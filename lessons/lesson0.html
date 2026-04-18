@@ -1,0 +1,1986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 0: Correlation and the generative linear model (draft v2)</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --panel: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6b68;
+    --accent: #b23a48;
+    --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f;
+    --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9;
+    --code-bg: #1e1f22;
+    --code-ink: #e6e6e6;
+    --code-hi: #3b3f48;
+    --stage-bar: #efeee8;
+    --lock-bg: #f0ece0;
+    --lock-ink: #6a5018;
+    --lock-rule: #b4a06a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--panel);
+  }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; }
+
+  nav.toc {
+    position: sticky; top: 0; z-index: 5;
+    background: var(--stage-bar);
+    border-bottom: 1px solid var(--rule);
+    padding: 8px 24px;
+    font-size: 13px;
+  }
+  nav.toc a {
+    color: var(--muted); text-decoration: none; margin-right: 14px;
+  }
+  nav.toc a:hover { color: var(--ink); }
+  nav.toc a.active { color: var(--accent); font-weight: 600; }
+  nav.toc a.locked { color: #b8b8b4; text-decoration: line-through; }
+
+  section.stage {
+    padding: 28px 24px 40px 24px;
+    border-bottom: 1px solid var(--rule);
+    max-width: 1300px;
+    margin: 0 auto;
+    position: relative;
+  }
+  section.stage h2.stage-h {
+    margin: 0 0 4px 0;
+    font-size: 20px;
+  }
+  section.stage .stage-sub {
+    margin: 0 0 18px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  /* Stage locking -- applies to every stage after A until its predecessor
+     is fully assessed. Dims the content and blocks pointer interaction, and
+     a banner explains how to unlock it. */
+  section.stage.stage-locked {
+    opacity: 0.38;
+    filter: grayscale(0.4);
+  }
+  section.stage.stage-locked .lock-banner { display: block; }
+  section.stage.stage-locked .stage-body  { pointer-events: none; }
+  .lock-banner {
+    display: none;
+    margin: 0 0 16px 0;
+    padding: 10px 14px;
+    background: var(--lock-bg);
+    border: 1px dashed var(--lock-rule);
+    border-radius: 4px;
+    font-size: 13px;
+    color: var(--lock-ink);
+    text-align: center;
+  }
+
+  /* After a prediction is submitted, a small "explore" counter appears.
+     The next stage unlocks only after the student has moved sliders a few
+     times -- prediction + exploration, not prediction alone. */
+  .explore-tracker {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #f4f0dd;
+    border-left: 3px solid #caa04a;
+    border-radius: 0 4px 4px 0;
+    font-size: 12.5px;
+    color: #4a3a14;
+    display: none;
+  }
+  .explore-tracker.shown { display: block; }
+  .explore-tracker.complete {
+    background: #e4efd4;
+    border-left-color: #6f8a4a;
+    color: #2e4410;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .col { display: flex; flex-direction: column; gap: 16px; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .scenario p { margin: 0 0 8px 0; }
+  .scenario p:last-child { margin-bottom: 0; }
+  .scenario .formula {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 13px;
+    background: #f2f1ec;
+    padding: 8px 10px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .prediction ol { margin: 0; padding-left: 20px; }
+  .prediction li { margin-bottom: 10px; }
+  .prediction label { display: block; margin: 3px 0; cursor: pointer; font-size: 14px; }
+  .prediction .q { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+  .prediction button {
+    margin-top: 6px;
+    padding: 8px 14px;
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .prediction button:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+  .prediction-done {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .prediction-done.correct { background: #e6f0dd; border-color: #6f8a4a; color: #3d5728; }
+  .prediction-done.wrong   { background: #fbe4c6; border-color: #a86a1a; color: #5c3802; }
+
+  .controls.locked { opacity: 0.4; pointer-events: none; }
+  .controls .row {
+    display: grid;
+    grid-template-columns: 120px 1fr 70px;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .controls label { font-size: 13px; }
+  .controls output { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .controls input[type=range] { width: 100%; }
+  .controls .buttons { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .controls button {
+    background: #333; color: #fff; border: 0; border-radius: 4px;
+    padding: 6px 10px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #888; }
+  .controls button.ghost { background: transparent; color: #333; border: 1px solid var(--rule); }
+  .controls button.accent { background: var(--accent); }
+  .toggle-row {
+    display: flex; gap: 14px; align-items: center; margin-top: 6px;
+    font-size: 13px;
+  }
+
+  .graph-wrap canvas { width: 100%; height: auto; display: block; background: #fff; }
+  .fit-stats {
+    font-family: ui-monospace, Menlo, monospace;
+    font-size: 12.5px;
+    margin-top: 8px;
+    color: var(--ink);
+  }
+  .fit-stats .label { color: var(--muted); }
+
+  pre.code {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 12px 14px;
+    border-radius: 4px;
+    font: 12px/1.55 ui-monospace, Menlo, monospace;
+    overflow-x: auto;
+    margin: 0;
+    max-height: 340px;
+  }
+  pre.code .line { display: block; padding: 0 6px; border-radius: 2px; }
+  pre.code .line.hi { background: var(--code-hi); }
+  pre.code .kw { color: #c792ea; }
+  pre.code .fn { color: #82aaff; }
+  pre.code .num { color: #f78c6c; }
+  pre.code .str { color: #c3e88d; }
+  pre.code .com { color: #676f8a; font-style: italic; }
+
+  .teaching-note {
+    background: #f5efe0;
+    border-left: 3px solid #caa04a;
+    padding: 8px 12px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: #4a3a14;
+  }
+  .teaching-note strong { color: #2e230a; }
+
+  footer.wrap-up {
+    padding: 20px 24px 40px 24px;
+    max-width: 1300px;
+    margin: 0 auto;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  footer.wrap-up h2 { color: var(--ink); font-size: 16px; }
+  footer.wrap-up code { font-family: ui-monospace, Menlo, monospace; background: #eee; padding: 1px 4px; border-radius: 3px; }
+
+  /* Learning-outcomes banner -- one per lesson, visible above the TOC. */
+  .outcomes {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 16px 24px 4px 24px;
+    border-bottom: 1px solid var(--rule);
+    background: var(--panel);
+  }
+  .outcomes h2 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .outcomes p { margin: 0 0 8px 0; }
+  .outcomes ul {
+    margin: 0 0 10px 0;
+    padding-left: 20px;
+    columns: 2;
+    column-gap: 28px;
+    font-size: 14px;
+  }
+  .outcomes li { margin-bottom: 4px; break-inside: avoid; }
+  .outcomes .stage-outcome {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 14px 0;
+    padding: 8px 12px;
+    background: #f3f1ea;
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 4px 4px 0;
+  }
+  .outcomes .stage-outcome strong { color: var(--ink); }
+
+  /* "Transfer" reflection panel -- appears after the explore threshold is hit.
+     Same visual family as .prediction, but blue accent so students can tell
+     it apart from the pre-stage prediction. */
+  .reflect {
+    display: none;
+    background: var(--accent2-soft);
+    border: 1px solid var(--accent2);
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-top: 12px;
+  }
+  .reflect.shown { display: block; }
+  .reflect h3 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent2);
+    font-weight: 600;
+  }
+  .reflect .scenario-q { margin: 0 0 8px 0; font-size: 14px; }
+  .reflect .q { font-weight: 600; margin: 6px 0 4px 0; font-size: 14px; }
+  .reflect label { display: block; margin: 3px 0; cursor: pointer; font-size: 14px; }
+  .reflect button {
+    margin-top: 8px;
+    padding: 7px 13px;
+    background: var(--accent2);
+    color: #fff;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .reflect button:disabled { background: #bbb; cursor: not-allowed; }
+  .reflect .result {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+  }
+  .reflect .result.correct { background: #e6f0dd; border: 1px solid #6f8a4a; color: #3d5728; display: block; }
+  .reflect .result.wrong   { background: #fbe4c6; border: 1px solid #a86a1a; color: #5c3802; display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Lesson 0 — Prediction, and what a regression is actually doing</h1>
+  <p>BIO 202, Spring 2026 — draft v3. Each stage hands you one more piece of information and asks the same question again. Each stage unlocks after you predict <em>and</em> explore the previous one.</p>
+</header>
+
+<div class="outcomes">
+  <h2>What Lesson 0 is actually asking</h2>
+  <p>One question, five times: <em>what is your best guess for y, and how wrong will you typically be?</em> Each stage gives you one more piece of information about the frog and asks whether the guess gets any better.</p>
+  <ul>
+    <li>With no other information, predict y. (It is the mean. σ is how wrong you will typically be.)</li>
+    <li>With a group label, predict y. Read the "slope" on a 0/1 predictor for what it is: the difference between two group means.</li>
+    <li>Read <em>r</em> as one number for how tightly two measurements travel together.</li>
+    <li>Read <em>R²</em> as "how much did knowing x improve my guess?" Notice that R² and σ are two ways of saying the same thing.</li>
+    <li>Say what a p-value answers. Say what it does not.</li>
+    <li>Decide whether two estimates are <em>clearly different</em> by asking whether their clouds of plausible values overlap.</li>
+  </ul>
+  <p style="font-size:12.5px; color: var(--muted); margin:0;">The formulas come along for the ride. The skill is translating a formula back into the prediction question out loud.</p>
+</div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. No info: use the mean</a>
+  <a href="#stageB" id="tocB" class="locked">B. Group label: use the group mean</a>
+  <a href="#stageC" id="tocC" class="locked">C. Two measurements: do they travel together?</a>
+  <a href="#stageD" id="tocD" class="locked">D. Predict y with x: a line</a>
+  <a href="#stageE" id="tocE" class="locked">E. Two rules: clearly different?</a>
+</nav>
+
+<!-- ===================================================================== -->
+<!-- STAGE A -- y ~ Normal(mu, sigma) ==================================== -->
+<!-- ===================================================================== -->
+<section class="stage" id="stageA">
+  <h2 class="stage-h">A — With no other information, the best guess is the mean</h2>
+  <p class="stage-sub">Someone hands you a new frog. You have no other information. The best single-number guess is the population mean μ, and σ is how wrong that guess will typically be.</p>
+  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> say why μ is the best guess under no-information, why σ is the typical size of the error, and why the sample ȳ wiggles around the true μ run to run.</p>
+  <div class="lock-banner">Complete the previous stage to unlock this section.</div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Gray tree frogs, one pond, no other information. Someone hands you a frog and asks for its body mass. The best number to say is the population mean μ. It minimizes your average squared error against any other value you could pick.</p>
+        <p><span class="formula">y<sub>i</sub> ~ Normal(μ, σ)</span></p>
+        <p>You do not know μ. You have a sample of n frogs, and from them you compute ȳ. ȳ is your <em>estimate</em> of μ. A different n frogs would give a slightly different ȳ. The true μ is a property of the world; the estimate wiggles run to run.</p>
+        <p>σ is the other half of the story: how wrong this guess will typically be. A typical frog sits about σ away from μ. Small σ means the mean is a sharp prediction. Large σ means the mean is the best you can do, and the best is not very good.</p>
+        <p>Two parameters, one for the guess and one for the size of the error. Stage B adds one new piece of information about the frog and asks whether the guess gets any better.</p>
+        <p class="teaching-note"><strong>Note that</strong> Stage D writes <code>y ~ Normal(β·x + α, σ)</code>. Set β = 0 and you are back here. Regression does not replace the mean; it extends it.</p>
+      </div>
+
+      <div class="panel graph-wrap">
+        <h3>Simulated sample (histogram with fixed axes)</h3>
+        <canvas id="plotA" width="560" height="320"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">true μ:</span> <span id="trueMuA">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">sample ȳ:</span> <span id="sampleMeanA">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">sample sd:</span> <span id="sampleSdA">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You raise σ from 0.5 to 2.5, keeping μ and n fixed. The histogram…</div>
+            <label><input type="radio" name="qA1" value="narrow" /> gets narrower</label>
+            <label><input type="radio" name="qA1" value="widen" /> gets wider</label>
+            <label><input type="radio" name="qA1" value="shift" /> shifts right but keeps the same width</label>
+          </li>
+          <li>
+            <div class="q">Q2. You raise n from 20 to 500, keeping μ and σ fixed. The sample mean ȳ…</div>
+            <label><input type="radio" name="qA2" value="closer" /> gets closer to the true μ (on average)</label>
+            <label><input type="radio" name="qA2" value="farther" /> gets farther from μ</label>
+            <label><input type="radio" name="qA2" value="same" /> is unchanged — n only affects σ</label>
+          </li>
+        </ol>
+        <button id="submitA" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreA">Explore the sliders to unlock Stage B. <span class="count">0/5 moves</span></div>
+      </div>
+
+      <div class="reflect" id="reflectA">
+        <h3>Transfer question — new scenario</h3>
+        <p class="scenario-q">A colleague samples 15 mice from a single population. She reports a sample mean body mass of 24.3 g with SD 1.8 g. If she re-samples 15 <em>different</em> mice from the same population, the new sample mean will most likely be…</p>
+        <label><input type="radio" name="rA" value="a" /> exactly 24.3 g — the population mean is what it is</label>
+        <label><input type="radio" name="rA" value="b" /> close to 24.3 g but not exactly — every sample wobbles around the true μ</label>
+        <label><input type="radio" name="rA" value="c" /> completely unpredictable — small samples have no signal</label>
+        <button disabled>Check my answer</button>
+        <div class="result"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="n"><label for="A_n">n (sample size)</label><input type="range" id="A_n" min="5" max="500" step="5" value="40" /><output id="A_nOut">40</output></div>
+          <div class="row" data-line="mu"><label for="A_mu">μ (true mean)</label><input type="range" id="A_mu" min="5" max="15" step="0.1" value="8" /><output id="A_muOut">8.0</output></div>
+          <div class="row" data-line="sigma"><label for="A_sigma">σ (true SD)</label><input type="range" id="A_sigma" min="0.2" max="2.5" step="0.1" value="1.2" /><output id="A_sigmaOut">1.2</output></div>
+          <div class="row" data-line="seed"><label for="A_seed">seed</label><input type="range" id="A_seed" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="A_newSeed">Regenerate (new seed)</button>
+            <button id="A_reset" class="secondary">Reset</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>R code (base R — mirrors this simulation)</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="com"># Stage A: one variable, no predictor.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n     &lt;- <span class="num" id="cA_n">40</span></span><span class="line" data-line="mu">mu    &lt;- <span class="num" id="cA_mu">8.0</span>    <span class="com"># true population mean</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cA_sigma">1.2</span>   <span class="com"># true population SD</span></span><span class="line"></span><span class="line"><span class="com"># simulate the sample -- every frog is a draw from the SAME distribution</span></span><span class="line">y &lt;- <span class="fn">rnorm</span>(n, mean = mu, sd = sigma)</span><span class="line"></span><span class="line"><span class="com"># estimates from the sample (these wiggle run-to-run)</span></span><span class="line"><span class="fn">mean</span>(y); <span class="fn">sd</span>(y)</span><span class="line"></span><span class="line"><span class="fn">hist</span>(y, breaks = <span class="num">20</span>, col = <span class="str">"gray80"</span>, border = <span class="str">"white"</span>,</span><span class="line">     xlim = <span class="fn">c</span>(<span class="num">0</span>, <span class="num">20</span>), xlab = <span class="str">"body mass (g)"</span>, main = <span class="str">""</span>)</span><span class="line"><span class="fn">abline</span>(v = mu,      col = <span class="str">"#b23a48"</span>, lwd = <span class="num">2</span>, lty = <span class="num">2</span>)</span><span class="line"><span class="fn">abline</span>(v = <span class="fn">mean</span>(y), col = <span class="str">"#2f6b8f"</span>, lwd = <span class="num">2</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- STAGE B -- binary predictor: y ~ Normal(alpha + delta*g, sigma) ===== -->
+<!-- ===================================================================== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Add a group label, and the guess splits in two</h2>
+  <p class="stage-sub">Now you know which pond the frog came from. That is new information. The best guess is no longer a single number; it is the group mean. The "slope" on a 0/1 predictor <em>is</em> the difference between the two group means.</p>
+  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> recognize <code>y = mx + b</code> from algebra inside the regression equation. Read δ as the difference between two group means, not as a separate mysterious object.</p>
+  <div class="lock-banner">Complete Stage A (submit prediction and move the sliders a few times) to unlock this section.</div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Now the frog comes with a tag: <em>lowland</em> (g = 0) or <em>upland</em> (g = 1). One new piece of information. The best guess is no longer μ for everyone. It is α for lowland frogs, and α + δ for upland frogs.</p>
+        <p>The object is already familiar from algebra. <code>y = mx + b</code> is the same line, renamed and split into two pieces so each piece can do its own job:</p>
+        <p><span class="formula">μ<sub>i</sub> = α + δ · g<sub>i</sub></span></p>
+        <p><span class="formula">y<sub>i</sub> ~ Normal(μ<sub>i</sub>, σ)</span></p>
+        <p>α is the intercept — the guess when g = 0. δ is the slope — how much the guess changes when g goes up by one. Since g takes only two values, the "line" has only two points on it: α, and α + δ. δ is not just "the slope." It <em>is</em> the difference between the two group means.</p>
+        <p>The second line is Stage A layered on: each y<sub>i</sub> is a noisy draw around its group mean, with spread σ. Same σ for both groups.</p>
+        <p class="teaching-note"><strong>A t-test is this regression.</strong> <code>lm(y ~ g)</code> returns δ as the slope coefficient, and the standard error on that coefficient is the standard error of the difference between two sample means. Two names, one calculation.</p>
+      </div>
+
+      <div class="panel graph-wrap">
+        <h3>Two groups, side by side (fixed axes)</h3>
+        <canvas id="plotB" width="560" height="340"></canvas>
+        <div class="fit-stats" id="statsB">
+          <span class="label">ȳ<sub>0</sub>:</span> <span id="B_m0">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">ȳ<sub>1</sub>:</span> <span id="B_m1">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">δ̂ = ȳ<sub>1</sub> − ȳ<sub>0</sub>:</span> <span id="B_dhat">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">SE(δ̂):</span> <span id="B_dse">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">generative truth:</span> α = <span id="B_aTrue">—</span>,
+          α + δ = <span id="B_abTrue">—</span> &nbsp;(σ = <span id="B_sTrue">—</span>)
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You set δ = 0 (the two ponds actually share one mean). The estimated δ̂ from your sample will be…</div>
+            <label><input type="radio" name="qB1" value="zero" /> exactly 0</label>
+            <label><input type="radio" name="qB1" value="near" /> near 0, not exactly — and new seeds land on either side of 0</label>
+            <label><input type="radio" name="qB1" value="big" /> close to 1, because equal groups of frogs still differ a lot by luck</label>
+          </li>
+          <li>
+            <div class="q">Q2. You raise n (per group) from 10 to 200, keeping α, δ, σ fixed. SE(δ̂) will…</div>
+            <label><input type="radio" name="qB2" value="shrink" /> shrink — more data makes the estimated difference more precise</label>
+            <label><input type="radio" name="qB2" value="grow" /> grow — more data adds more noise</label>
+            <label><input type="radio" name="qB2" value="same" /> stay the same — only σ affects the SE</label>
+          </li>
+        </ol>
+        <button id="submitB" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreB">Explore the sliders to unlock Stage C. <span class="count">0/5 moves</span></div>
+      </div>
+
+      <div class="reflect" id="reflectB">
+        <h3>Transfer question — new scenario</h3>
+        <p class="scenario-q">A friend fits <code>lm(blood_pressure ~ treatment)</code> with treatment coded 0 (placebo) and 1 (new drug). R prints the slope on <code>treatment</code> as <strong>−4.2 mmHg</strong>. The best reading is…</p>
+        <label><input type="radio" name="rB" value="a" /> The drug group's average blood pressure is 4.2 mmHg.</label>
+        <label><input type="radio" name="rB" value="b" /> The drug group averages 4.2 mmHg <em>lower</em> than the placebo group.</label>
+        <label><input type="radio" name="rB" value="c" /> The p-value for the drug effect is 4.2.</label>
+        <button disabled>Check my answer</button>
+        <div class="result"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="row" data-line="ng"><label for="B_ng">n (per group)</label><input type="range" id="B_ng" min="5" max="200" step="5" value="40" /><output id="B_ngOut">40</output></div>
+          <div class="row" data-line="alpha"><label for="B_alpha">α (mean of group 0)</label><input type="range" id="B_alpha" min="7" max="13" step="0.1" value="10" /><output id="B_alphaOut">10.0</output></div>
+          <div class="row" data-line="delta"><label for="B_delta">δ (group-1 effect)</label><input type="range" id="B_delta" min="-3" max="3" step="0.05" value="1.0" /><output id="B_deltaOut">1.00</output></div>
+          <div class="row" data-line="sigma"><label for="B_sigma">σ (shared noise)</label><input type="range" id="B_sigma" min="0.2" max="2.5" step="0.1" value="1.0" /><output id="B_sigmaOut">1.0</output></div>
+          <div class="row" data-line="seed"><label for="B_seed">seed</label><input type="range" id="B_seed" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="B_newSeed">Regenerate (new seed)</button>
+            <button id="B_reset" class="secondary">Reset</button>
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>R code (base R) — <em>regression and t-test are the same calculation</em></h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="com"># Stage B: binary predictor. y ~ N(alpha + delta*g, sigma), g in {0, 1}.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="ng">n     &lt;- <span class="num" id="cB_ng">40</span>    <span class="com"># per group</span></span><span class="line" data-line="alpha">alpha &lt;- <span class="num" id="cB_alpha">10.0</span>  <span class="com"># mean of group 0 (lowland)</span></span><span class="line" data-line="delta">delta &lt;- <span class="num" id="cB_delta">1.00</span>  <span class="com"># mean of group 1 minus mean of group 0</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cB_sigma">1.0</span></span><span class="line"></span><span class="line">g &lt;- <span class="fn">rep</span>(<span class="fn">c</span>(<span class="num">0</span>, <span class="num">1</span>), each = n)                  <span class="com"># 0/1 predictor</span></span><span class="line">y &lt;- <span class="fn">rnorm</span>(<span class="num">2</span>*n, mean = alpha + delta*g, sd = sigma)</span><span class="line"></span><span class="line"><span class="com"># REGRESSION form. Coefficient on g is delta_hat.</span></span><span class="line">fit &lt;- <span class="fn">lm</span>(y ~ g)</span><span class="line"><span class="fn">coef</span>(fit)</span><span class="line"><span class="fn">summary</span>(fit)$coefficients[<span class="num">2</span>, <span class="str">"Std. Error"</span>]</span><span class="line"></span><span class="line"><span class="com"># T-TEST form. Same number, different packaging.</span></span><span class="line">tt &lt;- <span class="fn">t.test</span>(y ~ g, var.equal = <span class="kw">TRUE</span>)</span><span class="line">tt$estimate[<span class="num">2</span>] - tt$estimate[<span class="num">1</span>]   <span class="com"># = coef(fit)["g"]</span></span><span class="line"></span><span class="line"><span class="fn">plot</span>(<span class="fn">jitter</span>(g, amount = <span class="num">0.08</span>), y, pch = <span class="num">16</span>, col = <span class="str">"gray40"</span>,</span><span class="line">     xaxt = <span class="str">"n"</span>, xlab = <span class="str">"group"</span>, ylab = <span class="str">"body mass (g)"</span>)</span><span class="line"><span class="fn">axis</span>(<span class="num">1</span>, at = <span class="fn">c</span>(<span class="num">0</span>, <span class="num">1</span>), labels = <span class="fn">c</span>(<span class="str">"lowland"</span>, <span class="str">"upland"</span>))</span><span class="line"><span class="fn">abline</span>(h = <span class="fn">mean</span>(y[g==<span class="num">0</span>]), col = <span class="str">"#b23a48"</span>, lwd = <span class="num">2</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="fn">mean</span>(y[g==<span class="num">1</span>]), col = <span class="str">"#2f6b8f"</span>, lwd = <span class="num">2</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- STAGE C -- correlation ============================================= -->
+<!-- ===================================================================== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Two measurements that travel together</h2>
+  <p class="stage-sub">A second number on each frog. Do the two travel together? The correlation coefficient r is one number that says how tightly.</p>
+  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> read r at a glance. Sign is the direction of the tilt; magnitude is how tightly the two numbers line up. Note that r̂ wiggles run to run even when the true r is zero.</p>
+  <div class="lock-banner">Complete Stage B (submit prediction and move the sliders a few times) to unlock this section.</div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Same frogs. Now you measure a second number on each: snout–vent length. You want to know whether two measurements on the same frog travel together, whether bigger frogs tend to be both longer and heavier.</p>
+        <p>The correlation coefficient r is one number that answers the question. It lives between −1 and +1:</p>
+        <ul style="margin: 4px 0 8px 0; padding-left: 22px;">
+          <li><strong>r ≈ +1</strong> — the two numbers track tightly, moving in the same direction.</li>
+          <li><strong>r ≈ 0</strong> — no tilt. Knowing one tells you essentially nothing about the other.</li>
+          <li><strong>r ≈ −1</strong> — the two numbers track tightly, moving in opposite directions.</li>
+        </ul>
+        <p>Sign is the direction of the tilt. Magnitude is how tightly the two numbers line up. That is all r is.</p>
+        <p>Note that r is <em>symmetric</em>: swap x and y and r does not change. And r is a <em>description</em>, not a cause. A nonzero r says two measurements move together in this sample. It does not say one caused the other.</p>
+        <p class="teaching-note"><strong>Watch for:</strong> even when the real r is zero, the sample r̂ is almost never exactly zero. Press "new seed" a few times. The wiggle you see is the same thing ȳ was doing in Stage A — an estimate wobbling around a true value that itself does not move.</p>
+      </div>
+
+      <div class="panel graph-wrap">
+        <h3>Bivariate scatter (fixed axes)</h3>
+        <canvas id="plotC" width="560" height="360"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">true r:</span> <span id="trueRC">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">sample r̂:</span> <span id="sampleRC">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">|r̂ − r|:</span> <span id="gapRC">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You set the true r to 0 and take a sample of n = 30. The sample r̂ will be…</div>
+            <label><input type="radio" name="qC1" value="exact" /> exactly 0</label>
+            <label><input type="radio" name="qC1" value="near" /> near 0, but nonzero — the point cloud tilts slightly one way or the other</label>
+            <label><input type="radio" name="qC1" value="big" /> big (|r̂| &gt; 0.5), because small samples always look correlated</label>
+          </li>
+          <li>
+            <div class="q">Q2. r = +0.9 and r = −0.9 — how do the two scatters compare?</div>
+            <label><input type="radio" name="qC2" value="samegap" /> the clouds are equally tight; only the slope direction changes</label>
+            <label><input type="radio" name="qC2" value="tighter" /> +0.9 is tighter than −0.9</label>
+            <label><input type="radio" name="qC2" value="looser" /> −0.9 is tighter than +0.9</label>
+          </li>
+        </ol>
+        <button id="submitC" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreC">Explore the sliders to unlock Stage D. <span class="count">0/5 moves</span></div>
+      </div>
+
+      <div class="reflect" id="reflectC">
+        <h3>Transfer question — new scenario</h3>
+        <p class="scenario-q">You plot tree height against trunk diameter for 30 trees and compute <strong>r̂ = 0.06</strong>. The best reading is…</p>
+        <label><input type="radio" name="rC" value="a" /> A positive correlation, because 0.06 is not zero.</label>
+        <label><input type="radio" name="rC" value="b" /> The sample is small; r̂ near 0 is exactly what we'd see if the real r were 0 — we can't read a real pattern out of this.</label>
+        <label><input type="radio" name="rC" value="c" /> Tree height and trunk diameter are uncorrelated in nature.</label>
+        <button disabled>Check my answer</button>
+        <div class="result"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row" data-line="n"><label for="C_n">n</label><input type="range" id="C_n" min="5" max="400" step="5" value="60" /><output id="C_nOut">60</output></div>
+          <div class="row" data-line="r"><label for="C_r">r (correlation)</label><input type="range" id="C_r" min="-0.99" max="0.99" step="0.01" value="0.6" /><output id="C_rOut">0.60</output></div>
+          <div class="row" data-line="sx"><label for="C_sx">σₓ</label><input type="range" id="C_sx" min="0.3" max="2.5" step="0.1" value="1.5" /><output id="C_sxOut">1.5</output></div>
+          <div class="row" data-line="sy"><label for="C_sy">σᵧ</label><input type="range" id="C_sy" min="0.3" max="2.5" step="0.1" value="1.0" /><output id="C_syOut">1.0</output></div>
+          <div class="row" data-line="seed"><label for="C_seed">seed</label><input type="range" id="C_seed" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="C_newSeed">Regenerate (new seed)</button>
+            <button id="C_reset" class="secondary">Reset</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>R code (base R)</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="com"># Stage C: correlation -- two variables that co-vary.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="n">n  &lt;- <span class="num" id="cC_n">60</span></span><span class="line" data-line="r">r  &lt;- <span class="num" id="cC_r">0.60</span></span><span class="line" data-line="sx">sx &lt;- <span class="num" id="cC_sx">1.5</span></span><span class="line" data-line="sy">sy &lt;- <span class="num" id="cC_sy">1.0</span></span><span class="line"></span><span class="line"><span class="com"># build a bivariate normal sample from two independent draws</span></span><span class="line">z1 &lt;- <span class="fn">rnorm</span>(n); z2 &lt;- <span class="fn">rnorm</span>(n)</span><span class="line">x  &lt;- sx * z1</span><span class="line">y  &lt;- sy * (r * z1 + <span class="fn">sqrt</span>(<span class="num">1</span> - r^<span class="num">2</span>) * z2)</span><span class="line"></span><span class="line"><span class="com"># sample correlation -- this wiggles sample to sample</span></span><span class="line"><span class="fn">cor</span>(x, y)</span><span class="line"></span><span class="line"><span class="fn">plot</span>(x, y, pch = <span class="num">16</span>, col = <span class="str">"gray40"</span>,</span><span class="line">     xlim = <span class="fn">c</span>(-<span class="num">8</span>, <span class="num">8</span>), ylim = <span class="fn">c</span>(-<span class="num">8</span>, <span class="num">8</span>),</span><span class="line">     xlab = <span class="str">"snout-vent length"</span>, ylab = <span class="str">"body mass"</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- STAGE D -- regression with inferred-lines cloud ===================== -->
+<!-- ===================================================================== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Turn the second measurement into a prediction rule</h2>
+  <p class="stage-sub">Use x to predict y. The rule is a line. R² answers how much that line improved your guess over the Stage A mean.</p>
+  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> name each piece of the regression in the prediction frame. β is how the guess changes per unit of x; α is the guess at x = 0; σ is the typical error around the line; R² is how much knowing x improved the guess over the Stage A mean. Watch R² and σ move together.</p>
+  <div class="lock-banner">Complete Stage C (submit prediction and move the sliders a few times) to unlock this section.</div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Same frogs. Use snout–vent length x as the predictor for body mass y. The prediction rule is a line:</p>
+        <p><span class="formula">y<sub>i</sub> ~ Normal(β·x<sub>i</sub> + α, σ)</span></p>
+        <p>For any frog with length x, the best guess is β · x + α. α is the intercept (the guess at x = 0). β is the slope (how much the guess changes when x goes up by one unit). σ is the spread around the line, the typical size of the error — same role as in Stage A.</p>
+        <p>The trick is to see this as Stage A with one new piece of information. Set β = 0 and the rule collapses to a single number (α = ȳ): you are predicting the same y for every frog, no matter its length. Set β ≠ 0 and the guess slides along a line as x changes. The information in x has entered the guess.</p>
+        <p>We fit (α̂, β̂) by ordinary least squares ("draw the one line that sits closest to all the points"). That gives <em>one</em> line. Turn on inferred lines and you see many others that the data find nearly as plausible — a cloud of rules, not a single answer. The width of the cloud is the uncertainty in β̂.</p>
+        <p class="teaching-note"><strong>R² and σ are two ways of saying the same thing.</strong> R² is the fraction of y's variation that the line accounts for. Drag σ up and R² falls; drag σ down and R² climbs toward 1. Small σ means the points hug the line and knowing x helped a lot. Large σ means the points scatter away from the line and knowing x barely helped. One story, two axes.</p>
+        <p class="teaching-note"><strong>What SE(β̂) is.</strong> It is the standard deviation of the cloud of inferred slopes. As a general rule, if β̂ is more than about 2 SE away from zero, zero sits outside the plausible cloud, and a p-value would call the slope "significant." The cloud itself is the real object. A p-value just converts "how far is zero from the cloud?" into a single number.</p>
+      </div>
+
+      <div class="panel graph-wrap">
+        <h3>Scatter + fit + inferred-lines cloud (fixed axes)</h3>
+        <canvas id="plotD" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">fit:</span> ŷ = <span id="D_aHat">—</span> + <span id="D_bHat">—</span> · x
+          &nbsp;|&nbsp;
+          <span class="label">SE(β̂):</span> <span id="D_bSe">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">R²:</span> <span id="D_r2">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">generative truth:</span>
+          y = <span id="D_aTrue">—</span> + <span id="D_bTrue">—</span> · x  &nbsp;(σ = <span id="D_sTrue">—</span>)
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You halve n (e.g. 200 → 100), keeping β and σ fixed. The cloud of inferred lines…</div>
+            <label><input type="radio" name="qD1" value="narrow" /> gets narrower (more precise)</label>
+            <label><input type="radio" name="qD1" value="wide" /> gets wider (less precise)</label>
+            <label><input type="radio" name="qD1" value="same" /> is unchanged — the cloud is set by σ alone</label>
+          </li>
+          <li>
+            <div class="q">Q2. You set the true β = 0 and run one simulation with n = 50, σ = 1.5. The fitted slope β̂ will be…</div>
+            <label><input type="radio" name="qD2" value="zero" /> exactly 0</label>
+            <label><input type="radio" name="qD2" value="near" /> near 0 but not exactly — and the cloud of inferred lines is centered on a flat line</label>
+            <label><input type="radio" name="qD2" value="tilt" /> systematically positive, because that is what OLS does</label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreD">Explore the sliders to unlock Stage E. <span class="count">0/5 moves</span></div>
+      </div>
+
+      <div class="reflect" id="reflectD">
+        <h3>Transfer question — new scenario</h3>
+        <p class="scenario-q">A regression returns <code>ŷ = 1.2 + 0.85·x</code> with <strong>R² = 0.07</strong> and SE(β̂) ≈ 0.41. Which summary is best?</p>
+        <label><input type="radio" name="rD" value="a" /> The slope (0.85) is big, so the effect is strong.</label>
+        <label><input type="radio" name="rD" value="b" /> The slope is roughly 2·SE away from zero (still plausibly real), but the line accounts for only ~7% of y's variation — there is a lot of noise left over.</label>
+        <label><input type="radio" name="rD" value="c" /> R² = 0.07 means 7% of the data points lie exactly on the line.</label>
+        <button disabled>Check my answer</button>
+        <div class="result"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row" data-line="n"><label for="D_n">n</label><input type="range" id="D_n" min="10" max="120" step="5" value="40" /><output id="D_nOut">40</output></div>
+          <div class="row" data-line="alpha"><label for="D_alpha">α (intercept)</label><input type="range" id="D_alpha" min="0" max="10" step="0.1" value="4" /><output id="D_alphaOut">4.0</output></div>
+          <div class="row" data-line="beta"><label for="D_beta">β (slope)</label><input type="range" id="D_beta" min="-1.5" max="2" step="0.05" value="0.8" /><output id="D_betaOut">0.80</output></div>
+          <div class="row" data-line="sigma"><label for="D_sigma">σ (noise)</label><input type="range" id="D_sigma" min="0.2" max="3" step="0.1" value="1.2" /><output id="D_sigmaOut">1.2</output></div>
+          <div class="row" data-line="nboot"><label for="D_nboot">inferred lines</label><input type="range" id="D_nboot" min="20" max="120" step="10" value="60" /><output id="D_nbootOut">60</output></div>
+          <div class="row" data-line="seed"><label for="D_seed">seed</label><input type="range" id="D_seed" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="toggle-row">
+            <label><input type="checkbox" id="D_cloud" checked /> show inferred lines</label>
+            <label><input type="checkbox" id="D_truth" checked /> show generative line</label>
+          </div>
+          <div class="buttons">
+            <button id="D_newSeed">Regenerate (new seed)</button>
+            <button id="D_reset" class="secondary">Reset</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>R code (base R)</h3>
+<pre class="code" id="codeD"><span class="line" data-line="seed"><span class="com"># Stage D: regression with many lines nearly as good as the best one.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line" data-line="n">n     &lt;- <span class="num" id="cD_n">40</span></span><span class="line" data-line="alpha">alpha &lt;- <span class="num" id="cD_alpha">4.0</span>    <span class="com"># intercept</span></span><span class="line" data-line="beta">beta  &lt;- <span class="num" id="cD_beta">0.80</span>   <span class="com"># slope</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cD_sigma">1.2</span>    <span class="com"># residual SD</span></span><span class="line"></span><span class="line">x &lt;- <span class="fn">runif</span>(n, min = <span class="num">0</span>, max = <span class="num">10</span>)</span><span class="line">y &lt;- <span class="fn">rnorm</span>(n, mean = alpha + beta * x, sd = sigma)</span><span class="line"></span><span class="line"><span class="com"># OLS fit -- one point estimate</span></span><span class="line">fit &lt;- <span class="fn">lm</span>(y ~ x)</span><span class="line"><span class="fn">coef</span>(fit)</span><span class="line"></span><span class="line"><span class="com"># inferred lines -- resample the data with replacement and refit many times.</span></span><span class="line"><span class="com"># Each resample gives one line that is compatible with the data.</span></span><span class="line" data-line="nboot">n_lines &lt;- <span class="num" id="cD_nboot">60</span></span><span class="line">inferred &lt;- <span class="fn">replicate</span>(n_lines, {</span><span class="line">  i &lt;- <span class="fn">sample</span>(n, n, replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(y[i] ~ x[i]))</span><span class="line">})</span><span class="line"></span><span class="line"><span class="fn">plot</span>(x, y, pch = <span class="num">16</span>, col = <span class="str">"gray40"</span>,</span><span class="line">     xlim = <span class="fn">c</span>(<span class="num">0</span>, <span class="num">10</span>), ylim = <span class="fn">c</span>(-<span class="num">5</span>, <span class="num">25</span>),</span><span class="line">     xlab = <span class="str">"x"</span>, ylab = <span class="str">"y"</span>)</span><span class="line"><span class="fn">apply</span>(inferred, <span class="num">2</span>, <span class="kw">function</span>(ab)</span><span class="line">  <span class="fn">abline</span>(ab[<span class="num">1</span>], ab[<span class="num">2</span>], col = <span class="fn">rgb</span>(<span class="num">0.7</span>, <span class="num">0.23</span>, <span class="num">0.28</span>, <span class="num">0.05</span>)))</span><span class="line"><span class="fn">abline</span>(fit, col = <span class="str">"#b23a48"</span>, lwd = <span class="num">2</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- STAGE E -- two groups, two slopes: "are they clearly different?" ==== -->
+<!-- ===================================================================== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — Two populations, two prediction rules. Can we tell them apart?</h2>
+  <p class="stage-sub">Each pond has its own line. "Are the slopes clearly different?" becomes a visual question: do the two clouds of plausible slopes overlap?</p>
+  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> translate "is the difference statistically significant?" into "do the two clouds of plausible slopes overlap?" Same question, no jargon. Say what a permutation p-value actually answers.</p>
+  <div class="lock-banner">Complete Stage D (submit prediction and move the sliders a few times) to unlock this section.</div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Two populations of frogs now: a lowland pond (A) and an upland pond (B). Each has its own prediction rule, its own line:</p>
+        <p><span class="formula">y<sub>i,g</sub> ~ Normal(β<sub>g</sub>·x<sub>i,g</sub> + α<sub>g</sub>, σ)</span></p>
+        <p>The question is whether these are the same rule or two different rules. Concretely: is β<sub>A</sub> different from β<sub>B</sub>?</p>
+        <p>Draw the cloud of plausible slopes for each pond, separately. If the clouds do not overlap, the data rules out any shared slope — the rules are clearly different. If the clouds do overlap, there is a range of slopes compatible with both ponds, including "both the same." That is the question a significance test answers, with the jargon stripped out.</p>
+        <p class="teaching-note"><strong>A second view, more formal.</strong> Shuffle the pond labels many times and each time recompute the difference in fitted slopes. The shuffled distribution answers: if the two ponds truly shared one slope, how big a split would we see just from how frogs got assigned? If the observed split sits out in the tail of that distribution, the two slopes are clearly different.</p>
+        <p class="teaching-note"><strong>What this p-value says.</strong> It is the fraction of shuffled worlds in which the split was at least as extreme as ours. Note that it does <em>not</em> say "there is a 5% chance the ponds share a slope." It says: if they did share one, 5% of random shuffles would look at least this different from each other.</p>
+      </div>
+
+      <div class="panel graph-wrap">
+        <h3>Two scatters + two clouds of inferred lines (fixed axes)</h3>
+        <canvas id="plotE1" width="560" height="340"></canvas>
+        <h3 style="margin-top:12px;">If the groups shared one slope: what splits would we see?</h3>
+        <canvas id="plotE2" width="560" height="200"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">β̂<sub>A</sub>:</span> <span id="E_bA">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">β̂<sub>B</sub>:</span> <span id="E_bB">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">observed Δβ̂:</span> <span id="E_dObs">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">under pooled null, at least as extreme:</span> <span id="E_p">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">clouds overlap?</span> <span id="E_overlap">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="panel prediction" id="predE">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You set β<sub>A</sub> = β<sub>B</sub> (truly equal slopes). The two clouds of inferred lines should…</div>
+            <label><input type="radio" name="qE1" value="overlap" /> overlap a lot — any shared slope is compatible with both datasets</label>
+            <label><input type="radio" name="qE1" value="miss" /> be separate — equal true slopes still produce separate clouds</label>
+            <label><input type="radio" name="qE1" value="collapse" /> collapse onto a single line</label>
+          </li>
+          <li>
+            <div class="q">Q2. With β<sub>A</sub> = 1, β<sub>B</sub> = 0.7, σ = 1.5, you double the n per group. The two clouds will…</div>
+            <label><input type="radio" name="qE2" value="narrow" /> narrow, and the overlap between them will shrink — the slopes become clearly different</label>
+            <label><input type="radio" name="qE2" value="widen" /> widen — more data adds more uncertainty</label>
+            <label><input type="radio" name="qE2" value="same" /> not change — cloud width is set by σ alone</label>
+          </li>
+        </ol>
+        <button id="submitE" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreE">Explore the sliders to finish Lesson 0. <span class="count">0/5 moves</span></div>
+      </div>
+
+      <div class="reflect" id="reflectE">
+        <h3>Transfer question — new scenario</h3>
+        <p class="scenario-q">A study reports 95% slope intervals for two groups: <strong>group 1: [0.45, 0.92]</strong> and <strong>group 2: [0.81, 1.34]</strong>. The best reading is…</p>
+        <label><input type="radio" name="rE" value="a" /> The two slopes are clearly different — group 2's interval sits mostly above group 1's.</label>
+        <label><input type="radio" name="rE" value="b" /> The data cannot cleanly tell the slopes apart: the intervals overlap on [0.81, 0.92], so slopes in that range are compatible with both groups, including "both the same."</label>
+        <label><input type="radio" name="rE" value="c" /> The p-value must be below 0.05 because the point estimates differ.</label>
+        <button disabled>Check my answer</button>
+        <div class="result"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsE">
+          <div class="row" data-line="ng"><label for="E_ng">n per group</label><input type="range" id="E_ng" min="10" max="200" step="5" value="50" /><output id="E_ngOut">50</output></div>
+          <div class="row" data-line="bA"><label for="E_bA_in">β<sub>A</sub></label><input type="range" id="E_bA_in" min="-1.5" max="2" step="0.05" value="1.00" /><output id="E_bA_out">1.00</output></div>
+          <div class="row" data-line="bB"><label for="E_bB_in">β<sub>B</sub></label><input type="range" id="E_bB_in" min="-1.5" max="2" step="0.05" value="0.70" /><output id="E_bB_out">0.70</output></div>
+          <div class="row" data-line="sigma"><label for="E_sigma">σ (shared)</label><input type="range" id="E_sigma" min="0.2" max="3" step="0.1" value="1.2" /><output id="E_sigmaOut">1.2</output></div>
+          <div class="row" data-line="nboot"><label for="E_nboot">inferred lines (per group)</label><input type="range" id="E_nboot" min="40" max="400" step="20" value="200" /><output id="E_nbootOut">200</output></div>
+          <div class="row" data-line="nperm"><label for="E_nperm">pooled-null shuffles</label><input type="range" id="E_nperm" min="100" max="2000" step="100" value="500" /><output id="E_npermOut">500</output></div>
+          <div class="row" data-line="seed"><label for="E_seed">seed</label><input type="range" id="E_seed" min="1" max="999" step="1" value="42" /><output id="E_seedOut">42</output></div>
+          <div class="toggle-row">
+            <label><input type="checkbox" id="E_cloud" checked /> show inferred-lines clouds</label>
+          </div>
+          <div class="buttons">
+            <button id="E_newSeed">Regenerate (new seed)</button>
+            <button id="E_runPerm" class="accent">Run pooled-null shuffles</button>
+            <button id="E_reset" class="secondary">Reset</button>
+            <button id="E_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>R code (base R)</h3>
+<pre class="code" id="codeE"><span class="line" data-line="seed"><span class="com"># Stage E: two slopes. Are they clearly different?</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cE_seed">42</span>)</span><span class="line" data-line="ng">n  &lt;- <span class="num" id="cE_ng">50</span>     <span class="com"># per group</span></span><span class="line" data-line="bA">bA &lt;- <span class="num" id="cE_bA">1.00</span></span><span class="line" data-line="bB">bB &lt;- <span class="num" id="cE_bB">0.70</span></span><span class="line" data-line="sigma">s  &lt;- <span class="num" id="cE_sigma">1.2</span></span><span class="line"></span><span class="line">xA &lt;- <span class="fn">runif</span>(n, <span class="num">0</span>, <span class="num">10</span>); yA &lt;- <span class="fn">rnorm</span>(n, bA*xA + <span class="num">4</span>, s)</span><span class="line">xB &lt;- <span class="fn">runif</span>(n, <span class="num">0</span>, <span class="num">10</span>); yB &lt;- <span class="fn">rnorm</span>(n, bB*xB + <span class="num">4</span>, s)</span><span class="line"></span><span class="line"><span class="com"># Inferred lines per group (bootstrap resampling within each group).</span></span><span class="line" data-line="nboot">K &lt;- <span class="num" id="cE_nboot">200</span></span><span class="line">inf_A &lt;- <span class="fn">replicate</span>(K, <span class="fn">coef</span>(<span class="fn">lm</span>(yA[i] ~ xA[i], data = <span class="fn">data.frame</span>(</span><span class="line">  i = <span class="fn">sample</span>(n, n, replace = <span class="kw">TRUE</span>)))))</span><span class="line">inf_B &lt;- <span class="fn">replicate</span>(K, <span class="fn">coef</span>(<span class="fn">lm</span>(yB[i] ~ xB[i], data = <span class="fn">data.frame</span>(</span><span class="line">  i = <span class="fn">sample</span>(n, n, replace = <span class="kw">TRUE</span>)))))</span><span class="line"></span><span class="line"><span class="com"># Overlap between the two slope clouds -- the "clearly different" check.</span></span><span class="line">qA &lt;- <span class="fn">quantile</span>(inf_A[<span class="num">2</span>, ], <span class="fn">c</span>(<span class="num">0.025</span>, <span class="num">0.975</span>))</span><span class="line">qB &lt;- <span class="fn">quantile</span>(inf_B[<span class="num">2</span>, ], <span class="fn">c</span>(<span class="num">0.025</span>, <span class="num">0.975</span>))</span><span class="line">overlap &lt;- <span class="fn">max</span>(<span class="num">0</span>, <span class="fn">min</span>(qA[<span class="num">2</span>], qB[<span class="num">2</span>]) - <span class="fn">max</span>(qA[<span class="num">1</span>], qB[<span class="num">1</span>]))</span><span class="line"></span><span class="line"><span class="com"># Pooled null: shuffle group labels and recompute the split.</span></span><span class="line" data-line="nperm">P &lt;- <span class="num" id="cE_nperm">500</span></span><span class="line">x &lt;- <span class="fn">c</span>(xA, xB); y &lt;- <span class="fn">c</span>(yA, yB)</span><span class="line">null_d &lt;- <span class="fn">replicate</span>(P, {</span><span class="line">  g &lt;- <span class="fn">sample</span>(<span class="fn">c</span>(<span class="fn">rep</span>(<span class="kw">TRUE</span>, n), <span class="fn">rep</span>(<span class="kw">FALSE</span>, n)))</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(y[g]  ~ x[g] ))[<span class="num">2</span>] -</span><span class="line">    <span class="fn">coef</span>(<span class="fn">lm</span>(y[!g] ~ x[!g]))[<span class="num">2</span>]</span><span class="line">})</span><span class="line">obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(yA ~ xA))[<span class="num">2</span>] - <span class="fn">coef</span>(<span class="fn">lm</span>(yB ~ xB))[<span class="num">2</span>]</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(null_d) &gt;= <span class="fn">abs</span>(obs))   <span class="com"># fraction at least as extreme</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<footer class="wrap-up">
+  <h2>Where this lesson goes next</h2>
+  <p>The written deliverable for Lesson 0 is one modification to the Stage E
+  <code>.R</code> script that this GUI cannot do for you. Replace the pooled-null
+  shuffle with a parametric alternative (the interaction-term coefficient from
+  <code>lm(y ~ x * group)</code>), run both, and compare the two methods'
+  answers to the "clearly different?" question.</p>
+  <p>Lesson 1 inherits this machinery. The inferred-lines cloud of Stage D
+  becomes a null-slope distribution over 1000 replicate simulations. The Stage
+  E two-group comparison becomes "does one songbird species' slope clearly
+  differ from the across-species average over 40 years?"</p>
+</footer>
+
+<script>
+/* =======================================================================
+   Shared utilities (RNG, OLS, helpers). Factored into a single JS module
+   once a third lesson needs them; vendored here for now.
+   ======================================================================= */
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function makeNormal(rng) {
+  let spare = null;
+  return function () {
+    if (spare !== null) { const v = spare; spare = null; return v; }
+    let u = 0, v = 0;
+    while (u === 0) u = rng();
+    while (v === 0) v = rng();
+    const mag = Math.sqrt(-2.0 * Math.log(u));
+    spare = mag * Math.sin(2 * Math.PI * v);
+    return mag * Math.cos(2 * Math.PI * v);
+  };
+}
+
+function ols(x, y) {
+  const n = x.length;
+  let sx = 0, sy = 0;
+  for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; }
+  const mx = sx / n, my = sy / n;
+  let sxx = 0, sxy = 0, syy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx, dy = y[i] - my;
+    sxx += dx * dx; sxy += dx * dy; syy += dy * dy;
+  }
+  const b = sxy / Math.max(1e-12, sxx);
+  const a = my - b * mx;
+  let ssRes = 0;
+  for (let i = 0; i < n; i++) {
+    const r = y[i] - (a + b * x[i]);
+    ssRes += r * r;
+  }
+  const dof = Math.max(1, n - 2);
+  const seB = Math.sqrt((ssRes / dof) / Math.max(1e-12, sxx));
+  const r2 = 1 - ssRes / Math.max(1e-12, syy);
+  return { a, b, seB, r2 };
+}
+function olsSlope(x, y) {
+  const n = x.length;
+  let sx = 0, sy = 0;
+  for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; }
+  const mx = sx / n, my = sy / n;
+  let sxx = 0, sxy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx, dy = y[i] - my;
+    sxx += dx * dx; sxy += dx * dy;
+  }
+  return sxy / Math.max(1e-12, sxx);
+}
+function pearson(x, y) {
+  const n = x.length;
+  let sx = 0, sy = 0;
+  for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; }
+  const mx = sx / n, my = sy / n;
+  let sxx = 0, syy = 0, sxy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx, dy = y[i] - my;
+    sxx += dx * dx; syy += dy * dy; sxy += dx * dy;
+  }
+  return sxy / Math.sqrt(Math.max(1e-12, sxx * syy));
+}
+function quantile(arr, p) {
+  const a = arr.slice().sort((x, y) => x - y);
+  const idx = Math.max(0, Math.min(a.length - 1, p * (a.length - 1)));
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  return a[lo] + (a[hi] - a[lo]) * (idx - lo);
+}
+function downloadText(filename, text) {
+  const blob = new Blob([text], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* Canvas helpers. All accept a frame object from makeFrame. */
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
+  if (canvas.width !== cssW * dpr) { canvas.width = cssW * dpr; canvas.height = cssH * dpr; }
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+  return { ctx, cssW, cssH };
+}
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) {
+  const W = cssW - pad.l - pad.r, H = cssH - pad.t - pad.b;
+  return {
+    pad, cssW, cssH, W, H, xMin, xMax, yMin, yMax,
+    xs: v => pad.l + ((v - xMin) / (xMax - xMin)) * W,
+    ys: v => pad.t + H - ((v - yMin) / (yMax - yMin)) * H,
+  };
+}
+function drawAxes(ctx, f, xLabel, yLabel, xTicksCount, yTicksCount, xTickFmt, yTickFmt) {
+  xTickFmt = xTickFmt || (v => v.toFixed(1));
+  yTickFmt = yTickFmt || (v => v.toFixed(1));
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.pad.t);
+  ctx.lineTo(f.pad.l, f.pad.t + f.H);
+  ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H);
+  ctx.stroke();
+  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i <= xTicksCount; i++) {
+    const v = f.xMin + (f.xMax - f.xMin) * (i / xTicksCount);
+    const px = f.xs(v);
+    ctx.beginPath(); ctx.moveTo(px, f.pad.t + f.H); ctx.lineTo(px, f.pad.t + f.H + 4); ctx.stroke();
+    ctx.fillText(xTickFmt(v), px, f.pad.t + f.H + 6);
+  }
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let i = 0; i <= yTicksCount; i++) {
+    const v = f.yMin + (f.yMax - f.yMin) * (i / yTicksCount);
+    const py = f.ys(v);
+    ctx.beginPath(); ctx.moveTo(f.pad.l - 4, py); ctx.lineTo(f.pad.l, py); ctx.stroke();
+    ctx.fillText(yTickFmt(v), f.pad.l - 6, py);
+  }
+  ctx.fillStyle = "#333";
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(xLabel, f.pad.l + f.W / 2, f.cssH - 8);
+  ctx.save();
+  ctx.translate(14, f.pad.t + f.H / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+}
+function drawPoints(ctx, f, xs, ys, fill, r) {
+  ctx.fillStyle = fill;
+  for (let i = 0; i < xs.length; i++) {
+    const px = f.xs(xs[i]), py = f.ys(ys[i]);
+    if (px < f.pad.l || px > f.pad.l + f.W) continue;
+    if (py < f.pad.t || py > f.pad.t + f.H) continue;
+    ctx.beginPath();
+    ctx.arc(px, py, r || 2.8, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
+function drawLineAB(ctx, f, a, b, color, width, dash) {
+  // clip manually to the frame so lines stay inside the plotted area.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(f.pad.l, f.pad.t, f.W, f.H);
+  ctx.clip();
+  ctx.strokeStyle = color; ctx.lineWidth = width || 2;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  ctx.moveTo(f.xs(f.xMin), f.ys(a + b * f.xMin));
+  ctx.lineTo(f.xs(f.xMax), f.ys(a + b * f.xMax));
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+function drawVLine(ctx, f, xv, color, width, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = width || 2;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  ctx.moveTo(f.xs(xv), f.pad.t);
+  ctx.lineTo(f.xs(xv), f.pad.t + f.H);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+function drawHLine(ctx, f, yv, color, width, dash) {
+  ctx.strokeStyle = color; ctx.lineWidth = width || 2;
+  ctx.setLineDash(dash || []);
+  ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.ys(yv));
+  ctx.lineTo(f.pad.l + f.W, f.ys(yv));
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+function drawHistogram(ctx, f, values, bins, fill) {
+  if (values.length === 0) return;
+  const lo = f.xMin, hi = f.xMax;
+  const w = (hi - lo) / bins;
+  const counts = new Array(bins).fill(0);
+  for (const v of values) {
+    if (v < lo || v > hi) continue;
+    let k = Math.floor((v - lo) / w);
+    if (k >= bins) k = bins - 1;
+    counts[k]++;
+  }
+  const maxC = Math.max(1, ...counts);
+  ctx.fillStyle = fill;
+  for (let i = 0; i < bins; i++) {
+    const x0 = f.xs(lo + i * w);
+    const x1 = f.xs(lo + (i + 1) * w);
+    const h = (counts[i] / maxC) * f.H;
+    const y0 = f.pad.t + f.H - h;
+    ctx.fillRect(x0 + 0.5, y0, Math.max(1, x1 - x0 - 1), h);
+  }
+}
+
+/* Code-panel line highlighting. */
+function highlightByDataLine(codeId, key) {
+  document.querySelectorAll(`#${codeId} .line`).forEach(el => {
+    el.classList.toggle("hi", el.dataset.line === key);
+  });
+}
+function clearHighlightByCode(codeId) {
+  document.querySelectorAll(`#${codeId} .line.hi`).forEach(el => el.classList.remove("hi"));
+}
+
+/* =======================================================================
+   Stage gating. Each stage's gate has two requirements:
+   (1) submit the prediction,
+   (2) make N >= EXPLORE_THRESHOLD slider moves AFTER (1).
+   Only when both are met does the next stage unlock (visible + interactive).
+   ======================================================================= */
+const EXPLORE_THRESHOLD = 5;
+
+const Gates = {
+  // stageKey: { predDone, exploreCount, nextStage, tocLink, tracker, controlsId }
+  A: { predDone:false, exploreCount:0, nextStage:"B", tocNext:"tocB", trackerId:"exploreA", controlsId:"controlsA", done:false },
+  B: { predDone:false, exploreCount:0, nextStage:"C", tocNext:"tocC", trackerId:"exploreB", controlsId:"controlsB", done:false },
+  C: { predDone:false, exploreCount:0, nextStage:"D", tocNext:"tocD", trackerId:"exploreC", controlsId:"controlsC", done:false },
+  D: { predDone:false, exploreCount:0, nextStage:"E", tocNext:"tocE", trackerId:"exploreD", controlsId:"controlsD", done:false },
+  E: { predDone:false, exploreCount:0, nextStage:null, tocNext:null, trackerId:"exploreE", controlsId:"controlsE", done:false },
+};
+
+function onSliderMove(stageKey) {
+  const g = Gates[stageKey];
+  if (!g || !g.predDone || g.done) return;
+  g.exploreCount++;
+  const tracker = document.getElementById(g.trackerId);
+  const count = tracker.querySelector(".count");
+  const shown = Math.min(g.exploreCount, EXPLORE_THRESHOLD);
+  count.textContent = `${shown}/${EXPLORE_THRESHOLD} moves`;
+  if (g.exploreCount >= EXPLORE_THRESHOLD) {
+    g.done = true;
+    tracker.classList.add("complete");
+    tracker.innerHTML = g.nextStage
+      ? `✓ Stage ${stageKey} explored. Stage ${g.nextStage} is unlocked. See the transfer question below to test your reading.`
+      : `✓ You have reached the end of Lesson 0. See the transfer question below.`;
+    if (g.nextStage) {
+      document.getElementById("stage" + g.nextStage).classList.remove("stage-locked");
+      document.getElementById(g.tocNext).classList.remove("locked");
+    }
+    const reflectEl = document.getElementById("reflect" + stageKey);
+    if (reflectEl) reflectEl.classList.add("shown");
+  }
+}
+
+function wireReflect(stageKey, questionName, correct, explain) {
+  const panel = document.getElementById("reflect" + stageKey);
+  if (!panel) return;
+  const btn = panel.querySelector("button");
+  const result = panel.querySelector(".result");
+  function checkFilled() {
+    const ok = !!panel.querySelector(`input[name="${questionName}"]:checked`);
+    btn.disabled = !ok;
+  }
+  panel.querySelectorAll(`input[name="${questionName}"]`).forEach(r =>
+    r.addEventListener("change", checkFilled));
+  btn.addEventListener("click", () => {
+    const sel = panel.querySelector(`input[name="${questionName}"]:checked`);
+    if (!sel) return;
+    const ok = sel.value === correct;
+    result.className = "result " + (ok ? "correct" : "wrong");
+    result.innerHTML = (ok ? "<strong>✓ Nice read.</strong> " : "<strong>✗ Not quite.</strong> ") + explain;
+    btn.disabled = true;
+    panel.querySelectorAll(`input[name="${questionName}"]`).forEach(r => r.disabled = true);
+  });
+}
+
+function wirePrediction(stageKey, predId, names, answers, explains) {
+  const g = Gates[stageKey];
+  const panel = document.getElementById(predId);
+  const btn = panel.querySelector("button");
+  const controls = document.getElementById(g.controlsId);
+  const tracker = document.getElementById(g.trackerId);
+  function checkFilled() {
+    const ok = names.every(n => panel.querySelector(`input[name="${n}"]:checked`));
+    btn.disabled = !ok;
+  }
+  names.forEach(n => {
+    panel.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", checkFilled));
+  });
+  btn.addEventListener("click", () => {
+    const picks = names.map(n => panel.querySelector(`input[name="${n}"]:checked`).value);
+    const results = names.map((_, i) => ({
+      q: i + 1,
+      pick: picks[i],
+      correct: picks[i] === answers[i],
+      explain: explains[i]
+    }));
+    // Replace the prediction list, KEEP the explore tracker node alive.
+    const priorTracker = tracker.cloneNode(true);
+    panel.innerHTML = `<h3>Prediction — logged</h3>` + results.map(r => `
+      <div class="prediction-done ${r.correct ? "correct" : "wrong"}">
+        <strong>Q${r.q}:</strong> you chose <code>${r.pick}</code>
+        ${r.correct ? "✓" : "✗ (the null model says otherwise)"}<br/>
+        <small>${r.explain}</small>
+      </div>`).join("") +
+      `<p style="font-size:13px; color: var(--muted); margin-top:10px;">
+         Sliders unlocked. Move them to test your prediction.
+       </p>`;
+    panel.appendChild(priorTracker);
+    priorTracker.classList.add("shown");
+    // Re-bind the id reference since we replaced innerHTML above.
+    g.predDone = true;
+    controls.classList.remove("locked");
+  });
+}
+
+/* =======================================================================
+   STAGE A -- y ~ Normal(mu, sigma).   FIXED frame [0, 20].
+   ======================================================================= */
+const sA = {
+  n: 40, mu: 8.0, sigma: 1.2, seed: 42,
+  canvas: document.getElementById("plotA"),
+};
+const sA_outs = {
+  n: document.getElementById("A_nOut"),
+  mu: document.getElementById("A_muOut"),
+  sigma: document.getElementById("A_sigmaOut"),
+  seed: document.getElementById("A_seedOut"),
+};
+const sA_code = {
+  n: document.getElementById("cA_n"),
+  mu: document.getElementById("cA_mu"),
+  sigma: document.getElementById("cA_sigma"),
+  seed: document.getElementById("cA_seed"),
+};
+function drawStageA() {
+  const { ctx, cssW, cssH } = setupCanvas(sA.canvas);
+  const rng = mulberry32(sA.seed | 0);
+  const rn = makeNormal(rng);
+  const y = new Array(sA.n | 0);
+  for (let i = 0; i < y.length; i++) y[i] = sA.mu + sA.sigma * rn();
+  // FIXED frame. The whole point of the fix is that moving mu shifts the
+  // histogram inside this stable [0, 20] window, not alongside it.
+  const f = makeFrame({l:52, r:14, t:20, b:36}, cssW, cssH, 0, 20, 0, 1.05);
+  drawAxes(ctx, f, "body mass (g)", "density", 10, 4);
+  drawHistogram(ctx, f, y, 40, "rgba(30,30,30,0.55)");
+  drawVLine(ctx, f, sA.mu, "#b23a48", 2, [5, 4]);
+  const ym = y.reduce((a, b) => a + b, 0) / y.length;
+  let ss = 0; for (const v of y) ss += (v - ym) * (v - ym);
+  const sd = Math.sqrt(ss / Math.max(1, y.length - 1));
+  drawVLine(ctx, f, ym, "#2f6b8f", 2);
+  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("dashed red = true μ", f.pad.l + 6, f.pad.t - 16);
+  ctx.fillText("solid blue = sample ȳ", f.pad.l + 140, f.pad.t - 16);
+  document.getElementById("trueMuA").textContent = sA.mu.toFixed(2);
+  document.getElementById("sampleMeanA").textContent = ym.toFixed(3);
+  document.getElementById("sampleSdA").textContent = sd.toFixed(3);
+}
+function sA_fmt(key, v) {
+  if (key === "n" || key === "seed") return String(v | 0);
+  return v.toFixed(1);
+}
+["n", "mu", "sigma", "seed"].forEach(k => {
+  const el = document.getElementById(`A_${k}`);
+  const handler = () => {
+    sA[k] = parseFloat(el.value);
+    sA_outs[k].textContent = sA_fmt(k, sA[k]);
+    if (sA_code[k]) sA_code[k].textContent = sA_fmt(k, sA[k]);
+    highlightByDataLine("codeA", k);
+    drawStageA();
+    onSliderMove("A");
+  };
+  el.addEventListener("input", handler);
+  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeA"), 600); });
+});
+document.getElementById("A_newSeed").addEventListener("click", () => {
+  sA.seed = 1 + Math.floor(Math.random() * 998);
+  document.getElementById("A_seed").value = sA.seed;
+  sA_outs.seed.textContent = sA.seed;
+  sA_code.seed.textContent = sA.seed;
+  highlightByDataLine("codeA", "seed"); drawStageA();
+  setTimeout(() => clearHighlightByCode("codeA"), 600);
+  onSliderMove("A");
+});
+document.getElementById("A_reset").addEventListener("click", () => {
+  sA.n = 40; sA.mu = 8; sA.sigma = 1.2; sA.seed = 42;
+  ["n","mu","sigma","seed"].forEach(k => {
+    document.getElementById(`A_${k}`).value = sA[k];
+    sA_outs[k].textContent = sA_fmt(k, sA[k]);
+    if (sA_code[k]) sA_code[k].textContent = sA_fmt(k, sA[k]);
+  });
+  drawStageA();
+});
+document.getElementById("A_download").addEventListener("click", () => {
+  downloadText(`lesson0_stageA_seed${sA.seed|0}.R`, `# Lesson 0, Stage A -- y ~ Normal(mu, sigma)
+set.seed(${sA.seed|0})
+n     <- ${sA.n|0}
+mu    <- ${sA.mu.toFixed(2)}
+sigma <- ${sA.sigma.toFixed(2)}
+
+y <- rnorm(n, mean = mu, sd = sigma)
+cat("sample mean =", mean(y), " sample sd =", sd(y), "\\n")
+
+hist(y, breaks = 20, col = "gray80", border = "white",
+     xlim = c(0, 20), xlab = "body mass (g)", main = "")
+abline(v = mu,      col = "#b23a48", lwd = 2, lty = 2)
+abline(v = mean(y), col = "#2f6b8f", lwd = 2)
+`);
+});
+
+/* =======================================================================
+   STAGE B -- binary predictor, regression == t-test.  FIXED frame.
+   ======================================================================= */
+const sB = {
+  ng: 40, alpha: 10, delta: 1.0, sigma: 1.0, seed: 42,
+  canvas: document.getElementById("plotB"),
+};
+const sB_outs = {
+  ng: document.getElementById("B_ngOut"),
+  alpha: document.getElementById("B_alphaOut"),
+  delta: document.getElementById("B_deltaOut"),
+  sigma: document.getElementById("B_sigmaOut"),
+  seed: document.getElementById("B_seedOut"),
+};
+const sB_code = {
+  ng: document.getElementById("cB_ng"),
+  alpha: document.getElementById("cB_alpha"),
+  delta: document.getElementById("cB_delta"),
+  sigma: document.getElementById("cB_sigma"),
+  seed: document.getElementById("cB_seed"),
+};
+function drawStageB() {
+  const { ctx, cssW, cssH } = setupCanvas(sB.canvas);
+  const rng = mulberry32(sB.seed | 0);
+  const rn = makeNormal(rng);
+  const n = sB.ng | 0;
+  const y0 = new Array(n), y1 = new Array(n);
+  const x0 = new Array(n), x1 = new Array(n);
+  // x-coords are jittered around 0.25 (group 0) and 0.75 (group 1).
+  for (let i = 0; i < n; i++) {
+    y0[i] = sB.alpha + sB.sigma * rn();
+    x0[i] = 0.25 + (rng() - 0.5) * 0.16;
+  }
+  for (let i = 0; i < n; i++) {
+    y1[i] = sB.alpha + sB.delta + sB.sigma * rn();
+    x1[i] = 0.75 + (rng() - 0.5) * 0.16;
+  }
+  // FIXED frame. x is [0, 1] (group indicator space), y is [4, 20] so that
+  // alpha [7, 13] + delta [-3, 3] plus 3*sigma all fit at the default.
+  const f = makeFrame({l:52, r:14, t:14, b:36}, cssW, cssH, 0, 1, 4, 20);
+  drawAxes(ctx, f, "group", "body mass (g)",
+    1, 4, v => (v < 0.5 ? "lowland (0)" : "upland (1)"), v => v.toFixed(1));
+  drawPoints(ctx, f, x0, y0, "rgba(178,58,72,0.55)", 3);
+  drawPoints(ctx, f, x1, y1, "rgba(47,107,143,0.55)", 3);
+
+  // group means as short horizontal dashes centred on each group's x-column
+  const m0 = y0.reduce((a,b)=>a+b,0) / y0.length;
+  const m1 = y1.reduce((a,b)=>a+b,0) / y1.length;
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(f.xs(0.10), f.ys(m0)); ctx.lineTo(f.xs(0.40), f.ys(m0)); ctx.stroke();
+  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(f.xs(0.60), f.ys(m1)); ctx.lineTo(f.xs(0.90), f.ys(m1)); ctx.stroke();
+
+  // SE(delta_hat) = sigma_hat * sqrt(1/n + 1/n); approximate via sample pooled SD.
+  let ss0 = 0, ss1 = 0;
+  for (const v of y0) ss0 += (v - m0) * (v - m0);
+  for (const v of y1) ss1 += (v - m1) * (v - m1);
+  const sPool = Math.sqrt((ss0 + ss1) / Math.max(1, 2 * n - 2));
+  const seD = sPool * Math.sqrt(2 / n);
+
+  document.getElementById("B_m0").textContent   = m0.toFixed(3);
+  document.getElementById("B_m1").textContent   = m1.toFixed(3);
+  document.getElementById("B_dhat").textContent = (m1 - m0).toFixed(3);
+  document.getElementById("B_dse").textContent  = seD.toFixed(3);
+  document.getElementById("B_aTrue").textContent  = sB.alpha.toFixed(2);
+  document.getElementById("B_abTrue").textContent = (sB.alpha + sB.delta).toFixed(2);
+  document.getElementById("B_sTrue").textContent  = sB.sigma.toFixed(2);
+}
+function sB_fmt(key, v) {
+  if (key === "ng" || key === "seed") return String(v | 0);
+  if (key === "delta") return v.toFixed(2);
+  return v.toFixed(1);
+}
+const sB_sliderMap = { ng:"B_ng", alpha:"B_alpha", delta:"B_delta", sigma:"B_sigma", seed:"B_seed" };
+Object.entries(sB_sliderMap).forEach(([k, id]) => {
+  const el = document.getElementById(id);
+  const handler = () => {
+    sB[k] = parseFloat(el.value);
+    sB_outs[k].textContent = sB_fmt(k, sB[k]);
+    if (sB_code[k]) sB_code[k].textContent = sB_fmt(k, sB[k]);
+    highlightByDataLine("codeB", k);
+    drawStageB();
+    onSliderMove("B");
+  };
+  el.addEventListener("input", handler);
+  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeB"), 600); });
+});
+document.getElementById("B_newSeed").addEventListener("click", () => {
+  sB.seed = 1 + Math.floor(Math.random() * 998);
+  document.getElementById("B_seed").value = sB.seed;
+  sB_outs.seed.textContent = sB.seed;
+  sB_code.seed.textContent = sB.seed;
+  highlightByDataLine("codeB", "seed"); drawStageB();
+  setTimeout(() => clearHighlightByCode("codeB"), 600);
+  onSliderMove("B");
+});
+document.getElementById("B_reset").addEventListener("click", () => {
+  sB.ng = 40; sB.alpha = 10; sB.delta = 1; sB.sigma = 1; sB.seed = 42;
+  Object.entries(sB_sliderMap).forEach(([k, id]) => {
+    document.getElementById(id).value = sB[k];
+    sB_outs[k].textContent = sB_fmt(k, sB[k]);
+    if (sB_code[k]) sB_code[k].textContent = sB_fmt(k, sB[k]);
+  });
+  drawStageB();
+});
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText(`lesson0_stageB_seed${sB.seed|0}.R`, `# Lesson 0, Stage B -- binary predictor (regression == t-test).
+set.seed(${sB.seed|0})
+n     <- ${sB.ng|0}      # per group
+alpha <- ${sB.alpha.toFixed(2)}
+delta <- ${sB.delta.toFixed(2)}
+sigma <- ${sB.sigma.toFixed(2)}
+
+g <- rep(c(0, 1), each = n)
+y <- rnorm(2*n, mean = alpha + delta * g, sd = sigma)
+
+fit <- lm(y ~ g)
+print(coef(fit))
+print(summary(fit)$coefficients[2, "Std. Error"])
+
+tt <- t.test(y ~ g, var.equal = TRUE)
+cat("mean diff from t.test =", tt$estimate[2] - tt$estimate[1], "\\n")
+cat("lm slope coefficient  =", coef(fit)["g"], "\\n")
+
+plot(jitter(g, amount = 0.08), y, pch = 16, col = "gray40",
+     xaxt = "n", xlab = "group", ylab = "body mass (g)",
+     ylim = c(4, 20))
+axis(1, at = c(0, 1), labels = c("lowland", "upland"))
+abline(h = mean(y[g==0]), col = "#b23a48", lwd = 2)
+abline(h = mean(y[g==1]), col = "#2f6b8f", lwd = 2)
+`);
+});
+
+/* =======================================================================
+   STAGE C -- correlation.   FIXED frame [-8, 8] x [-8, 8].
+   ======================================================================= */
+const sC = {
+  n: 60, r: 0.6, sx: 1.5, sy: 1.0, seed: 42,
+  canvas: document.getElementById("plotC"),
+};
+const sC_outs = {
+  n: document.getElementById("C_nOut"),
+  r: document.getElementById("C_rOut"),
+  sx: document.getElementById("C_sxOut"),
+  sy: document.getElementById("C_syOut"),
+  seed: document.getElementById("C_seedOut"),
+};
+const sC_code = {
+  n: document.getElementById("cC_n"),
+  r: document.getElementById("cC_r"),
+  sx: document.getElementById("cC_sx"),
+  sy: document.getElementById("cC_sy"),
+  seed: document.getElementById("cC_seed"),
+};
+function drawStageC() {
+  const { ctx, cssW, cssH } = setupCanvas(sC.canvas);
+  const rng = mulberry32(sC.seed | 0);
+  const rn = makeNormal(rng);
+  const n = sC.n | 0;
+  const xs = new Array(n), ys = new Array(n);
+  const r = Math.max(-0.999, Math.min(0.999, sC.r));
+  for (let i = 0; i < n; i++) {
+    const z1 = rn(), z2 = rn();
+    xs[i] = sC.sx * z1;
+    ys[i] = sC.sy * (r * z1 + Math.sqrt(1 - r * r) * z2);
+  }
+  // FIXED frame. Changing sx/sy visibly widens/narrows the cloud inside it.
+  const f = makeFrame({l:50, r:14, t:14, b:36}, cssW, cssH, -8, 8, -8, 8);
+  drawAxes(ctx, f, "snout-vent length (centered)", "body mass (centered)", 4, 4);
+  drawPoints(ctx, f, xs, ys, "rgba(30,30,30,0.55)", 2.8);
+  const rHat = pearson(xs, ys);
+  document.getElementById("trueRC").textContent = r.toFixed(2);
+  document.getElementById("sampleRC").textContent = rHat.toFixed(3);
+  document.getElementById("gapRC").textContent = Math.abs(rHat - r).toFixed(3);
+}
+function sC_fmt(key, v) {
+  if (key === "n" || key === "seed") return String(v | 0);
+  if (key === "r") return v.toFixed(2);
+  return v.toFixed(1);
+}
+const sC_sliderMap = { n:"C_n", r:"C_r", sx:"C_sx", sy:"C_sy", seed:"C_seed" };
+Object.entries(sC_sliderMap).forEach(([k, id]) => {
+  const el = document.getElementById(id);
+  const handler = () => {
+    sC[k] = parseFloat(el.value);
+    sC_outs[k].textContent = sC_fmt(k, sC[k]);
+    if (sC_code[k]) sC_code[k].textContent = sC_fmt(k, sC[k]);
+    highlightByDataLine("codeC", k);
+    drawStageC();
+    onSliderMove("C");
+  };
+  el.addEventListener("input", handler);
+  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeC"), 600); });
+});
+document.getElementById("C_newSeed").addEventListener("click", () => {
+  sC.seed = 1 + Math.floor(Math.random() * 998);
+  document.getElementById("C_seed").value = sC.seed;
+  sC_outs.seed.textContent = sC.seed;
+  sC_code.seed.textContent = sC.seed;
+  highlightByDataLine("codeC", "seed"); drawStageC();
+  setTimeout(() => clearHighlightByCode("codeC"), 600);
+  onSliderMove("C");
+});
+document.getElementById("C_reset").addEventListener("click", () => {
+  sC.n = 60; sC.r = 0.6; sC.sx = 1.5; sC.sy = 1.0; sC.seed = 42;
+  Object.entries(sC_sliderMap).forEach(([k, id]) => {
+    document.getElementById(id).value = sC[k];
+    sC_outs[k].textContent = sC_fmt(k, sC[k]);
+    if (sC_code[k]) sC_code[k].textContent = sC_fmt(k, sC[k]);
+  });
+  drawStageC();
+});
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText(`lesson0_stageC_seed${sC.seed|0}.R`, `# Lesson 0, Stage C -- correlation (bivariate normal)
+set.seed(${sC.seed|0})
+n  <- ${sC.n|0}
+r  <- ${sC.r.toFixed(2)}
+sx <- ${sC.sx.toFixed(2)}
+sy <- ${sC.sy.toFixed(2)}
+
+z1 <- rnorm(n); z2 <- rnorm(n)
+x  <- sx * z1
+y  <- sy * (r * z1 + sqrt(1 - r^2) * z2)
+
+cat("sample correlation =", cor(x, y), "\\n")
+plot(x, y, pch = 16, col = "gray40",
+     xlim = c(-8, 8), ylim = c(-8, 8),
+     xlab = "snout-vent length", ylab = "body mass")
+`);
+});
+
+/* =======================================================================
+   STAGE D -- regression with inferred-lines cloud. FIXED frame [0,10]x[-5,25].
+   ======================================================================= */
+const sD = {
+  n: 40, alpha: 4.0, beta: 0.8, sigma: 1.2, nboot: 60, seed: 42,
+  showCloud: true, showTruth: true,
+  canvas: document.getElementById("plotD"),
+};
+const sD_outs = {
+  n: document.getElementById("D_nOut"),
+  alpha: document.getElementById("D_alphaOut"),
+  beta: document.getElementById("D_betaOut"),
+  sigma: document.getElementById("D_sigmaOut"),
+  nboot: document.getElementById("D_nbootOut"),
+  seed: document.getElementById("D_seedOut"),
+};
+const sD_code = {
+  n: document.getElementById("cD_n"),
+  alpha: document.getElementById("cD_alpha"),
+  beta: document.getElementById("cD_beta"),
+  sigma: document.getElementById("cD_sigma"),
+  nboot: document.getElementById("cD_nboot"),
+  seed: document.getElementById("cD_seed"),
+};
+function drawStageD() {
+  const { ctx, cssW, cssH } = setupCanvas(sD.canvas);
+  const rng = mulberry32(sD.seed | 0);
+  const rn = makeNormal(rng);
+  const n = sD.n | 0;
+  const xs = new Array(n), ys = new Array(n);
+  for (let i = 0; i < n; i++) {
+    xs[i] = rng() * 10;
+    ys[i] = sD.alpha + sD.beta * xs[i] + sD.sigma * rn();
+  }
+  const fit = ols(xs, ys);
+  // FIXED frame. Moving alpha or beta visibly shifts / tilts the fit inside it.
+  const f = makeFrame({l:52, r:14, t:14, b:36}, cssW, cssH, 0, 10, -5, 25);
+  drawAxes(ctx, f, "x (snout-vent length)", "y (body mass)", 5, 6);
+  if (sD.showCloud) {
+    const bootRng = mulberry32(((sD.seed | 0) ^ 0x9e3779b9) >>> 0);
+    const B = sD.nboot | 0;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(f.pad.l, f.pad.t, f.W, f.H); ctx.clip();
+    ctx.strokeStyle = "rgba(178,58,72,0.18)"; ctx.lineWidth = 1;
+    for (let b = 0; b < B; b++) {
+      const xs2 = new Array(n), ys2 = new Array(n);
+      for (let i = 0; i < n; i++) {
+        const k = Math.floor(bootRng() * n);
+        xs2[i] = xs[k]; ys2[i] = ys[k];
+      }
+      const bf = ols(xs2, ys2);
+      ctx.beginPath();
+      ctx.moveTo(f.xs(f.xMin), f.ys(bf.a + bf.b * f.xMin));
+      ctx.lineTo(f.xs(f.xMax), f.ys(bf.a + bf.b * f.xMax));
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  drawPoints(ctx, f, xs, ys, "rgba(30,30,30,0.55)", 2.6);
+  if (sD.showTruth) drawLineAB(ctx, f, sD.alpha, sD.beta, "#2f6b8f", 2, [6, 4]);
+  drawLineAB(ctx, f, fit.a, fit.b, "#b23a48", 2.4);
+
+  document.getElementById("D_aHat").textContent = fit.a.toFixed(2);
+  document.getElementById("D_bHat").textContent = fit.b.toFixed(3);
+  document.getElementById("D_bSe").textContent  = fit.seB.toFixed(3);
+  document.getElementById("D_r2").textContent   = fit.r2.toFixed(3);
+  document.getElementById("D_aTrue").textContent = sD.alpha.toFixed(2);
+  document.getElementById("D_bTrue").textContent = sD.beta.toFixed(2);
+  document.getElementById("D_sTrue").textContent = sD.sigma.toFixed(2);
+}
+function sD_fmt(key, v) {
+  if (key === "n" || key === "seed" || key === "nboot") return String(v | 0);
+  if (key === "beta") return v.toFixed(2);
+  return v.toFixed(1);
+}
+const sD_sliderMap = { n:"D_n", alpha:"D_alpha", beta:"D_beta", sigma:"D_sigma", nboot:"D_nboot", seed:"D_seed" };
+Object.entries(sD_sliderMap).forEach(([k, id]) => {
+  const el = document.getElementById(id);
+  const handler = () => {
+    sD[k] = parseFloat(el.value);
+    sD_outs[k].textContent = sD_fmt(k, sD[k]);
+    if (sD_code[k]) sD_code[k].textContent = sD_fmt(k, sD[k]);
+    highlightByDataLine("codeD", k);
+    drawStageD();
+    onSliderMove("D");
+  };
+  el.addEventListener("input", handler);
+  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeD"), 600); });
+});
+document.getElementById("D_cloud").addEventListener("change", e => { sD.showCloud = e.target.checked; drawStageD(); onSliderMove("D"); });
+document.getElementById("D_truth").addEventListener("change", e => { sD.showTruth = e.target.checked; drawStageD(); onSliderMove("D"); });
+document.getElementById("D_newSeed").addEventListener("click", () => {
+  sD.seed = 1 + Math.floor(Math.random() * 998);
+  document.getElementById("D_seed").value = sD.seed;
+  sD_outs.seed.textContent = sD.seed;
+  sD_code.seed.textContent = sD.seed;
+  highlightByDataLine("codeD", "seed"); drawStageD();
+  setTimeout(() => clearHighlightByCode("codeD"), 600);
+  onSliderMove("D");
+});
+document.getElementById("D_reset").addEventListener("click", () => {
+  sD.n = 40; sD.alpha = 4; sD.beta = 0.8; sD.sigma = 1.2; sD.nboot = 60; sD.seed = 42;
+  Object.entries(sD_sliderMap).forEach(([k, id]) => {
+    document.getElementById(id).value = sD[k];
+    sD_outs[k].textContent = sD_fmt(k, sD[k]);
+    if (sD_code[k]) sD_code[k].textContent = sD_fmt(k, sD[k]);
+  });
+  drawStageD();
+});
+document.getElementById("D_download").addEventListener("click", () => {
+  downloadText(`lesson0_stageD_seed${sD.seed|0}.R`, `# Lesson 0, Stage D -- regression with an inferred-lines cloud.
+set.seed(${sD.seed|0})
+n     <- ${sD.n|0}
+alpha <- ${sD.alpha.toFixed(2)}
+beta  <- ${sD.beta.toFixed(2)}
+sigma <- ${sD.sigma.toFixed(2)}
+
+x <- runif(n, 0, 10)
+y <- rnorm(n, mean = alpha + beta * x, sd = sigma)
+
+fit <- lm(y ~ x)
+print(coef(fit))
+
+n_lines <- ${sD.nboot|0}
+inferred <- replicate(n_lines, {
+  i <- sample(n, n, replace = TRUE)
+  coef(lm(y[i] ~ x[i]))
+})
+
+plot(x, y, pch = 16, col = "gray40",
+     xlim = c(0, 10), ylim = c(-5, 25),
+     xlab = "x", ylab = "y")
+apply(inferred, 2, function(ab) abline(ab[1], ab[2], col = rgb(0.7, 0.23, 0.28, 0.05)))
+abline(alpha, beta, col = "#2f6b8f", lwd = 2, lty = 2)
+abline(fit, col = "#b23a48", lwd = 2)
+`);
+});
+
+/* =======================================================================
+   STAGE E -- two groups, inferred-lines clouds, "clearly different".
+   FIXED frame [0, 10] x [-5, 25].
+   ======================================================================= */
+const sE = {
+  ng: 50, bA: 1.0, bB: 0.7, sigma: 1.2, nboot: 200, nperm: 500, seed: 42,
+  showCloud: true,
+  canvasTop: document.getElementById("plotE1"),
+  canvasBot: document.getElementById("plotE2"),
+  nullDeltas: [],
+  observedDelta: 0,
+  pVal: null,
+  bA_hat: 0, bB_hat: 0,
+  boot_A_b: [], boot_B_b: [],
+};
+const sE_outs = {
+  ng: document.getElementById("E_ngOut"),
+  bA: document.getElementById("E_bA_out"),
+  bB: document.getElementById("E_bB_out"),
+  sigma: document.getElementById("E_sigmaOut"),
+  nboot: document.getElementById("E_nbootOut"),
+  nperm: document.getElementById("E_npermOut"),
+  seed: document.getElementById("E_seedOut"),
+};
+const sE_code = {
+  ng: document.getElementById("cE_ng"),
+  bA: document.getElementById("cE_bA"),
+  bB: document.getElementById("cE_bB"),
+  sigma: document.getElementById("cE_sigma"),
+  nboot: document.getElementById("cE_nboot"),
+  nperm: document.getElementById("cE_nperm"),
+  seed: document.getElementById("cE_seed"),
+};
+function simulateE() {
+  const rng = mulberry32(sE.seed | 0);
+  const rn = makeNormal(rng);
+  const n = sE.ng | 0;
+  const xA = new Array(n), yA = new Array(n);
+  const xB = new Array(n), yB = new Array(n);
+  for (let i = 0; i < n; i++) {
+    xA[i] = rng() * 10;
+    yA[i] = 4 + sE.bA * xA[i] + sE.sigma * rn();
+  }
+  for (let i = 0; i < n; i++) {
+    xB[i] = rng() * 10;
+    yB[i] = 4 + sE.bB * xB[i] + sE.sigma * rn();
+  }
+  return { xA, yA, xB, yB };
+}
+function computeBootstrapCloudsE(xA, yA, xB, yB) {
+  const n = xA.length;
+  const K = sE.nboot | 0;
+  const bootRng = mulberry32(((sE.seed | 0) ^ 0x51a7c3e9) >>> 0);
+  const bootA = []; const bootB = [];
+  const slopeA = []; const slopeB = [];
+  for (let k = 0; k < K; k++) {
+    const xa = new Array(n), ya = new Array(n);
+    const xb = new Array(n), yb = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const ja = Math.floor(bootRng() * n), jb = Math.floor(bootRng() * n);
+      xa[i] = xA[ja]; ya[i] = yA[ja];
+      xb[i] = xB[jb]; yb[i] = yB[jb];
+    }
+    const fa = ols(xa, ya), fb = ols(xb, yb);
+    bootA.push(fa); bootB.push(fb);
+    slopeA.push(fa.b); slopeB.push(fb.b);
+  }
+  return { bootA, bootB, slopeA, slopeB };
+}
+function drawStageE() {
+  const sim = simulateE();
+  const { xA, yA, xB, yB } = sim;
+  const fitA = ols(xA, yA), fitB = ols(xB, yB);
+  sE.bA_hat = fitA.b; sE.bB_hat = fitB.b;
+  sE.observedDelta = fitA.b - fitB.b;
+
+  const { bootA, bootB, slopeA, slopeB } = computeBootstrapCloudsE(xA, yA, xB, yB);
+  sE.boot_A_b = slopeA; sE.boot_B_b = slopeB;
+
+  // Overlap flag using 95% intervals of slopes.
+  const qA = [quantile(slopeA, 0.025), quantile(slopeA, 0.975)];
+  const qB = [quantile(slopeB, 0.025), quantile(slopeB, 0.975)];
+  const overlap = Math.max(0, Math.min(qA[1], qB[1]) - Math.max(qA[0], qB[0]));
+  const overlapFlag = overlap > 0;
+  const overlapTxt = overlapFlag
+    ? `yes — the 95% slope intervals overlap by ${overlap.toFixed(3)}. Not clearly different.`
+    : `no — the 95% slope intervals are disjoint. Clearly different.`;
+
+  // TOP canvas -- scatter + inferred-lines clouds + fitted lines
+  {
+    const { ctx, cssW, cssH } = setupCanvas(sE.canvasTop);
+    const f = makeFrame({l:52, r:14, t:14, b:36}, cssW, cssH, 0, 10, -5, 25);
+    drawAxes(ctx, f, "x (snout-vent length)", "y (body mass)", 5, 6);
+    if (sE.showCloud) {
+      ctx.save();
+      ctx.beginPath(); ctx.rect(f.pad.l, f.pad.t, f.W, f.H); ctx.clip();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(178,58,72,0.05)";
+      for (const ab of bootA) {
+        ctx.beginPath();
+        ctx.moveTo(f.xs(f.xMin), f.ys(ab.a + ab.b * f.xMin));
+        ctx.lineTo(f.xs(f.xMax), f.ys(ab.a + ab.b * f.xMax));
+        ctx.stroke();
+      }
+      ctx.strokeStyle = "rgba(47,107,143,0.05)";
+      for (const ab of bootB) {
+        ctx.beginPath();
+        ctx.moveTo(f.xs(f.xMin), f.ys(ab.a + ab.b * f.xMin));
+        ctx.lineTo(f.xs(f.xMax), f.ys(ab.a + ab.b * f.xMax));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+    drawPoints(ctx, f, xA, yA, "rgba(178,58,72,0.55)", 2.6);
+    drawPoints(ctx, f, xB, yB, "rgba(47,107,143,0.55)", 2.6);
+    drawLineAB(ctx, f, fitA.a, fitA.b, "#b23a48", 2.4);
+    drawLineAB(ctx, f, fitB.a, fitB.b, "#2f6b8f", 2.4);
+    ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("group A (lowland)", f.pad.l + 6, f.pad.t + 4);
+    ctx.fillStyle = "#b23a48"; ctx.fillRect(f.pad.l + 116, f.pad.t + 6, 18, 2);
+    ctx.fillStyle = "#555";
+    ctx.fillText("group B (upland)", f.pad.l + 6, f.pad.t + 18);
+    ctx.fillStyle = "#2f6b8f"; ctx.fillRect(f.pad.l + 116, f.pad.t + 20, 18, 2);
+  }
+  // BOTTOM canvas -- pooled-null distribution of Δβ̂
+  {
+    const { ctx, cssW, cssH } = setupCanvas(sE.canvasBot);
+    const bound = Math.max(0.5,
+      Math.abs(sE.observedDelta) * 1.6,
+      sE.nullDeltas.length > 0 ? Math.max(...sE.nullDeltas.map(Math.abs)) * 1.1 : 1.0
+    );
+    const f = makeFrame({l:52, r:14, t:14, b:36}, cssW, cssH, -bound, bound, 0, 1.05);
+    drawAxes(ctx, f, "Δβ̂ = β̂_A − β̂_B  (under pooled null)", "frequency", 5, 2);
+    if (sE.nullDeltas.length > 0) {
+      drawHistogram(ctx, f, sE.nullDeltas, 30, "rgba(100,100,100,0.6)");
+    } else {
+      ctx.fillStyle = "#888";
+      ctx.font = "12px -apple-system, Helvetica, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("Press 'Run pooled-null shuffles' to build the null distribution.",
+        f.pad.l + f.W / 2, f.pad.t + f.H / 2);
+    }
+    drawVLine(ctx, f, sE.observedDelta, "#b23a48", 2);
+    drawVLine(ctx, f, 0, "#999", 1, [3, 3]);
+  }
+
+  document.getElementById("E_bA").textContent   = sE.bA_hat.toFixed(3);
+  document.getElementById("E_bB").textContent   = sE.bB_hat.toFixed(3);
+  document.getElementById("E_dObs").textContent = sE.observedDelta.toFixed(3);
+  document.getElementById("E_p").textContent    =
+    (sE.pVal == null ? "—" : (sE.pVal < 1e-4 ? "<1/10 000" : `${(sE.pVal * 100).toFixed(1)}% of shuffles`));
+  const overlapEl = document.getElementById("E_overlap");
+  overlapEl.textContent = overlapTxt;
+  overlapEl.style.color = overlapFlag ? "#a86a1a" : "#3d5728";
+}
+function runPooledNullE() {
+  const { xA, yA, xB, yB } = simulateE();
+  const n = xA.length;
+  const xPool = new Array(2 * n), yPool = new Array(2 * n);
+  for (let i = 0; i < n; i++) { xPool[i] = xA[i]; yPool[i] = yA[i]; }
+  for (let i = 0; i < n; i++) { xPool[n + i] = xB[i]; yPool[n + i] = yB[i]; }
+  const rng = mulberry32(((sE.seed | 0) ^ 0x13371337) >>> 0);
+  const P = sE.nperm | 0;
+  const deltas = new Array(P);
+  const idx = new Array(2 * n); for (let i = 0; i < 2 * n; i++) idx[i] = i;
+  for (let p = 0; p < P; p++) {
+    for (let i = 2 * n - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      const t = idx[i]; idx[i] = idx[j]; idx[j] = t;
+    }
+    const xg1 = new Array(n), yg1 = new Array(n);
+    const xg2 = new Array(n), yg2 = new Array(n);
+    for (let i = 0; i < n; i++) {
+      xg1[i] = xPool[idx[i]]; yg1[i] = yPool[idx[i]];
+      xg2[i] = xPool[idx[n + i]]; yg2[i] = yPool[idx[n + i]];
+    }
+    deltas[p] = olsSlope(xg1, yg1) - olsSlope(xg2, yg2);
+  }
+  sE.nullDeltas = deltas;
+  let tail = 0;
+  const abs_obs = Math.abs(sE.observedDelta);
+  for (const d of deltas) if (Math.abs(d) >= abs_obs) tail++;
+  sE.pVal = (tail + 1) / (P + 1);
+  drawStageE();
+}
+function sE_fmt(key, v) {
+  if (key === "ng" || key === "seed" || key === "nperm" || key === "nboot") return String(v | 0);
+  if (key === "bA" || key === "bB") return v.toFixed(2);
+  return v.toFixed(1);
+}
+const sE_sliderMap = { ng:"E_ng", bA:"E_bA_in", bB:"E_bB_in", sigma:"E_sigma", nboot:"E_nboot", nperm:"E_nperm", seed:"E_seed" };
+Object.entries(sE_sliderMap).forEach(([k, id]) => {
+  const el = document.getElementById(id);
+  const handler = () => {
+    sE[k] = parseFloat(el.value);
+    sE_outs[k].textContent = sE_fmt(k, sE[k]);
+    if (sE_code[k]) sE_code[k].textContent = sE_fmt(k, sE[k]);
+    highlightByDataLine("codeE", k);
+    // Any parameter change invalidates the previously-computed null.
+    sE.nullDeltas = [];
+    sE.pVal = null;
+    drawStageE();
+    onSliderMove("E");
+  };
+  el.addEventListener("input", handler);
+  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeE"), 600); });
+});
+document.getElementById("E_cloud").addEventListener("change", e => { sE.showCloud = e.target.checked; drawStageE(); onSliderMove("E"); });
+document.getElementById("E_newSeed").addEventListener("click", () => {
+  sE.seed = 1 + Math.floor(Math.random() * 998);
+  document.getElementById("E_seed").value = sE.seed;
+  sE_outs.seed.textContent = sE.seed;
+  sE_code.seed.textContent = sE.seed;
+  sE.nullDeltas = []; sE.pVal = null;
+  highlightByDataLine("codeE", "seed"); drawStageE();
+  setTimeout(() => clearHighlightByCode("codeE"), 600);
+  onSliderMove("E");
+});
+document.getElementById("E_runPerm").addEventListener("click", () => { runPooledNullE(); onSliderMove("E"); });
+document.getElementById("E_reset").addEventListener("click", () => {
+  sE.ng = 50; sE.bA = 1; sE.bB = 0.7; sE.sigma = 1.2; sE.nboot = 200; sE.nperm = 500; sE.seed = 42;
+  sE.nullDeltas = []; sE.pVal = null;
+  Object.entries(sE_sliderMap).forEach(([k, id]) => {
+    document.getElementById(id).value = sE[k];
+    sE_outs[k].textContent = sE_fmt(k, sE[k]);
+    if (sE_code[k]) sE_code[k].textContent = sE_fmt(k, sE[k]);
+  });
+  drawStageE();
+});
+document.getElementById("E_download").addEventListener("click", () => {
+  downloadText(`lesson0_stageE_seed${sE.seed|0}.R`, `# Lesson 0, Stage E -- two slopes, "clearly different?"
+# NON-TRIVIAL MODIFICATION for the writeup:
+#   replace the pooled-null shuffle below with a parametric alternative,
+#   e.g. the interaction term in lm(y ~ x * group), and compare the two
+#   methods' answers to the "clearly different?" question.
+set.seed(${sE.seed|0})
+n  <- ${sE.ng|0}
+bA <- ${sE.bA.toFixed(2)}
+bB <- ${sE.bB.toFixed(2)}
+s  <- ${sE.sigma.toFixed(2)}
+
+xA <- runif(n, 0, 10); yA <- rnorm(n, bA*xA + 4, s)
+xB <- runif(n, 0, 10); yB <- rnorm(n, bB*xB + 4, s)
+
+# inferred-lines clouds
+K <- ${sE.nboot|0}
+inf_A <- replicate(K, { i <- sample(n, n, replace = TRUE); coef(lm(yA[i] ~ xA[i])) })
+inf_B <- replicate(K, { i <- sample(n, n, replace = TRUE); coef(lm(yB[i] ~ xB[i])) })
+qA <- quantile(inf_A[2, ], c(0.025, 0.975))
+qB <- quantile(inf_B[2, ], c(0.025, 0.975))
+overlap <- max(0, min(qA[2], qB[2]) - max(qA[1], qB[1]))
+cat("95% slope interval A =", qA, "\\n")
+cat("95% slope interval B =", qB, "\\n")
+cat("overlap =", overlap, "\\n")
+
+obs <- coef(lm(yA ~ xA))[2] - coef(lm(yB ~ xB))[2]
+
+# pooled-null shuffles
+P <- ${sE.nperm|0}
+x <- c(xA, xB); y <- c(yA, yB)
+null_d <- replicate(P, {
+  g <- sample(c(rep(TRUE, n), rep(FALSE, n)))
+  coef(lm(y[g]  ~ x[g] ))[2] - coef(lm(y[!g] ~ x[!g]))[2]
+})
+p_emp <- (sum(abs(null_d) >= abs(obs)) + 1) / (P + 1)
+cat("observed delta =", obs, "\\n")
+cat("fraction of shuffles at least as extreme =", p_emp, "\\n")
+
+hist(null_d, breaks = 30, col = "gray70", border = "white",
+     xlab = "shuffled delta beta", main = "")
+abline(v = obs, col = "#b23a48", lwd = 2)
+abline(v = 0, col = "gray40", lty = 2)
+`);
+});
+
+/* =======================================================================
+   Wire prediction gates (AFTER all sliders are bound so the gate can
+   cleanly reuse the handlers).
+   ======================================================================= */
+wirePrediction("A", "predA",
+  ["qA1", "qA2"],
+  ["widen", "closer"],
+  [
+    "The histogram is a visualization of the population shape. σ sets its width. Raising σ widens it; μ moves it but does not change its spread.",
+    "SE(ȳ) = σ / √n. More data narrows the sampling distribution of ȳ around μ. σ itself is a property of the world, not of n."
+  ]);
+wirePrediction("B", "predB",
+  ["qB1", "qB2"],
+  ["near", "shrink"],
+  [
+    "When the two groups truly share one mean, δ̂ is centered on 0 but wiggles — each sample lands slightly above or below. Press 'new seed' and watch δ̂ bounce around 0.",
+    "SE(δ̂) = σ · √(2/n). Raising n shrinks the SE the same way it shrinks the SE of any mean. This is the t-test standard error, in regression form."
+  ]);
+wirePrediction("C", "predC",
+  ["qC1", "qC2"],
+  ["near", "samegap"],
+  [
+    "Sample correlations at r = 0 scatter around 0. The SE of r̂ is about (1 − r²) / √(n − 2). Try r = 0 and press 'new seed' several times.",
+    "r is a signed number in [−1, +1]. Its sign is the slope direction; its magnitude is the tightness. |r| = 0.9 means the same cloud shape whether positive or negative."
+  ]);
+wirePrediction("D", "predD",
+  ["qD1", "qD2"],
+  ["wide", "near"],
+  [
+    "SE(β̂) ∝ σ / (√n · SD(x)). Halving n raises SE(β̂) by ≈ √2, and the cloud of inferred lines widens.",
+    "OLS is unbiased: with β = 0 and no pathology, β̂ is centered on 0 but any one sample tilts either way. The inferred-lines cloud shows that spread explicitly."
+  ]);
+wirePrediction("E", "predE",
+  ["qE1", "qE2"],
+  ["overlap", "narrow"],
+  [
+    "Equal true slopes produce two clouds of inferred lines that substantially overlap — no pair of (β_A, β_B) values is clearly ruled out, including the shared-slope case.",
+    "Doubling n shrinks both clouds. When the true slopes differ, the clouds pull apart and stop overlapping — which is what 'the slopes are clearly different' looks like."
+  ]);
+
+/* =======================================================================
+   Transfer ("post-stage") questions — revealed after the explore threshold
+   is met. Apply the same concept to a brand-new scenario.
+   ======================================================================= */
+wireReflect("A", "rA", "b",
+  "Every sample from the same population produces a slightly different ȳ. The true μ stays put; the estimate wiggles. The histogram width in this stage is showing you that wiggle.");
+wireReflect("B", "rB", "b",
+  "With a 0/1 predictor, the slope on that predictor <em>is</em> the difference in group means. A negative slope here says the drug group sits lower than the placebo group. Nothing more.");
+wireReflect("C", "rC", "b",
+  "A sample r̂ near zero in a small n looks the same whether the real r is 0 or mildly nonzero. The tiny value is the same kind of wiggle you produced by pressing 'new seed' at r = 0.");
+wireReflect("D", "rD", "b",
+  "A nonzero β̂ can still sit inside a cloud that includes zero. R² is <em>how much of y's variation the line accounts for</em>, not how many points lie on it. Small R² and large σ are two ways of saying the same thing: the line has not helped much yet.");
+wireReflect("E", "rE", "b",
+  "Overlapping 95% intervals mean some slopes in the overlap are compatible with both groups. 'Is it significant?' becomes 'do the clouds separate?' Here, they do not, quite.");
+
+/* =======================================================================
+   Initial renders (sliders locked, plots show defaults)
+   ======================================================================= */
+drawStageA();
+drawStageB();
+drawStageC();
+drawStageD();
+drawStageE();
+
+/* TOC active-section indicator */
+const tocMap = { stageA:"tocA", stageB:"tocB", stageC:"tocC", stageD:"tocD", stageE:"tocE" };
+window.addEventListener("scroll", () => {
+  let active = "stageA";
+  for (const id of Object.keys(tocMap)) {
+    const el = document.getElementById(id);
+    if (el.getBoundingClientRect().top < 120) active = id;
+  }
+  for (const [sid, tid] of Object.entries(tocMap)) {
+    document.getElementById(tid).classList.toggle("active", sid === active);
+  }
+});
+</script>
+</body>
+</html>
