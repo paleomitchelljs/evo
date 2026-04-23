@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S13: reading trees</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --panel: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6b68;
+    --accent: #b23a48;
+    --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f;
+    --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9;
+    --code-bg: #1e1f22;
+    --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+
+  svg.tree { width: 100%; height: auto; display: block; background: #fff; cursor: default; }
+  svg.tree text.tip {
+    font-family: var(--mds-serif, "Crimson Pro", Charter, Georgia, serif);
+    font-size: 14px;
+    fill: #1d1d1b;
+    cursor: pointer;
+  }
+  svg.tree text.tip.selected { font-weight: 700; fill: var(--accent2); }
+  svg.tree circle.tip-hit { cursor: pointer; }
+  svg.tree circle.tip-hit.selected { fill: var(--accent2); }
+
+  .option-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .option-row button {
+    padding: 6px 10px; background: #f2f1ec; color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 4px;
+    font: 13px ui-monospace, Menlo, monospace; cursor: pointer;
+  }
+  .option-row button.secondary:disabled { color: #bbb; cursor: not-allowed; }
+
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal.correct { background: #e4efd4; border-left-color: #6f8a4a; color: #2e4410; }
+  .reveal.wrong { background: #fbe4c6; border-left-color: #a86a1a; color: #5c3802; }
+  .reveal .big { font: 600 14.5px ui-monospace, Menlo, monospace; margin-bottom: 6px; }
+  .reveal p { margin: 4px 0 0 0; }
+
+  .rotate-btn {
+    margin-top: 10px; padding: 7px 12px; background: var(--accent2);
+    color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px;
+    display: none;
+  }
+  .rotate-btn.shown { display: inline-block; margin-right: 8px; }
+
+  .next-btn {
+    margin-top: 10px; padding: 7px 12px; background: var(--ink);
+    color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px;
+    display: none;
+  }
+  .next-btn.shown { display: inline-block; }
+
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tally-cell {
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    text-align: center;
+    background: #fafaf7;
+  }
+  .tally-cell.correct { background: #e4efd4; border-color: #6f8a4a; }
+  .tally-cell.wrong { background: #fbe4c6; border-color: #a86a1a; }
+  .tally-cell.empty { background: #fff; color: #bbb; }
+  .tally-cell .mark { font-size: 18px; font-weight: 700; }
+
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S13 — Reading trees, with rotated nodes</h1>
+  <p>Five rounds. In each, click the two tips whose most recent common ancestor is <em>most recent</em> — i.e. the two that are each other's closest relatives on the tree. The visual layout is designed to fool you. After each answer, the same tree is redrawn with a different set of node rotations to show that the layout was arbitrary; the ancestry is not.</p>
+</header>
+
+<main>
+  <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally</h3>
+    <div class="tally-grid" id="tallyGrid"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      Rotating a node in a phylogenetic tree — swapping which clade sits on
+      top at any internal node — produces an <strong>equivalent tree</strong>.
+      The relationships are identical. Only the drawing changes. If you
+      answered by visual proximity on the page, the rotations would flip your
+      answer; if you answered by tracing back to the MRCA, they never would.
+    </p>
+    <p>
+      Sister taxa are defined by a shared most recent common ancestor —
+      <code>depth(MRCA)</code> — not by how far apart their names are printed.
+      Crocodiles and birds are each other's closest relatives on the vertebrate
+      tree. They share an archosaur ancestor that is nested deeply inside the
+      "reptiles." Hippos and whales share an artiodactyl ancestor that
+      post-dates the fish split; whales are nested tetrapods that happen to
+      look fish-shaped. Convergent morphology is not ancestry.
+    </p>
+    <p>
+      The only things that cannot change without altering a tree's meaning are
+      (1) which taxa share an MRCA, and (2) the relative depth of each
+      internal node. Rotate any branch at any node — the tree means the same
+      thing. That is the whole of "reading trees."
+    </p>
+  </div>
+</main>
+
+<script>
+// ---------- Trees ----------
+// Each node is either { tip: true, name, display? } or { name, children: [...] }.
+// `rotate` on an internal node flips the order of its children in the layout.
+// `correctPair` lists the two tip names that are true sister taxa in the tree.
+
+function mkRound(cfg) { return cfg; }
+
+const ROUNDS = [
+  mkRound({
+    label: "Vertebrate classes, canonical drawing",
+    prompt: "Which two of these share the most recent common ancestor?",
+    tree: {
+      name: "vertebrate", children: [
+        { tip: true, name: "shark" },
+        { name: "tetrapod", children: [
+          { tip: true, name: "frog" },
+          { name: "amniote", children: [
+            { tip: true, name: "mammal" },
+            { name: "reptilebird", children: [
+              { tip: true, name: "lizard" },
+              { name: "archosaur", children: [
+                { tip: true, name: "crocodile" },
+                { tip: true, name: "bird" },
+              ] },
+            ] },
+          ] },
+        ] },
+      ],
+    },
+    correctPair: ["crocodile", "bird"],
+    distractors: [
+      { pair: ["lizard", "crocodile"], note: "Lizards and crocodiles are both 'reptiles' in the colloquial sense, but that grouping is paraphyletic — it excludes birds. Birds are nested inside archosaurs with crocodiles." },
+      { pair: ["lizard", "bird"], note: "Both scaly and beaky, but birds are archosaurs; crocodiles are the bird's closer relative." },
+    ],
+  }),
+  mkRound({
+    label: "Same vertebrate tree, node-rotated so crocodile sits next to mammal on the page",
+    prompt: "Same tree as round 1. Which two share the most recent common ancestor?",
+    tree: {
+      name: "vertebrate", children: [
+        { tip: true, name: "shark" },
+        { name: "tetrapod", children: [
+          { tip: true, name: "frog" },
+          { name: "amniote", children: [
+            { tip: true, name: "mammal" },
+            { name: "reptilebird", rotate: true, children: [
+              { tip: true, name: "lizard" },
+              { name: "archosaur", rotate: true, children: [
+                { tip: true, name: "crocodile" },
+                { tip: true, name: "bird" },
+              ] },
+            ] },
+          ] },
+        ] },
+      ],
+    },
+    // Because of rotations: tips top-to-bottom are shark, frog, mammal, bird, crocodile, lizard.
+    correctPair: ["crocodile", "bird"],
+    distractors: [
+      { pair: ["mammal", "bird"], note: "The layout puts bird next to mammal, but 'next to' on the page is not ancestry. Bird's sister on the tree is still crocodile." },
+      { pair: ["crocodile", "lizard"], note: "Same paraphyletic instinct as round 1; the drawing changed, the tree did not." },
+    ],
+  }),
+  mkRound({
+    label: "Great apes, with human placed far from chimp on the page",
+    prompt: "Which two of these share the most recent common ancestor?",
+    tree: {
+      name: "apes", children: [
+        { tip: true, name: "orangutan" },
+        { name: "african", rotate: true, children: [
+          { tip: true, name: "gorilla" },
+          { name: "panhomo", rotate: true, children: [
+            { tip: true, name: "chimpanzee" },
+            { tip: true, name: "human" },
+          ] },
+        ] },
+      ],
+    },
+    // Layout tips: orangutan, human, chimp, gorilla  (with rotate flips)
+    correctPair: ["chimpanzee", "human"],
+    distractors: [
+      { pair: ["human", "orangutan"], note: "Visually adjacent after the rotation, but orangutan is the outgroup to all three African apes. Chimp is human's sister." },
+      { pair: ["gorilla", "chimpanzee"], note: "Common confusion: 'non-human apes' feels like a group. It is paraphyletic — it excludes humans, who are African apes." },
+    ],
+  }),
+  mkRound({
+    label: "Geospiza ground finches, Darwin's famous radiation",
+    prompt: "Which two of these six ground-finch species share the most recent common ancestor?",
+    tree: {
+      name: "geospiza", children: [
+        { tip: true, name: "G. scandens" },
+        { name: "rest", children: [
+          { tip: true, name: "G. magnirostris" },
+          { name: "small", rotate: true, children: [
+            { tip: true, name: "G. fortis" },
+            { name: "smallest", children: [
+              { tip: true, name: "G. fuliginosa" },
+              { name: "twig", rotate: true, children: [
+                { tip: true, name: "G. difficilis" },
+                { tip: true, name: "G. conirostris" },
+              ] },
+            ] },
+          ] },
+        ] },
+      ],
+    },
+    correctPair: ["G. difficilis", "G. conirostris"],
+    distractors: [
+      { pair: ["G. fortis", "G. fuliginosa"], note: "These two look very similar and are often confused in the field — but the phylogeny separates fortis from the fuliginosa+difficilis+conirostris clade at the smallest-body node." },
+      { pair: ["G. scandens", "G. conirostris"], note: "Both are cactus specialists ecologically, but convergent ecology is not ancestry." },
+    ],
+  }),
+  mkRound({
+    label: "Whales, hippos, cows, and fish — morphology-fools-you edition",
+    prompt: "Which two of these share the most recent common ancestor?",
+    tree: {
+      name: "vertebrate", children: [
+        { tip: true, name: "salmon" },
+        { name: "tetrapod", children: [
+          { tip: true, name: "shark" },
+          { name: "mammal", rotate: true, children: [
+            { tip: true, name: "cow" },
+            { name: "whippomorph", rotate: true, children: [
+              { tip: true, name: "hippo" },
+              { tip: true, name: "whale" },
+            ] },
+          ] },
+        ] },
+      ],
+    },
+    // Wait — salmon and shark are not both tetrapods! Let me restructure.
+    correctPair: ["hippo", "whale"],
+    distractors: [
+      { pair: ["whale", "salmon"], note: "Whales look fish-shaped by convergence — aquatic medium, streamlined body. But whales are artiodactyls. Their sister group is hippos, which never left mammals." },
+      { pair: ["whale", "shark"], note: "Same trap as salmon — aquatic shape is not ancestry." },
+    ],
+  }),
+];
+
+// Fix the round-5 tree structure: salmon and shark are both fish, outside tetrapods
+ROUNDS[4].tree = {
+  name: "vertebrate", children: [
+    { name: "fish", children: [
+      { tip: true, name: "salmon" },
+      { tip: true, name: "shark" },
+    ] },
+    { name: "mammal", rotate: true, children: [
+      { tip: true, name: "cow" },
+      { name: "whippomorph", rotate: true, children: [
+        { tip: true, name: "hippo" },
+        { tip: true, name: "whale" },
+      ] },
+    ] },
+  ],
+};
+
+const state = { round: 0, history: [], selectedTips: [], rotationOverride: null };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ---------- Tree layout ----------
+function cloneTree(node) {
+  if (node.tip) return { ...node };
+  return { ...node, children: node.children.map(cloneTree) };
+}
+function getInternals(node, acc = []) {
+  if (node.tip) return acc;
+  acc.push(node);
+  for (const c of node.children) getInternals(c, acc);
+  return acc;
+}
+function postOrderTips(node) {
+  const tips = [];
+  function visit(n) {
+    if (n.tip) { tips.push(n); return; }
+    const children = n.rotate ? [...n.children].reverse() : n.children;
+    for (const c of children) visit(c);
+  }
+  visit(node);
+  return tips;
+}
+function nodeDepth(node) {
+  if (node.tip) return 0;
+  return 1 + Math.max(...node.children.map(nodeDepth));
+}
+function mrca(root, names) {
+  // find the deepest internal whose descendants include all names
+  const target = new Set(names);
+  function collect(n, out) {
+    if (n.tip) { out.add(n.name); return; }
+    for (const c of n.children) collect(c, out);
+  }
+  function search(n) {
+    if (n.tip) return n.name === names[0] || n.name === names[1] ? { depth: 0, node: null } : { depth: -Infinity, node: null };
+    // child containing all?
+    let best = { depth: -Infinity, node: null };
+    for (const c of n.children) {
+      const rec = search(c);
+      if (rec.node) return rec;
+      if (rec.depth >= 0 && rec.node == null) best = rec; // single tip match upstream
+    }
+    // check if n is the MRCA
+    const descendants = new Set();
+    collect(n, descendants);
+    if ([...target].every(t => descendants.has(t))) {
+      // check children: if any single child already contains both targets, that child is MRCA instead
+      for (const c of n.children) {
+        const cd = new Set();
+        collect(c, cd);
+        if ([...target].every(t => cd.has(t))) {
+          return search(c);
+        }
+      }
+      return { depth: nodeDepth(n), node: n };
+    }
+    return best;
+  }
+  return search(root).node;
+}
+
+// Path depth (distance from root) for node-coloring the MRCA in reveal
+function pathDepth(root, target) {
+  if (root === target) return 0;
+  if (root.tip) return -1;
+  for (const c of root.children) {
+    const d = pathDepth(c, target);
+    if (d >= 0) return d + 1;
+  }
+  return -1;
+}
+
+function layoutTree(root, width, height, padLeft = 20, padRight = 130, padTop = 20, padBot = 20) {
+  const tips = postOrderTips(root);
+  const nTips = tips.length;
+  const plotH = height - padTop - padBot;
+  const tipStep = plotH / (nTips + 1);
+  tips.forEach((t, i) => { t.y = padTop + tipStep * (i + 1); });
+
+  const maxDepth = nodeDepth(root);
+  const plotW = width - padLeft - padRight;
+  const depthUnit = plotW / maxDepth;
+
+  function assignX(n) {
+    if (n.tip) { n.x = width - padRight; return; }
+    for (const c of n.children) assignX(c);
+    n.x = padLeft + (maxDepth - nodeDepth(n)) * depthUnit;
+  }
+  assignX(root);
+
+  function assignY(n) {
+    if (n.tip) return;
+    for (const c of n.children) assignY(c);
+    const ys = n.children.map(c => c.y);
+    n.y = (Math.min(...ys) + Math.max(...ys)) / 2;
+  }
+  assignY(root);
+}
+
+function renderTree(svg, root, opts = {}) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 360;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("preserveAspectRatio", "none");
+
+  const rootC = cloneTree(root);
+  layoutTree(rootC, W, H);
+
+  // Edges
+  function drawEdges(n) {
+    if (n.tip) return;
+    for (const c of n.children) {
+      svg.appendChild(svgEl("path", {
+        d: `M${n.x},${n.y} L${n.x},${c.y} L${c.x},${c.y}`,
+        fill: "none", stroke: "#1d1d1b", "stroke-width": "1.4",
+      }));
+      drawEdges(c);
+    }
+  }
+  drawEdges(rootC);
+
+  // Highlight MRCA if requested
+  if (opts.mrcaTipNames) {
+    const m = mrca(rootC, opts.mrcaTipNames);
+    if (m) {
+      svg.appendChild(svgEl("circle", { cx: m.x, cy: m.y, r: 8, fill: "none", stroke: "#4a8040", "stroke-width": "2.5" }));
+      const lab = svgEl("text", { x: m.x - 10, y: m.y - 11, "text-anchor": "end", "font-size": "11", fill: "#4a8040", "font-weight": "600" });
+      lab.textContent = "MRCA";
+      svg.appendChild(lab);
+    }
+  }
+
+  // Tips (name labels + clickable dots)
+  const tips = postOrderTips(rootC);
+  for (const t of tips) {
+    const selected = state.selectedTips.includes(t.name);
+    svg.appendChild(svgEl("line", {
+      x1: t.x, x2: t.x + 12, y1: t.y, y2: t.y,
+      stroke: "#1d1d1b", "stroke-width": "1.4",
+    }));
+    const circle = svgEl("circle", {
+      cx: t.x + 12, cy: t.y, r: 7,
+      fill: selected ? "#2f6b8f" : "#fff",
+      stroke: selected ? "#2f6b8f" : "#1d1d1b",
+      "stroke-width": selected ? "2" : "1.4",
+      class: "tip-hit" + (selected ? " selected" : ""),
+    });
+    if (opts.clickable) {
+      circle.addEventListener("click", () => toggleTipSelection(t.name));
+    }
+    svg.appendChild(circle);
+
+    const text = svgEl("text", {
+      x: t.x + 24, y: t.y + 5,
+      class: "tip" + (selected ? " selected" : ""),
+    });
+    text.textContent = t.display || t.name;
+    if (opts.clickable) text.addEventListener("click", () => toggleTipSelection(t.name));
+    svg.appendChild(text);
+  }
+}
+
+function toggleTipSelection(name) {
+  if (!state.interactive) return;
+  const idx = state.selectedTips.indexOf(name);
+  if (idx >= 0) state.selectedTips.splice(idx, 1);
+  else if (state.selectedTips.length < 2) state.selectedTips.push(name);
+  renderCurrent();
+}
+
+// ---------- Rendering ----------
+function renderCurrent() {
+  const r = ROUNDS[state.round];
+  const svg = document.getElementById("roundTreeSvg");
+  if (!svg) return;
+  const treeToShow = state.rotationOverride || r.tree;
+  renderTree(svg, treeToShow, {
+    clickable: state.interactive,
+    mrcaTipNames: state.revealed ? r.correctPair : null,
+  });
+
+  // Update submit disabled state
+  const submit = document.getElementById("submitBtn");
+  if (submit) submit.disabled = state.selectedTips.length !== 2;
+}
+
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    document.getElementById("finale").classList.add("shown");
+    return;
+  }
+
+  state.selectedTips = [];
+  state.revealed = false;
+  state.interactive = true;
+  state.rotationOverride = null;
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.prompt]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: tree
+  const chartPanel = makeEl("div", { class: "panel" });
+  chartPanel.appendChild(makeEl("h3", null, ["Phylogenetic tree"]));
+  const svg = svgEl("svg", { id: "roundTreeSvg", class: "tree" });
+  chartPanel.appendChild(svg);
+
+  const hint = makeEl("p", { style: "font-size:12px;color:#6b6b68;margin:8px 0 0 0;" }, [
+    "click two tips to select a pair of taxa; click again to deselect"
+  ]);
+  chartPanel.appendChild(hint);
+
+  // Right: guess + reveal
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    "Click two tips in the tree whose most recent common ancestor is most recent (i.e. the pair that are each other's closest relatives)."
+  ]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit pair"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const actionRow = makeEl("div", null);
+  const rotateBtn = makeEl("button", { class: "rotate-btn", id: "rotateBtn" }, ["Rotate nodes (same tree, different layout)"]);
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  actionRow.appendChild(rotateBtn);
+  actionRow.appendChild(nextBtn);
+  guessPanel.appendChild(actionRow);
+
+  right.appendChild(guessPanel);
+
+  grid.appendChild(chartPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  renderCurrent();
+
+  submitBtn.addEventListener("click", () => {
+    if (state.selectedTips.length !== 2) return;
+    const correct = setEquals(state.selectedTips, r.correctPair);
+    state.revealed = true;
+    state.interactive = false;
+    state.history.push({ correct, selected: [...state.selectedTips] });
+    renderCurrent();
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.classList.add(correct ? "correct" : "wrong");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      correct ? "correct" : "not quite"
+    ]));
+    revealBox.appendChild(makeEl("p", null, [
+      `The sister pair on this tree is ${r.correctPair[0]} and ${r.correctPair[1]}. Their MRCA is highlighted on the tree.`
+    ]));
+
+    if (!correct) {
+      const yourPair = [...state.selectedTips];
+      const dist = r.distractors.find(d => setEquals(d.pair, yourPair));
+      if (dist) revealBox.appendChild(makeEl("p", null, [dist.note]));
+    }
+
+    rotateBtn.classList.add("shown");
+    nextBtn.classList.add("shown");
+    renderTally();
+  });
+
+  rotateBtn.addEventListener("click", () => {
+    // Flip a random subset of internal rotate flags on a fresh clone
+    const fresh = cloneTree(r.tree);
+    const internals = getInternals(fresh);
+    for (const n of internals) {
+      if (Math.random() < 0.5) n.rotate = !n.rotate;
+    }
+    state.rotationOverride = fresh;
+    renderCurrent();
+  });
+
+  nextBtn.addEventListener("click", () => {
+    state.round++;
+    renderRound();
+    renderTally();
+  });
+}
+
+function setEquals(a, b) {
+  return a.length === b.length && a.every(x => b.includes(x));
+}
+
+function renderTally() {
+  const g = document.getElementById("tallyGrid");
+  g.innerHTML = "";
+  for (let i = 0; i < ROUNDS.length; i++) {
+    const h = state.history[i];
+    const cell = makeEl("div", { class: "tally-cell" + (h ? (h.correct ? " correct" : " wrong") : " empty") });
+    cell.appendChild(makeEl("div", null, [`R${i + 1}`]));
+    cell.appendChild(makeEl("div", { class: "mark" }, [h ? (h.correct ? "✓" : "✗") : "—"]));
+    if (h) {
+      cell.appendChild(makeEl("div", { style: "font-size:10px; color:#6b6b68; margin-top:2px;" }, [
+        `chose: ${h.selected.join(", ")}`
+      ]));
+    }
+    g.appendChild(cell);
+  }
+}
+
+renderRound();
+renderTally();
+</script>
+
+</body>
+</html>

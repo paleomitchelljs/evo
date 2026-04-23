@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S19: convergence vs. drift</title>
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f; --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9; --code-bg: #1e1f22; --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 74ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .scenario-box { background: #f7f5ee; padding: 14px 16px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; line-height: 1.55; }
+  .scenario-box .item { margin-bottom: 10px; }
+  .scenario-box .item:last-child { margin-bottom: 0; }
+  .scenario-box strong { color: var(--ink); }
+  .choice-row { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
+  .choice-row button { padding: 10px 14px; background: #fafaf7; color: var(--ink); border: 1px solid var(--rule); border-radius: 4px; font: 13.5px -apple-system, sans-serif; cursor: pointer; text-align: left; }
+  .choice-row button:hover { border-color: var(--accent2); }
+  .choice-row button.picked { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .choice-row button .title { font-weight: 600; display: block; margin-bottom: 2px; }
+  .choice-row button .sub { font-size: 12px; color: var(--muted); display: block; }
+  .choice-row button.picked .sub { color: rgba(255,255,255,0.8); }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal.correct { background: #e4efd4; border-left-color: #6f8a4a; color: #2e4410; }
+  .reveal.wrong { background: #fbe4c6; border-left-color: #a86a1a; color: #5c3802; }
+  .reveal .big { font: 600 14.5px ui-monospace, Menlo, monospace; margin-bottom: 6px; }
+  .reveal p { margin: 6px 0 0 0; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tally-cell { border: 1px solid var(--rule); border-radius: 4px; padding: 8px; font-size: 12px; text-align: center; background: #fafaf7; }
+  .tally-cell.correct { background: #e4efd4; border-color: #6f8a4a; }
+  .tally-cell.wrong { background: #fbe4c6; border-color: #a86a1a; }
+  .tally-cell.empty { background: #fff; color: #bbb; }
+  .tally-cell .mark { font-size: 20px; font-weight: 700; }
+  .tally-cell .lab { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S19 — Convergence vs. drift vs. shared ancestry</h1>
+  <p>Five scenarios. In each, a similar trait appears in multiple lineages or populations. Decide whether the pattern is best explained by <strong>repeated convergent selection</strong> (same environmental pressure, same adaptive solution), <strong>drift / founder effects</strong> (random signal amplified by isolation), or <strong>shared ancestry</strong> (the trait was inherited once, not evolved many times).</p>
+</header>
+
+<main>
+  <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally</h3>
+    <div class="tally-grid" id="tallyGrid"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      A repeated pattern has three possible causes. <strong>Convergent
+      selection</strong> is the most interesting one — the same environment
+      produces the same adaptive solution in independently evolving
+      lineages. But it is not the only cause. The same pattern can come
+      from <strong>drift or founder effects</strong> when small populations
+      sample from shared ancestral variation and diverge in a
+      history-dependent way. Or from <strong>shared ancestry</strong> when
+      the trait was inherited once from a common ancestor, and the
+      lineages look similar because they never lost it.
+    </p>
+    <p>
+      The key test is <strong>independence of origin</strong>. Sister
+      species on nearby islands that share a trait are not independent
+      replicates — they may have inherited the trait once. Species on
+      distant continents that never interbred, sharing the same
+      solution, are. The number of independent origins — measured from
+      the phylogeny, not from surface similarity — is what discriminates
+      the three causes.
+    </p>
+    <p>
+      Pattern ≠ process. "Six ecomorphs on four islands" is a pattern.
+      "Six ecomorphs evolved independently on four islands" is a
+      process claim that requires the tree. Always ask for the tree
+      before the story.
+    </p>
+  </div>
+</main>
+
+<script>
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "Caribbean Anolis ecomorphs",
+    items: [
+      { k: "Observation", v: "Six body-plan types (trunk-crown, trunk-ground, twig, crown-giant, trunk, grass-bush) — each occupies a specific microhabitat (high canopy, trunk surfaces, thin twigs, giant canopy, mid-trunk, ground-shrub)." },
+      { k: "Distribution", v: "The same six ecomorphs appear on each of the four Greater Antillean islands: Cuba, Hispaniola, Jamaica, Puerto Rico." },
+      { k: "Phylogeny", v: "The trunk-crown anole on Jamaica is NOT the sister species of the trunk-crown anole on Cuba. On the tree, each island's fauna is monophyletic (one ancestor per island), and the six ecomorphs arose independently within each island radiation." },
+    ],
+    truth: "selection",
+    explanation: "Four independent origins of each ecomorph. The monophyletic within-island radiations mean there is no way the ecomorph labels were inherited; they evolved in parallel. Same selective pressures (microhabitat) drove the same body plan four times. Drift cannot produce the same six outcomes repeatedly — drift is random.",
+  },
+  {
+    label: "Three-spine stickleback pelvic reduction",
+    items: [
+      { k: "Observation", v: "Reduced or absent pelvic girdle and spines in freshwater stickleback populations." },
+      { k: "Distribution", v: "Found in dozens of independent freshwater lakes across North America and Europe, typically within a few thousand years of postglacial colonization from marine ancestors (which have fully armored pelvises)." },
+      { k: "Phylogeny", v: "Each freshwater lake population descends independently from the marine ancestor. The pelvic-reduction loss-of-function is driven by regulatory changes at the Pitx1 locus (with some populations using different mechanisms)." },
+    ],
+    truth: "selection",
+    explanation: "Independent origins in different lakes, but the trait recurs every time — reduced predation by armored fish plus lower calcium availability in freshwater favors armor loss. The same selective regime hits the same mutable target (Pitx1 regulation). Parallel selection, convergent adaptation.",
+  },
+  {
+    label: "Anolis sagrei on seven Bahamian experimental islands (Kolbe et al. 2012)",
+    items: [
+      { k: "Observation", v: "Four years after biologists released a small number of Anolis sagrei on seven tiny vegetationless Bahamian islands, the descendant populations differ in body size, limb length, and perch morphology." },
+      { k: "Distribution", v: "Each island ended up with a slightly different founder morphology distribution, traceable to the random ~4–10 founding adults. The islands share source-population ancestry (one continental Bahamas population)." },
+      { k: "Phylogeny", v: "Despite clear adaptive responses to each island's different vegetation, the morphological signature of the founder group is STILL detectable after four years — meaning the between-island morphological differences are dominated by who got there first, not who did best." },
+    ],
+    truth: "drift",
+    explanation: "Founder effects. Selection did act (populations shifted toward island-appropriate morphologies) but the between-island differences are mostly explained by the random founder sample. This is the classic Kolbe et al. result — founders persist even under clear selection, because the founding sample size was small enough for drift to dominate.",
+  },
+  {
+    label: "Eye loss in cave animals worldwide",
+    items: [
+      { k: "Observation", v: "Reduced or absent eyes and pigment in animals that live in lightless caves." },
+      { k: "Distribution", v: "Mexican tetra cavefish, Somalian cavefish, blind cave salamanders, subterranean crustaceans, cave spiders, cave beetles, even cave planthoppers — on every continent, across dozens of phyla." },
+      { k: "Phylogeny", v: "Each cave-dwelling lineage has surface-dwelling relatives with normal eyes. Independent cave colonization events, independent eye reduction. Within Astyanax alone, eye loss has evolved at least ~30 separate times in different Mexican caves." },
+    ],
+    truth: "selection",
+    explanation: "Independent origins, same outcome. Relaxed purifying selection on eye genes (plus in some cases, positive selection for other traits constrained by eye development) allows loss-of-function mutations to drift to fixation. A huge mutation target (~70 genes required for eye formation) plus removal of the stabilizing constraint means eyes are lost every time a lineage enters a cave environment.",
+  },
+  {
+    label: "Mitochondrial haplotype clusters across continental human populations",
+    items: [
+      { k: "Observation", v: "Distinct mitochondrial haplotype frequencies in African, European, East Asian, and Native American populations." },
+      { k: "Distribution", v: "Each continental group has a characteristic mtDNA haplogroup signature. The between-group differences are real and easily detected by population geneticists." },
+      { k: "Phylogeny", v: "Humans originated in Africa. Non-African populations descend from serial founding events as modern humans migrated out ~70,000 years ago. Each founding bottleneck carried a subsample of the previous population's mitochondrial diversity; additional bottlenecks at later migrations (into Europe, into East Asia, across Beringia) further reduced and reshuffled haplotype frequencies." },
+    ],
+    truth: "drift",
+    explanation: "Serial founder effects and isolation-by-distance. Non-African human populations look 'differentiated' at mtDNA because of a chain of bottlenecks, not because mitochondrial haplotypes are selected differently in different environments. Selection on mitochondria in humans is weak; the continental pattern is drift-dominated. This is the textbook warning case — apparent 'structure' that is entirely neutral-process.",
+  },
+];
+
+const state = { round: 0, history: [], choice: null };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    document.getElementById("finale").classList.add("shown");
+    return;
+  }
+  state.choice = null;
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: scenario items
+  const left = makeEl("div", null);
+  const descPanel = makeEl("div", { class: "panel" });
+  descPanel.appendChild(makeEl("h3", null, ["Scenario"]));
+  const box = makeEl("div", { class: "scenario-box" });
+  for (const item of r.items) {
+    const itm = makeEl("div", { class: "item" });
+    itm.appendChild(makeEl("strong", null, [item.k + ". "]));
+    itm.appendChild(document.createTextNode(item.v));
+    box.appendChild(itm);
+  }
+  descPanel.appendChild(box);
+  left.appendChild(descPanel);
+
+  // Right: classification
+  const right = makeEl("div", null);
+  const choicePanel = makeEl("div", { class: "panel" });
+  choicePanel.appendChild(makeEl("h3", null, ["Classify the pattern"]));
+  const choices = [
+    { key: "selection", title: "Convergent selection", sub: "Independent lineages, same selective pressure, same outcome. Evidence: monophyletic within-locality radiations, shared selective regime." },
+    { key: "drift", title: "Drift / founder effects", sub: "Apparent structure dominated by sampling noise. Evidence: small founding populations, short time since colonization, or serial bottlenecks." },
+    { key: "shared", title: "Shared ancestry (not convergence)", sub: "The trait was inherited once and carried forward. Evidence: the lineages showing the trait form a clade, not independently nested within the tree." },
+  ];
+  const buttons = {};
+  const choiceRow = makeEl("div", { class: "choice-row" });
+  for (const c of choices) {
+    const btn = makeEl("button", { type: "button" }, [
+      makeEl("span", { class: "title" }, [c.title]),
+      makeEl("span", { class: "sub" }, [c.sub]),
+    ]);
+    btn.addEventListener("click", () => {
+      state.choice = c.key;
+      for (const k in buttons) buttons[k].classList.toggle("picked", k === c.key);
+      submitBtn.disabled = false;
+    });
+    buttons[c.key] = btn;
+    choiceRow.appendChild(btn);
+  }
+  choicePanel.appendChild(choiceRow);
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit classification"]);
+  choicePanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  choicePanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  choicePanel.appendChild(nextBtn);
+
+  right.appendChild(choicePanel);
+  grid.appendChild(left);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  submitBtn.addEventListener("click", () => {
+    if (!state.choice) return;
+    submitBtn.disabled = true;
+    for (const k in buttons) buttons[k].disabled = true;
+
+    const correct = state.choice === r.truth;
+    state.history.push({ round: r, choice: state.choice, correct });
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown", correct ? "correct" : "wrong");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [correct ? "correct" : `not quite — correct answer: ${labelOf(r.truth)}`]));
+    revealBox.appendChild(makeEl("p", null, [r.explanation]));
+
+    nextBtn.classList.add("shown");
+    renderTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); renderTally(); });
+}
+
+function labelOf(key) {
+  return { selection: "convergent selection", drift: "drift / founder effects", shared: "shared ancestry" }[key];
+}
+
+function renderTally() {
+  const g = document.getElementById("tallyGrid");
+  g.innerHTML = "";
+  for (let i = 0; i < ROUNDS.length; i++) {
+    const h = state.history[i];
+    const cell = makeEl("div", { class: "tally-cell" + (h ? (h.correct ? " correct" : " wrong") : " empty") });
+    cell.appendChild(makeEl("div", null, [`R${i + 1}: ${shortLabel(ROUNDS[i])}`]));
+    cell.appendChild(makeEl("div", { class: "mark" }, [h ? (h.correct ? "✓" : "✗") : "—"]));
+    if (h) {
+      cell.appendChild(makeEl("div", { class: "lab" }, [`truth: ${labelOf(ROUNDS[i].truth)}`]));
+    } else {
+      cell.appendChild(makeEl("div", { class: "lab" }, ["—"]));
+    }
+  }
+}
+
+function shortLabel(r) {
+  if (r.label.includes("Anolis ecomorphs")) return "Anolis ecomorphs";
+  if (r.label.includes("stickleback")) return "stickleback";
+  if (r.label.includes("Kolbe")) return "Kolbe founders";
+  if (r.label.includes("cave animals")) return "cave eye loss";
+  if (r.label.includes("Mitochondrial")) return "human mtDNA";
+  return r.label;
+}
+
+renderRound();
+renderTally();
+</script>
+</body>
+</html>

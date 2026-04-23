@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S17: mutation target size</title>
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f; --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9; --code-bg: #1e1f22; --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 74ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .phenotype-box { background: #f7f5ee; padding: 14px 16px; border-radius: 4px; margin-bottom: 12px; font-size: 14px; line-height: 1.55; }
+  .phenotype-box strong { color: var(--ink); font-size: 15px; }
+  .choice-row { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 8px; }
+  .choice-row button { padding: 10px 14px; background: #fafaf7; color: var(--ink); border: 1px solid var(--rule); border-radius: 4px; font: 13.5px -apple-system, sans-serif; cursor: pointer; text-align: left; }
+  .choice-row button:hover { border-color: var(--accent2); }
+  .choice-row button.picked { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .choice-row button .title { font-weight: 600; display: block; margin-bottom: 2px; }
+  .choice-row button .sub { font-size: 12px; color: var(--muted); display: block; }
+  .choice-row button.picked .sub { color: rgba(255,255,255,0.8); }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal.correct { background: #e4efd4; border-left-color: #6f8a4a; color: #2e4410; }
+  .reveal.wrong { background: #fbe4c6; border-left-color: #a86a1a; color: #5c3802; }
+  .reveal .big { font: 600 14.5px ui-monospace, Menlo, monospace; margin-bottom: 6px; }
+  .reveal p { margin: 6px 0 0 0; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .tally-cell { border: 1px solid var(--rule); border-radius: 4px; padding: 8px; font-size: 12px; text-align: center; background: #fafaf7; }
+  .tally-cell.correct { background: #e4efd4; border-color: #6f8a4a; }
+  .tally-cell.wrong { background: #fbe4c6; border-color: #a86a1a; }
+  .tally-cell.empty { background: #fff; color: #bbb; }
+  .tally-cell .mark { font-size: 20px; font-weight: 700; }
+  .tally-cell .lab { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .tally-cell .count { font-size: 10px; font-family: ui-monospace, Menlo, monospace; color: var(--ink); margin-top: 3px; }
+
+  .genes-viz { display: flex; gap: 24px; align-items: flex-start; margin-top: 12px; }
+  .genes-viz svg { width: 100%; }
+
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S17 — Mutation target size and the rate of parallel evolution</h1>
+  <p>Five phenotypes. Each can be produced by some developmental genetic architecture. Some architectures have many parallel paths — many mutations in many genes can yield the same outcome. Others have a single narrow path — only one very specific mutation works. The number of times a trait evolves independently across a clade tracks that "effective mutation rate to the phenotype."</p>
+</header>
+
+<main>
+  <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally</h3>
+    <div class="tally-grid" id="tallyGrid"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      The rate at which a phenotype evolves is not just about selection.
+      It is also about <strong>how many mutations can produce it</strong>.
+      Webbed feet and eye loss are easy — any of several genes can be
+      tweaked and you get the phenotype. They arise again and again.
+      The placenta is hard — it required a specific transcription factor
+      binding a specific transposon that happened to land in exactly the
+      right place. It evolved roughly twice in the history of vertebrates.
+      Hinged jaws and the tetrapod limb are harder still; those evolved
+      once each.
+    </p>
+    <p>
+      The pattern in the tally reflects two separate multipliers on the
+      per-generation rate of evolution:
+    </p>
+    <ul style="margin: 0 0 10px 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+      <li><strong>Mutation target size</strong>. How many bases, how many
+        genes, can mutate and still produce the phenotype?</li>
+      <li><strong>Selectability</strong>. Conditional on producing the
+        phenotype, how strongly favored is the mutant?</li>
+    </ul>
+    <p>
+      A trait with a huge mutation target that is strongly favored in
+      some environments — eye loss in caves, webbed feet in aquatic
+      lineages — appears in every clade the environment recurs in. A
+      trait with a tiny mutation target — hinged jaws, true flight,
+      bone — appears once or twice in the entire history of life and
+      never again. The parallel-evolution count is a clean empirical
+      readout of this distinction.
+    </p>
+  </div>
+</main>
+
+<script>
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "Webbed feet",
+    phenotype: "Partial or complete webbing between the digits of tetrapod feet. Aquatic and semi-aquatic lineages (ducks, frogs, otters, bats that swim).",
+    mechanism: "Webbing forms when interdigital cell death is suppressed during limb development. This can happen by decreasing BMP signaling, increasing Gremlin (which inhibits BMP), or increasing SHH dosage — three distinct molecular routes, each with multiple gene-level options.",
+    truth: "high",
+    nOrigins: "many — independently in ducks, grebes, penguins, frogs, salamanders, otters, beavers, platypuses, fishing bats, and more",
+    count: "~20+ independent origins across tetrapods",
+  },
+  {
+    label: "Eye reduction / loss in cave-dwelling lineages",
+    phenotype: "Reduced or absent eyes in animals that have adapted to lightless caves. Mexican tetras (Astyanax), various cavefish, salamanders, crustaceans, insects.",
+    mechanism: "Relaxed selection on eye development allows loss-of-function mutations in any of ~70 genes required for eye formation. Most populations lose eyes via different mutations even within a single species complex.",
+    truth: "high",
+    nOrigins: "dozens — independently in fish, amphibians, crustaceans, insects",
+    count: "~100+ independent origins across cave-adapted animals",
+  },
+  {
+    label: "Lactase persistence in adult humans",
+    phenotype: "Ability to digest lactose (milk sugar) as an adult. Ancestral mammalian state is to down-regulate lactase expression after weaning.",
+    mechanism: "Regulatory mutations in the LCT gene enhancer keep the gene expressed in adults. At least four distinct mutations have spread in different human populations (European -13910*T, East African -14010*C, Middle Eastern -13915*G, and others).",
+    truth: "moderate",
+    nOrigins: "at least 4 independent origins in the last 10,000 years",
+    count: "4+ origins in Homo sapiens alone",
+  },
+  {
+    label: "The placenta",
+    phenotype: "A tissue that regulates the maternal–fetal interface during gestation, enabling live birth with prolonged internal development.",
+    mechanism: "Required a single transcription factor (CEBPB, PPARG, and others) to acquire binding sites in the regulatory regions of ~1,500 nearby genes simultaneously — achieved in mammals when a specific endogenous retrovirus (MER20) inserted and brought along binding motifs. A similarly singular insertion would be needed again for parallel origin.",
+    truth: "low",
+    nOrigins: "roughly 2 independent origins in vertebrate history (eutherian mammals; some live-bearing fish/reptiles have analogs that are developmentally distinct)",
+    count: "~2 origins across vertebrates",
+  },
+  {
+    label: "Hinged, movable jaws",
+    phenotype: "The tetrapod / gnathostome jaw: two paired bones, hinged, capable of biting and chewing. Derived from the first gill arch of jawless ancestors.",
+    mechanism: "Required coordinated re-patterning of the first pharyngeal arch involving DLX genes, HAND2, and endothelin signaling — plus the restructuring of dental, muscular, and neural architecture that coevolved with it. An enormous coordinated change with no partial-function intermediate available to parallel lineages.",
+    truth: "low",
+    nOrigins: "1 origin — all jawed vertebrates descend from the same Silurian event (~440 Mya)",
+    count: "exactly 1 origin across all of life",
+  },
+];
+
+const state = { round: 0, history: [], choice: null };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    document.getElementById("finale").classList.add("shown");
+    return;
+  }
+  state.choice = null;
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: phenotype + mechanism description
+  const left = makeEl("div", null);
+  const descPanel = makeEl("div", { class: "panel" });
+  descPanel.appendChild(makeEl("h3", null, ["The phenotype"]));
+  const phenoBox = makeEl("div", { class: "phenotype-box" });
+  phenoBox.appendChild(makeEl("p", { style: "margin:0 0 10px 0;" }, [
+    makeEl("strong", null, ["Trait. "]),
+    r.phenotype,
+  ]));
+  phenoBox.appendChild(makeEl("p", { style: "margin:0;" }, [
+    makeEl("strong", null, ["Developmental architecture. "]),
+    r.mechanism,
+  ]));
+  descPanel.appendChild(phenoBox);
+  left.appendChild(descPanel);
+
+  // Right: classification + reveal
+  const right = makeEl("div", null);
+  const choicePanel = makeEl("div", { class: "panel" });
+  choicePanel.appendChild(makeEl("h3", null, ["Classify the mutation target"]));
+  choicePanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `How many independent mutational paths can produce this phenotype? This determines the effective per-lineage rate at which it evolves.`
+  ]));
+
+  const choices = [
+    { key: "high", title: "High effective mutation rate", sub: "Many genes, many mutations, many regulatory tweaks all yield the phenotype. Evolves many times in parallel across a clade." },
+    { key: "moderate", title: "Moderate", sub: "A handful of specific regulatory or coding changes can produce the phenotype. Arises a small number of times (say 2–10) in a large clade." },
+    { key: "low", title: "Low / singular path", sub: "A very specific, coordinated change is required. Evolves once or twice in the history of the clade and essentially never in parallel." },
+  ];
+  const buttons = {};
+  const choiceRow = makeEl("div", { class: "choice-row" });
+  for (const c of choices) {
+    const btn = makeEl("button", { type: "button" }, [
+      makeEl("span", { class: "title" }, [c.title]),
+      makeEl("span", { class: "sub" }, [c.sub]),
+    ]);
+    btn.addEventListener("click", () => {
+      state.choice = c.key;
+      for (const k in buttons) buttons[k].classList.toggle("picked", k === c.key);
+      submitBtn.disabled = false;
+    });
+    buttons[c.key] = btn;
+    choiceRow.appendChild(btn);
+  }
+  choicePanel.appendChild(choiceRow);
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit classification"]);
+  choicePanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  choicePanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  choicePanel.appendChild(nextBtn);
+
+  right.appendChild(choicePanel);
+  grid.appendChild(left);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  submitBtn.addEventListener("click", () => {
+    if (!state.choice) return;
+    submitBtn.disabled = true;
+    for (const k in buttons) buttons[k].disabled = true;
+
+    const correct = state.choice === r.truth;
+    state.history.push({ round: r, choice: state.choice, correct });
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown", correct ? "correct" : "wrong");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [correct ? "correct" : `not quite — correct answer: ${labelOf(r.truth)}`]));
+    revealBox.appendChild(makeEl("p", null, [
+      `Observed independent origins: ${r.nOrigins}.`
+    ]));
+
+    nextBtn.classList.add("shown");
+    renderTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); renderTally(); });
+}
+
+function labelOf(key) {
+  return { high: "high effective mutation rate (many paths)", moderate: "moderate", low: "low effective mutation rate (singular path)" }[key];
+}
+
+function renderTally() {
+  const g = document.getElementById("tallyGrid");
+  g.innerHTML = "";
+  for (let i = 0; i < ROUNDS.length; i++) {
+    const h = state.history[i];
+    const cell = makeEl("div", { class: "tally-cell" + (h ? (h.correct ? " correct" : " wrong") : " empty") });
+    cell.appendChild(makeEl("div", null, [`R${i + 1}: ${ROUNDS[i].label.length > 18 ? ROUNDS[i].label.slice(0, 18) + "…" : ROUNDS[i].label}`]));
+    cell.appendChild(makeEl("div", { class: "mark" }, [h ? (h.correct ? "✓" : "✗") : "—"]));
+    if (h) {
+      cell.appendChild(makeEl("div", { class: "count" }, [ROUNDS[i].count]));
+    } else {
+      cell.appendChild(makeEl("div", { class: "lab" }, ["—"]));
+    }
+  }
+}
+
+renderRound();
+renderTally();
+</script>
+</body>
+</html>
