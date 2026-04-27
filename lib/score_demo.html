@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Score library demo</title>
+<link rel="stylesheet" href="score.css">
+<style>
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: #fafaf7;
+    color: #1d1d1b;
+  }
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid #e2e0d9;
+    background: #ffffff;
+  }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: #6b6b68; font-size: 13px; max-width: 72ch; }
+  main { max-width: 800px; margin: 0 auto; padding: 24px; }
+  section.demo {
+    background: #ffffff;
+    border: 1px solid #e2e0d9;
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin: 0 0 16px 0;
+  }
+  section.demo h2 {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #6b6b68;
+    font-weight: 600;
+  }
+  section.demo p { margin: 0 0 10px 0; font-size: 14px; }
+  .q-row {
+    display: flex; gap: 8px; align-items: center;
+    margin: 8px 0;
+    padding: 8px 10px;
+    background: #fafaf7;
+    border-radius: 4px;
+  }
+  .q-row .q-label { flex: 1 1 auto; font-size: 13.5px; }
+  .q-row button {
+    padding: 5px 11px;
+    background: #fff;
+    border: 1px solid #b23a48;
+    color: #b23a48;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12.5px;
+  }
+  .q-row button.right { border-color: #2f6b8f; color: #2f6b8f; }
+  .q-row button.recorded { background: #f4d3d7; }
+  .q-row button.right.recorded { background: #d0e1ed; }
+  .controls {
+    display: flex; gap: 8px; margin: 14px 0;
+  }
+  .controls button {
+    padding: 8px 14px;
+    background: #2f6b8f; color: #fff;
+    border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px;
+  }
+  .controls button.secondary {
+    background: #fff; color: #6b6b68; border: 1px solid #e2e0d9;
+  }
+  .pre-locked .q-row, .post-locked .q-row { opacity: 0.4; pointer-events: none; }
+  .pre-locked button, .post-locked button { cursor: not-allowed; }
+  .lock-note {
+    font-size: 12px; color: #6a5018;
+    background: #f4f0dd; padding: 6px 10px; border-radius: 4px;
+    display: inline-block; margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Score library — demo / smoke test</h1>
+  <p>Pretest gates the scaffold; finishing the scaffold unlocks the posttest.
+  Clicking ✓ records a 1 for that question; ✗ records a 0. Reload to confirm
+  state persists in localStorage by name. Try the same name with a different
+  module ID by changing the URL hash (<code>#s02</code>, etc.) — the
+  adjective + animal should differ.</p>
+</header>
+
+<main>
+
+<div id="score-name"></div>
+
+<section class="demo" id="pretest-section">
+  <h2>Pretest (2 items)</h2>
+  <p>Both items must be answered before the scaffold unlocks.</p>
+  <div class="q-row">
+    <span class="q-label">P0 — close-reading: pick the right interpretation of the figure.</span>
+    <button data-group="pretest" data-idx="0" data-bit="1" class="right">✓ correct</button>
+    <button data-group="pretest" data-idx="0" data-bit="0">✗ wrong</button>
+  </div>
+  <div class="q-row">
+    <span class="q-label">P1 — predict sign of a slope (positive / negative / zero).</span>
+    <button data-group="pretest" data-idx="1" data-bit="1" class="right">✓ correct</button>
+    <button data-group="pretest" data-idx="1" data-bit="0">✗ wrong</button>
+  </div>
+</section>
+
+<section class="demo" id="scaffold-section">
+  <h2>Scaffold checkpoints (5 items)</h2>
+  <div id="scaffold-lock" class="lock-note">Locked — finish the pretest first.</div>
+  <div id="scaffold-questions">
+    <div class="q-row">
+      <span class="q-label">C0 — categorical: drift or selection?</span>
+      <button data-group="scaffold" data-idx="0" data-bit="1" class="right">✓</button>
+      <button data-group="scaffold" data-idx="0" data-bit="0">✗</button>
+    </div>
+    <div class="q-row">
+      <span class="q-label">C1 — sign of β̂ (using <code>scoring.signMatch</code>).</span>
+      <button data-group="scaffold" data-idx="1" data-bit="1" class="right">✓</button>
+      <button data-group="scaffold" data-idx="1" data-bit="0">✗</button>
+    </div>
+    <div class="q-row">
+      <span class="q-label">C2 — order of magnitude of fixation time.</span>
+      <button data-group="scaffold" data-idx="2" data-bit="1" class="right">✓</button>
+      <button data-group="scaffold" data-idx="2" data-bit="0">✗</button>
+    </div>
+    <div class="q-row">
+      <span class="q-label">C3 — close-reading: which axis label is misleading?</span>
+      <button data-group="scaffold" data-idx="3" data-bit="1" class="right">✓</button>
+      <button data-group="scaffold" data-idx="3" data-bit="0">✗</button>
+    </div>
+    <div class="q-row">
+      <span class="q-label">C4 — overlap or not (binary).</span>
+      <button data-group="scaffold" data-idx="4" data-bit="1" class="right">✓</button>
+      <button data-group="scaffold" data-idx="4" data-bit="0">✗</button>
+    </div>
+  </div>
+</section>
+
+<section class="demo" id="posttest-section">
+  <h2>Posttest (2 items, mirror the pretest)</h2>
+  <div id="posttest-lock" class="lock-note">Locked — answer the scaffold first.</div>
+  <div id="posttest-questions">
+    <div class="q-row">
+      <span class="q-label">T0 — same close-reading question as P0.</span>
+      <button data-group="posttest" data-idx="0" data-bit="1" class="right">✓</button>
+      <button data-group="posttest" data-idx="0" data-bit="0">✗</button>
+    </div>
+    <div class="q-row">
+      <span class="q-label">T1 — same sign-of-slope question as P1.</span>
+      <button data-group="posttest" data-idx="1" data-bit="1" class="right">✓</button>
+      <button data-group="posttest" data-idx="1" data-bit="0">✗</button>
+    </div>
+  </div>
+</section>
+
+<div class="controls">
+  <button id="finish-btn" disabled>Finish module &amp; reveal code</button>
+  <button id="reset-btn" class="secondary">Reset (clear localStorage)</button>
+</div>
+
+<div id="score-final"></div>
+
+</main>
+
+<script src="score.js"></script>
+<script>
+  // Allow ?module=s02 or #s02 to pick a different module id for testing the
+  // per-module hash distinctness. Defaults to "demo".
+  const urlModule =
+    new URLSearchParams(location.search).get("module")
+    || (location.hash || "").replace(/^#/, "")
+    || "demo";
+
+  const PRE = 2, SCAFF = 5, POST = 2;
+  const seen = { pretest: new Set(), scaffold: new Set(), posttest: new Set() };
+
+  Score.init({
+    moduleId: urlModule,
+    version: 1,
+    pretest: PRE, scaffold: SCAFF, posttest: POST,
+    mountNamePrompt: "#score-name",
+    mountFinalCode:  "#score-final",
+    onReady: () => {
+      // Restore "seen" state from the score lib's per-item answered tracker.
+      ["pretest","scaffold","posttest"].forEach(g => {
+        const n = (g === "pretest" ? PRE : g === "scaffold" ? SCAFF : POST);
+        for (let i = 0; i < n; i++) if (Score.isAnswered(g, i)) seen[g].add(i);
+      });
+      // Visually mark previously-answered buttons.
+      document.querySelectorAll("button[data-group]").forEach(btn => {
+        const g = btn.dataset.group, idx = parseInt(btn.dataset.idx, 10);
+        const bit = parseInt(btn.dataset.bit, 10);
+        if (Score.isAnswered(g, idx) && Score.getBit(g, idx) === bit) {
+          btn.classList.add("recorded");
+        }
+      });
+      refreshLocks();
+    }
+  });
+
+  function refreshLocks() {
+    const preDone = seen.pretest.size >= PRE;
+    const scaffDone = seen.scaffold.size >= SCAFF;
+    document.getElementById("scaffold-section").classList.toggle("pre-locked", !preDone);
+    document.getElementById("scaffold-lock").style.display = preDone ? "none" : "inline-block";
+    document.getElementById("posttest-section").classList.toggle("post-locked", !scaffDone);
+    document.getElementById("posttest-lock").style.display = scaffDone ? "none" : "inline-block";
+    document.getElementById("finish-btn").disabled =
+      !(preDone && scaffDone && seen.posttest.size >= POST && Score._state.passcode);
+  }
+
+  document.querySelectorAll("button[data-group]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const group = btn.dataset.group;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const bit = parseInt(btn.dataset.bit, 10);
+      if (!Score._state.passcode) {
+        alert("Confirm your name first.");
+        return;
+      }
+      if (group === "pretest")    Score.recordPretest(idx, bit);
+      else if (group === "scaffold") Score.recordCheckpoint(idx, bit);
+      else if (group === "posttest") Score.recordPosttest(idx, bit);
+      seen[group].add(idx);
+      // Visual feedback: mark the chosen answer in this row.
+      btn.parentElement.querySelectorAll("button").forEach(b => b.classList.remove("recorded"));
+      btn.classList.add("recorded");
+      refreshLocks();
+    });
+  });
+
+  document.getElementById("finish-btn").addEventListener("click", () => {
+    Score.finish();
+  });
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith("bio202-score:"))
+      .forEach(k => localStorage.removeItem(k));
+    location.reload();
+  });
+</script>
+
+</body>
+</html>

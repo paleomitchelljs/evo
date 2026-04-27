@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S7: breeder's equation</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -162,11 +163,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — predicted R vs. observed R</h3>
     <svg id="tallySvg" viewBox="0 0 1000 190" preserveAspectRatio="none" aria-label="Tally of predicted versus observed response across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -195,8 +210,12 @@
       drift. The equation is a first-order tool, not a closed solution.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Grant finch annual means (from data/clean/finch_beak.csv, via lesson2 embed) ----------
 const FINCH_BEAK = {
@@ -286,7 +305,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -581,8 +600,84 @@ function drawTally() {
   const lt3 = svgEl("text", { x: lx + 190, y: ly + 3, "font-size": "11", fill: "#c28a2b" }); lt3.textContent = "h² · S (prediction from equation)"; svg.appendChild(lt3);
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "The breeder's equation says R = h\u00b2 \u00d7 S. With S = +0.2 cm and h\u00b2 = 0.5, the predicted one-generation response is:",
+    options: ["+0.04 cm.", "+0.10 cm.", "+0.20 cm.", "+0.40 cm."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "If h\u00b2 = 0, then for any selection differential S, the response R is:",
+    options: ["Equal to S.", "Half of S.", "Zero.", "Doubled."],
+    correct: 2
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A trait shows S = 0.5 SD and h\u00b2 = 0.4. The expected one-generation response in trait units is:",
+    options: ["0.1 SD.", "0.2 SD.", "0.4 SD.", "0.5 SD."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Two species have the same S; Species A has h\u00b2 = 0.8, Species B has h\u00b2 = 0.2. After one generation, which shows the larger trait change?",
+    options: ["Species A.", "Species B.", "Both equal.", "Neither \u2014 h\u00b2 doesn't matter."],
+    correct: 0
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s07",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 
 </body>

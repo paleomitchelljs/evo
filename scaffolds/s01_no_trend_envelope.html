@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S1: "no trend" is a distribution</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -79,11 +80,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — null envelope vs. observed slope (signed z-score)</h3>
     <svg id="tallySvg" viewBox="0 0 1000 210" preserveAspectRatio="none" aria-label="Tally of guesses vs truth across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -114,8 +129,12 @@
       famous "diminishing-returns" debate as a null-model result.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Data ----------
 // Finch data — inline from data/clean/finch_beak.csv
@@ -279,7 +298,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -635,8 +654,84 @@ function shortRoundLabel(r) {
   return "";
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "If you fit a regression line to a 40-year time series with no real trend, the slope estimate \u03b2\u0302 will most likely be:",
+    options: ["Exactly 0.", "Close to 0, with sample-to-sample variability.", "Significantly different from 0 (Type I error).", "Undefined."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Doubling the number of years of data, holding all else equal, will most likely make the null half-width of |\u03b2\u0302|:",
+    options: ["Larger.", "Smaller.", "Unchanged.", "Negative."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A permutation test gives a wide null half-width and the observed slope is small. The strongest claim is:",
+    options: ["The trend is real and large.", "The observed slope is consistent with the null \u2014 no trend distinguishable.", "The permutation test is invalid.", "The slope is exactly zero."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Two studies have the same observed slope, but Study A has higher residual scatter \u03c3. Study A's null envelope is:",
+    options: ["Narrower.", "Wider.", "The same.", "Inverted."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s01",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

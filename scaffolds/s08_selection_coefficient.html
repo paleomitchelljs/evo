@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S8: selection coefficient from Δp</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -66,11 +67,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — estimated s and 95% CI across rounds</h3>
     <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Tally of s estimates across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -101,8 +116,12 @@
       "how strong is selection here?", you must report all three alongside.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 const ROUNDS = [
@@ -186,7 +205,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -526,8 +545,84 @@ function shortLabel(r) {
   return "";
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "An allele goes from p = 0.1 to p = 0.5 over t = 50 generations in a large population. This requires a selection coefficient s that is:",
+    options: ["Negative.", "Positive.", "Exactly zero.", "Undefined."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "If you observe \u0394p \u2248 0 across many generations, the most parsimonious estimate of s is:",
+    options: ["Strongly positive.", "Near zero.", "Strongly negative.", "Cannot be determined."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Larger N\u2091, holding the observed \u0394p and t the same, implies the inferred s is:",
+    options: ["Smaller (less drift attribution).", "Larger.", "Unchanged.", "Sign-reversed."],
+    correct: 0
+  },
+  {
+    idx: 1,
+    q: "If a small \u0394p could plausibly be produced by drift in a small N\u2091, the inferred s should be reported as:",
+    options: ["Definitely positive.", "Plausibly zero (within drift expectation).", "Definitely negative.", "Infinitely large."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s08",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

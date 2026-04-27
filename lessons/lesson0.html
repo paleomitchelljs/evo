@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 0: Correlation and the generative linear model (draft v2)</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -329,6 +330,12 @@
   <p>BIO 202, Spring 2026 — draft v3. Each stage hands you one more piece of information and asks the same question again. Each stage unlocks after you predict <em>and</em> explore the previous one.</p>
 </header>
 
+<div id="score-name" style="max-width: 1300px; margin: 16px auto 0 auto; padding: 0 24px;"></div>
+
+<div class="score-card" id="pretest-card" style="display:none; max-width: 1300px; margin: 0 auto; padding: 16px 24px;">
+  <div id="pretest-mount"></div>
+</div>
+
 <div class="outcomes">
   <h2>What Lesson 0 is actually asking</h2>
   <p>One question, five times: <em>what is your best guess for y, and how wrong will you typically be?</em> Each stage gives you one more piece of information about the frog and asks whether the guess gets any better.</p>
@@ -354,11 +361,11 @@
 <!-- ===================================================================== -->
 <!-- STAGE A -- y ~ Normal(mu, sigma) ==================================== -->
 <!-- ===================================================================== -->
-<section class="stage" id="stageA">
+<section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — With no other information, the best guess is the mean</h2>
   <p class="stage-sub">Someone hands you a new frog. You have no other information. The best single-number guess is the population mean μ, and σ is how wrong that guess will typically be.</p>
   <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> say why μ is the best guess under no-information, why σ is the typical size of the error, and why the sample ȳ wiggles around the true μ run to run.</p>
-  <div class="lock-banner">Complete the previous stage to unlock this section.</div>
+  <div class="lock-banner">Locked — answer the pretest above to unlock this section.</div>
 
   <div class="stage-body grid">
     <div class="col">
@@ -847,6 +854,14 @@
   differ from the across-species average over 40 years?"</p>
 </footer>
 
+<div class="score-card" id="posttest-card" style="display:none; max-width: 1300px; margin: 16px auto; padding: 16px 24px;">
+  <div id="posttest-mount"></div>
+</div>
+
+<div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 32px 24px;"></div>
+
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 /* =======================================================================
    Shared utilities (RNG, OLS, helpers). Factored into a single JS module
@@ -1097,6 +1112,8 @@ function onSliderMove(stageKey) {
     if (g.nextStage) {
       document.getElementById("stage" + g.nextStage).classList.remove("stage-locked");
       document.getElementById(g.tocNext).classList.remove("locked");
+    } else if (typeof showPosttest === "function") {
+      showPosttest();
     }
     const reflectEl = document.getElementById("reflect" + stageKey);
     if (reflectEl) reflectEl.classList.add("shown");
@@ -1980,6 +1997,78 @@ window.addEventListener("scroll", () => {
   for (const [sid, tid] of Object.entries(tocMap)) {
     document.getElementById(tid).classList.toggle("active", sid === active);
   }
+});
+
+/* =======================================================================
+   Score / pretest / posttest wiring (bookend pattern — no scaffold bits)
+   ======================================================================= */
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A scatter has points around a line with positive slope. The Pearson correlation r will be:",
+    options: ["Negative.", "Positive.", "Zero.", "Undefined."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "If you generate y from y = \u03b1 + \u03b2\u00b7x + noise and fit a regression, repeating with new noise many times gives you:",
+    options: ["The exact same \u03b2\u0302 each time.", "A distribution of \u03b2\u0302 values around the true \u03b2.", "\u03b2\u0302 = 0 always.", "\u03b2\u0302 = \u221e."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A correlation r = 0.8 between two traits across 30 species means:",
+    options: ["The traits are causally related.", "They are strongly linearly associated; causation requires more analysis.", "They are unrelated.", "Their slopes are equal."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Holding x and the true \u03b2 fixed, as residual scatter shrinks, the correlation r:",
+    options: ["Increases toward 1.", "Decreases toward 0.", "Becomes negative.", "Remains unchanged."],
+    correct: 0
+  }
+];
+
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("stageA").classList.remove("stage-locked");
+      const tocA = document.getElementById("tocA");
+      if (tocA) tocA.classList.remove("locked");
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  if (card.style.display === "block") return;
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "Wrap-up check",
+    items: POSTTEST_ITEMS,
+    onComplete: () => { Score.finish(); }
+  });
+}
+
+Score.init({
+  moduleId: "lesson0",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
 });
 </script>
 </body>

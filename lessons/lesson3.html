@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 3: Mendel, linkage, and gene dropping</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -306,6 +307,12 @@
   <p>BIO 202, Spring 2026 — draft v1. Mendelian transmission is fair coins. Fair coins make distributions, not exact ratios. Everything popgen will do from here — drift, linkage decay, founder loss — starts here.</p>
 </header>
 
+<div id="score-name" style="max-width: 1300px; margin: 16px auto 0 auto; padding: 0 24px;"></div>
+
+<div class="score-card" id="pretest-card" style="display:none; max-width: 1300px; margin: 0 auto; padding: 16px 24px;">
+  <div id="pretest-mount"></div>
+</div>
+
 <div class="outcomes">
   <h2>What Lesson 3 is actually asking</h2>
   <p>Three scales of Mendelian sampling. One locus, two loci, and a whole pedigree — each one asks how far random transmission pushes allele frequencies away from their expected values.</p>
@@ -329,11 +336,11 @@
 <!-- ===================================================================== -->
 <!-- STAGE A -- one locus, Aa x Aa, family size n ======================== -->
 <!-- ===================================================================== -->
-<section class="stage" id="stageA">
+<section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Mendel's laws are fair coins. A 3:1 ratio is an <em>expectation</em>, not a promise.</h2>
   <p class="stage-sub">Two heterozygous parents (Aa × Aa). Each child gets one allele from each parent by a fair coin. The expected frequency of A in the kids is 0.5. In a family of 4, the <em>actual</em> frequency lands on 0, 0.25, 0.5, 0.75, or 1 — with probabilities 1/16, 4/16, 6/16, 4/16, 1/16.</p>
   <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> read the spread of <em>p̂</em> across small families as the same thing you called "sampling variance" in Lesson 0. The drift variance <code>p(1−p)/(2n)</code> in popgen is a Mendelian restatement of the binomial variance.</p>
-  <div class="lock-banner">Complete the previous stage to unlock this section.</div>
+  <div class="lock-banner">Locked — answer the pretest above to unlock this section.</div>
 
   <div class="stage-body grid">
     <div class="col">
@@ -650,6 +657,14 @@
   thousands of generations instead of one.</p>
 </footer>
 
+<div class="score-card" id="posttest-card" style="display:none; max-width: 1300px; margin: 16px auto; padding: 16px 24px;">
+  <div id="posttest-mount"></div>
+</div>
+
+<div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 32px 24px;"></div>
+
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 /* =======================================================================
    Shared utilities (RNG, canvas helpers). Mirrors lesson0/1/2; factor
@@ -789,6 +804,8 @@ function onSliderMove(stageKey) {
     if (g.nextStage) {
       document.getElementById("stage" + g.nextStage).classList.remove("stage-locked");
       document.getElementById(g.tocNext).classList.remove("locked");
+    } else if (typeof showPosttest === "function") {
+      showPosttest();
     }
     const reflectEl = document.getElementById("reflect" + stageKey);
     if (reflectEl) reflectEl.classList.add("shown");
@@ -1393,6 +1410,78 @@ window.addEventListener("scroll", () => {
   for (const [sid, tid] of Object.entries(tocMap)) {
     document.getElementById(tid).classList.toggle("active", sid === active);
   }
+});
+
+/* =======================================================================
+   Score / pretest / posttest wiring (bookend pattern — no scaffold bits)
+   ======================================================================= */
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two heterozygous parents (Aa \u00d7 Aa) cross. The expected offspring genotype ratio is:",
+    options: ["1:1 AA:aa.", "1:2:1 AA:Aa:aa.", "1:1:1:1.", "9:3:3:1."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "A single Aa \u00d7 Aa cross with 4 offspring is unlikely to show exactly 1:2:1. The best explanation is:",
+    options: ["Mendel's laws are wrong.", "Sampling variation \u2014 small samples deviate from expected ratios.", "The genotypes are all the same.", "A mutation occurred."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two loci on the same chromosome with a small recombination distance will most likely:",
+    options: ["Segregate independently.", "Be inherited together (linked) more often than chance.", "Always recombine.", "Show 1:1:1:1 ratios."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Gene dropping in a pedigree, repeated many times, builds the distribution of:",
+    options: ["Allele frequencies expected at the founders.", "Allele frequencies expected in descendants given the pedigree.", "Recombination rates.", "Mutation rates."],
+    correct: 1
+  }
+];
+
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("stageA").classList.remove("stage-locked");
+      const tocA = document.getElementById("tocA");
+      if (tocA) tocA.classList.remove("locked");
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  if (card.style.display === "block") return;
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "Wrap-up check",
+    items: POSTTEST_ITEMS,
+    onComplete: () => { Score.finish(); }
+  });
+}
+
+Score.init({
+  moduleId: "lesson3",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
 });
 </script>
 </body>

@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Score code verifier</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: #fafaf7; color: #1d1d1b;
+  }
+  header { padding: 16px 24px; border-bottom: 1px solid #e2e0d9; background: #fff; }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: #6b6b68; font-size: 13px; max-width: 80ch; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+  .card {
+    background: #fff; border: 1px solid #e2e0d9; border-radius: 6px;
+    padding: 16px 18px; margin: 0 0 16px 0;
+  }
+  .card h2 {
+    margin: 0 0 12px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #6b6b68; font-weight: 600;
+  }
+  .field { display: grid; grid-template-columns: 130px 1fr; gap: 10px; margin: 8px 0; align-items: center; }
+  .field label { font-size: 13px; color: #6b6b68; }
+  .field input, .field textarea {
+    padding: 7px 10px; font: 14px ui-monospace, Menlo, monospace;
+    border: 1px solid #e2e0d9; border-radius: 4px; background: #fafaf7;
+    width: 100%; box-sizing: border-box;
+  }
+  .field textarea { resize: vertical; min-height: 60px; font-size: 13px; }
+  .actions { display: flex; gap: 8px; margin: 8px 0 0 0; }
+  .actions button {
+    padding: 7px 14px; background: #2f6b8f; color: #fff;
+    border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px;
+  }
+  .actions button.secondary { background: #fff; color: #6b6b68; border: 1px solid #e2e0d9; }
+
+  .verdict { padding: 10px 14px; border-radius: 4px; font-size: 14px; margin: 12px 0; }
+  .verdict.ok   { background: #d0e1ed; border: 1px solid #2f6b8f; color: #1d1d1b; }
+  .verdict.bad  { background: #f4d3d7; border: 1px solid #b23a48; color: #1d1d1b; }
+  .verdict.warn { background: #f4f0dd; border: 1px solid #caa04a; color: #1d1d1b; }
+
+  table.bits { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+  table.bits th, table.bits td {
+    text-align: left; padding: 6px 10px;
+    border-bottom: 1px solid #e2e0d9;
+  }
+  table.bits th { font-size: 11.5px; text-transform: uppercase; color: #6b6b68; letter-spacing: 0.06em; }
+  table.bits td.bit { font-family: ui-monospace, Menlo, monospace; }
+  table.bits td.right { color: #2f6b8f; }
+  table.bits td.wrong { color: #b23a48; }
+
+  .roster-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  .roster-table th, .roster-table td { padding: 6px 8px; border-bottom: 1px solid #e2e0d9; text-align: left; }
+  .roster-table td.passcode { font-family: ui-monospace, Menlo, monospace; }
+
+  details { margin: 8px 0; }
+  details summary { cursor: pointer; color: #6b6b68; font-size: 13px; }
+
+  pre.parsed {
+    background: #fafaf7; border: 1px solid #e2e0d9; border-radius: 4px;
+    padding: 8px 10px; font: 12.5px ui-monospace, Menlo, monospace;
+    margin: 6px 0 0 0; white-space: pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Score code verifier</h1>
+  <p>Instructor tool — runs entirely in the browser, nothing is sent anywhere.
+  Paste a student code, type the student's name, and confirm the adjective +
+  animal match. Use the roster generator to pre-compute the expected passcode
+  for every student in a class for a given module.</p>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>Verify a single submission</h2>
+  <p style="margin: 0 0 8px 0; font-size: 13px; color: #6b6b68;">
+    Paste the code. The embedded name token is hashed and compared to the
+    embedded passcode. If the student typed a different spelling than the
+    roster, you can override the name to test alternative spellings.
+  </p>
+  <div class="field">
+    <label for="vc-code">Student code</label>
+    <input id="vc-code" type="text" placeholder="e.g., s01v1-alice_smith-noble-otter-11-10110-10" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="vc-name">Override name</label>
+    <input id="vc-name" type="text" placeholder="optional — leave blank to use the name embedded in the code" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="vc-salt">Salt (optional)</label>
+    <input id="vc-salt" type="text" placeholder="leave blank unless you set one in Score.init" autocomplete="off">
+  </div>
+  <div class="actions">
+    <button id="vc-go">Verify</button>
+    <button id="vc-clear" class="secondary">Clear</button>
+  </div>
+
+  <div id="vc-result"></div>
+</section>
+
+<section class="card">
+  <h2>Roster — expected passcodes for a class</h2>
+  <p style="margin: 0 0 8px 0; font-size: 13px; color: #6b6b68;">
+    Paste one student name per line, set a module ID, and get the passcode each
+    student's code should start with for that module. Names are normalized
+    (lowercased, whitespace collapsed) before hashing.
+  </p>
+  <div class="field">
+    <label for="rs-module">Module ID</label>
+    <input id="rs-module" type="text" placeholder="e.g., s01" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="rs-version">Version</label>
+    <input id="rs-version" type="number" value="1" min="1">
+  </div>
+  <div class="field">
+    <label for="rs-salt">Salt (optional)</label>
+    <input id="rs-salt" type="text" placeholder="optional" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="rs-names">Names</label>
+    <textarea id="rs-names" placeholder="Alice Smith&#10;Bob Lee&#10;Carol Park" rows="6"></textarea>
+  </div>
+  <div class="actions">
+    <button id="rs-go">Generate roster</button>
+    <button id="rs-csv" class="secondary">Copy as CSV</button>
+  </div>
+  <div id="rs-result"></div>
+</section>
+
+</main>
+
+<script src="../lib/score.js"></script>
+<script>
+  function el(tag, attrs, kids) {
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      if (k === "class") e.className = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    }
+    (kids || []).forEach(k => e.appendChild(typeof k === "string" ? document.createTextNode(k) : k));
+    return e;
+  }
+
+  async function verify() {
+    const result = document.getElementById("vc-result");
+    result.innerHTML = "";
+    const code = document.getElementById("vc-code").value.trim();
+    const overrideName = document.getElementById("vc-name").value.trim();
+    const salt = document.getElementById("vc-salt").value.trim();
+
+    if (!code) {
+      result.appendChild(el("div", { class: "verdict warn" }, ["Code is required."]));
+      return;
+    }
+    const parsed = Score.parseCode(code);
+    if (!parsed) {
+      result.appendChild(el("div", { class: "verdict bad" }, [
+        "Code does not parse. Expected format: moduleIdvVERSION-name_token-adj-animal-PRE-SCAFFOLD-POST"
+      ]));
+      return;
+    }
+    // Default to the embedded name; allow override to test alternative spellings.
+    const nameToHash = overrideName || parsed.nameToken;
+    const expected = await Score.hashName(
+      nameToHash,
+      parsed.moduleId + "v" + parsed.version,
+      salt
+    );
+    const match = expected === parsed.passcode;
+    const usedOverride = !!overrideName;
+    const verdict = el("div", { class: "verdict " + (match ? "ok" : "bad") }, [
+      match
+        ? "MATCH — embedded passcode (" + parsed.passcode + ") matches the hash of "
+          + (usedOverride ? "override name '" + Score.nameToken(overrideName) + "'" : "embedded name '" + parsed.nameToken + "'")
+          + " on " + parsed.moduleId + "v" + parsed.version + "."
+        : "MISMATCH — embedded passcode is " + parsed.passcode
+          + ", but hash of " + (usedOverride ? "override '" + Score.nameToken(overrideName) + "'" : "embedded name '" + parsed.nameToken + "'")
+          + " is " + expected + "."
+    ]);
+    result.appendChild(verdict);
+
+    const total = parsed.pretestBits.length + parsed.scaffoldBits.length + parsed.posttestBits.length;
+    const right = (parsed.pretestBits + parsed.scaffoldBits + parsed.posttestBits).split("").filter(b => b === "1").length;
+
+    const tbl = el("table", { class: "bits" });
+    tbl.appendChild(el("thead", null, [
+      el("tr", null, [
+        el("th", null, ["Group"]),
+        el("th", null, ["Bits"]),
+        el("th", null, ["Right / total"])
+      ])
+    ]));
+    const tbody = el("tbody");
+    [["Pretest", parsed.pretestBits],
+     ["Scaffold", parsed.scaffoldBits],
+     ["Posttest", parsed.posttestBits]].forEach(([label, bits]) => {
+      const r = bits.split("").filter(b => b === "1").length;
+      tbody.appendChild(el("tr", null, [
+        el("td", null, [label]),
+        el("td", { class: "bit" }, [bits || "(empty)"]),
+        el("td", null, [r + " / " + bits.length])
+      ]));
+    });
+    tbody.appendChild(el("tr", null, [
+      el("td", null, ["Total"]),
+      el("td", null, [""]),
+      el("td", null, [right + " / " + total])
+    ]));
+    tbl.appendChild(tbody);
+    result.appendChild(tbl);
+
+    const det = el("details", null, [
+      el("summary", null, ["Parsed structure"]),
+      el("pre", { class: "parsed" }, [JSON.stringify(parsed, null, 2)])
+    ]);
+    result.appendChild(det);
+  }
+
+  let lastRoster = [];
+
+  async function generateRoster() {
+    const moduleId = document.getElementById("rs-module").value.trim();
+    const version = parseInt(document.getElementById("rs-version").value, 10) || 1;
+    const salt = document.getElementById("rs-salt").value.trim();
+    const namesRaw = document.getElementById("rs-names").value;
+    const target = document.getElementById("rs-result");
+    target.innerHTML = "";
+
+    if (!moduleId) {
+      target.appendChild(el("div", { class: "verdict warn" }, ["Module ID required."]));
+      return;
+    }
+    const names = namesRaw.split("\n").map(s => s.trim()).filter(Boolean);
+    if (!names.length) {
+      target.appendChild(el("div", { class: "verdict warn" }, ["At least one name required."]));
+      return;
+    }
+
+    const rows = [];
+    for (const n of names) {
+      const pc = await Score.hashName(n, moduleId + "v" + version, salt);
+      rows.push({ name: n, passcode: pc });
+    }
+    lastRoster = rows;
+
+    const tbl = el("table", { class: "roster-table" });
+    tbl.appendChild(el("thead", null, [
+      el("tr", null, [
+        el("th", null, ["Name"]),
+        el("th", null, ["Expected passcode for " + moduleId + "v" + version])
+      ])
+    ]));
+    const tbody = el("tbody");
+    rows.forEach(r => {
+      tbody.appendChild(el("tr", null, [
+        el("td", null, [r.name]),
+        el("td", { class: "passcode" }, [r.passcode])
+      ]));
+    });
+    tbl.appendChild(tbody);
+    target.appendChild(tbl);
+  }
+
+  document.getElementById("vc-go").addEventListener("click", verify);
+  document.getElementById("vc-clear").addEventListener("click", () => {
+    ["vc-code","vc-name","vc-salt"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("vc-result").innerHTML = "";
+  });
+  document.getElementById("rs-go").addEventListener("click", generateRoster);
+  document.getElementById("rs-csv").addEventListener("click", async () => {
+    if (!lastRoster.length) return;
+    const csv = "name,passcode\n" +
+      lastRoster.map(r => '"' + r.name.replace(/"/g,'""') + '",' + r.passcode).join("\n");
+    try {
+      await navigator.clipboard.writeText(csv);
+      alert("Roster copied to clipboard as CSV.");
+    } catch (e) {
+      alert("Copy failed.");
+    }
+  });
+</script>
+
+</body>
+</html>

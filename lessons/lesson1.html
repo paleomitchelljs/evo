@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 1: Variation and directional change (draft v1)</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -298,6 +299,12 @@
   <p>BIO 202, Spring 2026 — draft v1. "No trend" is a distribution, not a single number. How big a trend does it take before you can tell it apart from chance?</p>
 </header>
 
+<div id="score-name" style="max-width: 1300px; margin: 16px auto 0 auto; padding: 0 24px;"></div>
+
+<div class="score-card" id="pretest-card" style="display:none; max-width: 1300px; margin: 0 auto; padding: 16px 24px;">
+  <div id="pretest-mount"></div>
+</div>
+
 <div class="outcomes">
   <h2>What Lesson 1 is actually asking</h2>
   <p>You fit a line to forty years of specimen data and read off a slope. That slope, by itself, tells you almost nothing. It could be noise. The question is not "what is the slope?" but "how different is the slope I got from the slopes I would have gotten under no trend at all?"</p>
@@ -321,11 +328,11 @@
 <!-- ===================================================================== -->
 <!-- STAGE A — the null                                                    -->
 <!-- ===================================================================== -->
-<section class="stage" id="stageA">
+<section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — The null: one thousand slopes of nothing</h2>
   <p class="stage-sub">Forty years, one hundred specimens per year, all drawn from the same unchanging distribution. Fit a line through each simulated dataset and collect the slopes. The histogram of those slopes is the null.</p>
   <p class="stage-outcome"><strong>For this stage:</strong> say out loud what "no trend" means as a distribution, not as a single number. Name what controls the width of that distribution (sample size, σ, the number of years) and what does not (the true value of the slope, since it is fixed at zero here).</p>
-  <div class="lock-banner">Start with Stage A.</div>
+  <div class="lock-banner">Answer the pretest above to unlock this section.</div>
 
   <div class="stage-body grid">
     <div class="col">
@@ -737,7 +744,14 @@
   <p>For the coding writeup, extend <code>simulate_years()</code> to a <em>multi-species</em> simulator with per-species slopes drawn from a Normal with some cross-species mean and SD. Fit per-species lines, report the distribution of slopes, and compare its width to what you get by bootstrapping the Grant finch series across its 40 years. That is where the GUI stops scaffolding and real coding begins.</p>
 </footer>
 
+<div class="score-card" id="posttest-card" style="display:none; max-width: 1300px; margin: 16px auto; padding: 16px 24px;">
+  <div id="posttest-mount"></div>
+</div>
 
+<div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 32px 24px;"></div>
+
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 "use strict";
 
@@ -901,6 +915,7 @@ function onSliderMove(stage) {
     if (stage === "A") { unlockStage("B"); }
     if (stage === "B") { unlockStage("C"); }
     if (stage === "C") { unlockStage("D"); }
+    if (stage === "D" && typeof showPosttest === "function") { showPosttest(); }
   }
 }
 function unlockStage(stage) {
@@ -1727,6 +1742,94 @@ window.addEventListener("scroll", () => {
   for (const [sid, tid] of Object.entries(tocMap)) {
     document.getElementById(tid).classList.toggle("active", sid === active);
   }
+});
+
+/* =======================================================================
+   Score / pretest / posttest wiring (bookend pattern — no scaffold bits)
+   ======================================================================= */
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A regression line through forty annual measurements gives slope = +0.12 per year. Without further information, the most defensible interpretation is:",
+    options: [
+      "The trait is significantly increasing.",
+      "The trait is significantly decreasing.",
+      "We can't tell yet — we don't know how big slopes get just by chance.",
+      "The fit is unreliable because the points scatter widely."
+    ],
+    correct: 2
+  },
+  {
+    idx: 1,
+    q: "If you simulate 1,000 datasets with no real underlying trend and fit a slope to each, the histogram of fitted slopes will most likely be:",
+    options: [
+      "A single bar at zero.",
+      "A bell-shaped distribution centered near zero.",
+      "A flat distribution across all values.",
+      "Two narrow peaks, one positive and one negative."
+    ],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "You fit a line to a 40-year time series and get slope = -0.08 per year. A null distribution built by shuffling y-values has a 95% half-width of |β̂| = 0.15. The strongest claim you can make is:",
+    options: [
+      "The trait is decreasing significantly.",
+      "The observed slope is well within what no-trend produces — we can't distinguish it from chance.",
+      "The shuffling procedure was incorrect because the null half-width is too large.",
+      "The trait is increasing."
+    ],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Two studies report the same observed slope on different time series. Study X has a wide null distribution; Study Y has a narrow one. Which study is more likely to call its slope 'real' (i.e., extreme relative to its null)?",
+    options: [
+      "Study X.",
+      "Study Y.",
+      "Both equally — the observed slope is identical.",
+      "Neither — the null width does not affect a one-sided p-value."
+    ],
+    correct: 1
+  }
+];
+
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => { unlockStage("A"); }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  if (card.style.display === "block") return;  // already shown
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "Wrap-up check",
+    items: POSTTEST_ITEMS,
+    onComplete: () => { Score.finish(); }
+  });
+}
+
+Score.init({
+  moduleId: "lesson1",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
 });
 </script>
 </body>

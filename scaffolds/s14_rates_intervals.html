@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S14: rates of evolution across intervals</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -73,11 +74,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — median |rate| vs. interval length</h3>
     <svg id="tallySvg" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-label="Median rate across intervals"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -108,8 +123,12 @@
       interval. Always report the interval.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Data ----------
 const LTEE_ARA1_GEN = [0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,22000,24000,26000,28000,30000,32000,34000,36000,38000,40000,42000,44000,46000,48000,50000];
@@ -264,7 +283,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -615,8 +634,84 @@ function supscript(n) {
   return minus + digits.split("").map(d => map[d] || d).join("");
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "The same evolutionary change measured over a short interval vs. a long interval will most often give a:",
+    options: ["Higher rate over the long interval.", "Higher rate over the short interval.", "Same rate either way.", "No relationship."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Averaging |\u0394| over progressively longer intervals, the |rate| typically:",
+    options: ["Increases.", "Decreases (regression toward zero).", "Stays constant.", "Becomes negative."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Higher measured rates at shorter timescales are best explained by:",
+    options: ["Real acceleration over short times.", "Reversals and noise averaging out over long intervals.", "Measurement error increasing with time.", "Selection pressure increasing."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Comparing rates between species or studies is fair only when intervals are:",
+    options: ["The same length.", "Different lengths.", "Doesn't matter.", "Always 1 generation."],
+    correct: 0
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s14",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

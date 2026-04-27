@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 2: Model building and residual reading (draft v1)</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -206,6 +207,12 @@
   <p>BIO 202, Spring 2026 — draft v1. Same data, two models, different stories. What the residuals tell you about the variable you forgot.</p>
 </header>
 
+<div id="score-name" style="max-width: 1300px; margin: 16px auto 0 auto; padding: 0 24px;"></div>
+
+<div class="score-card" id="pretest-card" style="display:none; max-width: 1300px; margin: 0 auto; padding: 16px 24px;">
+  <div id="pretest-mount"></div>
+</div>
+
 <div class="outcomes">
   <h2>What Lesson 2 is actually asking</h2>
   <p>You have one dataset. You can fit several different linear models to it, and the slopes will disagree. Which slope is "right" is not a question about the data — it is a question about what you are willing to assume. The residuals are how you discover that your model is missing something.</p>
@@ -229,11 +236,11 @@
 <!-- ===================================================================== -->
 <!-- STAGE A                                                               -->
 <!-- ===================================================================== -->
-<section class="stage" id="stageA">
+<section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — One species, a clean fit, residuals that look like noise</h2>
   <p class="stage-sub">When your model matches the data-generating process, the residuals are unstructured. That is the target — and it is what you will learn to miss in Stage B.</p>
   <p class="stage-outcome"><strong>For this stage:</strong> say what a residual is (observed minus fitted), and name what a residual plot that says "the model is fine" should look like (no pattern, symmetric scatter, no drift in variance).</p>
-  <div class="lock-banner">Start with Stage A.</div>
+  <div class="lock-banner">Locked — answer the pretest above to unlock this section.</div>
 
   <div class="stage-body grid">
     <div class="col">
@@ -653,7 +660,15 @@
   <p>For the coding writeup, start from the downloaded <code>lesson2_stageD_*.R</code>. Extend the model from additive to interaction (<code>y ~ year * species</code>) and run <code>anova()</code> to test whether the two species really need their own slopes. Then fit a piecewise model with breakpoints at 1977 and 2004 and compare its residual autocorrelation to the additive model. The part the GUI cannot expose as a slider: picking which new term the residuals are asking for, and justifying that choice in two sentences.</p>
 </footer>
 
+<div class="score-card" id="posttest-card" style="display:none; max-width: 1300px; margin: 16px auto; padding: 16px 24px;">
+  <div id="posttest-mount"></div>
+</div>
 
+<div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 32px 24px;"></div>
+
+
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 "use strict";
 
@@ -769,6 +784,7 @@ function onSliderMove(stage) {
     if (stage === "A") unlockStage("B");
     if (stage === "B") unlockStage("C");
     if (stage === "C") unlockStage("D");
+    if (stage === "D" && typeof showPosttest === "function") showPosttest();
   }
 }
 function unlockStage(stage) {
@@ -1695,6 +1711,76 @@ window.addEventListener("scroll", () => {
   for (const [sid, tid] of Object.entries(tocMap)) {
     document.getElementById(tid).classList.toggle("active", sid === active);
   }
+});
+
+/* =======================================================================
+   Score / pretest / posttest wiring (bookend pattern — no scaffold bits)
+   ======================================================================= */
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two different linear models on the same data give different slopes for x (e.g., y ~ x vs y ~ x + group). This usually means:",
+    options: ["One model is computationally wrong.", "A grouping variable absorbs some of x's apparent effect.", "The data are noise.", "The models are equivalent."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Looking at residuals of a fitted model is most useful for:",
+    options: ["Confirming the model is correct.", "Identifying what variable was forgotten.", "Computing R\u00b2.", "Visualizing the slope."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A residual plot shows clear structure (curvature, clusters). The implication is:",
+    options: ["The model fits perfectly.", "The model is missing structure that's still in the data.", "The data are bad.", "The slope estimate is biased toward zero."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Adding a variable to a regression model and watching the slope of x change substantially indicates:",
+    options: ["The added variable is irrelevant.", "The added variable confounds (or mediates) the relationship between x and y.", "The model is overfit.", "The slopes don't actually depend on covariates."],
+    correct: 1
+  }
+];
+
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      unlockStage("A");
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  if (card.style.display === "block") return;
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "Wrap-up check",
+    items: POSTTEST_ITEMS,
+    onComplete: () => { Score.finish(); }
+  });
+}
+
+Score.init({
+  moduleId: "lesson2",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
 });
 </script>
 </body>

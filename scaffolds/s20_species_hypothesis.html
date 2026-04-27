@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S20: species as hypotheses</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -78,11 +79,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally</h3>
     <div class="tally-grid" id="tallyGrid"></div>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -120,8 +135,12 @@
       observation that would refute it.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 // Each round has the evidence, the "defensible" call, the "both defensible" flag, and the best flip observation.
@@ -235,7 +254,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
   state.speciesChoice = null;
@@ -393,8 +412,84 @@ function shortLabel(r) {
   return r.label;
 }
 
-renderRound();
-renderTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "When you call two populations 'separate species,' the most fundamental claim you are making is:",
+    options: ["They cannot interbreed under any circumstances.", "They look different.", "They will not influence each other's evolutionary trajectory going forward.", "They live in different places."],
+    correct: 2
+  },
+  {
+    idx: 1,
+    q: "Two populations have F_ST = 0.05 at neutral loci but F_ST = 0.25 at a handful of behavioral-isolation loci. The strongest case is:",
+    options: ["Clearly two species \u2014 high F_ST at any locus suffices.", "Clearly one species \u2014 low average F_ST.", "Speciation is in progress at the loci that matter; gene flow continues at neutral sites.", "The data are inconclusive."],
+    correct: 2
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A ring species \u2014 terminal populations don't interbreed, but a continuous gene-flow chain runs through intermediates \u2014 is best understood as:",
+    options: ["Definitely two species.", "Definitely one species.", "A genuine grey zone \u2014 the binary classification doesn't fit naturally.", "An error in the data."],
+    correct: 2
+  },
+  {
+    idx: 1,
+    q: "F1 hybrids between two populations are completely sterile. This most strongly supports:",
+    options: ["One species.", "Two species (operational reproductive isolation).", "High migration rate.", "Low F_ST."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      renderTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s20",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

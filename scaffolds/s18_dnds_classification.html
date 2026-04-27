@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S18: dN/dS classification</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -67,11 +68,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — dN vs. dS for each round</h3>
     <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="dN vs dS per round"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -106,8 +121,12 @@
       locate the signal.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 const ROUNDS = [
@@ -176,7 +195,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
   state.choice = null;
@@ -432,8 +451,84 @@ function supscript(n) {
   return minus + digits.split("").map(d => map[d] || d).join("");
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A gene with dN/dS > 1 is most consistent with:",
+    options: ["Purifying (negative) selection.", "Neutral evolution.", "Positive (Darwinian) selection.", "No mutation."],
+    correct: 2
+  },
+  {
+    idx: 1,
+    q: "A gene with dN/dS << 1 is most consistent with:",
+    options: ["Positive selection.", "Purifying selection conserving function.", "Convergence.", "Population size effects."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Most genes in most genomes show dN/dS values:",
+    options: ["> 1, indicating widespread positive selection.", "\u2248 0, indicating no mutation.", "< 1, reflecting purifying selection.", "Exactly 1."],
+    correct: 2
+  },
+  {
+    idx: 1,
+    q: "A measured dN/dS \u2248 1 across an entire gene is most parsimoniously interpreted as:",
+    options: ["Strong directional selection.", "Approximate neutrality (or balance of positive and negative).", "Recombination breakdown.", "HWE failure."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s18",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

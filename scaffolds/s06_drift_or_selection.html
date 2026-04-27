@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S6: drift, selection, or both?</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -97,11 +98,24 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
 
-  <div class="tally">
-    <h3>Running tally — classifications</h3>
-    <div class="tally-grid" id="tallyGrid"></div>
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+    <div class="tally">
+      <h3>Running tally — classifications</h3>
+      <div class="tally-grid" id="tallyGrid"></div>
+    </div>
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -134,8 +148,12 @@
       demonstrated.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Embedded data ----------
 const LTEE_ARA1_GEN = [0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,22000,24000,26000,28000,30000,32000,34000,36000,38000,40000,42000,44000,46000,48000,50000];
@@ -287,7 +305,9 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    // All rounds done. Show the posttest; on completion, reveal the finale
+    // and the score code.
+    showPosttest();
     return;
   }
 
@@ -362,8 +382,11 @@ function renderRound() {
     for (const k in buttons) buttons[k].disabled = true;
 
     state.revealed = true;
+    // For "both defensible" cases the rubric should accept either, but S6's
+    // rounds all have a single defensible truth, so equality is fine.
     const correct = state.choice === r.truth;
     state.history.push({ round: r, choice: state.choice, correct });
+    Score.recordCheckpoint(state.round, correct ? 1 : 0);
 
     // Build the reveal text
     revealBox.innerHTML = "";
@@ -579,8 +602,109 @@ function renderTally() {
   }
 }
 
-renderRound();
-renderTally();
+// ---------- Pretest / posttest items ----------
+// Two paired items, both probing the s ≈ 1/Ne intuition. The framework
+// tracks bits at fixed positions; question text is meant to be edited freely.
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "An allele in a small population (Nₑ = 50) has |s| = 0.005. Over the next 100 generations, the most likely trajectory is:",
+    options: [
+      "A clear directional climb to fixation.",
+      "Drift-dominated — the allele behaves nearly neutral.",
+      "An exponential rise.",
+      "A perfectly flat line at the starting frequency."
+    ],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Ten replicate populations start at p = 0.5 with identical parameters. After 80 generations the trajectories fan out from p = 0 to p = 1 with no consistent direction. The most parsimonious interpretation is:",
+    options: [
+      "Strong directional selection in each replicate.",
+      "Drift in a small population.",
+      "Migration from an unobserved sink population.",
+      "Mutation pressure overwhelming selection."
+    ],
+    correct: 1
+  }
+];
+
+// Posttest mirrors the pretest concepts on different scenarios so the
+// reveal text in between doesn't trivially answer the same item.
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two populations, both with |s| = 0.01, differ only in Nₑ (one has Nₑ = 20, the other Nₑ = 100,000). In which is selection effectively neutral?",
+    options: [
+      "Both — |s| is the same in each.",
+      "Only the Nₑ = 20 population, because |s| is below 1/Nₑ there.",
+      "Only the Nₑ = 100,000 population.",
+      "Neither — selection is never neutral if |s| > 0."
+    ],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "You see one allele frequency trajectory rise from 0.10 to 0.45 over 30 generations in a single population. To decide whether this is selection or drift, the most important additional information is:",
+    options: [
+      "Whether the allele's effect is dominant or recessive.",
+      "What the population's effective size is.",
+      "Whether the locus is on an autosome or sex chromosome.",
+      "Whether the species is haploid or diploid."
+    ],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      renderTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these two before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      // Scroll the finale into view so the student doesn't miss it.
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s06",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: ROUNDS.length,
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

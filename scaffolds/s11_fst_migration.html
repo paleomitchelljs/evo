@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S11: F_ST and migration</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7;
@@ -88,11 +89,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — F<sub>ST</sub> vs. N<sub>e</sub>·m curve</h3>
     <svg id="tallySvg" viewBox="0 0 1000 220" preserveAspectRatio="none" aria-label="Tally of guesses on the F_ST vs migration curve"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -122,8 +137,12 @@
       species, but because the fjord geometry reduces incoming migrants.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 // A "forward" round gives you N_e and m; you guess F_ST.
@@ -193,7 +212,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -535,8 +554,84 @@ function drawTally() {
   const lt2 = svgEl("text", { x: lx + 62, y: ly + 3, "font-size": "11", fill: "#b23a48" }); lt2.textContent = "your guess"; svg.appendChild(lt2);
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Wright's two-population approximation gives F_ST \u2248 1 / (1 + 4 N\u2091 m). Increasing m, holding N\u2091 fixed, will most likely:",
+    options: ["Increase F_ST.", "Decrease F_ST.", "Leave F_ST unchanged.", "Make F_ST negative."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "If F_ST is small (near 0), the populations are most likely:",
+    options: ["Strongly differentiated.", "Effectively well-mixed by migration.", "Completely isolated.", "Cannot tell."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "F_ST = 0.2 implies, very roughly, the effective number of migrants Nm per generation is on the order of:",
+    options: ["0.", "About 1.", "About 100.", "Infinite."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Two populations with very small N\u2091 but high m may show F_ST that is:",
+    options: ["Very high.", "Low \u2014 migration overcomes drift.", "Always 0.5.", "Negative."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s11",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S5: time to fixation</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -63,11 +64,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — median resolution time vs. N<sub>e</sub></h3>
     <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Median resolution time across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -104,8 +119,12 @@
       sets the starting hand.</strong> Both change what you see.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 const ROUNDS = [
@@ -204,7 +223,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -546,8 +565,84 @@ function supscript(n) {
   return minus + digits.split("").map(d => map[d] || d).join("");
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Doubling N\u2091, holding p\u2080 fixed, will most likely change the median time to fixation:",
+    options: ["Roughly halve it.", "Roughly double it.", "Leave it unchanged.", "Make it infinite."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "An allele starts at p\u2080 = 0.01 in a population of N\u2091 = 100. The most likely outcome is:",
+    options: ["Quick fixation.", "Quick loss.", "Indefinite stable polymorphism.", "Approach to p = 0.5."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two replicates have the same p\u2080 but N\u2091 = 10 vs N\u2091 = 1000. Which one resolves (fixes or loses) faster on average?",
+    options: ["N\u2091 = 10.", "N\u2091 = 1000.", "Both at the same time.", "Neither will fix."],
+    correct: 0
+  },
+  {
+    idx: 1,
+    q: "Under neutral drift starting at p\u2080 = 0.5, the expected time to fixation given fixation occurs is approximately:",
+    options: ["Independent of N\u2091.", "Linear in N\u2091.", "Quadratic in N\u2091.", "Exponential in N\u2091."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s05",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

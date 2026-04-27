@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S9: mutation–selection balance</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -63,11 +64,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — equilibrium frequency vs. dominance</h3>
     <svg id="tallySvg" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-label="Equilibrium q across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -103,8 +118,12 @@
       the biology is more complicated than the equation.</strong>
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // ---------- Rounds ----------
 const ROUNDS = [
@@ -187,7 +206,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -484,8 +503,84 @@ function supscript(n) {
   return minus + digits.split("").map(d => map[d] || d).join("");
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "For a recessive lethal allele with mutation rate \u03bc, the equilibrium allele frequency q\u0302 is approximately:",
+    options: ["\u03bc.", "\u221a\u03bc.", "\u03bc/s.", "Zero."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Halving the selection coefficient s while holding \u03bc fixed will most likely:",
+    options: ["Halve q\u0302.", "Increase q\u0302.", "Leave q\u0302 unchanged.", "Drive q\u0302 to 0."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A dominant deleterious allele reaches q\u0302 \u2248 \u03bc/s; a recessive reaches q\u0302 \u2248 \u221a(\u03bc/s). For the same \u03bc and s, which is larger?",
+    options: ["Dominant.", "Recessive.", "Equal.", "Cannot tell."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Mutation\u2013selection balance explains why deleterious alleles are not exactly extinct. The equilibrium q\u0302 depends most directly on:",
+    options: ["Population size only.", "The ratio of mutation rate to selection.", "Drift only.", "Migration rate only."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s09",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>

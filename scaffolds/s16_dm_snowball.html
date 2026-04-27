@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>BIO 202 — Scaffold S16: Dobzhansky–Muller snowball</title>
+<link rel="stylesheet" href="../lib/score.css">
 <style>
   :root {
     --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
@@ -63,11 +64,25 @@
 </header>
 
 <main>
-  <div id="round-container"></div>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
 
   <div class="tally">
     <h3>Running tally — incompatibilities vs. divergence time (log–log)</h3>
     <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Snowball log-log plot"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
   </div>
 
   <div class="finale" id="finale">
@@ -98,8 +113,12 @@
       on a curve.
     </p>
   </div>
+
+  <div id="score-final"></div>
 </main>
 
+<script src="../lib/score.js"></script>
+<script src="../lib/quiz.js"></script>
 <script>
 // Expected incompatibility count: I(t) = alpha * t^2
 // Use alpha = 1 for a clean demonstration.
@@ -163,7 +182,7 @@ function renderRound() {
 
   const r = ROUNDS[state.round];
   if (!r) {
-    document.getElementById("finale").classList.add("shown");
+    showPosttest();
     return;
   }
 
@@ -423,8 +442,84 @@ function supscript(n) {
   return minus + digits.split("").map(d => map[d] || d).join("");
 }
 
-renderRound();
-drawTally();
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "The Dobzhansky\u2013Muller model predicts the number of pairwise incompatibilities between two diverging lineages grows over divergence time:",
+    options: ["Linearly.", "Faster than linearly (e.g., quadratically).", "Constantly (no change).", "Decreases."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "After divergence time t, the expected number of pairwise incompatibilities scales approximately like:",
+    options: ["t.", "t\u00b2.", "log(t).", "1/t."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two species pairs have been isolated for the same total time, but pair A has accumulated alleles at twice the rate per generation. Pair A is most likely to show:",
+    options: ["Fewer incompatibilities.", "More incompatibilities.", "Equal incompatibilities.", "No reproductive isolation."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Reproductive isolation building up faster-than-linearly with divergence time supports the idea that:",
+    options: ["Incompatibilities arise pairwise from accumulated substitutions.", "Speciation is purely allopatric.", "Reproductive isolation is unrelated to substitution rate.", "Incompatibilities decrease with time."],
+    correct: 0
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s16",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
 </script>
 </body>
 </html>
