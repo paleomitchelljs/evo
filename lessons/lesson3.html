@@ -2,1487 +2,806 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>BIO 202 — Lesson 3: Mendel, linkage, and gene dropping</title>
+<title>BIO 202 — Lesson 4: Lines of equally good fit</title>
 <link rel="stylesheet" href="../lib/score.css">
 <style>
-  :root {
-    --bg: #fafaf7;
-    --panel: #ffffff;
-    --ink: #1d1d1b;
-    --muted: #6b6b68;
-    --accent: #b23a48;
-    --accent-soft: #f4d3d7;
-    --accent2: #2f6b8f;
-    --accent2-soft: #d0e1ed;
-    --rule: #e2e0d9;
-    --code-bg: #1e1f22;
-    --code-ink: #e6e6e6;
-    --code-hi: #3b3f48;
-    --stage-bar: #efeee8;
-    --lock-bg: #f0ece0;
-    --lock-ink: #6a5018;
-    --lock-rule: #b4a06a;
-    /* Four founder-allele colors, ColorBrewer Set2-ish, kept distinct from
-       accent/accent2 (which are reserved for data-vs-truth roles). */
-    --allele1: #66a61e;
-    --allele2: #7570b3;
-    --allele3: #e6ab02;
-    --allele4: #a6761d;
-  }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-    background: var(--bg);
-    color: var(--ink);
-  }
-  header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--rule);
-    background: var(--panel);
-  }
-  header h1 { margin: 0 0 4px 0; font-size: 18px; }
-  header p { margin: 0; color: var(--muted); font-size: 13px; }
-
-  nav.toc {
-    position: sticky; top: 0; z-index: 5;
-    background: var(--stage-bar);
-    border-bottom: 1px solid var(--rule);
-    padding: 8px 24px;
-    font-size: 13px;
-  }
-  nav.toc a { color: var(--muted); text-decoration: none; margin-right: 14px; }
-  nav.toc a:hover { color: var(--ink); }
-  nav.toc a.active { color: var(--accent); font-weight: 600; }
-  nav.toc a.locked { color: #b8b8b4; text-decoration: line-through; }
-
-  section.stage {
-    padding: 28px 24px 40px 24px;
-    border-bottom: 1px solid var(--rule);
-    max-width: 1300px;
-    margin: 0 auto;
-    position: relative;
-  }
-  section.stage h2.stage-h { margin: 0 0 4px 0; font-size: 20px; }
-  section.stage .stage-sub { margin: 0 0 18px 0; color: var(--muted); font-size: 13px; }
-
-  section.stage.stage-locked { opacity: 0.38; filter: grayscale(0.4); }
-  section.stage.stage-locked .lock-banner { display: block; }
-  section.stage.stage-locked .stage-body  { pointer-events: none; }
-  .lock-banner {
-    display: none;
-    margin: 0 0 16px 0;
-    padding: 10px 14px;
-    background: var(--lock-bg);
-    border: 1px dashed var(--lock-rule);
-    border-radius: 4px;
-    font-size: 13px;
-    color: var(--lock-ink);
-    text-align: center;
-  }
-
-  .explore-tracker {
-    margin-top: 10px;
-    padding: 8px 12px;
-    background: #f4f0dd;
-    border-left: 3px solid #caa04a;
-    border-radius: 0 4px 4px 0;
-    font-size: 12.5px;
-    color: #4a3a14;
-    display: none;
-  }
-  .explore-tracker.shown { display: block; }
-  .explore-tracker.complete {
-    background: #e4efd4;
-    border-left-color: #6f8a4a;
-    color: #2e4410;
-  }
-
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .col { display: flex; flex-direction: column; gap: 16px; }
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 14px 16px;
-  }
-  .panel h3 {
-    margin: 0 0 10px 0;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .scenario p { margin: 0 0 8px 0; }
-  .scenario p:last-child { margin-bottom: 0; }
-  .scenario .formula {
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 13px;
-    background: #f2f1ec;
-    padding: 8px 10px;
-    border-radius: 4px;
-    display: inline-block;
-  }
-
-  .prediction ol { margin: 0; padding-left: 20px; }
-  .prediction li { margin-bottom: 10px; }
-  .prediction label { display: block; margin: 3px 0; cursor: pointer; font-size: 14px; }
-  .prediction .q { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
-  .prediction button {
-    margin-top: 6px; padding: 8px 14px;
-    background: var(--accent); color: #fff;
-    border: 0; border-radius: 4px; cursor: pointer; font-size: 14px;
-  }
-  .prediction button:disabled { background: #bbb; cursor: not-allowed; }
-  .prediction-done {
-    background: var(--accent-soft);
-    border: 1px solid var(--accent);
-    color: var(--accent);
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    margin-bottom: 6px;
-  }
-  .prediction-done.correct { background: #e6f0dd; border-color: #6f8a4a; color: #3d5728; }
-  .prediction-done.wrong   { background: #fbe4c6; border-color: #a86a1a; color: #5c3802; }
-
-  .controls.locked { opacity: 0.4; pointer-events: none; }
-  .controls .row {
-    display: grid;
-    grid-template-columns: 150px 1fr 70px;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
-  }
-  .controls label { font-size: 13px; }
-  .controls output { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
-  .controls input[type=range] { width: 100%; }
-  .controls .buttons { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
-  .controls button {
-    background: #333; color: #fff; border: 0; border-radius: 4px;
-    padding: 6px 10px; cursor: pointer; font-size: 13px;
-  }
-  .controls button.secondary { background: #888; }
-  .controls button.ghost { background: transparent; color: #333; border: 1px solid var(--rule); }
-  .controls button.accent { background: var(--accent); }
-
-  .graph-wrap canvas { width: 100%; height: auto; display: block; background: #fff; }
-  .fit-stats {
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 12.5px;
-    margin-top: 8px;
-    color: var(--ink);
-  }
-  .fit-stats .label { color: var(--muted); }
-
-  pre.code {
-    background: var(--code-bg);
-    color: var(--code-ink);
-    padding: 12px 14px;
-    border-radius: 4px;
-    font: 12px/1.55 ui-monospace, Menlo, monospace;
-    overflow-x: auto;
-    margin: 0;
-    max-height: 360px;
-  }
-  pre.code .line { display: block; padding: 0 6px; border-radius: 2px; }
-  pre.code .line.hi { background: var(--code-hi); }
-  pre.code .kw { color: #c792ea; }
-  pre.code .fn { color: #82aaff; }
-  pre.code .num { color: #f78c6c; }
-  pre.code .str { color: #c3e88d; }
-  pre.code .com { color: #676f8a; font-style: italic; }
-
-  .teaching-note {
-    background: #f5efe0;
-    border-left: 3px solid #caa04a;
-    padding: 8px 12px;
-    border-radius: 0 4px 4px 0;
-    font-size: 13px;
-    color: #4a3a14;
-  }
-  .teaching-note strong { color: #2e230a; }
-
-  footer.wrap-up {
-    padding: 20px 24px 40px 24px;
-    max-width: 1300px;
-    margin: 0 auto;
-    color: var(--muted);
-    font-size: 13px;
-  }
-  footer.wrap-up h2 { color: var(--ink); font-size: 16px; }
-  footer.wrap-up code { font-family: ui-monospace, Menlo, monospace; background: #eee; padding: 1px 4px; border-radius: 3px; }
-
-  .outcomes {
-    max-width: 1300px;
-    margin: 0 auto;
-    padding: 16px 24px 4px 24px;
-    border-bottom: 1px solid var(--rule);
-    background: var(--panel);
-  }
-  .outcomes h2 {
-    margin: 0 0 6px 0;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    font-weight: 600;
-  }
-  .outcomes p { margin: 0 0 8px 0; }
-  .outcomes ul {
-    margin: 0 0 10px 0;
-    padding-left: 20px;
-    columns: 2;
-    column-gap: 28px;
-    font-size: 14px;
-  }
-  .outcomes li { margin-bottom: 4px; break-inside: avoid; }
-  .outcomes .stage-outcome {
-    font-size: 12.5px;
-    color: var(--muted);
-    margin: 0 0 14px 0;
-    padding: 8px 12px;
-    background: #f3f1ea;
-    border-left: 3px solid var(--accent2);
-    border-radius: 0 4px 4px 0;
-  }
-  .outcomes .stage-outcome strong { color: var(--ink); }
-
-  .reflect {
-    display: none;
-    background: var(--accent2-soft);
-    border: 1px solid var(--accent2);
-    border-radius: 6px;
-    padding: 14px 16px;
-    margin-top: 12px;
-  }
-  .reflect.shown { display: block; }
-  .reflect h3 {
-    margin: 0 0 6px 0;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--accent2);
-    font-weight: 600;
-  }
-  .reflect .scenario-q { margin: 0 0 8px 0; font-size: 14px; }
-  .reflect .q { font-weight: 600; margin: 6px 0 4px 0; font-size: 14px; }
-  .reflect label { display: block; margin: 3px 0; cursor: pointer; font-size: 14px; }
-  .reflect button {
-    margin-top: 8px;
-    padding: 7px 13px;
-    background: var(--accent2); color: #fff;
-    border: 0; border-radius: 4px; cursor: pointer; font-size: 14px;
-  }
-  .reflect button:disabled { background: #bbb; cursor: not-allowed; }
-  .reflect .result {
-    margin-top: 10px;
-    padding: 8px 10px;
-    border-radius: 4px;
-    font-size: 13px;
-    display: none;
-  }
-  .reflect .result.correct { background: #e6f0dd; border: 1px solid #6f8a4a; color: #3d5728; display: block; }
-  .reflect .result.wrong   { background: #fbe4c6; border: 1px solid #a86a1a; color: #5c3802; display: block; }
-
-  /* Pedigree / legend inline chips. */
-  .chip {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border-radius: 2px;
-    vertical-align: -1px;
-    margin-right: 4px;
-  }
-  .chip.a1 { background: var(--allele1); }
-  .chip.a2 { background: var(--allele2); }
-  .chip.a3 { background: var(--allele3); }
-  .chip.a4 { background: var(--allele4); }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; }
+  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .prediction-done.correct { background:#e6f0dd; border-color:#6f8a4a; color:#3d5728; }
+  .prediction-done.wrong { background:#fbe4c6; border-color:#a86a1a; color:#5c3802; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .big { font-size: 16px; font-weight: 600; color: var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; }
+  .teaching-note strong { color:#2e230a; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; }
+  footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+  .outcomes ul { margin:0 0 10px; padding-left:20px; columns:2; column-gap:28px; font-size:14px; }
+  .outcomes li { margin-bottom:4px; break-inside:avoid; }
+  .stage-outcome { font-size:12.5px; color:var(--muted); margin:4px 0 14px; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; }
+  .stage-outcome strong { color:var(--ink); }
+  .stretch { margin-top:20px; padding:16px; background:var(--accent2-soft); border:1px dashed var(--accent2); border-radius:6px; }
+  .stretch h3 { margin:0 0 8px; font-size:13px; color:var(--accent2); text-transform:uppercase; letter-spacing:.06em; }
+  .stretch p { margin:0 0 8px; font-size:13.5px; }
+  .stretch button { margin-top:6px; padding:7px 13px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .stretch button.done { background:#6f8a4a; }
+  .stretch .opt-in-status { margin-top:8px; font-size:12.5px; color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
 </style>
 </head>
 <body>
-
 <header>
-  <h1>Lesson 3 — Mendel, linkage, and gene dropping</h1>
-  <p>BIO 202, Spring 2026 — draft v1. Mendelian transmission is fair coins. Fair coins make distributions, not exact ratios. Everything popgen will do from here — drift, linkage decay, founder loss — starts here.</p>
+  <h1>Lesson 4 — How unique is the best-fit line?</h1>
+  <p>BIO 202, Spring 2026, draft v1. In Lesson 3 you fit a line. Here you ask what counts as "fit" in the first place.</p>
 </header>
-
-<div id="score-name" style="max-width: 1300px; margin: 16px auto 0 auto; padding: 0 24px;"></div>
-
-<div class="score-card" id="pretest-card" style="display:none; max-width: 1300px; margin: 0 auto; padding: 16px 24px;">
-  <div id="pretest-mount"></div>
-</div>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
 
 <div class="outcomes">
-  <h2>What Lesson 3 is actually asking</h2>
-  <p>Three scales of Mendelian sampling. One locus, two loci, and a whole pedigree — each one asks how far random transmission pushes allele frequencies away from their expected values.</p>
-  <ul>
-    <li>Say why a 3:1 ratio is an <em>expectation</em>, not a guarantee. Small families land away from it on purpose.</li>
-    <li>Read the drift variance p(1−p)/(2n) as "fair-coin sampling variance", not a new formula.</li>
-    <li>Name what a recombination rate <em>r</em> does to gamete frequencies when two loci start in coupling.</li>
-    <li>Read linkage disequilibrium D as "how much do these two loci still travel together?"</li>
-    <li>Run a gene-dropping simulation on a pedigree and read founder-allele retention as a probability, not a certainty.</li>
-    <li>Say why a captive breeding program needs more than one offspring per couple to preserve founder diversity.</li>
-  </ul>
-  <p style="font-size:12.5px; color: var(--muted); margin:0;">The math is not harder than lesson 0. The shift is that the "noise" now has a biological name: meiosis.</p>
+  <h2>What you'll do</h2>
+  <p>Move a line by hand. Save 20 that score the same R² (to 2 decimal places) as the OLS optimum. Then ask whether a bootstrap reaches the same cloud.</p>
 </div>
 
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. One locus: fair coins</a>
-  <a href="#stageB" id="tocB" class="locked">B. Two loci: recombination and LD</a>
-  <a href="#stageC" id="tocC" class="locked">C. Gene dropping through a pedigree</a>
+  <a href="#stageA" id="tocA">A. Drag a line, read R²</a>
+  <a href="#stageB" id="tocB" class="locked">B. Find 20 lines with the same R²</a>
+  <a href="#stageC" id="tocC" class="locked">C. Bootstrap a cloud of fits</a>
+  <a href="#stageD" id="tocD" class="locked">D. NHANES height–weight</a>
 </nav>
 
-<!-- ===================================================================== -->
-<!-- STAGE A -- one locus, Aa x Aa, family size n ======================== -->
-<!-- ===================================================================== -->
+<!-- ========== STAGE A — drag, read R² ============================== -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Mendel's laws are fair coins. A 3:1 ratio is an <em>expectation</em>, not a promise.</h2>
-  <p class="stage-sub">Two heterozygous parents (Aa × Aa). Each child gets one allele from each parent by a fair coin. The expected frequency of A in the kids is 0.5. In a family of 4, the <em>actual</em> frequency lands on 0, 0.25, 0.5, 0.75, or 1 — with probabilities 1/16, 4/16, 6/16, 4/16, 1/16.</p>
-  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> read the spread of <em>p̂</em> across small families as the same thing you called "sampling variance" in Lesson 0. The drift variance <code>p(1−p)/(2n)</code> in popgen is a Mendelian restatement of the binomial variance.</p>
-  <div class="lock-banner">Locked — answer the pretest above to unlock this section.</div>
-
+  <h2 class="stage-h">A — Drag a line and watch R² update</h2>
+  <p class="stage-sub">Synthetic scatter with a true generative line. Move the sliders. R² to 2 decimal places sits in the corner.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>Two parents, both Aa. Each produces gametes: half A, half a. A child receives one gamete from each parent, independently. Four possible combinations per child, each with probability 1/4: AA, Aa, Aa, aa. The Punnett square.</p>
-        <p><span class="formula">p(A in one gamete) = 0.5</span> &nbsp; <span class="formula">p(A in child) = 0.5</span></p>
-        <p>In a family of n children, count the number of A alleles across all 2n gametes the parents transmit. That count is Binomial(2n, 0.5). Divide by 2n to get the family's allele frequency p̂:</p>
-        <p><span class="formula">2n · p̂ ~ Binomial(2n, 0.5)</span> &nbsp; <span class="formula">Var(p̂) = 0.5 · 0.5 / (2n) = p(1−p)/(2n)</span></p>
-        <p>That second formula is the one popgen texts call the "drift variance" per generation. It is not a new idea. It is the variance of a binomial proportion, applied to alleles instead of coin flips.</p>
-        <p>Simulate many families of size n. The expected allele frequency in every one is 0.5. The <em>realized</em> allele frequency in each one is somewhere in that binomial distribution. Small n, wide distribution — a lot of families land at 0.25 or 0.75 by luck. Large n, narrow distribution — almost every family lands near 0.5.</p>
-        <p class="teaching-note"><strong>Note that</strong> "the 3:1 ratio" taught in an intro genetics course is the <em>expected</em> AA+Aa : aa split across infinitely many children. For a family of 4, the ratio is fixed to 4:0, 3:1, 2:2, 1:3, or 0:4 — and each of those has nonzero probability.</p>
+        <p>50 points drawn from <code>y = 1.0·x + 0.5 + Normal(0, 1)</code>. You place the line (it does not auto-fit). The big number is R² rounded to 2 decimal places.</p>
+        <p>Aim for the highest R² you can. Then see how far you can wiggle α and β before the rounded number changes.</p>
       </div>
-
       <div class="panel graph-wrap">
-        <h3>Allele frequency p̂ across families (histogram)</h3>
-        <canvas id="plotA" width="560" height="360"></canvas>
+        <h3>Scatter + your line</h3>
+        <canvas id="plotA" width="560" height="380"></canvas>
         <div class="fit-stats" id="statsA">
-          <span class="label">n (family size):</span> <span id="A_n">—</span>
+          <span class="label">your α:</span> <span id="A_aVal">0.5</span>
           &nbsp;|&nbsp;
-          <span class="label">families:</span> <span id="A_fams">—</span>
+          <span class="label">your β:</span> <span id="A_bVal">1.0</span>
           &nbsp;|&nbsp;
-          <span class="label">mean p̂:</span> <span id="A_mean">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">sd(p̂):</span> <span id="A_sd">—</span>
+          <span class="label">R² (2 dp):</span> <span id="A_r2" class="big">—</span>
         </div>
         <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">theory: sd(p̂) = √(p(1−p)/(2n)) =</span> <span id="A_sdTheory">—</span>
+          <span class="label">OLS best α̂:</span> <span id="A_aOls">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">OLS best β̂:</span> <span id="A_bOls">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">OLS R² (full):</span> <span id="A_r2Ols">—</span>
         </div>
       </div>
     </div>
-
     <div class="col">
       <div class="panel prediction" id="predA">
         <h3>Prediction (required before sliders unlock)</h3>
         <ol>
           <li>
-            <div class="q">Q1. You simulate 1000 families of 4 children from Aa × Aa. What will the histogram of family-level p̂ look like?</div>
-            <label><input type="radio" name="qA1" value="all" /> one tall bar at p̂ = 0.5 — Mendel's law guarantees the ratio</label>
-            <label><input type="radio" name="qA1" value="mode" /> a peak at 0.5, but a substantial fraction of families also land at 0.25, 0.75, 0, and 1</label>
-            <label><input type="radio" name="qA1" value="flat" /> a flat histogram across [0, 1] — any frequency is equally likely in small families</label>
+            <div class="q">Q1. You're at the OLS optimum and you move β by 0.05 (small). R² to 2 decimal places will:</div>
+            <label><input type="radio" name="qA1" value="same" /> almost always stay the same (because R² near the max is flat in β)</label>
+            <label><input type="radio" name="qA1" value="drop" /> drop visibly</label>
+            <label><input type="radio" name="qA1" value="rise" /> rise</label>
           </li>
           <li>
-            <div class="q">Q2. You raise the family size n from 4 to 40, keeping the number of families fixed. The histogram of p̂…</div>
-            <label><input type="radio" name="qA2" value="widen" /> gets wider — more kids means more ways things can vary</label>
-            <label><input type="radio" name="qA2" value="narrow" /> gets narrower and more sharply peaked on 0.5</label>
-            <label><input type="radio" name="qA2" value="shift" /> shifts to the right</label>
+            <div class="q">Q2. Moving the line in any direction from the OLS optimum:</div>
+            <label><input type="radio" name="qA2" value="cant" /> cannot raise R² — OLS already gave the max</label>
+            <label><input type="radio" name="qA2" value="random" /> can raise or lower it randomly</label>
+            <label><input type="radio" name="qA2" value="up" /> raises it if you go in the right direction</label>
           </li>
         </ol>
         <button id="submitA" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreA">Explore the sliders to unlock Stage B. <span class="count">0/5 moves</span></div>
+        <div class="explore-tracker" id="exploreA">Try at least 8 (α, β) combinations to unlock Stage B. <span class="count">0/8 combos</span></div>
       </div>
-
-      <div class="reflect" id="reflectA">
-        <h3>Transfer question — new scenario</h3>
-        <p class="scenario-q">A pair of carriers for a recessive disease (Aa × Aa) has three children. Zero of them are affected (aa). Which reading is best?</p>
-        <label><input type="radio" name="rA" value="a" /> The parents are probably not actually carriers — a recessive should show up.</label>
-        <label><input type="radio" name="rA" value="b" /> No tension with Mendel. Under Aa × Aa the chance of <em>zero</em> affected in 3 kids is (3/4)³ ≈ 0.42 — the modal outcome.</label>
-        <label><input type="radio" name="rA" value="c" /> One of the next children must be affected to bring the ratio back to 3:1.</label>
-        <button disabled>Check my answer</button>
-        <div class="result"></div>
-      </div>
-
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsA">
-          <div class="row" data-line="n"><label for="A_nSlider">n (kids per family)</label><input type="range" id="A_nSlider" min="1" max="80" step="1" value="4" /><output id="A_nOut">4</output></div>
-          <div class="row" data-line="fams"><label for="A_famsSlider">number of families</label><input type="range" id="A_famsSlider" min="50" max="5000" step="50" value="1000" /><output id="A_famsOut">1000</output></div>
-          <div class="row" data-line="seed"><label for="A_seedSlider">seed</label><input type="range" id="A_seedSlider" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="row" data-line="alpha"><label for="A_a">α (intercept)</label><input type="range" id="A_a" min="-3" max="4" step="0.05" value="0.5" /><output id="A_aOut">0.5</output></div>
+          <div class="row" data-line="beta"><label for="A_b">β (slope)</label><input type="range" id="A_b" min="-1" max="3" step="0.05" value="1.0" /><output id="A_bOut">1.0</output></div>
+          <div class="row" data-line="seed"><label for="A_seed">seed</label><input type="range" id="A_seed" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
           <div class="buttons">
-            <button id="A_newSeed">Regenerate (new seed)</button>
-            <button id="A_reset" class="secondary">Reset</button>
+            <button id="A_ols" class="accent">Snap to OLS</button>
+            <button id="A_newSeed" class="secondary">Regenerate (new seed)</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
-
       <div class="panel">
-        <h3>R code (base R)</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="com"># Stage A: one locus, Aa x Aa, family size n.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n     &lt;- <span class="num" id="cA_n">4</span>     <span class="com"># kids per family</span></span><span class="line" data-line="fams">fams  &lt;- <span class="num" id="cA_fams">1000</span>  <span class="com"># number of families to simulate</span></span><span class="line"></span><span class="line"><span class="com"># Each kid gets one allele from each of two Aa parents.</span></span><span class="line"><span class="com"># A = 1, a = 0. Count A alleles in each family, divide by 2n.</span></span><span class="line">p_hat &lt;- <span class="fn">replicate</span>(fams, {</span><span class="line">  g1 &lt;- <span class="fn">rbinom</span>(n, <span class="num">1</span>, <span class="num">0.5</span>)   <span class="com"># allele from parent 1, per kid</span></span><span class="line">  g2 &lt;- <span class="fn">rbinom</span>(n, <span class="num">1</span>, <span class="num">0.5</span>)   <span class="com"># allele from parent 2, per kid</span></span><span class="line">  <span class="fn">sum</span>(g1 + g2) / (<span class="num">2</span> * n)</span><span class="line">})</span><span class="line"></span><span class="line"><span class="com"># realized vs expected</span></span><span class="line"><span class="fn">mean</span>(p_hat); <span class="fn">sd</span>(p_hat)</span><span class="line"><span class="fn">sqrt</span>(<span class="num">0.5</span> * <span class="num">0.5</span> / (<span class="num">2</span> * n))   <span class="com"># theoretical sd of p_hat</span></span><span class="line"></span><span class="line"><span class="fn">hist</span>(p_hat, breaks = <span class="fn">seq</span>(<span class="num">-0.025</span>, <span class="num">1.025</span>, by = <span class="num">0.05</span>),</span><span class="line">     col = <span class="str">"gray80"</span>, border = <span class="str">"white"</span>,</span><span class="line">     xlab = <span class="str">"realized p in family"</span>, main = <span class="str">""</span>)</span><span class="line"><span class="fn">abline</span>(v = <span class="num">0.5</span>, col = <span class="str">"#b23a48"</span>, lwd = <span class="num">2</span>, lty = <span class="num">2</span>)</span></pre>
+        <h3>R code — hand-fit a line, compare to OLS</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line">n &lt;- <span class="num">50</span></span><span class="line">x &lt;- <span class="fn">runif</span>(n, <span class="num">0</span>, <span class="num">5</span>)</span><span class="line">y &lt;- <span class="num">0.5</span> + <span class="num">1.0</span>*x + <span class="fn">rnorm</span>(n, <span class="num">0</span>, <span class="num">1</span>)</span><span class="line"></span><span class="line" data-line="alpha">my_a &lt;- <span class="num" id="cA_a">0.5</span></span><span class="line" data-line="beta">my_b &lt;- <span class="num" id="cA_b">1.0</span></span><span class="line">yhat &lt;- my_a + my_b * x</span><span class="line">r2_my &lt;- <span class="num">1</span> - <span class="fn">sum</span>((y - yhat)^<span class="num">2</span>) / <span class="fn">sum</span>((y - <span class="fn">mean</span>(y))^<span class="num">2</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(y ~ x)</span><span class="line"><span class="fn">round</span>(<span class="fn">summary</span>(fit)$r.squared, <span class="num">2</span>)</span><span class="line"><span class="fn">round</span>(r2_my, <span class="num">2</span>)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-
-<!-- ===================================================================== -->
-<!-- STAGE B -- two loci, recombination, AB/ab parent ==================== -->
-<!-- ===================================================================== -->
+<!-- ========== STAGE B — find 20 lines with same R² ==================== -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Two loci, one recombination rate. How tightly do A and B travel together?</h2>
-  <p class="stage-sub">A parent's two chromosomes carry AB on one and ab on the other. A gamete is either a parental haplotype (AB, ab) or a recombinant one (Ab, aB). r is the probability of a recombinant gamete. r = 0 means full linkage; r = 0.5 means the two loci are effectively independent.</p>
-  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> read linkage disequilibrium D = p(AB)·p(ab) − p(Ab)·p(aB) as "how much more often do A and B show up together than they would if gametes were independent draws at the two loci?" r shrinks D toward 0 across generations.</p>
-  <div class="lock-banner">Complete Stage A to unlock this section.</div>
-
+  <h2 class="stage-h">B — Find 20 different lines that share the OLS R² (to 2 dp)</h2>
+  <p class="stage-sub">Save every line you find that matches the OLS R² within tolerance. Target: 20 saves.</p>
+  <div class="lock-banner">Complete Stage A (submit prediction, try 8 combos) to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>One double-heterozygous parent, coupling phase: AB on one chromosome, ab on the other. In meiosis a crossover between the two loci swaps the tail, and the parent produces a recombinant gamete (Ab or aB) instead of a parental one (AB or ab). r is the probability that a given gamete is recombinant:</p>
-        <p><span class="formula">p(AB) = p(ab) = (1 − r)/2</span> &nbsp; <span class="formula">p(Ab) = p(aB) = r/2</span></p>
-        <p>At r = 0, the two loci are locked: only AB and ab gametes, 50/50. A and B always travel together. At r = 0.5, all four haplotypes are equally frequent (1/4 each). A and B are effectively independent — the probability of a B allele is 1/2 regardless of whether the A locus shows A or a.</p>
-        <p>Linkage disequilibrium D measures the departure from independence at the two loci:</p>
-        <p><span class="formula">D = p(AB) · p(ab) − p(Ab) · p(aB)</span></p>
-        <p>If gametes were independent draws at the two loci, D would be 0 (p(AB) would equal p(A)·p(B)). When A and B travel together, D is positive; when they avoid each other, D is negative. The starting AB/ab parent has <em>maximum</em> coupling-phase D: D<sub>0</sub> = 1/4. Recombination erodes D by a factor of (1 − r) every generation.</p>
-        <p class="teaching-note"><strong>Note that</strong> r is bounded at 0.5. You cannot have <em>more</em> than 50% recombinant gametes from a coupling-phase parent, because a gamete with zero crossovers between the two loci is parental by definition, and a gamete with many crossovers is recombinant with probability 1/2. r = 0.5 is "effectively on different chromosomes".</p>
-        <p class="teaching-note"><strong>The trick is</strong> that D = 0 at r = 0.5 because the four haplotypes all come out at 1/4. Plug 1/4 into the formula: (1/4)(1/4) − (1/4)(1/4) = 0. Independence is the same statement as "no D".</p>
+        <p>Same scatter. When your R² (to 2 dp) matches the OLS R² within the tolerance, click <em>Save this line</em>. Saved lines stack as faint blue. Target: 20 saves.</p>
+        <p>Watch where the saved lines fall on the α–β plane (Stage C will plot it).</p>
       </div>
-
       <div class="panel graph-wrap">
-        <h3>Gamete haplotype frequencies from AB/ab parent</h3>
-        <canvas id="plotB" width="560" height="320"></canvas>
+        <h3>Scatter + your line + saved lines</h3>
+        <canvas id="plotB" width="560" height="380"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">p̂(AB):</span> <span id="B_pAB">—</span>
+          <span class="label">target R² (OLS):</span> <span id="B_target">—</span>
           &nbsp;|&nbsp;
-          <span class="label">p̂(Ab):</span> <span id="B_pAb">—</span>
+          <span class="label">your R² (2 dp):</span> <span id="B_r2" class="big">—</span>
           &nbsp;|&nbsp;
-          <span class="label">p̂(aB):</span> <span id="B_paB">—</span>
+          <span class="label">tolerance:</span> ±<span id="B_tol">0.01</span>
           &nbsp;|&nbsp;
-          <span class="label">p̂(ab):</span> <span id="B_pab">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">observed D:</span> <span id="B_D">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">expected D:</span> <span id="B_Dexp">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">r:</span> <span id="B_r">—</span>
+          <span class="label">saved:</span> <span class="saved-counter" id="B_savedCt">0</span>
         </div>
       </div>
     </div>
-
     <div class="col">
       <div class="panel prediction" id="predB">
         <h3>Prediction (required before sliders unlock)</h3>
         <ol>
           <li>
-            <div class="q">Q1. You set r = 0.5 (the two loci are on different chromosomes, effectively). The four haplotype frequencies in the gamete pool will be…</div>
-            <label><input type="radio" name="qB1" value="AB" /> mostly AB and ab (the parental haplotypes)</label>
-            <label><input type="radio" name="qB1" value="equal" /> close to 1/4 each — A and B now assort independently</label>
-            <label><input type="radio" name="qB1" value="recomb" /> mostly Ab and aB (the recombinant haplotypes)</label>
+            <div class="q">Q1. You raise β by 0.10 from the OLS optimum. To keep R² (to 2 dp) at the OLS level, you need to:</div>
+            <label><input type="radio" name="qB1" value="raise" /> raise α as well — both go the same direction</label>
+            <label><input type="radio" name="qB1" value="lower" /> lower α — the two slide along a tilted line of equal-fit pairs</label>
+            <label><input type="radio" name="qB1" value="same" /> leave α alone — only β controls R²</label>
           </li>
           <li>
-            <div class="q">Q2. You start at r = 0 and slowly raise r toward 0.5. The observed D…</div>
-            <label><input type="radio" name="qB2" value="up" /> rises from 0 to 1/4</label>
-            <label><input type="radio" name="qB2" value="down" /> falls from 1/4 toward 0</label>
-            <label><input type="radio" name="qB2" value="flat" /> stays near 0 throughout — D does not depend on r</label>
+            <div class="q">Q2. After 20 saves, the saved (α, β) pairs will:</div>
+            <label><input type="radio" name="qB2" value="point" /> all collapse to a single point (the OLS optimum) — there is no slack</label>
+            <label><input type="radio" name="qB2" value="ellipse" /> trace out an elongated ellipse — α and β are negatively correlated</label>
+            <label><input type="radio" name="qB2" value="random" /> form a uniform random cloud — no structure</label>
           </li>
         </ol>
-        <button id="submitB" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreB">Explore the sliders to unlock Stage C. <span class="count">0/5 moves</span></div>
+        <button id="submitB" disabled>Submit prediction → unlock the saver</button>
+        <div class="explore-tracker" id="exploreB">Save 20 different lines matching the OLS R² (within tolerance). <span class="count">0/20 saved</span></div>
       </div>
-
-      <div class="reflect" id="reflectB">
-        <h3>Transfer question — new scenario</h3>
-        <p class="scenario-q">A study of a human population finds two SNPs where the "risk" alleles co-occur on the same haplotype much more often than chance — observed D is about 80% of its maximum possible value. The two SNPs are 50 kb apart. Which reading is best?</p>
-        <label><input type="radio" name="rB" value="a" /> The two SNPs must be under joint natural selection — high D means selection.</label>
-        <label><input type="radio" name="rB" value="b" /> High D between physically close SNPs is what short genetic distance <em>looks like</em>: recombination between them is rare, so historical coupling phase has not been broken up.</label>
-        <label><input type="radio" name="rB" value="c" /> High D means the SNPs are on different chromosomes.</label>
-        <button disabled>Check my answer</button>
-        <div class="result"></div>
-      </div>
-
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsB">
-          <div class="row" data-line="r"><label for="B_rSlider">r (recombination rate)</label><input type="range" id="B_rSlider" min="0" max="0.5" step="0.01" value="0.1" /><output id="B_rOut">0.10</output></div>
-          <div class="row" data-line="ngam"><label for="B_ngamSlider">gametes simulated</label><input type="range" id="B_ngamSlider" min="100" max="10000" step="100" value="2000" /><output id="B_ngamOut">2000</output></div>
-          <div class="row" data-line="seed"><label for="B_seedSlider">seed</label><input type="range" id="B_seedSlider" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="row" data-line="alpha"><label for="B_a">α (intercept)</label><input type="range" id="B_a" min="-3" max="4" step="0.05" value="0.5" /><output id="B_aOut">0.5</output></div>
+          <div class="row" data-line="beta"><label for="B_b">β (slope)</label><input type="range" id="B_b" min="-1" max="3" step="0.05" value="1.0" /><output id="B_bOut">1.0</output></div>
+          <div class="row"><label for="B_tolIn">tolerance ±</label><input type="range" id="B_tolIn" min="0" max="0.05" step="0.005" value="0.01" /><output id="B_tolOut">0.01</output></div>
           <div class="buttons">
-            <button id="B_newSeed">Regenerate (new seed)</button>
-            <button id="B_reset" class="secondary">Reset</button>
+            <button id="B_save" class="accent">Save this line</button>
+            <button id="B_clear" class="ghost">Clear saved</button>
             <button id="B_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
-
       <div class="panel">
-        <h3>R code (base R)</h3>
-<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="com"># Stage B: AB/ab parent, recombination rate r.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="r">r    &lt;- <span class="num" id="cB_r">0.10</span>    <span class="com"># recombination rate between the two loci</span></span><span class="line" data-line="ngam">ngam &lt;- <span class="num" id="cB_ngam">2000</span>    <span class="com"># gametes to simulate</span></span><span class="line"></span><span class="line"><span class="com"># Each gamete: is it recombinant? (prob r) and which of the two possibilities?</span></span><span class="line">recomb &lt;- <span class="fn">rbinom</span>(ngam, <span class="num">1</span>, r)</span><span class="line">flip   &lt;- <span class="fn">rbinom</span>(ngam, <span class="num">1</span>, <span class="num">0.5</span>)</span><span class="line"></span><span class="line"><span class="com"># Parental gametes are AB ("AB") or ab ("ab"). Recombinant gametes are Ab or aB.</span></span><span class="line">hap &lt;- <span class="fn">ifelse</span>(recomb == <span class="num">0</span>,</span><span class="line">              <span class="fn">ifelse</span>(flip == <span class="num">0</span>, <span class="str">"AB"</span>, <span class="str">"ab"</span>),</span><span class="line">              <span class="fn">ifelse</span>(flip == <span class="num">0</span>, <span class="str">"Ab"</span>, <span class="str">"aB"</span>))</span><span class="line">tbl &lt;- <span class="fn">table</span>(<span class="fn">factor</span>(hap, levels = <span class="fn">c</span>(<span class="str">"AB"</span>, <span class="str">"Ab"</span>, <span class="str">"aB"</span>, <span class="str">"ab"</span>))) / ngam</span><span class="line"></span><span class="line"><span class="com"># Linkage disequilibrium at the gamete pool</span></span><span class="line">D &lt;- tbl[<span class="str">"AB"</span>] * tbl[<span class="str">"ab"</span>] - tbl[<span class="str">"Ab"</span>] * tbl[<span class="str">"aB"</span>]</span><span class="line"><span class="fn">print</span>(tbl); <span class="fn">print</span>(D)</span><span class="line"></span><span class="line"><span class="fn">barplot</span>(tbl, col = <span class="fn">c</span>(<span class="str">"#66a61e"</span>, <span class="str">"#7570b3"</span>, <span class="str">"#e6ab02"</span>, <span class="str">"#a6761d"</span>),</span><span class="line">        ylim = <span class="fn">c</span>(<span class="num">0</span>, <span class="num">0.55</span>), ylab = <span class="str">"gamete frequency"</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="fn">c</span>((<span class="num">1</span>-r)/<span class="num">2</span>, r/<span class="num">2</span>), lty = <span class="num">2</span>, col = <span class="str">"#b23a48"</span>)</span></pre>
+        <h3>R code — hunting (α, β) pairs with matching rounded R²</h3>
+<pre class="code" id="codeB"><span class="line"><span class="com"># Same data as Stage A.</span></span><span class="line">target_r2 &lt;- <span class="fn">round</span>(<span class="fn">summary</span>(<span class="fn">lm</span>(y ~ x))$r.squared, <span class="num">2</span>)</span><span class="line"></span><span class="line"><span class="com"># grid-search (a, b) pairs whose rounded R^2 matches</span></span><span class="line">grid &lt;- <span class="fn">expand.grid</span>(a = <span class="fn">seq</span>(-<span class="num">1</span>, <span class="num">2</span>, by = <span class="num">0.05</span>),</span><span class="line">                    b = <span class="fn">seq</span>(<span class="num">0.6</span>, <span class="num">1.4</span>, by = <span class="num">0.05</span>))</span><span class="line">grid$r2 &lt;- <span class="fn">apply</span>(grid, <span class="num">1</span>, <span class="kw">function</span>(p) {</span><span class="line">  <span class="num">1</span> - <span class="fn">sum</span>((y - (p[<span class="num">1</span>] + p[<span class="num">2</span>]*x))^<span class="num">2</span>) / <span class="fn">sum</span>((y - <span class="fn">mean</span>(y))^<span class="num">2</span>)</span><span class="line">})</span><span class="line">keep &lt;- <span class="fn">subset</span>(grid, <span class="fn">round</span>(r2, <span class="num">2</span>) == target_r2)</span><span class="line"><span class="fn">nrow</span>(keep)   <span class="com"># how many pairs share the rounded R^2?</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-
-<!-- ===================================================================== -->
-<!-- STAGE C -- gene dropping through a small founder pedigree =========== -->
-<!-- ===================================================================== -->
+<!-- ========== STAGE C — bootstrap cloud =============================== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Gene dropping. How many founder alleles make it to generation F2?</h2>
-  <p class="stage-sub">Four unrelated founders, each homozygous for a unique allele (1, 2, 3, 4). One generation of crosses gives two F1 heterozygotes. The F1 couple produces <em>k</em> F2 offspring. How many of the four founder alleles survive to F2, and how does that depend on k?</p>
-  <p class="stage-outcome" style="margin:4px 0 14px 0; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; font-size:12.5px; color:var(--muted);"><strong>For this stage:</strong> name "gene dropping" as the technique conservation geneticists use to predict how much founder diversity a captive breeding plan will retain. Read founder loss as fair-coin attrition: each F1 parent transmits one of its two alleles per child, so an allele that fails to be transmitted in <em>any</em> of k kids is gone.</p>
-  <div class="lock-banner">Complete Stage B to unlock this section.</div>
-
+  <h2 class="stage-h">C — The bootstrap cloud (200 resamples of the data)</h2>
+  <p class="stage-sub">200 bootstrap resamples. Refit OLS on each. Overlay the 200 fitted lines, then look at the α–β plane next to your Stage B cloud.</p>
+  <div class="lock-banner">Complete Stage B (submit prediction, save 20 lines) to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario — a four-founder pedigree</h3>
-        <p>Four unrelated founders, drawn from a captive breeding program. Each is homozygous for a unique allele — easy bookkeeping, nothing else:</p>
-        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #f2f1ec; padding: 10px 12px; border-radius: 4px;">
-          <span class="chip a1"></span>G1 = (1, 1) &nbsp; <span class="chip a2"></span>G2 = (2, 2) &nbsp; <span class="chip a3"></span>G3 = (3, 3) &nbsp; <span class="chip a4"></span>G4 = (4, 4)
-        </p>
-        <p>Two couples, two F1 offspring:</p>
-        <p style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; background: #f2f1ec; padding: 10px 12px; border-radius: 4px;">
-          G1 × G2 &nbsp;→&nbsp; F1<sub>a</sub> = (1, 2) &nbsp;&nbsp;&nbsp; G3 × G4 &nbsp;→&nbsp; F1<sub>b</sub> = (3, 4)
-        </p>
-        <p>F1<sub>a</sub> × F1<sub>b</sub> produce k children. For each child, F1<sub>a</sub> transmits either allele 1 or allele 2 (fair coin), and F1<sub>b</sub> transmits either allele 3 or allele 4 (fair coin). The child is one of (1,3), (1,4), (2,3), (2,4) — each with probability 1/4.</p>
-        <p>An allele is <em>retained</em> to F2 if it appears in at least one of the k kids. An allele is <em>lost</em> if every one of the k F1 transmissions from its carrier parent went the other way. For allele 1:</p>
-        <p><span class="formula">P(allele 1 lost) = (1/2)<sup>k</sup></span> &nbsp; <span class="formula">P(allele 1 retained) = 1 − (1/2)<sup>k</sup></span></p>
-        <p>Same calculation for alleles 2, 3, 4. So the expected number of founder alleles retained, summed over all four, is 4 · (1 − (1/2)<sup>k</sup>). k = 1: expect 2. k = 4: expect 3.75. k = 8: expect 3.97.</p>
-        <p class="teaching-note"><strong>Note that</strong> allele 1 and allele 2 are <em>not</em> independently retained: if F1<sub>a</sub> transmits allele 1 in every kid (loss of allele 2), then allele 1 is certainly kept. Formal calc: P(F1<sub>a</sub> loses <em>either</em> 1 or 2) = 2 · (1/2)<sup>k</sup> − 0 = 2<sup>1−k</sup>. For k = 1 this is 1 — you cannot keep both of F1<sub>a</sub>'s alleles in a single child.</p>
-        <p class="teaching-note"><strong>Why this matters.</strong> This is the engine behind captive-breeding family-size recommendations. A program that produces one offspring per generation per breeding pair loses on average half of each pair's genetic contribution per generation. The Florida panther, the California condor, and Przewalski's horse programs all run gene-dropping simulations on their real pedigrees to plan pairings. This stage is the toy version.</p>
+        <h3>Scenario</h3>
+        <p>A bootstrap resample = 50 points sampled with replacement from the original 50. Some points appear twice, some not at all. Refit OLS on each resample; collect (α̂, β̂).</p>
+        <p>200 of them, plotted as faint red lines on the scatter. Your Stage B saved cloud appears green in the α–β plot. Compare.</p>
       </div>
-
       <div class="panel graph-wrap">
-        <h3>Founder-allele retention probability across replicates</h3>
-        <canvas id="plotC" width="560" height="300"></canvas>
-        <div class="fit-stats" id="statsC">
-          <span class="label">k (F2 kids):</span> <span id="C_k">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">replicates:</span> <span id="C_reps">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">mean # retained:</span> <span id="C_meanRet">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">expected:</span> <span id="C_expRet">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">P(all 4 retained):</span> <span id="C_pAll">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">theory:</span> <span id="C_pAllTh">—</span>
-          &nbsp;&nbsp;<span style="color:var(--muted);">(theory = (1 − 2<sup>1−k</sup>)² for k ≥ 1)</span>
-        </div>
-      </div>
-
-      <div class="panel graph-wrap">
-        <h3>Retention probability vs family size k</h3>
-        <canvas id="plotC2" width="560" height="260"></canvas>
-        <div class="fit-stats">
-          <span class="label">dashed red:</span> theoretical 1 − (1/2)<sup>k</sup> &nbsp;|&nbsp;
-          <span class="label">blue dots:</span> simulated P(one founder allele retained) per k
-        </div>
+        <h3>Scatter + bootstrap fitted lines (red) + your saved cloud overlay</h3>
+        <canvas id="plotC1" width="560" height="280"></canvas>
+        <h3 style="margin-top:10px;">α × β plot: bootstrap (red) vs. your saved (green)</h3>
+        <canvas id="plotC2" width="560" height="280"></canvas>
       </div>
     </div>
-
     <div class="col">
       <div class="panel prediction" id="predC">
-        <h3>Prediction (required before sliders unlock)</h3>
+        <h3>Prediction (required before bootstrap runs)</h3>
         <ol>
           <li>
-            <div class="q">Q1. With k = 1 F2 child, how many of the 4 founder alleles are retained?</div>
-            <label><input type="radio" name="qC1" value="four" /> 4 — the child has two alleles and both come from founders</label>
-            <label><input type="radio" name="qC1" value="two" /> exactly 2 — one from each F1 parent, so two of the four founders drop out every time</label>
-            <label><input type="radio" name="qC1" value="vary" /> a random number between 0 and 4 — totally unpredictable</label>
+            <div class="q">Q1. The bootstrap cloud of (α̂, β̂) pairs will:</div>
+            <label><input type="radio" name="qC1" value="circle" /> look like a circular cloud around the OLS optimum</label>
+            <label><input type="radio" name="qC1" value="tilt" /> look like a tilted ellipse — α̂ and β̂ are correlated</label>
+            <label><input type="radio" name="qC1" value="apart" /> have α̂ and β̂ varying independently — uncorrelated</label>
           </li>
           <li>
-            <div class="q">Q2. You raise k from 1 to 6, keeping the pedigree and the seed fixed. P(all 4 founder alleles retained)…</div>
-            <label><input type="radio" name="qC2" value="down" /> falls toward 0 — more offspring dilute each founder</label>
-            <label><input type="radio" name="qC2" value="up" /> rises toward 1 — more offspring means more chances for each allele to get transmitted</label>
-            <label><input type="radio" name="qC2" value="flat" /> stays at 1/2 — gene dropping is random</label>
+            <div class="q">Q2. Compared to the OLS point estimate, the bootstrap cloud's spread tells you:</div>
+            <label><input type="radio" name="qC2" value="point" /> nothing new — OLS already gives the answer</label>
+            <label><input type="radio" name="qC2" value="se" /> the standard error of β̂ — the cloud's width is what SE describes</label>
+            <label><input type="radio" name="qC2" value="bias" /> the bias of β̂ — whether OLS is over- or under-estimating</label>
           </li>
         </ol>
-        <button id="submitC" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreC">Explore the sliders to finish Lesson 3. <span class="count">0/5 moves</span></div>
+        <button id="submitC" disabled>Submit prediction → unlock bootstrap</button>
+        <div class="explore-tracker" id="exploreC">Run at least 3 bootstrap batches with different seeds. <span class="count">0/3 batches</span></div>
       </div>
-
-      <div class="reflect" id="reflectC">
-        <h3>Transfer question — new scenario</h3>
-        <p class="scenario-q">A captive-breeding coordinator tells you: "This founder pair has only produced one offspring in ten years. We need to rebreed them before we lose their genetic contribution." Which reading makes sense?</p>
-        <label><input type="radio" name="rC" value="a" /> They are being pessimistic — the one offspring carries the full genetic contribution of both parents.</label>
-        <label><input type="radio" name="rC" value="b" /> One offspring carries only one allele from each parent. At a heterozygous locus, the other allele had a (1/2)<sup>1</sup> = 1/2 chance of dropping out on transmission, and cannot be recovered from that one descendant.</label>
-        <label><input type="radio" name="rC" value="c" /> They mean the mutation rate is too low.</label>
-        <button disabled>Check my answer</button>
-        <div class="result"></div>
-      </div>
-
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsC">
-          <div class="row" data-line="k"><label for="C_kSlider">k (F2 kids per couple)</label><input type="range" id="C_kSlider" min="1" max="12" step="1" value="2" /><output id="C_kOut">2</output></div>
-          <div class="row" data-line="reps"><label for="C_repsSlider">replicate pedigrees</label><input type="range" id="C_repsSlider" min="100" max="5000" step="100" value="1000" /><output id="C_repsOut">1000</output></div>
-          <div class="row" data-line="seed"><label for="C_seedSlider">seed</label><input type="range" id="C_seedSlider" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="row" data-line="reps"><label for="C_reps">reps</label><input type="range" id="C_reps" min="50" max="500" step="50" value="200" /><output id="C_repsOut">200</output></div>
+          <div class="row" data-line="seed"><label for="C_seed">seed</label><input type="range" id="C_seed" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
           <div class="buttons">
-            <button id="C_newSeed">Regenerate (new seed)</button>
-            <button id="C_reset" class="secondary">Reset</button>
+            <button id="C_run" class="accent">Run bootstrap</button>
             <button id="C_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
-
       <div class="panel">
-        <h3>R code (base R) — gene-drop one founder pedigree</h3>
-<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="com"># Stage C: drop alleles through a 2-couple, 1-generation pedigree.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="k">k    &lt;- <span class="num" id="cC_k">2</span>      <span class="com"># F2 kids per couple</span></span><span class="line" data-line="reps">reps &lt;- <span class="num" id="cC_reps">1000</span>   <span class="com"># replicate simulations of the pedigree</span></span><span class="line"></span><span class="line"><span class="com"># Founders: G1=(1,1), G2=(2,2), G3=(3,3), G4=(4,4)</span></span><span class="line"><span class="com"># F1a from G1xG2 is (1,2); F1b from G3xG4 is (3,4).</span></span><span class="line"><span class="com"># Each F2 kid: one allele from F1a (1 or 2), one from F1b (3 or 4).</span></span><span class="line"></span><span class="line">gene_drop &lt;- <span class="kw">function</span>(k) {</span><span class="line">  from_a &lt;- <span class="fn">sample</span>(<span class="fn">c</span>(<span class="num">1</span>, <span class="num">2</span>), k, replace = <span class="kw">TRUE</span>)</span><span class="line">  from_b &lt;- <span class="fn">sample</span>(<span class="fn">c</span>(<span class="num">3</span>, <span class="num">4</span>), k, replace = <span class="kw">TRUE</span>)</span><span class="line">  alleles_seen &lt;- <span class="fn">unique</span>(<span class="fn">c</span>(from_a, from_b))</span><span class="line">  <span class="fn">as.integer</span>(<span class="fn">c</span>(<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>) %in% alleles_seen)</span><span class="line">}</span><span class="line"></span><span class="line">ret &lt;- <span class="fn">t</span>(<span class="fn">replicate</span>(reps, gene_drop(k)))</span><span class="line"><span class="fn">colnames</span>(ret) &lt;- <span class="fn">paste0</span>(<span class="str">"a"</span>, <span class="num">1</span>:<span class="num">4</span>)</span><span class="line"><span class="fn">colMeans</span>(ret)                   <span class="com"># per-allele retention probability</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">rowSums</span>(ret) == <span class="num">4</span>)         <span class="com"># P(all four retained)</span></span><span class="line"></span><span class="line"><span class="fn">barplot</span>(<span class="fn">colMeans</span>(ret), ylim = <span class="fn">c</span>(<span class="num">0</span>, <span class="num">1</span>),</span><span class="line">        col = <span class="fn">c</span>(<span class="str">"#66a61e"</span>, <span class="str">"#7570b3"</span>, <span class="str">"#e6ab02"</span>, <span class="str">"#a6761d"</span>),</span><span class="line">        ylab = <span class="str">"P(founder allele retained)"</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="num">1</span> - (<span class="num">1</span>/<span class="num">2</span>)^k, col = <span class="str">"#b23a48"</span>, lwd = <span class="num">2</span>, lty = <span class="num">2</span>)</span></pre>
+        <h3>R code — bootstrap the OLS slope</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># Same x, y as Stage A.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="reps">reps &lt;- <span class="num" id="cC_reps">200</span></span><span class="line">boot &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  i &lt;- <span class="fn">sample</span>(<span class="fn">length</span>(x), <span class="fn">length</span>(x), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(y[i] ~ x[i]))</span><span class="line">})</span><span class="line"><span class="fn">apply</span>(boot, <span class="num">1</span>, <span class="fn">quantile</span>, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span><span class="line"><span class="fn">cor</span>(boot[<span class="num">1</span>,], boot[<span class="num">2</span>,])   <span class="com"># negative -- alpha and beta trade off</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE D — NHANES height–weight ========================== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Real data: NHANES height → weight</h2>
+  <p class="stage-sub">Same two moves as Stages B and C, on a 400-person NHANES subsample. Compare R² at β̂, at β̂ + 1 SE, and at β̂ − 1 SE.</p>
+  <div class="lock-banner">Complete Stage C (submit prediction, run 3 bootstrap batches) to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>A 400-person random subsample from NHANES. Fit weight ~ height, bootstrap it 200 times. R² readouts at β̂, β̂ + 1 SE, and β̂ − 1 SE all appear in the panel. Compare them.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>NHANES weight ~ height with bootstrap fit cloud</h3>
+        <canvas id="plotD" width="560" height="380"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">OLS β̂:</span> <span id="D_b">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">SE(β̂):</span> <span id="D_se">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">95% bootstrap β:</span> <span id="D_qi">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">R² at β̂:</span> <span id="D_r2c">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">R² at β̂ + 1 SE:</span> <span id="D_r2p">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">R² at β̂ − 1 SE:</span> <span id="D_r2m">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction (required before bootstrap unlocks)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. For NHANES height → weight, R² at β̂ + 1 SE compared to R² at β̂ will be:</div>
+            <label><input type="radio" name="qD1" value="same" /> the same to 2 decimal places</label>
+            <label><input type="radio" name="qD1" value="big" /> noticeably lower — moving 1 SE costs a lot</label>
+            <label><input type="radio" name="qD1" value="zero" /> exactly zero — only the OLS β̂ gives any fit</label>
+          </li>
+          <li>
+            <div class="q">Q2. The 95% bootstrap interval on β̂ will be:</div>
+            <label><input type="radio" name="qD2" value="point" /> [β̂, β̂] — there's no uncertainty</label>
+            <label><input type="radio" name="qD2" value="se" /> roughly β̂ ± 1.96·SE — a Gaussian-like band</label>
+            <label><input type="radio" name="qD2" value="huge" /> very wide — covering everything from negative to large positive</label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit prediction → unlock bootstrap</button>
+        <div class="explore-tracker" id="exploreD">Run at least 2 NHANES bootstrap batches to wrap up. <span class="count">0/2 batches</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row" data-line="n"><label for="D_n">subsample n</label><input type="range" id="D_n" min="50" max="2000" step="50" value="400" /><output id="D_nOut">400</output></div>
+          <div class="row" data-line="reps"><label for="D_reps">reps</label><input type="range" id="D_reps" min="50" max="500" step="50" value="200" /><output id="D_repsOut">200</output></div>
+          <div class="row" data-line="seed"><label for="D_seed">seed</label><input type="range" id="D_seed" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="D_run" class="accent">Run NHANES bootstrap</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — same move on NHANES</h3>
+<pre class="code" id="codeD"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line" data-line="n">idx &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num" id="cD_n">400</span>)</span><span class="line">d &lt;- nh[idx, ]</span><span class="line">fit &lt;- <span class="fn">lm</span>(Weight ~ Height, data = d)</span><span class="line"></span><span class="line" data-line="reps">B &lt;- <span class="num" id="cD_reps">200</span></span><span class="line">boot &lt;- <span class="fn">replicate</span>(B, {</span><span class="line">  k &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(d), <span class="fn">nrow</span>(d), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(Weight ~ Height, data = d[k, ]))</span><span class="line">})</span><span class="line"><span class="fn">apply</span>(boot, <span class="num">1</span>, <span class="fn">quantile</span>, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span></pre>
+      </div>
+    </div>
+  </div>
+  <div class="stretch" id="stretchD">
+    <h3>Stretch challenge (optional)</h3>
+    <p>Run the same bootstrap at n = 50, n = 200, and n = 1500. Report the bootstrap SE on β̂ for each. Then find a function of n that the three SEs fit, and say which way the cloud widens. Hit "I tried it" once you have a function.</p>
+    <button id="stretchD_btn">I tried it</button>
+    <div class="opt-in-status" id="stretchD_status">Not yet attempted.</div>
+  </div>
+</section>
 
-<!-- ===================================================================== -->
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
 <footer class="wrap-up">
   <h2>Where this lesson goes next</h2>
-  <p>The written deliverable for Lesson 3 is one modification to the Stage C
-  <code>.R</code> script that this GUI cannot do for you. Extend
-  <code>gene_drop()</code> to a <em>two-generation</em> pedigree: start from
-  the same four founders, but have F2 sibling mates produce an F3 generation
-  of m kids, and track founder-allele retention at F3. The question is not
-  whether founder alleles are lost — the question is <em>how much faster</em>
-  they are lost when transmission has to survive two rounds of meiosis
-  instead of one.</p>
-  <p>This is the on-ramp to Lesson 4 (Wright–Fisher drift). A Wright–Fisher
-  population is a long pedigree with every individual drawn uniformly at
-  random from the parent generation. The variance at one step <em>is</em>
-  the stage-A variance, p(1−p)/(2N). The difference is N instead of n, and
-  thousands of generations instead of one.</p>
+  <p><strong>Lesson 5</strong> takes the cloud you just built and asks: when is a slope clearly different from zero?</p>
+  <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
 </footer>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width: 1300px; margin: 16px auto; padding: 16px 24px;">
-  <div id="posttest-mount"></div>
-</div>
-
-<div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 32px 24px;"></div>
-
-<script src="../lib/score.js"></script>
 <script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
 <script>
-/* =======================================================================
-   Shared utilities (RNG, canvas helpers). Mirrors lesson0/1/2; factor
-   out once a fifth lesson needs them.
-   ======================================================================= */
-function mulberry32(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
+function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
+function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
+  xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
+  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke();
+  ctx.fillStyle="#333"; ctx.font="11px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for (let i=0;i<=xTicks;i++){ const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+6); }
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
+  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
+  ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
+  ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
 }
-function downloadText(filename, text) {
-  const blob = new Blob([text], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a); a.click(); a.remove();
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
+function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
+function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
+function ols(xs, ys) {
+  const n=xs.length, mx=mean(xs), my=mean(ys);
+  let sxy=0, sxx=0;
+  for (let i=0;i<n;i++) { sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
+  const b = sxy/sxx; const a = my - b*mx;
+  const yhat = xs.map(x => a + b*x);
+  const ssr = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
+  const sst = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
+  const sres = Math.sqrt(ssr/(n-2));
+  const seB  = sres / Math.sqrt(sxx);
+  return { a, b, r2: 1 - ssr/sst, sres, seB };
 }
-function setupCanvas(canvas) {
-  const dpr = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth, cssH = canvas.clientHeight;
-  if (canvas.width !== cssW * dpr) { canvas.width = cssW * dpr; canvas.height = cssH * dpr; }
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, cssW, cssH);
-  return { ctx, cssW, cssH };
-}
-function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) {
-  const W = cssW - pad.l - pad.r, H = cssH - pad.t - pad.b;
-  return {
-    pad, cssW, cssH, W, H, xMin, xMax, yMin, yMax,
-    xs: v => pad.l + ((v - xMin) / (xMax - xMin)) * W,
-    ys: v => pad.t + H - ((v - yMin) / (yMax - yMin)) * H,
-  };
-}
-function drawAxes(ctx, f, xLabel, yLabel, xTicksCount, yTicksCount, xTickFmt, yTickFmt) {
-  xTickFmt = xTickFmt || (v => v.toFixed(2));
-  yTickFmt = yTickFmt || (v => v.toFixed(2));
-  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.pad.t);
-  ctx.lineTo(f.pad.l, f.pad.t + f.H);
-  ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H);
-  ctx.stroke();
-  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  for (let i = 0; i <= xTicksCount; i++) {
-    const v = f.xMin + (f.xMax - f.xMin) * (i / xTicksCount);
-    const px = f.xs(v);
-    ctx.beginPath(); ctx.moveTo(px, f.pad.t + f.H); ctx.lineTo(px, f.pad.t + f.H + 4); ctx.stroke();
-    ctx.fillText(xTickFmt(v), px, f.pad.t + f.H + 6);
-  }
-  ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  for (let i = 0; i <= yTicksCount; i++) {
-    const v = f.yMin + (f.yMax - f.yMin) * (i / yTicksCount);
-    const py = f.ys(v);
-    ctx.beginPath(); ctx.moveTo(f.pad.l - 4, py); ctx.lineTo(f.pad.l, py); ctx.stroke();
-    ctx.fillText(yTickFmt(v), f.pad.l - 6, py);
-  }
-  ctx.fillStyle = "#333";
-  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  ctx.fillText(xLabel, f.pad.l + f.W / 2, f.cssH - 8);
-  ctx.save();
-  ctx.translate(14, f.pad.t + f.H / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText(yLabel, 0, 0);
-  ctx.restore();
-}
-function drawVLine(ctx, f, xv, color, width, dash) {
-  ctx.strokeStyle = color; ctx.lineWidth = width || 2;
-  ctx.setLineDash(dash || []);
-  ctx.beginPath();
-  ctx.moveTo(f.xs(xv), f.pad.t);
-  ctx.lineTo(f.xs(xv), f.pad.t + f.H);
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-function drawHLine(ctx, f, yv, color, width, dash) {
-  ctx.strokeStyle = color; ctx.lineWidth = width || 2;
-  ctx.setLineDash(dash || []);
-  ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.ys(yv));
-  ctx.lineTo(f.pad.l + f.W, f.ys(yv));
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-function drawHistogramBins(ctx, f, counts, fill) {
-  const maxC = Math.max(1, ...counts);
-  const n = counts.length;
-  const w = (f.xMax - f.xMin) / n;
-  ctx.fillStyle = fill;
-  for (let i = 0; i < n; i++) {
-    const x0 = f.xs(f.xMin + i * w);
-    const x1 = f.xs(f.xMin + (i + 1) * w);
-    const h = (counts[i] / maxC) * f.H;
-    const y0 = f.pad.t + f.H - h;
-    ctx.fillRect(x0 + 0.5, y0, Math.max(1, x1 - x0 - 1), h);
-  }
+function r2OfLine(xs, ys, a, b) {
+  const my = mean(ys);
+  let ssr=0, sst=0;
+  for (let i=0;i<xs.length;i++) { const e = ys[i]-(a+b*xs[i]); ssr += e*e; sst += (ys[i]-my)*(ys[i]-my); }
+  return 1 - ssr/sst;
 }
 
-function highlightByDataLine(codeId, key) {
-  document.querySelectorAll(`#${codeId} .line`).forEach(el => {
-    el.classList.toggle("hi", el.dataset.line === key);
-  });
-}
-function clearHighlightByCode(codeId) {
-  document.querySelectorAll(`#${codeId} .line.hi`).forEach(el => el.classList.remove("hi"));
-}
-
-/* =======================================================================
-   Stage gating: same pattern as lesson0/1/2.
-   ======================================================================= */
-const EXPLORE_THRESHOLD = 5;
-const Gates = {
-  A: { predDone:false, exploreCount:0, nextStage:"B", tocNext:"tocB", trackerId:"exploreA", controlsId:"controlsA", done:false },
-  B: { predDone:false, exploreCount:0, nextStage:"C", tocNext:"tocC", trackerId:"exploreB", controlsId:"controlsB", done:false },
-  C: { predDone:false, exploreCount:0, nextStage:null, tocNext:null, trackerId:"exploreC", controlsId:"controlsC", done:false },
-};
-function onSliderMove(stageKey) {
-  const g = Gates[stageKey];
-  if (!g || !g.predDone || g.done) return;
-  g.exploreCount++;
-  const tracker = document.getElementById(g.trackerId);
-  const count = tracker.querySelector(".count");
-  const shown = Math.min(g.exploreCount, EXPLORE_THRESHOLD);
-  count.textContent = `${shown}/${EXPLORE_THRESHOLD} moves`;
-  if (g.exploreCount >= EXPLORE_THRESHOLD) {
-    g.done = true;
-    tracker.classList.add("complete");
-    tracker.innerHTML = g.nextStage
-      ? `✓ Stage ${stageKey} explored. Stage ${g.nextStage} is unlocked. See the transfer question below.`
-      : `✓ You have reached the end of Lesson 3. See the transfer question below.`;
-    if (g.nextStage) {
-      document.getElementById("stage" + g.nextStage).classList.remove("stage-locked");
-      document.getElementById(g.tocNext).classList.remove("locked");
-    } else if (typeof showPosttest === "function") {
-      showPosttest();
-    }
-    const reflectEl = document.getElementById("reflect" + stageKey);
-    if (reflectEl) reflectEl.classList.add("shown");
+const EXPLORE_THRESHOLD = { A: 8, B: 20, C: 3, D: 2 };
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+function bumpExplore(stage) {
+  const g = Gates[stage]; if (!g.predicted || g.done) return;
+  g.explores += 1;
+  const tracker = document.getElementById("explore"+stage);
+  const c = tracker.querySelector(".count");
+  const noun = stage==="A"?"combos":stage==="B"?"saved":stage==="C"?"batches":"batches";
+  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
+  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
+    g.done = true; tracker.classList.add("complete");
+    c.textContent = `${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`;
+    unlockNext(stage);
   }
 }
-function wireReflect(stageKey, questionName, correct, explain) {
-  const panel = document.getElementById("reflect" + stageKey);
-  if (!panel) return;
-  const btn = panel.querySelector("button");
-  const result = panel.querySelector(".result");
-  function checkFilled() {
-    const ok = !!panel.querySelector(`input[name="${questionName}"]:checked`);
-    btn.disabled = !ok;
-  }
-  panel.querySelectorAll(`input[name="${questionName}"]`).forEach(r => r.addEventListener("change", checkFilled));
+function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"posttest"}[s]; }
+function unlockNext(stage) {
+  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
+  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
+  else if (typeof showPosttest==="function") showPosttest();
+}
+function wirePrediction(stage, predId, names, answers, controlsId) {
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  function allFilled() { return names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
+  function check() { btn.disabled = !allFilled(); }
+  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
   btn.addEventListener("click", () => {
-    const sel = panel.querySelector(`input[name="${questionName}"]:checked`);
-    if (!sel) return;
-    const ok = sel.value === correct;
-    result.className = "result " + (ok ? "correct" : "wrong");
-    result.innerHTML = (ok ? "<strong>✓ Nice read.</strong> " : "<strong>✗ Not quite.</strong> ") + explain;
-    btn.disabled = true;
-    panel.querySelectorAll(`input[name="${questionName}"]`).forEach(r => r.disabled = true);
-  });
-}
-function wirePrediction(stageKey, predId, names, answers, explains) {
-  const g = Gates[stageKey];
-  const panel = document.getElementById(predId);
-  const btn = panel.querySelector("button");
-  const controls = document.getElementById(g.controlsId);
-  const tracker = document.getElementById(g.trackerId);
-  function checkFilled() {
-    const ok = names.every(n => panel.querySelector(`input[name="${n}"]:checked`));
-    btn.disabled = !ok;
-  }
-  names.forEach(n => {
-    panel.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", checkFilled));
-  });
-  btn.addEventListener("click", () => {
-    const picks = names.map(n => panel.querySelector(`input[name="${n}"]:checked`).value);
-    const results = names.map((_, i) => ({
-      q: i + 1, pick: picks[i],
-      correct: picks[i] === answers[i], explain: explains[i]
-    }));
-    const priorTracker = tracker.cloneNode(true);
-    panel.innerHTML = `<h3>Prediction — logged</h3>` + results.map(r => `
-      <div class="prediction-done ${r.correct ? "correct" : "wrong"}">
-        <strong>Q${r.q}:</strong> you chose <code>${r.pick}</code>
-        ${r.correct ? "✓" : "✗ (Mendel's coins say otherwise)"}<br/>
-        <small>${r.explain}</small>
-      </div>`).join("") +
-      `<p style="font-size:13px; color: var(--muted); margin-top:10px;">
-         Sliders unlocked. Move them to test your prediction.
-       </p>`;
-    panel.appendChild(priorTracker);
-    priorTracker.classList.add("shown");
-    g.predDone = true;
-    controls.classList.remove("locked");
-  });
-}
-
-/* =======================================================================
-   STAGE A -- Aa x Aa, histogram of p-hat across families.
-   ======================================================================= */
-const sA = { n: 4, fams: 1000, seed: 42, canvas: document.getElementById("plotA") };
-const sA_outs = {
-  n: document.getElementById("A_nOut"),
-  fams: document.getElementById("A_famsOut"),
-  seed: document.getElementById("A_seedOut"),
-};
-const sA_code = {
-  n: document.getElementById("cA_n"),
-  fams: document.getElementById("cA_fams"),
-  seed: document.getElementById("cA_seed"),
-};
-
-function simulateFamilies(rng, n, fams) {
-  const p_hat = new Array(fams);
-  for (let f = 0; f < fams; f++) {
-    let count = 0;
-    for (let i = 0; i < n; i++) {
-      if (rng() < 0.5) count++;   // parent 1 gamete
-      if (rng() < 0.5) count++;   // parent 2 gamete
+    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
+    const nc = results.filter(r=>r.correct).length;
+    const ol = root.querySelector("ol");
+    const msg = document.createElement("div");
+    msg.className = "prediction-done";
+    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
+    root.insertBefore(msg, ol);
+    btn.style.display = "none";
+    Gates[stage].predicted = true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
+      Score.recordCheckpoint(stageIdx*2,     results[0].correct);
+      Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
     }
-    p_hat[f] = count / (2 * n);
-  }
-  return p_hat;
+  });
 }
 
+/* Synthetic data shared between A, B, C */
+let Synth = { xs: null, ys: null, seed: 42, ols: null };
+function regenSynth() {
+  const rng = mulberry32(Synth.seed), normal = makeNormal(rng);
+  const n = 50, xs = new Array(n), ys = new Array(n);
+  for (let i=0;i<n;i++) { xs[i] = rng()*5; ys[i] = 0.5 + 1.0*xs[i] + normal(); }
+  Synth.xs = xs; Synth.ys = ys; Synth.ols = ols(xs, ys);
+}
+regenSynth();
+
+/* ====== STAGE A ====================================================== */
+const sA = { a: 0.5, b: 1.0 };
 function drawStageA() {
-  const { ctx, cssW, cssH } = setupCanvas(sA.canvas);
-  const rng = mulberry32(sA.seed | 0);
-  const n = sA.n | 0, fams = sA.fams | 0;
-  const p_hat = simulateFamilies(rng, n, fams);
-
-  // Bin on [0, 1] with 2n+1 bins centered on the discrete support values.
-  const bins = Math.min(60, 2 * n + 1);
-  const counts = new Array(bins).fill(0);
-  for (const v of p_hat) {
-    let k = Math.floor(v * bins);
-    if (k >= bins) k = bins - 1;
-    counts[k]++;
-  }
-
-  const f = makeFrame({l:52, r:14, t:20, b:36}, cssW, cssH, 0, 1, 0, 1.05);
-  drawAxes(ctx, f, "p̂ (frequency of A in the family)", "count", 10, 4,
-    v => v.toFixed(2), () => "");
-  drawHistogramBins(ctx, f, counts, "rgba(30,30,30,0.55)");
-  drawVLine(ctx, f, 0.5, "#b23a48", 2, [5, 4]);
-
-  // Stats.
-  let s = 0; for (const v of p_hat) s += v;
-  const m = s / fams;
-  let ss = 0; for (const v of p_hat) ss += (v - m) * (v - m);
-  const sd = Math.sqrt(ss / Math.max(1, fams - 1));
-
-  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-  ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText("dashed red = expected p = 0.5", f.pad.l + 6, f.pad.t - 16);
-
-  document.getElementById("A_n").textContent = n;
-  document.getElementById("A_fams").textContent = fams;
-  document.getElementById("A_mean").textContent = m.toFixed(4);
-  document.getElementById("A_sd").textContent = sd.toFixed(4);
-  document.getElementById("A_sdTheory").textContent = Math.sqrt(0.25 / (2 * n)).toFixed(4);
+  const cv = document.getElementById("plotA");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, -0.2, 5.2, -1, 7);
+  drawAxes(ctx, f, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx.fillStyle = "rgba(60,60,60,0.6)";
+  for (let i=0;i<Synth.xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(Synth.xs[i]), f.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx.fill(); }
+  // OLS line (faint)
+  ctx.strokeStyle = "rgba(47,107,143,0.4)"; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(Synth.ols.a + Synth.ols.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(Synth.ols.a + Synth.ols.b*5.2)); ctx.stroke();
+  ctx.setLineDash([]);
+  // Student line
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(sA.a + sA.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(sA.a + sA.b*5.2)); ctx.stroke();
+  const r2 = r2OfLine(Synth.xs, Synth.ys, sA.a, sA.b);
+  document.getElementById("A_aVal").textContent = sA.a.toFixed(2);
+  document.getElementById("A_bVal").textContent = sA.b.toFixed(2);
+  document.getElementById("A_r2").textContent = r2.toFixed(2);
+  document.getElementById("A_aOls").textContent = Synth.ols.a.toFixed(3);
+  document.getElementById("A_bOls").textContent = Synth.ols.b.toFixed(3);
+  document.getElementById("A_r2Ols").textContent = Synth.ols.r2.toFixed(4);
 }
-
-function sA_fmt(key, v) { return String(v | 0); }
-const sA_sliderMap = { n: "A_nSlider", fams: "A_famsSlider", seed: "A_seedSlider" };
-Object.entries(sA_sliderMap).forEach(([k, id]) => {
-  const el = document.getElementById(id);
-  const handler = () => {
-    sA[k] = parseFloat(el.value);
-    sA_outs[k].textContent = sA_fmt(k, sA[k]);
-    if (sA_code[k]) sA_code[k].textContent = sA_fmt(k, sA[k]);
-    highlightByDataLine("codeA", k);
+["A_a","A_b","A_seed"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="A_a") { sA.a = parseFloat(e.target.value); document.getElementById("A_aOut").textContent = sA.a.toFixed(2); document.getElementById("cA_a").textContent = sA.a.toFixed(2); highlightByDataLine("codeA","alpha"); bumpExplore("A"); }
+    if (id==="A_b") { sA.b = parseFloat(e.target.value); document.getElementById("A_bOut").textContent = sA.b.toFixed(2); document.getElementById("cA_b").textContent = sA.b.toFixed(2); highlightByDataLine("codeA","beta"); bumpExplore("A"); }
+    if (id==="A_seed") { Synth.seed = parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent = Synth.seed; document.getElementById("cA_seed").textContent = Synth.seed; regenSynth(); highlightByDataLine("codeA","seed"); }
     drawStageA();
-    onSliderMove("A");
-  };
-  el.addEventListener("input", handler);
-  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeA"), 600); });
+  });
+});
+document.getElementById("A_ols").addEventListener("click", () => {
+  sA.a = Synth.ols.a; sA.b = Synth.ols.b;
+  document.getElementById("A_a").value = sA.a.toFixed(2); document.getElementById("A_aOut").textContent = sA.a.toFixed(2);
+  document.getElementById("A_b").value = sA.b.toFixed(2); document.getElementById("A_bOut").textContent = sA.b.toFixed(2);
+  drawStageA(); bumpExplore("A");
 });
 document.getElementById("A_newSeed").addEventListener("click", () => {
-  sA.seed = 1 + Math.floor(Math.random() * 998);
-  document.getElementById("A_seedSlider").value = sA.seed;
-  sA_outs.seed.textContent = sA.seed;
-  sA_code.seed.textContent = sA.seed;
-  highlightByDataLine("codeA", "seed"); drawStageA();
-  setTimeout(() => clearHighlightByCode("codeA"), 600);
-  onSliderMove("A");
-});
-document.getElementById("A_reset").addEventListener("click", () => {
-  sA.n = 4; sA.fams = 1000; sA.seed = 42;
-  Object.entries(sA_sliderMap).forEach(([k, id]) => {
-    document.getElementById(id).value = sA[k];
-    sA_outs[k].textContent = sA_fmt(k, sA[k]);
-    if (sA_code[k]) sA_code[k].textContent = sA_fmt(k, sA[k]);
-  });
-  drawStageA();
+  const s = Math.floor(Math.random()*999) + 1;
+  document.getElementById("A_seed").value = s;
+  document.getElementById("A_seed").dispatchEvent(new Event("input"));
 });
 document.getElementById("A_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageA_seed${sA.seed|0}.R`, `# Lesson 3, Stage A -- Aa x Aa, family size n, realized allele frequency
-set.seed(${sA.seed|0})
-n    <- ${sA.n|0}
-fams <- ${sA.fams|0}
-
-p_hat <- replicate(fams, {
-  g1 <- rbinom(n, 1, 0.5)
-  g2 <- rbinom(n, 1, 0.5)
-  sum(g1 + g2) / (2 * n)
-})
-
-cat("mean p_hat =", mean(p_hat), "\\n")
-cat("sd   p_hat =", sd(p_hat),   "\\n")
-cat("theory sd  =", sqrt(0.5 * 0.5 / (2 * n)), "\\n")
-
-hist(p_hat, breaks = seq(-0.025, 1.025, by = 0.05),
-     col = "gray80", border = "white",
-     xlab = "realized p in family", main = "")
-abline(v = 0.5, col = "#b23a48", lwd = 2, lty = 2)
+  downloadText(`lesson4_stageA_seed${Synth.seed}.R`, `# Lesson 4, Stage A
+set.seed(${Synth.seed})
+n <- 50
+x <- runif(n, 0, 5)
+y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
+my_a <- ${sA.a}; my_b <- ${sA.b}
+yhat <- my_a + my_b * x
+r2_my <- 1 - sum((y - yhat)^2) / sum((y - mean(y))^2)
+fit <- lm(y ~ x)
+round(summary(fit)$r.squared, 2); round(r2_my, 2)
 `);
 });
-
-/* =======================================================================
-   STAGE B -- AB/ab parent, recombination rate r, gamete pool.
-   ======================================================================= */
-const sB = { r: 0.10, ngam: 2000, seed: 42, canvas: document.getElementById("plotB") };
-const sB_outs = {
-  r: document.getElementById("B_rOut"),
-  ngam: document.getElementById("B_ngamOut"),
-  seed: document.getElementById("B_seedOut"),
-};
-const sB_code = {
-  r: document.getElementById("cB_r"),
-  ngam: document.getElementById("cB_ngam"),
-  seed: document.getElementById("cB_seed"),
-};
-
-function simulateGametes(rng, r, ngam) {
-  // haps order: AB, Ab, aB, ab
-  const counts = [0, 0, 0, 0];
-  for (let i = 0; i < ngam; i++) {
-    const recomb = rng() < r;
-    const flip = rng() < 0.5;
-    if (!recomb) counts[flip ? 3 : 0]++;   // parental: AB or ab
-    else         counts[flip ? 2 : 1]++;   // recombinant: Ab or aB
-  }
-  return counts;
-}
-
-function drawStageB() {
-  const { ctx, cssW, cssH } = setupCanvas(sB.canvas);
-  const rng = mulberry32(sB.seed | 0);
-  const ngam = sB.ngam | 0;
-  const counts = simulateGametes(rng, sB.r, ngam);
-  const freqs = counts.map(c => c / ngam);
-  const expected = [(1 - sB.r) / 2, sB.r / 2, sB.r / 2, (1 - sB.r) / 2];
-  const colors = [
-    getComputedStyle(document.documentElement).getPropertyValue("--allele1").trim() || "#66a61e",
-    getComputedStyle(document.documentElement).getPropertyValue("--allele2").trim() || "#7570b3",
-    getComputedStyle(document.documentElement).getPropertyValue("--allele3").trim() || "#e6ab02",
-    getComputedStyle(document.documentElement).getPropertyValue("--allele4").trim() || "#a6761d",
-  ];
-  const labels = ["AB", "Ab", "aB", "ab"];
-
-  const f = makeFrame({l:52, r:14, t:20, b:46}, cssW, cssH, 0, 4, 0, 0.6);
-
-  // Custom axes for bar labels.
-  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.pad.t);
-  ctx.lineTo(f.pad.l, f.pad.t + f.H);
-  ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H);
-  ctx.stroke();
-  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-  ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  for (let i = 0; i <= 6; i++) {
-    const v = i * 0.1;
-    const py = f.ys(v);
-    ctx.beginPath(); ctx.moveTo(f.pad.l - 4, py); ctx.lineTo(f.pad.l, py); ctx.stroke();
-    ctx.fillText(v.toFixed(2), f.pad.l - 6, py);
-  }
-  // Bars centered at x = 0.5, 1.5, 2.5, 3.5
-  const barW = 0.6;
-  for (let i = 0; i < 4; i++) {
-    const cx = i + 0.5;
-    const x0 = f.xs(cx - barW / 2), x1 = f.xs(cx + barW / 2);
-    // simulated
-    const y0 = f.ys(freqs[i]);
-    ctx.fillStyle = colors[i];
-    ctx.fillRect(x0, y0, x1 - x0, f.ys(0) - y0);
-    // expected (dashed outline on top)
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
-    const ey = f.ys(expected[i]);
-    ctx.beginPath(); ctx.moveTo(x0, ey); ctx.lineTo(x1, ey); ctx.stroke();
-    ctx.setLineDash([]);
-    // label
-    ctx.fillStyle = "#333"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-    ctx.font = "12px ui-monospace, Menlo, monospace";
-    ctx.fillText(labels[i], f.xs(cx), f.pad.t + f.H + 6);
-  }
-  ctx.fillStyle = "#333"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-  ctx.fillText("haplotype", f.pad.l + f.W / 2, f.cssH - 6);
-  ctx.save();
-  ctx.translate(14, f.pad.t + f.H / 2);
-  ctx.rotate(-Math.PI / 2);
-  ctx.fillText("gamete frequency", 0, 0);
-  ctx.restore();
-
-  ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-  ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText("dashed red = expected under r", f.pad.l + 6, f.pad.t - 16);
-
-  const D = freqs[0] * freqs[3] - freqs[1] * freqs[2];
-  const Dexp = (1 - 2 * sB.r) / 4;
-  document.getElementById("B_pAB").textContent = freqs[0].toFixed(3);
-  document.getElementById("B_pAb").textContent = freqs[1].toFixed(3);
-  document.getElementById("B_paB").textContent = freqs[2].toFixed(3);
-  document.getElementById("B_pab").textContent = freqs[3].toFixed(3);
-  document.getElementById("B_D").textContent = D.toFixed(4);
-  document.getElementById("B_Dexp").textContent = Dexp.toFixed(4);
-  document.getElementById("B_r").textContent = sB.r.toFixed(2);
-}
-
-function sB_fmt(key, v) {
-  if (key === "r") return v.toFixed(2);
-  return String(v | 0);
-}
-const sB_sliderMap = { r: "B_rSlider", ngam: "B_ngamSlider", seed: "B_seedSlider" };
-Object.entries(sB_sliderMap).forEach(([k, id]) => {
-  const el = document.getElementById(id);
-  const handler = () => {
-    sB[k] = parseFloat(el.value);
-    sB_outs[k].textContent = sB_fmt(k, sB[k]);
-    if (sB_code[k]) sB_code[k].textContent = sB_fmt(k, sB[k]);
-    highlightByDataLine("codeB", k);
-    drawStageB();
-    onSliderMove("B");
-  };
-  el.addEventListener("input", handler);
-  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeB"), 600); });
-});
-document.getElementById("B_newSeed").addEventListener("click", () => {
-  sB.seed = 1 + Math.floor(Math.random() * 998);
-  document.getElementById("B_seedSlider").value = sB.seed;
-  sB_outs.seed.textContent = sB.seed;
-  sB_code.seed.textContent = sB.seed;
-  highlightByDataLine("codeB", "seed"); drawStageB();
-  setTimeout(() => clearHighlightByCode("codeB"), 600);
-  onSliderMove("B");
-});
-document.getElementById("B_reset").addEventListener("click", () => {
-  sB.r = 0.10; sB.ngam = 2000; sB.seed = 42;
-  Object.entries(sB_sliderMap).forEach(([k, id]) => {
-    document.getElementById(id).value = sB[k];
-    sB_outs[k].textContent = sB_fmt(k, sB[k]);
-    if (sB_code[k]) sB_code[k].textContent = sB_fmt(k, sB[k]);
-  });
-  drawStageB();
-});
-document.getElementById("B_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageB_seed${sB.seed|0}.R`, `# Lesson 3, Stage B -- AB/ab parent, recombination r
-set.seed(${sB.seed|0})
-r    <- ${sB.r.toFixed(3)}
-ngam <- ${sB.ngam|0}
-
-recomb <- rbinom(ngam, 1, r)
-flip   <- rbinom(ngam, 1, 0.5)
-hap <- ifelse(recomb == 0,
-              ifelse(flip == 0, "AB", "ab"),
-              ifelse(flip == 0, "Ab", "aB"))
-tbl <- table(factor(hap, levels = c("AB", "Ab", "aB", "ab"))) / ngam
-
-D <- tbl["AB"] * tbl["ab"] - tbl["Ab"] * tbl["aB"]
-cat("haplotype frequencies:\\n"); print(tbl)
-cat("D =", D, "   (expected (1 - 2r)/4 =", (1 - 2 * r) / 4, ")\\n")
-
-barplot(tbl, col = c("#66a61e", "#7570b3", "#e6ab02", "#a6761d"),
-        ylim = c(0, 0.55), ylab = "gamete frequency")
-abline(h = c((1 - r) / 2, r / 2), lty = 2, col = "#b23a48")
-`);
-});
-
-/* =======================================================================
-   STAGE C -- gene dropping through 4-founder pedigree.
-   ======================================================================= */
-const sC = { k: 2, reps: 1000, seed: 42,
-             canvas: document.getElementById("plotC"),
-             canvas2: document.getElementById("plotC2") };
-const sC_outs = {
-  k: document.getElementById("C_kOut"),
-  reps: document.getElementById("C_repsOut"),
-  seed: document.getElementById("C_seedOut"),
-};
-const sC_code = {
-  k: document.getElementById("cC_k"),
-  reps: document.getElementById("cC_reps"),
-  seed: document.getElementById("cC_seed"),
-};
-
-// One replicate of the pedigree: returns [seen1, seen2, seen3, seen4] (0/1).
-function oneGeneDrop(rng, k) {
-  let seen1 = 0, seen2 = 0, seen3 = 0, seen4 = 0;
-  for (let i = 0; i < k; i++) {
-    // F1a transmits 1 or 2
-    if (rng() < 0.5) seen1 = 1; else seen2 = 1;
-    // F1b transmits 3 or 4
-    if (rng() < 0.5) seen3 = 1; else seen4 = 1;
-  }
-  return [seen1, seen2, seen3, seen4];
-}
-
-function drawStageC() {
-  const rng = mulberry32(sC.seed | 0);
-  const k = sC.k | 0, reps = sC.reps | 0;
-
-  // Main plot: per-allele retention probabilities at the current k.
-  const retain = [0, 0, 0, 0];
-  let allFour = 0;
-  for (let i = 0; i < reps; i++) {
-    const s = oneGeneDrop(rng, k);
-    for (let j = 0; j < 4; j++) retain[j] += s[j];
-    if (s[0] && s[1] && s[2] && s[3]) allFour++;
-  }
-  const retProb = retain.map(c => c / reps);
-  const pAll = allFour / reps;
-
-  // --- main canvas ---
-  {
-    const { ctx, cssW, cssH } = setupCanvas(sC.canvas);
-    const f = makeFrame({l:52, r:14, t:20, b:46}, cssW, cssH, 0, 4, 0, 1.05);
-    ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(f.pad.l, f.pad.t);
-    ctx.lineTo(f.pad.l, f.pad.t + f.H);
-    ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H);
-    ctx.stroke();
-    ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-    ctx.textAlign = "right"; ctx.textBaseline = "middle";
-    for (let i = 0; i <= 5; i++) {
-      const v = i * 0.2;
-      const py = f.ys(v);
-      ctx.beginPath(); ctx.moveTo(f.pad.l - 4, py); ctx.lineTo(f.pad.l, py); ctx.stroke();
-      ctx.fillText(v.toFixed(2), f.pad.l - 6, py);
-    }
-    const colors = [
-      getComputedStyle(document.documentElement).getPropertyValue("--allele1").trim() || "#66a61e",
-      getComputedStyle(document.documentElement).getPropertyValue("--allele2").trim() || "#7570b3",
-      getComputedStyle(document.documentElement).getPropertyValue("--allele3").trim() || "#e6ab02",
-      getComputedStyle(document.documentElement).getPropertyValue("--allele4").trim() || "#a6761d",
-    ];
-    const labels = ["allele 1 (G1)", "allele 2 (G2)", "allele 3 (G3)", "allele 4 (G4)"];
-    const barW = 0.6;
-    for (let i = 0; i < 4; i++) {
-      const cx = i + 0.5;
-      const x0 = f.xs(cx - barW / 2), x1 = f.xs(cx + barW / 2);
-      const y0 = f.ys(retProb[i]);
-      ctx.fillStyle = colors[i];
-      ctx.fillRect(x0, y0, x1 - x0, f.ys(0) - y0);
-      ctx.fillStyle = "#333"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-      ctx.font = "11px ui-monospace, Menlo, monospace";
-      ctx.fillText(labels[i], f.xs(cx), f.pad.t + f.H + 6);
-    }
-    // theoretical line
-    const expP = 1 - Math.pow(0.5, k);
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    ctx.moveTo(f.xs(0), f.ys(expP));
-    ctx.lineTo(f.xs(4), f.ys(expP));
-    ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#555"; ctx.font = "11px ui-monospace, Menlo, monospace";
-    ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillText(`dashed red = 1 − (1/2)^k = ${expP.toFixed(3)}`, f.pad.l + 6, f.pad.t - 16);
-    ctx.save();
-    ctx.translate(14, f.pad.t + f.H / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillStyle = "#333"; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-    ctx.fillText("P(founder allele retained)", 0, 0);
-    ctx.restore();
-  }
-
-  // --- sweep-over-k plot ---
-  {
-    const { ctx, cssW, cssH } = setupCanvas(sC.canvas2);
-    const f = makeFrame({l:52, r:14, t:14, b:36}, cssW, cssH, 0, 13, 0, 1.05);
-    drawAxes(ctx, f, "k (F2 kids per couple)", "P(retained)", 13, 5,
-      v => String(Math.round(v)), v => v.toFixed(2));
-    // theoretical curve
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
-    ctx.beginPath();
-    for (let kv = 1; kv <= 12; kv += 0.25) {
-      const y = 1 - Math.pow(0.5, kv);
-      const px = f.xs(kv), py = f.ys(y);
-      if (kv === 1) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-    }
-    ctx.stroke();
-    ctx.setLineDash([]);
-    // simulated points: for each k in 1..12, run a shorter batch (reps_small)
-    // using a fresh RNG chain seeded off the same seed for reproducibility.
-    const reps_small = Math.min(400, reps);
-    ctx.fillStyle = "#2f6b8f";
-    for (let kv = 1; kv <= 12; kv++) {
-      const rng2 = mulberry32((sC.seed | 0) + kv * 7919);
-      let sum = 0, cnt = 0;
-      for (let i = 0; i < reps_small; i++) {
-        const s = oneGeneDrop(rng2, kv);
-        sum += s[0]; cnt++;   // retention probability of allele 1 (any single founder allele)
-      }
-      const p = sum / cnt;
-      const px = f.xs(kv), py = f.ys(p);
-      ctx.beginPath(); ctx.arc(px, py, 3.2, 0, 2 * Math.PI); ctx.fill();
-    }
-    // highlight current k
-    drawVLine(ctx, f, k, "rgba(47,107,143,0.18)", 6);
-  }
-
-  // Stats.
-  const expSum = 4 * (1 - Math.pow(0.5, k));
-  const pAllTh = Math.pow(1 - Math.pow(2, 1 - k), 2);
-  document.getElementById("C_k").textContent = k;
-  document.getElementById("C_reps").textContent = reps;
-  const meanRet = retProb.reduce((a, b) => a + b, 0);
-  document.getElementById("C_meanRet").textContent = meanRet.toFixed(3);
-  document.getElementById("C_expRet").textContent = expSum.toFixed(3);
-  document.getElementById("C_pAll").textContent = pAll.toFixed(3);
-  document.getElementById("C_pAllTh").textContent = pAllTh.toFixed(3);
-}
-
-function sC_fmt(key, v) { return String(v | 0); }
-const sC_sliderMap = { k: "C_kSlider", reps: "C_repsSlider", seed: "C_seedSlider" };
-Object.entries(sC_sliderMap).forEach(([k, id]) => {
-  const el = document.getElementById(id);
-  const handler = () => {
-    sC[k] = parseFloat(el.value);
-    sC_outs[k].textContent = sC_fmt(k, sC[k]);
-    if (sC_code[k]) sC_code[k].textContent = sC_fmt(k, sC[k]);
-    highlightByDataLine("codeC", k);
-    drawStageC();
-    onSliderMove("C");
-  };
-  el.addEventListener("input", handler);
-  el.addEventListener("change", () => { handler(); setTimeout(() => clearHighlightByCode("codeC"), 600); });
-});
-document.getElementById("C_newSeed").addEventListener("click", () => {
-  sC.seed = 1 + Math.floor(Math.random() * 998);
-  document.getElementById("C_seedSlider").value = sC.seed;
-  sC_outs.seed.textContent = sC.seed;
-  sC_code.seed.textContent = sC.seed;
-  highlightByDataLine("codeC", "seed"); drawStageC();
-  setTimeout(() => clearHighlightByCode("codeC"), 600);
-  onSliderMove("C");
-});
-document.getElementById("C_reset").addEventListener("click", () => {
-  sC.k = 2; sC.reps = 1000; sC.seed = 42;
-  Object.entries(sC_sliderMap).forEach(([k, id]) => {
-    document.getElementById(id).value = sC[k];
-    sC_outs[k].textContent = sC_fmt(k, sC[k]);
-    if (sC_code[k]) sC_code[k].textContent = sC_fmt(k, sC[k]);
-  });
-  drawStageC();
-});
-document.getElementById("C_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageC_seed${sC.seed|0}.R`, `# Lesson 3, Stage C -- gene dropping through a 4-founder pedigree.
-set.seed(${sC.seed|0})
-k    <- ${sC.k|0}      # F2 kids per couple
-reps <- ${sC.reps|0}   # replicate simulations
-
-gene_drop <- function(k) {
-  from_a <- sample(c(1, 2), k, replace = TRUE)  # F1a = (1, 2) transmits one per kid
-  from_b <- sample(c(3, 4), k, replace = TRUE)  # F1b = (3, 4) transmits one per kid
-  alleles_seen <- unique(c(from_a, from_b))
-  as.integer(c(1, 2, 3, 4) %in% alleles_seen)
-}
-
-ret <- t(replicate(reps, gene_drop(k)))
-colnames(ret) <- paste0("a", 1:4)
-cat("per-allele retention:\\n"); print(colMeans(ret))
-cat("P(all four retained) =", mean(rowSums(ret) == 4),
-    "  theory =", (1 - 2^(1 - k))^2, "\\n")
-
-barplot(colMeans(ret), ylim = c(0, 1),
-        col = c("#66a61e", "#7570b3", "#e6ab02", "#a6761d"),
-        ylab = "P(founder allele retained)")
-abline(h = 1 - (1/2)^k, col = "#b23a48", lwd = 2, lty = 2)
-
-# ---- NON-TRIVIAL MODIFICATION ----
-# Extend gene_drop() to track a SECOND generation (F3). Start from the same
-# four founders, have F2 sibling mates produce m offspring each, and return
-# which founder alleles are present at F3. Compare founder retention at F2
-# vs F3 -- how much faster does loss happen with two meioses instead of one?
-`);
-});
-
-/* =======================================================================
-   Wire prediction gates.
-   ======================================================================= */
-wirePrediction("A", "predA",
-  ["qA1", "qA2"],
-  ["mode", "narrow"],
-  [
-    "In a family of n = 4, realized p̂ is a Binomial(8, 0.5)/8 variable: the mode is at 0.5 (P ≈ 0.27), but 0.375 and 0.625 are also common, and even 0 or 1 happen roughly once per 250 families. The histogram has a peak, not a spike.",
-    "sd(p̂) = √(0.25 / (2n)). At n = 4 it is ≈ 0.177. At n = 40 it is ≈ 0.056. More kids, tighter distribution, more families landing near 0.5."
-  ]);
-wirePrediction("B", "predB",
-  ["qB1", "qB2"],
-  ["equal", "down"],
-  [
-    "At r = 0.5 the four haplotypes come out at 1/4 each, so A and B assort independently. p(B | A) = 1/2 = p(B | a).",
-    "D starts at its maximum 1/4 when r = 0 and decays toward 0 as r rises. Within one generation, D_gametes = (1 − 2r)/4. (The multi-generation decay is by a factor of (1 − r) per generation, same idea.)"
-  ]);
-wirePrediction("C", "predC",
-  ["qC1", "qC2"],
-  ["two", "up"],
-  [
-    "With one F2 kid, F1a transmits one of {1, 2} and F1b transmits one of {3, 4}. The kid has exactly two founder alleles — and the other two founders have dropped out. Every replicate lands on 2 retained. Spread is zero.",
-    "With k = 1, P(all four retained) = 0 (impossible — one kid has only two alleles). With larger k, P(all four retained) = (1 − 2^(1−k))². For k = 6 that is ≈ 0.94."
-  ]);
-
-wireReflect("A", "rA", "b",
-  "Under Aa × Aa, each kid has a 3/4 chance of being unaffected. Three kids independent: (3/4)³ ≈ 0.42. Observing zero affected in 3 is the single most common outcome, not evidence against Mendel.");
-wireReflect("B", "rB", "b",
-  "High D at short genetic distances is exactly what historical linkage looks like: coupling phase set up long ago hasn't been broken up yet by recombination. It is not by itself evidence of selection — neutral markers show the same pattern.");
-wireReflect("C", "rC", "b",
-  "One offspring carries only one allele from each parent at every locus. Whatever allele the parent did not transmit is not in the descendant, and cannot be recovered from that lineage. The program is right to rebreed — it is not sentimental, it is gene dropping arithmetic.");
-
-/* =======================================================================
-   Initial renders.
-   ======================================================================= */
+wirePrediction("A", "predA", ["qA1","qA2"], ["same","cant"], "controlsA");
 drawStageA();
-drawStageB();
-drawStageC();
 
-/* TOC active-section indicator */
-const tocMap = { stageA:"tocA", stageB:"tocB", stageC:"tocC" };
-window.addEventListener("scroll", () => {
-  let active = "stageA";
-  for (const id of Object.keys(tocMap)) {
-    const el = document.getElementById(id);
-    if (el.getBoundingClientRect().top < 120) active = id;
-  }
-  for (const [sid, tid] of Object.entries(tocMap)) {
-    document.getElementById(tid).classList.toggle("active", sid === active);
+/* ====== STAGE B ===================================================== */
+const sB = { a: 0.5, b: 1.0, tol: 0.01, saved: [] };
+function drawStageB() {
+  const cv = document.getElementById("plotB");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, -0.2, 5.2, -1, 7);
+  drawAxes(ctx, f, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx.fillStyle = "rgba(60,60,60,0.6)";
+  for (let i=0;i<Synth.xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(Synth.xs[i]), f.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx.fill(); }
+  // Saved lines
+  ctx.strokeStyle = "rgba(47,107,143,0.25)"; ctx.lineWidth = 1.5;
+  sB.saved.forEach(s => { ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(s.a + s.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(s.a + s.b*5.2)); ctx.stroke(); });
+  // OLS line
+  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(Synth.ols.a + Synth.ols.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(Synth.ols.a + Synth.ols.b*5.2)); ctx.stroke();
+  // Current student line
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(sB.a + sB.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(sB.a + sB.b*5.2)); ctx.stroke();
+  const target = +Synth.ols.r2.toFixed(2);
+  const r2 = r2OfLine(Synth.xs, Synth.ys, sB.a, sB.b);
+  document.getElementById("B_target").textContent = target.toFixed(2);
+  document.getElementById("B_r2").textContent = r2.toFixed(2);
+  document.getElementById("B_tol").textContent = sB.tol.toFixed(3);
+  document.getElementById("B_savedCt").textContent = sB.saved.length;
+}
+["B_a","B_b","B_tolIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="B_a") { sB.a = parseFloat(e.target.value); document.getElementById("B_aOut").textContent = sB.a.toFixed(2); highlightByDataLine("codeB","alpha"); }
+    if (id==="B_b") { sB.b = parseFloat(e.target.value); document.getElementById("B_bOut").textContent = sB.b.toFixed(2); highlightByDataLine("codeB","beta"); }
+    if (id==="B_tolIn") { sB.tol = parseFloat(e.target.value); document.getElementById("B_tolOut").textContent = sB.tol.toFixed(3); }
+    drawStageB();
+  });
+});
+document.getElementById("B_save").addEventListener("click", () => {
+  const target = +Synth.ols.r2.toFixed(2);
+  const r2 = r2OfLine(Synth.xs, Synth.ys, sB.a, sB.b);
+  if (Math.abs(+r2.toFixed(2) - target) <= sB.tol) {
+    sB.saved.push({ a: sB.a, b: sB.b });
+    drawStageB(); bumpExplore("B");
+  } else {
+    alert(`Your R² (${r2.toFixed(2)}) is more than ${sB.tol.toFixed(3)} from the OLS target (${target.toFixed(2)}). Adjust the sliders and try again.`);
   }
 });
+document.getElementById("B_clear").addEventListener("click", () => { sB.saved = []; drawStageB(); });
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText(`lesson4_stageB.R`, `# Lesson 4, Stage B
+set.seed(${Synth.seed})
+n <- 50; x <- runif(n, 0, 5); y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
+target_r2 <- round(summary(lm(y ~ x))$r.squared, 2)
+grid <- expand.grid(a = seq(-1, 2, by = 0.05), b = seq(0.6, 1.4, by = 0.05))
+grid$r2 <- apply(grid, 1, function(p) 1 - sum((y - (p[1] + p[2]*x))^2) / sum((y - mean(y))^2))
+keep <- subset(grid, round(r2, 2) == target_r2)
+nrow(keep)
+plot(keep$a, keep$b, pch=16, col="#2f6b8f", xlab="alpha", ylab="beta")
+`);
+});
+wirePrediction("B", "predB", ["qB1","qB2"], ["lower","ellipse"], "controlsB");
+drawStageB();
 
-/* =======================================================================
-   Score / pretest / posttest wiring (bookend pattern — no scaffold bits)
-   ======================================================================= */
+/* ====== STAGE C ===================================================== */
+const sC = { reps: 200, seed: 42, fits: [] };
+function runC() {
+  const rng = mulberry32(sC.seed);
+  sC.fits = [];
+  const n = Synth.xs.length;
+  for (let r=0;r<sC.reps;r++) {
+    const xs = new Array(n), ys = new Array(n);
+    for (let i=0;i<n;i++) { const k = Math.floor(rng()*n); xs[i] = Synth.xs[k]; ys[i] = Synth.ys[k]; }
+    const fit = ols(xs, ys);
+    sC.fits.push({ a: fit.a, b: fit.b });
+  }
+  drawStageC(); bumpExplore("C");
+}
+function drawStageC() {
+  // Plot 1: scatter + bootstrap lines
+  const cv1 = document.getElementById("plotC1");
+  const { ctx: ctx1, W: W1, H: H1 } = setupCanvas(cv1);
+  ctx1.clearRect(0,0,W1,H1);
+  const pad1 = { l: 50, r: 12, t: 14, b: 40 };
+  const f1 = makeFrame(pad1, W1, H1, -0.2, 5.2, -1, 7);
+  drawAxes(ctx1, f1, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx1.strokeStyle = "rgba(178,58,72,0.18)"; ctx1.lineWidth = 1;
+  sC.fits.forEach(s => { ctx1.beginPath(); ctx1.moveTo(f1.x(-0.2), f1.y(s.a + s.b*-0.2)); ctx1.lineTo(f1.x(5.2), f1.y(s.a + s.b*5.2)); ctx1.stroke(); });
+  ctx1.fillStyle = "rgba(60,60,60,0.7)";
+  for (let i=0;i<Synth.xs.length;i++) { ctx1.beginPath(); ctx1.arc(f1.x(Synth.xs[i]), f1.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx1.fill(); }
+  // Plot 2: alpha × beta plane
+  const cv2 = document.getElementById("plotC2");
+  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
+  ctx2.clearRect(0,0,W2,H2);
+  const allA = sC.fits.map(s=>s.a).concat(sB.saved.map(s=>s.a));
+  const allB = sC.fits.map(s=>s.b).concat(sB.saved.map(s=>s.b));
+  const aMin = allA.length ? Math.min(...allA, Synth.ols.a-0.5) : -0.5;
+  const aMax = allA.length ? Math.max(...allA, Synth.ols.a+0.5) : 1.5;
+  const bMin = allB.length ? Math.min(...allB, Synth.ols.b-0.3) : 0.5;
+  const bMax = allB.length ? Math.max(...allB, Synth.ols.b+0.3) : 1.5;
+  const pad2 = { l: 60, r: 12, t: 14, b: 40 };
+  const f2 = makeFrame(pad2, W2, H2, aMin, aMax, bMin, bMax);
+  drawAxes(ctx2, f2, "α", "β", 5, 4, v=>v.toFixed(2), v=>v.toFixed(2));
+  ctx2.fillStyle = "rgba(178,58,72,0.55)";
+  sC.fits.forEach(s => { ctx2.beginPath(); ctx2.arc(f2.x(s.a), f2.y(s.b), 2.5, 0, 2*Math.PI); ctx2.fill(); });
+  ctx2.fillStyle = "rgba(47,107,143,0.85)";
+  sB.saved.forEach(s => { ctx2.beginPath(); ctx2.arc(f2.x(s.a), f2.y(s.b), 4, 0, 2*Math.PI); ctx2.fill(); });
+  ctx2.fillStyle = "#000"; ctx2.beginPath(); ctx2.arc(f2.x(Synth.ols.a), f2.y(Synth.ols.b), 5, 0, 2*Math.PI); ctx2.fill();
+}
+["C_reps","C_seed"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="C_reps") { sC.reps = parseInt(e.target.value,10); document.getElementById("C_repsOut").textContent = sC.reps; document.getElementById("cC_reps").textContent = sC.reps; highlightByDataLine("codeC","reps"); }
+    if (id==="C_seed") { sC.seed = parseInt(e.target.value,10); document.getElementById("C_seedOut").textContent = sC.seed; document.getElementById("cC_seed").textContent = sC.seed; highlightByDataLine("codeC","seed"); }
+  });
+});
+document.getElementById("C_run").addEventListener("click", runC);
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText(`lesson4_stageC_seed${sC.seed}.R`, `# Lesson 4, Stage C
+set.seed(${Synth.seed})
+n <- 50; x <- runif(n, 0, 5); y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
+set.seed(${sC.seed})
+boot <- replicate(${sC.reps}, { i <- sample(length(x), length(x), replace = TRUE); coef(lm(y[i] ~ x[i])) })
+apply(boot, 1, quantile, c(.025, .975))
+cor(boot[1,], boot[2,])
+`);
+});
+wirePrediction("C", "predC", ["qC1","qC2"], ["tilt","se"], "controlsC");
+
+/* ====== STAGE D — NHANES ============================================ */
+const sD = { nhanes: null, n: 400, reps: 200, seed: 42, fits: [], sample: null };
+async function loadD() {
+  try {
+    const r = await fetch("../data/clean/nhanes_adults.json");
+    sD.nhanes = await r.json();
+  } catch (e) {
+    sD.nhanes = [];
+    console.warn("nhanes fallback for L4 stage D", e);
+  }
+}
+function drawSampleD() {
+  if (!sD.nhanes || !sD.nhanes.length) return;
+  const rng = mulberry32(sD.seed);
+  const all = sD.nhanes.filter(r => r.Height && r.Weight);
+  const ids = new Set();
+  while (ids.size < Math.min(sD.n, all.length)) ids.add(Math.floor(rng()*all.length));
+  sD.sample = Array.from(ids).map(i => ({ h: parseFloat(all[i].Height), w: parseFloat(all[i].Weight) }));
+}
+function runD() {
+  if (!sD.sample) drawSampleD();
+  if (!sD.sample) return;
+  const xs = sD.sample.map(d=>d.h), ys = sD.sample.map(d=>d.w);
+  const rng = mulberry32(sD.seed + 17);
+  sD.fits = [];
+  for (let r=0;r<sD.reps;r++) {
+    const xb = new Array(xs.length), yb = new Array(ys.length);
+    for (let i=0;i<xs.length;i++) { const k = Math.floor(rng()*xs.length); xb[i] = xs[k]; yb[i] = ys[k]; }
+    const fit = ols(xb, yb);
+    sD.fits.push({ a: fit.a, b: fit.b });
+  }
+  drawStageD(); bumpExplore("D");
+}
+function drawStageD() {
+  if (!sD.sample) drawSampleD();
+  if (!sD.sample) return;
+  const cv = document.getElementById("plotD");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, 140, 200, 30, 180);
+  drawAxes(ctx, f, "height (cm)", "weight (kg)", 6, 6, v=>v.toFixed(0), v=>v.toFixed(0));
+  // Bootstrap lines
+  ctx.strokeStyle = "rgba(178,58,72,0.12)"; ctx.lineWidth = 1;
+  sD.fits.forEach(s => { ctx.beginPath(); ctx.moveTo(f.x(140), f.y(s.a + s.b*140)); ctx.lineTo(f.x(200), f.y(s.a + s.b*200)); ctx.stroke(); });
+  // Points
+  ctx.fillStyle = "rgba(60,60,60,0.6)";
+  sD.sample.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.h), f.y(d.w), 2, 0, 2*Math.PI); ctx.fill(); });
+  // OLS
+  const xs = sD.sample.map(d=>d.h), ys = sD.sample.map(d=>d.w);
+  const fit = ols(xs, ys);
+  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x(140), f.y(fit.a + fit.b*140)); ctx.lineTo(f.x(200), f.y(fit.a + fit.b*200)); ctx.stroke();
+  document.getElementById("D_b").textContent = fit.b.toFixed(3);
+  document.getElementById("D_se").textContent = fit.seB.toFixed(3);
+  if (sD.fits.length) {
+    const bs = sD.fits.map(s=>s.b);
+    const q1 = quantile(bs, 0.025), q2 = quantile(bs, 0.975);
+    document.getElementById("D_qi").textContent = `(${q1.toFixed(3)}, ${q2.toFixed(3)})`;
+  }
+  // R² at the three β values
+  const r2c = r2OfLine(xs, ys, fit.a, fit.b);
+  const r2p = r2OfLine(xs, ys, fit.a, fit.b + fit.seB);
+  const r2m = r2OfLine(xs, ys, fit.a, fit.b - fit.seB);
+  document.getElementById("D_r2c").textContent = r2c.toFixed(3);
+  document.getElementById("D_r2p").textContent = r2p.toFixed(3);
+  document.getElementById("D_r2m").textContent = r2m.toFixed(3);
+}
+["D_n","D_reps","D_seed"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="D_n") { sD.n = parseInt(e.target.value,10); document.getElementById("D_nOut").textContent = sD.n; document.getElementById("cD_n").textContent = sD.n; highlightByDataLine("codeD","n"); drawSampleD(); drawStageD(); }
+    if (id==="D_reps") { sD.reps = parseInt(e.target.value,10); document.getElementById("D_repsOut").textContent = sD.reps; document.getElementById("cD_reps").textContent = sD.reps; highlightByDataLine("codeD","reps"); }
+    if (id==="D_seed") { sD.seed = parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent = sD.seed; document.getElementById("cD_seed").textContent = sD.seed; highlightByDataLine("codeD","seed"); drawSampleD(); drawStageD(); }
+  });
+});
+document.getElementById("D_run").addEventListener("click", runD);
+document.getElementById("D_download").addEventListener("click", () => {
+  downloadText(`lesson4_stageD_seed${sD.seed}.R`, `# Lesson 4, Stage D
+nh <- read.csv("data/clean/nhanes_adults.csv")
+set.seed(${sD.seed})
+idx <- sample(nrow(nh), ${sD.n}); d <- nh[idx, ]
+fit <- lm(Weight ~ Height, data = d)
+B <- ${sD.reps}
+boot <- replicate(B, { k <- sample(nrow(d), nrow(d), replace = TRUE); coef(lm(Weight ~ Height, data = d[k, ])) })
+apply(boot, 1, quantile, c(.025, .975))
+`);
+});
+document.getElementById("stretchD_btn").addEventListener("click", () => {
+  const btn = document.getElementById("stretchD_btn");
+  btn.classList.add("done"); btn.textContent = "Recorded ✓"; btn.disabled = true;
+  document.getElementById("stretchD_status").textContent = "Noted.";
+  if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, true);
+});
+wirePrediction("D", "predD", ["qD1","qD2"], ["same","se"], "controlsD");
+
+/* ====== Pretest / Posttest / Score ================================== */
 const PRETEST_ITEMS = [
-  {
-    idx: 0,
-    q: "Two heterozygous parents (Aa \u00d7 Aa) cross. The expected offspring genotype ratio is:",
-    options: ["1:1 AA:aa.", "1:2:1 AA:Aa:aa.", "1:1:1:1.", "9:3:3:1."],
-    correct: 1
-  },
-  {
-    idx: 1,
-    q: "A single Aa \u00d7 Aa cross with 4 offspring is unlikely to show exactly 1:2:1. The best explanation is:",
-    options: ["Mendel's laws are wrong.", "Sampling variation \u2014 small samples deviate from expected ratios.", "The genotypes are all the same.", "A mutation occurred."],
-    correct: 1
-  }
+  { idx: 0, q: "An OLS regression returns β̂ = 1.05 with SE = 0.10. The true β most likely sits:",
+    options: ["exactly at 1.05", "in a band around 1.05 — many values nearby are consistent with the data", "at 0 — only OLS β̂ is significant", "outside the SE band — point estimates are biased"],
+    correct: 1 },
+  { idx: 1, q: "R² rounded to 2 decimal places between two regressions fit to the same data with slightly different (α, β):",
+    options: ["is always identical", "can be identical for a range of (α, β) pairs near the optimum", "is always different", "is meaningless"],
+    correct: 1 }
 ];
-
 const POSTTEST_ITEMS = [
-  {
-    idx: 0,
-    q: "Two loci on the same chromosome with a small recombination distance will most likely:",
-    options: ["Segregate independently.", "Be inherited together (linked) more often than chance.", "Always recombine.", "Show 1:1:1:1 ratios."],
-    correct: 1
-  },
-  {
-    idx: 1,
-    q: "Gene dropping in a pedigree, repeated many times, builds the distribution of:",
-    options: ["Allele frequencies expected at the founders.", "Allele frequencies expected in descendants given the pedigree.", "Recombination rates.", "Mutation rates."],
-    correct: 1
-  }
+  { idx: 0, q: "You bootstrap a regression and the (α̂, β̂) cloud is a tilted ellipse. The tilt means:",
+    options: ["the data are tilted", "α̂ and β̂ are correlated — a change in one is compensated by a change in the other", "OLS is biased", "the residuals are non-normal"],
+    correct: 1 },
+  { idx: 1, q: "A paper reports β̂ = 0.50, SE = 0.05, R² = 0.18. Compared to β̂ = 0.50, R² at β = 0.55 will:",
+    options: ["plummet to ~0", "be essentially identical to 0.18 within rounding", "double", "drop by exactly 1 SE worth of R²"],
+    correct: 1 },
+  { idx: 2,
+    q: "Which of these describes what you found in this lesson?",
+    options: [
+      "Many (α, β) pairs share the same rounded R²",
+      "α and β trade off — raising one usually requires lowering the other to keep R² fixed",
+      "A bootstrap of the data produces a tilted (α̂, β̂) cloud that nearly coincides with the hand-built one",
+      "The OLS optimum is the only line with high R²",
+      "Bootstrap SE on β̂ grows with sample size n"
+    ],
+    correct: [0, 1, 2] }
 ];
-
 function showPretest() {
   document.getElementById("pretest-card").style.display = "block";
-  Quiz.render({
-    mount: "#pretest-mount",
-    group: "pretest",
-    title: "Before you start",
-    items: PRETEST_ITEMS,
-    onComplete: () => {
-      document.getElementById("stageA").classList.remove("stage-locked");
-      const tocA = document.getElementById("tocA");
-      if (tocA) tocA.classList.remove("locked");
-    }
-  });
+  Quiz.render({ mount:"#pretest-mount", group:"pretest", title:"Before you start", items: PRETEST_ITEMS,
+    onComplete: () => { document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked"); } });
 }
-
 function showPosttest() {
-  const card = document.getElementById("posttest-card");
-  if (card.style.display === "block") return;
-  card.style.display = "block";
-  Quiz.render({
-    mount: "#posttest-mount",
-    group: "posttest",
-    title: "Wrap-up check",
-    items: POSTTEST_ITEMS,
-    onComplete: () => { Score.finish(); }
-  });
+  const c = document.getElementById("posttest-card"); if (c.style.display==="block") return;
+  c.style.display = "block";
+  Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items:POSTTEST_ITEMS, onComplete: () => Score.finish() });
 }
-
 Score.init({
-  moduleId: "lesson3",
-  version: 1,
-  pretest: PRETEST_ITEMS.length,
-  scaffold: 0,
-  posttest: POSTTEST_ITEMS.length,
-  mountNamePrompt: "#score-name",
-  mountFinalCode:  "#score-final",
-  onReady: () => { showPretest(); }
+  moduleId: "lesson4", version: 2,
+  pretest: PRETEST_ITEMS.length, scaffold: 9, posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => showPretest()
 });
+loadD();
 </script>
 </body>
 </html>

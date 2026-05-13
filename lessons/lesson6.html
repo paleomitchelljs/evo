@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 5b: How an empirical P can mislead you</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; }
+  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.secondary { background:#888; } .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; } .teaching-note strong { color:#2e230a; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+  .pvalue-readout { font:18px ui-monospace; padding:6px 10px; background:#1e1f22; color:#c3e88d; display:inline-block; border-radius:4px; }
+  .pvalue-readout.muted { color:#888; }
+  .p-row {
+    display:flex; align-items:center; gap:10px;
+    padding:6px 0; border-top:1px solid var(--rule);
+    font:13px ui-monospace,Menlo,monospace;
+  }
+  .p-row:first-of-type { border-top:0; }
+  .p-row .label { min-width:140px; color:var(--muted); }
+  .p-row .pill { padding:3px 8px; border-radius:10px; background:#1e1f22; color:#c3e88d; }
+  .p-row .pill.sig { color:#f78c6c; }
+  .pair-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .pair-grid .panel h3 { font-size:12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 5b — How an empirical P can mislead you</h1>
+  <p>BIO 202, Spring 2026, draft v1. Four scenarios. In each, the shuffle-the-predictor machine from Lesson 5 returns an honest answer to a different question than the one you meant to ask.</p>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
+
+<div class="outcomes">
+  <h2>What you'll do</h2>
+  <p>Four stages. Predict each one before you run it. Each surfaces a different way the test can answer "yes" or "no" to a question you didn't quite ask.</p>
+</div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. Not different + not different ≠ same</a>
+  <a href="#stageB" id="tocB" class="locked">B. Same effect, two verdicts</a>
+  <a href="#stageC" id="tocC" class="locked">C. Big effect, large P. Small effect, tiny P.</a>
+  <a href="#stageD" id="tocD" class="locked">D. The test only knows what you asked it</a>
+</nav>
+
+<!-- =========== STAGE A — three distributions, non-transitivity =========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — Three groups, three pairwise comparisons</h2>
+  <p class="stage-sub">Set up three groups. Run all three pairwise comparisons. Notice what each one says, and what they say together.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>What to do</h3>
+        <p>Three groups: Low, Middle, High. The defaults are set so that Low vs. Middle is "not clearly different," and Middle vs. High is "not clearly different." Run all three comparisons and read the empirical P for each.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>The three groups</h3>
+        <canvas id="plotA" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsA"></div>
+      </div>
+      <div class="panel">
+        <h3>Pairwise empirical P-values</h3>
+        <div class="p-row"><span class="label">Low vs. Middle</span> <span class="pill" id="A_pLM">—</span> <span class="muted" id="A_dLM">δ̂ = —</span></div>
+        <div class="p-row"><span class="label">Middle vs. High</span> <span class="pill" id="A_pMH">—</span> <span class="muted" id="A_dMH">δ̂ = —</span></div>
+        <div class="p-row"><span class="label">Low vs. High</span> <span class="pill" id="A_pLH">—</span> <span class="muted" id="A_dLH">δ̂ = —</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. If Low vs. Middle is "not clearly different" and Middle vs. High is "not clearly different," what should the Low vs. High comparison say?</div>
+            <label><input type="radio" name="qA1" value="trans" /> Also "not clearly different" — the test is consistent</label>
+            <label><input type="radio" name="qA1" value="maybe" /> Possibly "clearly different" — the gap from Low to High is bigger than either single step</label>
+            <label><input type="radio" name="qA1" value="undefined" /> The answer is undefined</label>
+          </li>
+        </ol>
+        <button id="submitA" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 slider combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="muL"><label for="A_muLIn">Low mean</label><input type="range" id="A_muLIn" min="-2" max="0" step="0.05" value="-0.4" /><output id="A_muLOut">-0.40</output></div>
+          <div class="row" data-line="muH"><label for="A_muHIn">High mean</label><input type="range" id="A_muHIn" min="0" max="2" step="0.05" value="0.4" /><output id="A_muHOut">0.40</output></div>
+          <div class="row" data-line="sigma"><label for="A_sigIn">within σ</label><input type="range" id="A_sigIn" min="0.3" max="3" step="0.05" value="1.0" /><output id="A_sigOut">1.00</output></div>
+          <div class="row" data-line="n"><label for="A_nIn">n / group</label><input type="range" id="A_nIn" min="10" max="200" step="5" value="30" /><output id="A_nOut">30</output></div>
+          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — the three pairwise comparisons</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cA_n">30</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cA_sig">1.00</span></span><span class="line" data-line="muL">muL &lt;- <span class="num" id="cA_muL">-0.40</span></span><span class="line" data-line="muH">muH &lt;- <span class="num" id="cA_muH">0.40</span></span><span class="line">L &lt;- <span class="fn">rnorm</span>(n, muL, sigma)</span><span class="line">M &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma)</span><span class="line">H &lt;- <span class="fn">rnorm</span>(n, muH, sigma)</span><span class="line"></span><span class="line">empP &lt;- <span class="kw">function</span>(a, b) {</span><span class="line">  y &lt;- <span class="fn">c</span>(a, b); g &lt;- <span class="fn">c</span>(<span class="fn">rep</span>(<span class="num">0</span>, <span class="fn">length</span>(a)), <span class="fn">rep</span>(<span class="num">1</span>, <span class="fn">length</span>(b)))</span><span class="line">  d  &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ g))[<span class="num">2</span>]</span><span class="line">  dN &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ <span class="fn">sample</span>(g)))[<span class="num">2</span>])</span><span class="line">  <span class="fn">mean</span>(<span class="fn">abs</span>(dN) &gt;= <span class="fn">abs</span>(d))</span><span class="line">}</span><span class="line"><span class="fn">empP</span>(L, M); <span class="fn">empP</span>(M, H); <span class="fn">empP</span>(L, H)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== STAGE B — same effect, two sample sizes =========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Two experiments, same true effect</h2>
+  <p class="stage-sub">Identical biology. Two sample sizes (n = 30 and n = 300). Run both. Read each verdict.</p>
+  <div class="lock-banner">Complete Stage A to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>What to do</h3>
+        <p>Two experiments are running side-by-side with the same true mean difference. The left one has 30 individuals per group; the right has 300. Move the effect-size slider and watch what happens to each verdict.</p>
+      </div>
+      <div class="panel pair-grid">
+        <div class="panel" style="margin:0;">
+          <h3>Small experiment (n = 30 per group)</h3>
+          <canvas id="plotB_small_groups" width="320" height="160"></canvas>
+          <canvas id="plotB_small_null" width="320" height="140"></canvas>
+          <div class="fit-stats">
+            <span class="label">δ̂:</span> <span id="B_small_dHat">—</span>
+            &nbsp;|&nbsp;
+            <span class="label">P:</span> <span id="B_small_p" class="pvalue-readout">—</span>
+          </div>
+        </div>
+        <div class="panel" style="margin:0;">
+          <h3>Large experiment (n = 300 per group)</h3>
+          <canvas id="plotB_large_groups" width="320" height="160"></canvas>
+          <canvas id="plotB_large_null" width="320" height="140"></canvas>
+          <div class="fit-stats">
+            <span class="label">δ̂:</span> <span id="B_large_dHat">—</span>
+            &nbsp;|&nbsp;
+            <span class="label">P:</span> <span id="B_large_p" class="pvalue-readout">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. With the same true effect in both experiments, the two empirical P-values will:</div>
+            <label><input type="radio" name="qB1" value="same" /> be roughly the same — same biology, same answer</label>
+            <label><input type="radio" name="qB1" value="diff" /> differ, with the larger experiment giving a smaller P</label>
+            <label><input type="radio" name="qB1" value="random" /> differ randomly with no consistent pattern</label>
+          </li>
+        </ol>
+        <button id="submitB" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreB">Try at least 4 effect-size values to unlock Stage C. <span class="count">0/4 values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="row" data-line="delta"><label for="B_dIn">true δ</label><input type="range" id="B_dIn" min="0" max="1.5" step="0.05" value="0.3" /><output id="B_dOut">0.30</output></div>
+          <div class="row" data-line="sigma"><label for="B_sigIn">within σ</label><input type="range" id="B_sigIn" min="0.3" max="3" step="0.05" value="1.0" /><output id="B_sigOut">1.00</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="delta">delta &lt;- <span class="num" id="cB_d">0.30</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cB_sig">1.00</span></span><span class="line"></span><span class="line">runP &lt;- <span class="kw">function</span>(n) {</span><span class="line">  y &lt;- <span class="fn">c</span>(<span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma), <span class="fn">rnorm</span>(n, delta, sigma))</span><span class="line">  g &lt;- <span class="fn">c</span>(<span class="fn">rep</span>(<span class="num">0</span>, n), <span class="fn">rep</span>(<span class="num">1</span>, n))</span><span class="line">  d  &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ g))[<span class="num">2</span>]</span><span class="line">  dN &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ <span class="fn">sample</span>(g)))[<span class="num">2</span>])</span><span class="line">  <span class="fn">mean</span>(<span class="fn">abs</span>(dN) &gt;= <span class="fn">abs</span>(d))</span><span class="line">}</span><span class="line"><span class="fn">runP</span>(<span class="num">30</span>); <span class="fn">runP</span>(<span class="num">300</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== STAGE C — same verdict, very different effects =========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Which one is "clear"?</h2>
+  <p class="stage-sub">Two experiments side by side. Decide which has the bigger underlying effect, and which one the test calls "clearly different from zero."</p>
+  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>What to do</h3>
+        <p>Look at the two experiments below. Two labs ran them, on the same trait in two different species. Decide which one has the bigger underlying effect, and which one the test signals as "clearly different from zero." See if they agree.</p>
+      </div>
+      <div class="panel pair-grid">
+        <div class="panel" style="margin:0;">
+          <h3>Experiment A</h3>
+          <canvas id="plotC_A_groups" width="320" height="160"></canvas>
+          <canvas id="plotC_A_null" width="320" height="140"></canvas>
+          <div class="fit-stats">
+            <span class="label">δ̂:</span> <span id="C_A_dHat">—</span>
+            &nbsp;|&nbsp;
+            <span class="label">P:</span> <span id="C_A_p" class="pvalue-readout">—</span>
+          </div>
+          <div class="fit-stats" style="margin-top:2px;">
+            <span class="label">n / group:</span> <span id="C_A_n">200</span>
+            &nbsp;|&nbsp;
+            <span class="label">within σ:</span> <span id="C_A_sig">0.5</span>
+          </div>
+        </div>
+        <div class="panel" style="margin:0;">
+          <h3>Experiment B</h3>
+          <canvas id="plotC_B_groups" width="320" height="160"></canvas>
+          <canvas id="plotC_B_null" width="320" height="140"></canvas>
+          <div class="fit-stats">
+            <span class="label">δ̂:</span> <span id="C_B_dHat">—</span>
+            &nbsp;|&nbsp;
+            <span class="label">P:</span> <span id="C_B_p" class="pvalue-readout">—</span>
+          </div>
+          <div class="fit-stats" style="margin-top:2px;">
+            <span class="label">n / group:</span> <span id="C_B_n">12</span>
+            &nbsp;|&nbsp;
+            <span class="label">within σ:</span> <span id="C_B_sig">4.0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Both experiments will appear on the plots below. Which is more likely to clear the P &lt; 0.05 bar?</div>
+            <label><input type="radio" name="qC1" value="big" /> Whichever has the bigger underlying effect</label>
+            <label><input type="radio" name="qC1" value="clean" /> Whichever has cleaner data (less within-group spread, more individuals)</label>
+            <label><input type="radio" name="qC1" value="random" /> It's random — depends on the run</label>
+          </li>
+        </ol>
+        <button id="submitC" disabled>Submit → reveal the experiments</button>
+        <div class="explore-tracker" id="exploreC">Run at least 2 reseeds to unlock Stage D. <span class="count">0/2 reseeds</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="C_newseed" class="accent">Reseed</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line"></span><span class="line"><span class="com"># Experiment A: small effect, clean data, lots of samples</span></span><span class="line">A0 &lt;- <span class="fn">rnorm</span>(<span class="num">200</span>, <span class="num">0</span>, <span class="num">0.5</span>); A1 &lt;- <span class="fn">rnorm</span>(<span class="num">200</span>, <span class="num">-0.3</span>, <span class="num">0.5</span>)</span><span class="line"></span><span class="line"><span class="com"># Experiment B: huge effect, messy data, tiny samples</span></span><span class="line">B0 &lt;- <span class="fn">rnorm</span>(<span class="num">12</span>, <span class="num">0</span>, <span class="num">4.0</span>);  B1 &lt;- <span class="fn">rnorm</span>(<span class="num">12</span>, <span class="num">-1.5</span>, <span class="num">4.0</span>)</span><span class="line"></span><span class="line"><span class="fn">empP</span>(A0, A1); <span class="fn">empP</span>(B0, B1)   <span class="com"># empP() defined in Stage A code</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========== STAGE D — equal means, unequal variances =========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Equal means, very different distributions</h2>
+  <p class="stage-sub">Two groups with the same mean. One slider controls the spread of the second. Run the test.</p>
+  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>What to do</h3>
+        <p>Two groups, same mean. One slider controls how spread out the second group is. Watch the histograms. Watch the P-value.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Two groups (top) and the null distribution of δ̂ under shuffled labels (bottom)</h3>
+        <canvas id="plotD_groups" width="560" height="220"></canvas>
+        <canvas id="plotD_null" width="560" height="180"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">σ_A:</span> <span id="D_sigA">1.0</span>
+          &nbsp;|&nbsp;
+          <span class="label">σ_B:</span> <span id="D_sigB">1.0</span>
+          &nbsp;|&nbsp;
+          <span class="label">observed δ̂:</span> <span id="D_dHat">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">empirical P:</span> <span id="D_p" class="pvalue-readout">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. The true means in both groups are zero. As σ_B grows, the empirical P (which asks about the mean difference) will:</div>
+            <label><input type="radio" name="qD1" value="small" /> become small — bigger spread means a more significant result</label>
+            <label><input type="radio" name="qD1" value="hover" /> hover around 0.5 — the means are still equal, so the test sees no real signal</label>
+            <label><input type="radio" name="qD1" value="grow" /> climb toward 1 — the test recognizes the distributions are different</label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreD">Try at least 4 σ_B values to wrap up. <span class="count">0/4 values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row" data-line="sigB"><label for="D_sigBIn">σ_B</label><input type="range" id="D_sigBIn" min="0.5" max="5" step="0.05" value="1.0" /><output id="D_sigBOut">1.00</output></div>
+          <div class="row" data-line="n"><label for="D_nIn">n / group</label><input type="range" id="D_nIn" min="20" max="500" step="10" value="50" /><output id="D_nOut">50</output></div>
+          <div class="row" data-line="seed"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons"><button id="D_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cD_n">50</span></span><span class="line" data-line="sigB">sigma_B &lt;- <span class="num" id="cD_sigB">1.00</span></span><span class="line">A &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, <span class="num">1</span>)</span><span class="line">B &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma_B)</span><span class="line"><span class="fn">empP</span>(A, B)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<footer class="wrap-up">
+  <h2>One sentence to carry forward</h2>
+  <p><em>The difference between significant and not significant is not itself significant.</em> The empirical P is a precise answer to <strong>a specific question</strong>: "is the observed δ̂ clearly outside the cloud of shuffled δ̂'s, given this n, this σ, and this regression model?" If the question you wanted answered is a different one (do these three groups separate? is this effect important? are these distributions the same?), the empirical P does not answer it, even when the test runs cleanly.</p>
+  <p><strong>Lesson 6</strong> takes the regression line back to Galton's 1885 family data, with the slope getting a new name.</p>
+  <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
+</footer>
+
+<script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
+<script>
+function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
+function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
+function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
+  xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
+  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke();
+  ctx.fillStyle="#333"; ctx.font="10px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for (let i=0;i<=xTicks;i++){ const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5); }
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
+  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555";
+  if (xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22);
+  if (yLabel) { ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore(); }
+}
+function drawVLine(ctx, f, xv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); }
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
+function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
+
+const EXPLORE_THRESHOLD = { A: 5, B: 4, C: 2, D: 4 };
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+function bumpExplore(stage) {
+  const g = Gates[stage]; if (!g.predicted || g.done) return;
+  g.explores += 1;
+  const tracker = document.getElementById("explore"+stage);
+  const c = tracker.querySelector(".count");
+  const noun = stage==="A"?"combos":stage==="B"?"values":stage==="C"?"reseeds":"values";
+  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
+  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
+    g.done = true; tracker.classList.add("complete");
+    c.textContent = `${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`;
+    unlockNext(stage);
+  }
+}
+function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"posttest"}[s]; }
+function unlockNext(stage) {
+  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
+  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
+  else if (typeof showPosttest==="function") showPosttest();
+}
+function wirePrediction(stage, predId, names, answers, controlsId) {
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  function check() { btn.disabled = !names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
+  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
+  btn.addEventListener("click", () => {
+    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
+    const ol = root.querySelector("ol");
+    const msg = document.createElement("div");
+    msg.className = "prediction-done";
+    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
+    root.insertBefore(msg, ol);
+    btn.style.display = "none";
+    Gates[stage].predicted = true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
+      results.forEach((r,i) => Score.recordCheckpoint(stageIdx*2 + i, r.correct));
+    }
+  });
+}
+
+/* Permutation-on-binary helpers, shared by all stages */
+function simGroups(nA, nB, muA, muB, sigA, sigB, seed) {
+  const rng = mulberry32(seed), normal = makeNormal(rng);
+  const a = new Array(nA), b = new Array(nB);
+  for (let i=0;i<nA;i++) a[i] = muA + sigA * normal();
+  for (let i=0;i<nB;i++) b[i] = muB + sigB * normal();
+  return { a, b };
+}
+function permP(a, b, reps, seed) {
+  const rng = mulberry32(seed + 991);
+  const y = a.concat(b), nA = a.length, n = y.length;
+  const dObs = mean(b) - mean(a);
+  const dNull = new Array(reps);
+  for (let r=0;r<reps;r++) {
+    const yp = y.slice();
+    for (let i=n-1;i>0;i--) { const j = Math.floor(rng()*(i+1)); [yp[i], yp[j]] = [yp[j], yp[i]]; }
+    let s1 = 0, s2 = 0;
+    for (let i=0;i<nA;i++) s1 += yp[i];
+    for (let i=nA;i<n;i++) s2 += yp[i];
+    dNull[r] = (s2/(n-nA)) - (s1/nA);
+  }
+  let extreme = 0;
+  for (const v of dNull) if (Math.abs(v) >= Math.abs(dObs)) extreme++;
+  return { dObs, dNull, p: extreme/reps };
+}
+
+function drawNullHist(ctx, f, dNull, dObs) {
+  const xmin = Math.min(...dNull, dObs)*1.05, xmax = Math.max(...dNull, dObs)*1.05;
+  drawAxes(ctx, f, null, null, 4, 0, v=>v.toFixed(2), v=>"");
+  const bins = 28, binW = (xmax-xmin)/bins;
+  const counts = new Array(bins).fill(0);
+  for (const v of dNull) { const i = Math.min(bins-1, Math.max(0, Math.floor((v - xmin)/binW))); counts[i]++; }
+  const maxC = Math.max(...counts, 1);
+  for (let i=0;i<bins;i++) {
+    if (counts[i]===0) continue;
+    const x0 = f.x(xmin + i*binW), x1 = f.x(xmin + (i+1)*binW);
+    const h = (counts[i]/maxC) * (f.H * 0.88);
+    ctx.fillStyle = "rgba(120,120,120,0.6)";
+    ctx.fillRect(x0+1, f.pad.t + f.H - h, x1-x0-2, h);
+  }
+  drawVLine(ctx, f, dObs, "#b23a48", 2.5, []);
+  drawVLine(ctx, f, 0, "#000", 1, [3,3]);
+}
+
+function drawTwoHist(canvasId, a, b, xMin, xMax, labelA, labelB) {
+  const cv = document.getElementById(canvasId);
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 40, r: 8, t: 12, b: 30 };
+  const f = makeFrame(pad, W, H, xMin, xMax, 0, 0.55);
+  drawAxes(ctx, f, null, null, 4, 0, v=>v.toFixed(1), v=>"");
+  function dHist(values, color) {
+    const bins = 28, binW = (xMax-xMin)/bins;
+    const counts = new Array(bins).fill(0);
+    for (const v of values) { if (v<xMin||v>=xMax) continue; counts[Math.min(bins-1,Math.floor((v-xMin)/binW))]++; }
+    const N = values.length;
+    ctx.fillStyle = color;
+    for (let i=0;i<bins;i++) { const d = counts[i]/(N*binW); if(d===0)continue; ctx.fillRect(f.x(xMin+i*binW)+0.5, f.y(d), f.x(xMin+(i+1)*binW)-f.x(xMin+i*binW)-1, f.y(0)-f.y(d)); }
+  }
+  dHist(a, "rgba(120,120,120,0.6)");
+  dHist(b, "rgba(178,58,72,0.6)");
+  drawVLine(ctx, f, mean(a), "#444", 1.5, []);
+  drawVLine(ctx, f, mean(b), "#b23a48", 1.5, []);
+}
+
+/* =================== STAGE A — three distributions =================== */
+const sA = { muL: -0.4, muH: 0.4, sigma: 1.0, n: 30, seed: 42 };
+
+function drawStageA() {
+  const { a: gLo } = simGroups(sA.n, 0, sA.muL, 0, sA.sigma, 1, sA.seed + 1);
+  const { a: gMid } = simGroups(sA.n, 0, 0,     0, sA.sigma, 1, sA.seed + 2);
+  const { a: gHi } = simGroups(sA.n, 0, sA.muH, 0, sA.sigma, 1, sA.seed + 3);
+  const range = Math.max(3, Math.max(Math.abs(sA.muL), Math.abs(sA.muH)) + 3 * sA.sigma);
+  const cv = document.getElementById("plotA");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 50, r: 12, t: 12, b: 40 };
+  const f = makeFrame(pad, W, H, -range, range, 0, 0.55);
+  drawAxes(ctx, f, "value", "density", 6, 4, v=>v.toFixed(1), v=>v.toFixed(2));
+  function dHist(values, color) {
+    const bins = 30, binW = (2*range)/bins;
+    const counts = new Array(bins).fill(0);
+    for (const v of values) { if (v<-range||v>=range) continue; counts[Math.min(bins-1,Math.floor((v+range)/binW))]++; }
+    const N = values.length;
+    ctx.fillStyle = color;
+    for (let i=0;i<bins;i++) { const d = counts[i]/(N*binW); if(d===0)continue; ctx.fillRect(f.x(-range+i*binW)+0.5, f.y(d), f.x(-range+(i+1)*binW)-f.x(-range+i*binW)-1, f.y(0)-f.y(d)); }
+  }
+  dHist(gLo,  "rgba(47,107,143,0.55)");  // blue
+  dHist(gMid, "rgba(120,120,120,0.55)"); // gray
+  dHist(gHi,  "rgba(178,58,72,0.55)");   // red
+  drawVLine(ctx, f, sA.muL, "#2f6b8f", 1.5, []);
+  drawVLine(ctx, f, 0,      "#444",    1.5, []);
+  drawVLine(ctx, f, sA.muH, "#b23a48", 1.5, []);
+
+  // Pairwise empirical P
+  const PR = 1000;
+  const pLM = permP(gLo,  gMid, PR, sA.seed + 11);
+  const pMH = permP(gMid, gHi,  PR, sA.seed + 22);
+  const pLH = permP(gLo,  gHi,  PR, sA.seed + 33);
+  function pillify(id, p) {
+    const el = document.getElementById(id);
+    el.textContent = p < 0.001 ? "<0.001" : p.toFixed(3);
+    el.classList.toggle("sig", p < 0.05);
+  }
+  pillify("A_pLM", pLM.p); pillify("A_pMH", pMH.p); pillify("A_pLH", pLH.p);
+  document.getElementById("A_dLM").textContent = "δ̂ = " + pLM.dObs.toFixed(2);
+  document.getElementById("A_dMH").textContent = "δ̂ = " + pMH.dObs.toFixed(2);
+  document.getElementById("A_dLH").textContent = "δ̂ = " + pLH.dObs.toFixed(2);
+}
+
+["A_muLIn","A_muHIn","A_sigIn","A_nIn","A_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="A_muLIn") { sA.muL=parseFloat(e.target.value); document.getElementById("A_muLOut").textContent=sA.muL.toFixed(2); document.getElementById("cA_muL").textContent=sA.muL.toFixed(2); highlightByDataLine("codeA","muL"); }
+    if (id==="A_muHIn") { sA.muH=parseFloat(e.target.value); document.getElementById("A_muHOut").textContent=sA.muH.toFixed(2); document.getElementById("cA_muH").textContent=sA.muH.toFixed(2); highlightByDataLine("codeA","muH"); }
+    if (id==="A_sigIn") { sA.sigma=parseFloat(e.target.value); document.getElementById("A_sigOut").textContent=sA.sigma.toFixed(2); document.getElementById("cA_sig").textContent=sA.sigma.toFixed(2); highlightByDataLine("codeA","sigma"); }
+    if (id==="A_nIn") { sA.n=parseInt(e.target.value,10); document.getElementById("A_nOut").textContent=sA.n; document.getElementById("cA_n").textContent=sA.n; highlightByDataLine("codeA","n"); }
+    if (id==="A_seedIn") { sA.seed=parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent=sA.seed; document.getElementById("cA_seed").textContent=sA.seed; highlightByDataLine("codeA","seed"); }
+    drawStageA();
+    bumpExplore("A");
+  });
+});
+document.getElementById("A_download").addEventListener("click", () => {
+  downloadText(`lesson5b_stageA.R`, `set.seed(${sA.seed}); n <- ${sA.n}; sigma <- ${sA.sigma}; muL <- ${sA.muL}; muH <- ${sA.muH}
+L <- rnorm(n, muL, sigma); M <- rnorm(n, 0, sigma); H <- rnorm(n, muH, sigma)
+empP <- function(a, b) {
+  y <- c(a, b); g <- c(rep(0, length(a)), rep(1, length(b)))
+  d  <- coef(lm(y ~ g))[2]
+  dN <- replicate(1000, coef(lm(y ~ sample(g)))[2])
+  mean(abs(dN) >= abs(d))
+}
+empP(L, M); empP(M, H); empP(L, H)
+`);
+});
+wirePrediction("A", "predA", ["qA1"], ["maybe"], "controlsA");
+drawStageA();
+
+/* =================== STAGE B — sample size dominance =================== */
+const sB = { delta: 0.3, sigma: 1.0, seed: 42 };
+
+function drawStageB() {
+  // Small experiment: n = 30 per group
+  const small = simGroups(30, 30, 0, sB.delta, sB.sigma, sB.sigma, sB.seed + 7);
+  const smP = permP(small.a, small.b, 800, sB.seed + 17);
+  drawTwoHist("plotB_small_groups", small.a, small.b, -4, 4);
+  const cv1 = document.getElementById("plotB_small_null");
+  const { ctx: ctx1, W: W1, H: H1 } = setupCanvas(cv1);
+  ctx1.clearRect(0,0,W1,H1);
+  drawNullHist(ctx1, makeFrame({l:36,r:8,t:8,b:26}, W1, H1, Math.min(...smP.dNull, smP.dObs)*1.05, Math.max(...smP.dNull, smP.dObs)*1.05, 0, 1), smP.dNull, smP.dObs);
+  document.getElementById("B_small_dHat").textContent = smP.dObs.toFixed(3);
+  document.getElementById("B_small_p").textContent = smP.p < 0.001 ? "<0.001" : smP.p.toFixed(3);
+
+  // Large experiment: n = 300 per group
+  const big = simGroups(300, 300, 0, sB.delta, sB.sigma, sB.sigma, sB.seed + 8);
+  const bgP = permP(big.a, big.b, 600, sB.seed + 18);
+  drawTwoHist("plotB_large_groups", big.a, big.b, -4, 4);
+  const cv2 = document.getElementById("plotB_large_null");
+  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
+  ctx2.clearRect(0,0,W2,H2);
+  drawNullHist(ctx2, makeFrame({l:36,r:8,t:8,b:26}, W2, H2, Math.min(...bgP.dNull, bgP.dObs)*1.05, Math.max(...bgP.dNull, bgP.dObs)*1.05, 0, 1), bgP.dNull, bgP.dObs);
+  document.getElementById("B_large_dHat").textContent = bgP.dObs.toFixed(3);
+  document.getElementById("B_large_p").textContent = bgP.p < 0.001 ? "<0.001" : bgP.p.toFixed(3);
+}
+
+["B_dIn","B_sigIn","B_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="B_dIn") { sB.delta=parseFloat(e.target.value); document.getElementById("B_dOut").textContent=sB.delta.toFixed(2); document.getElementById("cB_d").textContent=sB.delta.toFixed(2); highlightByDataLine("codeB","delta"); bumpExplore("B"); }
+    if (id==="B_sigIn") { sB.sigma=parseFloat(e.target.value); document.getElementById("B_sigOut").textContent=sB.sigma.toFixed(2); document.getElementById("cB_sig").textContent=sB.sigma.toFixed(2); highlightByDataLine("codeB","sigma"); }
+    if (id==="B_seedIn") { sB.seed=parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent=sB.seed; document.getElementById("cB_seed").textContent=sB.seed; highlightByDataLine("codeB","seed"); }
+    drawStageB();
+  });
+});
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText(`lesson5b_stageB.R`, `set.seed(${sB.seed}); delta <- ${sB.delta}; sigma <- ${sB.sigma}
+runP <- function(n) {
+  y <- c(rnorm(n, 0, sigma), rnorm(n, delta, sigma))
+  g <- c(rep(0, n), rep(1, n))
+  d  <- coef(lm(y ~ g))[2]
+  dN <- replicate(1000, coef(lm(y ~ sample(g)))[2])
+  mean(abs(dN) >= abs(d))
+}
+runP(30); runP(300)
+`);
+});
+wirePrediction("B", "predB", ["qB1"], ["diff"], "controlsB");
+drawStageB();
+
+/* =================== STAGE C — same verdict, different effects =================== */
+const sC = { seed: 42 };
+
+function drawStageC() {
+  // Experiment A: small effect (-0.3), clean (σ = 0.5), large n (200)
+  const expA = simGroups(200, 200, 0, -0.3, 0.5, 0.5, sC.seed + 41);
+  const pA = permP(expA.a, expA.b, 600, sC.seed + 141);
+  drawTwoHist("plotC_A_groups", expA.a, expA.b, -3, 3);
+  const cvA = document.getElementById("plotC_A_null");
+  const { ctx: ctxA, W: WA, H: HA } = setupCanvas(cvA);
+  ctxA.clearRect(0,0,WA,HA);
+  drawNullHist(ctxA, makeFrame({l:36,r:8,t:8,b:26}, WA, HA, Math.min(...pA.dNull, pA.dObs)*1.1, Math.max(...pA.dNull, pA.dObs)*1.1, 0, 1), pA.dNull, pA.dObs);
+  document.getElementById("C_A_dHat").textContent = pA.dObs.toFixed(3);
+  document.getElementById("C_A_p").textContent = pA.p < 0.001 ? "<0.001" : pA.p.toFixed(3);
+
+  // Experiment B: large effect (-1.5), messy (σ = 4.0), tiny n (12)
+  const expB = simGroups(12, 12, 0, -1.5, 4.0, 4.0, sC.seed + 71);
+  const pB = permP(expB.a, expB.b, 1000, sC.seed + 171);
+  drawTwoHist("plotC_B_groups", expB.a, expB.b, -10, 10);
+  const cvB = document.getElementById("plotC_B_null");
+  const { ctx: ctxB, W: WB, H: HB } = setupCanvas(cvB);
+  ctxB.clearRect(0,0,WB,HB);
+  drawNullHist(ctxB, makeFrame({l:36,r:8,t:8,b:26}, WB, HB, Math.min(...pB.dNull, pB.dObs)*1.1, Math.max(...pB.dNull, pB.dObs)*1.1, 0, 1), pB.dNull, pB.dObs);
+  document.getElementById("C_B_dHat").textContent = pB.dObs.toFixed(3);
+  document.getElementById("C_B_p").textContent = pB.p < 0.001 ? "<0.001" : pB.p.toFixed(3);
+}
+
+document.getElementById("C_seedIn").addEventListener("input", (e) => {
+  sC.seed = parseInt(e.target.value, 10);
+  document.getElementById("C_seedOut").textContent = sC.seed;
+  document.getElementById("cC_seed").textContent = sC.seed;
+  highlightByDataLine("codeC","seed");
+  drawStageC();
+});
+document.getElementById("C_newseed").addEventListener("click", () => {
+  const s = Math.floor(Math.random()*999)+1;
+  document.getElementById("C_seedIn").value = s;
+  document.getElementById("C_seedIn").dispatchEvent(new Event("input"));
+  bumpExplore("C");
+});
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText(`lesson5b_stageC.R`, `set.seed(${sC.seed})
+# Experiment A: small effect, clean data, large n
+A0 <- rnorm(200, 0, 0.5); A1 <- rnorm(200, -0.3, 0.5)
+# Experiment B: big effect, messy data, tiny n
+B0 <- rnorm(12, 0, 4.0);  B1 <- rnorm(12, -1.5, 4.0)
+empP <- function(a, b) {
+  y <- c(a, b); g <- c(rep(0, length(a)), rep(1, length(b)))
+  d  <- coef(lm(y ~ g))[2]
+  dN <- replicate(1000, coef(lm(y ~ sample(g)))[2])
+  mean(abs(dN) >= abs(d))
+}
+empP(A0, A1); empP(B0, B1)
+`);
+});
+wirePrediction("C", "predC", ["qC1"], ["clean"], "controlsC");
+drawStageC();
+
+/* =================== STAGE D — equal means, unequal variances =================== */
+const sD = { sigB: 1.0, n: 50, seed: 42 };
+
+function drawStageD() {
+  const { a, b } = simGroups(sD.n, sD.n, 0, 0, 1.0, sD.sigB, sD.seed);
+  const range = Math.max(3, sD.sigB * 3 + 1);
+  drawTwoHist("plotD_groups", a, b, -range, range);
+  const { dObs, dNull, p } = permP(a, b, 1000, sD.seed + 555);
+  const cv = document.getElementById("plotD_null");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const allD = dNull.concat([dObs]);
+  drawNullHist(ctx, makeFrame({l:46,r:12,t:10,b:30}, W, H, Math.min(...allD)*1.1, Math.max(...allD)*1.1, 0, 1), dNull, dObs);
+  document.getElementById("D_sigA").textContent = "1.0";
+  document.getElementById("D_sigB").textContent = sD.sigB.toFixed(2);
+  document.getElementById("D_dHat").textContent = dObs.toFixed(3);
+  document.getElementById("D_p").textContent = p < 0.001 ? "<0.001" : p.toFixed(3);
+}
+
+["D_sigBIn","D_nIn","D_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="D_sigBIn") { sD.sigB=parseFloat(e.target.value); document.getElementById("D_sigBOut").textContent=sD.sigB.toFixed(2); document.getElementById("cD_sigB").textContent=sD.sigB.toFixed(2); highlightByDataLine("codeD","sigB"); bumpExplore("D"); }
+    if (id==="D_nIn") { sD.n=parseInt(e.target.value,10); document.getElementById("D_nOut").textContent=sD.n; document.getElementById("cD_n").textContent=sD.n; highlightByDataLine("codeD","n"); }
+    if (id==="D_seedIn") { sD.seed=parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent=sD.seed; document.getElementById("cD_seed").textContent=sD.seed; highlightByDataLine("codeD","seed"); }
+    drawStageD();
+  });
+});
+document.getElementById("D_download").addEventListener("click", () => {
+  downloadText(`lesson5b_stageD.R`, `set.seed(${sD.seed}); n <- ${sD.n}; sigma_B <- ${sD.sigB}
+A <- rnorm(n, 0, 1); B <- rnorm(n, 0, sigma_B)
+empP <- function(a, b) {
+  y <- c(a, b); g <- c(rep(0, length(a)), rep(1, length(b)))
+  d  <- coef(lm(y ~ g))[2]
+  dN <- replicate(1000, coef(lm(y ~ sample(g)))[2])
+  mean(abs(dN) >= abs(d))
+}
+empP(A, B)
+`);
+});
+wirePrediction("D", "predD", ["qD1"], ["hover"], "controlsD");
+drawStageD();
+
+/* =================== Pretest / Posttest / Score =================== */
+const PRETEST_ITEMS = [
+  { idx: 0,
+    q: "Two pairwise comparisons of three groups both return 'not clearly different.' What can you conclude about the comparison the test never ran (between the two outer groups)?",
+    options: [
+      "Also not clearly different — non-significance is transitive",
+      "Nothing — that comparison was never tested, and the answer can go either way",
+      "Definitely clearly different — they're separated by both small steps",
+      "Statistical tests rule out all three pairwise comparisons at once"
+    ],
+    correct: 1 },
+  { idx: 1,
+    q: "Two studies report the same effect size (same δ̂). One finds P < 0.001, the other finds P = 0.4. The most likely explanation is:",
+    options: [
+      "One of the studies made a mistake",
+      "Different sample sizes or within-group variation — the same effect can produce very different empirical P-values",
+      "The biology is different",
+      "P-values are random; there is no explanation"
+    ],
+    correct: 1 }
+];
+const POSTTEST_ITEMS = [
+  { idx: 0,
+    q: "Two groups have the same mean but very different variances. You fit y ~ α + δ·g and run the shuffle-the-label test. The empirical P will:",
+    options: [
+      "Be small — the distributions are clearly different",
+      "Hover around 0.5 — the test asks about the mean difference, and the means are equal",
+      "Always be exactly 0.05",
+      "Depend on the seed but average to 0.05"
+    ],
+    correct: 1 },
+  { idx: 1,
+    q: "The single sentence that summarizes this lesson:",
+    options: [
+      "P-values measure the magnitude of an effect",
+      "The difference between significant and not significant is not itself significant",
+      "Smaller P is always better",
+      "Effect size and P-value are the same thing"
+    ],
+    correct: 1 },
+  { idx: 2,
+    q: "Which of these did you actually see happen in this lesson?",
+    options: [
+      "A vs B and B vs C can both be 'not clearly different' while A vs C is",
+      "The same true effect can produce very different empirical P-values at different sample sizes",
+      "An experiment with a much bigger underlying effect can produce a much bigger empirical P than one with a smaller effect",
+      "The shuffle-the-label test detects any kind of difference between two distributions",
+      "If you got P < 0.05, you have definitely answered the question you were asking"
+    ],
+    correct: [0, 1, 2] }
+];
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({ mount:"#pretest-mount", group:"pretest", title:"Before you start", items: PRETEST_ITEMS,
+    onComplete: () => { document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked"); } });
+}
+function showPosttest() {
+  const c = document.getElementById("posttest-card"); if (c.style.display==="block") return;
+  c.style.display = "block";
+  Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items:POSTTEST_ITEMS, onComplete: () => Score.finish() });
+}
+Score.init({
+  moduleId: "lesson5b", version: 2,
+  pretest: PRETEST_ITEMS.length, scaffold: 4, posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => showPretest()
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 6: Galton's insight — regression is inheritance</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; }
+  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .prediction-done.correct { background:#e6f0dd; border-color:#6f8a4a; color:#3d5728; }
+  .prediction-done.wrong { background:#fbe4c6; border-color:#a86a1a; color:#5c3802; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.secondary { background:#888; } .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; } .teaching-note strong { color:#2e230a; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+  .outcomes ul { margin:0 0 10px; padding-left:20px; columns:2; column-gap:28px; font-size:14px; }
+  .outcomes li { margin-bottom:4px; break-inside:avoid; }
+  .stage-outcome { font-size:12.5px; color:var(--muted); margin:4px 0 14px; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; }
+  .stage-outcome strong { color:var(--ink); }
+  .stretch { margin-top:20px; padding:16px; background:var(--accent2-soft); border:1px dashed var(--accent2); border-radius:6px; }
+  .stretch h3 { margin:0 0 8px; font-size:13px; color:var(--accent2); text-transform:uppercase; letter-spacing:.06em; }
+  .stretch p { margin:0 0 8px; font-size:13.5px; }
+  .stretch button { margin-top:6px; padding:7px 13px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; } .stretch button.done { background:#6f8a4a; }
+  .stretch .opt-in-status { margin-top:8px; font-size:12.5px; color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 6 — Galton, 1885: a regression on families</h1>
+  <p>BIO 202, Spring 2026, draft v1. The same regression machinery you have been using since Lesson 3, applied to parents and their children.</p>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
+<div class="outcomes">
+  <h2>What you'll do</h2>
+  <p>Four stages. Build a parent-offspring simulator, then run the regression on 934 real children from Galton's 1885 paper.</p>
+</div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. Two independent traits</a>
+  <a href="#stageB" id="tocB" class="locked">B. Couple them with h²</a>
+  <a href="#stageC" id="tocC" class="locked">C. Fit offspring on midparent</a>
+  <a href="#stageD" id="tocD" class="locked">D. Galton's real data</a>
+</nav>
+
+<!-- ====== STAGE A — independent traits ============================== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — Two independent traits, no relationship</h2>
+  <p class="stage-sub">Simulate a population where two traits are generated independently. Read three summary numbers; reseed and read them again.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Two simulated traits, drawn independently from Normal(0, 1). n individuals. Read the three summary numbers (covariance, Pearson r, Spearman ρ) and watch what they do as you change the seed.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Scatter of two independent traits</h3>
+        <canvas id="plotA" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">n:</span> <span id="A_n">200</span>
+          &nbsp;|&nbsp;
+          <span class="label">cov(x, y):</span> <span id="A_cov">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">Pearson r:</span> <span id="A_r">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">Spearman ρ:</span> <span id="A_rho">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Two independent variables generate a scatter. The sample Pearson r will be:</div>
+            <label><input type="radio" name="qA1" value="exact" /> exactly 0</label>
+            <label><input type="radio" name="qA1" value="close" /> close to 0 but generally not exactly — small samples wobble</label>
+            <label><input type="radio" name="qA1" value="any" /> equally likely to be any value in (−1, 1)</label>
+          </li>
+          <li>
+            <div class="q">Q2. As you raise n, the sample r:</div>
+            <label><input type="radio" name="qA2" value="zero" /> converges to 0</label>
+            <label><input type="radio" name="qA2" value="wob" /> wobbles by the same amount around 0 regardless of n</label>
+            <label><input type="radio" name="qA2" value="grow" /> grows away from 0</label>
+          </li>
+        </ol>
+        <button id="submitA" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 seed/n combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="n"><label for="A_nIn">n</label><input type="range" id="A_nIn" min="20" max="1000" step="10" value="200" /><output id="A_nOut">200</output></div>
+          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="A_newSeed" class="secondary">Regenerate (new seed)</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — independent traits, three summaries</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cA_n">200</span></span><span class="line">x &lt;- <span class="fn">rnorm</span>(n); y &lt;- <span class="fn">rnorm</span>(n)</span><span class="line"></span><span class="line"><span class="fn">cov</span>(x, y)</span><span class="line"><span class="fn">cor</span>(x, y)                <span class="com"># Pearson</span></span><span class="line"><span class="fn">cor</span>(x, y, method = <span class="str">"spearman"</span>)   <span class="com"># Spearman rank correlation</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE B — couple with h² ================================= -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Couple the traits: introduce heritability h²</h2>
+  <p class="stage-sub">Now the offspring trait depends on the parents' trait. h² is a slider. Move it.</p>
+  <div class="lock-banner">Complete Stage A (submit prediction, try 5 combos) to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Simulated parent–offspring pairs. Midparent m = (father + mother) / 2. Offspring trait generated as:</p>
+        <p><span class="formula">y = μ + h²·(m − μ) + Normal(0, σ·√(1 − h²))</span></p>
+        <p>Move h². Watch the cloud.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Midparent vs. offspring, with cloud tilt</h3>
+        <canvas id="plotB" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsB">
+          <span class="label">true h²:</span> <span id="B_h2">0.50</span>
+          &nbsp;|&nbsp;
+          <span class="label">cov:</span> <span id="B_cov">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">Pearson r:</span> <span id="B_r">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction (required before sliders unlock)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. You move h² from 0 to 1. The covariance between midparent and offspring will:</div>
+            <label><input type="radio" name="qB1" value="grow" /> grow steadily, roughly tracking h²</label>
+            <label><input type="radio" name="qB1" value="stay" /> stay near zero — adding heritability doesn't change covariance</label>
+            <label><input type="radio" name="qB1" value="drop" /> drop — heritability suppresses covariance</label>
+          </li>
+          <li>
+            <div class="q">Q2. At h² = 1 (perfect inheritance), the cloud of (midparent, offspring) points becomes:</div>
+            <label><input type="radio" name="qB2" value="round" /> a round cloud — perfect inheritance still has noise</label>
+            <label><input type="radio" name="qB2" value="line" /> a tight line — offspring equals midparent exactly</label>
+            <label><input type="radio" name="qB2" value="flat" /> a flat band — variance is gone</label>
+          </li>
+        </ol>
+        <button id="submitB" disabled>Submit prediction → unlock sliders</button>
+        <div class="explore-tracker" id="exploreB">Try at least 6 h² values to unlock Stage C. <span class="count">0/6 h² values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="row" data-line="h2"><label for="B_h2In">h² (heritability)</label><input type="range" id="B_h2In" min="0" max="1" step="0.01" value="0.5" /><output id="B_h2Out">0.50</output></div>
+          <div class="row" data-line="n"><label for="B_nIn">n pairs</label><input type="range" id="B_nIn" min="30" max="2000" step="10" value="300" /><output id="B_nOut">300</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="B_newSeed" class="secondary">Regenerate (new seed)</button>
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — couple two traits via h²</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cB_n">300</span></span><span class="line" data-line="h2">h2 &lt;- <span class="num" id="cB_h2">0.50</span></span><span class="line">mu &lt;- <span class="num">68</span>; sigma &lt;- <span class="num">3</span></span><span class="line">father &lt;- <span class="fn">rnorm</span>(n, mu, sigma); mother &lt;- <span class="fn">rnorm</span>(n, mu, sigma)</span><span class="line">midparent &lt;- (father + mother) / <span class="num">2</span></span><span class="line">offspring &lt;- mu + h2 * (midparent - mu) +</span><span class="line">             <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma * <span class="fn">sqrt</span>(<span class="num">1</span> - h2))</span><span class="line"><span class="fn">cov</span>(midparent, offspring); <span class="fn">cor</span>(midparent, offspring)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE C — slope = h² ====================================== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Fit offspring on midparent</h2>
+  <p class="stage-sub">Same simulator. Fit <code>lm(offspring ~ midparent)</code>. Compare β̂ to the true h² slider.</p>
+  <div class="lock-banner">Complete Stage B (submit prediction, try 6 h² values) to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Same simulator as Stage B. Now we explicitly fit <code>lm(offspring ~ midparent)</code> and display the slope β̂ next to the true h² slider.</p>
+        <p>Drag h². Watch β̂.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Midparent × offspring with fitted line</h3>
+        <canvas id="plotC" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">true h²:</span> <span id="C_truth">0.50</span>
+          &nbsp;|&nbsp;
+          <span class="label">fitted slope β̂:</span> <span id="C_slope" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">|β̂ − h²|:</span> <span id="C_gap">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">R²:</span> <span id="C_r2">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">SE(β̂):</span> <span id="C_se">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction (required before slider unlocks)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. The slope of offspring on midparent equals:</div>
+            <label><input type="radio" name="qC1" value="h2" /> h² (heritability) — directly</label>
+            <label><input type="radio" name="qC1" value="r" /> Pearson r — not h²</label>
+            <label><input type="radio" name="qC1" value="one" /> 1 always — because offspring share genes with both parents</label>
+          </li>
+          <li>
+            <div class="q">Q2. Galton observed slope ≈ 0.65 for father–son heights. The biological reading is:</div>
+            <label><input type="radio" name="qC2" value="h2" /> h² for height ≈ 0.65 — about two-thirds of height variation is heritable</label>
+            <label><input type="radio" name="qC2" value="bad" /> heredity is broken because the slope is not 1</label>
+            <label><input type="radio" name="qC2" value="random" /> the data are random</label>
+          </li>
+        </ol>
+        <button id="submitC" disabled>Submit prediction → unlock the slider</button>
+        <div class="explore-tracker" id="exploreC">Drag h² through at least 8 distinct values to unlock Stage D. <span class="count">0/8 values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row" data-line="h2"><label for="C_h2In">h² (truth)</label><input type="range" id="C_h2In" min="0" max="1" step="0.01" value="0.5" /><output id="C_h2Out">0.50</output></div>
+          <div class="row" data-line="n"><label for="C_nIn">n pairs</label><input type="range" id="C_nIn" min="30" max="2000" step="10" value="500" /><output id="C_nOut">500</output></div>
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — read h² off the regression slope</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cC_n">500</span></span><span class="line" data-line="h2">h2 &lt;- <span class="num" id="cC_h2">0.50</span></span><span class="line">mu &lt;- <span class="num">68</span>; sigma &lt;- <span class="num">3</span></span><span class="line">f &lt;- <span class="fn">rnorm</span>(n, mu, sigma); m &lt;- <span class="fn">rnorm</span>(n, mu, sigma)</span><span class="line">midparent &lt;- (f + m) / <span class="num">2</span></span><span class="line">offspring &lt;- mu + h2 * (midparent - mu) + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma * <span class="fn">sqrt</span>(<span class="num">1</span> - h2))</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(offspring ~ midparent)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]               <span class="com"># the slope IS h-hat-squared</span></span><span class="line"><span class="fn">summary</span>(fit)$coefficients[<span class="num">2</span>, <span class="num">2</span>]   <span class="com"># SE on h²-hat</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE D — Galton real ===================================== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Galton's 1885 data: 934 children, 197 families</h2>
+  <p class="stage-sub">Real father–mother–child records. Same regression you just built. Read the slope, then bootstrap it.</p>
+  <div class="lock-banner">Complete Stage C (submit prediction, try 8 h² values) to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>934 child-records, 197 Victorian-era families. Midparent height = (father + 1.08·mother) / 2 (Galton's sex correction).</p>
+        <p>Fit <code>lm(childHeight ~ midparentHeight)</code>. Bootstrap it. The slope is what you came here for.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Galton family data: midparent height vs child height</h3>
+        <canvas id="plotD" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">N children:</span> <span id="D_N">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">families:</span> <span id="D_F">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">slope (= ĥ²):</span> <span id="D_b" class="big">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">intercept:</span> <span id="D_a">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">R²:</span> <span id="D_r2">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">95% bootstrap on ĥ²:</span> <span id="D_qi">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction (required before bootstrap unlocks)</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. The slope of childHeight on midparentHeight in Galton's data is:</div>
+            <label><input type="radio" name="qD1" value="one" /> exactly 1 — kids look like the average of their parents</label>
+            <label><input type="radio" name="qD1" value="below" /> below 1 (about 0.65) — kids regress toward the population mean</label>
+            <label><input type="radio" name="qD1" value="zero" /> near 0 — height isn't very heritable</label>
+          </li>
+          <li>
+            <div class="q">Q2. Split the data by child sex. The two sex-specific slopes will:</div>
+            <label><input type="radio" name="qD2" value="same" /> be roughly the same (because h² is a population parameter that doesn't depend on offspring sex)</label>
+            <label><input type="radio" name="qD2" value="opposite" /> have opposite signs</label>
+            <label><input type="radio" name="qD2" value="zero" /> both be zero</label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit prediction → unlock bootstrap</button>
+        <div class="explore-tracker" id="exploreD">Run the bootstrap and split-by-sex toggle to wrap up. <span class="count">0/2 actions</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row"><label><input type="checkbox" id="D_split" /> color by child sex</label><div></div><output></output></div>
+          <div class="row" data-line="reps"><label for="D_reps">bootstrap reps</label><input type="range" id="D_reps" min="50" max="500" step="50" value="200" /><output id="D_repsOut">200</output></div>
+          <div class="row" data-line="seed"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="D_boot" class="accent">Run bootstrap on ĥ²</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — Galton in 5 lines</h3>
+<pre class="code" id="codeD"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$midparent &lt;- (g$father + <span class="num">1.08</span> * g$mother) / <span class="num">2</span></span><span class="line">fit &lt;- <span class="fn">lm</span>(childHeight ~ midparent, data = g)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]   <span class="com"># h-hat-squared ≈ 0.65</span></span><span class="line"></span><span class="line" data-line="reps">B &lt;- <span class="num" id="cD_reps">200</span></span><span class="line"><span class="fn">replicate</span>(B, {</span><span class="line">  k &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(g), <span class="fn">nrow</span>(g), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(childHeight ~ midparent, data = g[k, ]))[<span class="num">2</span>]</span><span class="line">}) |&gt; <span class="fn">quantile</span>(<span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span></pre>
+      </div>
+    </div>
+  </div>
+  <div class="stretch" id="stretchD">
+    <h3>Stretch challenge (optional)</h3>
+    <p>Galton's mother coefficient of 1.08 is rough. Refit using an un-corrected mother coefficient of 1.0 and report how the slope changes. Then run a per-sex fit: male offspring on midparent (no correction), then female offspring on midparent. Which approach gives the cleanest ĥ²? Hit "I tried it" after you have an answer.</p>
+    <button id="stretchD_btn">I tried it</button>
+    <div class="opt-in-status" id="stretchD_status">Not yet attempted.</div>
+  </div>
+</section>
+
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<footer class="wrap-up">
+  <h2>Where this lesson goes next</h2>
+  <p><strong>Unit 2 begins.</strong> Lesson 7 introduces inheritance probabilities without Punnett squares. Lesson 8 builds Hardy-Weinberg. The slope you just measured comes back in Lesson 14, as the lever that controls how fast a population responds to selection.</p>
+  <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
+</footer>
+
+<script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
+<script>
+function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
+function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
+function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
+  xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
+  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke();
+  ctx.fillStyle="#333"; ctx.font="11px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for (let i=0;i<=xTicks;i++){ const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+6); }
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
+  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
+  ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
+  ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+}
+function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
+function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
+function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
+function covar(xs, ys) { const mx=mean(xs), my=mean(ys); let s=0; for(let i=0;i<xs.length;i++) s+=(xs[i]-mx)*(ys[i]-my); return s/(xs.length-1); }
+function corr(xs, ys) { return covar(xs, ys) / (std(xs)*std(ys)); }
+function spearman(xs, ys) {
+  const rank = arr => {
+    const sorted = arr.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+    const r = new Array(arr.length);
+    sorted.forEach((s,k) => r[s.i] = k+1);
+    return r;
+  };
+  return corr(rank(xs), rank(ys));
+}
+function ols(xs, ys) {
+  const mx = mean(xs), my = mean(ys);
+  let sxy = 0, sxx = 0;
+  for (let i=0;i<xs.length;i++) { sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
+  const b = sxy/sxx; const a = my - b*mx;
+  const yhat = xs.map(x => a + b*x);
+  const ssr = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
+  const sst = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
+  const sres = Math.sqrt(ssr/(xs.length-2));
+  const seB = sres / Math.sqrt(sxx);
+  return { a, b, r2: 1 - ssr/sst, sres, seB };
+}
+
+const EXPLORE_THRESHOLD = { A: 5, B: 6, C: 8, D: 2 };
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+function bumpExplore(stage) {
+  const g = Gates[stage]; if (!g.predicted || g.done) return;
+  g.explores += 1;
+  const tracker = document.getElementById("explore"+stage);
+  const c = tracker.querySelector(".count");
+  const noun = stage==="A"?"combos":stage==="B"?"h² values":stage==="C"?"values":"actions";
+  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
+  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
+    g.done = true; tracker.classList.add("complete");
+    c.textContent = `${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`;
+    unlockNext(stage);
+  }
+}
+function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"posttest"}[s]; }
+function unlockNext(stage) {
+  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
+  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
+  else if (typeof showPosttest==="function") showPosttest();
+}
+function wirePrediction(stage, predId, names, answers, controlsId) {
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  function check() { btn.disabled = !names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
+  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
+  btn.addEventListener("click", () => {
+    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
+    const nc = results.filter(r=>r.correct).length;
+    const ol = root.querySelector("ol");
+    const msg = document.createElement("div");
+    msg.className = "prediction-done";
+    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
+    root.insertBefore(msg, ol);
+    btn.style.display = "none";
+    Gates[stage].predicted = true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
+      Score.recordCheckpoint(stageIdx*2,     results[0].correct);
+      Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
+    }
+  });
+}
+
+/* ====== STAGE A ===================================================== */
+const sA = { n: 200, seed: 42 };
+function simIndep(n, seed) {
+  const rng = mulberry32(seed), normal = makeNormal(rng);
+  const xs = new Array(n), ys = new Array(n);
+  for (let i=0;i<n;i++) { xs[i] = normal(); ys[i] = normal(); }
+  return { xs, ys };
+}
+function drawStageA() {
+  const cv = document.getElementById("plotA");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const { xs, ys } = simIndep(sA.n, sA.seed);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, -3.5, 3.5, -3.5, 3.5);
+  drawAxes(ctx, f, "trait x (z-scored)", "trait y (z-scored)", 7, 7, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx.fillStyle = "rgba(60,60,60,0.55)";
+  for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 2, 0, 2*Math.PI); ctx.fill(); }
+  document.getElementById("A_n").textContent = sA.n;
+  document.getElementById("A_cov").textContent = covar(xs, ys).toFixed(3);
+  document.getElementById("A_r").textContent = corr(xs, ys).toFixed(3);
+  document.getElementById("A_rho").textContent = spearman(xs, ys).toFixed(3);
+}
+["A_nIn","A_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="A_nIn") { sA.n=parseInt(e.target.value,10); document.getElementById("A_nOut").textContent=sA.n; document.getElementById("cA_n").textContent=sA.n; highlightByDataLine("codeA","n"); }
+    if (id==="A_seedIn") { sA.seed=parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent=sA.seed; document.getElementById("cA_seed").textContent=sA.seed; highlightByDataLine("codeA","seed"); }
+    drawStageA(); bumpExplore("A");
+  });
+});
+document.getElementById("A_newSeed").addEventListener("click", () => {
+  const s = Math.floor(Math.random()*999)+1;
+  document.getElementById("A_seedIn").value = s;
+  document.getElementById("A_seedIn").dispatchEvent(new Event("input"));
+});
+document.getElementById("A_download").addEventListener("click", () => {
+  downloadText(`lesson6_stageA.R`, `set.seed(${sA.seed}); n <- ${sA.n}
+x <- rnorm(n); y <- rnorm(n)
+cov(x, y); cor(x, y); cor(x, y, method="spearman")
+`);
+});
+wirePrediction("A", "predA", ["qA1","qA2"], ["close","zero"], "controlsA");
+drawStageA();
+
+/* ====== STAGE B ===================================================== */
+const sB = { h2: 0.5, n: 300, seed: 42 };
+function simParentOffspring(n, h2, seed) {
+  const rng = mulberry32(seed), normal = makeNormal(rng);
+  const mu = 68, sigma = 3;
+  const out = [];
+  for (let i=0;i<n;i++) {
+    const f = mu + sigma*normal(), m = mu + sigma*normal();
+    const mp = (f + m)/2;
+    const y = mu + h2*(mp - mu) + sigma*Math.sqrt(1 - h2)*normal();
+    out.push({ f, m, mp, y });
+  }
+  return out;
+}
+function drawStageB() {
+  const cv = document.getElementById("plotB");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const data = simParentOffspring(sB.n, sB.h2, sB.seed);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, 58, 78, 58, 78);
+  drawAxes(ctx, f, "midparent height (in)", "offspring height (in)", 5, 5, v=>v.toFixed(0), v=>v.toFixed(0));
+  // 1:1 reference
+  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(58)); ctx.lineTo(f.x(78), f.y(78)); ctx.stroke(); ctx.setLineDash([]);
+  // Points
+  ctx.fillStyle = "rgba(47,107,143,0.55)";
+  data.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.mp), f.y(d.y), 2.5, 0, 2*Math.PI); ctx.fill(); });
+  const mps = data.map(d=>d.mp), ys = data.map(d=>d.y);
+  document.getElementById("B_h2").textContent = sB.h2.toFixed(2);
+  document.getElementById("B_cov").textContent = covar(mps, ys).toFixed(3);
+  document.getElementById("B_r").textContent = corr(mps, ys).toFixed(3);
+}
+["B_h2In","B_nIn","B_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="B_h2In") { sB.h2=parseFloat(e.target.value); document.getElementById("B_h2Out").textContent=sB.h2.toFixed(2); document.getElementById("cB_h2").textContent=sB.h2.toFixed(2); highlightByDataLine("codeB","h2"); bumpExplore("B"); }
+    if (id==="B_nIn") { sB.n=parseInt(e.target.value,10); document.getElementById("B_nOut").textContent=sB.n; document.getElementById("cB_n").textContent=sB.n; highlightByDataLine("codeB","n"); }
+    if (id==="B_seedIn") { sB.seed=parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent=sB.seed; document.getElementById("cB_seed").textContent=sB.seed; highlightByDataLine("codeB","seed"); }
+    drawStageB();
+  });
+});
+document.getElementById("B_newSeed").addEventListener("click", () => {
+  const s = Math.floor(Math.random()*999)+1;
+  document.getElementById("B_seedIn").value = s;
+  document.getElementById("B_seedIn").dispatchEvent(new Event("input"));
+});
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText(`lesson6_stageB.R`, `set.seed(${sB.seed}); n <- ${sB.n}; h2 <- ${sB.h2}; mu <- 68; sigma <- 3
+f <- rnorm(n, mu, sigma); m <- rnorm(n, mu, sigma)
+mp <- (f+m)/2
+y <- mu + h2*(mp - mu) + rnorm(n, 0, sigma*sqrt(1-h2))
+cov(mp, y); cor(mp, y)
+`);
+});
+wirePrediction("B", "predB", ["qB1","qB2"], ["grow","line"], "controlsB");
+drawStageB();
+
+/* ====== STAGE C ===================================================== */
+const sC = { h2: 0.5, n: 500, seed: 42 };
+function drawStageC() {
+  const cv = document.getElementById("plotC");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const data = simParentOffspring(sC.n, sC.h2, sC.seed);
+  const mps = data.map(d=>d.mp), ys = data.map(d=>d.y);
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, 58, 78, 58, 78);
+  drawAxes(ctx, f, "midparent height (in)", "offspring height (in)", 5, 5, v=>v.toFixed(0), v=>v.toFixed(0));
+  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(58)); ctx.lineTo(f.x(78), f.y(78)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(47,107,143,0.45)";
+  data.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.mp), f.y(d.y), 2.5, 0, 2*Math.PI); ctx.fill(); });
+  const fit = ols(mps, ys);
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(fit.a + fit.b*58)); ctx.lineTo(f.x(78), f.y(fit.a + fit.b*78)); ctx.stroke();
+  document.getElementById("C_truth").textContent = sC.h2.toFixed(2);
+  document.getElementById("C_slope").textContent = fit.b.toFixed(3);
+  document.getElementById("C_gap").textContent = Math.abs(fit.b - sC.h2).toFixed(3);
+  document.getElementById("C_r2").textContent = fit.r2.toFixed(3);
+  document.getElementById("C_se").textContent = fit.seB.toFixed(3);
+}
+["C_h2In","C_nIn","C_seedIn"].forEach(id => {
+  document.getElementById(id).addEventListener("input", (e) => {
+    if (id==="C_h2In") { sC.h2=parseFloat(e.target.value); document.getElementById("C_h2Out").textContent=sC.h2.toFixed(2); document.getElementById("cC_h2").textContent=sC.h2.toFixed(2); highlightByDataLine("codeC","h2"); bumpExplore("C"); }
+    if (id==="C_nIn") { sC.n=parseInt(e.target.value,10); document.getElementById("C_nOut").textContent=sC.n; document.getElementById("cC_n").textContent=sC.n; highlightByDataLine("codeC","n"); }
+    if (id==="C_seedIn") { sC.seed=parseInt(e.target.value,10); document.getElementById("C_seedOut").textContent=sC.seed; document.getElementById("cC_seed").textContent=sC.seed; highlightByDataLine("codeC","seed"); }
+    drawStageC();
+  });
+});
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText(`lesson6_stageC.R`, `set.seed(${sC.seed}); n <- ${sC.n}; h2 <- ${sC.h2}; mu <- 68; sigma <- 3
+f <- rnorm(n, mu, sigma); m <- rnorm(n, mu, sigma)
+mp <- (f+m)/2; y <- mu + h2*(mp - mu) + rnorm(n, 0, sigma*sqrt(1-h2))
+fit <- lm(y ~ mp); coef(fit)[2]; summary(fit)$coefficients[2, 2]
+`);
+});
+wirePrediction("C", "predC", ["qC1","qC2"], ["h2","h2"], "controlsC");
+drawStageC();
+
+/* ====== STAGE D — Galton ============================================ */
+const sD = { galton: null, splitSex: false, reps: 200, seed: 42, bootSlopes: [] };
+async function loadGalton() {
+  try {
+    const r = await fetch("../data/clean/galton_families.json");
+    sD.galton = await r.json();
+  } catch (e) {
+    console.warn("galton fallback", e); sD.galton = [];
+  }
+  drawStageD();
+}
+function drawStageD() {
+  if (!sD.galton) return;
+  const cv = document.getElementById("plotD");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const rows = sD.galton.map(r => ({
+    f: +r.father, m: +r.mother, mp: (+r.father + 1.08*(+r.mother))/2,
+    y: +r.childHeight, sex: r.gender, family: r.family
+  })).filter(r => isFinite(r.mp) && isFinite(r.y));
+  const pad = { l: 50, r: 12, t: 18, b: 50 };
+  const f = makeFrame(pad, W, H, 64, 76, 56, 80);
+  drawAxes(ctx, f, "midparent height (in)", "child height (in)", 6, 6, v=>v.toFixed(0), v=>v.toFixed(0));
+  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(f.x(64), f.y(64)); ctx.lineTo(f.x(76), f.y(76)); ctx.stroke(); ctx.setLineDash([]);
+  rows.forEach(d => {
+    ctx.fillStyle = sD.splitSex
+      ? (d.sex === "male" ? "rgba(47,107,143,0.55)" : "rgba(178,58,72,0.45)")
+      : "rgba(60,60,60,0.5)";
+    // jitter for overplotting
+    const jx = (Math.random()-0.5)*0.2, jy = (Math.random()-0.5)*0.2;
+    ctx.beginPath(); ctx.arc(f.x(d.mp+jx), f.y(d.y+jy), 2.5, 0, 2*Math.PI); ctx.fill();
+  });
+  const mps = rows.map(d=>d.mp), ys = rows.map(d=>d.y);
+  const fit = ols(mps, ys);
+  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(f.x(64), f.y(fit.a + fit.b*64)); ctx.lineTo(f.x(76), f.y(fit.a + fit.b*76)); ctx.stroke();
+  document.getElementById("D_N").textContent = rows.length;
+  const families = new Set(rows.map(d => d.family)).size;
+  document.getElementById("D_F").textContent = families;
+  document.getElementById("D_b").textContent = fit.b.toFixed(3);
+  document.getElementById("D_a").textContent = fit.a.toFixed(2);
+  document.getElementById("D_r2").textContent = fit.r2.toFixed(3);
+  if (sD.bootSlopes.length) {
+    const lo = quantile(sD.bootSlopes, 0.025), hi = quantile(sD.bootSlopes, 0.975);
+    document.getElementById("D_qi").textContent = `(${lo.toFixed(3)}, ${hi.toFixed(3)})`;
+  }
+}
+function runBootD() {
+  if (!sD.galton) return;
+  const rows = sD.galton.map(r => ({ mp: (+r.father + 1.08*(+r.mother))/2, y: +r.childHeight }))
+                       .filter(r => isFinite(r.mp) && isFinite(r.y));
+  const rng = mulberry32(sD.seed);
+  sD.bootSlopes = [];
+  for (let r=0;r<sD.reps;r++) {
+    const mps = new Array(rows.length), ys = new Array(rows.length);
+    for (let i=0;i<rows.length;i++) { const k = Math.floor(rng()*rows.length); mps[i] = rows[k].mp; ys[i] = rows[k].y; }
+    const fit = ols(mps, ys);
+    sD.bootSlopes.push(fit.b);
+  }
+  drawStageD(); bumpExplore("D");
+}
+
+document.getElementById("D_split").addEventListener("change", (e) => { sD.splitSex = e.target.checked; drawStageD(); bumpExplore("D"); });
+document.getElementById("D_reps").addEventListener("input", (e) => { sD.reps = parseInt(e.target.value,10); document.getElementById("D_repsOut").textContent = sD.reps; document.getElementById("cD_reps").textContent = sD.reps; highlightByDataLine("codeD","reps"); });
+document.getElementById("D_seedIn").addEventListener("input", (e) => { sD.seed = parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent = sD.seed; });
+document.getElementById("D_boot").addEventListener("click", runBootD);
+document.getElementById("D_download").addEventListener("click", () => {
+  downloadText(`lesson6_stageD.R`, `g <- read.csv("data/clean/galton_families.csv")
+g$midparent <- (g$father + 1.08 * g$mother) / 2
+fit <- lm(childHeight ~ midparent, data = g)
+coef(fit)[2]   # h-hat-squared
+B <- ${sD.reps}
+boot <- replicate(B, { k <- sample(nrow(g), nrow(g), replace = TRUE); coef(lm(childHeight ~ midparent, data = g[k, ]))[2] })
+quantile(boot, c(.025, .975))
+`);
+});
+document.getElementById("stretchD_btn").addEventListener("click", () => {
+  const btn = document.getElementById("stretchD_btn");
+  btn.classList.add("done"); btn.textContent="Recorded ✓"; btn.disabled=true;
+  document.getElementById("stretchD_status").textContent = "Noted.";
+  if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, true);
+});
+wirePrediction("D", "predD", ["qD1","qD2"], ["below","same"], "controlsD");
+loadGalton();
+
+/* ====== Pretest / Posttest / Score ================================== */
+const PRETEST_ITEMS = [
+  { idx:0, q:"In a regression of offspring trait on midparent trait, the slope estimates:",
+    options:["the population mean","heritability h²","the offspring mean only","nothing useful"],
+    correct: 1 },
+  { idx:1, q:"Two truly independent traits have a sample Pearson r of −0.07. The right reading is:",
+    options:["the population r is exactly −0.07","sample r wobbles around the true r of 0; this is normal sampling noise","the variables are negatively correlated","an error in the data"],
+    correct: 1 }
+];
+const POSTTEST_ITEMS = [
+  { idx:0, q:"Galton observed slope ≈ 0.65 for child-on-midparent height. The biological reading is:",
+    options:["heredity is broken","heritability of height is about 0.65 — most of the variation is heritable, but offspring 'regress toward the mean' because h² is less than 1","heights are random","children are smaller than parents"],
+    correct: 1 },
+  { idx:1, q:"The breeders' equation R = h²·S says:",
+    options:["selection produces no response unless h² = 1","the response to selection equals heritability times the selection differential — a regression line in disguise","selection requires no variation","response is proportional to σ"],
+    correct: 1 },
+  { idx: 2,
+    q: "Which of these did you find in this lesson?",
+    options: [
+      "Independent traits give sample r near zero, but r wobbles around zero at finite n",
+      "The slope of offspring on midparent estimates h² when both axes are on the same scale",
+      "Galton's 1885 family data gave ĥ² for height of about 0.65",
+      "h² is the same for every trait in every population",
+      "At h² = 1 the (midparent, offspring) cloud is a horizontal flat band"
+    ],
+    correct: [0, 1, 2] }
+];
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({ mount:"#pretest-mount", group:"pretest", title:"Before you start", items: PRETEST_ITEMS,
+    onComplete: () => { document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked"); } });
+}
+function showPosttest() {
+  const c = document.getElementById("posttest-card"); if (c.style.display==="block") return;
+  c.style.display = "block";
+  Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items: POSTTEST_ITEMS, onComplete: () => Score.finish() });
+}
+Score.init({
+  moduleId: "lesson6", version: 2,
+  pretest: PRETEST_ITEMS.length, scaffold: 9, posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => showPretest()
+});
+</script>
+</body>
+</html>
