@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>BIO 202 — Lesson 4: Lines of equally good fit</title>
+<title>BIO 202 — Lesson 3: Subtracting the line and reading what's left</title>
 <link rel="stylesheet" href="../lib/score.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   * { box-sizing: border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
   nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
   nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
   nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
@@ -50,7 +51,6 @@
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
   .fit-stats .label { color:var(--muted); }
-  .fit-stats .big { font-size: 16px; font-weight: 600; color: var(--accent); }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
   pre.code .line { display:block; padding:0 6px; border-radius:2px; }
   pre.code .line.hi { background:var(--code-hi); }
@@ -73,318 +73,335 @@
   .stretch button { margin-top:6px; padding:7px 13px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
   .stretch button.done { background:#6f8a4a; }
   .stretch .opt-in-status { margin-top:8px; font-size:12.5px; color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
-  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+  /* S2 drill UI */
+  .drill-tally { display:flex; gap:6px; margin:8px 0 10px; flex-wrap:wrap; }
+  .drill-tally .dot { width:18px; height:18px; border-radius:3px; background:#ddd; border:1px solid #ccc; font-size:11px; line-height:18px; text-align:center; color:#666; }
+  .drill-tally .dot.correct { background:#6f8a4a; border-color:#3d5728; color:#fff; }
+  .drill-tally .dot.wrong   { background:#a86a1a; border-color:#5c3802; color:#fff; }
+  .drill-tally .dot.now     { border-color:#000; box-shadow:0 0 0 2px var(--accent); }
+  .drill-buttons { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+  .drill-buttons button { padding:8px 14px; border:1px solid var(--rule); background:#fff; cursor:pointer; border-radius:4px; font-size:13px; }
+  .drill-buttons button:hover { background:#f6f4ec; }
+  .drill-buttons button.locked { pointer-events:none; opacity:0.4; }
+  .drill-reveal { padding:10px 12px; border-radius:4px; margin-top:8px; display:none; font-size:13px; }
+  .drill-reveal.shown { display:block; }
+  .drill-reveal.correct { background:#e6f0dd; border:1px solid #6f8a4a; color:#3d5728; }
+  .drill-reveal.wrong   { background:#fbe4c6; border:1px solid #a86a1a; color:#5c3802; }
+  /* Click-to-predict canvas */
+  .click-canvas { cursor: crosshair; }
+  .click-canvas.locked { cursor: not-allowed; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 4 — How unique is the best-fit line?</h1>
-  <p>BIO 202, Spring 2026, draft v1. In Lesson 3 you fit a line. Here you ask what counts as "fit" in the first place.</p>
+  <h1>Lesson 3 — Subtracting the line and reading what's left</h1>
+  <p>BIO 202, Spring 2026, draft v1. In Lesson 1 you knew nothing about each individual. Here you know one extra thing per person.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
-
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;">
+  <div id="pretest-mount"></div>
+</div>
 <div class="outcomes">
   <h2>What you'll do</h2>
-  <p>Move a line by hand. Save 20 that score the same R² (to 2 decimal places) as the OLS optimum. Then ask whether a bootstrap reaches the same cloud.</p>
+  <p>Predict adult weight four times. Each round you get a different piece of information to work with. Don't read ahead.</p>
 </div>
-
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. Drag a line, read R²</a>
-  <a href="#stageB" id="tocB" class="locked">B. Find 20 lines with the same R²</a>
-  <a href="#stageC" id="tocC" class="locked">C. Bootstrap a cloud of fits</a>
-  <a href="#stageD" id="tocD" class="locked">D. NHANES height–weight</a>
+  <a href="#stageA" id="tocA">A. Predict weight with no info</a>
+  <a href="#stageB" id="tocB" class="locked">B. Add height as a covariate</a>
+  <a href="#stageC" id="tocC" class="locked">C. Residual-pattern drill (5 rounds)</a>
+  <a href="#stageD" id="tocD" class="locked">D. Beren and Cyrus: predict the missing point</a>
 </nav>
 
-<!-- ========== STAGE A — drag, read R² ============================== -->
+<!-- ============ STAGE A — predict weight, no info ===================== -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Drag a line and watch R² update</h2>
-  <p class="stage-sub">Synthetic scatter with a true generative line. Move the sliders. R² to 2 decimal places sits in the corner.</p>
+  <h2 class="stage-h">A — Predict an adult's weight with no other information</h2>
+  <p class="stage-sub">Same setup as Lesson 1 Stage B, with weight instead of height. Move the slider, watch the errors.</p>
   <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>50 points drawn from <code>y = 1.0·x + 0.5 + Normal(0, 1)</code>. You place the line (it does not auto-fit). The big number is R² rounded to 2 decimal places.</p>
-        <p>Aim for the highest R² you can. Then see how far you can wiggle α and β before the rounded number changes.</p>
+        <p>NHANES adult weights. The slider is your constant guess. Gray = the truth, red = your signed errors. Move the slider and watch the two distributions move relative to each other.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Scatter + your line</h3>
-        <canvas id="plotA" width="560" height="380"></canvas>
+        <h3>Weight (gray) and signed errors from your guess (red)</h3>
+        <canvas id="plotA" width="560" height="360"></canvas>
         <div class="fit-stats" id="statsA">
-          <span class="label">your α:</span> <span id="A_aVal">0.5</span>
+          <span class="label">N:</span> <span id="A_N">—</span>
           &nbsp;|&nbsp;
-          <span class="label">your β:</span> <span id="A_bVal">1.0</span>
+          <span class="label">μ:</span> <span id="A_mu">—</span>
           &nbsp;|&nbsp;
-          <span class="label">R² (2 dp):</span> <span id="A_r2" class="big">—</span>
+          <span class="label">σ:</span> <span id="A_sigma">—</span>
         </div>
         <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">OLS best α̂:</span> <span id="A_aOls">—</span>
+          <span class="label">your guess:</span> <span id="A_guess">—</span>
           &nbsp;|&nbsp;
-          <span class="label">OLS best β̂:</span> <span id="A_bOls">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">OLS R² (full):</span> <span id="A_r2Ols">—</span>
+          <span class="label">MSE:</span> <span id="A_mse">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predA">
-        <h3>Prediction (required before sliders unlock)</h3>
+        <h3>Prediction (required before slider unlocks)</h3>
         <ol>
           <li>
-            <div class="q">Q1. You're at the OLS optimum and you move β by 0.05 (small). R² to 2 decimal places will:</div>
-            <label><input type="radio" name="qA1" value="same" /> almost always stay the same (because R² near the max is flat in β)</label>
-            <label><input type="radio" name="qA1" value="drop" /> drop visibly</label>
-            <label><input type="radio" name="qA1" value="rise" /> rise</label>
+            <div class="q">Q1. The constant predictor with the smallest MSE on adult weight is:</div>
+            <label><input type="radio" name="qA1" value="mu" /> the population mean weight</label>
+            <label><input type="radio" name="qA1" value="med" /> the population median weight</label>
+            <label><input type="radio" name="qA1" value="any" /> any value — they all give the same MSE</label>
           </li>
           <li>
-            <div class="q">Q2. Moving the line in any direction from the OLS optimum:</div>
-            <label><input type="radio" name="qA2" value="cant" /> cannot raise R² — OLS already gave the max</label>
-            <label><input type="radio" name="qA2" value="random" /> can raise or lower it randomly</label>
-            <label><input type="radio" name="qA2" value="up" /> raises it if you go in the right direction</label>
+            <div class="q">Q2. If you compared MSE and median-absolute-error, which would the mean and the median win?</div>
+            <label><input type="radio" name="qA2" value="mean-mse" /> mean wins MSE; median wins absolute error</label>
+            <label><input type="radio" name="qA2" value="same" /> they win the same metrics</label>
+            <label><input type="radio" name="qA2" value="median-mse" /> median wins MSE; mean wins absolute error</label>
           </li>
         </ol>
-        <button id="submitA" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreA">Try at least 8 (α, β) combinations to unlock Stage B. <span class="count">0/8 combos</span></div>
+        <button id="submitA" disabled>Submit prediction → unlock slider</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 different guesses to unlock Stage B. <span class="count">0/5 guesses</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsA">
-          <div class="row" data-line="alpha"><label for="A_a">α (intercept)</label><input type="range" id="A_a" min="-3" max="4" step="0.05" value="0.5" /><output id="A_aOut">0.5</output></div>
-          <div class="row" data-line="beta"><label for="A_b">β (slope)</label><input type="range" id="A_b" min="-1" max="3" step="0.05" value="1.0" /><output id="A_bOut">1.0</output></div>
-          <div class="row" data-line="seed"><label for="A_seed">seed</label><input type="range" id="A_seed" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="row" data-line="guess"><label for="A_guessIn">your guess (kg)</label><input type="range" id="A_guessIn" min="50" max="120" step="0.5" value="81" /><output id="A_guessOut">81.0</output></div>
           <div class="buttons">
-            <button id="A_ols" class="accent">Snap to OLS</button>
-            <button id="A_newSeed" class="secondary">Regenerate (new seed)</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — hand-fit a line, compare to OLS</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line">n &lt;- <span class="num">50</span></span><span class="line">x &lt;- <span class="fn">runif</span>(n, <span class="num">0</span>, <span class="num">5</span>)</span><span class="line">y &lt;- <span class="num">0.5</span> + <span class="num">1.0</span>*x + <span class="fn">rnorm</span>(n, <span class="num">0</span>, <span class="num">1</span>)</span><span class="line"></span><span class="line" data-line="alpha">my_a &lt;- <span class="num" id="cA_a">0.5</span></span><span class="line" data-line="beta">my_b &lt;- <span class="num" id="cA_b">1.0</span></span><span class="line">yhat &lt;- my_a + my_b * x</span><span class="line">r2_my &lt;- <span class="num">1</span> - <span class="fn">sum</span>((y - yhat)^<span class="num">2</span>) / <span class="fn">sum</span>((y - <span class="fn">mean</span>(y))^<span class="num">2</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(y ~ x)</span><span class="line"><span class="fn">round</span>(<span class="fn">summary</span>(fit)$r.squared, <span class="num">2</span>)</span><span class="line"><span class="fn">round</span>(r2_my, <span class="num">2</span>)</span></pre>
+        <h3>R code — constant predictor for weight</h3>
+<pre class="code" id="codeA"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">y &lt;- nh$Weight</span><span class="line"><span class="fn">mean</span>(y); <span class="fn">median</span>(y); <span class="fn">sd</span>(y)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cA_guess">81.0</span></span><span class="line">err &lt;- guess - y</span><span class="line"><span class="fn">mean</span>(err^<span class="num">2</span>)        <span class="com"># MSE -- minimized by guess = mean</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(err))     <span class="com"># MAE -- minimized by guess = median</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE B — find 20 lines with same R² ==================== -->
+<!-- ============ STAGE B — covariate added ============================ -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Find 20 different lines that share the OLS R² (to 2 dp)</h2>
-  <p class="stage-sub">Save every line you find that matches the OLS R² within tolerance. Target: 20 saves.</p>
-  <div class="lock-banner">Complete Stage A (submit prediction, try 8 combos) to unlock this section.</div>
+  <h2 class="stage-h">B — Now you know each person's height. Use it.</h2>
+  <p class="stage-sub">Same dataset. One new piece of information per person.</p>
+  <div class="lock-banner">Complete Stage A (submit prediction, try 5 guesses) to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>Same scatter. When your R² (to 2 dp) matches the OLS R² within the tolerance, click <em>Save this line</em>. Saved lines stack as faint blue. Target: 20 saves.</p>
-        <p>Watch where the saved lines fall on the α–β plane (Stage C will plot it).</p>
+        <p>Each NHANES adult has a height and a weight. Blue line: <code>weight ~ α + β·height</code>. Dashed gray: the Stage A constant predictor.</p>
+        <p><span class="formula">y<sub>i</sub> ~ Normal(α + β·x<sub>i</sub>, σ)</span></p>
+        <p>Toggle "show residuals" to see the vertical errors. Watch σ as you do.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Scatter + your line + saved lines</h3>
-        <canvas id="plotB" width="560" height="380"></canvas>
+        <h3>Weight vs height with fitted line (and residual bars)</h3>
+        <canvas id="plotB" width="560" height="400"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">target R² (OLS):</span> <span id="B_target">—</span>
+          <span class="label">α̂:</span> <span id="B_a">—</span>
           &nbsp;|&nbsp;
-          <span class="label">your R² (2 dp):</span> <span id="B_r2" class="big">—</span>
+          <span class="label">β̂:</span> <span id="B_b">—</span>
           &nbsp;|&nbsp;
-          <span class="label">tolerance:</span> ±<span id="B_tol">0.01</span>
+          <span class="label">R²:</span> <span id="B_r2">—</span>
           &nbsp;|&nbsp;
-          <span class="label">saved:</span> <span class="saved-counter" id="B_savedCt">0</span>
+          <span class="label">residual σ:</span> <span id="B_sres">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">MSE constant predictor (Stage A):</span> <span id="B_mseA">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">MSE line (Stage B):</span> <span id="B_mseB">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predB">
-        <h3>Prediction (required before sliders unlock)</h3>
+        <h3>Prediction (required before controls unlock)</h3>
         <ol>
           <li>
-            <div class="q">Q1. You raise β by 0.10 from the OLS optimum. To keep R² (to 2 dp) at the OLS level, you need to:</div>
-            <label><input type="radio" name="qB1" value="raise" /> raise α as well — both go the same direction</label>
-            <label><input type="radio" name="qB1" value="lower" /> lower α — the two slide along a tilted line of equal-fit pairs</label>
-            <label><input type="radio" name="qB1" value="same" /> leave α alone — only β controls R²</label>
+            <div class="q">Q1. When you fit a line of weight on height, the residual SD compared to the marginal SD of weight will be:</div>
+            <label><input type="radio" name="qB1" value="smaller" /> smaller — the covariate accounts for some of the variation</label>
+            <label><input type="radio" name="qB1" value="same" /> the same — residuals always have the same SD as the response</label>
+            <label><input type="radio" name="qB1" value="bigger" /> bigger — adding a predictor injects more noise</label>
           </li>
           <li>
-            <div class="q">Q2. After 20 saves, the saved (α, β) pairs will:</div>
-            <label><input type="radio" name="qB2" value="point" /> all collapse to a single point (the OLS optimum) — there is no slack</label>
-            <label><input type="radio" name="qB2" value="ellipse" /> trace out an elongated ellipse — α and β are negatively correlated</label>
-            <label><input type="radio" name="qB2" value="random" /> form a uniform random cloud — no structure</label>
+            <div class="q">Q2. The intercept α̂ from <code>lm(weight ~ height)</code> reads as:</div>
+            <label><input type="radio" name="qB2" value="ymean" /> the mean weight when height is at its mean</label>
+            <label><input type="radio" name="qB2" value="zero" /> the predicted weight at height = 0 — usually meaningless biologically without centering</label>
+            <label><input type="radio" name="qB2" value="slope" /> the slope of weight on height</label>
           </li>
         </ol>
-        <button id="submitB" disabled>Submit prediction → unlock the saver</button>
-        <div class="explore-tracker" id="exploreB">Save 20 different lines matching the OLS R² (within tolerance). <span class="count">0/20 saved</span></div>
+        <button id="submitB" disabled>Submit prediction → unlock controls</button>
+        <div class="explore-tracker" id="exploreB">Toggle controls (residuals on/off, subsample, refit) at least 5 times to unlock Stage C. <span class="count">0/5 toggles</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsB">
-          <div class="row" data-line="alpha"><label for="B_a">α (intercept)</label><input type="range" id="B_a" min="-3" max="4" step="0.05" value="0.5" /><output id="B_aOut">0.5</output></div>
-          <div class="row" data-line="beta"><label for="B_b">β (slope)</label><input type="range" id="B_b" min="-1" max="3" step="0.05" value="1.0" /><output id="B_bOut">1.0</output></div>
-          <div class="row"><label for="B_tolIn">tolerance ±</label><input type="range" id="B_tolIn" min="0" max="0.05" step="0.005" value="0.01" /><output id="B_tolOut">0.01</output></div>
+          <div class="row"><label><input type="checkbox" id="B_resid" /> show residual bars</label><div></div><output></output></div>
+          <div class="row" data-line="subsample"><label for="B_nIn">subsample n</label><input type="range" id="B_nIn" min="50" max="2000" step="50" value="400" /><output id="B_nOut">400</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
           <div class="buttons">
-            <button id="B_save" class="accent">Save this line</button>
-            <button id="B_clear" class="ghost">Clear saved</button>
+            <button id="B_refit" class="accent">Re-draw subsample</button>
             <button id="B_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — hunting (α, β) pairs with matching rounded R²</h3>
-<pre class="code" id="codeB"><span class="line"><span class="com"># Same data as Stage A.</span></span><span class="line">target_r2 &lt;- <span class="fn">round</span>(<span class="fn">summary</span>(<span class="fn">lm</span>(y ~ x))$r.squared, <span class="num">2</span>)</span><span class="line"></span><span class="line"><span class="com"># grid-search (a, b) pairs whose rounded R^2 matches</span></span><span class="line">grid &lt;- <span class="fn">expand.grid</span>(a = <span class="fn">seq</span>(-<span class="num">1</span>, <span class="num">2</span>, by = <span class="num">0.05</span>),</span><span class="line">                    b = <span class="fn">seq</span>(<span class="num">0.6</span>, <span class="num">1.4</span>, by = <span class="num">0.05</span>))</span><span class="line">grid$r2 &lt;- <span class="fn">apply</span>(grid, <span class="num">1</span>, <span class="kw">function</span>(p) {</span><span class="line">  <span class="num">1</span> - <span class="fn">sum</span>((y - (p[<span class="num">1</span>] + p[<span class="num">2</span>]*x))^<span class="num">2</span>) / <span class="fn">sum</span>((y - <span class="fn">mean</span>(y))^<span class="num">2</span>)</span><span class="line">})</span><span class="line">keep &lt;- <span class="fn">subset</span>(grid, <span class="fn">round</span>(r2, <span class="num">2</span>) == target_r2)</span><span class="line"><span class="fn">nrow</span>(keep)   <span class="com"># how many pairs share the rounded R^2?</span></span></pre>
+        <h3>R code — fit weight on height</h3>
+<pre class="code" id="codeB"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="subsample">idx &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num" id="cB_n">400</span>)</span><span class="line">d &lt;- nh[idx, ]</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(Weight ~ Height, data = d)</span><span class="line"><span class="fn">summary</span>(fit)</span><span class="line"><span class="fn">sd</span>(<span class="fn">residuals</span>(fit))   <span class="com"># residual SD -- smaller than sd(d$Weight)</span></span><span class="line"></span><span class="line"><span class="fn">plot</span>(d$Height, d$Weight, pch = <span class="num">16</span>, col = <span class="str">"#444"</span>,</span><span class="line">     xlab = <span class="str">"height (cm)"</span>, ylab = <span class="str">"weight (kg)"</span>)</span><span class="line"><span class="fn">abline</span>(fit, col = <span class="str">"#2f6b8f"</span>, lwd = <span class="num">2</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="fn">mean</span>(d$Weight), col = <span class="str">"gray60"</span>, lty = <span class="num">2</span>)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE C — bootstrap cloud =============================== -->
+<!-- ============ STAGE C — S2 residual-pattern drill =================== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — The bootstrap cloud (200 resamples of the data)</h2>
-  <p class="stage-sub">200 bootstrap resamples. Refit OLS on each. Overlay the 200 fitted lines, then look at the α–β plane next to your Stage B cloud.</p>
-  <div class="lock-banner">Complete Stage B (submit prediction, save 20 lines) to unlock this section.</div>
+  <h2 class="stage-h">C — Residual-pattern drill (5 rounds)</h2>
+  <p class="stage-sub">Five scatters. Each has a straight-line fit. Some are wrong on purpose. Pick the residual pattern. Move on.</p>
+  <div class="lock-banner">Complete Stage B (submit prediction, toggle controls 5 times) to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>A bootstrap resample = 50 points sampled with replacement from the original 50. Some points appear twice, some not at all. Refit OLS on each resample; collect (α̂, β̂).</p>
-        <p>200 of them, plotted as faint red lines on the scatter. Your Stage B saved cloud appears green in the α–β plot. Compare.</p>
+        <p>Each round: a scatter with a fitted line (top) and a residuals plot (bottom). Pick the pattern. Five rounds, real data each time.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Scatter + bootstrap fitted lines (red) + your saved cloud overlay</h3>
-        <canvas id="plotC1" width="560" height="280"></canvas>
-        <h3 style="margin-top:10px;">α × β plot: bootstrap (red) vs. your saved (green)</h3>
-        <canvas id="plotC2" width="560" height="280"></canvas>
+        <h3 id="C_title">Round 1 of 5 — fit and residuals</h3>
+        <canvas id="plotC1" width="560" height="220"></canvas>
+        <canvas id="plotC2" width="560" height="160"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">round:</span> <span id="C_round">1</span>/5
+          &nbsp;|&nbsp;
+          <span class="label">correct so far:</span> <span id="C_correct">0</span>
+        </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predC">
-        <h3>Prediction (required before bootstrap runs)</h3>
+        <h3>Prediction (required before the drill starts)</h3>
         <ol>
           <li>
-            <div class="q">Q1. The bootstrap cloud of (α̂, β̂) pairs will:</div>
-            <label><input type="radio" name="qC1" value="circle" /> look like a circular cloud around the OLS optimum</label>
-            <label><input type="radio" name="qC1" value="tilt" /> look like a tilted ellipse — α̂ and β̂ are correlated</label>
-            <label><input type="radio" name="qC1" value="apart" /> have α̂ and β̂ varying independently — uncorrelated</label>
+            <div class="q">Q1. A residual-vs-fitted plot shows a curve (like a smile or a frown). The single most likely diagnosis is:</div>
+            <label><input type="radio" name="qC1" value="curve" /> the relationship is nonlinear — a straight line misses a curve</label>
+            <label><input type="radio" name="qC1" value="hetero" /> heteroskedasticity — the variance changes with fitted value</label>
+            <label><input type="radio" name="qC1" value="outlier" /> a single outlier is causing the pattern</label>
           </li>
           <li>
-            <div class="q">Q2. Compared to the OLS point estimate, the bootstrap cloud's spread tells you:</div>
-            <label><input type="radio" name="qC2" value="point" /> nothing new — OLS already gives the answer</label>
-            <label><input type="radio" name="qC2" value="se" /> the standard error of β̂ — the cloud's width is what SE describes</label>
-            <label><input type="radio" name="qC2" value="bias" /> the bias of β̂ — whether OLS is over- or under-estimating</label>
+            <div class="q">Q2. A residual-vs-fitted plot shows two disjoint clouds, one above and one below the zero line. The single most likely diagnosis is:</div>
+            <label><input type="radio" name="qC2" value="missgroup" /> a missing group/category variable that separates the data into two clusters</label>
+            <label><input type="radio" name="qC2" value="hetero" /> heteroskedasticity — wider spread on one side</label>
+            <label><input type="radio" name="qC2" value="curve" /> the relationship is nonlinear</label>
           </li>
         </ol>
-        <button id="submitC" disabled>Submit prediction → unlock bootstrap</button>
-        <div class="explore-tracker" id="exploreC">Run at least 3 bootstrap batches with different seeds. <span class="count">0/3 batches</span></div>
+        <button id="submitC" disabled>Submit prediction → start the drill</button>
+        <div class="explore-tracker" id="exploreC">Finish all 5 rounds to unlock Stage D. <span class="count">0/5 rounds</span></div>
       </div>
-      <div class="panel">
-        <h3>Controls</h3>
-        <div class="controls locked" id="controlsC">
-          <div class="row" data-line="reps"><label for="C_reps">reps</label><input type="range" id="C_reps" min="50" max="500" step="50" value="200" /><output id="C_repsOut">200</output></div>
-          <div class="row" data-line="seed"><label for="C_seed">seed</label><input type="range" id="C_seed" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
-          <div class="buttons">
-            <button id="C_run" class="accent">Run bootstrap</button>
-            <button id="C_download" class="ghost">Download .R</button>
-          </div>
+      <div class="panel" id="drillPanel" style="display:none;">
+        <h3>What residual pattern is this?</h3>
+        <div class="drill-tally" id="C_tally"></div>
+        <div class="drill-buttons" id="C_buttons">
+          <button data-pick="clean">Clean noise</button>
+          <button data-pick="curve">Curvature</button>
+          <button data-pick="clouds">Two clouds</button>
+          <button data-pick="hetero">Heteroskedasticity</button>
         </div>
+        <div class="drill-reveal" id="C_reveal"></div>
       </div>
       <div class="panel">
-        <h3>R code — bootstrap the OLS slope</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># Same x, y as Stage A.</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="reps">reps &lt;- <span class="num" id="cC_reps">200</span></span><span class="line">boot &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  i &lt;- <span class="fn">sample</span>(<span class="fn">length</span>(x), <span class="fn">length</span>(x), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(y[i] ~ x[i]))</span><span class="line">})</span><span class="line"><span class="fn">apply</span>(boot, <span class="num">1</span>, <span class="fn">quantile</span>, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span><span class="line"><span class="fn">cor</span>(boot[<span class="num">1</span>,], boot[<span class="num">2</span>,])   <span class="com"># negative -- alpha and beta trade off</span></span></pre>
+        <h3>R code — residuals as a diagnostic</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># Round 1: mammal mass vs gestation, log-log (clean)</span></span><span class="line">m &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/pantheria_mammals.csv"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(<span class="fn">log</span>(AdultBodyMass_g) ~ <span class="fn">log</span>(GestationLen_d), data = m)</span><span class="line"><span class="fn">plot</span>(<span class="fn">fitted</span>(fit), <span class="fn">residuals</span>(fit), pch = <span class="num">16</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="num">0</span>, col = <span class="str">"#b23a48"</span>)</span><span class="line"></span><span class="line"><span class="com"># Same plot, linear-linear: curvature appears</span></span><span class="line"><span class="fn">plot</span>(<span class="fn">lm</span>(AdultBodyMass_g ~ GestationLen_d, data = m))</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE D — NHANES height–weight ========================== -->
+<!-- ============ STAGE D — predict the missing point =================== -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Real data: NHANES height → weight</h2>
-  <p class="stage-sub">Same two moves as Stages B and C, on a 400-person NHANES subsample. Compare R² at β̂, at β̂ + 1 SE, and at β̂ − 1 SE.</p>
-  <div class="lock-banner">Complete Stage C (submit prediction, run 3 bootstrap batches) to unlock this section.</div>
+  <h2 class="stage-h">D — Beren and Cyrus: click where the missing measurement should sit</h2>
+  <p class="stage-sub">Real growth data for both kids. One measurement is hidden per round. Click where you think it goes; the reveal tells you what was actually there.</p>
+  <div class="lock-banner">Complete Stage C (finish all 5 drill rounds) to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
-        <p>A 400-person random subsample from NHANES. Fit weight ~ height, bootstrap it 200 times. R² readouts at β̂, β̂ + 1 SE, and β̂ − 1 SE all appear in the panel. Compare them.</p>
+        <p>One kid's mass-by-age trajectory with a single point hidden. WHO median in gray. Click where you think the missing point belongs.</p>
+        <p>The reveal color tells you something about that point. Six rounds.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>NHANES weight ~ height with bootstrap fit cloud</h3>
-        <canvas id="plotD" width="560" height="380"></canvas>
+        <h3 id="D_title">Round 1 of 6 — click where the missing point should be</h3>
+        <canvas id="plotD" class="click-canvas locked" width="560" height="380"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">OLS β̂:</span> <span id="D_b">—</span>
+          <span class="label">kid:</span> <span id="D_kid">—</span>
           &nbsp;|&nbsp;
-          <span class="label">SE(β̂):</span> <span id="D_se">—</span>
+          <span class="label">round:</span> <span id="D_round">1</span>/6
           &nbsp;|&nbsp;
-          <span class="label">95% bootstrap β:</span> <span id="D_qi">—</span>
+          <span class="label">your click:</span> <span id="D_click">—</span>
         </div>
         <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">R² at β̂:</span> <span id="D_r2c">—</span>
+          <span class="label">actual:</span> <span id="D_actual">—</span>
           &nbsp;|&nbsp;
-          <span class="label">R² at β̂ + 1 SE:</span> <span id="D_r2p">—</span>
+          <span class="label">prediction error:</span> <span id="D_err">—</span>
           &nbsp;|&nbsp;
-          <span class="label">R² at β̂ − 1 SE:</span> <span id="D_r2m">—</span>
+          <span class="label">sick proxy:</span> <span id="D_sick">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predD">
-        <h3>Prediction (required before bootstrap unlocks)</h3>
+        <h3>Prediction (required before the canvas unlocks)</h3>
         <ol>
           <li>
-            <div class="q">Q1. For NHANES height → weight, R² at β̂ + 1 SE compared to R² at β̂ will be:</div>
-            <label><input type="radio" name="qD1" value="same" /> the same to 2 decimal places</label>
-            <label><input type="radio" name="qD1" value="big" /> noticeably lower — moving 1 SE costs a lot</label>
-            <label><input type="radio" name="qD1" value="zero" /> exactly zero — only the OLS β̂ gives any fit</label>
+            <div class="q">Q1. A child is measured at the doctor when they are sick. Compared to a same-age clean measurement, the sick-day mass measurement will tend to be:</div>
+            <label><input type="radio" name="qD1" value="lower" /> lower — children eat less and lose water weight when ill</label>
+            <label><input type="radio" name="qD1" value="higher" /> higher — illness adds inflammation weight</label>
+            <label><input type="radio" name="qD1" value="same" /> the same — illness is uncorrelated with mass</label>
           </li>
           <li>
-            <div class="q">Q2. The 95% bootstrap interval on β̂ will be:</div>
-            <label><input type="radio" name="qD2" value="point" /> [β̂, β̂] — there's no uncertainty</label>
-            <label><input type="radio" name="qD2" value="se" /> roughly β̂ ± 1.96·SE — a Gaussian-like band</label>
-            <label><input type="radio" name="qD2" value="huge" /> very wide — covering everything from negative to large positive</label>
+            <div class="q">Q2. If you fit "mass = f(age)" and ignore the sick-day flag, the residuals from that fit on sick-day measurements will:</div>
+            <label><input type="radio" name="qD2" value="negative" /> tend to be more negative than clean-day residuals (the model overpredicts sick-day mass)</label>
+            <label><input type="radio" name="qD2" value="positive" /> tend to be more positive</label>
+            <label><input type="radio" name="qD2" value="same" /> show the same distribution — illness flag doesn't matter</label>
           </li>
         </ol>
-        <button id="submitD" disabled>Submit prediction → unlock bootstrap</button>
-        <div class="explore-tracker" id="exploreD">Run at least 2 NHANES bootstrap batches to wrap up. <span class="count">0/2 batches</span></div>
+        <button id="submitD" disabled>Submit prediction → unlock the canvas</button>
+        <div class="explore-tracker" id="exploreD">Complete all 6 rounds to wrap up. <span class="count">0/6 rounds</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsD">
-          <div class="row" data-line="n"><label for="D_n">subsample n</label><input type="range" id="D_n" min="50" max="2000" step="50" value="400" /><output id="D_nOut">400</output></div>
-          <div class="row" data-line="reps"><label for="D_reps">reps</label><input type="range" id="D_reps" min="50" max="500" step="50" value="200" /><output id="D_repsOut">200</output></div>
-          <div class="row" data-line="seed"><label for="D_seed">seed</label><input type="range" id="D_seed" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+        <div class="controls" id="controlsD">
           <div class="buttons">
-            <button id="D_run" class="accent">Run NHANES bootstrap</button>
+            <button id="D_next" class="accent" disabled>Next round →</button>
             <button id="D_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — same move on NHANES</h3>
-<pre class="code" id="codeD"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line" data-line="n">idx &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num" id="cD_n">400</span>)</span><span class="line">d &lt;- nh[idx, ]</span><span class="line">fit &lt;- <span class="fn">lm</span>(Weight ~ Height, data = d)</span><span class="line"></span><span class="line" data-line="reps">B &lt;- <span class="num" id="cD_reps">200</span></span><span class="line">boot &lt;- <span class="fn">replicate</span>(B, {</span><span class="line">  k &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(d), <span class="fn">nrow</span>(d), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(Weight ~ Height, data = d[k, ]))</span><span class="line">})</span><span class="line"><span class="fn">apply</span>(boot, <span class="num">1</span>, <span class="fn">quantile</span>, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span></pre>
+        <h3>R code — kids' growth with sick-proxy flag</h3>
+<pre class="code" id="codeD"><span class="line">k &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/kids_growth.csv"</span>)</span><span class="line">b &lt;- <span class="fn">subset</span>(k, kid == <span class="str">"beren"</span> &amp; measure == <span class="str">"mass"</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(value ~ <span class="fn">poly</span>(age_years, <span class="num">2</span>), data = b)</span><span class="line">b$residual &lt;- <span class="fn">residuals</span>(fit)</span><span class="line"></span><span class="line"><span class="com"># compare residuals by sick_proxy flag</span></span><span class="line"><span class="fn">aggregate</span>(residual ~ sick_proxy, data = b, <span class="fn">mean</span>)</span><span class="line"><span class="fn">boxplot</span>(residual ~ sick_proxy, data = b,</span><span class="line">        col = <span class="fn">c</span>(<span class="str">"#6f8a4a"</span>, <span class="str">"#a86a1a"</span>))</span></pre>
       </div>
     </div>
   </div>
   <div class="stretch" id="stretchD">
-    <h3>Stretch challenge (optional)</h3>
-    <p>Run the same bootstrap at n = 50, n = 200, and n = 1500. Report the bootstrap SE on β̂ for each. Then find a function of n that the three SEs fit, and say which way the cloud widens. Hit "I tried it" once you have a function.</p>
+    <h3>Stretch challenge (optional, recorded)</h3>
+    <p>The downloaded <code>.R</code> for Stage D shows the boxplot move: pull residuals from the smooth "mass = f(age)" fit on Beren, then split them by sick_proxy. Do it. Are the sick-day residuals systematically more negative? Refit including <code>sick_proxy</code> as a predictor and report the new residual SD.</p>
     <button id="stretchD_btn">I tried it</button>
     <div class="opt-in-status" id="stretchD_status">Not yet attempted.</div>
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;">
+  <div id="posttest-mount"></div>
+</div>
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
   <h2>Where this lesson goes next</h2>
-  <p><strong>Lesson 5</strong> takes the cloud you just built and asks: when is a slope clearly different from zero?</p>
+  <p><strong>Lesson 4</strong> asks: how unique is the line you just fit? Move the slope and intercept by hand, find 20 different lines that all share the same rounded R², and see what that buys you.</p>
   <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
 </footer>
 
 <script src="../lib/quiz.js"></script>
 <script src="../lib/score.js"></script>
 <script>
+/* ====== Shared helpers (verbatim from Lesson 1) ===================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
 function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
-function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H, xInv:px=>xMin+(px-pad.l)/W*(xMax-xMin), yInv:py=>yMin+(pad.t+H-py)/H*(yMax-yMin)}; }
 function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
   ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
@@ -397,38 +414,31 @@ function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
   ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
 }
+function drawVLine(ctx, f, xv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); }
+function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
 function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
 function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
-function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
 function ols(xs, ys) {
-  const n=xs.length, mx=mean(xs), my=mean(ys);
-  let sxy=0, sxx=0;
+  const n = xs.length; const mx = mean(xs), my = mean(ys);
+  let sxy = 0, sxx = 0;
   for (let i=0;i<n;i++) { sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
   const b = sxy/sxx; const a = my - b*mx;
   const yhat = xs.map(x => a + b*x);
-  const ssr = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
-  const sst = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
-  const sres = Math.sqrt(ssr/(n-2));
-  const seB  = sres / Math.sqrt(sxx);
-  return { a, b, r2: 1 - ssr/sst, sres, seB };
-}
-function r2OfLine(xs, ys, a, b) {
-  const my = mean(ys);
-  let ssr=0, sst=0;
-  for (let i=0;i<xs.length;i++) { const e = ys[i]-(a+b*xs[i]); ssr += e*e; sst += (ys[i]-my)*(ys[i]-my); }
-  return 1 - ssr/sst;
+  const ss_res = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
+  const ss_tot = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
+  return { a, b, r2: 1 - ss_res/ss_tot, sres: Math.sqrt(ss_res/(n-2)), yhat };
 }
 
-const EXPLORE_THRESHOLD = { A: 8, B: 20, C: 3, D: 2 };
+const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 6 };
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
 function bumpExplore(stage) {
   const g = Gates[stage]; if (!g.predicted || g.done) return;
   g.explores += 1;
   const tracker = document.getElementById("explore"+stage);
   const c = tracker.querySelector(".count");
-  const noun = stage==="A"?"combos":stage==="B"?"saved":stage==="C"?"batches":"batches";
+  const noun = stage==="A"?"guesses":stage==="B"?"toggles":stage==="C"?"rounds":"rounds";
   c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
   if (g.explores >= EXPLORE_THRESHOLD[stage]) {
     g.done = true; tracker.classList.add("complete");
@@ -442,7 +452,7 @@ function unlockNext(stage) {
   if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
   else if (typeof showPosttest==="function") showPosttest();
 }
-function wirePrediction(stage, predId, names, answers, controlsId) {
+function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
   const root=document.getElementById(predId); const btn=root.querySelector("button");
   function allFilled() { return names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
   function check() { btn.disabled = !allFilled(); }
@@ -459,6 +469,7 @@ function wirePrediction(stage, predId, names, answers, controlsId) {
     Gates[stage].predicted = true;
     document.getElementById("explore"+stage).classList.add("shown");
     if (controlsId) document.getElementById(controlsId).classList.remove("locked");
+    if (afterUnlock) afterUnlock();
     const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
     if (typeof Score !== "undefined" && Score.recordCheckpoint) {
       Score.recordCheckpoint(stageIdx*2,     results[0].correct);
@@ -467,321 +478,471 @@ function wirePrediction(stage, predId, names, answers, controlsId) {
   });
 }
 
-/* Synthetic data shared between A, B, C */
-let Synth = { xs: null, ys: null, seed: 42, ols: null };
-function regenSynth() {
-  const rng = mulberry32(Synth.seed), normal = makeNormal(rng);
-  const n = 50, xs = new Array(n), ys = new Array(n);
-  for (let i=0;i<n;i++) { xs[i] = rng()*5; ys[i] = 0.5 + 1.0*xs[i] + normal(); }
-  Synth.xs = xs; Synth.ys = ys; Synth.ols = ols(xs, ys);
+/* ====== Data loading ================================================ */
+const Data = { nhanes: null, mammals: null, birds: null, finch: null, finchPop: null, pets: null, petsMeta: null, kids: null, who: null };
+async function fetchJSON(p, fallback) {
+  try { const r = await fetch(p); return await r.json(); }
+  catch (e) { console.warn("fallback for "+p, e); return fallback; }
 }
-regenSynth();
+async function loadData() {
+  Data.nhanes  = await fetchJSON("../data/clean/nhanes_adults.json", []);
+  Data.mammals = await fetchJSON("../data/clean/pantheria_mammals.json", []);
+  Data.birds   = await fetchJSON("../data/clean/avonet_birds.json", []);
+  Data.finch   = await fetchJSON("../data/clean/finch_beak.json", []);
+  Data.finchPop= await fetchJSON("../data/clean/finch_pop.json", []);
+  Data.pets    = await fetchJSON("../data/clean/pets_timeseries.json", []);
+  Data.petsMeta= await fetchJSON("../data/clean/pets_series_metadata.json", []);
+  Data.kids    = await fetchJSON("../data/clean/kids_growth.json", []);
+  Data.who     = await fetchJSON("../data/clean/who_growth_reference.json", []);
+  drawStageA(); drawStageB(); /* drill drawn on demand, stage D drawn on demand */
+}
 
-/* ====== STAGE A ====================================================== */
-const sA = { a: 0.5, b: 1.0 };
+/* ====== STAGE A =================================================== */
+const sA = { guess: 81 };
+
 function drawStageA() {
   const cv = document.getElementById("plotA");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
+  if (!Data.nhanes || !Data.nhanes.length) { ctx.fillStyle="#888"; ctx.fillText("loading…", 20, 30); return; }
+  const ys = Data.nhanes.map(r => parseFloat(r.Weight)).filter(v=>!isNaN(v));
+  const mu = mean(ys), sigma = std(ys);
   const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, -0.2, 5.2, -1, 7);
-  drawAxes(ctx, f, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
-  ctx.fillStyle = "rgba(60,60,60,0.6)";
-  for (let i=0;i<Synth.xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(Synth.xs[i]), f.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx.fill(); }
-  // OLS line (faint)
-  ctx.strokeStyle = "rgba(47,107,143,0.4)"; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(Synth.ols.a + Synth.ols.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(Synth.ols.a + Synth.ols.b*5.2)); ctx.stroke();
-  ctx.setLineDash([]);
-  // Student line
-  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(sA.a + sA.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(sA.a + sA.b*5.2)); ctx.stroke();
-  const r2 = r2OfLine(Synth.xs, Synth.ys, sA.a, sA.b);
-  document.getElementById("A_aVal").textContent = sA.a.toFixed(2);
-  document.getElementById("A_bVal").textContent = sA.b.toFixed(2);
-  document.getElementById("A_r2").textContent = r2.toFixed(2);
-  document.getElementById("A_aOls").textContent = Synth.ols.a.toFixed(3);
-  document.getElementById("A_bOls").textContent = Synth.ols.b.toFixed(3);
-  document.getElementById("A_r2Ols").textContent = Synth.ols.r2.toFixed(4);
+  const f = makeFrame(pad, W, H, 30, 180, 0, 0.04);
+  drawAxes(ctx, f, "weight (kg) / your guess", "density", 8, 4, v=>v.toFixed(0), v=>v.toFixed(3));
+  function densityHist(values, color, minX, maxX) {
+    const bins = 40, binW = (maxX-minX)/bins;
+    const counts = new Array(bins).fill(0);
+    for (const v of values) { if (v<minX||v>=maxX) continue; counts[Math.min(bins-1,Math.floor((v-minX)/binW))]++; }
+    const N = values.length;
+    ctx.fillStyle = color;
+    for (let i=0;i<bins;i++) { const d = counts[i]/(N*binW); if(d===0)continue; ctx.fillRect(f.x(minX+i*binW)+0.5, f.y(d), f.x(minX+(i+1)*binW)-f.x(minX+i*binW)-1, f.y(0)-f.y(d)); }
+  }
+  densityHist(ys, "rgba(120,120,120,0.6)", 30, 180);
+  // Errors centered at guess
+  const errs = ys.map(y => sA.guess - y);
+  densityHist(errs.map(e => sA.guess + e), "rgba(178,58,72,0.55)", 30, 180);
+  drawVLine(ctx, f, mu, "#000", 1.5, [4,3]);
+  drawVLine(ctx, f, sA.guess, "#b23a48", 2, []);
+  document.getElementById("A_N").textContent = ys.length;
+  document.getElementById("A_mu").textContent = mu.toFixed(2);
+  document.getElementById("A_sigma").textContent = sigma.toFixed(2);
+  document.getElementById("A_guess").textContent = sA.guess.toFixed(1);
+  document.getElementById("A_mse").textContent = mean(errs.map(e=>e*e)).toFixed(1);
 }
-["A_a","A_b","A_seed"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="A_a") { sA.a = parseFloat(e.target.value); document.getElementById("A_aOut").textContent = sA.a.toFixed(2); document.getElementById("cA_a").textContent = sA.a.toFixed(2); highlightByDataLine("codeA","alpha"); bumpExplore("A"); }
-    if (id==="A_b") { sA.b = parseFloat(e.target.value); document.getElementById("A_bOut").textContent = sA.b.toFixed(2); document.getElementById("cA_b").textContent = sA.b.toFixed(2); highlightByDataLine("codeA","beta"); bumpExplore("A"); }
-    if (id==="A_seed") { Synth.seed = parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent = Synth.seed; document.getElementById("cA_seed").textContent = Synth.seed; regenSynth(); highlightByDataLine("codeA","seed"); }
-    drawStageA();
-  });
-});
-document.getElementById("A_ols").addEventListener("click", () => {
-  sA.a = Synth.ols.a; sA.b = Synth.ols.b;
-  document.getElementById("A_a").value = sA.a.toFixed(2); document.getElementById("A_aOut").textContent = sA.a.toFixed(2);
-  document.getElementById("A_b").value = sA.b.toFixed(2); document.getElementById("A_bOut").textContent = sA.b.toFixed(2);
+document.getElementById("A_guessIn").addEventListener("input", (e) => {
+  sA.guess = parseFloat(e.target.value);
+  document.getElementById("A_guessOut").textContent = sA.guess.toFixed(1);
+  document.getElementById("cA_guess").textContent = sA.guess.toFixed(1);
+  highlightByDataLine("codeA", "guess");
   drawStageA(); bumpExplore("A");
 });
-document.getElementById("A_newSeed").addEventListener("click", () => {
-  const s = Math.floor(Math.random()*999) + 1;
-  document.getElementById("A_seed").value = s;
-  document.getElementById("A_seed").dispatchEvent(new Event("input"));
-});
 document.getElementById("A_download").addEventListener("click", () => {
-  downloadText(`lesson4_stageA_seed${Synth.seed}.R`, `# Lesson 4, Stage A
-set.seed(${Synth.seed})
-n <- 50
-x <- runif(n, 0, 5)
-y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
-my_a <- ${sA.a}; my_b <- ${sA.b}
-yhat <- my_a + my_b * x
-r2_my <- 1 - sum((y - yhat)^2) / sum((y - mean(y))^2)
-fit <- lm(y ~ x)
-round(summary(fit)$r.squared, 2); round(r2_my, 2)
+  downloadText(`lesson3_stageA.R`, `# Lesson 3, Stage A
+nh <- read.csv("data/clean/nhanes_adults.csv")
+y <- nh$Weight
+mean(y); median(y); sd(y)
+guess <- ${sA.guess}
+err <- guess - y
+mean(err^2); mean(abs(err))
 `);
 });
-wirePrediction("A", "predA", ["qA1","qA2"], ["same","cant"], "controlsA");
-drawStageA();
+wirePrediction("A", "predA", ["qA1","qA2"], ["mu","mean-mse"], "controlsA");
 
-/* ====== STAGE B ===================================================== */
-const sB = { a: 0.5, b: 1.0, tol: 0.01, saved: [] };
+/* ====== STAGE B ================================================== */
+const sB = { n: 400, seed: 42, showResid: false, sample: null };
+function drawSubsampleB() {
+  if (!Data.nhanes || !Data.nhanes.length) return;
+  const rng = mulberry32(sB.seed);
+  const all = Data.nhanes.filter(r => r.Height && r.Weight);
+  const ids = new Set();
+  while (ids.size < Math.min(sB.n, all.length)) ids.add(Math.floor(rng()*all.length));
+  sB.sample = Array.from(ids).map(i => ({ h: parseFloat(all[i].Height), w: parseFloat(all[i].Weight) }));
+}
 function drawStageB() {
   const cv = document.getElementById("plotB");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, -0.2, 5.2, -1, 7);
-  drawAxes(ctx, f, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
-  ctx.fillStyle = "rgba(60,60,60,0.6)";
-  for (let i=0;i<Synth.xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(Synth.xs[i]), f.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx.fill(); }
-  // Saved lines
-  ctx.strokeStyle = "rgba(47,107,143,0.25)"; ctx.lineWidth = 1.5;
-  sB.saved.forEach(s => { ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(s.a + s.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(s.a + s.b*5.2)); ctx.stroke(); });
-  // OLS line
-  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(Synth.ols.a + Synth.ols.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(Synth.ols.a + Synth.ols.b*5.2)); ctx.stroke();
-  // Current student line
-  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(f.x(-0.2), f.y(sB.a + sB.b*-0.2)); ctx.lineTo(f.x(5.2), f.y(sB.a + sB.b*5.2)); ctx.stroke();
-  const target = +Synth.ols.r2.toFixed(2);
-  const r2 = r2OfLine(Synth.xs, Synth.ys, sB.a, sB.b);
-  document.getElementById("B_target").textContent = target.toFixed(2);
-  document.getElementById("B_r2").textContent = r2.toFixed(2);
-  document.getElementById("B_tol").textContent = sB.tol.toFixed(3);
-  document.getElementById("B_savedCt").textContent = sB.saved.length;
-}
-["B_a","B_b","B_tolIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="B_a") { sB.a = parseFloat(e.target.value); document.getElementById("B_aOut").textContent = sB.a.toFixed(2); highlightByDataLine("codeB","alpha"); }
-    if (id==="B_b") { sB.b = parseFloat(e.target.value); document.getElementById("B_bOut").textContent = sB.b.toFixed(2); highlightByDataLine("codeB","beta"); }
-    if (id==="B_tolIn") { sB.tol = parseFloat(e.target.value); document.getElementById("B_tolOut").textContent = sB.tol.toFixed(3); }
-    drawStageB();
-  });
-});
-document.getElementById("B_save").addEventListener("click", () => {
-  const target = +Synth.ols.r2.toFixed(2);
-  const r2 = r2OfLine(Synth.xs, Synth.ys, sB.a, sB.b);
-  if (Math.abs(+r2.toFixed(2) - target) <= sB.tol) {
-    sB.saved.push({ a: sB.a, b: sB.b });
-    drawStageB(); bumpExplore("B");
-  } else {
-    alert(`Your R² (${r2.toFixed(2)}) is more than ${sB.tol.toFixed(3)} from the OLS target (${target.toFixed(2)}). Adjust the sliders and try again.`);
-  }
-});
-document.getElementById("B_clear").addEventListener("click", () => { sB.saved = []; drawStageB(); });
-document.getElementById("B_download").addEventListener("click", () => {
-  downloadText(`lesson4_stageB.R`, `# Lesson 4, Stage B
-set.seed(${Synth.seed})
-n <- 50; x <- runif(n, 0, 5); y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
-target_r2 <- round(summary(lm(y ~ x))$r.squared, 2)
-grid <- expand.grid(a = seq(-1, 2, by = 0.05), b = seq(0.6, 1.4, by = 0.05))
-grid$r2 <- apply(grid, 1, function(p) 1 - sum((y - (p[1] + p[2]*x))^2) / sum((y - mean(y))^2))
-keep <- subset(grid, round(r2, 2) == target_r2)
-nrow(keep)
-plot(keep$a, keep$b, pch=16, col="#2f6b8f", xlab="alpha", ylab="beta")
-`);
-});
-wirePrediction("B", "predB", ["qB1","qB2"], ["lower","ellipse"], "controlsB");
-drawStageB();
-
-/* ====== STAGE C ===================================================== */
-const sC = { reps: 200, seed: 42, fits: [] };
-function runC() {
-  const rng = mulberry32(sC.seed);
-  sC.fits = [];
-  const n = Synth.xs.length;
-  for (let r=0;r<sC.reps;r++) {
-    const xs = new Array(n), ys = new Array(n);
-    for (let i=0;i<n;i++) { const k = Math.floor(rng()*n); xs[i] = Synth.xs[k]; ys[i] = Synth.ys[k]; }
-    const fit = ols(xs, ys);
-    sC.fits.push({ a: fit.a, b: fit.b });
-  }
-  drawStageC(); bumpExplore("C");
-}
-function drawStageC() {
-  // Plot 1: scatter + bootstrap lines
-  const cv1 = document.getElementById("plotC1");
-  const { ctx: ctx1, W: W1, H: H1 } = setupCanvas(cv1);
-  ctx1.clearRect(0,0,W1,H1);
-  const pad1 = { l: 50, r: 12, t: 14, b: 40 };
-  const f1 = makeFrame(pad1, W1, H1, -0.2, 5.2, -1, 7);
-  drawAxes(ctx1, f1, "x", "y", 6, 5, v=>v.toFixed(1), v=>v.toFixed(1));
-  ctx1.strokeStyle = "rgba(178,58,72,0.18)"; ctx1.lineWidth = 1;
-  sC.fits.forEach(s => { ctx1.beginPath(); ctx1.moveTo(f1.x(-0.2), f1.y(s.a + s.b*-0.2)); ctx1.lineTo(f1.x(5.2), f1.y(s.a + s.b*5.2)); ctx1.stroke(); });
-  ctx1.fillStyle = "rgba(60,60,60,0.7)";
-  for (let i=0;i<Synth.xs.length;i++) { ctx1.beginPath(); ctx1.arc(f1.x(Synth.xs[i]), f1.y(Synth.ys[i]), 3, 0, 2*Math.PI); ctx1.fill(); }
-  // Plot 2: alpha × beta plane
-  const cv2 = document.getElementById("plotC2");
-  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
-  ctx2.clearRect(0,0,W2,H2);
-  const allA = sC.fits.map(s=>s.a).concat(sB.saved.map(s=>s.a));
-  const allB = sC.fits.map(s=>s.b).concat(sB.saved.map(s=>s.b));
-  const aMin = allA.length ? Math.min(...allA, Synth.ols.a-0.5) : -0.5;
-  const aMax = allA.length ? Math.max(...allA, Synth.ols.a+0.5) : 1.5;
-  const bMin = allB.length ? Math.min(...allB, Synth.ols.b-0.3) : 0.5;
-  const bMax = allB.length ? Math.max(...allB, Synth.ols.b+0.3) : 1.5;
-  const pad2 = { l: 60, r: 12, t: 14, b: 40 };
-  const f2 = makeFrame(pad2, W2, H2, aMin, aMax, bMin, bMax);
-  drawAxes(ctx2, f2, "α", "β", 5, 4, v=>v.toFixed(2), v=>v.toFixed(2));
-  ctx2.fillStyle = "rgba(178,58,72,0.55)";
-  sC.fits.forEach(s => { ctx2.beginPath(); ctx2.arc(f2.x(s.a), f2.y(s.b), 2.5, 0, 2*Math.PI); ctx2.fill(); });
-  ctx2.fillStyle = "rgba(47,107,143,0.85)";
-  sB.saved.forEach(s => { ctx2.beginPath(); ctx2.arc(f2.x(s.a), f2.y(s.b), 4, 0, 2*Math.PI); ctx2.fill(); });
-  ctx2.fillStyle = "#000"; ctx2.beginPath(); ctx2.arc(f2.x(Synth.ols.a), f2.y(Synth.ols.b), 5, 0, 2*Math.PI); ctx2.fill();
-}
-["C_reps","C_seed"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="C_reps") { sC.reps = parseInt(e.target.value,10); document.getElementById("C_repsOut").textContent = sC.reps; document.getElementById("cC_reps").textContent = sC.reps; highlightByDataLine("codeC","reps"); }
-    if (id==="C_seed") { sC.seed = parseInt(e.target.value,10); document.getElementById("C_seedOut").textContent = sC.seed; document.getElementById("cC_seed").textContent = sC.seed; highlightByDataLine("codeC","seed"); }
-  });
-});
-document.getElementById("C_run").addEventListener("click", runC);
-document.getElementById("C_download").addEventListener("click", () => {
-  downloadText(`lesson4_stageC_seed${sC.seed}.R`, `# Lesson 4, Stage C
-set.seed(${Synth.seed})
-n <- 50; x <- runif(n, 0, 5); y <- 0.5 + 1.0*x + rnorm(n, 0, 1)
-set.seed(${sC.seed})
-boot <- replicate(${sC.reps}, { i <- sample(length(x), length(x), replace = TRUE); coef(lm(y[i] ~ x[i])) })
-apply(boot, 1, quantile, c(.025, .975))
-cor(boot[1,], boot[2,])
-`);
-});
-wirePrediction("C", "predC", ["qC1","qC2"], ["tilt","se"], "controlsC");
-
-/* ====== STAGE D — NHANES ============================================ */
-const sD = { nhanes: null, n: 400, reps: 200, seed: 42, fits: [], sample: null };
-async function loadD() {
-  try {
-    const r = await fetch("../data/clean/nhanes_adults.json");
-    sD.nhanes = await r.json();
-  } catch (e) {
-    sD.nhanes = [];
-    console.warn("nhanes fallback for L4 stage D", e);
-  }
-}
-function drawSampleD() {
-  if (!sD.nhanes || !sD.nhanes.length) return;
-  const rng = mulberry32(sD.seed);
-  const all = sD.nhanes.filter(r => r.Height && r.Weight);
-  const ids = new Set();
-  while (ids.size < Math.min(sD.n, all.length)) ids.add(Math.floor(rng()*all.length));
-  sD.sample = Array.from(ids).map(i => ({ h: parseFloat(all[i].Height), w: parseFloat(all[i].Weight) }));
-}
-function runD() {
-  if (!sD.sample) drawSampleD();
-  if (!sD.sample) return;
-  const xs = sD.sample.map(d=>d.h), ys = sD.sample.map(d=>d.w);
-  const rng = mulberry32(sD.seed + 17);
-  sD.fits = [];
-  for (let r=0;r<sD.reps;r++) {
-    const xb = new Array(xs.length), yb = new Array(ys.length);
-    for (let i=0;i<xs.length;i++) { const k = Math.floor(rng()*xs.length); xb[i] = xs[k]; yb[i] = ys[k]; }
-    const fit = ols(xb, yb);
-    sD.fits.push({ a: fit.a, b: fit.b });
-  }
-  drawStageD(); bumpExplore("D");
-}
-function drawStageD() {
-  if (!sD.sample) drawSampleD();
-  if (!sD.sample) return;
-  const cv = document.getElementById("plotD");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
+  if (!sB.sample) drawSubsampleB();
+  if (!sB.sample) { ctx.fillStyle="#888"; ctx.fillText("loading…", 20, 30); return; }
+  const xs = sB.sample.map(d=>d.h), ys = sB.sample.map(d=>d.w);
   const pad = { l: 50, r: 12, t: 18, b: 50 };
   const f = makeFrame(pad, W, H, 140, 200, 30, 180);
   drawAxes(ctx, f, "height (cm)", "weight (kg)", 6, 6, v=>v.toFixed(0), v=>v.toFixed(0));
-  // Bootstrap lines
-  ctx.strokeStyle = "rgba(178,58,72,0.12)"; ctx.lineWidth = 1;
-  sD.fits.forEach(s => { ctx.beginPath(); ctx.moveTo(f.x(140), f.y(s.a + s.b*140)); ctx.lineTo(f.x(200), f.y(s.a + s.b*200)); ctx.stroke(); });
-  // Points
-  ctx.fillStyle = "rgba(60,60,60,0.6)";
-  sD.sample.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.h), f.y(d.w), 2, 0, 2*Math.PI); ctx.fill(); });
-  // OLS
-  const xs = sD.sample.map(d=>d.h), ys = sD.sample.map(d=>d.w);
   const fit = ols(xs, ys);
+  if (sB.showResid) {
+    ctx.strokeStyle = "rgba(178,58,72,0.4)"; ctx.lineWidth = 0.8;
+    for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.moveTo(f.x(xs[i]), f.y(ys[i])); ctx.lineTo(f.x(xs[i]), f.y(fit.yhat[i])); ctx.stroke(); }
+  }
+  ctx.fillStyle = "rgba(80,80,80,0.6)";
+  for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 2, 0, 2*Math.PI); ctx.fill(); }
   ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(f.x(140), f.y(fit.a + fit.b*140)); ctx.lineTo(f.x(200), f.y(fit.a + fit.b*200)); ctx.stroke();
-  document.getElementById("D_b").textContent = fit.b.toFixed(3);
-  document.getElementById("D_se").textContent = fit.seB.toFixed(3);
-  if (sD.fits.length) {
-    const bs = sD.fits.map(s=>s.b);
-    const q1 = quantile(bs, 0.025), q2 = quantile(bs, 0.975);
-    document.getElementById("D_qi").textContent = `(${q1.toFixed(3)}, ${q2.toFixed(3)})`;
-  }
-  // R² at the three β values
-  const r2c = r2OfLine(xs, ys, fit.a, fit.b);
-  const r2p = r2OfLine(xs, ys, fit.a, fit.b + fit.seB);
-  const r2m = r2OfLine(xs, ys, fit.a, fit.b - fit.seB);
-  document.getElementById("D_r2c").textContent = r2c.toFixed(3);
-  document.getElementById("D_r2p").textContent = r2p.toFixed(3);
-  document.getElementById("D_r2m").textContent = r2m.toFixed(3);
+  drawHLine(ctx, f, mean(ys), "#888", 1.5, [4,4]);
+  document.getElementById("B_a").textContent = fit.a.toFixed(2);
+  document.getElementById("B_b").textContent = fit.b.toFixed(3);
+  document.getElementById("B_r2").textContent = fit.r2.toFixed(3);
+  document.getElementById("B_sres").textContent = fit.sres.toFixed(2);
+  document.getElementById("B_mseA").textContent = mean(ys.map(y=>(y-mean(ys))*(y-mean(ys)))).toFixed(1);
+  document.getElementById("B_mseB").textContent = mean(fit.yhat.map((yh,i)=>(yh-ys[i])*(yh-ys[i]))).toFixed(1);
 }
-["D_n","D_reps","D_seed"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="D_n") { sD.n = parseInt(e.target.value,10); document.getElementById("D_nOut").textContent = sD.n; document.getElementById("cD_n").textContent = sD.n; highlightByDataLine("codeD","n"); drawSampleD(); drawStageD(); }
-    if (id==="D_reps") { sD.reps = parseInt(e.target.value,10); document.getElementById("D_repsOut").textContent = sD.reps; document.getElementById("cD_reps").textContent = sD.reps; highlightByDataLine("codeD","reps"); }
-    if (id==="D_seed") { sD.seed = parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent = sD.seed; document.getElementById("cD_seed").textContent = sD.seed; highlightByDataLine("codeD","seed"); drawSampleD(); drawStageD(); }
-  });
-});
-document.getElementById("D_run").addEventListener("click", runD);
-document.getElementById("D_download").addEventListener("click", () => {
-  downloadText(`lesson4_stageD_seed${sD.seed}.R`, `# Lesson 4, Stage D
+document.getElementById("B_resid").addEventListener("change", (e) => { sB.showResid = e.target.checked; drawStageB(); bumpExplore("B"); });
+document.getElementById("B_nIn").addEventListener("input", (e) => { sB.n = parseInt(e.target.value,10); document.getElementById("B_nOut").textContent = sB.n; document.getElementById("cB_n").textContent = sB.n; highlightByDataLine("codeB","subsample"); });
+document.getElementById("B_seedIn").addEventListener("input", (e) => { sB.seed = parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent = sB.seed; document.getElementById("cB_seed").textContent = sB.seed; highlightByDataLine("codeB","seed"); });
+document.getElementById("B_refit").addEventListener("click", () => { drawSubsampleB(); drawStageB(); bumpExplore("B"); });
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText(`lesson3_stageB_seed${sB.seed}.R`, `# Lesson 3, Stage B
 nh <- read.csv("data/clean/nhanes_adults.csv")
-set.seed(${sD.seed})
-idx <- sample(nrow(nh), ${sD.n}); d <- nh[idx, ]
-fit <- lm(Weight ~ Height, data = d)
-B <- ${sD.reps}
-boot <- replicate(B, { k <- sample(nrow(d), nrow(d), replace = TRUE); coef(lm(Weight ~ Height, data = d[k, ])) })
-apply(boot, 1, quantile, c(.025, .975))
+set.seed(${sB.seed})
+idx <- sample(nrow(nh), ${sB.n})
+d <- nh[idx, ]
+fit <- lm(Weight ~ Height, data = d); summary(fit); sd(residuals(fit))
+plot(d$Height, d$Weight, pch=16, col="#444", xlab="height (cm)", ylab="weight (kg)")
+abline(fit, col="#2f6b8f", lwd=2)
+abline(h = mean(d$Weight), col="gray60", lty=2)
 `);
 });
+wirePrediction("B", "predB", ["qB1","qB2"], ["smaller","zero"], "controlsB");
+
+/* ====== STAGE C — S2 drill ====================================== */
+const sC = { round: 0, correct: 0, picks: [] };
+// Five built-in rounds. Each prepares (xs, ys, fit, expected, explanation) at draw time.
+const sC_rounds = [
+  { name: "Mammal body mass vs gestation (log-log)", expected: "clean",
+    build: () => {
+      const m = Data.mammals.filter(r => +r.adult_body_mass_g > 0 && +r.gestation_days > 0);
+      const rng = mulberry32(11);
+      const sub = m.sort(() => rng()-0.5).slice(0, 250);
+      return { xs: sub.map(r => Math.log(+r.gestation_days)), ys: sub.map(r => Math.log(+r.adult_body_mass_g)),
+               xlab: "log(gestation, days)", ylab: "log(body mass, g)" };
+    },
+    explain: "Log-log makes the relationship linear. Residuals are roughly symmetric, no obvious pattern — clean noise."
+  },
+  { name: "Mammal body mass vs gestation (linear-linear)", expected: "curve",
+    build: () => {
+      const m = Data.mammals.filter(r => +r.adult_body_mass_g > 0 && +r.gestation_days > 0 && +r.adult_body_mass_g < 1e6);
+      const rng = mulberry32(12);
+      const sub = m.sort(() => rng()-0.5).slice(0, 250);
+      return { xs: sub.map(r => +r.gestation_days), ys: sub.map(r => +r.adult_body_mass_g),
+               xlab: "gestation (days)", ylab: "body mass (g)" };
+    },
+    explain: "Raw scale: a straight line underpredicts at both extremes. The residual plot bends — curvature."
+  },
+  { name: "Bird beak length vs beak depth (across orders)", expected: "clouds",
+    build: () => {
+      const b = Data.birds.filter(r => +r.beak_length_culmen_mm > 0 && +r.beak_depth_mm > 0);
+      const rng = mulberry32(13);
+      const sub = b.sort(() => rng()-0.5).slice(0, 300);
+      return { xs: sub.map(r => Math.log(+r.beak_depth_mm)), ys: sub.map(r => Math.log(+r.beak_length_culmen_mm)),
+               xlab: "log(beak depth, mm)", ylab: "log(beak length, mm)" };
+    },
+    explain: "Different trophic guilds (granivores, nectarivores, raptors) sit at different positions in beak-shape space. Residuals cluster into more than one cloud."
+  },
+  { name: "Fortis beak depth across years (Grant 40-year)", expected: "hetero",
+    build: () => {
+      // finch_beak.json is nested: { years: [...], fortis: { beak_depth: [...] }, ... }
+      const years = Data.finch.years || [];
+      const depths = (Data.finch.fortis && Data.finch.fortis.beak_depth) || [];
+      const xs = [], ys = [];
+      for (let i=0;i<years.length && i<depths.length;i++) { xs.push(+years[i]); ys.push(+depths[i]); }
+      return { xs, ys, xlab: "year", ylab: "fortis mean beak depth (mm)" };
+    },
+    explain: "Drought-year 1977 and post-magnirostris 2003+ stand out as outliers. The variance of residuals isn't constant across years — heteroskedasticity that flags external events the linear-in-time model misses."
+  },
+  { name: "PETS body-size series — log rate vs log interval", expected: "curve",
+    build: () => {
+      // pets_timeseries: rows have (tsID, age_MY, trait_mean). Pair consecutive rows within a series.
+      const groups = {};
+      Data.pets.forEach(r => { (groups[r.tsID] = groups[r.tsID] || []).push(r); });
+      const xs = [], ys = [];
+      const rng = mulberry32(15);
+      const keys = Object.keys(groups).sort(() => rng()-0.5).slice(0, 80);
+      keys.forEach(k => {
+        const rows = groups[k].sort((a,b) => +a.age_MY - +b.age_MY);
+        for (let i = 1; i < rows.length; i++) {
+          const dt = Math.abs(+rows[i].age_MY - +rows[i-1].age_MY);
+          const dy = Math.abs(+rows[i].trait_mean - +rows[i-1].trait_mean);
+          if (dt > 0 && dy > 0) { xs.push(Math.log(dt)); ys.push(Math.log(dy / dt)); }
+        }
+      });
+      return { xs, ys, xlab: "log(interval, MY)", ylab: "log(|Δtrait| / interval)" };
+    },
+    explain: "Gingerich's rates-vs-interval pattern: short-interval rates are much higher than long-interval rates. A straight-line fit on log–log axes underestimates the curvature near short intervals."
+  },
+];
+
+function startDrill() {
+  document.getElementById("drillPanel").style.display = "block";
+  sC.round = 0; sC.correct = 0; sC.picks = [];
+  drawDrillRound();
+}
+
+function drawDrillRound() {
+  const i = sC.round;
+  const round = sC_rounds[i];
+  const data = round.build();
+  document.getElementById("C_title").textContent = `Round ${i+1} of 5 — ${round.name}`;
+  document.getElementById("C_round").textContent = i+1;
+  document.getElementById("C_correct").textContent = sC.correct;
+  // Scatter
+  const cv1 = document.getElementById("plotC1");
+  const { ctx, W, H } = setupCanvas(cv1);
+  ctx.clearRect(0,0,W,H);
+  if (!data.xs.length) { ctx.fillStyle="#888"; ctx.fillText("loading…",20,30); return; }
+  const xmin = Math.min(...data.xs), xmax = Math.max(...data.xs);
+  const ymin = Math.min(...data.ys), ymax = Math.max(...data.ys);
+  const dx = xmax-xmin, dy = ymax-ymin;
+  const pad = { l: 56, r: 12, t: 14, b: 38 };
+  const f = makeFrame(pad, W, H, xmin-0.05*dx, xmax+0.05*dx, ymin-0.05*dy, ymax+0.05*dy);
+  drawAxes(ctx, f, data.xlab, data.ylab, 5, 4, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx.fillStyle = "rgba(60,60,60,0.5)";
+  for (let k=0;k<data.xs.length;k++) { ctx.beginPath(); ctx.arc(f.x(data.xs[k]), f.y(data.ys[k]), 2, 0, 2*Math.PI); ctx.fill(); }
+  const fit = ols(data.xs, data.ys);
+  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x(f.xMin), f.y(fit.a+fit.b*f.xMin)); ctx.lineTo(f.x(f.xMax), f.y(fit.a+fit.b*f.xMax)); ctx.stroke();
+  // Residual plot
+  const cv2 = document.getElementById("plotC2");
+  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
+  ctx2.clearRect(0,0,W2,H2);
+  const resid = data.ys.map((y,j) => y - (fit.a + fit.b*data.xs[j]));
+  const rmin = Math.min(...resid), rmax = Math.max(...resid);
+  const rPad = { l: 56, r: 12, t: 14, b: 30 };
+  const fR = makeFrame(rPad, W2, H2, f.xMin, f.xMax, rmin*1.1, rmax*1.1);
+  drawAxes(ctx2, fR, data.xlab, "residual", 5, 4, v=>v.toFixed(1), v=>v.toFixed(1));
+  drawHLine(ctx2, fR, 0, "#b23a48", 1.5, [4,3]);
+  ctx2.fillStyle = "rgba(60,60,60,0.55)";
+  for (let k=0;k<data.xs.length;k++) { ctx2.beginPath(); ctx2.arc(fR.x(data.xs[k]), fR.y(resid[k]), 1.8, 0, 2*Math.PI); ctx2.fill(); }
+  // Reset buttons
+  document.querySelectorAll("#C_buttons button").forEach(b => b.classList.remove("locked"));
+  document.getElementById("C_reveal").className = "drill-reveal";
+  document.getElementById("C_reveal").textContent = "";
+  // Tally
+  const tally = document.getElementById("C_tally");
+  tally.innerHTML = "";
+  for (let k=0;k<5;k++) {
+    const d = document.createElement("div");
+    d.className = "dot";
+    if (k < sC.picks.length) d.classList.add(sC.picks[k] ? "correct" : "wrong");
+    else if (k === sC.round) d.classList.add("now");
+    d.textContent = k+1;
+    tally.appendChild(d);
+  }
+}
+
+document.querySelectorAll("#C_buttons button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if (btn.classList.contains("locked")) return;
+    const pick = btn.dataset.pick;
+    const round = sC_rounds[sC.round];
+    const isCorrect = pick === round.expected;
+    sC.picks.push(isCorrect); if (isCorrect) sC.correct++;
+    document.querySelectorAll("#C_buttons button").forEach(b => b.classList.add("locked"));
+    const rev = document.getElementById("C_reveal");
+    rev.className = "drill-reveal shown " + (isCorrect ? "correct" : "wrong");
+    rev.innerHTML = `<strong>${isCorrect ? "Correct" : "Not quite"}.</strong> The intended diagnosis was <em>${round.expected}</em>. ${round.explain} <button id="C_nextBtn" style="margin-left:8px;">Next round →</button>`;
+    document.getElementById("C_nextBtn").addEventListener("click", () => {
+      sC.round++;
+      if (sC.round >= 5) {
+        document.getElementById("C_title").textContent = `Done — ${sC.correct}/5 correct`;
+        bumpExplore("C"); Gates.C.explores = 5; bumpExplore("C");
+      } else {
+        bumpExplore("C");
+        drawDrillRound();
+      }
+    });
+  });
+});
+wirePrediction("C", "predC", ["qC1","qC2"], ["curve","missgroup"], null, () => { document.getElementById("drillPanel").style.display = "block"; startDrill(); });
+
+/* ====== STAGE D — kids' growth click-to-predict ================== */
+const sD = {
+  round: 0, totalRounds: 6, byKidMeasure: null,
+  current: null,   // { kid, points, hiddenIdx, hiddenPoint }
+  click: null, locked: true,
+};
+
+function organizeKids() {
+  sD.byKidMeasure = {};
+  Data.kids.forEach(r => {
+    if (r.measure !== "mass") return;
+    const k = r.kid;
+    (sD.byKidMeasure[k] = sD.byKidMeasure[k] || []).push(r);
+  });
+  Object.keys(sD.byKidMeasure).forEach(k => sD.byKidMeasure[k].sort((a,b) => a.day_of_life - b.day_of_life));
+}
+
+function setupRoundD() {
+  if (!sD.byKidMeasure) organizeKids();
+  // Alternate kids; pick a hidden point in the interior (not first/last).
+  const kid = (sD.round % 2 === 0) ? "beren" : "cyrus";
+  const pts = sD.byKidMeasure[kid];
+  if (!pts || pts.length < 4) { sD.current = null; return; }
+  const rng = mulberry32(sD.round*131 + 7);
+  // Prefer hidden = sick_proxy:true at least once if available
+  const sickIdx = pts.map((p,i) => p.sick_proxy ? i : -1).filter(i => i > 0 && i < pts.length-1);
+  let hiddenIdx;
+  if (sickIdx.length && (sD.round === 1 || sD.round === 3)) {
+    hiddenIdx = sickIdx[Math.floor(rng()*sickIdx.length)];
+  } else {
+    hiddenIdx = 1 + Math.floor(rng() * (pts.length - 2));
+  }
+  sD.current = { kid, points: pts, hiddenIdx, hiddenPoint: pts[hiddenIdx], revealed: false };
+  sD.click = null;
+}
+
+function drawStageD() {
+  if (!sD.current) { sD.locked = false; setupRoundD(); }
+  if (!sD.current) return;
+  const cv = document.getElementById("plotD");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pts = sD.current.points;
+  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
+  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
+  const pad = { l: 56, r: 12, t: 14, b: 40 };
+  const f = makeFrame(pad, W, H, 0, xMax, 0, yMax);
+  drawAxes(ctx, f, "age (years)", "mass (kg)", 6, 5, v=>v.toFixed(1), v=>v.toFixed(0));
+  // WHO reference
+  if (Data.who && Data.who.length) {
+    ctx.strokeStyle = "#aaa"; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.beginPath();
+    Data.who.forEach((r,i) => {
+      const x = f.x(r.day_of_life/365.25), y = f.y(r.mass_kg);
+      i===0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // Visible kid points (excluding hidden)
+  ctx.fillStyle = "rgba(60,60,60,0.7)";
+  pts.forEach((p, i) => {
+    if (i === sD.current.hiddenIdx && !sD.current.revealed) return;
+    ctx.beginPath(); ctx.arc(f.x(p.age_years), f.y(p.value), 4, 0, 2*Math.PI); ctx.fill();
+  });
+  // Highlight hidden if revealed
+  if (sD.current.revealed) {
+    const hp = sD.current.hiddenPoint;
+    ctx.fillStyle = hp.sick_proxy ? "#a86a1a" : "#6f8a4a";
+    ctx.beginPath(); ctx.arc(f.x(hp.age_years), f.y(hp.value), 6, 0, 2*Math.PI); ctx.fill();
+    // also draw user's click and a line connecting them
+    if (sD.click) {
+      ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(f.x(sD.click.x), f.y(sD.click.y)); ctx.lineTo(f.x(hp.age_years), f.y(hp.value)); ctx.stroke();
+      ctx.fillStyle = "#b23a48";
+      ctx.beginPath(); ctx.arc(f.x(sD.click.x), f.y(sD.click.y), 4, 0, 2*Math.PI); ctx.fill();
+    }
+  } else if (sD.click) {
+    ctx.fillStyle = "#b23a48";
+    ctx.beginPath(); ctx.arc(f.x(sD.click.x), f.y(sD.click.y), 4, 0, 2*Math.PI); ctx.fill();
+  } else {
+    // Show a marker at the hidden age, indicating that's the age we need a click for
+    const hp = sD.current.hiddenPoint;
+    ctx.strokeStyle = "#888"; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(f.x(hp.age_years), f.pad.t); ctx.lineTo(f.x(hp.age_years), f.pad.t+f.H); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#888"; ctx.textAlign = "center"; ctx.font = "12px -apple-system";
+    ctx.fillText(`click here at age ${hp.age_years.toFixed(2)} y`, f.x(hp.age_years), f.pad.t + 12);
+  }
+  // Update info
+  document.getElementById("D_kid").textContent = sD.current.kid;
+  document.getElementById("D_round").textContent = sD.round + 1;
+  document.getElementById("D_click").textContent = sD.click ? `(${sD.click.x.toFixed(2)} y, ${sD.click.y.toFixed(1)} kg)` : "—";
+  if (sD.current.revealed) {
+    const hp = sD.current.hiddenPoint;
+    document.getElementById("D_actual").textContent = `(${hp.age_years.toFixed(2)} y, ${hp.value.toFixed(1)} kg)`;
+    document.getElementById("D_err").textContent = sD.click ? `${(sD.click.y - hp.value).toFixed(2)} kg`: "—";
+    document.getElementById("D_sick").textContent = hp.sick_proxy ? "yes (antibiotic / temperature within ±7 days)" : "no";
+  } else {
+    document.getElementById("D_actual").textContent = "—";
+    document.getElementById("D_err").textContent = "—";
+    document.getElementById("D_sick").textContent = "—";
+  }
+}
+
+document.getElementById("plotD").addEventListener("click", (e) => {
+  if (sD.locked || !sD.current || sD.current.revealed) return;
+  const cv = e.currentTarget;
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (cv.width / rect.width / (window.devicePixelRatio||1));
+  const py = (e.clientY - rect.top)  * (cv.height / rect.height / (window.devicePixelRatio||1));
+  // Convert pixel → data using the same frame the draw used
+  const pts = sD.current.points;
+  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
+  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
+  const pad = { l: 56, r: 12, t: 14, b: 40 };
+  const f = makeFrame(pad, cv.width/(window.devicePixelRatio||1), cv.height/(window.devicePixelRatio||1), 0, xMax, 0, yMax);
+  sD.click = { x: f.xInv(px), y: f.yInv(py) };
+  sD.current.revealed = true;
+  drawStageD();
+  document.getElementById("D_next").disabled = false;
+  // record
+  if (sD.click.x !== null) sD.round; // no-op
+});
+
+document.getElementById("D_next").addEventListener("click", () => {
+  sD.round++;
+  document.getElementById("D_next").disabled = true;
+  bumpExplore("D");
+  if (sD.round >= sD.totalRounds) {
+    document.getElementById("D_title").textContent = "Done — review your last reveal above.";
+    // Final advance triggers next-stage unlock (posttest) via bumpExplore.
+    return;
+  }
+  document.getElementById("D_title").textContent = `Round ${sD.round+1} of ${sD.totalRounds} — click where the missing point should be`;
+  setupRoundD(); drawStageD();
+});
+
+document.getElementById("D_download").addEventListener("click", () => {
+  downloadText(`lesson3_stageD.R`, `# Lesson 3, Stage D
+k <- read.csv("data/clean/kids_growth.csv")
+b <- subset(k, kid == "beren" & measure == "mass")
+fit <- lm(value ~ poly(age_years, 2), data = b)
+b$residual <- residuals(fit)
+aggregate(residual ~ sick_proxy, data = b, mean)
+boxplot(residual ~ sick_proxy, data = b, col = c("#6f8a4a","#a86a1a"))
+`);
+});
+
 document.getElementById("stretchD_btn").addEventListener("click", () => {
   const btn = document.getElementById("stretchD_btn");
   btn.classList.add("done"); btn.textContent = "Recorded ✓"; btn.disabled = true;
   document.getElementById("stretchD_status").textContent = "Noted.";
   if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, true);
 });
-wirePrediction("D", "predD", ["qD1","qD2"], ["same","se"], "controlsD");
 
-/* ====== Pretest / Posttest / Score ================================== */
+wirePrediction("D", "predD", ["qD1","qD2"], ["lower","negative"], null, () => {
+  sD.locked = false;
+  document.getElementById("plotD").classList.remove("locked");
+  setupRoundD(); drawStageD();
+});
+
+/* ====== Pretest / Posttest / Score ============================== */
 const PRETEST_ITEMS = [
-  { idx: 0, q: "An OLS regression returns β̂ = 1.05 with SE = 0.10. The true β most likely sits:",
-    options: ["exactly at 1.05", "in a band around 1.05 — many values nearby are consistent with the data", "at 0 — only OLS β̂ is significant", "outside the SE band — point estimates are biased"],
+  { idx: 0, q: "In a regression of weight on height, the residuals are best described as:",
+    options: ["the original weights", "the part of weight not explained by height", "the slope estimate", "the same as the weights minus the mean weight"],
     correct: 1 },
-  { idx: 1, q: "R² rounded to 2 decimal places between two regressions fit to the same data with slightly different (α, β):",
-    options: ["is always identical", "can be identical for a range of (α, β) pairs near the optimum", "is always different", "is meaningless"],
+  { idx: 1, q: "A clean residual plot (no pattern) means:",
+    options: ["the model is exactly correct", "there is no evidence in the residuals that the model is missing a key piece — it does not prove the model is right", "the residuals are zero", "the predictor is unrelated to the outcome"],
     correct: 1 }
 ];
 const POSTTEST_ITEMS = [
-  { idx: 0, q: "You bootstrap a regression and the (α̂, β̂) cloud is a tilted ellipse. The tilt means:",
-    options: ["the data are tilted", "α̂ and β̂ are correlated — a change in one is compensated by a change in the other", "OLS is biased", "the residuals are non-normal"],
+  { idx: 0, q: "You fit lm(weight ~ height) and the residuals form two disjoint clouds. The single most likely diagnosis is:",
+    options: ["heteroskedasticity", "a missing categorical predictor (e.g., sex)", "a curved relationship", "an outlier"],
     correct: 1 },
-  { idx: 1, q: "A paper reports β̂ = 0.50, SE = 0.05, R² = 0.18. Compared to β̂ = 0.50, R² at β = 0.55 will:",
-    options: ["plummet to ~0", "be essentially identical to 0.18 within rounding", "double", "drop by exactly 1 SE worth of R²"],
+  { idx: 1, q: "You see that sick-day kid measurements have systematically more negative residuals than clean-day measurements. What does this tell you?",
+    options: [
+      "the kids are smaller than average",
+      "illness is a missing covariate — the 'mass = f(age)' model is biased on those days",
+      "the model is exactly correct",
+      "this is sampling noise — nothing to learn"
+    ],
     correct: 1 },
   { idx: 2,
-    q: "Which of these describes what you found in this lesson?",
+    q: "Which of these describes something this lesson actually taught?",
     options: [
-      "Many (α, β) pairs share the same rounded R²",
-      "α and β trade off — raising one usually requires lowering the other to keep R² fixed",
-      "A bootstrap of the data produces a tilted (α̂, β̂) cloud that nearly coincides with the hand-built one",
-      "The OLS optimum is the only line with high R²",
-      "Bootstrap SE on β̂ grows with sample size n"
+      "With no covariate, the population mean minimizes mean-squared error among constant predictors",
+      "Adding a covariate that carries information shrinks the residual SD",
+      "A residual pattern (curve, two clouds, fan) is evidence about what the model missed",
+      "Residuals on sick-day visits looked the same as clean-day residuals",
+      "If the residuals form a curve, the underlying relationship is linear"
     ],
     correct: [0, 1, 2] }
 ];
@@ -796,12 +957,12 @@ function showPosttest() {
   Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items:POSTTEST_ITEMS, onComplete: () => Score.finish() });
 }
 Score.init({
-  moduleId: "lesson4", version: 2,
+  moduleId: "lesson3", version: 2,
   pretest: PRETEST_ITEMS.length, scaffold: 9, posttest: POSTTEST_ITEMS.length,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
   onReady: () => showPretest()
 });
-loadD();
+loadData();
 </script>
 </body>
 </html>

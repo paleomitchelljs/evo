@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 9: Building the population where nothing changes</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; }
+  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .anchor-quote { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e230a; margin:8px 0 4px; }
+  .scenario .anchor-quote .src { display:block; margin-top:6px; font-size:11px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .toggle-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:13px; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  footer.wrap-up .closing { background:#f5efe0; border-left:3px solid #caa04a; padding:12px 16px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 16px; }
+  footer.wrap-up .closing .src { display:block; margin-top:6px; font-size:12px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+  .pvalue-readout { font:16px ui-monospace; padding:4px 10px; background:#1e1f22; color:#c3e88d; display:inline-block; border-radius:4px; }
+  .pvalue-readout.sig { color:#f78c6c; }
+  .genotype-stack { display:flex; height:42px; border:1px solid var(--rule); border-radius:4px; overflow:hidden; margin:6px 0; font:12px ui-monospace; }
+  .genotype-stack .cell { display:flex; align-items:center; justify-content:center; color:#fff; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 9 — Building the population where nothing changes</h1>
+  <p>BIO 202, Spring 2026, draft v1. Hardy-Weinberg as the null. Turn the assumptions off one at a time and watch the genotype frequencies leave it.</p>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
+
+<div class="outcomes">
+  <h2>What you'll do</h2>
+  <p>Four stages. Build the panmictic baseline, then turn off the assumptions one at a time and see which violation moves the genotypes most. End on a real wild-population dataset and ask which assumption broke.</p>
+  <div class="scenario" style="max-width:920px;">
+    <div class="anchor-quote">
+      We're analogizing evolution to motion. Newton's first law: an object at rest tends to stay at rest unless acted on by an outside force. Hardy-Weinberg equilibrium is our object at rest. A gene frequency tends to stay at that frequency unless acted on by an outside force. The thing is, "outside force" here does not mean what you want it to mean. When you hear "force," you expect a thing that pushes — a separate thing. But the system not being infinite is itself enough.
+      <span class="src">— 202_lec09_05</span>
+    </div>
+  </div>
+</div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. p², 2pq, q²</a>
+  <a href="#stageB" id="tocB" class="locked">B. Turn assumptions off</a>
+  <a href="#stageC" id="tocC" class="locked">C. χ² on genotype counts</a>
+  <a href="#stageD" id="tocD" class="locked">D. A wild locus, four candidate culprits</a>
+</nav>
+
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — Infinite population, panmictic mating, no mutation</h2>
+  <p class="stage-sub">Slide the allele frequency p. Read the expected genotype frequencies p², 2pq, q². Watch the heterozygote curve peak at p = 0.5.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>One locus, two alleles. Allele A at frequency p. Allele a at frequency q = 1 − p. Under HWE: AA = p², Aa = 2pq, aa = q². Three numbers determined by one slider.</p>
+        <div class="anchor-quote">
+          Hardy-Weinberg equilibrium is the fancy phrase we use for saying: this will be our baseline. Our expectation of no change. It is not real. It requires an infinite number of individuals alive at one time, and teleportation. Hardy-Weinberg never exists. But it's our baseline for comparison.
+          <span class="src">— 202_lec08_05</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Genotype frequencies vs p</h3>
+        <canvas id="plotA" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">p:</span> <span id="A_p">0.50</span>
+          &nbsp;|&nbsp;
+          <span class="label">AA:</span> <span id="A_AA">0.250</span>
+          &nbsp;|&nbsp;
+          <span class="label">Aa:</span> <span id="A_Aa">0.500</span>
+          &nbsp;|&nbsp;
+          <span class="label">aa:</span> <span id="A_aa">0.250</span>
+        </div>
+        <div class="genotype-stack" id="stackA"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. At what allele frequency p is the heterozygote (Aa) frequency maximized?</div>
+            <label><input type="radio" name="qA1" value="zero" /> p = 0</label>
+            <label><input type="radio" name="qA1" value="half" /> p = 0.5</label>
+            <label><input type="radio" name="qA1" value="one" /> p = 1</label>
+            <label><input type="radio" name="qA1" value="varies" /> Depends on the population size</label>
+          </li>
+        </ol>
+        <button id="submitA" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreA">Slide p to at least 4 different values to unlock Stage B. <span class="count">0/4 values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="p"><label for="A_pIn">p (freq of A)</label><input type="range" id="A_pIn" min="0" max="1" step="0.01" value="0.5" /><output id="A_pOut">0.50</output></div>
+          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — HWE genotype frequencies</h3>
+<pre class="code" id="codeA"><span class="line" data-line="p">p &lt;- <span class="num" id="cA_p">0.50</span></span><span class="line">q &lt;- <span class="num">1</span> - p</span><span class="line"><span class="fn">c</span>(AA = p^<span class="num">2</span>, Aa = <span class="num">2</span>*p*q, aa = q^<span class="num">2</span>)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Turn the assumptions off</h2>
+  <p class="stage-sub">Four toggles. Each violates one HWE assumption. Watch the genotype frequencies drift away from p², 2pq, q² over generations.</p>
+  <div class="lock-banner">Complete Stage A (submit prediction, slide p ≥ 4 times) to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Start at HWE with p = 0.5. Run for 100 generations. Toggle finite N, mutation, selection, non-random mating. Each one peels the population off the equilibrium curve in a characteristic way.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Genotype frequency trajectories</h3>
+        <canvas id="plotB" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsB">
+          <span class="label">gen:</span> <span id="B_gen">100</span>
+          &nbsp;|&nbsp;
+          <span class="label">final p:</span> <span id="B_finalP">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">final F:</span> <span id="B_finalF" class="big">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Which violation moves p (the allele frequency) most, in a fixed run of 100 generations?</div>
+            <label><input type="radio" name="qB1" value="finite" /> Finite population (drift)</label>
+            <label><input type="radio" name="qB1" value="mutation" /> Mutation</label>
+            <label><input type="radio" name="qB1" value="selection" /> Selection</label>
+            <label><input type="radio" name="qB1" value="nrm" /> Non-random mating</label>
+          </li>
+        </ol>
+        <button id="submitB" disabled>Submit → unlock the toggles</button>
+        <div class="explore-tracker" id="exploreB">Toggle the four switches in different combinations at least 5 times. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="toggle-row"><input type="checkbox" id="B_finite" /> <label for="B_finite">finite N (drift)</label></div>
+          <div class="row"><label for="B_NIn">N</label><input type="range" id="B_NIn" min="20" max="2000" step="20" value="100" /><output id="B_NOut">100</output></div>
+          <div class="toggle-row"><input type="checkbox" id="B_mutation" /> <label for="B_mutation">mutation (μ = 1e-3)</label></div>
+          <div class="toggle-row"><input type="checkbox" id="B_selection" /> <label for="B_selection">selection (s)</label></div>
+          <div class="row"><label for="B_sIn">s (cost of aa)</label><input type="range" id="B_sIn" min="0" max="0.3" step="0.01" value="0.05" /><output id="B_sOut">0.05</output></div>
+          <div class="toggle-row"><input type="checkbox" id="B_inbreed" /> <label for="B_inbreed">non-random mating (F)</label></div>
+          <div class="row"><label for="B_FIn">F</label><input type="range" id="B_FIn" min="0" max="0.9" step="0.05" value="0.3" /><output id="B_FOut">0.30</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — HWE violations</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line">N &lt;- <span class="num" id="cB_N">100</span>; gens &lt;- <span class="num">100</span>; p &lt;- <span class="num">0.5</span></span><span class="line">mu &lt;- <span class="num">1e-3</span>; s &lt;- <span class="num" id="cB_s">0.05</span>; F &lt;- <span class="num" id="cB_F">0.30</span></span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  q &lt;- <span class="num">1</span> - p</span><span class="line">  fAA &lt;- p^<span class="num">2</span> + F*p*q;  fAa &lt;- <span class="num">2</span>*p*q*(<span class="num">1</span>-F);  faa &lt;- q^<span class="num">2</span> + F*p*q</span><span class="line">  w &lt;- <span class="fn">c</span>(<span class="num">1</span>, <span class="num">1</span>, <span class="num">1</span> - s)            <span class="com"># aa is selected against</span></span><span class="line">  fAA &lt;- fAA*w[<span class="num">1</span>]; fAa &lt;- fAa*w[<span class="num">2</span>]; faa &lt;- faa*w[<span class="num">3</span>]</span><span class="line">  tot &lt;- fAA + fAa + faa</span><span class="line">  p &lt;- (fAA + fAa/<span class="num">2</span>) / tot</span><span class="line">  p &lt;- p*(<span class="num">1</span>-mu) + (<span class="num">1</span>-p)*mu          <span class="com"># symmetric mutation</span></span><span class="line">  <span class="kw">if</span> (finite) p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">}</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Chi-squared on genotype counts</h2>
+  <p class="stage-sub">Sample N individuals at a given p. Compute the χ² on AA / Aa / aa counts vs the HWE expectation. The 1-df test.</p>
+  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>One locus. Sample N individuals. Compute observed AA / Aa / aa counts. The HWE-expected counts come from the observed allele frequency p̂. χ² with 1 degree of freedom (the AA, Aa, aa fractions are constrained to sum to 1 AND to give the observed p̂).</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Observed vs HWE-expected genotype counts</h3>
+        <canvas id="plotC" width="560" height="260"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">N:</span> <span id="C_N">200</span>
+          &nbsp;|&nbsp;
+          <span class="label">p̂:</span> <span id="C_phat">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">F̂ (=1 − H_obs/H_exp):</span> <span id="C_F" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">χ²:</span> <span id="C_chi">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">P:</span> <span id="C_p" class="pvalue-readout">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. With F = 0.3 (moderate inbreeding) and N = 200, the χ² test on HWE will:</div>
+            <label><input type="radio" name="qC1" value="reject" /> Almost always reject HWE</label>
+            <label><input type="radio" name="qC1" value="rarely" /> Rarely reject — the test is weak at this N</label>
+            <label><input type="radio" name="qC1" value="depends" /> Depends entirely on the seed</label>
+          </li>
+        </ol>
+        <button id="submitC" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreC">Try at least 3 (F, N) combinations to unlock Stage D. <span class="count">0/3 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row"><label for="C_NIn">N</label><input type="range" id="C_NIn" min="40" max="2000" step="20" value="200" /><output id="C_NOut">200</output></div>
+          <div class="row"><label for="C_pIn">true p</label><input type="range" id="C_pIn" min="0.05" max="0.95" step="0.01" value="0.5" /><output id="C_pOut">0.50</output></div>
+          <div class="row"><label for="C_FIn">true F</label><input type="range" id="C_FIn" min="0" max="0.9" step="0.05" value="0.3" /><output id="C_FOut">0.30</output></div>
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — HWE chi-squared on observed counts</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line">N &lt;- <span class="num">200</span>; p &lt;- <span class="num">0.5</span>; F &lt;- <span class="num">0.30</span></span><span class="line">q &lt;- <span class="num">1</span> - p</span><span class="line">probs &lt;- <span class="fn">c</span>(p^<span class="num">2</span> + F*p*q, <span class="num">2</span>*p*q*(<span class="num">1</span>-F), q^<span class="num">2</span> + F*p*q)</span><span class="line">obs &lt;- <span class="fn">rmultinom</span>(<span class="num">1</span>, N, probs)[,<span class="num">1</span>]</span><span class="line">phat &lt;- (<span class="num">2</span>*obs[<span class="num">1</span>] + obs[<span class="num">2</span>]) / (<span class="num">2</span>*N)</span><span class="line">exp_HWE &lt;- N * <span class="fn">c</span>(phat^<span class="num">2</span>, <span class="num">2</span>*phat*(<span class="num">1</span>-phat), (<span class="num">1</span>-phat)^<span class="num">2</span>)</span><span class="line"><span class="fn">sum</span>((obs - exp_HWE)^<span class="num">2</span> / exp_HWE)   <span class="com"># χ² with 1 df</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — A wild locus — four candidate culprits</h2>
+  <p class="stage-sub">Italian sparrow loci. Some loci sit at HWE; some don't. For the ones that don't, you have four suspects: drift, mutation, selection, non-random mating. The test tells you only that something is off — not which.</p>
+  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Genotype counts across loci in <code>data/clean/italian_sparrow_loci.csv</code> (or fallback synthetic). For each locus: estimate p̂, compute HWE-expected genotype counts, compute χ². Rank loci by departure from HWE.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Per-locus χ² values</h3>
+        <canvas id="plotD" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">loci:</span> <span id="D_nloci">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">in HWE (P&gt;0.05):</span> <span id="D_inHWE" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">out of HWE (P≤0.05):</span> <span id="D_outHWE">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Across many loci in a wild population, the fraction that fails an HWE test will be:</div>
+            <label><input type="radio" name="qD1" value="five" /> About 5% (the false-positive rate)</label>
+            <label><input type="radio" name="qD1" value="more" /> More than 5% — wild populations rarely sit exactly at HWE</label>
+            <label><input type="radio" name="qD1" value="none" /> Essentially zero — HWE is robust</label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit → reveal</button>
+        <div class="explore-tracker" id="exploreD">Click a locus to see its per-genotype breakdown at least 2 times. <span class="count">0/2 inspections</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="D_resim" class="accent">Resample (if synthetic)</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — per-locus HWE test</h3>
+<pre class="code" id="codeD"><span class="line">loci &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/italian_sparrow_loci.csv"</span>)</span><span class="line"><span class="fn">apply</span>(loci, <span class="num">1</span>, <span class="kw">function</span>(r) {</span><span class="line">  obs &lt;- <span class="fn">c</span>(r[<span class="str">"AA"</span>], r[<span class="str">"Aa"</span>], r[<span class="str">"aa"</span>])</span><span class="line">  N &lt;- <span class="fn">sum</span>(obs)</span><span class="line">  phat &lt;- (<span class="num">2</span>*obs[<span class="num">1</span>] + obs[<span class="num">2</span>]) / (<span class="num">2</span>*N)</span><span class="line">  e &lt;- N * <span class="fn">c</span>(phat^<span class="num">2</span>, <span class="num">2</span>*phat*(<span class="num">1</span>-phat), (<span class="num">1</span>-phat)^<span class="num">2</span>)</span><span class="line">  <span class="fn">sum</span>((obs - e)^<span class="num">2</span> / e)</span><span class="line">})</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<footer class="wrap-up">
+  <h2>One sentence to carry forward</h2>
+  <div class="closing">
+    Hardy-Weinberg is the inertial state of genetics — the state in which nothing changes because nothing is acting. It is never the real state. It is the baseline you measure deviation against. Every interesting evolutionary process is a way of leaving Hardy-Weinberg.
+    <span class="src">— composite: 202_lec09_05 + 202_lec08_05</span>
+  </div>
+  <p><strong>Lesson 10</strong> takes one of those four ways out of Hardy-Weinberg — finite-population drift — and runs it for its own sake.</p>
+</footer>
+
+<script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
+<script>
+function mulberry32(seed) { let a=seed>>>0; return function(){a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15), t|1); t^=t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
+function drawHLine(ctx,f,yv,color,width,dash){ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]);}
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
+function chi2P(x, k) { if (x <= 0) return 1; function lgamma(z) { const c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7]; if (z<0.5) return Math.log(Math.PI/Math.sin(Math.PI*z)) - lgamma(1-z); z-=1; let x=c[0]; for(let i=1;i<9;i++) x+=c[i]/(z+i); const t=z+7.5; return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x);} function gammaIncLower(s, x) { let term=1/s, sum=term; for (let n=1; n<200; n++) { term *= x/(s+n); sum += term; if (Math.abs(term) < 1e-12*Math.abs(sum)) break; } return sum * Math.exp(-x + s*Math.log(x) - lgamma(s)); } return 1 - gammaIncLower(k/2, x/2); }
+
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:4, B:5, C:3, D:2 };
+function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"values":stage==="B"?"combos":stage==="C"?"combos":"inspections"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+
+/* STAGE A — HWE genotype curves */
+const sA = { p:0.5 };
+function drawStageA() {
+  const p=sA.p, q=1-p;
+  const fAA=p*p, fAa=2*p*q, faa=q*q;
+  document.getElementById("A_p").textContent=p.toFixed(2);
+  document.getElementById("A_AA").textContent=fAA.toFixed(3);
+  document.getElementById("A_Aa").textContent=fAa.toFixed(3);
+  document.getElementById("A_aa").textContent=faa.toFixed(3);
+  const stack=document.getElementById("stackA"); stack.innerHTML="";
+  const parts=[[fAA,"#2f6b8f","AA"],[fAa,"#88a8c0","Aa"],[faa,"#b23a48","aa"]];
+  for(const [v,c,l] of parts){const d=document.createElement("div"); d.className="cell"; d.style.background=c; d.style.flexBasis=(100*v)+"%"; d.textContent=l+" "+v.toFixed(2); stack.appendChild(d);}
+  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:60,t:18,b:38}; const f=makeFrame(pad,W,H,0,1,0,1);
+  drawAxes(ctx,f,"allele frequency p","frequency",5,4,v=>v.toFixed(1),v=>v.toFixed(1));
+  // Curves
+  function curve(fn, color, label, lblY) {
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath();
+    for(let i=0;i<=100;i++){const x=i/100; const y=fn(x); if(i===0) ctx.moveTo(f.x(x),f.y(y)); else ctx.lineTo(f.x(x),f.y(y));}
+    ctx.stroke();
+    ctx.fillStyle=color; ctx.textAlign="left"; ctx.font="11px ui-monospace"; ctx.fillText(label, f.pad.l+f.W+4, lblY);
+  }
+  curve(x=>x*x, "#2f6b8f", "AA = p²", f.pad.t+f.H-4);
+  curve(x=>2*x*(1-x), "#88a8c0", "Aa = 2pq", f.pad.t+f.H/2);
+  curve(x=>(1-x)*(1-x), "#b23a48", "aa = q²", f.pad.t+10);
+  // current p
+  drawHLine(ctx,f,fAA,"#2f6b8f",1,[3,3]);
+  ctx.strokeStyle="#333"; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(p),f.pad.t); ctx.lineTo(f.x(p),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
+}
+document.getElementById("A_pIn").addEventListener("input",(e)=>{sA.p=+e.target.value; document.getElementById("A_pOut").textContent=sA.p.toFixed(2); document.getElementById("cA_p").textContent=sA.p.toFixed(2); highlightByDataLine("codeA","p"); drawStageA(); bumpExplore("A");});
+document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson9_stageA.R",`p <- ${sA.p}; q <- 1 - p
+c(AA = p^2, Aa = 2*p*q, aa = q^2)
+`);});
+wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+
+/* STAGE B — trajectory under violations */
+const sB = { finite:false, N:100, mutation:false, selection:false, s:0.05, inbreed:false, F:0.3, seed:42, mu:1e-3 };
+function drawStageB() {
+  const rng=mulberry32(sB.seed); const gens=100; const traj=new Array(gens+1);
+  let p=0.5; traj[0]=p;
+  for(let g=1;g<=gens;g++){
+    const q=1-p;
+    let fAA=p*p, fAa=2*p*q, faa=q*q;
+    if (sB.inbreed) { fAA=p*p+sB.F*p*q; fAa=2*p*q*(1-sB.F); faa=q*q+sB.F*p*q; }
+    if (sB.selection) { fAA*=1; fAa*=1; faa*=(1-sB.s); }
+    const tot=fAA+fAa+faa;
+    p = (fAA + fAa/2) / tot;
+    if (sB.mutation) p = p*(1-sB.mu) + (1-p)*sB.mu;
+    if (sB.finite) { let cnt=0; for(let i=0;i<2*sB.N;i++) if(rng()<p) cnt++; p = cnt/(2*sB.N); }
+    traj[g]=p;
+  }
+  const finalP = traj[gens];
+  const finalQ = 1-finalP;
+  // F from comparison of expected H_obs vs H_exp under current inbreed flag
+  const finalHobs = sB.inbreed ? 2*finalP*finalQ*(1-sB.F) : 2*finalP*finalQ;
+  const finalHexp = 2*finalP*finalQ;
+  const finalF = finalHexp>0 ? 1 - finalHobs/finalHexp : 0;
+  document.getElementById("B_gen").textContent=gens;
+  document.getElementById("B_finalP").textContent=finalP.toFixed(3);
+  document.getElementById("B_finalF").textContent=finalF.toFixed(3);
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
+  drawAxes(ctx,f,"generation","frequency",5,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  drawHLine(ctx,f,0.5,"#aaa",1,[3,3]);
+  ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2; ctx.beginPath();
+  for(let i=0;i<=gens;i++){const x=f.x(i), y=f.y(traj[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);}
+  ctx.stroke();
+  ctx.fillStyle="#2f6b8f"; ctx.font="11px ui-monospace"; ctx.textAlign="right"; ctx.fillText("p over time", f.pad.l+f.W-4, f.pad.t+12);
+}
+["B_finite","B_mutation","B_selection","B_inbreed"].forEach(id=>document.getElementById(id).addEventListener("change",(e)=>{sB[id.replace("B_","")]=e.target.checked; drawStageB(); bumpExplore("B");}));
+["B_NIn","B_sIn","B_FIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key=id.replace("B_","").replace("In",""); sB[key]=v; document.getElementById(id.replace("In","Out")).textContent= key==="seed"||key==="N"?v:v.toFixed(2); if (key==="s") document.getElementById("cB_s").textContent=v.toFixed(2); if (key==="F") document.getElementById("cB_F").textContent=v.toFixed(2); if (key==="N") document.getElementById("cB_N").textContent=v; if (key==="seed") { document.getElementById("cB_seed").textContent=v; highlightByDataLine("codeB","seed"); } drawStageB();}));
+document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson9_stageB.R",`set.seed(${sB.seed})
+N <- ${sB.N}; gens <- 100; p <- 0.5
+mu <- 1e-3; s <- ${sB.s}; F <- ${sB.F}
+finite <- ${sB.finite}; mutation <- ${sB.mutation}; selection <- ${sB.selection}; inbreed <- ${sB.inbreed}
+traj <- numeric(gens + 1); traj[1] <- p
+for (g in 1:gens) {
+  q <- 1 - p
+  fAA <- p^2; fAa <- 2*p*q; faa <- q^2
+  if (inbreed) { fAA <- p^2 + F*p*q; fAa <- 2*p*q*(1-F); faa <- q^2 + F*p*q }
+  if (selection) faa <- faa * (1 - s)
+  tot <- fAA + fAa + faa
+  p <- (fAA + fAa/2) / tot
+  if (mutation) p <- p*(1-mu) + (1-p)*mu
+  if (finite) p <- rbinom(1, 2*N, p) / (2*N)
+  traj[g + 1] <- p
+}
+plot(traj, type = "l", ylim = c(0,1), xlab = "generation", ylab = "p")
+`);});
+wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+
+/* STAGE C — chi-squared on counts */
+const sC = { N:200, p:0.5, F:0.3, seed:42 };
+function drawStageC() {
+  const rng=mulberry32(sC.seed); const q=1-sC.p;
+  const fAA=sC.p*sC.p+sC.F*sC.p*q, fAa=2*sC.p*q*(1-sC.F), faa=q*q+sC.F*sC.p*q;
+  const cum=[fAA, fAA+fAa, 1];
+  const obs=[0,0,0]; for(let i=0;i<sC.N;i++){const u=rng(); if(u<cum[0]) obs[0]++; else if(u<cum[1]) obs[1]++; else obs[2]++;}
+  const phat = (2*obs[0]+obs[1])/(2*sC.N);
+  const qhat = 1-phat;
+  const exp_HWE = [sC.N*phat*phat, sC.N*2*phat*qhat, sC.N*qhat*qhat];
+  let chi=0; for(let i=0;i<3;i++) if(exp_HWE[i]>0) chi+=(obs[i]-exp_HWE[i])**2/exp_HWE[i];
+  const p=chi2P(chi, 1);
+  const Fhat = exp_HWE[1] > 0 ? 1 - obs[1]/exp_HWE[1] : 0;
+  document.getElementById("C_N").textContent=sC.N;
+  document.getElementById("C_phat").textContent=phat.toFixed(3);
+  document.getElementById("C_F").textContent=Fhat.toFixed(3);
+  document.getElementById("C_chi").textContent=chi.toFixed(3);
+  const pEl=document.getElementById("C_p"); pEl.textContent=p<0.001?"<0.001":p.toFixed(3); pEl.classList.toggle("sig", p<0.05);
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const yMax=Math.max(...obs,...exp_HWE)*1.15;
+  const f=makeFrame(pad,W,H,-0.4,2.4,0,yMax);
+  drawAxes(ctx,f,null,"count",2,4,v=>{const i=Math.round(v); return ["AA","Aa","aa"][i]||"";},v=>v.toFixed(0));
+  for(let i=0;i<3;i++){
+    ctx.fillStyle="rgba(60,60,60,0.25)"; ctx.fillRect(f.x(i-0.3),f.y(exp_HWE[i]),f.x(i+0.3)-f.x(i-0.3),f.y(0)-f.y(exp_HWE[i]));
+    ctx.fillStyle=["#2f6b8f","#88a8c0","#b23a48"][i]; ctx.fillRect(f.x(i-0.22),f.y(obs[i]),f.x(i+0.22)-f.x(i-0.22),f.y(0)-f.y(obs[i]));
+  }
+}
+["C_NIn","C_pIn","C_FIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key=id.replace("C_","").replace("In",""); sC[key]=v; document.getElementById(id.replace("In","Out")).textContent=key==="seed"||key==="N"?v:v.toFixed(2); drawStageC(); bumpExplore("C");}));
+document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson9_stageC.R",`set.seed(${sC.seed})
+N <- ${sC.N}; p <- ${sC.p}; F <- ${sC.F}; q <- 1 - p
+probs <- c(p^2 + F*p*q, 2*p*q*(1-F), q^2 + F*p*q)
+obs <- rmultinom(1, N, probs)[,1]
+phat <- (2*obs[1] + obs[2]) / (2*N)
+e <- N * c(phat^2, 2*phat*(1-phat), (1-phat)^2)
+sum((obs - e)^2 / e)
+`);});
+wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+
+/* STAGE D — wild loci */
+const sD = { seed:42, loci:null };
+async function loadLoci() {
+  try { const r=await fetch("../data/clean/italian_sparrow_loci.json"); sD.loci=await r.json(); }
+  catch(e) { sD.loci=null; }
+  drawStageD();
+}
+function drawStageD() {
+  // Build a working dataset: real if available, synthetic otherwise
+  let loci=[];
+  if (sD.loci && Array.isArray(sD.loci) && sD.loci.length && (sD.loci[0].AA!==undefined||sD.loci[0].aa!==undefined)) {
+    loci = sD.loci.slice(0, 60).map((r,i)=>({name:r.locus||r.name||("L"+(i+1)), AA:+r.AA||0, Aa:+r.Aa||0, aa:+r.aa||0}));
+  } else {
+    // Synthetic: mix of HWE loci and inbreeding-distorted loci
+    const rng=mulberry32(sD.seed);
+    for(let i=0;i<40;i++){
+      const p=0.2+0.6*rng(); const F=(i<28)?0:(0.15+0.5*rng()); const N=120+Math.floor(80*rng());
+      const q=1-p; const fAA=p*p+F*p*q, fAa=2*p*q*(1-F), faa=q*q+F*p*q;
+      const cum=[fAA,fAA+fAa,1]; let aa=0,ab=0,bb=0;
+      for(let j=0;j<N;j++){const u=rng(); if(u<cum[0]) aa++; else if(u<cum[1]) ab++; else bb++;}
+      loci.push({name:"locus_"+(i+1), AA:aa, Aa:ab, aa:bb});
+    }
+  }
+  // Compute χ² per locus
+  const results=loci.map(L=>{
+    const N=L.AA+L.Aa+L.aa; const phat=(2*L.AA+L.Aa)/(2*N); const qhat=1-phat;
+    const e=[N*phat*phat, N*2*phat*qhat, N*qhat*qhat];
+    let chi=0; for(let i=0;i<3;i++) if(e[i]>0) chi+=([L.AA,L.Aa,L.aa][i]-e[i])**2/e[i];
+    return {name:L.name, chi, p:chi2P(chi,1)};
+  });
+  const nIn=results.filter(r=>r.p>0.05).length;
+  const nOut=results.length-nIn;
+  document.getElementById("D_nloci").textContent=results.length;
+  document.getElementById("D_inHWE").textContent=nIn;
+  document.getElementById("D_outHWE").textContent=nOut;
+  // Plot: sorted χ² as horizontal bar chart
+  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:90,r:12,t:18,b:34};
+  const sortedR=[...results].sort((a,b)=>b.chi-a.chi).slice(0,Math.min(20, results.length));
+  const f=makeFrame(pad,W,H,0,Math.max(...sortedR.map(r=>r.chi),5)*1.1,-0.5,sortedR.length-0.5);
+  drawAxes(ctx,f,"χ² (1 df)","",5,0,v=>v.toFixed(1),v=>"");
+  for(let i=0;i<sortedR.length;i++){
+    const r=sortedR[i]; const y=f.y(i);
+    ctx.fillStyle=r.p<0.05?"#b23a48":"#2f6b8f"; ctx.fillRect(f.x(0), y-7, f.x(r.chi)-f.x(0), 14);
+    ctx.fillStyle="#333"; ctx.font="10px ui-monospace"; ctx.textAlign="right"; ctx.fillText(r.name, f.pad.l-4, y+3);
+  }
+  // 3.84 critical line
+  drawVLineD(ctx, f, 3.84);
+}
+function drawVLineD(ctx, f, xv){ ctx.strokeStyle="#b23a48"; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle="#b23a48"; ctx.font="10px ui-monospace"; ctx.textAlign="left"; ctx.fillText("3.84", f.x(xv)+3, f.pad.t+10); }
+document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
+document.getElementById("D_resim").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson9_stageD.R",`loci <- read.csv("data/clean/italian_sparrow_loci.csv")
+chi_per_locus <- apply(loci, 1, function(r) {
+  obs <- c(r["AA"], r["Aa"], r["aa"])
+  N <- sum(obs); phat <- (2*obs[1] + obs[2]) / (2*N)
+  e <- N * c(phat^2, 2*phat*(1-phat), (1-phat)^2)
+  sum((obs - e)^2 / e)
+})
+mean(pchisq(chi_per_locus, df = 1, lower.tail = FALSE) < 0.05)
+`);});
+wirePrediction("D","predD",["qD1"],"controlsD"); loadLoci();
+
+/* Pretest / Posttest */
+const PRETEST_ITEMS = [
+  { idx:0, q:"Under Hardy-Weinberg, with p = 0.3, the heterozygote frequency is:", options:["0.09","0.21","0.42","0.49"], correct:2 },
+  { idx:1, q:"Hardy-Weinberg's four assumptions are: infinite population, no selection, no mutation, no:", options:["recombination","linkage","non-random mating","drift"], correct:2 }
+];
+const POSTTEST_ITEMS = [
+  { idx:0, q:"You measure genotype frequencies and find a heterozygote deficit (fewer Aa than HWE predicts). The deficit could be caused by:", options:["Inbreeding","Selection against Aa","Population structure (Wahlund effect)","Drift","All of the above"], correct:4 },
+  { idx:1, q:"Hardy-Weinberg never holds exactly because:", options:["The math is wrong","Real populations are finite","DNA replicates with error","Both B and C — the assumptions require infinite N and zero μ"], correct:3 },
+  { idx:2, q:"Across many wild loci, the fraction failing an HWE test is typically:", options:["Exactly 5%","Less than 5%","More than 5%","Either A or C, depending on the population"], correct:3 }
+];
+function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
+function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
+Score.init({moduleId:"lesson9", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+</script>
+</body>
+</html>

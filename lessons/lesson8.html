@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 8: Counting the ratios that breed true</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; }
+  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .anchor-quote { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e230a; margin:8px 0 4px; }
+  .scenario .anchor-quote .src { display:block; margin-top:6px; font-size:11px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  footer.wrap-up .closing { background:#f5efe0; border-left:3px solid #caa04a; padding:12px 16px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 16px; }
+  footer.wrap-up .closing .src { display:block; margin-top:6px; font-size:12px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+  .ratio-bar { display:flex; gap:2px; height:36px; border:1px solid var(--rule); border-radius:4px; overflow:hidden; margin:6px 0; }
+  .ratio-bar .cell { display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-family:ui-monospace,Menlo,monospace; font-weight:600; }
+  .pvalue-readout { font:16px ui-monospace; padding:4px 10px; background:#1e1f22; color:#c3e88d; display:inline-block; border-radius:4px; }
+  .pvalue-readout.sig { color:#f78c6c; }
+  table.counts { width:100%; border-collapse:collapse; font:13px ui-monospace,Menlo,monospace; margin-top:6px; }
+  table.counts th, table.counts td { padding:5px 8px; text-align:right; border-bottom:1px solid var(--rule); }
+  table.counts th { font-weight:600; color:var(--muted); text-align:left; }
+  table.counts td:first-child { text-align:left; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 8 — Counting the ratios that breed true</h1>
+  <p>BIO 202, Spring 2026, draft v1. Mendel's peas. Monohybrid 3:1, dihybrid 9:3:3:1, and what to do when the chi-squared on real data fits the expected ratio <em>too</em> well.</p>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
+
+<div class="outcomes">
+  <h2>What you'll do</h2>
+  <p>Four stages. Run Mendelian crosses in simulation. Predict each ratio before you sample. End on Mendel's own data — and the chi-squared score that has been bothering geneticists since R. A. Fisher noticed it in 1936.</p>
+  <div class="scenario" style="max-width:920px;">
+    <div class="anchor-quote">
+      Did Mendel have any idea about genes? Did he even know what part of the cell was inheritance? When he came up with dominant and recessive — these words you all are learning now in his rules — what did he know about molecular biology? Nothing. Literally nothing. He probably knows more than Mendel did about genetics. Now, Mendel was very smart. He set up really careful experiments.
+      <span class="src">— 202_lec01_06</span>
+    </div>
+  </div>
+</div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. Monohybrid 3:1</a>
+  <a href="#stageB" id="tocB" class="locked">B. Dihybrid 9:3:3:1</a>
+  <a href="#stageC" id="tocC" class="locked">C. Chi-squared, and what a chi-squared can't do</a>
+  <a href="#stageD" id="tocD" class="locked">D. Mendel's peas — too good to be true?</a>
+</nav>
+
+<!-- ====== STAGE A — monohybrid 3:1 =================================== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — One gene, two alleles, a 3:1 ratio</h2>
+  <p class="stage-sub">Simulate Mendel's monohybrid cross. Slide the offspring count. Watch how close the observed ratio is to 3:1.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Two heterozygous pea plants (Aa × Aa). Each parent contributes one allele at random — Mendel's law of segregation. Three quarters of offspring should be dominant phenotype (AA or Aa); one quarter recessive (aa). The <em>expected</em> ratio is 3:1. The <em>observed</em> ratio is whatever you sample.</p>
+        <div class="anchor-quote">
+          Dominant and recessive are not some property of the gene itself. They're just the words we use for how the traits manifest — how the outcome of all the different gene interactions percolates out to the organism.
+          <span class="src">— 202_lec01_07</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Observed counts vs expected 3:1</h3>
+        <canvas id="plotA" width="560" height="220"></canvas>
+        <div class="ratio-bar" id="barA"></div>
+        <table class="counts" id="tableA">
+          <tr><th>Phenotype</th><th>Observed</th><th>Expected (3:1)</th><th>(O−E)²/E</th></tr>
+          <tr><td>Dominant</td><td id="A_obsD">—</td><td id="A_expD">—</td><td id="A_chiD">—</td></tr>
+          <tr><td>Recessive</td><td id="A_obsR">—</td><td id="A_expR">—</td><td id="A_chiR">—</td></tr>
+          <tr><td><strong>χ² (1 df)</strong></td><td colspan="2" id="A_chi">—</td><td><span id="A_p" class="pvalue-readout">P = —</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. With n = 40 offspring, the χ² test against 3:1 will:</div>
+            <label><input type="radio" name="qA1" value="always" /> Almost always reject (sample is small but chi-squared is sensitive)</label>
+            <label><input type="radio" name="qA1" value="rarely" /> Rarely reject — most samples land near 3:1</label>
+            <label><input type="radio" name="qA1" value="depends" /> Depends entirely on which seed</label>
+          </li>
+        </ol>
+        <button id="submitA" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 (n, seed) combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="n"><label for="A_nIn">n offspring</label><input type="range" id="A_nIn" min="10" max="500" step="5" value="40" /><output id="A_nOut">40</output></div>
+          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="A_reseed" class="accent">New seed</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — monohybrid cross</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cA_n">40</span></span><span class="line"><span class="com"># Each offspring is dominant with prob 3/4 (Aa × Aa)</span></span><span class="line">offspring &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, n, <span class="num">0.75</span>)  <span class="com"># count dominant phenotype</span></span><span class="line">obs &lt;- <span class="fn">c</span>(dominant = offspring, recessive = n - offspring)</span><span class="line">exp &lt;- <span class="fn">c</span>(dominant = n * <span class="num">0.75</span>, recessive = n * <span class="num">0.25</span>)</span><span class="line"><span class="fn">chisq.test</span>(obs, p = <span class="fn">c</span>(<span class="num">0.75</span>, <span class="num">0.25</span>))</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE B — dihybrid 9:3:3:1 ================================ -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Two genes, independent assortment, a 9:3:3:1</h2>
+  <p class="stage-sub">Add a second locus. Four categories. Watch the chi-squared get pickier as n falls.</p>
+  <div class="lock-banner">Complete Stage A to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Two heterozygous loci, segregating independently. The four phenotype categories are expected at 9:3:3:1 — round-yellow : round-green : wrinkled-yellow : wrinkled-green. Same chi-squared machinery as Stage A, three degrees of freedom instead of one.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Observed counts vs expected 9:3:3:1</h3>
+        <canvas id="plotB" width="560" height="220"></canvas>
+        <div class="ratio-bar" id="barB"></div>
+        <table class="counts" id="tableB">
+          <tr><th>Phenotype</th><th>Observed</th><th>Expected</th><th>(O−E)²/E</th></tr>
+          <tr><td>Round, yellow</td><td id="B_o0">—</td><td id="B_e0">—</td><td id="B_c0">—</td></tr>
+          <tr><td>Round, green</td><td id="B_o1">—</td><td id="B_e1">—</td><td id="B_c1">—</td></tr>
+          <tr><td>Wrinkled, yellow</td><td id="B_o2">—</td><td id="B_e2">—</td><td id="B_c2">—</td></tr>
+          <tr><td>Wrinkled, green</td><td id="B_o3">—</td><td id="B_e3">—</td><td id="B_c3">—</td></tr>
+          <tr><td><strong>χ² (3 df)</strong></td><td colspan="2" id="B_chi">—</td><td><span id="B_p" class="pvalue-readout">P = —</span></td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. With n = 50 offspring across four categories, how often will the χ² reject 9:3:3:1 if the cross really is dihybrid?</div>
+            <label><input type="radio" name="qB1" value="rare" /> About 5% of the time (that's what α = 0.05 means)</label>
+            <label><input type="radio" name="qB1" value="often" /> About 50% of the time (small samples reject everything)</label>
+            <label><input type="radio" name="qB1" value="never" /> Almost never (the test is robust)</label>
+          </li>
+        </ol>
+        <button id="submitB" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreB">Try at least 5 (n, seed) combinations to unlock Stage C. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="row" data-line="n"><label for="B_nIn">n offspring</label><input type="range" id="B_nIn" min="16" max="800" step="8" value="80" /><output id="B_nOut">80</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="B_reseed" class="accent">New seed</button>
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — dihybrid cross</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cB_n">80</span></span><span class="line">p &lt;- <span class="fn">c</span>(<span class="num">9</span>, <span class="num">3</span>, <span class="num">3</span>, <span class="num">1</span>) / <span class="num">16</span>          <span class="com"># 9:3:3:1 expected</span></span><span class="line">obs &lt;- <span class="fn">rmultinom</span>(<span class="num">1</span>, n, p)[,<span class="num">1</span>]</span><span class="line"><span class="fn">chisq.test</span>(obs, p = p)</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE C — permutation null on chi-squared ================= -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — When the chi-squared rejects, and when it shouldn't</h2>
+  <p class="stage-sub">Run many simulated 3:1 crosses. Plot the distribution of χ² statistics. The P-value from a single experiment is the tail fraction of this distribution.</p>
+  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Generate 1,000 simulated monohybrid crosses, each at n offspring. Compute χ² for each. The distribution is the χ² null. The 5% tail is the rejection region. Your one observed experiment is one draw from this distribution.</p>
+        <div class="anchor-quote">
+          The null hypothesis is set up to be wrong. It is an incorrect hypothesis. The question is, how incorrect is it? Which means that for any null-hypothesis test, if your sample size is sufficiently large, you will reject the null — because the null is set up to be wrong.
+          <span class="src">— 145_lec01_07</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>χ² null distribution under perfect 3:1</h3>
+        <canvas id="plotC" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">n / cross:</span> <span id="C_n">80</span>
+          &nbsp;|&nbsp;
+          <span class="label">replicates:</span> <span id="C_reps">1000</span>
+          &nbsp;|&nbsp;
+          <span class="label">% χ² &gt; 3.84:</span> <span id="C_rej" class="big">—</span>
+          (theoretical: 5.0%)
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Across 1,000 simulated 3:1 crosses, the fraction with χ² &gt; 3.84 (the 0.05 critical value) will be:</div>
+            <label><input type="radio" name="qC1" value="five" /> About 5%</label>
+            <label><input type="radio" name="qC1" value="ten" /> About 10%</label>
+            <label><input type="radio" name="qC1" value="zero" /> Effectively 0% if the cross is truly 3:1</label>
+          </li>
+        </ol>
+        <button id="submitC" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreC">Try at least 3 different n values to unlock Stage D. <span class="count">0/3 values</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row" data-line="n"><label for="C_nIn">n / cross</label><input type="range" id="C_nIn" min="10" max="500" step="10" value="80" /><output id="C_nOut">80</output></div>
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — χ² null distribution</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cC_n">80</span></span><span class="line">reps &lt;- <span class="num">1000</span></span><span class="line">chi2 &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  d &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, n, <span class="num">0.75</span>)</span><span class="line">  o &lt;- <span class="fn">c</span>(d, n - d); e &lt;- <span class="fn">c</span>(<span class="num">0.75</span>*n, <span class="num">0.25</span>*n)</span><span class="line">  <span class="fn">sum</span>((o - e)^<span class="num">2</span> / e)</span><span class="line">})</span><span class="line"><span class="fn">mean</span>(chi2 &gt; <span class="num">3.84</span>)            <span class="com"># empirical rejection rate</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STAGE D — Mendel's pea data ================================ -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Mendel's actual data — and Fisher's complaint</h2>
+  <p class="stage-sub">Mendel's published pea ratios fit 3:1 unusually well. So well, in fact, that the combined χ² across his crosses is in the lower 1% tail. Either his lab tech was lying, or he tossed crosses that didn't look right, or the universe was unusually kind. You decide.</p>
+  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Mendel's 1865 paper reports several monohybrid F2 ratios — round/wrinkled seed, yellow/green seed, etc. Load his counts. Compute χ² for each trait. Then combine across traits. Where does Mendel's combined χ² sit in the distribution of <em>1,000 simulated Mendel-style experimenters</em>?</p>
+        <div class="anchor-quote">
+          Mendel's mistake was that he published his paper too early. If he had published 20 years later, everybody would have read it. He published when inheritance wasn't that exciting — so nobody noticed it, and it was forgotten for decades.
+          <span class="src">— 202_lec07_01</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Mendel's combined χ² vs simulated honest experimenters</h3>
+        <canvas id="plotD" width="560" height="280"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">Mendel's combined χ²:</span> <span id="D_mendel" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">P(χ² ≤ Mendel) under honest 3:1:</span> <span id="D_p" class="pvalue-readout">—</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Per-trait breakdown</h3>
+        <table class="counts" id="tableD">
+          <tr><th>Trait</th><th>n</th><th>Dominant</th><th>Recessive</th><th>χ² (1 df)</th><th>P</th></tr>
+        </table>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Combined across his published F2 ratios, Mendel's χ² sits where in the distribution of honest experimenters' χ² totals?</div>
+            <label><input type="radio" name="qD1" value="upper" /> In the upper tail — Mendel's ratios are unusually <em>far</em> from 3:1</label>
+            <label><input type="radio" name="qD1" value="middle" /> In the middle — exactly what an honest experimenter would produce</label>
+            <label><input type="radio" name="qD1" value="lower" /> In the lower tail — Mendel's ratios fit 3:1 unusually <em>well</em></label>
+          </li>
+        </ol>
+        <button id="submitD" disabled>Submit → reveal Mendel</button>
+        <div class="explore-tracker" id="exploreD">Run the simulated experimenter test at least 2 times to wrap up. <span class="count">0/2 runs</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row" data-line="seed"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons">
+            <button id="D_resim" class="accent">Re-simulate experimenters</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — Mendel vs honest experimenters</h3>
+<pre class="code" id="codeD"><span class="line">peas &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/mendel_pea.csv"</span>)</span><span class="line"><span class="com"># Per-trait chi-squared</span></span><span class="line">chi_obs &lt;- <span class="fn">apply</span>(peas, <span class="num">1</span>, <span class="kw">function</span>(r) {</span><span class="line">  o &lt;- <span class="fn">c</span>(r[<span class="str">"dominant"</span>], r[<span class="str">"recessive"</span>])</span><span class="line">  n &lt;- <span class="fn">sum</span>(o); e &lt;- <span class="fn">c</span>(<span class="num">0.75</span>*n, <span class="num">0.25</span>*n)</span><span class="line">  <span class="fn">sum</span>((o - e)^<span class="num">2</span> / e)</span><span class="line">})</span><span class="line">total_obs &lt;- <span class="fn">sum</span>(chi_obs)</span><span class="line"></span><span class="line"><span class="com"># Simulate 1000 honest experimenters</span></span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line">null_totals &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">sum</span>(<span class="fn">apply</span>(peas, <span class="num">1</span>, <span class="kw">function</span>(r) {</span><span class="line">  n &lt;- r[<span class="str">"dominant"</span>] + r[<span class="str">"recessive"</span>]</span><span class="line">  d &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, n, <span class="num">0.75</span>)</span><span class="line">  o &lt;- <span class="fn">c</span>(d, n - d); e &lt;- <span class="fn">c</span>(<span class="num">0.75</span>*n, <span class="num">0.25</span>*n)</span><span class="line">  <span class="fn">sum</span>((o - e)^<span class="num">2</span> / e)</span><span class="line">})))</span><span class="line"><span class="fn">mean</span>(null_totals &lt;= total_obs)   <span class="com"># Fisher's complaint</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<footer class="wrap-up">
+  <h2>One sentence to carry forward</h2>
+  <div class="closing">
+    Dominant and recessive are not properties of the gene. They are the words we use for how traits manifest in the organism. Mendel got the ratios right without knowing why — the ratios came from a mechanism (meiosis) he could not have seen.
+    <span class="src">— composite: 202_lec01_06 + 202_lec01_07</span>
+  </div>
+  <p><strong>Lesson 9</strong> takes Mendel's ratios and builds the population where the ratios stay constant generation to generation — Hardy-Weinberg.</p>
+  <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
+</footer>
+
+<script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
+<script>
+function mulberry32(seed) { let a=seed>>>0; return function(){a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15), t|1); t^=t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5); } ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
+function drawVLine(ctx,f,xv,color,width,dash){ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);}
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
+// Chi-squared P-value for k df via series approximation
+function chi2P(x, k) { if (x <= 0) return 1; // upper tail
+  // Use regularized incomplete gamma: P = 1 - gammaInc(k/2, x/2)
+  function gammaIncLower(s, x) { let term = 1/s, sum = term; for (let n=1; n<200; n++) { term *= x/(s+n); sum += term; if (Math.abs(term) < 1e-12*Math.abs(sum)) break; } return sum * Math.exp(-x + s*Math.log(x) - lgamma(s)); }
+  function lgamma(z) { const g=7; const c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7]; if (z<0.5) return Math.log(Math.PI/Math.sin(Math.PI*z)) - lgamma(1-z); z-=1; let x=c[0]; for(let i=1;i<g+2;i++) x+=c[i]/(z+i); const t=z+g+0.5; return 0.5*Math.log(2*Math.PI)+(z+0.5)*Math.log(t)-t+Math.log(x); }
+  return 1 - gammaIncLower(k/2, x/2); }
+
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:5, B:5, C:3, D:2 };
+function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"combos":stage==="C"?"values":"runs"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+
+/* ============== STAGE A — monohybrid ============== */
+const sA = { n:40, seed:42 };
+function chi1df(obs, expProbs, total) { let s=0; for(let i=0;i<obs.length;i++){const e=expProbs[i]*total; s+=(obs[i]-e)*(obs[i]-e)/e;} return s; }
+function drawBarRatio(elId, parts, colors) { const el=document.getElementById(elId); el.innerHTML=""; const tot=parts.reduce((a,b)=>a+b,0); parts.forEach((p,i)=>{const d=document.createElement("div"); d.className="cell"; d.style.background=colors[i]; d.style.flexBasis=(100*p/tot)+"%"; d.textContent=p; el.appendChild(d);}); }
+function drawStageA() {
+  const rng = mulberry32(sA.seed);
+  let dom=0; for(let i=0;i<sA.n;i++) if (rng() < 0.75) dom++;
+  const rec = sA.n - dom;
+  const eD = sA.n*0.75, eR = sA.n*0.25;
+  const chi = (dom-eD)*(dom-eD)/eD + (rec-eR)*(rec-eR)/eR;
+  const p = chi2P(chi, 1);
+  document.getElementById("A_obsD").textContent=dom; document.getElementById("A_obsR").textContent=rec;
+  document.getElementById("A_expD").textContent=eD.toFixed(1); document.getElementById("A_expR").textContent=eR.toFixed(1);
+  document.getElementById("A_chiD").textContent=((dom-eD)*(dom-eD)/eD).toFixed(3);
+  document.getElementById("A_chiR").textContent=((rec-eR)*(rec-eR)/eR).toFixed(3);
+  document.getElementById("A_chi").textContent=chi.toFixed(3);
+  const pEl=document.getElementById("A_p"); pEl.textContent="P = "+(p<0.001?"<0.001":p.toFixed(3)); pEl.classList.toggle("sig", p<0.05);
+  drawBarRatio("barA", [dom, rec], ["#2f6b8f","#b23a48"]);
+  // Plot: bar chart obs vs exp
+  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:30}; const yMax=Math.max(dom,eD)*1.15;
+  const f=makeFrame(pad,W,H,-0.4,1.6,0,yMax);
+  drawAxes(ctx,f,null,"count",2,4,v=>v<0.3?"Dom":"Rec",v=>v.toFixed(0));
+  // expected lines (dashed)
+  ctx.fillStyle="rgba(60,60,60,0.25)"; ctx.fillRect(f.x(-0.2),f.y(eD),f.x(0.2)-f.x(-0.2),f.y(0)-f.y(eD));
+  ctx.fillRect(f.x(0.8),f.y(eR),f.x(1.2)-f.x(0.8),f.y(0)-f.y(eR));
+  // observed
+  ctx.fillStyle="#2f6b8f"; ctx.fillRect(f.x(-0.15),f.y(dom),f.x(0.15)-f.x(-0.15),f.y(0)-f.y(dom));
+  ctx.fillStyle="#b23a48"; ctx.fillRect(f.x(0.85),f.y(rec),f.x(1.15)-f.x(0.85),f.y(0)-f.y(rec));
+  // legend
+  ctx.fillStyle="#333"; ctx.font="11px -apple-system, sans-serif"; ctx.textAlign="left"; ctx.fillText("■ observed", f.pad.l+f.W-80, f.pad.t+8); ctx.fillStyle="rgba(60,60,60,0.5)"; ctx.fillText("■ expected (3:1)", f.pad.l+f.W-80, f.pad.t+22);
+}
+["A_nIn","A_seedIn"].forEach(id=>{document.getElementById(id).addEventListener("input",(e)=>{if(id==="A_nIn"){sA.n=+e.target.value; document.getElementById("A_nOut").textContent=sA.n; document.getElementById("cA_n").textContent=sA.n; highlightByDataLine("codeA","n");} if(id==="A_seedIn"){sA.seed=+e.target.value; document.getElementById("A_seedOut").textContent=sA.seed; document.getElementById("cA_seed").textContent=sA.seed; highlightByDataLine("codeA","seed");} drawStageA(); bumpExplore("A"); });});
+document.getElementById("A_reseed").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("A_seedIn").value=s; document.getElementById("A_seedIn").dispatchEvent(new Event("input"));});
+document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson8_stageA.R",`set.seed(${sA.seed}); n <- ${sA.n}
+offspring <- rbinom(1, n, 0.75)
+obs <- c(dominant = offspring, recessive = n - offspring)
+chisq.test(obs, p = c(0.75, 0.25))
+`);});
+wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+
+/* ============== STAGE B — dihybrid ============== */
+const sB = { n:80, seed:42 };
+function drawStageB() {
+  const rng=mulberry32(sB.seed);
+  const probs=[9/16, 3/16, 3/16, 1/16];
+  const cum=[]; let acc=0; for(const p of probs){acc+=p; cum.push(acc);}
+  const obs=[0,0,0,0]; for(let i=0;i<sB.n;i++){const u=rng(); for(let j=0;j<4;j++) if(u<cum[j]){obs[j]++; break;}}
+  const exps=probs.map(p=>p*sB.n);
+  const cells=obs.map((o,i)=>(o-exps[i])**2/exps[i]);
+  const chi=cells.reduce((a,b)=>a+b,0); const p=chi2P(chi,3);
+  for(let i=0;i<4;i++){document.getElementById("B_o"+i).textContent=obs[i]; document.getElementById("B_e"+i).textContent=exps[i].toFixed(1); document.getElementById("B_c"+i).textContent=cells[i].toFixed(3);}
+  document.getElementById("B_chi").textContent=chi.toFixed(3);
+  const pEl=document.getElementById("B_p"); pEl.textContent="P = "+(p<0.001?"<0.001":p.toFixed(3)); pEl.classList.toggle("sig", p<0.05);
+  const colors=["#2f6b8f","#88a8c0","#caa04a","#b23a48"];
+  drawBarRatio("barB", obs, colors);
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:30}; const yMax=Math.max(...obs,...exps)*1.15;
+  const f=makeFrame(pad,W,H,-0.5,3.5,0,yMax);
+  const labels=["R-Y","R-G","W-Y","W-G"];
+  drawAxes(ctx,f,null,"count",3,4,v=>{const i=Math.round(v); return labels[i]||"";},v=>v.toFixed(0));
+  for(let i=0;i<4;i++){
+    ctx.fillStyle="rgba(60,60,60,0.25)"; ctx.fillRect(f.x(i-0.3),f.y(exps[i]),f.x(i+0.3)-f.x(i-0.3),f.y(0)-f.y(exps[i]));
+    ctx.fillStyle=colors[i]; ctx.fillRect(f.x(i-0.22),f.y(obs[i]),f.x(i+0.22)-f.x(i-0.22),f.y(0)-f.y(obs[i]));
+  }
+}
+["B_nIn","B_seedIn"].forEach(id=>{document.getElementById(id).addEventListener("input",(e)=>{if(id==="B_nIn"){sB.n=+e.target.value; document.getElementById("B_nOut").textContent=sB.n; document.getElementById("cB_n").textContent=sB.n; highlightByDataLine("codeB","n");} if(id==="B_seedIn"){sB.seed=+e.target.value; document.getElementById("B_seedOut").textContent=sB.seed; document.getElementById("cB_seed").textContent=sB.seed; highlightByDataLine("codeB","seed");} drawStageB(); bumpExplore("B"); });});
+document.getElementById("B_reseed").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("B_seedIn").value=s; document.getElementById("B_seedIn").dispatchEvent(new Event("input"));});
+document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson8_stageB.R",`set.seed(${sB.seed}); n <- ${sB.n}
+p <- c(9,3,3,1)/16
+obs <- rmultinom(1, n, p)[,1]
+chisq.test(obs, p = p)
+`);});
+wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+
+/* ============== STAGE C — chi-squared null distribution ============== */
+const sC = { n:80, seed:42 };
+function drawStageC() {
+  const rng=mulberry32(sC.seed);
+  const reps=1000; const chis=new Array(reps);
+  for(let r=0;r<reps;r++){let d=0; for(let i=0;i<sC.n;i++) if(rng()<0.75) d++; const e=sC.n*0.75, eR=sC.n*0.25; chis[r]=(d-e)**2/e + ((sC.n-d)-eR)**2/eR;}
+  const rejCount=chis.filter(c=>c>3.84).length;
+  document.getElementById("C_n").textContent=sC.n; document.getElementById("C_reps").textContent=reps;
+  document.getElementById("C_rej").textContent=(100*rejCount/reps).toFixed(1)+"%";
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:30}; const xMax=Math.max(10, Math.ceil(Math.max(...chis)));
+  const f=makeFrame(pad,W,H,0,xMax,0,1);
+  const bins=40, binW=xMax/bins; const counts=new Array(bins).fill(0);
+  for(const c of chis){const i=Math.min(bins-1, Math.floor(c/binW)); counts[i]++;}
+  const maxC=Math.max(...counts);
+  for(let i=0;i<bins;i++){if(counts[i]===0) continue; const x0=f.x(i*binW), x1=f.x((i+1)*binW); const h=counts[i]/maxC*f.H*0.9; ctx.fillStyle=(i*binW > 3.84)?"rgba(178,58,72,0.6)":"rgba(120,120,120,0.6)"; ctx.fillRect(x0+1, f.pad.t+f.H-h, x1-x0-2, h);}
+  drawVLine(ctx,f,3.84,"#b23a48",2,[5,3]);
+  drawAxes(ctx,f,"χ² statistic","",6,0,v=>v.toFixed(1),v=>"");
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("3.84 (α=0.05 critical)", f.x(3.84)+4, f.pad.t+18);
+}
+["C_nIn","C_seedIn"].forEach(id=>{document.getElementById(id).addEventListener("input",(e)=>{if(id==="C_nIn"){sC.n=+e.target.value; document.getElementById("C_nOut").textContent=sC.n; document.getElementById("cC_n").textContent=sC.n; highlightByDataLine("codeC","n");} if(id==="C_seedIn"){sC.seed=+e.target.value; document.getElementById("C_seedOut").textContent=sC.seed; document.getElementById("cC_seed").textContent=sC.seed; highlightByDataLine("codeC","seed");} drawStageC(); bumpExplore("C"); });});
+document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson8_stageC.R",`set.seed(${sC.seed}); n <- ${sC.n}; reps <- 1000
+chi2 <- replicate(reps, { d <- rbinom(1, n, 0.75); o <- c(d, n-d); e <- c(0.75*n, 0.25*n); sum((o-e)^2/e) })
+mean(chi2 > 3.84)
+`);});
+wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+
+/* ============== STAGE D — Mendel's data ============== */
+const sD = { seed:42, mendel:null };
+async function loadMendel() {
+  try { const r=await fetch("../data/clean/mendel_pea.json"); sD.mendel=await r.json(); } catch(e) { console.warn("mendel fallback"); sD.mendel=null; }
+  drawStageD();
+}
+function drawStageD() {
+  // Fallback table if data didn't load
+  const peas = sD.mendel || [
+    {trait:"seed_shape", dominant:5474, recessive:1850},
+    {trait:"seed_color", dominant:6022, recessive:2001},
+    {trait:"pod_form", dominant:882, recessive:299},
+    {trait:"pod_color", dominant:428, recessive:152},
+    {trait:"flower_color", dominant:705, recessive:224},
+    {trait:"flower_position", dominant:651, recessive:207},
+    {trait:"stem_length", dominant:787, recessive:277}
+  ];
+  // Per-trait chi-squared
+  let total=0; const rows=[];
+  for (const r of peas) {
+    const dom=+r.dominant, rec=+r.recessive; const n=dom+rec;
+    const eD=0.75*n, eR=0.25*n;
+    const chi=(dom-eD)*(dom-eD)/eD + (rec-eR)*(rec-eR)/eR;
+    total+=chi;
+    rows.push({trait:r.trait, n, dom, rec, chi, p:chi2P(chi,1)});
+  }
+  const tbl=document.getElementById("tableD");
+  // wipe data rows
+  while(tbl.rows.length>1) tbl.deleteRow(1);
+  for(const r of rows){const tr=tbl.insertRow(); tr.innerHTML=`<td>${r.trait}</td><td>${r.n}</td><td>${r.dom}</td><td>${r.rec}</td><td>${r.chi.toFixed(3)}</td><td>${r.p<0.001?"<0.001":r.p.toFixed(3)}</td>`;}
+  // Simulate honest experimenters
+  const rng=mulberry32(sD.seed); const reps=1000; const nullTotals=new Array(reps);
+  for(let i=0;i<reps;i++){let s=0; for(const r of peas){const n=+r.dominant+ +r.recessive; let d=0; for(let j=0;j<n;j++) if(rng()<0.75) d++; const eD=0.75*n, eR=0.25*n; s+=(d-eD)*(d-eD)/eD + ((n-d)-eR)*((n-d)-eR)/eR;} nullTotals[i]=s;}
+  const pLower=nullTotals.filter(t=>t<=total).length/reps;
+  document.getElementById("D_mendel").textContent=total.toFixed(2);
+  const pEl=document.getElementById("D_p"); pEl.textContent=pLower<0.001?"<0.001":pLower.toFixed(3); pEl.classList.toggle("sig", pLower<0.05);
+  // Plot
+  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:30}; const xMin=0, xMax=Math.max(total*2, Math.max(...nullTotals)*1.1);
+  const f=makeFrame(pad,W,H,xMin,xMax,0,1);
+  const bins=40, binW=(xMax-xMin)/bins; const counts=new Array(bins).fill(0);
+  for(const t of nullTotals){const i=Math.min(bins-1,Math.max(0,Math.floor((t-xMin)/binW))); counts[i]++;}
+  const maxC=Math.max(...counts);
+  for(let i=0;i<bins;i++){if(counts[i]===0) continue; const x0=f.x(xMin+i*binW), x1=f.x(xMin+(i+1)*binW); const h=counts[i]/maxC*f.H*0.9; ctx.fillStyle=(xMin+i*binW < total)?"rgba(202,160,74,0.6)":"rgba(120,120,120,0.5)"; ctx.fillRect(x0+1, f.pad.t+f.H-h, x1-x0-2, h);}
+  drawVLine(ctx,f,total,"#b23a48",2.5,[]);
+  drawAxes(ctx,f,"combined χ² across traits","",6,0,v=>v.toFixed(0),v=>"");
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("Mendel: "+total.toFixed(1), f.x(total)+4, f.pad.t+18);
+}
+document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; document.getElementById("cD_seed").textContent=sD.seed; highlightByDataLine("codeD","seed"); drawStageD();});
+document.getElementById("D_resim").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson8_stageD.R",`peas <- read.csv("data/clean/mendel_pea.csv")
+chi_obs <- apply(peas, 1, function(r) { o <- c(r["dominant"], r["recessive"]); n <- sum(o); e <- c(0.75*n, 0.25*n); sum((o-e)^2/e) })
+total_obs <- sum(chi_obs)
+set.seed(${sD.seed})
+null_totals <- replicate(1000, sum(apply(peas, 1, function(r) {
+  n <- r["dominant"] + r["recessive"]; d <- rbinom(1, n, 0.75)
+  o <- c(d, n-d); e <- c(0.75*n, 0.25*n); sum((o-e)^2/e)
+})))
+mean(null_totals <= total_obs)
+`);});
+wirePrediction("D","predD",["qD1"],"controlsD");
+loadMendel();
+
+/* ============== Pretest / Posttest / Score ============== */
+const PRETEST_ITEMS = [
+  { idx:0, q:"In a monohybrid cross Aa × Aa, what fraction of offspring are expected to show the recessive phenotype?", options:["1/2","1/3","1/4","3/4"], correct:2 },
+  { idx:1, q:"In a dihybrid cross AaBb × AaBb with independent assortment, the expected ratio of phenotypes is:", options:["3:1","1:1:1:1","9:3:3:1","16:0:0:0"], correct:2 }
+];
+const POSTTEST_ITEMS = [
+  { idx:0, q:"You run a monohybrid cross with n = 40 and get 27 dominant : 13 recessive. The χ² against 3:1 is small. What can you conclude?", options:["The cross is consistent with 3:1","The cross is significantly different from 3:1","The dominant allele is winning the meiosis lottery","Nothing — you'd need a permutation null"], correct:0 },
+  { idx:1, q:"Mendel's combined χ² across published F2 ratios sits in the lower tail of the distribution of honest experimenters. The most defensible reading is:", options:["Mendel made up his data","Mendel discarded crosses that looked off","Mendel was just lucky","Either of the first two — both are consistent with the data; we can't tell which"], correct:3 },
+  { idx:2, q:"Which of these are properties of genes (vs of phenotypes)?", options:["The DNA sequence","The trait being dominant","The trait being recessive","The chromosome location","The protein product (if any)"], correct:[0,3,4] }
+];
+function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
+function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
+Score.init({moduleId:"lesson8", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+</script>
+</body>
+</html>

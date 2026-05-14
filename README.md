@@ -22,12 +22,27 @@ The site is published via GitHub Pages from the `main` branch at the repository 
 ## Layout
 
 ```
-index.html          landing page with links to lessons
+index.html          landing page with cards for each lesson and scaffold
 lessons/
-  lesson0.html      prediction, noise, and the regression line
+  lesson1.html      adding up coin flips until a bell appears
+  lesson2.html      resampling to ask if new data still belongs
+  lesson3.html      subtracting the line and reading what's left
+  lesson4.html      finding the cloud of lines that all fit the data
+  lesson5.html      shuffling the predictor to see what chance can do
+  lesson6.html      watching the same biology give four different verdicts
+  lesson7.html      tracing how much of a parent ends up in their child
+scaffolds/          single-concept drill exercises (S01–S20)
+data/clean/         cleaned CSV + JSON datasets the lessons load
+data/raw/           original source data
+scripts/            Python cleaners that produce data/clean/
+lib/                shared JS (score, quiz) and CSS
+oldcode/            historical R scripts; reference only
+prototype/          early single-file prototypes
 ```
 
-New lessons go into `lessons/` as single HTML files and get linked from `index.html`.
+New lessons go into `lessons/lessonN.html` and get linked from `index.html`. Filenames match displayed lesson numbers.
+
+See **`PROJECT_PLAN.md`** for the full ~30-lesson plan organized into five units, ending with the "What is an Individual?" capstone.
 
 ## Pedagogy
 

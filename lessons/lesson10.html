@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 10: Watching alleles wander in a finite population</title>
+<link rel="stylesheet" href="../lib/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .explore-tracker.shown { display:block; } .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  .scenario .anchor-quote { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e230a; margin:8px 0 4px; }
+  .scenario .anchor-quote .src { display:block; margin-top:6px; font-size:11px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
+  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
+  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
+  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
+  .controls.locked { opacity:0.4; pointer-events:none; }
+  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
+  footer.wrap-up .closing { background:#f5efe0; border-left:3px solid #caa04a; padding:12px 16px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 16px; }
+  footer.wrap-up .closing .src { display:block; margin-top:6px; font-size:12px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
+  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .outcomes p { margin:0 0 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 10 — Watching alleles wander in a finite population</h1>
+  <p>BIO 202, Spring 2026, draft v1. Wright-Fisher drift. Allele frequencies stagger around at random until they hit zero or one and the variation is gone.</p>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
+
+<div class="outcomes">
+  <h2>What you'll do</h2>
+  <p>Four stages. Watch trajectories. Watch them hit absorbing boundaries. Watch the fixation-probability statistic equal the starting frequency for neutral alleles. End at the Buri flies — Wright-Fisher in a lab.</p>
+  <div class="scenario" style="max-width:920px;">
+    <div class="anchor-quote">
+      In the big population, one lightning strike had a 0.005% effect. The smaller population has a 0.5% effect. On its own, that one lightning strike is not going to change much. But it's not literally zero effect. And that one lightning strike is not the only random thing that's going to happen to my population of birds, whether it's 10,000 or 100. All the random effects in a generation get summed together at the next round of reproduction. Each generation doesn't start fresh.
+      <span class="src">— 202_lec09_06</span>
+    </div>
+  </div>
+</div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. One trajectory, then many</a>
+  <a href="#stageB" id="tocB" class="locked">B. Run to fixation</a>
+  <a href="#stageC" id="tocC" class="locked">C. Fix(p₀) = p₀</a>
+  <a href="#stageD" id="tocD" class="locked">D. Buri 1956 — 107 fly lines</a>
+</nav>
+
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — One trajectory, then 50</h2>
+  <p class="stage-sub">A single allele drifts in a Wright-Fisher population. Slide N, slide p₀, slide seed. Watch one realization. Toggle the fan to see 50.</p>
+  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Each generation, sample 2N alleles with replacement from the previous generation. That is the Wright-Fisher rule. The expected next-generation frequency is the current frequency; the variance is p(1−p)/(2N).</p></div>
+      <div class="panel graph-wrap"><h3>Allele frequency over generations</h3><canvas id="plotA" width="560" height="280"></canvas><div class="fit-stats" id="statsA"><span class="label">N:</span> <span id="A_N">100</span> &nbsp;|&nbsp; <span class="label">p₀:</span> <span id="A_p0">0.50</span> &nbsp;|&nbsp; <span class="label">gens:</span> <span id="A_gens">200</span> &nbsp;|&nbsp; <span class="label">final p (this run):</span> <span id="A_finalP" class="big">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA">
+        <h3>Prediction</h3>
+        <ol><li><div class="q">Q1. Across 50 independent replicates with N = 100, p₀ = 0.5, after 200 generations:</div>
+          <label><input type="radio" name="qA1" value="cluster" /> Most replicates will still be near 0.5</label>
+          <label><input type="radio" name="qA1" value="spread" /> The replicates will be spread across (0, 1), with some fixed at 0 or 1</label>
+          <label><input type="radio" name="qA1" value="extreme" /> Almost all replicates will be fixed at 0 or 1</label></li>
+        </ol>
+        <button id="submitA" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 (N, p₀, seed) combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
+      </div>
+      <div class="panel"><h3>Controls</h3>
+        <div class="controls locked" id="controlsA">
+          <div class="row" data-line="N"><label for="A_NIn">N (population)</label><input type="range" id="A_NIn" min="10" max="2000" step="10" value="100" /><output id="A_NOut">100</output></div>
+          <div class="row" data-line="p0"><label for="A_pIn">p₀ (start)</label><input type="range" id="A_pIn" min="0.05" max="0.95" step="0.01" value="0.5" /><output id="A_pOut">0.50</output></div>
+          <div class="row" data-line="gens"><label for="A_gIn">generations</label><input type="range" id="A_gIn" min="20" max="2000" step="10" value="200" /><output id="A_gOut">200</output></div>
+          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="buttons"><label><input type="checkbox" id="A_fan" /> show 50-replicate fan</label> <button id="A_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel"><h3>R code — Wright-Fisher one trajectory</h3>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="N">N &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="p0">p &lt;- <span class="num" id="cA_p">0.5</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cA_g">200</span></span><span class="line">traj &lt;- <span class="fn">numeric</span>(gens + <span class="num">1</span>); traj[<span class="num">1</span>] &lt;- p</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  traj[g + <span class="num">1</span>] &lt;- p</span><span class="line">}</span><span class="line"><span class="fn">plot</span>(traj, type = <span class="str">"l"</span>, ylim = <span class="fn">c</span>(<span class="num">0</span>,<span class="num">1</span>))</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Run to fixation</h2>
+  <p class="stage-sub">Let the simulation run until every replicate is at 0 or 1. Plot the distribution of times-to-fixation. Mean is around 4N for neutral alleles starting at p = 0.5.</p>
+  <div class="lock-banner">Complete Stage A to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>500 replicates, run until each is fixed. Histogram the fixation times. The expected mean for a neutral allele at p = 0.5 is about 2.8N generations (Kimura's classical result); conditional on fixation, ~4N.</p></div>
+      <div class="panel graph-wrap"><h3>Time to fixation (across replicates)</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">N:</span> <span id="B_N">50</span> &nbsp;|&nbsp; <span class="label">replicates:</span> <span id="B_reps">500</span> &nbsp;|&nbsp; <span class="label">mean time:</span> <span id="B_mean" class="big">—</span> &nbsp;|&nbsp; <span class="label">% fixed A:</span> <span id="B_fix">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB">
+        <h3>Prediction</h3>
+        <ol><li><div class="q">Q1. With N = 50, p₀ = 0.5, the mean time to fixation across 500 replicates will be:</div>
+          <label><input type="radio" name="qB1" value="few" /> About 20 generations</label>
+          <label><input type="radio" name="qB1" value="medium" /> About 140 generations (≈ 2.8 × N)</label>
+          <label><input type="radio" name="qB1" value="many" /> About 5000 generations</label></li>
+        </ol>
+        <button id="submitB" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreB">Try at least 4 N values to unlock Stage C. <span class="count">0/4 N values</span></div>
+      </div>
+      <div class="panel"><h3>Controls</h3>
+        <div class="controls locked" id="controlsB">
+          <div class="row"><label for="B_NIn">N</label><input type="range" id="B_NIn" min="10" max="300" step="5" value="50" /><output id="B_NOut">50</output></div>
+          <div class="row"><label for="B_pIn">p₀</label><input type="range" id="B_pIn" min="0.05" max="0.95" step="0.05" value="0.5" /><output id="B_pOut">0.50</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel"><h3>R code — time to fixation</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line">N &lt;- <span class="num">50</span>; p0 &lt;- <span class="num">0.5</span>; reps &lt;- <span class="num">500</span></span><span class="line">tfix &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  p &lt;- p0; g &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) { p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p)/(<span class="num">2</span>*N); g &lt;- g + <span class="num">1</span> }</span><span class="line">  g</span><span class="line">})</span><span class="line"><span class="fn">mean</span>(tfix); <span class="fn">hist</span>(tfix)</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Fix(p₀) = p₀</h2>
+  <p class="stage-sub">For a neutral allele, the probability of fixation equals the starting frequency. Departures from this line are the signature of selection.</p>
+  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>For each of 8 starting frequencies (0.1, 0.2, …, 0.9), run 300 replicates. Plot fraction that fixed the allele against p₀. The diagonal is the neutral prediction; deviation is selection (or sampling noise).</p></div>
+      <div class="panel graph-wrap"><h3>Fixation probability vs starting frequency</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">N:</span> <span id="C_N">50</span> &nbsp;|&nbsp; <span class="label">replicates/level:</span> 300 &nbsp;|&nbsp; <span class="label">selection coeff s:</span> <span id="C_s">0.00</span> &nbsp;|&nbsp; <span class="label">RMSE from p₀ line:</span> <span id="C_rmse" class="big">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC">
+        <h3>Prediction</h3>
+        <ol><li><div class="q">Q1. With s = 0 (no selection) and N = 50, the eight points will:</div>
+          <label><input type="radio" name="qC1" value="diagonal" /> Sit on the diagonal (fix probability = p₀)</label>
+          <label><input type="radio" name="qC1" value="above" /> Sit above the diagonal</label>
+          <label><input type="radio" name="qC1" value="below" /> Sit below the diagonal</label></li>
+        </ol>
+        <button id="submitC" disabled>Submit → unlock s</button>
+        <div class="explore-tracker" id="exploreC">Try at least 3 s values (0, weak, strong) to unlock Stage D. <span class="count">0/3 s values</span></div>
+      </div>
+      <div class="panel"><h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row"><label for="C_NIn">N</label><input type="range" id="C_NIn" min="20" max="200" step="10" value="50" /><output id="C_NOut">50</output></div>
+          <div class="row"><label for="C_sIn">s (selection)</label><input type="range" id="C_sIn" min="-0.1" max="0.1" step="0.005" value="0" /><output id="C_sOut">0.00</output></div>
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel"><h3>R code — fixation probability scan</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line">N &lt;- <span class="num">50</span>; s &lt;- <span class="num">0</span>; reps &lt;- <span class="num">300</span></span><span class="line">p0s &lt;- <span class="fn">seq</span>(<span class="num">0.1</span>, <span class="num">0.9</span>, <span class="num">0.1</span>)</span><span class="line">pfix &lt;- <span class="fn">sapply</span>(p0s, <span class="kw">function</span>(p0) {</span><span class="line">  <span class="fn">mean</span>(<span class="fn">replicate</span>(reps, {</span><span class="line">    p &lt;- p0</span><span class="line">    <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) {</span><span class="line">      p_sel &lt;- p*(<span class="num">1</span>+s)/(p*(<span class="num">1</span>+s)+(<span class="num">1</span>-p))</span><span class="line">      p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p_sel)/(<span class="num">2</span>*N)</span><span class="line">    }</span><span class="line">    p == <span class="num">1</span></span><span class="line">  }))</span><span class="line">})</span><span class="line"><span class="fn">plot</span>(p0s, pfix); <span class="fn">abline</span>(<span class="num">0</span>, <span class="num">1</span>)</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Buri 1956 — 107 fly lines</h2>
+  <p class="stage-sub">Peter Buri tracked the bw75 allele in 107 Drosophila lines for 19 generations, with 16 flies per line per generation. The variance in allele frequency across lines should grow at the rate Wright-Fisher predicts.</p>
+  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Buri's empirical trajectories overlaid with a Wright-Fisher simulation at N=16 (the actual sample size each generation). The simulation matches the observed spread — drift accounts for the variance.</p></div>
+      <div class="panel graph-wrap"><h3>Observed Buri lines vs simulated WF lines</h3><canvas id="plotD" width="560" height="320"></canvas><div class="fit-stats" id="statsD"><span class="label">N (per line):</span> <span id="D_N">16</span> &nbsp;|&nbsp; <span class="label">gens:</span> 19 &nbsp;|&nbsp; <span class="label">observed lines fixed:</span> <span id="D_obsFix">—</span> &nbsp;|&nbsp; <span class="label">predicted lines fixed:</span> <span id="D_simFix" class="big">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD">
+        <h3>Prediction</h3>
+        <ol><li><div class="q">Q1. After 19 generations with N = 16, what fraction of the 107 Buri lines do you expect to have fixed or lost the allele?</div>
+          <label><input type="radio" name="qD1" value="few" /> Under 10%</label>
+          <label><input type="radio" name="qD1" value="some" /> About 25%</label>
+          <label><input type="radio" name="qD1" value="many" /> About 50% or more</label></li>
+        </ol>
+        <button id="submitD" disabled>Submit → reveal</button>
+        <div class="explore-tracker" id="exploreD">Resimulate at least 3 times. <span class="count">0/3 sims</span></div>
+      </div>
+      <div class="panel"><h3>Controls</h3>
+        <div class="controls locked" id="controlsD">
+          <div class="row"><label for="D_seedIn">sim seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons"><button id="D_resim" class="accent">Resimulate</button> <button id="D_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel"><h3>R code — Buri overlay</h3>
+<pre class="code" id="codeD"><span class="line">buri &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/buri_fly.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>); N &lt;- <span class="num">16</span>; gens &lt;- <span class="num">19</span>; lines &lt;- <span class="num">107</span>; p0 &lt;- <span class="num">0.5</span></span><span class="line">sim &lt;- <span class="fn">replicate</span>(lines, {</span><span class="line">  p &lt;- p0; traj &lt;- p</span><span class="line">  <span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) { p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p)/(<span class="num">2</span>*N); traj &lt;- <span class="fn">c</span>(traj, p) }</span><span class="line">  traj</span><span class="line">})</span><span class="line"><span class="fn">matplot</span>(<span class="fn">t</span>(sim), type = <span class="str">"l"</span>, col = <span class="fn">rgb</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0.1</span>))</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<footer class="wrap-up">
+  <h2>One sentence to carry forward</h2>
+  <div class="closing">
+    Every allele has the same long-term fate — extinction. With drift, all you can do is predict how long it'll be until it goes extinct, and even that has huge uncertainty. The smaller the population, the faster it goes.
+    <span class="src">— 202_lec10_03</span>
+  </div>
+  <p><strong>Lesson 11</strong> turns drift into a measurement: given a real population's allele-frequency time course, estimate Nₑ.</p>
+</footer>
+
+<script src="../lib/quiz.js"></script>
+<script src="../lib/score.js"></script>
+<script>
+function mulberry32(seed) { let a=seed>>>0; return function(){a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15), t|1); t^=t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
+function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
+function rbinom(rng,n,p){let k=0; for(let i=0;i<n;i++) if(rng()<p) k++; return k;}
+function wfStep(rng,N,p,s){const ps = p*(1+s)/(p*(1+s)+(1-p)); return rbinom(rng,2*N,ps)/(2*N);}
+
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:5, B:4, C:3, D:3 };
+function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"N values":stage==="C"?"s values":"sims"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+
+/* STAGE A — trajectories */
+const sA = { N:100, p0:0.5, gens:200, seed:42, fan:false };
+function drawStageA() {
+  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,sA.gens,0,1);
+  drawAxes(ctx,f,"generation","p",6,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  if (sA.fan) {
+    for(let r=0;r<50;r++){
+      const rng=mulberry32(sA.seed*131 + r);
+      let p=sA.p0; ctx.strokeStyle="rgba(60,60,60,0.18)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
+      for(let g=1;g<=sA.gens;g++){ p=wfStep(rng,sA.N,p,0); ctx.lineTo(f.x(g),f.y(p)); }
+      ctx.stroke();
+    }
+  }
+  // Highlighted single trajectory
+  const rng=mulberry32(sA.seed);
+  let p=sA.p0; ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
+  for(let g=1;g<=sA.gens;g++){ p=wfStep(rng,sA.N,p,0); ctx.lineTo(f.x(g),f.y(p)); }
+  ctx.stroke();
+  document.getElementById("A_N").textContent=sA.N;
+  document.getElementById("A_p0").textContent=sA.p0.toFixed(2);
+  document.getElementById("A_gens").textContent=sA.gens;
+  document.getElementById("A_finalP").textContent=p.toFixed(3);
+}
+["A_NIn","A_pIn","A_gIn","A_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={A_NIn:"N",A_pIn:"p0",A_gIn:"gens",A_seedIn:"seed"}[id]; sA[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent= key==="p0"?v.toFixed(2):v; if(key==="N"){document.getElementById("cA_N").textContent=v; highlightByDataLine("codeA","N");} if(key==="p0"){document.getElementById("cA_p").textContent=v.toFixed(2); highlightByDataLine("codeA","p0");} if(key==="gens"){document.getElementById("cA_g").textContent=v; highlightByDataLine("codeA","gens");} if(key==="seed"){document.getElementById("cA_seed").textContent=v; highlightByDataLine("codeA","seed");} drawStageA(); bumpExplore("A");}));
+document.getElementById("A_fan").addEventListener("change",(e)=>{sA.fan=e.target.checked; drawStageA();});
+document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson10_stageA.R",`set.seed(${sA.seed}); N <- ${sA.N}; p <- ${sA.p0}; gens <- ${sA.gens}
+traj <- numeric(gens+1); traj[1] <- p
+for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj[g+1] <- p }
+plot(traj, type="l", ylim=c(0,1))
+`);});
+wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+
+/* STAGE B — time to fixation */
+const sB = { N:50, p0:0.5, seed:42 };
+function drawStageB() {
+  const reps=500; const tfix=new Array(reps); let fixA=0;
+  for(let r=0;r<reps;r++){
+    const rng=mulberry32(sB.seed + r*7);
+    let p=sB.p0, g=0;
+    while(p>0 && p<1) { p=wfStep(rng,sB.N,p,0); g++; if(g>50*sB.N) break; }
+    tfix[r]=g; if(p===1) fixA++;
+  }
+  const mean=tfix.reduce((a,b)=>a+b,0)/reps;
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const xMax=Math.max(...tfix);
+  const f=makeFrame(pad,W,H,0,xMax,0,1);
+  drawAxes(ctx,f,"generations to fixation","",6,0,v=>v.toFixed(0),v=>"");
+  const bins=40, binW=xMax/bins; const counts=new Array(bins).fill(0);
+  for(const t of tfix){const i=Math.min(bins-1, Math.floor(t/binW)); counts[i]++;}
+  const maxC=Math.max(...counts);
+  for(let i=0;i<bins;i++){if(counts[i]===0) continue; const h=counts[i]/maxC*f.H*0.9; ctx.fillStyle="rgba(120,120,120,0.6)"; ctx.fillRect(f.x(i*binW)+1, f.pad.t+f.H-h, f.x((i+1)*binW)-f.x(i*binW)-2, h);}
+  // mark mean
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(mean),f.pad.t); ctx.lineTo(f.x(mean),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("mean = "+mean.toFixed(0), f.x(mean)+4, f.pad.t+12);
+  document.getElementById("B_N").textContent=sB.N; document.getElementById("B_reps").textContent=reps; document.getElementById("B_mean").textContent=mean.toFixed(0); document.getElementById("B_fix").textContent=(100*fixA/reps).toFixed(1)+"%";
+}
+["B_NIn","B_pIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={B_NIn:"N",B_pIn:"p0",B_seedIn:"seed"}[id]; sB[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent= key==="p0"?v.toFixed(2):v; if(key==="seed"){document.getElementById("cB_seed").textContent=v; highlightByDataLine("codeB","seed");} drawStageB(); if(key==="N") bumpExplore("B");}));
+document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson10_stageB.R",`set.seed(${sB.seed}); N <- ${sB.N}; p0 <- ${sB.p0}; reps <- 500
+tfix <- replicate(reps, { p <- p0; g <- 0; while (p > 0 && p < 1) { p <- rbinom(1, 2*N, p)/(2*N); g <- g + 1 }; g })
+mean(tfix)
+`);});
+wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+
+/* STAGE C — fixation prob vs p0 */
+const sC = { N:50, s:0, seed:42 };
+function drawStageC() {
+  const p0s=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]; const reps=300; const pfix=[];
+  let mse=0;
+  for(const p0 of p0s){let fix=0; for(let r=0;r<reps;r++){const rng=mulberry32(sC.seed + Math.floor(p0*100) + r*11); let p=p0; while(p>0&&p<1){p=wfStep(rng,sC.N,p,sC.s); if(p===0||p===1) break;} if(p===1) fix++;} const pf=fix/reps; pfix.push(pf); mse+=(pf-p0)*(pf-p0);}
+  const rmse=Math.sqrt(mse/p0s.length);
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,1,0,1);
+  drawAxes(ctx,f,"starting frequency p₀","fixation probability",5,5,v=>v.toFixed(1),v=>v.toFixed(1));
+  // diagonal
+  ctx.strokeStyle="rgba(60,60,60,0.5)"; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(1),f.y(1)); ctx.stroke(); ctx.setLineDash([]);
+  // points
+  ctx.fillStyle="#b23a48";
+  for(let i=0;i<p0s.length;i++){ctx.beginPath(); ctx.arc(f.x(p0s[i]),f.y(pfix[i]),5,0,2*Math.PI); ctx.fill();}
+  document.getElementById("C_N").textContent=sC.N; document.getElementById("C_s").textContent=sC.s.toFixed(2); document.getElementById("C_rmse").textContent=rmse.toFixed(3);
+}
+["C_NIn","C_sIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={C_NIn:"N",C_sIn:"s",C_seedIn:"seed"}[id]; sC[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=key==="s"?v.toFixed(2):v; if(key==="seed"){document.getElementById("cC_seed").textContent=v; highlightByDataLine("codeC","seed");} drawStageC(); if(key==="s") bumpExplore("C");}));
+document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson10_stageC.R",`set.seed(${sC.seed}); N <- ${sC.N}; s <- ${sC.s}; reps <- 300
+p0s <- seq(0.1, 0.9, 0.1)
+pfix <- sapply(p0s, function(p0) mean(replicate(reps, {
+  p <- p0
+  while (p > 0 && p < 1) { p_sel <- p*(1+s)/(p*(1+s)+(1-p)); p <- rbinom(1, 2*N, p_sel)/(2*N) }
+  p == 1
+})))
+plot(p0s, pfix); abline(0, 1)
+`);});
+wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+
+/* STAGE D — Buri overlay */
+const sD = { seed:42, buri:null };
+async function loadBuri() {
+  try { const r=await fetch("../data/clean/buri_fly.json"); sD.buri=await r.json(); } catch(e) { sD.buri=null; }
+  drawStageD();
+}
+function drawStageD() {
+  // Buri lines may come as array of lines, each with trajectory of bw75 frequency at gens 0..19
+  // Fallback: synthesize 107 lines via WF at N=16 starting at p=0.5
+  let observed=null;
+  if (sD.buri && Array.isArray(sD.buri) && sD.buri.length) {
+    // Try several shape options
+    if (sD.buri[0].traj) observed = sD.buri.map(l=>l.traj);
+    else if (sD.buri[0].length) observed = sD.buri;
+    else observed=null;
+  }
+  const N=16, gens=19, lines=107, p0=0.5;
+  // Simulated lines
+  const rng=mulberry32(sD.seed);
+  const simLines=[];
+  for(let l=0;l<lines;l++){let p=p0; const traj=[p]; for(let g=1;g<=gens;g++){p=wfStep(rng,N,p,0); traj.push(p);} simLines.push(traj);}
+  const simFixed=simLines.filter(l=>l[gens]===0||l[gens]===1).length;
+  // Observed-fixed count (if data present)
+  let obsFixed="—";
+  if (observed) obsFixed = observed.filter(t=>t[gens]===0||t[gens]===1 || t[gens]===0 || t[gens]===N).length;
+  document.getElementById("D_N").textContent=N;
+  document.getElementById("D_simFix").textContent=simFixed+" / "+lines+" ("+(100*simFixed/lines).toFixed(0)+"%)";
+  document.getElementById("D_obsFix").textContent=observed ? (obsFixed+" / "+observed.length) : "(data not loaded; using simulation)";
+  // Draw
+  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
+  drawAxes(ctx,f,"generation","p (bw75)",5,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  // Simulated lines - light gray
+  ctx.strokeStyle="rgba(120,120,120,0.18)"; ctx.lineWidth=1;
+  for(const traj of simLines){ctx.beginPath(); for(let g=0;g<=gens;g++){if(g===0) ctx.moveTo(f.x(g),f.y(traj[g])); else ctx.lineTo(f.x(g),f.y(traj[g]));} ctx.stroke();}
+  // Observed lines - crimson
+  if (observed) {
+    ctx.strokeStyle="rgba(178,58,72,0.3)"; ctx.lineWidth=1.5;
+    for(const traj of observed){ if(!traj || !traj.length) continue; ctx.beginPath(); for(let g=0;g<traj.length;g++){const v=typeof traj[g]==='number'?traj[g]: (traj[g].freq ?? (traj[g]/N)); if(g===0) ctx.moveTo(f.x(g),f.y(v)); else ctx.lineTo(f.x(g),f.y(v));} ctx.stroke(); }
+  }
+  ctx.fillStyle="#333"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("gray = WF sim · crimson = Buri observed", f.pad.l+8, f.pad.t+12);
+}
+document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
+document.getElementById("D_resim").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson10_stageD.R",`buri <- read.csv("data/clean/buri_fly.csv")
+set.seed(${sD.seed}); N <- 16; gens <- 19; lines <- 107; p0 <- 0.5
+sim <- replicate(lines, { p <- p0; traj <- p; for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj <- c(traj, p) }; traj })
+matplot(t(sim), type="l", col=rgb(0,0,0,0.1))
+`);});
+wirePrediction("D","predD",["qD1"],"controlsD"); loadBuri();
+
+/* Pretest / Posttest */
+const PRETEST_ITEMS = [
+  { idx:0, q:"In a Wright-Fisher population of size N, the variance in allele frequency added each generation is:", options:["p(1−p)","p(1−p)/N","p(1−p)/(2N)","p(1−p)·N"], correct:2 },
+  { idx:1, q:"For a neutral allele starting at p₀ = 0.3 in a finite population, what is its fixation probability?", options:["0","0.3","0.5","1"], correct:1 }
+];
+const POSTTEST_ITEMS = [
+  { idx:0, q:"You observe two lab populations of equal size N drift over 4N generations. Both are neutral. Why don't they reach the same allele frequency?", options:["One had hidden selection","Drift is intrinsically stochastic; different realizations diverge","The samples were too small","Mutation moved them apart"], correct:1 },
+  { idx:1, q:"In a population of N = 100 over 200 generations, the expected fraction of replicates with the allele fixed (at 1) given p₀ = 0.5 is closest to:", options:["~10%","~25%","~50%","~95%"], correct:1 },
+  { idx:2, q:"Compared to the census size, the effective population size Nₑ tends to be:", options:["Larger","Smaller","About the same","Variable in either direction"], correct:1 }
+];
+function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
+function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
+Score.init({moduleId:"lesson10", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+</script>
+</body>
+</html>
