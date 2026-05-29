@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 5: Shuffling the predictor to see what chance can do</title>
 <link rel="stylesheet" href="../lib/score.css">
+<link rel="stylesheet" href="../lib/dag.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   * { box-sizing: border-box; }
@@ -85,10 +86,12 @@
   <p>BIO 202, Spring 2026, draft v2. One regression, one shuffle, one tail. Used four times.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
 <div class="outcomes">
   <h2>What you'll do</h2>
   <p>Four scenarios. In each, fit the regression, shuffle the predictor, look at where the observed coefficient sits in the cloud of shuffled ones. The tail fraction is what you'll report.</p>
+  <div class="teaching-note" style="margin-top:8px;">
+    <strong>The move Darwin couldn't make.</strong> When Darwin saw that tall-shrub Galápagos islands had tall-necked tortoises and low-grass islands had short-necked ones, he was doing a regression in his head: shell shape on island vegetation. He could see the association but had no way to ask "would I see a slope this steep just by reshuffling which tortoise lives on which island?" That's the move you build here. In Stage&nbsp;C round 2 you do it on his actual birds — the Grant lab's <em>Geospiza fortis</em> beak depths straddling the 1977 drought. The deeper move: shuffling breaks the link between predictor and response, which is the same as asking <em>"could this association have arisen without any channel of inheritance connecting them?"</em> You will use this exact question at every later scale in the course.
+  </div>
 </div>
 <nav class="toc" id="toc">
   <a href="#stageA" id="tocA">A. Tiny δ, huge n — empirical P tiny</a>
@@ -101,7 +104,7 @@
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Comparing two groups is a regression with a 0/1 predictor</h2>
   <p class="stage-sub">Generate group A (g = 0) and group B (g = 1). Fit <code>y ~ α + δ·g</code>. Shuffle g, refit, build the null histogram of shuffled δ̂'s. Read the tail fraction.</p>
-  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
@@ -249,9 +252,10 @@
         <h3>Scenario</h3>
         <p>Each round: a short real time series. Fit <code>y ~ α + β·x</code>. Shuffle the y values to build the null histogram of shuffled β̂'s.</p>
         <p>Guess the 95% interval of that null first. Then reveal.</p>
+        <p style="margin-top:6px; font-size:12.5px; color:var(--muted);">Rounds 1–2 are the Grant lab's Galápagos <em>Geospiza fortis</em> — Darwin's same archipelago, beaks measured in actual millimeters across the 1977 drought. The shuffle null is the test Darwin's argument never had.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3 id="C_title">Round 1 of 5 — fortis beak depth, 1973–1976 (pre-drought)</h3>
+        <h3 id="C_title">Round 1 of 5 — Darwin's archipelago — Geospiza fortis beak depth, 1973–1976 (pre-drought)</h3>
         <canvas id="plotC1" width="560" height="220"></canvas>
         <h3 style="margin-top:8px;">Null histogram of shuffled slopes</h3>
         <canvas id="plotC2" width="560" height="200"></canvas>
@@ -273,10 +277,10 @@
             <label><input type="radio" name="qC1" value="zero" /> a single spike at zero regardless of window</label>
           </li>
           <li>
-            <div class="q">Q2. The empirical P-value of an observed slope is best read as:</div>
-            <label><input type="radio" name="qC2" value="prob" /> the probability the true slope is zero</label>
-            <label><input type="radio" name="qC2" value="tail" /> the fraction of shuffled slopes at least as far from zero as the observed one</label>
-            <label><input type="radio" name="qC2" value="r2" /> the same as R²</label>
+            <div class="q">Q2. You see "empirical P = 0.02" next to an observed slope. Translate that to plain language for a colleague:</div>
+            <label><input type="radio" name="qC2" value="prob" /> "There's a 2% chance the true slope is exactly zero." (interpretation as a probability about the world)</label>
+            <label><input type="radio" name="qC2" value="tail" /> "If we'd shuffled the predictor to break any real relationship, 2% of those shuffled slopes would have been at least this far from zero — so the observed slope is unusual under a no-link world."</label>
+            <label><input type="radio" name="qC2" value="r2" /> "P and R² are the same number — both measure how much variance is explained."</label>
           </li>
         </ol>
         <button id="submitC" disabled>Submit prediction → start the drill</button>
@@ -298,6 +302,17 @@
 <pre class="code" id="codeC"><span class="line"><span class="com"># Per-round: x = year (or generation), y = trait mean / fitness.</span></span><span class="line">b_obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ x))[<span class="num">2</span>]</span><span class="line"></span><span class="line">b_null &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, {</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">sample</span>(y) ~ x))[<span class="num">2</span>]</span><span class="line">})</span><span class="line"><span class="fn">quantile</span>(b_null, <span class="fn">c</span>(<span class="num">0.025</span>, <span class="num">0.975</span>))   <span class="com"># 95% null envelope</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(b_null) &gt;= <span class="fn">abs</span>(b_obs))   <span class="com"># empirical two-sided P</span></span></pre>
       </div>
     </div>
+  </div>
+
+  <!-- DAG sub-panel: what causal story is the slope evidence for? -->
+  <div class="stage-body" style="margin-top:24px; border-top:1px dashed #c9c4b3; padding-top:20px;">
+    <div class="panel scenario" style="max-width:1100px; margin:0 auto 14px;">
+      <h3>The slope is a number. What causal story is it evidence for?</h3>
+      <p>You just got an empirical P. The slope <code>β̂(beak depth ~ year)</code> for the 1973–1977 Grant fortis is far outside the shuffle null. The test says "year predicts beak depth." But "year" doesn't <em>do</em> anything to a finch — it's a label on the x-axis.</p>
+      <p>Build a quick causal model below. Add arrows. Watch the simulated data on the right change. Then ask: <em>which model would produce the slope you just observed, and which would not?</em></p>
+    </div>
+    <div id="dag-l5-mount" style="max-width:1180px; margin:0 auto;"></div>
+    <p style="max-width:1100px; margin:14px auto 0; font-size:13px; color:#4a4a48;">The "year → beak" arrow is what the shuffle test directly evaluates. The "drought → year, drought → beak" pair is the story Darwin would have written. The test cannot distinguish them — it's not the test's job. The job of the test is to tell you the apparent slope isn't from random reshuffling; the job of the DAG is to tell you what to do next.</p>
   </div>
 </section>
 
@@ -380,7 +395,6 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
@@ -393,6 +407,7 @@
 
 <script src="../lib/quiz.js"></script>
 <script src="../lib/score.js"></script>
+<script src="../lib/dag.js"></script>
 <script>
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
@@ -425,7 +440,7 @@ function olsSlope(xs, ys) {
 
 const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 3 };
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-function bumpExplore(stage) {
+function bumpExplore(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); 
   const g = Gates[stage]; if (!g.predicted || g.done) return;
   g.explores += 1;
   const tracker = document.getElementById("explore"+stage);
@@ -434,15 +449,15 @@ function bumpExplore(stage) {
   c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
   if (g.explores >= EXPLORE_THRESHOLD[stage]) {
     g.done = true; tracker.classList.add("complete");
-    c.textContent = `${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`;
+    c.textContent = `${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`);
     unlockNext(stage);
   }
 }
-function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"posttest"}[s]; }
+function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:null}[s]; }
 function unlockNext(stage) {
   const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
   if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
-  else if (typeof showPosttest==="function") showPosttest();
+  else if (typeof Score !== "undefined" && Score.finish) Score.finish();
 }
 function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
   const root=document.getElementById(predId); const btn=root.querySelector("button");
@@ -651,13 +666,13 @@ async function loadData() {
 /* ====== STAGE C — drill =========================================== */
 const sC = { round: 0, picks: [], correct: 0 };
 const sC_rounds = [
-  { title: "fortis beak depth, 1973–1976 (pre-drought)", expectedExtreme: false,
+  { title: "Darwin's archipelago — Geospiza fortis beak depth, 1973–1976 (pre-drought)", expectedExtreme: false,
     build: () => {
       const yrs = Data.finch.years.slice(0, 4);
       const ys  = Data.finch.fortis.beak_depth.slice(0, 4);
       return { xs: yrs.map(y => y - yrs[0]), ys, xlab:"year (offset)", ylab:"fortis beak depth (mm)" };
     } },
-  { title: "fortis beak depth, 1973–1980 (straddles 1977 drought)", expectedExtreme: true,
+  { title: "Darwin's archipelago — Geospiza fortis beak depth, 1973–1980 (straddles 1977 drought)", expectedExtreme: true,
     build: () => {
       const yrs = Data.finch.years.slice(0, 8);
       const ys  = Data.finch.fortis.beak_depth.slice(0, 8);
@@ -823,7 +838,7 @@ function updateChallengesD(p) {
     if (total >= 3 && !Gates.D.done) {
       Gates.D.done = true; tracker.classList.add("complete");
       c.textContent = "3/3 done — wrap-up unlocked.";
-      if (typeof showPosttest==="function") showPosttest();
+      if (typeof Score !== "undefined" && Score.finish) Score.finish();
     }
   }
 }
@@ -861,48 +876,32 @@ document.getElementById("stretchD_btn").addEventListener("click", () => {
 });
 wirePrediction("D", "predD", ["qD1","qD2"], ["n_sigma","clarity"], "controlsD", drawStageD);
 
-/* ====== Pretest / Posttest / Score ================================== */
-const PRETEST_ITEMS = [
-  { idx:0, q:"Comparing the means of two groups of measurements is the same as:",
-    options:["a special test that only works for two groups","fitting a regression with a 0/1 indicator predictor and reading the slope","computing a t-statistic that has no other interpretation","none of the above"],
-    correct: 1 },
-  { idx:1, q:"An 'empirical P-value' from shuffling the predictor is:",
-    options:["the probability the true effect is zero","the fraction of shuffled coefficients at least as extreme as the observed one","the same as R²","unrelated to the regression"],
-    correct: 1 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"A regression of y on a 0/1 predictor returns a slope δ̂ = 0.05 in some units. The empirical P from shuffling the predictor is 0.001. The right reading is:",
-    options:["a huge effect with strong support","a small group difference very clearly distinguishable from a shuffled null — usually because n is large","the null is definitely true","the data are inconsistent with the regression model"],
-    correct: 1 },
-  { idx:1, q:"Which sentence is the course's summary for what an empirical P-value tells you?",
-    options:["P measures importance","Statistical significance is a measure of clarity (relative to a shuffled null), not importance","P proves the null is false","P equals the effect size"],
-    correct: 1 },
-  { idx: 2,
-    q: "Which of these correctly describes the shuffle-the-predictor recipe?",
-    options: [
-      "Fit the regression, shuffle the predictor, refit many times, compare the observed coefficient to the cloud",
-      "The empirical P is the fraction of shuffled coefficients at least as extreme as the observed one",
-      "Comparing two groups is a regression on a 0/1 predictor — same machinery",
-      "The empirical P tells you the probability the true effect is zero",
-      "A very small empirical P means the underlying effect is large"
+/* ====== DAG widget — Stage C addendum ================================ */
+// Three nodes: drought (cat), year (cont), beak depth (cont). The student
+// can draw any subset of arrows and see the simulated data shift. The widget
+// records arrow create / strength / conditioning manipulations as "C" bumps.
+(function mountDAGc(){
+  if (typeof DAG === "undefined") return;
+  const dag = DAG.init({
+    mount: "#dag-l5-mount",
+    nodes: [
+      { id: "drought", label: "Drought",     x: 90,  y: 60,  type: "categorical", levels: 2 },
+      { id: "year",    label: "Year",        x: 90,  y: 200 },
+      { id: "beak",    label: "Beak depth",  x: 460, y: 130 }
     ],
-    correct: [0, 1, 2] }
-];
-function showPretest() {
-  document.getElementById("pretest-card").style.display = "block";
-  Quiz.render({ mount:"#pretest-mount", group:"pretest", title:"Before you start", items: PRETEST_ITEMS,
-    onComplete: () => { document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked"); } });
-}
-function showPosttest() {
-  const c = document.getElementById("posttest-card"); if (c.style.display==="block") return;
-  c.style.display = "block";
-  Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items: POSTTEST_ITEMS, onComplete: () => Score.finish() });
-}
+    arrows: [],
+    initialAxes: { x: "year", y: "beak" },
+    n: 250,
+    seed: 1977,
+    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("C"); }
+  });
+})();
+
+/* ====== Score ================================== */
 Score.init({
-  moduleId: "lesson5", version: 3,
-  pretest: PRETEST_ITEMS.length, scaffold: 9, posttest: POSTTEST_ITEMS.length,
+  moduleId: "lesson5", version: 4, scaffold: 9,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-  onReady: () => showPretest()
+  onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
 });
 loadData();
 </script>

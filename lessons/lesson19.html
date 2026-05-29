@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 19: Removing the family resemblance before comparing species</title>
 <link rel="stylesheet" href="../lib/score.css">
+<link rel="stylesheet" href="../lib/dag.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   *{box-sizing:border-box} body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--ink)}
@@ -34,7 +35,6 @@
   <p>BIO 202, Spring 2026, draft v1. PGLS. Species aren't independent observations — they share ancestors. Subtract the shared part before you ask what's left.</p>
 </header>
 <div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
-<div class="score-card" id="pretest-card" style="display:none;max-width:1300px;margin:0 auto;padding:16px 24px"><div id="pretest-mount"></div></div>
 <div class="outcomes"><h2>What you'll do</h2><p>Simulate trait evolution on a tree. Compare naive OLS to phylogenetic independent contrasts. Fit Pagel's λ. End at AVONET birds.</p>
   <div class="scenario" style="max-width:920px"><div class="anchor-quote">I survey species of earthworms around the world. For each species, I measure body size and soil pH. I get a clean negative regression. But within each clade — these three sister species, those three sister species — the relationship is positive. You can make a negative overall trend out of a bunch of positive smaller trends. The fact of stratification is inherent in all life on Earth, because we're all descended from a set of nested common ancestors. When comparing living things, relatedness will always matter.<span class="src">— 202_lec26_02</span></div></div></div>
 <nav class="toc" id="toc">
@@ -42,12 +42,13 @@
   <a href="#stageB" id="tocB" class="locked">B. Phylogenetic contrasts</a>
   <a href="#stageC" id="tocC" class="locked">C. Pagel's λ</a>
   <a href="#stageD" id="tocD" class="locked">D. AVONET birds</a>
+  <a href="#stageE" id="tocE" class="locked">E. Earthworms — the sign flips when you condition</a>
 </nav>
 
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Naive OLS across species, ignoring phylogeny</h2>
   <p class="stage-sub">Simulate two traits evolving by Brownian motion on a tree. Run OLS on the tip values. The slope you get can be misleading — because the species aren't independent.</p>
-  <div class="lock-banner">Locked. Answer the pretest.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario"><h3>Scenario</h3><p>Generate a tree of N species. Simulate two traits x and y, each by Brownian motion. The traits evolve independently — the "true" slope is 0. But the naive OLS regression of y on x will often show a non-zero slope, because species in the same clade have correlated trait values.</p></div>
@@ -124,6 +125,22 @@
 <pre class="code" id="codeC"><span class="line"><span class="kw">library</span>(phytools)</span><span class="line"><span class="fn">phylosig</span>(tr, x, method = <span class="str">"lambda"</span>, test = <span class="kw">TRUE</span>)</span></pre></div>
     </div>
   </div>
+
+  <!-- DAG sub-panel: shared ancestry as the confounder Pagel's λ measures. -->
+  <div class="stage-body" style="margin-top:24px;border-top:1px dashed #c9c4b3;padding-top:20px;">
+    <div class="panel scenario" style="max-width:1100px;margin:0 auto 14px;">
+      <h3>What Pagel's λ is, in causal terms</h3>
+      <p>Two species' traits look correlated. Three causal stories could produce that. Build each one in the DAG below and see what the trait-vs-trait scatter looks like.</p>
+      <ol style="font-size:13.5px; margin:6px 0 6px 20px;">
+        <li><strong>Direct effect.</strong> Trait 1 → Trait 2. Real biology happens within each lineage.</li>
+        <li><strong>Shared ancestry.</strong> Phylogeny → Trait 1, Phylogeny → Trait 2. Both traits inherited from a common ancestor; no within-lineage link.</li>
+        <li><strong>Both.</strong> All three arrows present.</li>
+      </ol>
+      <p>The DAG widget treats "clade" as a categorical confounder — the same role phylogeny plays in Pagel's λ. Build each story, color by clade, watch the within-clade slopes vs the pooled slope.</p>
+    </div>
+    <div id="dag-l19-mount" style="max-width:1180px;margin:0 auto;"></div>
+    <p style="max-width:1100px; margin:14px auto 0; font-size:13px; color:#4a4a48;">Pagel's λ measures <em>how much of the across-species covariance is shared-ancestry covariance</em>. λ = 1 means the entire signal is the "phylogeny → both" story. λ = 0 means the entire signal is the within-lineage story. PGLS conditions on the tree, which is the same move as conditioning on "clade" in the DAG.</p>
+  </div>
 </section>
 
 <section class="stage stage-locked" id="stageD">
@@ -152,7 +169,50 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none;max-width:1300px;margin:0 auto;padding:16px 24px"><div id="posttest-mount"></div></div>
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — The earthworm sign flip — Simpson's paradox on a tree</h2>
+  <p class="stage-sub">The lecture's earthworm vignette, drawn as data. Pooled across all species, body size and soil pH show a clear <em>negative</em> relationship. Within each clade — the sister-species pairs — the relationship is <em>positive</em>. The phylogeny is doing all of the work in the pooled slope.</p>
+  <div class="lock-banner">Complete Stage D.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3>
+        <p>Synthetic earthworm data faithful to the structure in the lecture quote: 30 species in 6 clades of 5 species each. Within each clade, larger worms prefer slightly more alkaline soils (positive slope). Across clades, the bigger-bodied clades happen to occupy more acidic soils (so pooled across clades, the slope flips negative). The categorical variable is <em>clade membership</em> — and once it's drawn into the model, the within-clade slope is what's actually happening biologically.</p>
+      </div>
+      <div class="panel graph-wrap"><h3>Earthworm body size vs soil pH — pooled vs within-clade</h3>
+        <canvas id="plotE" width="560" height="320"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">pooled slope:</span> <span id="E_pool" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">median within-clade slope:</span> <span id="E_within">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predE"><h3>Prediction</h3>
+        <ol>
+          <li><div class="q">Q1. When you switch from pooled to within-clade view, the within-clade slopes will be:</div>
+            <label><input type="radio" name="qE1" value="same" /> Roughly the same as the pooled slope</label>
+            <label><input type="radio" name="qE1" value="weaker" /> Weaker than the pooled slope, but the same sign</label>
+            <label><input type="radio" name="qE1" value="flipped" /> Opposite sign — pooled negative; within-clade positive</label></li>
+          <li><div class="q">Q2. Which is the right way to describe what the pooled negative slope was measuring?</div>
+            <label><input type="radio" name="qE2" value="evolution" /> "Larger body size causes worms to prefer acidic soil"</label>
+            <label><input type="radio" name="qE2" value="clade" /> "Across clades, the larger-bodied lineages happen to live in more acidic soils — that's a fact about which clade lives where, not about evolution along any single lineage"</label>
+            <label><input type="radio" name="qE2" value="noise" /> "The data are just noise"</label></li>
+        </ol>
+        <button id="submitE" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreE">Toggle the clade-coloring at least once. <span class="count">0/1 toggles</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsE">
+        <div class="row"><label for="E_modeIn">view</label>
+          <select id="E_modeIn" style="grid-column:2 / 4; padding:6px;">
+            <option value="pool">pooled (no clade coloring)</option>
+            <option value="strat">color by clade, show within-clade fits</option>
+          </select></div></div></div>
+      <div class="panel"><h3>R code — Simpson's paradox on a tree</h3>
+<pre class="code" id="codeE"><span class="line">worms &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/earthworm_clades.csv"</span>)</span><span class="line">pooled  &lt;- <span class="fn">lm</span>(soil_pH ~ body_size, data = worms)</span><span class="line">within  &lt;- <span class="fn">lm</span>(soil_pH ~ body_size + clade, data = worms)</span><span class="line"><span class="fn">summary</span>(pooled)$coefficients[<span class="str">"body_size"</span>, ]</span><span class="line"><span class="fn">summary</span>(within)$coefficients[<span class="str">"body_size"</span>, ]</span></pre></div>
+    </div>
+  </div>
+</section>
+
 <div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 40px"></div>
 <footer class="wrap-up"><h2>One sentence to carry forward</h2>
   <div class="closing">Species are not independent observations. When you regress trait on environment across species, the points share ancestors, and the slope you compute is partly the slope of "we descended from a shared common ancestor." Subtract that out and what's left is the slope of "evolution happened independently in each lineage" — which is usually a much smaller, sometimes opposite, signal.<span class="src">— composite: 202_lec26_01 + 202_lec26_02</span></div>
@@ -160,6 +220,7 @@
 
 <script src="../lib/quiz.js"></script>
 <script src="../lib/score.js"></script>
+<script src="../lib/dag.js"></script>
 <script>
 function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
 function makeNormal(rng){let spare=null; return function(){if(spare!==null){const s=spare; spare=null; return s;} let u=0,v=0,s=0; do{u=rng()*2-1; v=rng()*2-1; s=u*u+v*v;}while(s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare=v*m; return u*m;};}
@@ -211,11 +272,11 @@ function pic(root, key="value") {
   return contrasts;
 }
 
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-const EXPLORE_THRESHOLD = { A:5, B:5, C:3, D:2 };
-function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=(stage==="D"?"toggles":(stage==="C"?"values":"seeds")); c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:5, B:3, C:3, D:2, E:1 };
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=(stage==="D"?"toggles":(stage==="C"?"values":"seeds")); c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"E",E:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
 
 const sA = { seed:42, n:30 };
@@ -368,18 +429,113 @@ summary(m)
 `);});
 wirePrediction("D","predD",["qD1"],"controlsD"); loadAvonet();
 
-const PRETEST_ITEMS = [
-  { idx:0, q:"Across species, OLS regression assumes:", options:["Species are independent","Species are correlated","Trait values are Gaussian","All of the above"], correct:0 },
-  { idx:1, q:"Phylogenetic independent contrasts at each node are independent under:", options:["Any model","Brownian motion","Selection","Drift"], correct:1 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"Two traits truly evolve independently on a tree. Across many simulations, what fraction of naive OLS regressions show P < 0.05?", options:["~5%","~20% or more — phylogenetic non-independence inflates false positives","0%","100%"], correct:1 },
-  { idx:1, q:"You run PGLS and find the slope is half the naive OLS slope. The interpretation is:", options:["The traits aren't related","Some of the naive correlation was clade signal, not independent co-evolution","Phylogeny is wrong","Sample size is too low"], correct:1 },
-  { idx:2, q:"Pagel's λ = 0 for a trait means:", options:["No phylogenetic signal — species are effectively independent","Strong phylogenetic signal — species evolve by Brownian motion","The trait doesn't evolve","Random measurement error"], correct:0 }
-];
-function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
-function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
-Score.init({moduleId:"lesson19", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+/* ====== STAGE E — earthworm Simpson's paradox ====== */
+// Synthetic data: 6 clades × 5 species each. Within-clade slope (body→pH)
+// is positive; across-clade slope is negative because the large-bodied
+// clades occupy more acidic soils.
+const WORM_DATA = (function(){
+  const rng = mulberry32(1872);
+  function g(){let u=0,v=0;while(u==0)u=rng();while(v==0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const rows = [];
+  const cladeCenters = [
+    {bodyMean: 2.0, pHMean: 7.5},  // small, alkaline
+    {bodyMean: 3.0, pHMean: 7.0},
+    {bodyMean: 4.0, pHMean: 6.4},
+    {bodyMean: 5.5, pHMean: 5.8},
+    {bodyMean: 7.0, pHMean: 5.2},
+    {bodyMean: 8.5, pHMean: 4.6}   // large, acidic
+  ];
+  for (let c = 0; c < cladeCenters.length; c++) {
+    const ctr = cladeCenters[c];
+    for (let i = 0; i < 5; i++) {
+      const bodyDev = g() * 0.7;       // within-clade body size variation
+      const body = ctr.bodyMean + bodyDev;
+      // Within-clade: more body size → more alkaline (positive slope ≈ +0.20)
+      const pHDev = 0.20 * bodyDev + 0.25 * g();
+      const pH = ctr.pHMean + pHDev;
+      rows.push({ body, pH, clade: c });
+    }
+  }
+  return rows;
+})();
+const WORM_COLORS = ["#2f6b8f","#b23a48","#c28a2b","#2f6b3a","#542788","#a52a2a"];
+const sE = { mode: "pool" };
+function wormOLS(xs, ys) {
+  const mx = xs.reduce((a,b)=>a+b,0)/xs.length;
+  const my = ys.reduce((a,b)=>a+b,0)/ys.length;
+  let sxx=0, sxy=0;
+  for (let i=0;i<xs.length;i++){const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy;}
+  const slope = sxx > 0 ? sxy/sxx : 0;
+  return { slope, intercept: my - slope*mx };
+}
+function drawStageE() {
+  const cv = document.getElementById("plotE"); const {ctx, W, H} = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const xs = WORM_DATA.map(d=>d.body), ys = WORM_DATA.map(d=>d.pH);
+  const pad = { l: 60, r: 12, t: 20, b: 40 };
+  const xMin = 0, xMax = Math.max(...xs)*1.1;
+  const yMin = Math.min(...ys)*0.9, yMax = Math.max(...ys)*1.05;
+  const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
+  drawAxes(ctx, f, "earthworm body size (cm)", "soil pH", 5, 5, v=>v.toFixed(0), v=>v.toFixed(1));
+  const pooled = wormOLS(xs, ys);
+  const byClade = {};
+  for (const d of WORM_DATA) (byClade[d.clade] = byClade[d.clade] || []).push(d);
+  const cladeFits = {};
+  for (const c in byClade) cladeFits[c] = wormOLS(byClade[c].map(d=>d.body), byClade[c].map(d=>d.pH));
+  // Points
+  for (const d of WORM_DATA) {
+    ctx.fillStyle = (sE.mode === "strat") ? WORM_COLORS[d.clade] : "#1d1d1baa";
+    ctx.beginPath(); ctx.arc(f.x(d.body), f.y(d.pH), 4, 0, 2*Math.PI); ctx.fill();
+  }
+  // Pooled fit
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = (sE.mode === "pool") ? 2.6 : 1.4;
+  ctx.setLineDash(sE.mode === "strat" ? [5,4] : []);
+  ctx.beginPath();
+  ctx.moveTo(f.x(xMin), f.y(pooled.intercept + pooled.slope * xMin));
+  ctx.lineTo(f.x(xMax), f.y(pooled.intercept + pooled.slope * xMax));
+  ctx.stroke(); ctx.setLineDash([]);
+  if (sE.mode === "strat") {
+    for (const c in byClade) {
+      const sub = byClade[c]; const fit = cladeFits[c];
+      const xLo = Math.min(...sub.map(d=>d.body)), xHi = Math.max(...sub.map(d=>d.body));
+      ctx.strokeStyle = WORM_COLORS[c]; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x(xLo), f.y(fit.intercept + fit.slope*xLo));
+      ctx.lineTo(f.x(xHi), f.y(fit.intercept + fit.slope*xHi));
+      ctx.stroke();
+    }
+  }
+  ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace"; ctx.textAlign = "left";
+  ctx.fillText("pooled slope = " + pooled.slope.toFixed(2) + " pH/cm", f.pad.l+8, f.pad.t+12);
+  // Median within-clade slope
+  const inSlopes = Object.values(cladeFits).map(f=>f.slope).sort((a,b)=>a-b);
+  const medW = inSlopes[Math.floor(inSlopes.length/2)];
+  document.getElementById("E_pool").textContent = pooled.slope.toFixed(2);
+  document.getElementById("E_within").textContent = medW.toFixed(2);
+}
+document.getElementById("E_modeIn").addEventListener("change", (e) => { sE.mode = e.target.value; drawStageE(); bumpExplore("E"); });
+wirePrediction("E","predE",["qE1","qE2"],"controlsE");
+drawStageE();
+
+/* ====== DAG widget — Stage C ====== */
+(function mountDAGc(){
+  if (typeof DAG === "undefined") return;
+  DAG.init({
+    mount: "#dag-l19-mount",
+    nodes: [
+      { id: "clade",  label: "Clade (ancestry)", x: 290, y: 55, type: "categorical", levels: 3 },
+      { id: "trait1", label: "Trait 1",          x: 110, y: 200 },
+      { id: "trait2", label: "Trait 2",          x: 470, y: 200 }
+    ],
+    arrows: [],
+    initialAxes: { x: "trait1", y: "trait2" },
+    initialColor: "clade",
+    n: 240,
+    seed: 314,
+    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("C"); }
+  });
+})();
+
+Score.init({moduleId:"lesson19", version:3, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

@@ -72,8 +72,6 @@
   <p>BIO 202, Spring 2026, draft v1. Mendel's peas. Monohybrid 3:1, dihybrid 9:3:3:1, and what to do when the chi-squared on real data fits the expected ratio <em>too</em> well.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
-
 <div class="outcomes">
   <h2>What you'll do</h2>
   <p>Four stages. Run Mendelian crosses in simulation. Predict each ratio before you sample. End on Mendel's own data — and the chi-squared score that has been bothering geneticists since R. A. Fisher noticed it in 1936.</p>
@@ -95,16 +93,12 @@
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — One gene, two alleles, a 3:1 ratio</h2>
   <p class="stage-sub">Simulate Mendel's monohybrid cross. Slide the offspring count. Watch how close the observed ratio is to 3:1.</p>
-  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
         <h3>Scenario</h3>
         <p>Two heterozygous pea plants (Aa × Aa). Each parent contributes one allele at random — Mendel's law of segregation. Three quarters of offspring should be dominant phenotype (AA or Aa); one quarter recessive (aa). The <em>expected</em> ratio is 3:1. The <em>observed</em> ratio is whatever you sample.</p>
-        <div class="anchor-quote">
-          Dominant and recessive are not some property of the gene itself. They're just the words we use for how the traits manifest — how the outcome of all the different gene interactions percolates out to the organism.
-          <span class="src">— 202_lec01_07</span>
-        </div>
       </div>
       <div class="panel graph-wrap">
         <h3>Observed counts vs expected 3:1</h3>
@@ -277,10 +271,6 @@
       <div class="panel scenario">
         <h3>Scenario</h3>
         <p>Mendel's 1865 paper reports several monohybrid F2 ratios — round/wrinkled seed, yellow/green seed, etc. Load his counts. Compute χ² for each trait. Then combine across traits. Where does Mendel's combined χ² sit in the distribution of <em>1,000 simulated Mendel-style experimenters</em>?</p>
-        <div class="anchor-quote">
-          Mendel's mistake was that he published his paper too early. If he had published 20 years later, everybody would have read it. He published when inheritance wasn't that exciting — so nobody noticed it, and it was forgotten for decades.
-          <span class="src">— 202_lec07_01</span>
-        </div>
       </div>
       <div class="panel graph-wrap">
         <h3>Mendel's combined χ² vs simulated honest experimenters</h3>
@@ -330,7 +320,6 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
@@ -362,9 +351,9 @@ function chi2P(x, k) { if (x <= 0) return 1; // upper tail
 
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
 const EXPLORE_THRESHOLD = { A:5, B:5, C:3, D:2 };
-function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"combos":stage==="C"?"values":"runs"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"combos":stage==="C"?"values":"runs"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
 
 /* ============== STAGE A — monohybrid ============== */
@@ -533,18 +522,7 @@ wirePrediction("D","predD",["qD1"],"controlsD");
 loadMendel();
 
 /* ============== Pretest / Posttest / Score ============== */
-const PRETEST_ITEMS = [
-  { idx:0, q:"In a monohybrid cross Aa × Aa, what fraction of offspring are expected to show the recessive phenotype?", options:["1/2","1/3","1/4","3/4"], correct:2 },
-  { idx:1, q:"In a dihybrid cross AaBb × AaBb with independent assortment, the expected ratio of phenotypes is:", options:["3:1","1:1:1:1","9:3:3:1","16:0:0:0"], correct:2 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"You run a monohybrid cross with n = 40 and get 27 dominant : 13 recessive. The χ² against 3:1 is small. What can you conclude?", options:["The cross is consistent with 3:1","The cross is significantly different from 3:1","The dominant allele is winning the meiosis lottery","Nothing — you'd need a permutation null"], correct:0 },
-  { idx:1, q:"Mendel's combined χ² across published F2 ratios sits in the lower tail of the distribution of honest experimenters. The most defensible reading is:", options:["Mendel made up his data","Mendel discarded crosses that looked off","Mendel was just lucky","Either of the first two — both are consistent with the data; we can't tell which"], correct:3 },
-  { idx:2, q:"Which of these are properties of genes (vs of phenotypes)?", options:["The DNA sequence","The trait being dominant","The trait being recessive","The chromosome location","The protein product (if any)"], correct:[0,3,4] }
-];
-function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
-function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
-Score.init({moduleId:"lesson8", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+Score.init({moduleId:"lesson8", version:1, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

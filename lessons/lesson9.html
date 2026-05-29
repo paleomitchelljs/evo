@@ -70,8 +70,6 @@
   <p>BIO 202, Spring 2026, draft v1. Hardy-Weinberg as the null. Turn the assumptions off one at a time and watch the genotype frequencies leave it.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
-
 <div class="outcomes">
   <h2>What you'll do</h2>
   <p>Four stages. Build the panmictic baseline, then turn off the assumptions one at a time and see which violation moves the genotypes most. End on a real wild-population dataset and ask which assumption broke.</p>
@@ -92,7 +90,7 @@
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Infinite population, panmictic mating, no mutation</h2>
   <p class="stage-sub">Slide the allele frequency p. Read the expected genotype frequencies p², 2pq, q². Watch the heterozygote curve peak at p = 0.5.</p>
-  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
@@ -297,6 +295,14 @@
             <label><input type="radio" name="qD1" value="more" /> More than 5% — wild populations rarely sit exactly at HWE</label>
             <label><input type="radio" name="qD1" value="none" /> Essentially zero — HWE is robust</label>
           </li>
+          <li>
+            <div class="q">Q2. For a locus that <em>does</em> fail HWE in this population, which of the four candidate forces are <strong>plausibly operating</strong>? Check every one you'd want to investigate. (Italian sparrows are a hybrid lineage of house and Spanish sparrows.)</div>
+            <label><input type="checkbox" name="qD2" value="drift"     /> Drift (finite Nₑ)</label>
+            <label><input type="checkbox" name="qD2" value="selection" /> Selection at or near the locus</label>
+            <label><input type="checkbox" name="qD2" value="mutation"  /> Mutation</label>
+            <label><input type="checkbox" name="qD2" value="assortative" /> Non-random mating (assortative or inbreeding)</label>
+            <label><input type="checkbox" name="qD2" value="structure" /> Population structure / Wahlund effect from the parent-species mixture</label>
+          </li>
         </ol>
         <button id="submitD" disabled>Submit → reveal</button>
         <div class="explore-tracker" id="exploreD">Click a locus to see its per-genotype breakdown at least 2 times. <span class="count">0/2 inspections</span></div>
@@ -319,7 +325,6 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
@@ -345,9 +350,9 @@ function chi2P(x, k) { if (x <= 0) return 1; function lgamma(z) { const c=[0.999
 
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
 const EXPLORE_THRESHOLD = { A:4, B:5, C:3, D:2 };
-function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"values":stage==="B"?"combos":stage==="C"?"combos":"inspections"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"values":stage==="B"?"combos":stage==="C"?"combos":"inspections"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
 
 /* STAGE A — HWE genotype curves */
@@ -540,21 +545,10 @@ chi_per_locus <- apply(loci, 1, function(r) {
 })
 mean(pchisq(chi_per_locus, df = 1, lower.tail = FALSE) < 0.05)
 `);});
-wirePrediction("D","predD",["qD1"],"controlsD"); loadLoci();
+wirePrediction("D","predD",["qD1","qD2"],"controlsD"); loadLoci();
 
 /* Pretest / Posttest */
-const PRETEST_ITEMS = [
-  { idx:0, q:"Under Hardy-Weinberg, with p = 0.3, the heterozygote frequency is:", options:["0.09","0.21","0.42","0.49"], correct:2 },
-  { idx:1, q:"Hardy-Weinberg's four assumptions are: infinite population, no selection, no mutation, no:", options:["recombination","linkage","non-random mating","drift"], correct:2 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"You measure genotype frequencies and find a heterozygote deficit (fewer Aa than HWE predicts). The deficit could be caused by:", options:["Inbreeding","Selection against Aa","Population structure (Wahlund effect)","Drift","All of the above"], correct:4 },
-  { idx:1, q:"Hardy-Weinberg never holds exactly because:", options:["The math is wrong","Real populations are finite","DNA replicates with error","Both B and C — the assumptions require infinite N and zero μ"], correct:3 },
-  { idx:2, q:"Across many wild loci, the fraction failing an HWE test is typically:", options:["Exactly 5%","Less than 5%","More than 5%","Either A or C, depending on the population"], correct:3 }
-];
-function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
-function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
-Score.init({moduleId:"lesson9", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+Score.init({moduleId:"lesson9", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

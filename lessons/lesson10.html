@@ -63,8 +63,6 @@
   <p>BIO 202, Spring 2026, draft v1. Wright-Fisher drift. Allele frequencies stagger around at random until they hit zero or one and the variation is gone.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="pretest-mount"></div></div>
-
 <div class="outcomes">
   <h2>What you'll do</h2>
   <p>Four stages. Watch trajectories. Watch them hit absorbing boundaries. Watch the fixation-probability statistic equal the starting frequency for neutral alleles. End at the Buri flies — Wright-Fisher in a lab.</p>
@@ -85,7 +83,7 @@
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — One trajectory, then 50</h2>
   <p class="stage-sub">A single allele drifts in a Wright-Fisher population. Slide N, slide p₀, slide seed. Watch one realization. Toggle the fan to see 50.</p>
-  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario"><h3>Scenario</h3><p>Each generation, sample 2N alleles with replacement from the previous generation. That is the Wright-Fisher rule. The expected next-generation frequency is the current frequency; the variance is p(1−p)/(2N).</p></div>
@@ -108,7 +106,8 @@
           <div class="row" data-line="p0"><label for="A_pIn">p₀ (start)</label><input type="range" id="A_pIn" min="0.05" max="0.95" step="0.01" value="0.5" /><output id="A_pOut">0.50</output></div>
           <div class="row" data-line="gens"><label for="A_gIn">generations</label><input type="range" id="A_gIn" min="20" max="2000" step="10" value="200" /><output id="A_gOut">200</output></div>
           <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
-          <div class="buttons"><label><input type="checkbox" id="A_fan" /> show 50-replicate fan</label> <button id="A_download" class="ghost">Download .R</button></div>
+          <div class="buttons"><label><input type="checkbox" id="A_fan" /> show 50-replicate fan</label> <button id="A_clearGuess" class="ghost">Clear envelope guess</button> <button id="A_download" class="ghost">Download .R</button></div>
+          <p style="font-size:12px;color:#6b6b68;margin:4px 0 0;">Click two points on the canvas to mark the upper and lower bound of where you expect most replicate trajectories to land at generation <span id="A_gensInline">200</span>. Then toggle the fan to check.</p>
         </div>
       </div>
       <div class="panel"><h3>R code — Wright-Fisher one trajectory</h3>
@@ -217,7 +216,6 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;"><div id="posttest-mount"></div></div>
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
@@ -243,23 +241,46 @@ function wfStep(rng,N,p,s){const ps = p*(1+s)/(p*(1+s)+(1-p)); return rbinom(rng
 
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
 const EXPLORE_THRESHOLD = { A:5, B:4, C:3, D:3 };
-function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"N values":stage==="C"?"s values":"sims"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"N values":stage==="C"?"s values":"sims"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
 
 /* STAGE A — trajectories */
-const sA = { N:100, p0:0.5, gens:200, seed:42, fan:false };
+const sA = { N:100, p0:0.5, gens:200, seed:42, fan:false, guessHi:null, guessLo:null, guessSubmitted:false };
 function drawStageA() {
   const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
   const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,sA.gens,0,1);
   drawAxes(ctx,f,"generation","p",6,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  // Predicted envelope (student's two clicks at the right edge of the canvas).
+  // Drawn as a shaded band even before the fan is revealed.
+  if (sA.guessHi !== null && sA.guessLo !== null) {
+    const hi = Math.max(sA.guessHi, sA.guessLo), lo = Math.min(sA.guessHi, sA.guessLo);
+    ctx.fillStyle = "rgba(47,107,143,0.18)";
+    ctx.fillRect(f.x(0), f.y(hi), f.x(sA.gens) - f.x(0), f.y(lo) - f.y(hi));
+    ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(f.x(0), f.y(hi)); ctx.lineTo(f.x(sA.gens), f.y(hi)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(f.x(0), f.y(lo)); ctx.lineTo(f.x(sA.gens), f.y(lo)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = "#2f6b8f"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "left";
+    ctx.fillText("your predicted ±envelope", f.pad.l + 10, f.y(hi) - 4);
+  }
   if (sA.fan) {
+    // Compute final-gen frequencies across replicates for the "fraction-fixed" readout.
+    const finals = [];
     for(let r=0;r<50;r++){
       const rng=mulberry32(sA.seed*131 + r);
       let p=sA.p0; ctx.strokeStyle="rgba(60,60,60,0.18)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
       for(let g=1;g<=sA.gens;g++){ p=wfStep(rng,sA.N,p,0); ctx.lineTo(f.x(g),f.y(p)); }
       ctx.stroke();
+      finals.push(p);
+    }
+    // Annotate fan vs prediction.
+    if (sA.guessHi !== null && sA.guessLo !== null) {
+      const hi = Math.max(sA.guessHi, sA.guessLo), lo = Math.min(sA.guessHi, sA.guessLo);
+      const inBand = finals.filter(p => p >= lo && p <= hi).length;
+      ctx.fillStyle = "#b23a48"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "right";
+      ctx.fillText(inBand + "/50 endpoints fall inside your band", f.pad.l + (f.x(sA.gens) - f.pad.l) - 6, f.pad.t + 14);
     }
   }
   // Highlighted single trajectory
@@ -272,8 +293,38 @@ function drawStageA() {
   document.getElementById("A_gens").textContent=sA.gens;
   document.getElementById("A_finalP").textContent=p.toFixed(3);
 }
+
+// Canvas click handler: first two clicks set the envelope bounds (the "draw
+// your fan" prediction); subsequent clicks replace the higher/lower bound
+// closer to the click.
+(function wireDrawFan(){
+  const cv = document.getElementById("plotA");
+  cv.style.cursor = "crosshair";
+  cv.addEventListener("click", (e) => {
+    const rect = cv.getBoundingClientRect();
+    const py = e.clientY - rect.top;
+    const pad = { l: 50, r: 12, t: 18, b: 38 };
+    const H = +cv.dataset.cssH || cv.height;
+    const cssH = H;
+    const usableH = cssH - pad.t - pad.b;
+    if (py < pad.t || py > pad.t + usableH) return;
+    const v = 1 - (py - pad.t) / usableH;
+    const clamped = Math.max(0, Math.min(1, v));
+    if (sA.guessHi === null) { sA.guessHi = clamped; }
+    else if (sA.guessLo === null) { sA.guessLo = clamped; }
+    else {
+      // Replace whichever bound the click is closer to.
+      const dHi = Math.abs(clamped - sA.guessHi);
+      const dLo = Math.abs(clamped - sA.guessLo);
+      if (dHi < dLo) sA.guessHi = clamped; else sA.guessLo = clamped;
+    }
+    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("A");
+    drawStageA();
+  });
+})();
 ["A_NIn","A_pIn","A_gIn","A_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={A_NIn:"N",A_pIn:"p0",A_gIn:"gens",A_seedIn:"seed"}[id]; sA[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent= key==="p0"?v.toFixed(2):v; if(key==="N"){document.getElementById("cA_N").textContent=v; highlightByDataLine("codeA","N");} if(key==="p0"){document.getElementById("cA_p").textContent=v.toFixed(2); highlightByDataLine("codeA","p0");} if(key==="gens"){document.getElementById("cA_g").textContent=v; highlightByDataLine("codeA","gens");} if(key==="seed"){document.getElementById("cA_seed").textContent=v; highlightByDataLine("codeA","seed");} drawStageA(); bumpExplore("A");}));
 document.getElementById("A_fan").addEventListener("change",(e)=>{sA.fan=e.target.checked; drawStageA();});
+document.getElementById("A_clearGuess").addEventListener("click",()=>{ sA.guessHi=null; sA.guessLo=null; drawStageA(); });
 document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson10_stageA.R",`set.seed(${sA.seed}); N <- ${sA.N}; p <- ${sA.p0}; gens <- ${sA.gens}
 traj <- numeric(gens+1); traj[1] <- p
 for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj[g+1] <- p }
@@ -393,18 +444,7 @@ matplot(t(sim), type="l", col=rgb(0,0,0,0.1))
 wirePrediction("D","predD",["qD1"],"controlsD"); loadBuri();
 
 /* Pretest / Posttest */
-const PRETEST_ITEMS = [
-  { idx:0, q:"In a Wright-Fisher population of size N, the variance in allele frequency added each generation is:", options:["p(1−p)","p(1−p)/N","p(1−p)/(2N)","p(1−p)·N"], correct:2 },
-  { idx:1, q:"For a neutral allele starting at p₀ = 0.3 in a finite population, what is its fixation probability?", options:["0","0.3","0.5","1"], correct:1 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"You observe two lab populations of equal size N drift over 4N generations. Both are neutral. Why don't they reach the same allele frequency?", options:["One had hidden selection","Drift is intrinsically stochastic; different realizations diverge","The samples were too small","Mutation moved them apart"], correct:1 },
-  { idx:1, q:"In a population of N = 100 over 200 generations, the expected fraction of replicates with the allele fixed (at 1) given p₀ = 0.5 is closest to:", options:["~10%","~25%","~50%","~95%"], correct:1 },
-  { idx:2, q:"Compared to the census size, the effective population size Nₑ tends to be:", options:["Larger","Smaller","About the same","Variable in either direction"], correct:1 }
-];
-function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
-function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
-Score.init({moduleId:"lesson10", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+Score.init({moduleId:"lesson10", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

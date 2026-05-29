@@ -34,7 +34,6 @@
   <p>BIO 202, Spring 2026, draft v1. Mutation-selection balance. The reason bad alleles don't go to zero is that mutation keeps recreating them.</p>
 </header>
 <div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
-<div class="score-card" id="pretest-card" style="display:none;max-width:1300px;margin:0 auto;padding:16px 24px"><div id="pretest-mount"></div></div>
 <div class="outcomes"><h2>What you'll do</h2><p>Mutation-only model. Mutation + selection equilibrium at q ≈ μ/(hs). Back-calculate s. Cystic fibrosis as the case where μ/(hs) breaks.</p>
   <div class="scenario" style="max-width:920px"><div class="anchor-quote">The frequency of an allele in the population goes back to what frequencies always are: how often you get it yourself, plus how often you inherit it. The two ways to get it. The frequency of a bad mutation works out to μ/(H·S) — the mutation rate divided by how bad it is and how heritable that badness is.<span class="src">— 202_lec17_02</span></div></div></div>
 <nav class="toc" id="toc">
@@ -47,7 +46,7 @@
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Mutation alone — q drifts up at rate μ</h2>
   <p class="stage-sub">Without selection, a new mutation arises at rate μ per generation. In a finite population, it usually goes extinct from drift; rarely it sweeps to fixation.</p>
-  <div class="lock-banner">Locked. Answer the pretest to unlock.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario"><h3>Scenario</h3><p>Start with q = 0. Each generation, each non-mutant allele can mutate to "a" with rate μ. Plot q over time. Without selection, this is a Wright-Fisher process plus an injection rate of μ per allele per generation.</p></div>
@@ -142,11 +141,13 @@
     </div>
     <div class="col">
       <div class="panel prediction" id="predD"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. Why is the CF allele frequency in Northern Europeans (q ≈ 0.022) too high to explain by mutation-selection balance alone?</div>
-          <label><input type="radio" name="qD1" value="mutation" /> Mutation rate must be wildly underestimated</label>
-          <label><input type="radio" name="qD1" value="selection" /> Selection must be much weaker than estimated</label>
-          <label><input type="radio" name="qD1" value="hetadv" /> Carriers (Aa) must have a fitness advantage — heterozygote advantage</label>
-          <label><input type="radio" name="qD1" value="drift" /> It's just drift</label></li></ol>
+        <p style="font-size:13px;color:#6b6b68;margin:0 0 8px;">The basic mutation-selection balance model assumes two causal arrows: μ → q and s_aa → q. It predicts q ≈ 0.001. The observed q is 22× higher. Which <em>additional</em> arrows in the causal model could be doing the work? Check every plausible one.</p>
+        <div class="q">Q1. What's keeping CF at q ≈ 0.022 above mutation-selection balance? (Check any that you think contribute.)</div>
+        <label><input type="checkbox" name="qD1" value="hetadv" /> Carriers (Aa) have a fitness advantage (heterozygote advantage)</label>
+        <label><input type="checkbox" name="qD1" value="mutation" /> The CFTR mutation rate at this locus is much higher than the 1×10⁻⁶ assumed</label>
+        <label><input type="checkbox" name="qD1" value="founder" /> A historical bottleneck / founder event drifted CF up; selection hasn't yet brought it down</label>
+        <label><input type="checkbox" name="qD1" value="drift" /> Pure ongoing drift</label>
+        <label><input type="checkbox" name="qD1" value="meas" /> The observed q ≈ 0.022 is a measurement error</label>
         <button id="submitD" disabled>Submit → reveal</button>
         <div class="explore-tracker" id="exploreD">Adjust the het-advantage slider and find a configuration that matches 0.022. <span class="count">0/2 attempts</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
@@ -160,7 +161,6 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none;max-width:1300px;margin:0 auto;padding:16px 24px"><div id="posttest-mount"></div></div>
 <div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 40px"></div>
 <footer class="wrap-up"><h2>One sentence to carry forward</h2>
   <div class="closing">Bad alleles are not rare because selection eliminated them. They are at frequency μ/(hs) — the rate at which mutation makes them, divided by how bad they are. When the observed frequency disagrees with this prediction, something else is keeping the allele around. That something is usually that the heterozygote isn't actually bad.<span class="src">— 202_lec17_02</span></div>
@@ -179,9 +179,9 @@ function rbinom(rng,n,p){let k=0; for(let i=0;i<n;i++) if(rng()<p) k++; return k
 
 const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
 const EXPLORE_THRESHOLD = { A:4, B:4, C:3, D:2 };
-function bumpExplore(stage){const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="D"?"attempts":"combos"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`; unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"posttest"}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if(typeof showPosttest==="function") showPosttest(); }
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="D"?"attempts":"combos"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
 
 const sA = { logMu:-4, N:1000, seed:42 };
@@ -294,18 +294,7 @@ c(rec = q_rec, partial = q_pd, hetadv = q_ha, observed = 0.022)
 `);});
 wirePrediction("D","predD",["qD1"],"controlsD"); drawStageD();
 
-const PRETEST_ITEMS = [
-  { idx:0, q:"For a partially dominant deleterious allele, the mutation-selection balance frequency is approximately:", options:["μ/s","μ/(hs)","s/μ","√(μ/s)"], correct:1 },
-  { idx:1, q:"For a fully recessive lethal (h=0, s=1), the equilibrium frequency is:", options:["μ","√μ","μ²","2μ"], correct:1 }
-];
-const POSTTEST_ITEMS = [
-  { idx:0, q:"The CF allele in Northern Europeans sits at q ≈ 0.022. The mutation-selection balance for a recessive lethal predicts q ≈ √(10⁻⁶/1) ≈ 0.001. The discrepancy means:", options:["The mutation rate is wrong","Selection is not strong","Some force (likely heterozygote advantage) is elevating the equilibrium","CF isn't actually fatal"], correct:2 },
-  { idx:1, q:"Inferring s from observed q assumes you know:", options:["μ","h","Both","Neither"], correct:2 },
-  { idx:2, q:"For a fully dominant deleterious allele (h = 1) with s = 0.05 and μ = 5×10⁻⁵, the equilibrium frequency q is approximately:", options:["10⁻³","10⁻⁵","10⁻¹","10⁻⁷"], correct:0 }
-];
-function showPretest() { document.getElementById("pretest-card").style.display="block"; Quiz.render({mount:"#pretest-mount",group:"pretest",title:"Before you start",items:PRETEST_ITEMS, onComplete:()=>{document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked");}}); }
-function showPosttest() { const c=document.getElementById("posttest-card"); if (c.style.display==="block") return; c.style.display="block"; Quiz.render({mount:"#posttest-mount",group:"posttest",title:"Wrap-up check",items:POSTTEST_ITEMS, onComplete:()=>Score.finish()}); }
-Score.init({moduleId:"lesson13", version:1, pretest:PRETEST_ITEMS.length, scaffold:4, posttest:POSTTEST_ITEMS.length, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>showPretest()});
+Score.init({moduleId:"lesson13", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

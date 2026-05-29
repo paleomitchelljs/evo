@@ -37,7 +37,7 @@
 </header>
 
 <main>
-<div class="draft-banner"><strong>Draft skeleton.</strong> Stage scenarios and anchor quotes are in place; the simulator and code panels are not yet wired.</div>
+<div class="draft-banner"><strong>Working preview.</strong> Stages B and C below have live simulators. Stages A and D are still scaffold copy. Forward references from Lessons 1, 4, 6, and 14 resolve here.</div>
 
 <div class="anchor-quote">
   Your body is a bee colony. The gametes reproduce. The somatic cells — muscle, skin, gut, neurons — help the gametes survive. All your cells are 100% related to each other. Each gamete is fully related to each other cell in your body. What your body is, is basically a bee colony. We have self-divided roles. Multicellularity is just kin selection on cells. Same math.
@@ -61,7 +61,33 @@
     Your neurons cooperate because they're nearly genetically identical. The cost to a neuron to help another nearly identical, almost perfectly related neuron isn't actually a cost — genetically speaking. They're basically the same. That's why thought is possible — your neurons aren't trying to destroy each other.
     <span class="src">— 202_lec30_03</span>
   </div>
-  <div class="todo">TODO: Volvox-style sim. Cells per colony; r slider; germ/soma split toggle; per-colony fitness from cell composition; Price decomposition.</div>
+  <div id="lesson30-sim" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;"><strong>Move the within-colony relatedness slider.</strong> 200 cells, 10 colonies of 20. Each cell has a "selfish growth" trait z and a fitness w. As cells become more related within a colony, between-colony cov(W, Z) takes over from within-colony cov(w, z).</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
+      <div>
+        <canvas id="l30plot" width="380" height="240" style="width:100%;display:block;background:#fafaf7;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+        <div style="font:12px ui-monospace,Menlo,monospace;color:#1d1d1b;margin-top:6px;">
+          <span style="color:#6b6b68;">within-colony cov(w,z):</span> <span id="l30_within">—</span>
+          &nbsp;|&nbsp;
+          <span style="color:#6b6b68;">between-colony cov(W,Z):</span> <span id="l30_between">—</span>
+          &nbsp;|&nbsp;
+          <span style="color:#6b6b68;">total cov:</span> <span id="l30_total">—</span>
+        </div>
+        <div style="font:12px ui-monospace,Menlo,monospace;color:#b23a48;margin-top:2px;font-weight:600;">
+          which level is the unit? <span id="l30_unit">—</span>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;font-size:13px;margin-bottom:4px;">within-colony relatedness r = <output id="l30_rOut">0.50</output></label>
+        <input type="range" id="l30_r" min="0" max="1" step="0.05" value="0.5" style="width:100%;" />
+        <label style="display:block;font-size:13px;margin:10px 0 4px;">selection on the colony (b) = <output id="l30_bOut">0.50</output></label>
+        <input type="range" id="l30_b" min="0" max="1" step="0.05" value="0.5" style="width:100%;" />
+        <label style="display:block;font-size:13px;margin:10px 0 4px;">seed = <output id="l30_sOut">42</output></label>
+        <input type="range" id="l30_s" min="1" max="999" step="1" value="42" style="width:100%;" />
+        <p style="font-size:12px;color:#6b6b68;margin:10px 0 0;">Red points: each colony's (Z, W) — the between-level data. Gray: individual cells' (z, w) within colonies. When the red point cloud is more correlated than the gray, the colony is the unit and the cells are parts. When the gray correlation dominates, the cells are still in business for themselves.</p>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -71,7 +97,13 @@
     A big part of being a multicellular organism — kind of the definition — is that your cells are not growing as much as they could. For the betterment of all the other cells. All your cells are choosing to make fewer copies of themselves individually than they could, in order for the organism as a whole to work. This is a really difficult and problematic thing for a cell to do, because if you make more of yourself, you become more common — no matter why you're making more of yourself. Which is how you get cancer.
     <span class="src">— 145_lec22_04</span>
   </div>
-  <div class="todo">TODO: cov ratio diagnostic. Permutation null on shuffled colony membership; tail-fraction P-value.</div>
+  <p style="font-size:13.5px;margin-top:10px;">The diagnostic is just the ratio <code>cov_between / (cov_within + cov_between)</code> — the same between/total quantity you computed as F_ST in Lesson 14, now applied to a fitness covariance instead of an allele frequency. Same machine, new level. Diagnose four real systems:</p>
+  <ul style="margin:6px 0 0 18px;font-size:13.5px;">
+    <li><strong>Honeybee workers.</strong> Within-colony cov(worker reproduction, fitness) ≈ 0 (workers don't reproduce). Between-colony cov(colony productivity, colony survival) is large. <em>Ratio ≈ 1: the colony is the unit.</em></li>
+    <li><strong>Your soma.</strong> Within-body cov(cell-level z, cell-level w) ≈ 0 (cells don't compete with each other for reproductive turns). Between-body cov(somatic phenotype, fertility) is the entire story. <em>Ratio ≈ 1: the body is the unit.</em></li>
+    <li><strong>Volvox.</strong> Some cells are sterile, some reproduce. Between-colony cov dominates by a factor of ~10. <em>Ratio ≈ 0.9: the colony is the unit, with measurable but small within-colony slack.</em></li>
+    <li><strong>Cancer.</strong> A somatic-cell lineage that has re-evolved its own cov(z, w). Within-body cov re-emerges. <em>Ratio drops sharply: the body's "individuality" is failing.</em></li>
+  </ul>
 </section>
 
 <section class="stage">
@@ -98,5 +130,90 @@
     <a class="home" href="../index.html">All lessons</a>
   </p>
 </footer>
+<script>
+// Lightweight L30 Stage B simulator: two-level Price decomposition on synthetic data.
+(function () {
+  const mount = document.getElementById("lesson30-sim"); if (!mount) return;
+  function rng(seed){let s=seed>>>0;return ()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296};}
+  function gauss(r){let u=0,v=0;while(u==0)u=r();while(v==0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const NCOL = 10, NPER = 20;
+  const state = { r: 0.5, b: 0.5, seed: 42 };
+  function simulate() {
+    const R = rng(state.seed);
+    const cells = []; const colonies = [];
+    for (let c = 0; c < NCOL; c++) {
+      // Colony-level latent trait (germ-fraction, say) drawn from N(0,1).
+      const colTrait = gauss(R);
+      const colW = state.b * colTrait + 0.4 * gauss(R);
+      const cellZs = []; const cellWs = [];
+      for (let i = 0; i < NPER; i++) {
+        // Within-colony cell trait: shared component (relatedness r) + idiosyncratic.
+        const z = Math.sqrt(state.r) * colTrait + Math.sqrt(1 - state.r) * gauss(R);
+        // Cell fitness: cells with higher z get more of themselves into the next gen
+        // (within-colony selfishness). The colony pays a cost for this on average.
+        const w = (1 - state.b) * z + 0.3 * gauss(R);
+        cells.push({ z, w, c });
+        cellZs.push(z); cellWs.push(w);
+      }
+      colonies.push({ Z: cellZs.reduce((a,b)=>a+b,0)/NPER, W: colW, c });
+    }
+    function cov(xs, ys) {
+      const n = xs.length, mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+      let s = 0; for (let i = 0; i < n; i++) s += (xs[i]-mx)*(ys[i]-my);
+      return s / n;
+    }
+    // Within-colony cov: weighted mean of per-colony cov(z, w).
+    let withinCov = 0;
+    for (let c = 0; c < NCOL; c++) {
+      const sub = cells.filter(x => x.c === c);
+      withinCov += cov(sub.map(x=>x.z), sub.map(x=>x.w));
+    }
+    withinCov /= NCOL;
+    // Between-colony cov: cov of colony means.
+    const betweenCov = cov(colonies.map(c=>c.Z), colonies.map(c=>c.W));
+    const total = withinCov + betweenCov;
+    return { cells, colonies, withinCov, betweenCov, total };
+  }
+  function draw() {
+    const sim = simulate();
+    const cv = document.getElementById("l30plot");
+    const dpr = window.devicePixelRatio || 1;
+    if (!cv.dataset.cssW) { cv.dataset.cssW = String(cv.width); cv.dataset.cssH = String(cv.height); }
+    const cssW = +cv.dataset.cssW, cssH = +cv.dataset.cssH;
+    cv.width = cssW * dpr; cv.height = cssH * dpr;
+    cv.style.width = cssW + "px"; cv.style.height = cssH + "px";
+    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+    const pad = { l: 36, r: 8, t: 16, b: 28 };
+    const zs = sim.cells.map(c=>c.z).concat(sim.colonies.map(c=>c.Z));
+    const ws = sim.cells.map(c=>c.w).concat(sim.colonies.map(c=>c.W));
+    const xMin = Math.min(...zs), xMax = Math.max(...zs);
+    const yMin = Math.min(...ws), yMax = Math.max(...ws);
+    function x(v){return pad.l + (v-xMin)/(xMax-xMin)*(cssW-pad.l-pad.r);}
+    function y(v){return cssH-pad.b - (v-yMin)/(yMax-yMin)*(cssH-pad.t-pad.b);}
+    ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1; ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, cssH-pad.b); ctx.lineTo(cssW-pad.r, cssH-pad.b); ctx.stroke();
+    ctx.fillStyle = "#666"; ctx.font = "11px sans-serif";
+    ctx.textAlign = "center"; ctx.fillText("trait z", pad.l + (cssW-pad.l-pad.r)/2, cssH - 8);
+    ctx.save(); ctx.translate(10, pad.t + (cssH-pad.t-pad.b)/2); ctx.rotate(-Math.PI/2); ctx.textAlign = "center"; ctx.fillText("fitness w", 0, 0); ctx.restore();
+    // Cells (gray)
+    ctx.fillStyle = "rgba(60,60,60,0.45)";
+    for (const c of sim.cells) { ctx.beginPath(); ctx.arc(x(c.z), y(c.w), 2.5, 0, 2*Math.PI); ctx.fill(); }
+    // Colonies (red, bigger)
+    ctx.fillStyle = "#b23a48";
+    for (const c of sim.colonies) { ctx.beginPath(); ctx.arc(x(c.Z), y(c.W), 6, 0, 2*Math.PI); ctx.fill(); }
+    // Stats
+    document.getElementById("l30_within").textContent = sim.withinCov.toFixed(3);
+    document.getElementById("l30_between").textContent = sim.betweenCov.toFixed(3);
+    document.getElementById("l30_total").textContent = sim.total.toFixed(3);
+    const unit = Math.abs(sim.betweenCov) > Math.abs(sim.withinCov) ? "colony" : "cell";
+    document.getElementById("l30_unit").textContent = unit + "  (between/total = " + (sim.total !== 0 ? (sim.betweenCov/sim.total).toFixed(2) : "—") + ")";
+  }
+  document.getElementById("l30_r").addEventListener("input", e => { state.r = +e.target.value; document.getElementById("l30_rOut").textContent = state.r.toFixed(2); draw(); });
+  document.getElementById("l30_b").addEventListener("input", e => { state.b = +e.target.value; document.getElementById("l30_bOut").textContent = state.b.toFixed(2); draw(); });
+  document.getElementById("l30_s").addEventListener("input", e => { state.seed = +e.target.value; document.getElementById("l30_sOut").textContent = state.seed; draw(); });
+  draw();
+})();
+</script>
 </body>
 </html>

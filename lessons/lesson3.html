@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 3: Subtracting the line and reading what's left</title>
 <link rel="stylesheet" href="../lib/score.css">
+<link rel="stylesheet" href="../lib/dag.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   * { box-sizing: border-box; }
@@ -98,25 +99,75 @@
   <p>BIO 202, Spring 2026, draft v1. In Lesson 1 you knew nothing about each individual. Here you know one extra thing per person.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="score-card" id="pretest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;">
-  <div id="pretest-mount"></div>
-</div>
 <div class="outcomes">
   <h2>What you'll do</h2>
   <p>Predict adult weight four times. Each round you get a different piece of information to work with. Don't read ahead.</p>
+  <div class="teaching-note" style="margin-top:8px;">
+    <strong>Why "subtract the line"?</strong> Once you fit a line that says <em>what current function should produce</em>, the residual is what current function can't explain. A giraffe's recurrent laryngeal nerve takes ~16&nbsp;ft to cover ~6&nbsp;in between brain and larynx — fit nerve length on body size, and the giraffe is the residual screaming "ancestry, not engineering." The olm's eye sits in a lightless cave — fit eye complexity on light environment, and the olm is the residual. Residuals like these are the diagnostic for one specific thing: <em>vertical transmission won over re-design.</em> The structure is here because it was inherited from a context where it once made sense, not because current selection is putting it here. Today you write the fit down.
+  </div>
 </div>
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. Predict weight with no info</a>
+  <a href="#stageL" id="tocL">L. Warm-up — fit a line to LOTR quotes</a>
+  <a href="#stageA" id="tocA" class="locked">A. Predict weight with no info</a>
   <a href="#stageB" id="tocB" class="locked">B. Add height as a covariate</a>
   <a href="#stageC" id="tocC" class="locked">C. Residual-pattern drill (5 rounds)</a>
   <a href="#stageD" id="tocD" class="locked">D. Beren and Cyrus: predict the missing point</a>
+  <a href="#stageE" id="tocE" class="locked">E. The residuals had a hidden variable</a>
 </nav>
+
+<!-- ============ STAGE L — LOTR warm-up (intercept, slope, residual semantics) === -->
+<section class="stage" id="stageL">
+  <h2 class="stage-h">L — Warm-up: intercept and slope, on data you already have intuition for</h2>
+  <p class="stage-sub">Every spoken-aloud quote in a film adaptation maps to a page in the source book. Plot minute vs. page, drag a line by hand, read what the intercept and slope mean.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Each point is a quote from Peter Jackson's <em>Fellowship of the Ring</em> theatrical cut. The <em>x</em>-coordinate is what minute it appears in the film. The <em>y</em>-coordinate is what page it appears on in the book.</p>
+        <p>Drag the α (intercept) and β (slope) sliders to fit a line by eye. Then read what each parameter <em>is</em>:</p>
+        <ul style="margin:6px 0 0 18px;font-size:13.5px;">
+          <li><strong>α</strong> = what page the film opens on at minute 0 (probably not page 0 — Jackson cuts the prologue).</li>
+          <li><strong>β</strong> = pages per minute of runtime (the film's pacing).</li>
+          <li><strong>residual</strong> = how far this quote is from where a perfectly linear adaptation would put it (out-of-order moments).</li>
+        </ul>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Jackson's Fellowship of the Ring — quote position</h3>
+        <canvas id="plotL" width="560" height="320"></canvas>
+        <div class="fit-stats" id="statsL">
+          <span class="label">α (intercept):</span> <span id="L_a">—</span> pages
+          &nbsp;|&nbsp;
+          <span class="label">β (slope):</span> <span id="L_b" class="big">—</span> pages/min
+          &nbsp;|&nbsp;
+          <span class="label">SSR:</span> <span id="L_ssr">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">OLS optimum:</span> α* = <span id="L_aStar">—</span>, β* = <span id="L_bStar">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls">
+          <div class="row"><label for="L_aIn">α (intercept, pages)</label><input type="range" id="L_aIn" min="-50" max="100" step="1" value="20" /><output id="L_aOut">20</output></div>
+          <div class="row"><label for="L_bIn">β (slope, pages/min)</label><input type="range" id="L_bIn" min="0" max="5" step="0.05" value="2.0" /><output id="L_bOut">2.00</output></div>
+          <div class="buttons"><button id="L_snap" class="accent">Snap to OLS</button> <button id="L_continue">Continue → Stage A</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Why this warm-up?</h3>
+        <p style="font-size:13.5px;color:#4a4a48;">"Pages per minute" is a quantity you can imagine without learning new vocabulary. The same arithmetic — α, β, residual, fit-to-minimize-SSR — will appear with body weight and finch beaks for the rest of the lesson. The math is the new thing in the room; the data should not also be new.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- ============ STAGE A — predict weight, no info ===================== -->
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A — Predict an adult's weight with no other information</h2>
   <p class="stage-sub">Same setup as Lesson 1 Stage B, with weight instead of height. Move the slider, watch the errors.</p>
-  <div class="lock-banner">Locked. Answer the pretest above to unlock this section.</div>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
@@ -145,10 +196,10 @@
         <h3>Prediction (required before slider unlocks)</h3>
         <ol>
           <li>
-            <div class="q">Q1. The constant predictor with the smallest MSE on adult weight is:</div>
-            <label><input type="radio" name="qA1" value="mu" /> the population mean weight</label>
-            <label><input type="radio" name="qA1" value="med" /> the population median weight</label>
-            <label><input type="radio" name="qA1" value="any" /> any value — they all give the same MSE</label>
+            <div class="q">Q1. You have to make one guess for every NHANES adult's weight and you'll be graded on squared error. Which single number minimizes the average penalty?</div>
+            <label><input type="radio" name="qA1" value="mu" /> The population mean — squared errors punish being far away, so the balance point of the distribution minimizes the total penalty</label>
+            <label><input type="radio" name="qA1" value="med" /> The population median — it splits the population in half by count</label>
+            <label><input type="radio" name="qA1" value="any" /> Any constant — when you have no info about each person, every guess gives the same expected score</label>
           </li>
           <li>
             <div class="q">Q2. If you compared MSE and median-absolute-error, which would the mean and the median win?</div>
@@ -220,10 +271,10 @@
             <label><input type="radio" name="qB1" value="bigger" /> bigger — adding a predictor injects more noise</label>
           </li>
           <li>
-            <div class="q">Q2. The intercept α̂ from <code>lm(weight ~ height)</code> reads as:</div>
-            <label><input type="radio" name="qB2" value="ymean" /> the mean weight when height is at its mean</label>
-            <label><input type="radio" name="qB2" value="zero" /> the predicted weight at height = 0 — usually meaningless biologically without centering</label>
-            <label><input type="radio" name="qB2" value="slope" /> the slope of weight on height</label>
+            <div class="q">Q2. R prints an intercept α̂ when you fit <code>lm(weight ~ height)</code>. What is that number actually predicting?</div>
+            <label><input type="radio" name="qB2" value="ymean" /> The mean weight in the sample (independent of height)</label>
+            <label><input type="radio" name="qB2" value="zero" /> The predicted weight of an adult with height = 0 cm — geometrically meaningful, biologically nonsense unless you center the predictor</label>
+            <label><input type="radio" name="qB2" value="slope" /> The slope of weight on height (same number as β̂)</label>
           </li>
         </ol>
         <button id="submitB" disabled>Submit prediction → unlock controls</button>
@@ -384,19 +435,135 @@
   </div>
 </section>
 
-<div class="score-card" id="posttest-card" style="display:none; max-width:1300px; margin:0 auto; padding:16px 24px;">
-  <div id="posttest-mount"></div>
-</div>
+<!-- ============ STAGE E — LOTR rug pull: residuals partition by film === -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — A scatter where the "noise" turned out to be a missing variable</h2>
+  <p class="stage-sub">Every quote from <em>The Lord of the Rings</em> film adaptations, plotted as <strong>book page</strong> against <strong>film minute</strong>. Fit one line to all of them — read R². Then color by which film the quote came from.</p>
+  <div class="lock-banner">Complete Stage D.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>Scenario</h3>
+        <p>Three film adaptations of Tolkien's trilogy. Each colored point is one quote spoken on screen: the <em>x</em> coordinate is what minute it appears in the film, the <em>y</em> coordinate is what page it appears on in the source book.</p>
+        <p>If the films were perfect linear adaptations, every point would sit on one line. They don't. The residuals from a pooled fit look like noise — until you color them.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Quote position — film minute (x) vs book page (y)</h3>
+        <canvas id="plotE" width="560" height="380"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">pooled R²:</span> <span id="E_r2_pool">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">colored by film R²:</span> <span id="E_r2_strat" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">slope diff (Jackson Fellowship vs Bakshi):</span> <span id="E_slopeDiff">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predE">
+        <h3>Prediction</h3>
+        <ol>
+          <li>
+            <div class="q">Q1. Before you color by film, the pooled fit looks noisy. After you color by film, which one is true?</div>
+            <label><input type="radio" name="qE1" value="noisy" /> The noise was real noise — there's no hidden structure to find</label>
+            <label><input type="radio" name="qE1" value="parallel" /> The films share roughly the same slope; the residuals partition cleanly by film</label>
+            <label><input type="radio" name="qE1" value="distinct" /> The films have <em>different</em> slopes — different pages-per-minute pacing — and within each, the relationship is much tighter than the pooled fit suggested</label>
+          </li>
+          <li>
+            <div class="q">Q2. Which of these is a fair statistical reading of what just happened? (Pick the strongest.)</div>
+            <label><input type="radio" name="qE2" value="residuals" /> Clean residuals don't confirm a model — dirty residuals reject it. Coloring revealed the variable the pooled model was missing.</label>
+            <label><input type="radio" name="qE2" value="moredata" /> Just need more data to get the pooled fit right.</label>
+            <label><input type="radio" name="qE2" value="film" /> The film variable adds nothing; the pooled line is just as good.</label>
+          </li>
+        </ol>
+        <button id="submitE" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreE">Toggle the color-by-film view at least once. <span class="count">0/1 toggles</span></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsE">
+          <div class="row"><label for="E_colorIn">view</label>
+            <select id="E_colorIn" style="grid-column:2 / 4; padding:6px;">
+              <option value="pool">single pooled fit (no film coloring)</option>
+              <option value="strat">color by film (separate fits per film)</option>
+            </select></div>
+          <div class="buttons"><button id="E_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>R code — residuals partition by a categorical</h3>
+<pre class="code" id="codeE"><span class="line">lotr &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/lotr_quotes.csv"</span>)</span><span class="line"><span class="com"># Pooled fit ignores 'film'</span></span><span class="line">pooled &lt;- <span class="fn">lm</span>(page ~ minute, data = lotr)</span><span class="line"><span class="com"># Stratified fit lets each film have its own slope</span></span><span class="line">strat  &lt;- <span class="fn">lm</span>(page ~ minute * film, data = lotr)</span><span class="line"><span class="fn">summary</span>(pooled)$r.squared; <span class="fn">summary</span>(strat)$r.squared</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- DAG sub-panel: draw the missing variable as a causal node. -->
+  <div class="stage-body" style="margin-top:24px;border-top:1px dashed #c9c4b3;padding-top:20px;">
+    <div class="panel scenario" style="max-width:1100px;margin:0 auto 14px;">
+      <h3>Draw the missing variable</h3>
+      <p>The pooled fit ignored "film". In a DAG, "film" is a categorical node that affects both <em>minute</em> (when does this film's runtime end?) and <em>page</em> (which book is this film adapting?). Build that DAG below and watch the scatter behave: pooled vs colored-by-film. This is the same picture you saw above, generated from a causal model you control.</p>
+    </div>
+    <div id="dag-l3-mount" style="max-width:1180px;margin:0 auto;"></div>
+  </div>
+</section>
+
+<!-- ============ SHOWCASE — vagus residual (open, no gate) ============= -->
+<section class="stage" id="stageVagus" style="background:#fcfaf2;">
+  <h2 class="stage-h">Showcase — the residual you just learned, drawn on the lecture example</h2>
+  <p class="stage-sub">No prediction, no controls. Just the same regression-and-residual move applied to the comparative anatomy from lecture.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario">
+        <h3>What you're looking at</h3>
+        <p>Ten mammals. <em>x</em> = the direct distance from the brainstem to the larynx (cm) — the path a sensible engineer would route the nerve down. <em>y</em> = the actual length of the recurrent laryngeal nerve (cm) — the path evolution actually took, looping under the aortic arch at the heart and back up.</p>
+        <p>The line is fit to the nine non-giraffe mammals. The giraffe is plotted in red — and the residual panel below shows how far off the line it sits.</p>
+        <p style="font-size:12px; color:var(--muted);">Approximate values from comparative-anatomy references (Wedel 2012 for giraffe; standard texts for the rest). Treat as pedagogical rather than research-grade.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Top: brain-to-larynx distance vs. nerve length. Bottom: residuals from a fit on the non-giraffe mammals.</h3>
+        <canvas id="plotVagus1" width="560" height="280"></canvas>
+        <canvas id="plotVagus2" width="560" height="180"></canvas>
+        <div class="fit-stats" id="statsVagus">
+          <span class="label">fit on non-giraffe (n = 9):</span>
+          <span class="label">slope:</span> <span id="V_b">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">R²:</span> <span id="V_r2">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">giraffe predicted:</span> <span id="V_pred">—</span> cm
+          &nbsp;|&nbsp;
+          <span class="label">giraffe actual:</span> <span id="V_obs">—</span> cm
+          &nbsp;|&nbsp;
+          <span class="label">residual:</span> <span id="V_res" style="color:var(--accent); font-weight:600;">—</span> cm
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3>What the residual is doing</h3>
+        <p>The nine-mammal fit says: for every 1 cm of direct brain-to-larynx distance, expect roughly 2–3 cm of recurrent laryngeal nerve (the loop around the aortic arch adds a relatively fixed amount). For a giraffe with a ~25 cm direct distance, the line predicts ~60 cm of nerve.</p>
+        <p>The giraffe's actual nerve is roughly <strong>270 cm</strong>. That's the residual you're looking at — the part of the giraffe's anatomy that the "what should a nerve do?" line can't explain. Lecture's framing: there is no engineering reason for it. There is only an ancestry reason — a vertical-transmission channel laying down nerve routing through every fish, every amphibian, every early tetrapod, every short-necked mammal, until it reached an animal whose neck stretched in a way the routing was never asked to anticipate.</p>
+        <p style="margin-top:10px; font-size:12.5px; color:var(--muted);">Same machine you used on Beren's sick-day weights. Different residual, same diagnostic. By Unit 5 you will use this exact diagnostic at every scale of life: <em>when current function and inherited form disagree, the disagreement is data about which channel of inheritance produced what you are seeing.</em></p>
+      </div>
+      <div class="panel">
+        <h3>R code — fit on non-giraffe, then look where the giraffe sits</h3>
+<pre class="code" id="codeVagus"><span class="line">v &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/vagus_nerve.csv"</span>)</span><span class="line">non_g &lt;- <span class="fn">subset</span>(v, species != <span class="str">"giraffe"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(rln_length_cm ~ direct_cm, data = non_g)</span><span class="line"></span><span class="line"><span class="com"># predict the giraffe from the non-giraffe regression</span></span><span class="line">giraffe &lt;- <span class="fn">subset</span>(v, species == <span class="str">"giraffe"</span>)</span><span class="line">pred &lt;- <span class="fn">predict</span>(fit, newdata = giraffe)</span><span class="line">giraffe$rln_length_cm - pred   <span class="com"># the residual: ~200 cm</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
   <h2>Where this lesson goes next</h2>
+  <p>The vagus showcase above is biology's main diagnostic for one specific thing: <em>when current function and inherited form disagree, the inherited form is evidence about which channel of vertical transmission produced it.</em> Same machine, same question, every lesson from here forward.</p>
   <p><strong>Lesson 4</strong> asks: how unique is the line you just fit? Move the slope and intercept by hand, find 20 different lines that all share the same rounded R², and see what that buys you.</p>
   <p><strong>Stuck on any of this?</strong> Office hours: bring the <code>.R</code> file you downloaded, or the place a prediction came out wrong, and we'll walk through it.</p>
 </footer>
 
 <script src="../lib/quiz.js"></script>
 <script src="../lib/score.js"></script>
+<script src="../lib/dag.js"></script>
 <script>
 /* ====== Shared helpers (verbatim from Lesson 1) ===================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -431,9 +598,9 @@ function ols(xs, ys) {
   return { a, b, r2: 1 - ss_res/ss_tot, sres: Math.sqrt(ss_res/(n-2)), yhat };
 }
 
-const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 6 };
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-function bumpExplore(stage) {
+const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 6, E: 1 };
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:false,explores:0,done:false} };
+function bumpExplore(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); 
   const g = Gates[stage]; if (!g.predicted || g.done) return;
   g.explores += 1;
   const tracker = document.getElementById("explore"+stage);
@@ -442,15 +609,15 @@ function bumpExplore(stage) {
   c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
   if (g.explores >= EXPLORE_THRESHOLD[stage]) {
     g.done = true; tracker.classList.add("complete");
-    c.textContent = `${g.explores}+ done — Stage ${nextStageLabel(stage)} unlocked.`;
+    c.textContent = `${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`);
     unlockNext(stage);
   }
 }
-function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"posttest"}[s]; }
+function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"E",E:null}[s]; }
 function unlockNext(stage) {
-  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
+  const next = {A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage];
   if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
-  else if (typeof showPosttest==="function") showPosttest();
+  else if (typeof Score !== "undefined" && Score.finish) Score.finish();
 }
 function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
   const root=document.getElementById(predId); const btn=root.querySelector("button");
@@ -471,9 +638,9 @@ function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) 
     if (controlsId) document.getElementById(controlsId).classList.remove("locked");
     if (afterUnlock) afterUnlock();
     const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
-    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
+    if (typeof stageIdx === "number" && typeof Score !== "undefined" && Score.recordCheckpoint) {
       Score.recordCheckpoint(stageIdx*2,     results[0].correct);
-      Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
+      if (results.length > 1) Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
     }
   });
 }
@@ -758,8 +925,7 @@ wirePrediction("C", "predC", ["qC1","qC2"], ["curve","missgroup"], null, () => {
 const sD = {
   round: 0, totalRounds: 6, byKidMeasure: null,
   current: null,   // { kid, points, hiddenIdx, hiddenPoint }
-  click: null, locked: true,
-};
+  click: null, locked: true};
 
 function organizeKids() {
   sD.byKidMeasure = {};
@@ -883,7 +1049,7 @@ document.getElementById("D_next").addEventListener("click", () => {
   bumpExplore("D");
   if (sD.round >= sD.totalRounds) {
     document.getElementById("D_title").textContent = "Done — review your last reveal above.";
-    // Final advance triggers next-stage unlock (posttest) via bumpExplore.
+    // Final advance triggers Score.finish() via bumpExplore → unlockNext.
     return;
   }
   document.getElementById("D_title").textContent = `Round ${sD.round+1} of ${sD.totalRounds} — click where the missing point should be`;
@@ -915,54 +1081,300 @@ wirePrediction("D", "predD", ["qD1","qD2"], ["lower","negative"], null, () => {
 });
 
 /* ====== Pretest / Posttest / Score ============================== */
-const PRETEST_ITEMS = [
-  { idx: 0, q: "In a regression of weight on height, the residuals are best described as:",
-    options: ["the original weights", "the part of weight not explained by height", "the slope estimate", "the same as the weights minus the mean weight"],
-    correct: 1 },
-  { idx: 1, q: "A clean residual plot (no pattern) means:",
-    options: ["the model is exactly correct", "there is no evidence in the residuals that the model is missing a key piece — it does not prove the model is right", "the residuals are zero", "the predictor is unrelated to the outcome"],
-    correct: 1 }
+/* ====== Showcase — vagus residual (open, no gate) ================= */
+const VAGUS_DATA = [
+  { sp: "mouse",    x: 1.5, y: 3,   ox: 6,  oy: -10 },
+  { sp: "rat",      x: 3,   y: 6,   ox: 6,  oy: -10 },
+  { sp: "cat",      x: 6,   y: 15,  ox: 6,  oy: -10 },
+  { sp: "dog",      x: 8,   y: 18,  ox: 6,  oy: 14 },
+  { sp: "pig",      x: 12,  y: 30,  ox: 6,  oy: -10 },
+  { sp: "human",    x: 12,  y: 25,  ox: 6,  oy: 16 },
+  { sp: "cow",      x: 20,  y: 50,  ox: 6,  oy: -10 },
+  { sp: "horse",    x: 22,  y: 50,  ox: 6,  oy: 16 },
+  { sp: "elephant", x: 35,  y: 90,  ox: 6,  oy: -10 },
+  { sp: "giraffe",  x: 25,  y: 270, ox: -6, oy: -10, special: true }
 ];
-const POSTTEST_ITEMS = [
-  { idx: 0, q: "You fit lm(weight ~ height) and the residuals form two disjoint clouds. The single most likely diagnosis is:",
-    options: ["heteroskedasticity", "a missing categorical predictor (e.g., sex)", "a curved relationship", "an outlier"],
-    correct: 1 },
-  { idx: 1, q: "You see that sick-day kid measurements have systematically more negative residuals than clean-day measurements. What does this tell you?",
-    options: [
-      "the kids are smaller than average",
-      "illness is a missing covariate — the 'mass = f(age)' model is biased on those days",
-      "the model is exactly correct",
-      "this is sampling noise — nothing to learn"
-    ],
-    correct: 1 },
-  { idx: 2,
-    q: "Which of these describes something this lesson actually taught?",
-    options: [
-      "With no covariate, the population mean minimizes mean-squared error among constant predictors",
-      "Adding a covariate that carries information shrinks the residual SD",
-      "A residual pattern (curve, two clouds, fan) is evidence about what the model missed",
-      "Residuals on sick-day visits looked the same as clean-day residuals",
-      "If the residuals form a curve, the underlying relationship is linear"
-    ],
-    correct: [0, 1, 2] }
+function drawVagus() {
+  const nonG = VAGUS_DATA.filter(d => !d.special);
+  const xs = nonG.map(d => d.x), ys = nonG.map(d => d.y);
+  const fit = ols(xs, ys);
+  const giraffe = VAGUS_DATA.find(d => d.special);
+  const pred = fit.a + fit.b * giraffe.x;
+  const residual = giraffe.y - pred;
+
+  document.getElementById("V_b").textContent = fit.b.toFixed(2);
+  document.getElementById("V_r2").textContent = fit.r2.toFixed(3);
+  document.getElementById("V_pred").textContent = pred.toFixed(0);
+  document.getElementById("V_obs").textContent = giraffe.y.toFixed(0);
+  document.getElementById("V_res").textContent = "+" + residual.toFixed(0);
+
+  // Top panel: scatter + fit
+  {
+    const c = document.getElementById("plotVagus1");
+    const { ctx, W, H } = setupCanvas(c);
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+    const f = makeFrame({ l: 56, r: 16, t: 10, b: 38 }, W, H, 0, 40, 0, 300);
+    drawAxes(ctx, f, "direct brain → larynx distance (cm)", "recurrent laryngeal nerve length (cm)", 4, 6);
+    // fit line over the non-giraffe x range
+    ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2; ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(f.x(0), f.y(fit.a));
+    ctx.lineTo(f.x(40), f.y(fit.a + fit.b * 40));
+    ctx.stroke();
+    // non-giraffe points
+    ctx.fillStyle = "#444";
+    for (const d of nonG) {
+      ctx.beginPath(); ctx.arc(f.x(d.x), f.y(d.y), 4, 0, Math.PI * 2); ctx.fill();
+    }
+    // giraffe point (red)
+    ctx.fillStyle = "#b23a48";
+    ctx.beginPath(); ctx.arc(f.x(giraffe.x), f.y(giraffe.y), 6, 0, Math.PI * 2); ctx.fill();
+    // label predicted-vs-actual: dashed vertical from line to giraffe
+    ctx.strokeStyle = "#b23a48"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(f.x(giraffe.x), f.y(pred));
+    ctx.lineTo(f.x(giraffe.x), f.y(giraffe.y));
+    ctx.stroke(); ctx.setLineDash([]);
+    // species labels
+    ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace, monospace";
+    for (const d of VAGUS_DATA) {
+      const align = d.ox < 0 ? "right" : "left";
+      ctx.textAlign = align; ctx.textBaseline = "middle";
+      ctx.fillStyle = d.special ? "#b23a48" : "#555";
+      ctx.fillText(d.sp, f.x(d.x) + d.ox, f.y(d.y) + d.oy);
+    }
+  }
+
+  // Bottom panel: residuals
+  {
+    const c = document.getElementById("plotVagus2");
+    const { ctx, W, H } = setupCanvas(c);
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
+    const allResids = VAGUS_DATA.map(d => ({ sp: d.sp, fitted: fit.a + fit.b * d.x, r: d.y - (fit.a + fit.b * d.x), special: !!d.special }));
+    const maxAbs = Math.max(220, ...allResids.map(d => Math.abs(d.r)));
+    const f = makeFrame({ l: 56, r: 16, t: 10, b: 38 }, W, H, 0, 40, -maxAbs * 0.2, maxAbs * 1.05);
+    drawAxes(ctx, f, "fitted nerve length (cm) from the non-giraffe line", "residual (actual − fitted) (cm)", 4, 4);
+    drawHLine(ctx, f, 0, "#b23a48", 1.5, [4, 3]);
+    for (const d of allResids) {
+      ctx.fillStyle = d.special ? "#b23a48" : "#444";
+      const r = d.special ? 6 : 4;
+      ctx.beginPath(); ctx.arc(f.x(d.fitted), f.y(d.r), r, 0, Math.PI * 2); ctx.fill();
+      if (d.special) {
+        ctx.fillStyle = "#b23a48"; ctx.font = "12px ui-monospace, monospace";
+        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.fillText(d.sp + "  +" + d.r.toFixed(0) + " cm", f.x(d.fitted) + 8, f.y(d.r));
+      }
+    }
+  }
+}
+
+/* ====== STAGE E — LOTR rug pull (residuals partition by film) ============ */
+// Synthetic quote data for 3 LOTR adaptations. Each film has its own pages-per-
+// minute slope (Jackson's Fellowship is slower than Two Towers; Bakshi's 1978
+// animated version covers more book per minute). The pooled fit looks noisy.
+// Stratify by film and the within-film fits are much tighter — and have
+// different slopes. Same residuals, new categorical variable.
+const LOTR_DATA = [
+  // Jackson Fellowship (2001), 178 min theatrical, ~420 pages of source.
+  // Slope ≈ 2.2 pg/min, intercept ≈ 15 pg (skips early Shire chapters).
+  {film:"Jackson FOTR",  minute: 8,  page: 25},  {film:"Jackson FOTR", minute: 22, page: 55},
+  {film:"Jackson FOTR",  minute: 35, page: 88},  {film:"Jackson FOTR", minute: 48, page:125},
+  {film:"Jackson FOTR",  minute: 62, page:155},  {film:"Jackson FOTR", minute: 75, page:190},
+  {film:"Jackson FOTR",  minute: 90, page:225},  {film:"Jackson FOTR", minute:108, page:268},
+  {film:"Jackson FOTR",  minute:125, page:310},  {film:"Jackson FOTR", minute:140, page:340},
+  {film:"Jackson FOTR",  minute:155, page:380},  {film:"Jackson FOTR", minute:172, page:415},
+  // Jackson Two Towers (2002), 179 min, ~360 pages (Books III–IV).
+  // Slope ≈ 2.0 pg/min, intercept ≈ 0 (resumes where FOTR left off, on its own page-numbering).
+  {film:"Jackson TTT",   minute: 10, page: 12},  {film:"Jackson TTT",  minute: 28, page: 50},
+  {film:"Jackson TTT",   minute: 45, page: 80},  {film:"Jackson TTT",  minute: 60, page:115},
+  {film:"Jackson TTT",   minute: 78, page:155},  {film:"Jackson TTT",  minute: 95, page:180},
+  {film:"Jackson TTT",   minute:115, page:225},  {film:"Jackson TTT",  minute:132, page:265},
+  {film:"Jackson TTT",   minute:150, page:300},  {film:"Jackson TTT",  minute:168, page:340},
+  // Bakshi 1978 animated, 132 min covering Fellowship + half of Two Towers (~600 pages).
+  // Slope ≈ 4.5 pg/min (much faster), intercept ≈ 5 pg.
+  {film:"Bakshi 1978",   minute:  5, page: 28},  {film:"Bakshi 1978",  minute: 18, page: 80},
+  {film:"Bakshi 1978",   minute: 32, page:155},  {film:"Bakshi 1978",  minute: 48, page:225},
+  {film:"Bakshi 1978",   minute: 62, page:290},  {film:"Bakshi 1978",  minute: 78, page:360},
+  {film:"Bakshi 1978",   minute: 95, page:430},  {film:"Bakshi 1978",  minute:112, page:510},
+  {film:"Bakshi 1978",   minute:126, page:575}
 ];
-function showPretest() {
-  document.getElementById("pretest-card").style.display = "block";
-  Quiz.render({ mount:"#pretest-mount", group:"pretest", title:"Before you start", items: PRETEST_ITEMS,
-    onComplete: () => { document.getElementById("stageA").classList.remove("stage-locked"); const t=document.getElementById("tocA"); if(t) t.classList.remove("locked"); } });
+const LOTR_COLORS = { "Jackson FOTR":"#2f6b8f", "Jackson TTT":"#2f6b3a", "Bakshi 1978":"#b23a48" };
+const sE = { mode: "pool" };
+function lotrOLS(xs, ys) {
+  const mx = mean(xs), my = mean(ys); let sxx=0, sxy=0, syy=0;
+  for (let i=0;i<xs.length;i++) { const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy; syy+=dy*dy; }
+  const slope = sxx > 0 ? sxy/sxx : 0;
+  const intercept = my - slope*mx;
+  // R² = explained / total
+  let ssRes = 0;
+  for (let i=0;i<xs.length;i++){ const pred = slope*xs[i]+intercept; ssRes += (ys[i]-pred)**2; }
+  const r2 = syy > 0 ? 1 - ssRes/syy : 0;
+  return { slope, intercept, r2 };
 }
-function showPosttest() {
-  const c = document.getElementById("posttest-card"); if (c.style.display==="block") return;
-  c.style.display = "block";
-  Quiz.render({ mount:"#posttest-mount", group:"posttest", title:"Wrap-up check", items:POSTTEST_ITEMS, onComplete: () => Score.finish() });
+function drawStageE() {
+  const cv = document.getElementById("plotE"); const {ctx, W, H} = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad = { l: 60, r: 12, t: 26, b: 38 };
+  const xs = LOTR_DATA.map(d => d.minute), ys = LOTR_DATA.map(d => d.page);
+  const xMin = 0, xMax = Math.max(...xs) * 1.05;
+  const yMin = 0, yMax = Math.max(...ys) * 1.08;
+  const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
+  drawAxes(ctx, f, "film minute", "book page", 5, 5, v => v.toFixed(0), v => v.toFixed(0));
+  // Always compute pooled and per-film fits so we can report both.
+  const pooled = lotrOLS(xs, ys);
+  const byFilm = {};
+  for (const d of LOTR_DATA) (byFilm[d.film] = byFilm[d.film] || []).push(d);
+  const fits = {};
+  for (const film in byFilm) {
+    const sub = byFilm[film];
+    fits[film] = lotrOLS(sub.map(d=>d.minute), sub.map(d=>d.page));
+  }
+  // Average within-film R² across films (weighted by N).
+  let r2Sum = 0, nSum = 0;
+  for (const film in byFilm) { const n = byFilm[film].length; r2Sum += fits[film].r2 * n; nSum += n; }
+  const r2Strat = r2Sum / nSum;
+  // Plot points
+  for (const d of LOTR_DATA) {
+    ctx.fillStyle = (sE.mode === "strat") ? LOTR_COLORS[d.film] : "#1d1d1baa";
+    ctx.beginPath(); ctx.arc(f.x(d.minute), f.y(d.page), 4.5, 0, 2*Math.PI); ctx.fill();
+  }
+  // Pooled fit (always show, as red line)
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = (sE.mode === "pool") ? 2.5 : 1.4;
+  ctx.setLineDash(sE.mode === "strat" ? [5,4] : []);
+  ctx.beginPath();
+  ctx.moveTo(f.x(xMin), f.y(pooled.intercept + pooled.slope * xMin));
+  ctx.lineTo(f.x(xMax), f.y(pooled.intercept + pooled.slope * xMax));
+  ctx.stroke(); ctx.setLineDash([]);
+  // Per-film fits (only in strat mode)
+  if (sE.mode === "strat") {
+    for (const film in byFilm) {
+      const fit = fits[film];
+      const sub = byFilm[film];
+      const xLo = Math.min(...sub.map(d=>d.minute)), xHi = Math.max(...sub.map(d=>d.minute));
+      ctx.strokeStyle = LOTR_COLORS[film]; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x(xLo), f.y(fit.intercept + fit.slope * xLo));
+      ctx.lineTo(f.x(xHi), f.y(fit.intercept + fit.slope * xHi));
+      ctx.stroke();
+    }
+    // Legend
+    let lx = f.pad.l + 8, ly = f.pad.t + 6;
+    ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle";
+    for (const film in byFilm) {
+      ctx.fillStyle = LOTR_COLORS[film]; ctx.fillRect(lx, ly - 5, 12, 10);
+      ctx.fillStyle = "#333"; ctx.textAlign = "left";
+      const slopeTxt = "  (β = " + fits[film].slope.toFixed(2) + " pg/min)";
+      ctx.fillText(film + slopeTxt, lx + 16, ly);
+      lx += ctx.measureText(film + slopeTxt).width + 32;
+    }
+  } else {
+    ctx.fillStyle = "#b23a48"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "left";
+    ctx.fillText("pooled β = " + pooled.slope.toFixed(2) + " pg/min", f.pad.l + 8, f.pad.t + 12);
+  }
+  document.getElementById("E_r2_pool").textContent = pooled.r2.toFixed(3);
+  document.getElementById("E_r2_strat").textContent = r2Strat.toFixed(3);
+  document.getElementById("E_slopeDiff").textContent = (fits["Jackson FOTR"].slope - fits["Bakshi 1978"].slope).toFixed(2) + " pg/min";
 }
+document.getElementById("E_colorIn").addEventListener("change", (e) => {
+  sE.mode = e.target.value; drawStageE(); bumpExplore("E");
+});
+document.getElementById("E_download").addEventListener("click", () => {
+  downloadText("lesson3_stageE.R", `lotr <- read.csv("data/clean/lotr_quotes.csv")
+pooled <- lm(page ~ minute, data = lotr)
+strat  <- lm(page ~ minute * film, data = lotr)
+c(R2_pooled = summary(pooled)$r.squared, R2_strat = summary(strat)$r.squared)
+`);
+});
+wirePrediction("E", "predE", ["qE1","qE2"], ["distinct","residuals"], "controlsE", null);
+drawStageE();
+
+/* ====== STAGE L — LOTR warm-up: drag α/β, read pages/min ====== */
+// Use only the Jackson-FOTR subset of the LOTR_DATA defined for Stage E.
+(function wireStageL(){
+  const data = LOTR_DATA.filter(d => d.film === "Jackson FOTR");
+  const xs = data.map(d => d.minute), ys = data.map(d => d.page);
+  // OLS for snap & display
+  const mx = xs.reduce((a,b)=>a+b,0)/xs.length, my = ys.reduce((a,b)=>a+b,0)/ys.length;
+  let sxx = 0, sxy = 0;
+  for (let i = 0; i < xs.length; i++) { sxx += (xs[i]-mx)*(xs[i]-mx); sxy += (xs[i]-mx)*(ys[i]-my); }
+  const bStar = sxy / sxx, aStar = my - bStar * mx;
+  document.getElementById("L_aStar").textContent = aStar.toFixed(1);
+  document.getElementById("L_bStar").textContent = bStar.toFixed(2);
+  const sL = { a: 20, b: 2.0 };
+  function drawL() {
+    const cv = document.getElementById("plotL"); const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+    const pad = { l: 50, r: 12, t: 16, b: 32 };
+    const xMin = 0, xMax = Math.max(...xs) * 1.05;
+    const yMin = -10, yMax = Math.max(...ys) * 1.1;
+    const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
+    drawAxes(ctx, f, "film minute", "book page", 5, 5, v => v.toFixed(0), v => v.toFixed(0));
+    // Student line
+    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(f.x(xMin), f.y(sL.a + sL.b * xMin));
+    ctx.lineTo(f.x(xMax), f.y(sL.a + sL.b * xMax));
+    ctx.stroke();
+    // Residual segments
+    let ssr = 0;
+    ctx.strokeStyle = "rgba(178,58,72,0.35)"; ctx.lineWidth = 1;
+    for (let i = 0; i < xs.length; i++) {
+      const pred = sL.a + sL.b * xs[i];
+      const res = ys[i] - pred; ssr += res * res;
+      ctx.beginPath(); ctx.moveTo(f.x(xs[i]), f.y(pred)); ctx.lineTo(f.x(xs[i]), f.y(ys[i])); ctx.stroke();
+    }
+    // Points
+    ctx.fillStyle = "#1d1d1b";
+    for (let i = 0; i < xs.length; i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 4, 0, 2*Math.PI); ctx.fill(); }
+    document.getElementById("L_a").textContent = sL.a.toFixed(0);
+    document.getElementById("L_b").textContent = sL.b.toFixed(2);
+    document.getElementById("L_ssr").textContent = ssr.toFixed(0);
+  }
+  document.getElementById("L_aIn").addEventListener("input", (e) => { sL.a = +e.target.value; document.getElementById("L_aOut").textContent = sL.a.toFixed(0); drawL(); if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("L"); });
+  document.getElementById("L_bIn").addEventListener("input", (e) => { sL.b = +e.target.value; document.getElementById("L_bOut").textContent = sL.b.toFixed(2); drawL(); if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("L"); });
+  document.getElementById("L_snap").addEventListener("click", () => {
+    sL.a = aStar; sL.b = bStar;
+    document.getElementById("L_aIn").value = Math.round(aStar);
+    document.getElementById("L_bIn").value = bStar.toFixed(2);
+    document.getElementById("L_aOut").textContent = aStar.toFixed(0);
+    document.getElementById("L_bOut").textContent = bStar.toFixed(2);
+    drawL();
+  });
+  document.getElementById("L_continue").addEventListener("click", () => {
+    // Unlock Stage A and scroll to it. (Stage L is open from the start.)
+    const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    s && s.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  drawL();
+})();
+
+/* ====== DAG widget — Stage E addendum ====== */
+(function mountDAGl3(){
+  if (typeof DAG === "undefined") return;
+  DAG.init({
+    mount: "#dag-l3-mount",
+    nodes: [
+      { id: "film",   label: "Film",        x: 290, y: 60, type: "categorical", levels: 3 },
+      { id: "minute", label: "Film minute", x: 110, y: 200 },
+      { id: "page",   label: "Book page",   x: 470, y: 200 }
+    ],
+    arrows: [
+      { from: "minute", to: "page", strength: 0.6 }
+    ],
+    initialAxes: { x: "minute", y: "page" },
+    initialColor: "film",
+    n: 240,
+    seed: 901,
+    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("E"); }
+  });
+})();
+
 Score.init({
-  moduleId: "lesson3", version: 2,
-  pretest: PRETEST_ITEMS.length, scaffold: 9, posttest: POSTTEST_ITEMS.length,
+  moduleId: "lesson3", version: 4, scaffold: 9,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-  onReady: () => showPretest()
+  onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
 });
 loadData();
+drawVagus();
 </script>
 </body>
 </html>
