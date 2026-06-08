@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S16: Dobzhansky–Muller snowball</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f; --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9; --code-bg: #1e1f22; --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 74ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .params { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; background: #f7f5ee; padding: 10px 12px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .params .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .params .v { color: var(--ink); font-weight: 700; font-size: 16px; }
+  svg.chart { width: 100%; height: auto; display: block; background: #fff; }
+  .guess-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .guess-row label { font-size: 13.5px; }
+  .guess-row input[type=number] { padding: 6px 8px; font: 14px ui-monospace, Menlo, monospace; border: 1px solid var(--rule); border-radius: 4px; width: 110px; }
+  .guess-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal .big { font: 600 15px ui-monospace, Menlo, monospace; color: var(--ink); margin-bottom: 4px; }
+  .reveal .err { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 4px; }
+  .reveal p { margin: 6px 0 0 0; font-size: 13px; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally svg { width: 100%; height: 260px; background: #fff; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S16 — The Dobzhansky–Muller snowball</h1>
+  <p>Five rounds. Two populations have been isolated for divergence time <em>t</em> (millions of years). Each population has been fixing new alleles at an approximately constant rate. Any allele fixed in population A can potentially be incompatible with any allele fixed in population B. Predict the expected number of hybrid incompatibilities as <em>t</em> doubles.</p>
+</header>
+
+<main>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally — incompatibilities vs. divergence time (log–log)</h3>
+    <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Snowball log-log plot"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      The number of hybrid incompatibilities between two isolated
+      populations grows as <code>I(t) ≈ α · t²</code>. The exponent of 2
+      is the "snowball": every new substitution in one lineage must be
+      tested against every substitution in the other. If each lineage
+      fixes alleles at a rate ∝ <em>t</em>, the number of pairs grows
+      as <em>t</em> · <em>t</em> = <em>t</em>².
+    </p>
+    <p>
+      On the tally above, the five points should fall very close to a
+      straight line with slope 2 in log–log space. The line is not
+      additive (t¹) — doubling <em>t</em> quadruples the number of
+      potential incompatibilities. This is exactly what Moyle &amp;
+      Nakazato 2010 observed in 64 Drosophila sister-species pairs and
+      what Matute et al. report in other clades. Divergence time is the
+      single best predictor of hybrid dysfunction, and the scaling
+      relationship confirms the mechanism.
+    </p>
+    <p>
+      This is why reproductive isolation accelerates. Early in
+      divergence, incompatibilities accumulate slowly. Once there are
+      enough of them, every new mutation has many targets to fail
+      against. Speciation does not happen at a fixed rate — it happens
+      on a curve.
+    </p>
+  </div>
+
+  <div id="score-final"></div>
+</main>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+// Expected incompatibility count: I(t) = alpha * t^2
+// Use alpha = 1 for a clean demonstration.
+const ALPHA = 1.0;
+function expectedI(t) { return ALPHA * t * t; }
+
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "Young divergence — sister populations, 0.5 MY apart",
+    scenario: "Two populations of a beetle species have been isolated on opposite sides of a mountain range for 500,000 years. Their genomes have each fixed some new alleles; most functional classes still work in hybrids.",
+    t: 0.5,
+  },
+  {
+    label: "Twice as old — 1 MY",
+    scenario: "Now consider two populations isolated for 1 million years under otherwise-identical conditions.",
+    t: 1.0,
+  },
+  {
+    label: "Two MY",
+    scenario: "Two populations isolated for 2 million years.",
+    t: 2.0,
+  },
+  {
+    label: "Four MY",
+    scenario: "Two populations isolated for 4 million years. Drosophila melanogaster and D. simulans are roughly this diverged.",
+    t: 4.0,
+  },
+  {
+    label: "Eight MY",
+    scenario: "Two populations isolated for 8 million years. About the divergence of mouse and rat.",
+    t: 8.0,
+  },
+];
+
+const state = { round: 0, history: [] };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ---------- Rendering ----------
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    showPosttest();
+    return;
+  }
+
+  const truth = expectedI(r.t);
+  // Previous round's I value for hint
+  const prev = state.round > 0 ? state.history[state.round - 1] : null;
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.scenario]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: accumulating alleles diagram
+  const left = makeEl("div", null);
+  const paramPanel = makeEl("div", { class: "panel" });
+  paramPanel.appendChild(makeEl("h3", null, ["Scenario"]));
+  paramPanel.appendChild(makeEl("div", { class: "params" }, [
+    (function () { const d = document.createElement("div"); d.appendChild(makeEl("div", { class: "k" }, ["divergence time t"])); d.appendChild(makeEl("div", { class: "v" }, [`${r.t} MY`])); return d; })(),
+    (function () { const d = document.createElement("div"); d.appendChild(makeEl("div", { class: "k" }, ["fixed alleles per pop"])); d.appendChild(makeEl("div", { class: "v" }, [`∝ ${r.t}`])); return d; })(),
+    (function () { const d = document.createElement("div"); d.appendChild(makeEl("div", { class: "k" }, ["incompatibility model"])); d.appendChild(makeEl("div", { class: "v" }, ["I = α · t²"])); return d; })(),
+  ]));
+
+  const diagramSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 300", preserveAspectRatio: "none" });
+  paramPanel.appendChild(diagramSvg);
+
+  left.appendChild(paramPanel);
+  grid.appendChild(left);
+
+  // Right: guess
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `How many incompatibilities do you expect between hybrids of these two populations? Any positive number.`
+  ]));
+  const guessRow = makeEl("div", { class: "guess-row" }, [
+    makeEl("label", { for: "guessInput" }, ["Predicted # incompatibilities:"]),
+    makeEl("input", { type: "number", id: "guessInput", step: "0.1", min: "0", placeholder: "0" }),
+  ]);
+  guessPanel.appendChild(guessRow);
+
+  let hint = "The model here uses I(t) = t² with α = 1.";
+  if (prev) {
+    hint += ` Last round (t = ${prev.round.t} MY), the true value was ${prev.truth.toFixed(2)}. This round t = ${r.t}, which is ${(r.t / prev.round.t).toFixed(0)}× larger.`;
+  }
+  guessPanel.appendChild(makeEl("p", { class: "guess-hint" }, [hint]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit prediction"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  guessPanel.appendChild(nextBtn);
+
+  right.appendChild(guessPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  drawDiagram(diagramSvg, r);
+
+  const input = document.getElementById("guessInput");
+  input.addEventListener("input", () => {
+    const v = parseFloat(input.value);
+    submitBtn.disabled = !(v >= 0);
+  });
+  submitBtn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (!(v >= 0)) return;
+    submitBtn.disabled = true; input.disabled = true;
+
+    state.history.push({ round: r, guess: v, truth });
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      `expected I = ${truth.toFixed(2)}  ·  your guess: ${v.toFixed(2)}`
+    ]));
+    const ratio = v > 0 ? v / truth : 0;
+    const off = v === 0 ? "you predicted zero" : ratio > 1 ? `you over-predicted by ${ratio.toFixed(2)}×` : `you under-predicted by ${(1 / ratio).toFixed(2)}×`;
+    revealBox.appendChild(makeEl("div", { class: "err" }, [off]));
+    if (state.round > 0) {
+      const prevTruth = state.history[state.round - 1].truth;
+      const ratioSnapshot = truth / prevTruth;
+      revealBox.appendChild(makeEl("p", null, [
+        `Divergence time doubled from ${state.history[state.round - 1].round.t} to ${r.t}, and incompatibilities grew by a factor of ${ratioSnapshot.toFixed(1)}. t² says this factor should be ${((r.t / state.history[state.round - 1].round.t) ** 2).toFixed(1)}.`
+      ]));
+    }
+
+    nextBtn.classList.add("shown");
+    drawTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); drawTally(); });
+}
+
+// ---------- Diagram: two diverging lineages and their incompatibility matrix ----------
+function drawDiagram(svg, round) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 300;
+
+  // Number of "alleles" proportional to t, capped for display
+  const n = Math.max(2, Math.round(round.t * 4));
+  const nDisplay = Math.min(n, 32);
+
+  // Left: divergence diagram (simple Y-shape with dots on each branch)
+  const mL = 10, mT = 16;
+  const diagW = 280, diagH = H - 40;
+  const xRoot = mL + 40, yRoot = mT + diagH - 20;
+  const yTop = mT + 20;
+
+  // Y shape
+  svg.appendChild(svgEl("line", { x1: xRoot, x2: mL + 80, y1: yRoot, y2: yTop + 60, stroke: "#1d1d1b", "stroke-width": "2" }));
+  svg.appendChild(svgEl("line", { x1: xRoot, x2: mL + 220, y1: yRoot, y2: yTop + 60, stroke: "#1d1d1b", "stroke-width": "2" }));
+  svg.appendChild(svgEl("line", { x1: mL + 80, x2: mL + 80, y1: yTop + 60, y2: yTop, stroke: "#1d1d1b", "stroke-width": "2" }));
+  svg.appendChild(svgEl("line", { x1: mL + 220, x2: mL + 220, y1: yTop + 60, y2: yTop, stroke: "#1d1d1b", "stroke-width": "2" }));
+
+  // Labels
+  const labA = svgEl("text", { x: mL + 80, y: yTop - 4, "text-anchor": "middle", "font-size": "12", fill: "#1d1d1b", "font-weight": "600" });
+  labA.textContent = "Pop A";
+  svg.appendChild(labA);
+  const labB = svgEl("text", { x: mL + 220, y: yTop - 4, "text-anchor": "middle", "font-size": "12", fill: "#1d1d1b", "font-weight": "600" });
+  labB.textContent = "Pop B";
+  svg.appendChild(labB);
+  const labT = svgEl("text", { x: xRoot - 8, y: yRoot + 4, "text-anchor": "end", "font-size": "11", fill: "#6b6b68" });
+  labT.textContent = `t = ${round.t} MY`;
+  svg.appendChild(labT);
+
+  // Dots along branches representing fixed alleles (up to n per branch)
+  for (let i = 0; i < nDisplay; i++) {
+    const fracA = 0.25 + 0.7 * (i / Math.max(nDisplay, 1));
+    const yA = yTop + 60 - fracA * (yTop + 60 - yTop);
+    svg.appendChild(svgEl("circle", { cx: mL + 80, cy: yA + (i % 5 - 2) * 2, r: 3, fill: "#2f6b8f" }));
+    const fracB = 0.25 + 0.7 * (i / Math.max(nDisplay, 1));
+    const yB = yTop + 60 - fracB * (yTop + 60 - yTop);
+    svg.appendChild(svgEl("circle", { cx: mL + 220, cy: yB + ((i + 3) % 5 - 2) * 2, r: 3, fill: "#b23a48" }));
+  }
+
+  // Right: interaction matrix. Label with # of potential incompatibilities
+  const mx = 340, my = mT;
+  const mW = 320, mH = 240;
+  const cellN = nDisplay;
+  const cell = Math.min((mW - 40) / cellN, (mH - 40) / cellN);
+  const mxStart = mx + 20;
+  const myStart = my + 20;
+
+  // Headers
+  const hAx = svgEl("text", { x: mxStart + cell * cellN / 2, y: my + 10, "text-anchor": "middle", "font-size": "11", fill: "#2f6b8f", "font-weight": "600" });
+  hAx.textContent = `Pop A alleles (${n} fixed)`;
+  svg.appendChild(hAx);
+  const hBx = svgEl("text", { x: mx + 8, y: myStart + cell * cellN / 2, "font-size": "11", fill: "#b23a48", "font-weight": "600", "text-anchor": "middle", transform: `rotate(-90 ${mx + 8} ${myStart + cell * cellN / 2})` });
+  hBx.textContent = `Pop B alleles (${n} fixed)`;
+  svg.appendChild(hBx);
+
+  for (let i = 0; i < cellN; i++) {
+    for (let j = 0; j < cellN; j++) {
+      // Mark ~1% of cells as "incompatible" — purely illustrative
+      const isIncompat = (i * 31 + j * 17) % 100 < Math.min(20, Math.max(2, round.t));
+      svg.appendChild(svgEl("rect", {
+        x: mxStart + j * cell, y: myStart + i * cell,
+        width: cell - 1, height: cell - 1,
+        fill: isIncompat ? "#b23a48" : "#ececea",
+      }));
+    }
+  }
+
+  // Incompatibility count annotation
+  const ann = svgEl("text", { x: mx + mW / 2, y: my + mH + 16, "text-anchor": "middle", "font-size": "12", fill: "#1d1d1b" });
+  ann.textContent = `potential incompatibilities grow ∝ (alleles A) × (alleles B) ∝ t²`;
+  svg.appendChild(ann);
+}
+
+// ---------- Tally ----------
+function drawTally() {
+  const svg = document.getElementById("tallySvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 260;
+  const mL = 62, mR = 22, mT = 18, mB = 46;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1" }));
+
+  // Log-log axes
+  const xLogMin = -0.4, xLogMax = 1.1; // t from ~0.4 to ~13 MY
+  const yLogMin = -1.2, yLogMax = 2.4;
+  const xScale = lx => mL + ((lx - xLogMin) / (xLogMax - xLogMin)) * plotW;
+  const yScale = ly => mT + ((yLogMax - ly) / (yLogMax - yLogMin)) * plotH;
+
+  // Reference t² line
+  let dRef = "";
+  for (let lx = xLogMin; lx <= xLogMax; lx += 0.05) {
+    const ly = Math.log10(expectedI(Math.pow(10, lx)));
+    dRef += (dRef === "" ? "M" : "L") + xScale(lx).toFixed(1) + "," + yScale(ly).toFixed(1);
+  }
+  svg.appendChild(svgEl("path", { d: dRef, fill: "none", stroke: "#c28a2b", "stroke-width": "1.5", "stroke-dasharray": "4 3" }));
+  const refLab = svgEl("text", { x: xScale(xLogMax) - 6, y: yScale(Math.log10(expectedI(Math.pow(10, xLogMax)))) + 16, "font-size": "11", fill: "#c28a2b", "text-anchor": "end", "font-weight": "600" });
+  refLab.textContent = "I(t) = t²  (slope = 2 in log–log)";
+  svg.appendChild(refLab);
+
+  // x ticks
+  for (let lx = Math.ceil(xLogMin); lx <= Math.floor(xLogMax); lx++) {
+    const x = xScale(lx);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT, y2: mT + plotH, stroke: "#ececea" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(lx);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 10, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = "divergence time t (MY, log scale)";
+  svg.appendChild(xl);
+
+  for (let ly = Math.ceil(yLogMin); ly <= Math.floor(yLogMax); ly++) {
+    const y = yScale(ly);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(ly);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 14, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 14 ${mT + plotH / 2})` });
+  yl.textContent = "incompatibilities (log scale)";
+  svg.appendChild(yl);
+
+  // Plot rounds
+  for (let i = 0; i < ROUNDS.length; i++) {
+    const r = ROUNDS[i];
+    const h = state.history[i];
+    const lx = Math.log10(r.t);
+
+    if (!h) {
+      const dot = svgEl("circle", { cx: xScale(lx), cy: yScale(Math.log10(expectedI(r.t))), r: 3, fill: "#d8d8d4" });
+      svg.appendChild(dot);
+      continue;
+    }
+
+    const lyT = Math.log10(h.truth);
+    const lyG = h.guess > 0 ? Math.log10(h.guess) : yLogMin;
+
+    svg.appendChild(svgEl("line", { x1: xScale(lx), x2: xScale(lx), y1: yScale(Math.min(lyT, lyG)), y2: yScale(Math.max(lyT, lyG)), stroke: "#d8d8d4", "stroke-width": "2" }));
+    svg.appendChild(svgEl("circle", { cx: xScale(lx), cy: yScale(lyT), r: 5, fill: "#1d1d1b" }));
+    svg.appendChild(svgEl("circle", { cx: xScale(lx), cy: yScale(lyG), r: 5, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  }
+
+  const lx = mL + 8, ly = mT + 14;
+  svg.appendChild(svgEl("circle", { cx: lx, cy: ly, r: 4, fill: "#1d1d1b" }));
+  const lt1 = svgEl("text", { x: lx + 8, y: ly + 3, "font-size": "11", fill: "#1d1d1b" }); lt1.textContent = "expected I (t²)"; svg.appendChild(lt1);
+  svg.appendChild(svgEl("circle", { cx: lx + 100, cy: ly, r: 4, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  const lt2 = svgEl("text", { x: lx + 108, y: ly + 3, "font-size": "11", fill: "#b23a48" }); lt2.textContent = "your guess"; svg.appendChild(lt2);
+}
+
+function supscript(n) {
+  const minus = n < 0 ? "⁻" : "";
+  const digits = String(Math.abs(n));
+  const map = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  return minus + digits.split("").map(d => map[d] || d).join("");
+}
+
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "The Dobzhansky\u2013Muller model predicts the number of pairwise incompatibilities between two diverging lineages grows over divergence time:",
+    options: ["Linearly.", "Faster than linearly (e.g., quadratically).", "Constantly (no change).", "Decreases."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "After divergence time t, the expected number of pairwise incompatibilities scales approximately like:",
+    options: ["t.", "t\u00b2.", "log(t).", "1/t."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Two species pairs have been isolated for the same total time, but pair A has accumulated alleles at twice the rate per generation. Pair A is most likely to show:",
+    options: ["Fewer incompatibilities.", "More incompatibilities.", "Equal incompatibilities.", "No reproductive isolation."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Reproductive isolation building up faster-than-linearly with divergence time supports the idea that:",
+    options: ["Incompatibilities arise pairwise from accumulated substitutions.", "Speciation is purely allopatric.", "Reproductive isolation is unrelated to substitution rate.", "Incompatibilities decrease with time."],
+    correct: 0
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s16",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
+</script>
+</body>
+</html>

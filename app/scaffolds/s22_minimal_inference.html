@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S22: what may you legitimately claim?</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68;
+    --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:78ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:760px; margin:0 auto; padding:24px; }
+  .round { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:16px 18px; margin:0 0 16px; }
+  .round.locked { opacity:.4; pointer-events:none; }
+  .round-badge { font-family:ui-monospace,Menlo,monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .scenario { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 12px; }
+  .q { font-weight:600; margin:0 0 10px; }
+  .choice { display:block; width:100%; text-align:left; padding:10px 13px; margin:0 0 8px; background:#fafaf7; color:var(--ink); border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .submit { margin-top:4px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+  .next-btn { margin-top:10px; padding:7px 12px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:13.5px; display:none; }
+  .next-btn.shown { display:inline-block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S22 — What may you legitimately claim?</h1>
+  <p>One observed change in frequency. The failure mode is over-claiming. For each
+  case, pick the <em>strongest</em> statement the data — by itself — actually
+  licenses. This is the inverse of Lesson 12: there you ran selection forward;
+  here you get one realized outcome and must say what it can support.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:760px;margin:16px auto 0;padding:0 24px"></div>
+<main id="rounds"></main>
+<div id="score-final" style="max-width:760px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/score.js"></script>
+<script>
+// Each round: the only LICENSED claim is index `answer`; the rest over-claim.
+const ROUNDS = [
+  {
+    scenario: "An allele rose from 12% to 31% over 40 generations in one population. That is all you are told.",
+    q: "What does this observation, by itself, license?",
+    choices: [
+      "Copies of the allele out-replicated the alternative.",
+      "Selection favored the allele.",
+      "The allele makes its carriers better off.",
+      "The allele will keep rising."
+    ],
+    answer: 0,
+    why: "Only the first. A rise in frequency means exactly that copies out-replicated — nothing more. The rise is fully consistent with drift; \"selection,\" \"better,\" and \"will continue\" are three separate extra claims this single trajectory cannot support."
+  },
+  {
+    scenario: "A heritable behavior is more common among the offspring than it was among the parents.",
+    q: "What is licensed?",
+    choices: [
+      "The behavior is adaptive.",
+      "Carriers of the behavior left more copies than non-carriers.",
+      "Natural selection acted on the behavior.",
+      "The behavior raises fitness."
+    ],
+    answer: 1,
+    why: "Heritable + rose ⇒ carriers out-replicated. \"Adaptive,\" \"selection acted,\" and \"raises fitness\" all assert a cause you have not measured and have not separated from drift. Same licensed claim as round 1, dressed as biology."
+  },
+  {
+    scenario: "Over one generation a coat-color allele went from 0.50 to 0.50 — no measurable change.",
+    q: "What does no change license?",
+    choices: [
+      "The allele is neutral.",
+      "Selection is absent.",
+      "Almost nothing — no change fits drift, balancing selection, or no force at all.",
+      "The allele is at equilibrium."
+    ],
+    answer: 2,
+    why: "\"Neutral,\" \"no selection,\" and \"at equilibrium\" are three different mechanisms that all produce the same flat reading. A single no-change observation cannot tell them apart, so the honest claim is the disjunction."
+  },
+  {
+    scenario: "You see Δp = +0.20 in one population over 10 generations and want to upgrade \"copies out-replicated\" to \"selection.\"",
+    q: "What would actually let you make that upgrade?",
+    choices: [
+      "A bigger Δp.",
+      "More generations of the same series.",
+      "A significance test on this one trajectory.",
+      "Replication across independent populations, or an estimate of Nₑ to rule out drift."
+    ],
+    answer: 3,
+    why: "One realized trajectory is one draw from a distribution — however large the move, drift can produce it when Nₑ is small. Only independent replicates (does the same allele rise again and again?) or a drift model calibrated by Nₑ can license \"selection.\" Size, length, and a test on the single series do not."
+  }
+];
+
+const mount = document.getElementById("rounds");
+const state = ROUNDS.map(() => ({ picked: null, done: false }));
+
+function render() {
+  mount.innerHTML = "";
+  ROUNDS.forEach((r, i) => {
+    const locked = i > 0 && !state[i-1].done;
+    const div = document.createElement("div");
+    div.className = "round" + (locked ? " locked" : "");
+    let html = '<div class="round-badge">Case ' + (i+1) + ' / ' + ROUNDS.length + '</div>';
+    html += '<div class="scenario">' + r.scenario + '</div>';
+    html += '<p class="q">' + r.q + '</p>';
+    r.choices.forEach((c, j) => {
+      const picked = state[i].picked === j ? " picked" : "";
+      html += '<button class="choice' + picked + '" data-r="' + i + '" data-c="' + j + '"' +
+              (state[i].done ? " disabled" : "") + '>' + c + '</button>';
+    });
+    if (!state[i].done) {
+      html += '<button class="submit" data-submit="' + i + '"' +
+              (state[i].picked === null ? " disabled" : "") + '>Submit</button>';
+    }
+    html += '<div class="reveal' + (state[i].done ? " shown" : "") + '" id="rev' + i + '">' +
+            '<strong>Licensed:</strong> “' + r.choices[r.answer] + '”<br>' + r.why + '</div>';
+    if (state[i].done && i < ROUNDS.length - 1) {
+      html += '<button class="next-btn shown" data-next="' + i + '">Next case →</button>';
+    }
+    div.innerHTML = html;
+    mount.appendChild(div);
+  });
+}
+
+mount.addEventListener("click", (e) => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.c !== undefined) {
+    const i = +t.dataset.r;
+    if (state[i].done) return;
+    state[i].picked = +t.dataset.c;
+    render();
+  } else if (t.dataset.submit !== undefined) {
+    const i = +t.dataset.submit;
+    if (state[i].picked === null) return;
+    state[i].done = true;
+    const correct = state[i].picked === ROUNDS[i].answer;
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(i, correct ? 1 : 0);
+    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(String.fromCharCode(65 + i));
+    render();
+    if (state.every(s => s.done) && typeof Score !== "undefined" && Score.finish) Score.finish();
+    const rev = document.getElementById("rev" + i);
+    if (rev) rev.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else if (t.dataset.next !== undefined) {
+    const next = (+t.dataset.next) + 1;
+    const el = mount.children[next];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+Score.init({
+  moduleId: "s22", version: 1, scaffold: ROUNDS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => render()
+});
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S21: when conditioning helps and when it hurts</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/dag.css">
+<style>
+  :root {
+    --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68;
+    --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:80ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:820px; margin:0 auto; padding:24px; }
+  .round { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:16px 18px; margin:0 0 16px; }
+  .round.locked { opacity:.4; pointer-events:none; }
+  .round-badge { font-family:ui-monospace,Menlo,monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .scenario { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 12px; }
+  .q { font-weight:600; margin:0 0 10px; }
+  .choice { display:block; width:100%; text-align:left; padding:10px 13px; margin:0 0 8px; background:#fafaf7; color:var(--ink); border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .submit { margin-top:4px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+  .reveal code { background:#d6e6c6; padding:1px 4px; border-radius:3px; font-family:ui-monospace,Menlo,monospace; }
+  .next-btn { margin-top:10px; padding:7px 12px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:13.5px; display:none; }
+  .next-btn.shown { display:inline-block; }
+  .sandbox { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:16px 18px; margin:0 0 16px; }
+  .sandbox h2 { margin:0 0 6px; font-size:16px; }
+  .sandbox p { margin:0 0 12px; color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S21 — When conditioning helps, and when it hurts</h1>
+  <p>A third variable can rescue a comparison or wreck it, depending on whether
+  it is a common <em>cause</em> or a common <em>effect</em>. This is the one move
+  behind Lesson 6 (the violent-movies collider) and Lesson 19 (Simpson's paradox
+  on a tree). Get the rule here, then both of those land as the same trick.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:820px;margin:16px auto 0;padding:0 24px"></div>
+<main id="rounds"></main>
+
+<section class="sandbox" id="sandbox" style="max-width:820px;margin:0 auto 16px;">
+  <h2>Sandbox — build the two shapes yourself</h2>
+  <p>Drag arrow strengths. Build a <strong>confounder</strong> (Z → X and Z → Y) and watch X–Y correlate even with no arrow between them — then <em>condition on Z</em> and watch it vanish. Then build a <strong>collider</strong> (X → C and Y → C), see X and Y uncorrelated — then <em>condition on C</em> and watch a correlation appear from nothing.</p>
+  <div id="dag-mount"></div>
+</section>
+
+<div id="score-final" style="max-width:820px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/dag.js"></script>
+<script>
+const ROUNDS = [
+  {
+    scenario: "Across the months of a year, ice-cream sales and drowning deaths rise and fall together. Temperature drives both.",
+    q: "If you compare ice-cream sales and drownings within a single temperature (condition on temperature), the correlation will:",
+    choices: [
+      "Vanish — it was never a direct link.",
+      "Get stronger.",
+      "Stay the same; temperature is irrelevant."
+    ],
+    answer: 0,
+    why: "Temperature is a common <em>cause</em> — a confounder (<code>X ← Z → Y</code>). It manufactures a correlation between two things with no arrow between them. Conditioning on the common cause removes the spurious correlation. This is the good kind of conditioning."
+  },
+  {
+    scenario: "In the general population, two diseases are independent. But among hospitalized patients they are negatively correlated — sicker on one means healthier on the other. Either disease, on its own, can land you in the hospital.",
+    q: "Where does that negative correlation among the hospitalized come from?",
+    choices: [
+      "One disease protects against the other.",
+      "An artifact of looking only at the hospitalized — a common effect was conditioned on.",
+      "Random noise; it would vanish with more patients."
+    ],
+    answer: 1,
+    why: "Hospitalization is a common <em>effect</em> — a collider (<code>X → C ← Y</code>). X and Y are truly independent, but once you condition on their shared effect (only look at the hospitalized), a spurious link appears: if you're here and not very sick from one, you're probably here because of the other. This is Berkson's paradox, and it is the bad kind of conditioning."
+  },
+  {
+    scenario: "Two structures, same third variable Z sitting between X and Y. In one, Z causes X and Y. In the other, X and Y cause Z.",
+    q: "What is the rule for when conditioning on Z helps versus hurts?",
+    choices: [
+      "Always condition on Z — more controls is always safer.",
+      "Never condition on Z — leave the data alone.",
+      "Condition on common causes (confounders); never condition on common effects (colliders)."
+    ],
+    answer: 2,
+    why: "Conditioning on a common <em>cause</em> removes confounding (helps). Conditioning on a common <em>effect</em> creates collider bias (hurts). Lesson 6's “violent movies → less crime” is a collider opened by which weekends release which films; Lesson 19's earthworm sign-flip is the same trick on a phylogeny. The arrow directions, not the variable count, decide."
+  }
+];
+
+const mount = document.getElementById("rounds");
+const state = ROUNDS.map(() => ({ picked: null, done: false }));
+
+function render() {
+  mount.innerHTML = "";
+  ROUNDS.forEach((r, i) => {
+    const locked = i > 0 && !state[i-1].done;
+    const div = document.createElement("div");
+    div.className = "round" + (locked ? " locked" : "");
+    let html = '<div class="round-badge">Case ' + (i+1) + ' / ' + ROUNDS.length + '</div>';
+    html += '<div class="scenario">' + r.scenario + '</div>';
+    html += '<p class="q">' + r.q + '</p>';
+    r.choices.forEach((c, j) => {
+      const picked = state[i].picked === j ? " picked" : "";
+      html += '<button class="choice' + picked + '" data-r="' + i + '" data-c="' + j + '"' +
+              (state[i].done ? " disabled" : "") + '>' + c + '</button>';
+    });
+    if (!state[i].done) {
+      html += '<button class="submit" data-submit="' + i + '"' +
+              (state[i].picked === null ? " disabled" : "") + '>Submit</button>';
+    }
+    html += '<div class="reveal' + (state[i].done ? " shown" : "") + '">' +
+            '<strong>Answer:</strong> ' + r.choices[r.answer] + '<br>' + r.why + '</div>';
+    if (state[i].done && i < ROUNDS.length - 1) {
+      html += '<button class="next-btn shown" data-next="' + i + '">Next case →</button>';
+    }
+    div.innerHTML = html;
+    mount.appendChild(div);
+  });
+}
+
+mount.addEventListener("click", (e) => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.c !== undefined) {
+    const i = +t.dataset.r; if (state[i].done) return;
+    state[i].picked = +t.dataset.c; render();
+  } else if (t.dataset.submit !== undefined) {
+    const i = +t.dataset.submit; if (state[i].picked === null) return;
+    state[i].done = true;
+    const correct = state[i].picked === ROUNDS[i].answer;
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(i, correct ? 1 : 0);
+    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(String.fromCharCode(65 + i));
+    render();
+    if (state.every(s => s.done) && typeof Score !== "undefined" && Score.finish) Score.finish();
+  } else if (t.dataset.next !== undefined) {
+    const el = mount.children[(+t.dataset.next) + 1];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+// Optional hands-on sandbox. Guarded so the rounds work even if the DAG
+// primitive fails to load.
+try {
+  if (typeof DAG !== "undefined") {
+    DAG.init({
+      mount: "#dag-mount",
+      nodes: [
+        { id: "x", label: "X", x: 110, y: 90 },
+        { id: "y", label: "Y", x: 470, y: 90 },
+        { id: "z", label: "Z", x: 290, y: 210 }
+      ],
+      arrows: [],
+      initialAxes: { x: "x", y: "y" },
+      n: 300,
+      seed: 11,
+      onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("S"); }
+    });
+  } else {
+    document.getElementById("sandbox").style.display = "none";
+  }
+} catch (e) {
+  const sb = document.getElementById("sandbox"); if (sb) sb.style.display = "none";
+}
+
+Score.init({
+  moduleId: "s21", version: 1, scaffold: ROUNDS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => render()
+});
+render();
+</script>
+</body>
+</html>

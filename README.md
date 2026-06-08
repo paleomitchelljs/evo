@@ -1,59 +1,78 @@
 # evo
 
-Interactive simulation lessons for BIO 202 (Evolution) at Coe College.
+Interactive homework activities for BIO 202 (Evolution) at Coe College.
 
-Each lesson is a single self-contained HTML file. No build step, no framework, no package manager. Open `index.html` in a browser and everything works.
+These are practice instruments, not a course. The lecture sequence introduces
+the material; each activity here drills one concept — predict, then manipulate,
+then confront data that pushes back. Every activity is a single self-contained
+HTML file. No build step, no framework, no package manager. Open `index.html`
+in a browser and everything works.
 
 ## Running locally
 
-Clone the repo and open `index.html` directly, or serve the folder with anything that speaks HTTP:
+Clone the repo and open `index.html` directly, or serve the folder with anything
+that speaks HTTP:
 
 ```sh
 python3 -m http.server 8000
 # then visit http://localhost:8000
 ```
 
-A plain static server is enough. Nothing here needs Node, Python, or R at runtime.
+A plain static server is enough. Nothing here needs Node, Python, or R at
+runtime.
 
 ## Deploying
 
-The site is published via GitHub Pages from the `main` branch at the repository root. Pushing to `main` updates the live site. The `.nojekyll` file in the root disables Jekyll so that paths starting with an underscore are served as-is.
+Published via GitHub Pages from the `main` branch at the repository root.
+Pushing to `main` updates the live site. The `.nojekyll` file disables Jekyll
+so paths starting with an underscore are served as-is.
 
 ## Layout
 
 ```
-index.html          landing page with cards for each lesson and scaffold
-lessons/
-  lesson1.html      adding up coin flips until a bell appears
-  lesson2.html      resampling to ask if new data still belongs
-  lesson3.html      subtracting the line and reading what's left
-  lesson4.html      finding the cloud of lines that all fit the data
-  lesson5.html      shuffling the predictor to see what chance can do
-  lesson6.html      watching the same biology give four different verdicts
-  lesson7.html      tracing how much of a parent ends up in their child
-scaffolds/          single-concept drill exercises (S01–S20)
-data/clean/         cleaned CSV + JSON datasets the lessons load
-data/raw/           original source data
-scripts/            Python cleaners that produce data/clean/
-lib/                shared JS (score, quiz) and CSS
-oldcode/            historical R scripts; reference only
-prototype/          early single-file prototypes
+index.html               landing page (repo root, the GitHub Pages entry point)
+app/
+  lessons/               one self-contained HTML file per activity (lesson1..34)
+  scaffolds/             single-concept drills (s01..s20)
+  assets/                shared JS (score, quiz, dag) and CSS the pages load
+data/
+  clean/                 cleaned CSV + JSON datasets the activities load
+  raw/                   original source data
+scripts/                 Python cleaners that produce data/clean/
+instructor/              browser-only grading tools (verify_code.html, aggregate.html)
+docs/
+  ideas/                 conceptual map + activity proposals
+  reviews/               pedagogy review passes (ADVERSARIAL, STEELMAN, HOMEWORK_REVIEW)
 ```
 
-New lessons go into `lessons/lessonN.html` and get linked from `index.html`. Filenames match displayed lesson numbers.
+The landing page stays at the repo root so GitHub Pages serves it as the entry
+point; everything it links to lives under `app/`. From `app/lessons/` (and
+`app/scaffolds/`), activities load assets as `../assets/…`, data as
+`../../data/clean/…`, and link home as `../../index.html`.
 
-See **`PROJECT_PLAN.md`** for the full ~30-lesson plan organized into five units, ending with the "What is an Individual?" capstone.
+See **`PROJECT_PLAN.md`** for the concept index, the design commitments, and how
+new activities are added. The concepts being reinforced are drawn from
+`evolution_course_conceptual_map.md`.
 
 ## Pedagogy
 
-Three rules shape every lesson. They are not optional.
+Three rules shape every activity. They are not optional.
 
-1. **Prediction before interactivity.** Controls are locked until the student commits to a prediction. Students predict, then test. They do not tinker first and rationalize after.
-2. **Code is always visible.** Moving a slider highlights the corresponding line of R. A slider is an editable named variable, not a spell.
-3. **Every assignment ends in real code.** The GUI is scaffolding. The final step is a `.R` modification the simulator cannot expose.
+1. **Prediction before interactivity.** Controls are locked until the student
+   commits to a prediction. They predict, then test — they do not tinker first
+   and rationalize after.
+2. **Code is always visible.** Moving a slider highlights the corresponding line
+   of R. A slider is an editable named variable, not a spell.
+3. **Show, don't tell.** The aim is intuition, not vocabulary. A student should
+   be able to look at a distribution and a slider's effect and judge whether the
+   fit improved, without being handed the name of the distribution or the
+   parameter.
 
-Each lesson also follows the same four-part rhythm: simulate a named null, layer in the novel feature, state the test that distinguishes the two, then bring in empirical data that pushes back on the model.
+Where it fits, an activity repeats one concept across several datasets, leads
+with data the student already understands before the biological case, and offers
+a "break it" mode that lets the model fail. Some activities end in a small `.R`
+edit; many don't.
 
 ## License
 
-Lessons are licensed for classroom use. Other uses, ask.
+Activities are licensed for classroom use. Other uses, ask.

@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S23: the cloud and the histogram are the same cloud</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:82ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:980px; margin:0 auto; padding:24px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; margin:0 0 16px; }
+  .panel h3 { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:780px){ .grid{ grid-template-columns:1fr; } }
+  canvas { width:100%; height:auto; display:block; background:#fff; }
+  .q { font-weight:600; margin:0 0 8px; }
+  .choice { display:block; width:100%; text-align:left; padding:9px 12px; margin:0 0 7px; background:#fafaf7; border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .submit { padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .controls.locked { opacity:.4; pointer-events:none; }
+  .row { display:grid; grid-template-columns:90px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .row output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .row input[type=range] { width:100%; }
+  .stat { font-family:ui-monospace,Menlo,monospace; font-size:13px; margin-top:8px; }
+  .stat .big { font-size:16px; font-weight:600; color:var(--accent); }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S23 — The cloud and the histogram are the same cloud</h1>
+  <p>Lesson 4 built a cloud of slopes by resampling data. Lesson 10 built a
+  histogram of allele frequencies by random copying. They look like different
+  pictures from different units. They are the same object: a <strong>sampling
+  distribution</strong>, and both tighten at the same rate, <code>1/√n</code>.
+  Set the sample size once and watch the two collapse together.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:980px;margin:16px auto 0;padding:0 24px"></div>
+
+<main>
+  <div class="panel">
+    <div class="q">Predict first. As you raise the sample size n, the slope cloud (left) and the allele-frequency histogram (right) will:</div>
+    <button class="choice" data-c="0">Both narrow, at the same rate</button>
+    <button class="choice" data-c="1">Narrow at different rates — they are unrelated</button>
+    <button class="choice" data-c="2">The slope cloud narrows; the allele histogram stays put</button>
+    <button class="submit" id="submit" disabled>Submit → unlock the slider</button>
+    <div class="reveal" id="reveal"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Sample size — shared by both</h3>
+    <div class="controls locked" id="controls">
+      <div class="row"><label for="nIn">n</label><input type="range" id="nIn" min="5" max="500" step="5" value="30"><output id="nOut">30</output></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>Lesson 4 — bootstrap slope cloud</h3>
+      <canvas id="plotS" width="440" height="240"></canvas>
+      <div class="stat"><span style="color:var(--muted)">SD of the slope:</span> <span id="sdS" class="big">—</span></div>
+    </div>
+    <div class="panel">
+      <h3>Lesson 10 — Wright–Fisher p′ histogram</h3>
+      <canvas id="plotP" width="440" height="240"></canvas>
+      <div class="stat"><span style="color:var(--muted)">SD of p′:</span> <span id="sdP" class="big">—</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>Both spreads versus 1/√n</h3>
+    <canvas id="plotR" width="900" height="200"></canvas>
+    <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">Each curve is a sampling-distribution width as n grows. The dashed reference is proportional to 1/√n. Two different machines, one law.</p>
+  </div>
+</main>
+<div id="score-final" style="max-width:980px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/score.js"></script>
+<script>
+// ---- standard helpers (verbatim from the lessons) ----
+function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function gauss(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function setupCanvas(c){const dpr=window.devicePixelRatio||1;if(!c.dataset.cssW){c.dataset.cssW=String(c.width);c.dataset.cssH=String(c.height);}const W=+c.dataset.cssW,H=+c.dataset.cssH;c.width=W*dpr;c.height=H*dpr;c.style.width=W+"px";c.style.height=H+"px";const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+function sd(a){const m=a.reduce((x,y)=>x+y,0)/a.length;return Math.sqrt(a.reduce((s,v)=>s+(v-m)*(v-m),0)/a.length);}
+
+function olsSlope(xs, ys){
+  const n=xs.length; let sx=0,sy=0;for(let i=0;i<n;i++){sx+=xs[i];sy+=ys[i];}
+  const mx=sx/n,my=sy/n; let sxx=0,sxy=0;
+  for(let i=0;i<n;i++){sxx+=(xs[i]-mx)*(xs[i]-mx);sxy+=(xs[i]-mx)*(ys[i]-my);}
+  return sxx===0?0:sxy/sxx;
+}
+
+// One fixed "true" dataset generator: y = 2 + 0.8 x + noise, x ~ U(0,10).
+function makeData(n, rng){
+  const xs=[],ys=[];
+  for(let i=0;i<n;i++){const x=rng()*10; xs.push(x); ys.push(2+0.8*x+gauss(rng)*3);}
+  return {xs,ys};
+}
+// Bootstrap the slope B times from one dataset of size n.
+function slopeCloud(n, B){
+  const rng=mulberry32(7); const {xs,ys}=makeData(n,rng);
+  const out=[]; const r2=mulberry32(99);
+  for(let b=0;b<B;b++){
+    const bx=[],by=[];
+    for(let i=0;i<n;i++){const k=Math.floor(r2()*n); bx.push(xs[k]); by.push(ys[k]);}
+    out.push(olsSlope(bx,by));
+  }
+  return out;
+}
+// Wright-Fisher: draw n alleles at p0=0.5, B times; record p'.
+function pCloud(n, B){
+  const rng=mulberry32(2024); const p0=0.5; const out=[];
+  for(let b=0;b<B;b++){let c=0;for(let i=0;i<n;i++) if(rng()<p0) c++; out.push(c/n);}
+  return out;
+}
+
+function drawHist(canvas, vals, color, center){
+  const {ctx,W,H}=setupCanvas(canvas); ctx.clearRect(0,0,W,H);
+  const pad={l:8,r:8,t:10,b:24};
+  const lo=Math.min(...vals), hi=Math.max(...vals);
+  const span=Math.max(1e-6,hi-lo); const k=24; const bins=new Array(k).fill(0);
+  for(const v of vals){let idx=Math.floor((v-lo)/span*k); if(idx>=k)idx=k-1; if(idx<0)idx=0; bins[idx]++;}
+  const maxB=Math.max(...bins,1); const bw=(W-pad.l-pad.r)/k;
+  ctx.fillStyle=color;
+  for(let i=0;i<k;i++){const h=(bins[i]/maxB)*(H-pad.t-pad.b); ctx.fillRect(pad.l+i*bw, H-pad.b-h, Math.max(1,bw-1), h);}
+  // center line
+  const cx=pad.l+((center-lo)/span)*(W-pad.l-pad.r);
+  ctx.strokeStyle="#333"; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(cx,pad.t); ctx.lineTo(cx,H-pad.b); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle="#555"; ctx.font="10px ui-monospace"; ctx.textAlign="center";
+  ctx.fillText(lo.toFixed(2), pad.l, H-8); ctx.fillText(hi.toFixed(2), W-pad.r, H-8);
+}
+
+function drawRate(canvas, ns, sdsA, sdsB){
+  const {ctx,W,H}=setupCanvas(canvas); ctx.clearRect(0,0,W,H);
+  const pad={l:36,r:10,t:12,b:26};
+  const nmax=ns[ns.length-1];
+  // normalize each series to its own first value so they overlay
+  const normA=sdsA.map(v=>v/sdsA[0]); const normB=sdsB.map(v=>v/sdsB[0]);
+  const ymax=Math.max(1, ...normA, ...normB);
+  const X=v=>pad.l+(v/nmax)*(W-pad.l-pad.r);
+  const Y=v=>pad.t+(1-v/ymax)*(H-pad.t-pad.b);
+  ctx.strokeStyle="#999"; ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+  // 1/sqrt(n) reference (normalized to n[0])
+  ctx.strokeStyle="#999"; ctx.setLineDash([4,3]); ctx.beginPath();
+  ns.forEach((n,i)=>{const v=Math.sqrt(ns[0]/n); const x=X(n),y=Y(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke(); ctx.setLineDash([]);
+  function plot(norm,color){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ns.forEach((n,i)=>{const x=X(n),y=Y(norm[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();}
+  plot(normA,"#b23a48"); plot(normB,"#2f6b8f");
+  ctx.font="11px -apple-system"; ctx.textAlign="left";
+  ctx.fillStyle="#b23a48"; ctx.fillText("slope SD", X(nmax*0.05), Y(normA[0])-6);
+  ctx.fillStyle="#2f6b8f"; ctx.fillText("p′ SD", X(nmax*0.05), Y(normB[0])+14);
+  ctx.fillStyle="#999"; ctx.fillText("∝ 1/√n", X(nmax*0.6), Y(Math.sqrt(ns[0]/(nmax*0.6)))-6);
+  ctx.fillStyle="#555"; ctx.textAlign="center"; ctx.fillText("n →", (pad.l+W-pad.r)/2, H-6);
+}
+
+const B = 400;
+function update(n){
+  const sc = slopeCloud(n, B);
+  const pc = pCloud(n, B);
+  drawHist(document.getElementById("plotS"), sc, "rgba(178,58,72,0.7)", 0.8);
+  drawHist(document.getElementById("plotP"), pc, "rgba(47,107,143,0.7)", 0.5);
+  document.getElementById("sdS").textContent = sd(sc).toFixed(3);
+  document.getElementById("sdP").textContent = sd(pc).toFixed(3);
+  // rate curve across a fixed n-grid (independent of the slider, drawn once-ish)
+  const ns=[10,20,40,80,160,320];
+  const sdsA=ns.map(m=>sd(slopeCloud(m,200)));
+  const sdsB=ns.map(m=>sd(pCloud(m,200)));
+  drawRate(document.getElementById("plotR"), ns, sdsA, sdsB);
+}
+
+// prediction gate
+let picked=null;
+document.querySelectorAll(".choice").forEach(b=>b.addEventListener("click",()=>{
+  if(document.getElementById("controls").classList.contains("locked")===false) return;
+  document.querySelectorAll(".choice").forEach(x=>x.classList.remove("picked"));
+  b.classList.add("picked"); picked=+b.dataset.c; document.getElementById("submit").disabled=false;
+}));
+document.getElementById("submit").addEventListener("click",()=>{
+  document.getElementById("controls").classList.remove("locked");
+  document.getElementById("submit").style.display="none";
+  const rev=document.getElementById("reveal");
+  rev.classList.add("shown");
+  rev.innerHTML="<strong>Both narrow, at the same rate.</strong> The left cloud is the bootstrap sampling distribution of a regression slope; its width is about σ_resid /(σ_x·√n). The right histogram is the sampling distribution of an allele frequency under random copying; its width is √(p(1−p)/n). Different machines, but both are cov/var statistics, and both shrink as 1/√n — the bottom plot overlays them on that reference. The (α,β) cloud of Lesson 4 and the p′ histogram of Lesson 10 were the same object the whole time.";
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, picked===0?1:0);
+  update(+document.getElementById("nIn").value);
+  if(typeof Score!=="undefined"&&Score.finish) Score.finish();
+});
+document.getElementById("nIn").addEventListener("input",e=>{
+  const n=+e.target.value; document.getElementById("nOut").textContent=n;
+  update(n);
+  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+});
+
+Score.init({ moduleId:"s23", version:1, scaffold:1, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>{ try{ update(30); }catch(e){} } });
+</script>
+</body>
+</html>

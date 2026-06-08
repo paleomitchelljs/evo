@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>BIO 202 — Lesson 12: Pushing the allele frequency with selection</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  *{box-sizing:border-box} body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:16px 24px;border-bottom:1px solid var(--rule);background:var(--panel)} header h1{margin:0 0 4px;font-size:18px} header p{margin:0;color:var(--muted);font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:5;background:var(--stage-bar);border-bottom:1px solid var(--rule);padding:8px 24px;font-size:13px} nav.toc a{color:var(--muted);text-decoration:none;margin-right:14px} nav.toc a.locked{color:#b8b8b4;text-decoration:line-through}
+  section.stage{padding:28px 24px 40px;border-bottom:1px solid var(--rule);max-width:1300px;margin:0 auto} section.stage h2.stage-h{margin:0 0 4px;font-size:20px} section.stage .stage-sub{margin:0 0 18px;color:var(--muted);font-size:13px}
+  section.stage.stage-locked{opacity:.38;filter:grayscale(.4)} section.stage.stage-locked .lock-banner{display:block} section.stage.stage-locked .stage-body{pointer-events:none}
+  .lock-banner{display:none;margin:0 0 16px;padding:10px 14px;background:var(--lock-bg);border:1px dashed var(--lock-rule);border-radius:4px;font-size:13px;color:var(--lock-ink);text-align:center}
+  .explore-tracker{margin-top:10px;padding:8px 12px;background:#f4f0dd;border-left:3px solid #caa04a;border-radius:0 4px 4px 0;font-size:12.5px;color:#4a3a14;display:none} .explore-tracker.shown{display:block} .explore-tracker.complete{background:#e4efd4;border-left-color:#6f8a4a;color:#2e4410}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} .col{display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px} .panel h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  .scenario p{margin:0 0 8px} .scenario p:last-child{margin-bottom:0} .scenario .anchor-quote{background:#f5efe0;border-left:3px solid #caa04a;padding:10px 14px;border-radius:0 4px 4px 0;font-size:13.5px;color:#2e230a;margin:8px 0 4px} .scenario .anchor-quote .src{display:block;margin-top:6px;font-size:11px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
+  .prediction ol{margin:0;padding-left:20px} .prediction li{margin-bottom:10px} .prediction label{display:block;margin:3px 0;cursor:pointer;font-size:14px} .prediction .q{font-weight:600;margin-bottom:4px;font-size:14px}
+  .prediction button{margin-top:6px;padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px} .prediction button:disabled{background:#bbb;cursor:not-allowed}
+  .prediction-done{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:4px;font-size:13px;margin-bottom:6px}
+  .controls.locked{opacity:.4;pointer-events:none} .controls .row{display:grid;grid-template-columns:140px 1fr 70px;align-items:center;gap:10px;margin-bottom:6px} .controls label{font-size:13px} .controls output{font-family:ui-monospace,Menlo,monospace;font-size:13px} .controls input[type=range]{width:100%}
+  .controls .buttons{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .controls button{background:#333;color:#fff;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:13px} .controls button.ghost{background:transparent;color:#333;border:1px solid var(--rule)} .controls button.accent{background:var(--accent)}
+  .graph-wrap canvas{width:100%;height:auto;display:block;background:#fff}
+  .fit-stats{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;margin-top:8px;color:var(--ink)} .fit-stats .label{color:var(--muted)} .fit-stats .big{font-size:16px;font-weight:600;color:var(--accent)}
+  pre.code{background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:4px;font:12px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto;margin:0;max-height:360px} pre.code .line{display:block;padding:0 6px;border-radius:2px} pre.code .line.hi{background:var(--code-hi)} pre.code .kw{color:#c792ea} pre.code .fn{color:#82aaff} pre.code .num{color:#f78c6c} pre.code .str{color:#c3e88d} pre.code .com{color:#676f8a;font-style:italic}
+  footer.wrap-up{padding:20px 24px 40px;max-width:1300px;margin:0 auto;color:var(--muted);font-size:13px} footer.wrap-up h2{color:var(--ink);font-size:16px} footer.wrap-up code{font-family:ui-monospace,Menlo,monospace;background:#eee;padding:1px 4px;border-radius:3px} footer.wrap-up .closing{background:#f5efe0;border-left:3px solid #caa04a;padding:12px 16px;border-radius:0 4px 4px 0;font-size:14px;color:#2e230a;margin:8px 0 16px} footer.wrap-up .closing .src{display:block;margin-top:6px;font-size:12px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
+  .outcomes{max-width:1300px;margin:0 auto;padding:16px 24px 4px;border-bottom:1px solid var(--rule);background:var(--panel)} .outcomes h2{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600} .outcomes p{margin:0 0 8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 12 — Pushing the allele frequency with selection</h1>
+  <p>BIO 202, Spring 2026, draft v1. Selection coefficients, deterministic trajectories, and the cloud of drift around them.</p>
+</header>
+<div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
+<div class="outcomes"><h2>What you'll do</h2><p>Drive a beneficial allele to fixation deterministically. Add drift. Estimate s from observed Δp. End at the LTEE.</p>
+  <div class="scenario" style="max-width:920px"><div class="anchor-quote">Pine trees — do they want their seeds to be eaten? No. The trees that made pinecone seeds that were easy to eat — what happened to them? They died. The trees that survived are the ones that had pinecone seeds that weren't easy to eat. That's more or less all selection is doing — the ones that aren't good enough to make more of themselves don't make more of themselves.<span class="src">— 202_lec16_03</span></div></div></div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. Deterministic s-curve</a>
+  <a href="#stageB" id="tocB" class="locked">B. Selection + drift</a>
+  <a href="#stageC" id="tocC" class="locked">C. Estimate s</a>
+  <a href="#stageD" id="tocD" class="locked">D. LTEE allele freqs</a>
+  <a href="#stageE" id="tocE" class="locked">E. Drift, selection, or both? (5 rounds)</a>
+</nav>
+
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — Deterministic selection — the s-curve</h2>
+  <p class="stage-sub">Infinite population, no drift. A favorable allele with coefficient s sweeps to fixation along a logistic curve.</p>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Allele A has fitness 1 + s relative to a; AA / Aa / aa get genotype fitnesses (1+s)², (1+s), 1 in the haploid approximation. The frequency p evolves: p' = p(1+s)/(p(1+s)+(1−p)). Plot trajectory from p₀.</p></div>
+      <div class="panel graph-wrap"><h3>Frequency trajectory under selection</h3><canvas id="plotA" width="560" height="280"></canvas><div class="fit-stats" id="statsA"><span class="label">s:</span> <span id="A_s">0.05</span> &nbsp;|&nbsp; <span class="label">p₀:</span> <span id="A_p0">0.01</span> &nbsp;|&nbsp; <span class="label">time to p=0.5:</span> <span id="A_t50">—</span> gen &nbsp;|&nbsp; <span class="label">time to p=0.99:</span> <span id="A_t99" class="big">—</span> gen</div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. Halving s (from 0.05 to 0.025) changes the time to fixation by approximately:</div>
+          <label><input type="radio" name="qA1" value="half" /> Half</label>
+          <label><input type="radio" name="qA1" value="double" /> Double</label>
+          <label><input type="radio" name="qA1" value="quad" /> 4×</label>
+          <label><input type="radio" name="qA1" value="unchanged" /> Unchanged — sweeps are mostly about p₀</label></li></ol>
+        <button id="submitA" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreA">Try at least 4 (s, p₀) combos. <span class="count">0/4 combos</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsA">
+          <div class="row" data-line="s"><label for="A_sIn">s</label><input type="range" id="A_sIn" min="0.001" max="0.5" step="0.001" value="0.05" /><output id="A_sOut">0.050</output></div>
+          <div class="row" data-line="p0"><label for="A_pIn">p₀</label><input type="range" id="A_pIn" min="0.001" max="0.5" step="0.001" value="0.01" /><output id="A_pOut">0.010</output></div>
+          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — deterministic selection</h3>
+<pre class="code" id="codeA"><span class="line" data-line="s">s &lt;- <span class="num" id="cA_s">0.05</span></span><span class="line" data-line="p0">p &lt;- <span class="num" id="cA_p">0.01</span></span><span class="line">gens &lt;- <span class="num">500</span>; traj &lt;- <span class="fn">numeric</span>(gens+<span class="num">1</span>); traj[<span class="num">1</span>] &lt;- p</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) { p &lt;- p*(<span class="num">1</span>+s)/(p*(<span class="num">1</span>+s)+(<span class="num">1</span>-p)); traj[g+<span class="num">1</span>] &lt;- p }</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Selection + drift</h2>
+  <p class="stage-sub">Real populations are finite. Same selection coefficient, finite N. Some replicates sweep; some lose the beneficial allele to drift anyway.</p>
+  <div class="lock-banner">Complete Stage A.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>50 replicate populations of N = 100. Same s = 0.05. Same p₀ = 0.05. Watch the spread. Some fix the allele; some lose it. Probability of fixation for a single new beneficial allele is ≈ 2s (Haldane).</p></div>
+      <div class="panel graph-wrap"><h3>50 replicate trajectories</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">N:</span> <span id="B_N">100</span> &nbsp;|&nbsp; <span class="label">s:</span> <span id="B_s">0.05</span> &nbsp;|&nbsp; <span class="label">p₀:</span> <span id="B_p0">0.05</span> &nbsp;|&nbsp; <span class="label">% replicates fixed:</span> <span id="B_pfix" class="big">—</span> &nbsp;|&nbsp; <span class="label">Haldane prediction (2s):</span> <span id="B_haldane">10%</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. A new beneficial allele (1 copy, p₀ = 1/(2N)) with s = 0.05 in a population of N = 100 will fix about:</div>
+          <label><input type="radio" name="qB1" value="ten" /> 10% of the time</label>
+          <label><input type="radio" name="qB1" value="half" /> 50% of the time</label>
+          <label><input type="radio" name="qB1" value="always" /> 100% of the time (it's beneficial)</label>
+          <label><input type="radio" name="qB1" value="never" /> Essentially 0% (it's just one copy)</label></li></ol>
+        <button id="submitB" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreB">Try at least 5 (N, s, p₀) combos. <span class="count">0/5 combos</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
+          <div class="row"><label for="B_NIn">N</label><input type="range" id="B_NIn" min="20" max="2000" step="20" value="100" /><output id="B_NOut">100</output></div>
+          <div class="row"><label for="B_sIn">s</label><input type="range" id="B_sIn" min="0.001" max="0.3" step="0.001" value="0.05" /><output id="B_sOut">0.050</output></div>
+          <div class="row"><label for="B_pIn">p₀</label><input type="range" id="B_pIn" min="0.005" max="0.3" step="0.005" value="0.05" /><output id="B_pOut">0.050</output></div>
+          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — selection + drift</h3>
+<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line">N &lt;- <span class="num">100</span>; s &lt;- <span class="num">0.05</span>; p0 &lt;- <span class="num">0.05</span>; reps &lt;- <span class="num">50</span></span><span class="line">trajs &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  p &lt;- p0; traj &lt;- p</span><span class="line">  <span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:<span class="num">300</span>) {</span><span class="line">    p_sel &lt;- p*(<span class="num">1</span>+s)/(p*(<span class="num">1</span>+s)+(<span class="num">1</span>-p))</span><span class="line">    p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p_sel)/(<span class="num">2</span>*N); traj &lt;- <span class="fn">c</span>(traj, p)</span><span class="line">  }; traj</span><span class="line">})</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — Estimate s from observed Δp</h2>
+  <p class="stage-sub">Given allele frequency at two time points, infer s. Same likelihood as fitting a logistic curve. Wide CI when Δp is small relative to drift noise.</p>
+  <div class="lock-banner">Complete Stage B.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Simulate a sweep at known true s. Observe p at t = 0 and t = T. Fit s by least squares. Confidence interval depends on N (drift noise), T (signal time), and the magnitude of s.</p></div>
+      <div class="panel graph-wrap"><h3>SSR profile over candidate s</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">true s:</span> <span id="C_trueS">0.05</span> &nbsp;|&nbsp; <span class="label">best-fit s:</span> <span id="C_bestS" class="big">—</span> &nbsp;|&nbsp; <span class="label">95% CI:</span> <span id="C_ci">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. With N = 200, T = 50 generations, and true s = 0.02 (weak), the fit will:</div>
+          <label><input type="radio" name="qC1" value="tight" /> Pin s to within ±0.005</label>
+          <label><input type="radio" name="qC1" value="wide" /> Have a wide CI — drift dominates</label>
+          <label><input type="radio" name="qC1" value="zero" /> Fit s = 0 (drift indistinguishable from weak selection)</label></li></ol>
+        <button id="submitC" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreC">Try at least 3 (s, N) combos. <span class="count">0/3 combos</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsC">
+          <div class="row"><label for="C_sIn">true s</label><input type="range" id="C_sIn" min="0.001" max="0.2" step="0.001" value="0.05" /><output id="C_sOut">0.050</output></div>
+          <div class="row"><label for="C_NIn">N</label><input type="range" id="C_NIn" min="50" max="2000" step="50" value="200" /><output id="C_NOut">200</output></div>
+          <div class="row"><label for="C_TIn">T (gens observed)</label><input type="range" id="C_TIn" min="10" max="500" step="10" value="50" /><output id="C_TOut">50</output></div>
+          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — fit s</h3>
+<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line">N &lt;- <span class="num">200</span>; s_true &lt;- <span class="num">0.05</span>; T &lt;- <span class="num">50</span>; p0 &lt;- <span class="num">0.05</span></span><span class="line">p &lt;- p0; traj &lt;- p</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:T) { p_sel &lt;- p*(<span class="num">1</span>+s_true)/(p*(<span class="num">1</span>+s_true)+(<span class="num">1</span>-p)); p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p_sel)/(<span class="num">2</span>*N); traj &lt;- <span class="fn">c</span>(traj, p) }</span><span class="line">s_grid &lt;- <span class="fn">seq</span>(-<span class="num">0.05</span>, <span class="num">0.2</span>, <span class="num">0.001</span>)</span><span class="line">ssr &lt;- <span class="fn">sapply</span>(s_grid, <span class="kw">function</span>(s) { p2 &lt;- p0; pp &lt;- p2; <span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:T) { pp &lt;- pp*(<span class="num">1</span>+s)/(pp*(<span class="num">1</span>+s)+(<span class="num">1</span>-pp)); p2 &lt;- <span class="fn">c</span>(p2, pp) }; <span class="fn">sum</span>((traj - p2)^<span class="num">2</span>) })</span><span class="line">s_grid[<span class="fn">which.min</span>(ssr)]</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — Lenski's long-term E. coli experiment</h2>
+  <p class="stage-sub">Real allele-frequency time courses from <code>data/clean/ltee_allele_freqs.csv</code>. Fit s to each rising allele. Some sweep cleanly; some get displaced.</p>
+  <div class="lock-banner">Complete Stage C.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>LTEE allele frequencies plotted over generations. Each rising trajectory is a beneficial mutation. Fit s per trajectory. Watch for clonal interference — alleles that rise then crash as a fitter mutation appears in the population.</p></div>
+      <div class="panel graph-wrap"><h3>LTEE allele frequencies</h3><canvas id="plotD" width="560" height="320"></canvas><div class="fit-stats" id="statsD"><span class="label">trajectories shown:</span> <span id="D_n">—</span> &nbsp;|&nbsp; <span class="label">median fit s:</span> <span id="D_med" class="big">—</span> &nbsp;|&nbsp; <span class="label">range:</span> <span id="D_range">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. Across LTEE beneficial mutations that successfully fix, the typical selection coefficient is around:</div>
+          <label><input type="radio" name="qD1" value="tiny" /> 0.001 — very weak</label>
+          <label><input type="radio" name="qD1" value="small" /> 0.01 — small but measurable</label>
+          <label><input type="radio" name="qD1" value="medium" /> 0.05 — moderate</label>
+          <label><input type="radio" name="qD1" value="huge" /> 0.5 — large</label></li></ol>
+        <button id="submitD" disabled>Submit → reveal</button>
+        <div class="explore-tracker" id="exploreD">Inspect at least 2 trajectories. <span class="count">0/2 inspections</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
+          <div class="row"><label for="D_seedIn">subset seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons"><button id="D_redraw" class="accent">Redraw subset</button> <button id="D_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — fit s per LTEE trajectory</h3>
+<pre class="code" id="codeD"><span class="line">ltee &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/ltee_allele_freqs.csv"</span>)</span><span class="line"><span class="com"># For each mutation, fit s by least squares to logistic</span></span><span class="line">muts &lt;- <span class="fn">split</span>(ltee, ltee$mutation_id)</span><span class="line">fits &lt;- <span class="fn">sapply</span>(muts, <span class="kw">function</span>(m) {</span><span class="line">  t &lt;- m$generation - <span class="fn">min</span>(m$generation); pobs &lt;- m$freq; p0 &lt;- pobs[<span class="num">1</span>]</span><span class="line">  s_grid &lt;- <span class="fn">seq</span>(<span class="num">0</span>, <span class="num">0.3</span>, <span class="num">0.005</span>)</span><span class="line">  ssr &lt;- <span class="fn">sapply</span>(s_grid, <span class="kw">function</span>(s) <span class="fn">sum</span>((pobs - <span class="num">1</span>/(<span class="num">1</span> + (<span class="num">1</span>/p0 - <span class="num">1</span>)*<span class="fn">exp</span>(-s*t)))^<span class="num">2</span>))</span><span class="line">  s_grid[<span class="fn">which.min</span>(ssr)]</span><span class="line">})</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — Drift, selection, or both? Five trajectories, five labels.</h2>
+  <p class="stage-sub">Same Wright-Fisher + selection simulator. Each round shows one trajectory. You decide which forces produced it before the truth is revealed.</p>
+  <div class="lock-banner">Complete Stage D.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Five trajectories, generated under known (N, s, p₀) combinations. Some are drift-only (s = 0). Some are selection-only-feeling (s much larger than 1/N). Some are the boundary case (s ≈ 1/N) where you can't tell from a single trace.</p>
+        <p>For each trajectory, pick the best label. The next round won't unlock until you commit.</p>
+      </div>
+      <div class="panel graph-wrap">
+        <h3 id="E_title">Round 1 of 5</h3>
+        <canvas id="plotE" width="560" height="320"></canvas>
+        <div class="fit-stats" id="statsE"><span class="label">progress:</span> <span id="E_progress">0 / 5</span> &nbsp;|&nbsp; <span class="label">correct so far:</span> <span id="E_correct" class="big">0</span></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel" id="predE_panel">
+        <h3>Classify this trajectory</h3>
+        <div class="drill-options" style="display:flex; flex-direction:column; gap:6px;">
+          <label><input type="radio" name="qE" value="drift" /> Drift only (no selection — s ≈ 0)</label>
+          <label><input type="radio" name="qE" value="selection" /> Selection dominates (s ≫ 1/N — the trajectory is mostly deterministic)</label>
+          <label><input type="radio" name="qE" value="both" /> Both — selection nudges, drift jitters (s comparable to 1/N)</label>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px;">
+          <button id="E_submit" disabled>Submit</button>
+          <button id="E_next" style="display:none;">Next →</button>
+        </div>
+        <div id="E_reveal" style="margin-top:10px; padding:8px 10px; background:#f4f0e6; border-left:3px solid #c28a2b; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; display:none;"></div>
+        <div class="explore-tracker" id="exploreE">Finish all 5 rounds. <span class="count">0/5 rounds</span></div>
+      </div>
+      <div class="panel"><h3>Why this drill?</h3>
+        <p style="font-size:13.5px; color:#4a4a48;">The boundary <strong>|s| ≈ 1/N</strong> is the most important single number in this lesson and you'll rely on it through Units 3 and 4. Below the boundary, selection is invisible against drift; above it, selection dominates. This drill makes you confront the boundary five times, on trajectories with known truth.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 40px"></div>
+<footer class="wrap-up"><h2>One sentence to carry forward</h2>
+  <div class="closing">Selection has no foresight. It is just the statistical result of things that copy themselves showing up more in the next generation. The peppered moths cannot know that parliament is about to pass clean-air legislation — and they don't have to. And "selection is the correlation" is literally a covariance — cov(fitness, allele) — the same slope you fit in Lesson 3 with fitness as the y-column. That covariance is all the Price equation (Lesson 26) will turn out to be.<span class="src">— composite: 202_lec15_03 + 461_lec10_03</span></div>
+  <p><strong>The inverse problem.</strong> Here you ran selection <em>forward</em> — set s, watch Δp. The harder direction is backward: you see one realized Δp and must say what it licenses. The honest answer is usually "copies out-replicated," not "selection mattered." Scaffold <a href="../scaffolds/s22_minimal_inference.html">S22</a> drills exactly that restraint.</p>
+  <p><strong>Lesson 13</strong> takes the next question: if selection is constantly purging bad alleles, why are bad alleles still here? Mutation-selection balance is the answer.</p></footer>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
+function rbinom(rng,n,p){let k=0; for(let i=0;i<n;i++) if(rng()<p) k++; return k;}
+
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:true,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:4, B:5, C:3, D:2, E:5 };
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"combos":stage==="C"?"combos":"inspections"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"E",E:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
+function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+
+const sA = { s:0.05, p0:0.01 };
+function drawStageA() {
+  const gens=600; const traj=new Array(gens+1); traj[0]=sA.p0;
+  for(let g=1;g<=gens;g++){const p=traj[g-1]; traj[g]=p*(1+sA.s)/(p*(1+sA.s)+(1-p));}
+  let t50=-1, t99=-1; for(let g=0;g<=gens;g++){if(t50<0 && traj[g]>=0.5) t50=g; if(t99<0 && traj[g]>=0.99){t99=g; break;}}
+  document.getElementById("A_s").textContent=sA.s.toFixed(3); document.getElementById("A_p0").textContent=sA.p0.toFixed(3);
+  document.getElementById("A_t50").textContent=t50>=0?t50:">"+gens;
+  document.getElementById("A_t99").textContent=t99>=0?t99:">"+gens;
+  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
+  drawAxes(ctx,f,"generation","p",6,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath();
+  for(let g=0;g<=gens;g++){const x=f.x(g),y=f.y(traj[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);}
+  ctx.stroke();
+}
+["A_sIn","A_pIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="A_sIn"){sA.s=v; document.getElementById("A_sOut").textContent=v.toFixed(3); document.getElementById("cA_s").textContent=v.toFixed(3); highlightByDataLine("codeA","s");} else {sA.p0=v; document.getElementById("A_pOut").textContent=v.toFixed(3); document.getElementById("cA_p").textContent=v.toFixed(3); highlightByDataLine("codeA","p0");} drawStageA(); bumpExplore("A");}));
+document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson12_stageA.R",`s <- ${sA.s}; p <- ${sA.p0}; gens <- 500
+traj <- numeric(gens+1); traj[1] <- p
+for (g in 1:gens) { p <- p*(1+s)/(p*(1+s)+(1-p)); traj[g+1] <- p }
+plot(traj, type="l", ylim=c(0,1))
+`);});
+wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+
+const sB = { N:100, s:0.05, p0:0.05, seed:42 };
+function drawStageB() {
+  const reps=50, gens=200; let nFix=0;
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
+  drawAxes(ctx,f,"generation","p",6,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  // deterministic
+  let det=[sB.p0]; for(let g=1;g<=gens;g++){const p=det[g-1]; det.push(p*(1+sB.s)/(p*(1+sB.s)+(1-p)));}
+  ctx.strokeStyle="rgba(0,0,0,0.4)"; ctx.lineWidth=1.5; ctx.setLineDash([4,3]); ctx.beginPath(); for(let g=0;g<=gens;g++){const x=f.x(g),y=f.y(det[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke(); ctx.setLineDash([]);
+  for(let r=0;r<reps;r++){
+    const rng=mulberry32(sB.seed + r*7);
+    let p=sB.p0; ctx.strokeStyle="rgba(178,58,72,0.4)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
+    for(let g=1;g<=gens;g++){const ps=p*(1+sB.s)/(p*(1+sB.s)+(1-p)); p=rbinom(rng,2*sB.N,ps)/(2*sB.N); ctx.lineTo(f.x(g),f.y(p));}
+    ctx.stroke(); if(p===1) nFix++;
+  }
+  document.getElementById("B_N").textContent=sB.N; document.getElementById("B_s").textContent=sB.s.toFixed(3); document.getElementById("B_p0").textContent=sB.p0.toFixed(3);
+  document.getElementById("B_pfix").textContent=(100*nFix/reps).toFixed(0)+"% ("+nFix+"/"+reps+")";
+  document.getElementById("B_haldane").textContent=(100*2*sB.s).toFixed(1)+"%";
+}
+["B_NIn","B_sIn","B_pIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={B_NIn:"N",B_sIn:"s",B_pIn:"p0",B_seedIn:"seed"}[id]; sB[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=(key==="N"||key==="seed")?v:v.toFixed(3); if(key==="seed"){document.getElementById("cB_seed").textContent=v; highlightByDataLine("codeB","seed");} drawStageB(); bumpExplore("B");}));
+document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson12_stageB.R",`set.seed(${sB.seed}); N <- ${sB.N}; s <- ${sB.s}; p0 <- ${sB.p0}; reps <- 50
+trajs <- replicate(reps, { p <- p0; traj <- p; for (g in 1:200) { p_sel <- p*(1+s)/(p*(1+s)+(1-p)); p <- rbinom(1,2*N,p_sel)/(2*N); traj <- c(traj, p) }; traj })
+matplot(t(trajs), type="l")
+`);});
+wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+
+const sC = { trueS:0.05, N:200, T:50, seed:42 };
+function drawStageC() {
+  // Simulate observed trajectory with drift
+  const rng=mulberry32(sC.seed); const p0=0.05;
+  let p=p0; const traj=[p]; for(let g=1;g<=sC.T;g++){const ps=p*(1+sC.trueS)/(p*(1+sC.trueS)+(1-p)); p=rbinom(rng,2*sC.N,ps)/(2*sC.N); traj.push(p);}
+  // Scan candidate s
+  const s_grid=[]; for(let s=-0.05; s<=0.2; s+=0.001) s_grid.push(s);
+  const ssr=s_grid.map(s=>{let pp=p0; let ss=0; for(let g=1;g<=sC.T;g++){pp=pp*(1+s)/(pp*(1+s)+(1-pp)); ss+=(traj[g]-pp)**2;} return ss;});
+  const minIdx=ssr.indexOf(Math.min(...ssr)); const bestS=s_grid[minIdx]; const minSSR=ssr[minIdx];
+  const thresh=minSSR*1.5;
+  let loS=s_grid[0], hiS=s_grid[s_grid.length-1];
+  for(let i=minIdx; i>=0; i--){if(ssr[i]>thresh){loS=s_grid[i+1]||s_grid[i]; break;}}
+  for(let i=minIdx; i<ssr.length; i++){if(ssr[i]>thresh){hiS=s_grid[i-1]||s_grid[i]; break;}}
+  document.getElementById("C_trueS").textContent=sC.trueS.toFixed(3); document.getElementById("C_bestS").textContent=bestS.toFixed(3); document.getElementById("C_ci").textContent="("+loS.toFixed(3)+", "+hiS.toFixed(3)+")";
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:60,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,-0.05,0.2,0,Math.max(...ssr));
+  drawAxes(ctx,f,"candidate s","SSR",6,4,v=>v.toFixed(2),v=>v.toFixed(3));
+  ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<s_grid.length;i++){const x=f.x(s_grid[i]),y=f.y(ssr[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(bestS),f.pad.t); ctx.lineTo(f.x(bestS),f.pad.t+f.H); ctx.stroke();
+  ctx.strokeStyle="#888"; ctx.beginPath(); ctx.moveTo(f.x(sC.trueS),f.pad.t); ctx.lineTo(f.x(sC.trueS),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("fit s = "+bestS.toFixed(3), f.x(bestS)+4, f.pad.t+12); ctx.fillStyle="#888"; ctx.fillText("true s = "+sC.trueS.toFixed(3), f.x(sC.trueS)+4, f.pad.t+24);
+}
+["C_sIn","C_NIn","C_TIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={C_sIn:"trueS",C_NIn:"N",C_TIn:"T",C_seedIn:"seed"}[id]; sC[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=(key==="trueS")?v.toFixed(3):v; if(key==="seed"){document.getElementById("cC_seed").textContent=v;} drawStageC(); if(key==="trueS"||key==="N") bumpExplore("C");}));
+document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson12_stageC.R",`set.seed(${sC.seed})
+N <- ${sC.N}; s_true <- ${sC.trueS}; T <- ${sC.T}; p0 <- 0.05
+p <- p0; traj <- p
+for (g in 1:T) { p_sel <- p*(1+s_true)/(p*(1+s_true)+(1-p)); p <- rbinom(1,2*N,p_sel)/(2*N); traj <- c(traj, p) }
+s_grid <- seq(-0.05, 0.2, 0.001)
+ssr <- sapply(s_grid, function(s) { p2 <- p0; pp <- p2; for (g in 1:T) { pp <- pp*(1+s)/(pp*(1+s)+(1-pp)); p2 <- c(p2, pp) }; sum((traj - p2)^2) })
+s_grid[which.min(ssr)]
+`);});
+wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+
+const sD = { seed:42, data:null };
+async function loadLTEE() {
+  try { const r=await fetch("../../data/clean/ltee_allele_freqs.json"); sD.data=await r.json(); }
+  catch(e){ sD.data=null; }
+  drawStageD();
+}
+function drawStageD() {
+  // Group by mutation_id; data fields may vary
+  let muts={};
+  if (sD.data && Array.isArray(sD.data)) {
+    for(const r of sD.data){
+      const id=r.mutation_id||r.mut_id||r.position||"m"+(Object.keys(muts).length+1);
+      const g=+r.generation||+r.gen; const f=+r.freq||+r.frequency||+r.p;
+      if(!isFinite(g)||!isFinite(f)) continue;
+      if(!muts[id]) muts[id]=[];
+      muts[id].push({g,f});
+    }
+  }
+  // Fallback: synthetic LTEE-like
+  if (Object.keys(muts).length===0) {
+    const rng=mulberry32(sD.seed);
+    for(let m=0;m<15;m++){
+      const id="syn_"+m; muts[id]=[];
+      const s=0.005+rng()*0.05; const tStart=Math.floor(rng()*5000); let p=0.005;
+      for(let g=tStart;g<=tStart+5000;g+=200){p=p*(1+s)/(p*(1+s)+(1-p)); if(p<1e-4||p>0.999) break; muts[id].push({g,f:p+(rng()-0.5)*0.05}); if(rng()<0.05) break;}
+    }
+  }
+  // Subset
+  const rng=mulberry32(sD.seed); const ids=Object.keys(muts); const subset=ids.slice(0,Math.min(20, ids.length));
+  // Fit s per trajectory
+  const fits=[];
+  for(const id of subset){
+    const m=muts[id].sort((a,b)=>a.g-b.g); if(m.length<3) continue;
+    const t0=m[0].g; const p0=Math.max(0.001, m[0].f);
+    const s_grid=[]; for(let s=0; s<=0.3; s+=0.005) s_grid.push(s);
+    const ssr=s_grid.map(s=>{let ss=0; for(const pt of m){const dt=pt.g-t0; const pp=1/(1+(1/p0-1)*Math.exp(-s*dt/100)); ss+=(pt.f-pp)**2;} return ss;});
+    const best=s_grid[ssr.indexOf(Math.min(...ssr))];
+    if(best>0.001) fits.push({id, s:best, traj:m});
+  }
+  fits.sort((a,b)=>a.s-b.s);
+  const median = fits.length>0 ? fits[Math.floor(fits.length/2)].s : 0;
+  const range = fits.length>0 ? "("+fits[0].s.toFixed(3)+", "+fits[fits.length-1].s.toFixed(3)+")" : "—";
+  document.getElementById("D_n").textContent=fits.length; document.getElementById("D_med").textContent=median.toFixed(3); document.getElementById("D_range").textContent=range;
+  // Plot
+  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  if (!fits.length) { ctx.fillStyle="#666"; ctx.font="14px -apple-system"; ctx.textAlign="center"; ctx.fillText("LTEE data not loaded; check data/clean/ltee_allele_freqs.json", W/2, H/2); return; }
+  const allG=fits.flatMap(f=>f.traj.map(p=>p.g)); const gMin=Math.min(...allG), gMax=Math.max(...allG);
+  const pad={l:60,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,gMin,gMax,0,1);
+  drawAxes(ctx,f,"generation","frequency",5,4,v=>v.toFixed(0),v=>v.toFixed(1));
+  for(let i=0;i<fits.length;i++){
+    const fit=fits[i]; const hue=Math.floor(360*i/fits.length); ctx.strokeStyle="hsl("+hue+", 60%, 45%)"; ctx.lineWidth=1.5;
+    ctx.beginPath(); for(let j=0;j<fit.traj.length;j++){const x=f.x(fit.traj[j].g), y=f.y(fit.traj[j].f); if(j===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+  }
+}
+document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
+document.getElementById("D_redraw").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson12_stageD.R",`ltee <- read.csv("data/clean/ltee_allele_freqs.csv")
+muts <- split(ltee, ltee$mutation_id)
+fits <- sapply(muts, function(m) {
+  t <- m$generation - min(m$generation); pobs <- m$freq; p0 <- pobs[1]
+  s_grid <- seq(0, 0.3, 0.005)
+  ssr <- sapply(s_grid, function(s) sum((pobs - 1/(1+(1/p0-1)*exp(-s*t)))^2))
+  s_grid[which.min(ssr)]
+})
+median(fits)
+`);});
+wirePrediction("D","predD",["qD1"],"controlsD"); loadLTEE();
+
+/* ====== STAGE E — drift/selection/both classification drill ====== */
+// Five preset (N, s, p₀, seed) scenarios; for each, simulate a single trajectory
+// and ask the student to classify. Track correct/incorrect across rounds.
+const E_ROUNDS = [
+  { N: 100,  s: 0,     p0: 0.5,  seed: 17,  truth: "drift",     why: "s = 0, N = 100. There is no selection. The wiggles are pure drift." },
+  { N: 1000, s: 0.05,  p0: 0.05, seed: 23,  truth: "selection", why: "s = 0.05, N = 1000. 1/N = 0.001 ≪ s. Selection dominates; drift is barely visible." },
+  { N: 60,   s: 0.05,  p0: 0.10, seed: 31,  truth: "both",      why: "s = 0.05, N = 60. 1/N ≈ 0.017 — s is bigger but not by enough to ignore drift. The upward push is real; the bumps are real too." },
+  { N: 300,  s: 0,     p0: 0.30, seed: 47,  truth: "drift",     why: "s = 0, N = 300. Sometimes drift wanders impressively far on its own. No selection is operating here." },
+  { N: 200,  s: 0.02,  p0: 0.05, seed: 71,  truth: "both",      why: "s = 0.02, N = 200. 1/N = 0.005 ≈ s/4. Selection is detectable; drift adds the wobble." }
+];
+const sE = { round: 0, correct: 0, picked: null, revealed: false };
+function drawStageE_round() {
+  const r = E_ROUNDS[sE.round]; if (!r) return;
+  document.getElementById("E_title").textContent = `Round ${sE.round + 1} of ${E_ROUNDS.length}`;
+  document.getElementById("E_progress").textContent = sE.round + " / " + E_ROUNDS.length;
+  document.getElementById("E_correct").textContent = sE.correct;
+  // Simulate 1 trajectory under (N, s, p0, seed)
+  const rng = mulberry32(r.seed);
+  let p = r.p0; const traj = [p]; const gens = 200;
+  for (let g = 1; g <= gens; g++) { p = wfStep(rng, r.N, p, r.s); traj.push(p); }
+  const cv = document.getElementById("plotE"); const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+  const pad = { l: 50, r: 12, t: 18, b: 38 }; const f = makeFrame(pad, W, H, 0, gens, 0, 1);
+  drawAxes(ctx, f, "generation", "p", 5, 4, v => v.toFixed(0), v => v.toFixed(1));
+  ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 2; ctx.beginPath();
+  for (let g = 0; g <= gens; g++) { const x = f.x(g), y = f.y(traj[g]); if (g === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); }
+  ctx.stroke();
+  // Don't reveal N/s yet.
+}
+function wireStageE() {
+  const radios = document.querySelectorAll('input[name="qE"]');
+  const submitBtn = document.getElementById("E_submit");
+  const nextBtn = document.getElementById("E_next");
+  const reveal = document.getElementById("E_reveal");
+  radios.forEach(r => r.addEventListener("change", () => {
+    sE.picked = r.value;
+    submitBtn.disabled = false;
+    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("E");
+  }));
+  submitBtn.addEventListener("click", () => {
+    const r = E_ROUNDS[sE.round];
+    const ok = sE.picked === r.truth;
+    if (ok) sE.correct += 1;
+    sE.revealed = true;
+    reveal.style.display = "block";
+    reveal.innerHTML = `<strong>${ok ? "Correct." : "Truth: " + r.truth + "."}</strong>  ${r.why} <em>(N=${r.N}, s=${r.s})</em>`;
+    submitBtn.style.display = "none";
+    nextBtn.style.display = "inline-block";
+    document.getElementById("E_correct").textContent = sE.correct;
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
+      // L12 has 4 scaffold slots; we overwrite slot 3 with the running fraction.
+      const slot = 3;
+      const finalBit = (sE.correct >= Math.ceil(E_ROUNDS.length * 0.6)) ? 1 : 0;
+      if (sE.round === E_ROUNDS.length - 1) Score.recordCheckpoint(slot, finalBit);
+    }
+  });
+  nextBtn.addEventListener("click", () => {
+    sE.round += 1;
+    sE.picked = null; sE.revealed = false;
+    radios.forEach(r => { r.checked = false; });
+    submitBtn.style.display = "inline-block"; submitBtn.disabled = true;
+    nextBtn.style.display = "none";
+    reveal.style.display = "none";
+    const tracker = document.getElementById("exploreE");
+    tracker.classList.add("shown");
+    const c = tracker.querySelector(".count");
+    c.textContent = sE.round + "/" + E_ROUNDS.length + " rounds";
+    if (sE.round >= E_ROUNDS.length) {
+      tracker.classList.add("complete");
+      c.textContent = "All rounds done — lesson complete (" + sE.correct + "/" + E_ROUNDS.length + " correct).";
+      if (typeof Score !== "undefined" && Score.finish) Score.finish();
+      return;
+    }
+    drawStageE_round();
+  });
+  drawStageE_round();
+}
+wireStageE();
+
+Score.init({moduleId:"lesson12", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+</script>
+</body>
+</html>

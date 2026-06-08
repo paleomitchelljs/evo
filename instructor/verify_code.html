@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Score code verifier</title>
+<link rel="stylesheet" href="../app/assets/score.css">
+<style>
+  body {
+    margin: 0;
+    font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+    background: #fafaf7; color: #1d1d1b;
+  }
+  header { padding: 16px 24px; border-bottom: 1px solid #e2e0d9; background: #fff; }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: #6b6b68; font-size: 13px; max-width: 80ch; }
+  main { max-width: 900px; margin: 0 auto; padding: 24px; }
+
+  .card {
+    background: #fff; border: 1px solid #e2e0d9; border-radius: 6px;
+    padding: 16px 18px; margin: 0 0 16px 0;
+  }
+  .card h2 {
+    margin: 0 0 12px 0; font-size: 13px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #6b6b68; font-weight: 600;
+  }
+  .field { display: grid; grid-template-columns: 130px 1fr; gap: 10px; margin: 8px 0; align-items: center; }
+  .field label { font-size: 13px; color: #6b6b68; }
+  .field input {
+    padding: 7px 10px; font: 14px ui-monospace, Menlo, monospace;
+    border: 1px solid #e2e0d9; border-radius: 4px; background: #fafaf7;
+    width: 100%; box-sizing: border-box;
+  }
+  .actions { display: flex; gap: 8px; margin: 8px 0 0 0; }
+  .actions button {
+    padding: 7px 14px; background: #2f6b8f; color: #fff;
+    border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px;
+  }
+  .actions button.secondary { background: #fff; color: #6b6b68; border: 1px solid #e2e0d9; }
+
+  .verdict { padding: 10px 14px; border-radius: 4px; font-size: 14px; margin: 12px 0; }
+  .verdict.ok   { background: #d0e1ed; border: 1px solid #2f6b8f; color: #1d1d1b; }
+  .verdict.bad  { background: #f4d3d7; border: 1px solid #b23a48; color: #1d1d1b; }
+  .verdict.warn { background: #f4f0dd; border: 1px solid #caa04a; color: #1d1d1b; }
+
+  table.kv { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13.5px; }
+  table.kv th, table.kv td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e2e0d9; }
+  table.kv th { width: 150px; font-size: 11.5px; text-transform: uppercase; color: #6b6b68; letter-spacing: 0.06em; }
+  table.kv td.mono { font-family: ui-monospace, Menlo, monospace; }
+  .pill { display:inline-block; padding:1px 7px; border-radius:10px; font-size:12px; background:#eef1ee; color:#3a3a37; margin-right:4px; }
+
+  details { margin: 8px 0; }
+  details summary { cursor: pointer; color: #6b6b68; font-size: 13px; }
+  pre.parsed {
+    background: #fafaf7; border: 1px solid #e2e0d9; border-radius: 4px;
+    padding: 8px 10px; font: 12.5px ui-monospace, Menlo, monospace;
+    margin: 6px 0 0 0; white-space: pre-wrap;
+  }
+  code.inl { font-family: ui-monospace, Menlo, monospace; background:#f1efe9; padding:1px 4px; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Score code verifier</h1>
+  <p>Instructor tool — runs entirely in the browser, nothing is sent anywhere.
+  Paste one student code and the salt you set in that module's <code class="inl">Score.init</code>.
+  The code is opaque to students; this tool decodes the name, the per-question
+  right/wrong bits, the elapsed working time, and the per-stage activity counts,
+  and confirms the tamper tag. For a whole class at once, use
+  <code class="inl">aggregate.html</code>.</p>
+</header>
+
+<main>
+
+<section class="card">
+  <h2>Decode a submission</h2>
+  <div class="field">
+    <label for="vc-code">Student code</label>
+    <input id="vc-code" type="text" placeholder="e.g., lesson1v6.wJ27Jo30s_NXIhfV12O-y0dRwswzHq8J7N60Fxy2Ak6M.0364d4" autocomplete="off">
+  </div>
+  <div class="field">
+    <label for="vc-salt">Salt</label>
+    <input id="vc-salt" type="text" placeholder="pre-filled with the project salt; change only for a per-module override" autocomplete="off">
+  </div>
+  <div class="actions">
+    <button id="vc-go">Decode</button>
+    <button id="vc-clear" class="secondary">Clear</button>
+  </div>
+  <div id="vc-result"></div>
+</section>
+
+<section class="card">
+  <h2>What's in the code</h2>
+  <p style="margin:0; font-size:13px; color:#6b6b68;">
+    The cleartext prefix <code class="inl">moduleNvVERSION</code> tells you which
+    lesson and scoring revision the code is for. Everything after the first
+    <code class="inl">.</code> is the student's name, their right/wrong bits, the
+    elapsed seconds, and the per-stage manipulation counts, XOR-encrypted with a
+    keystream derived from your salt and base64url-encoded, followed by a 6-hex
+    tamper tag. A <strong>VALID</strong> verdict means the tag matches — the code
+    decoded cleanly and was not edited. A <strong>salt mismatch</strong> verdict
+    means the salt you typed is not the one the module used.
+  </p>
+</section>
+
+</main>
+
+<script src="../app/assets/score.js"></script>
+<script>
+  function el(tag, attrs, kids) {
+    const e = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      if (k === "class") e.className = attrs[k];
+      else e.setAttribute(k, attrs[k]);
+    }
+    (kids || []).forEach(k => e.appendChild(typeof k === "string" ? document.createTextNode(k) : k));
+    return e;
+  }
+  const right = (bits) => (bits || "").split("").filter(b => b === "1").length;
+  function fmtTime(sec) {
+    sec = Math.max(0, sec | 0);
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return m + "m " + (s < 10 ? "0" : "") + s + "s";
+  }
+  function manipPills(map) {
+    const keys = Object.keys(map || {}).sort();
+    if (!keys.length) return [document.createTextNode("—")];
+    let total = 0;
+    const out = keys.map(k => { total += map[k]; return el("span", { class: "pill" }, [k + ": " + map[k]]); });
+    out.push(el("span", { class: "pill" }, ["total: " + total]));
+    return out;
+  }
+
+  async function decode() {
+    const result = document.getElementById("vc-result");
+    result.innerHTML = "";
+    const code = document.getElementById("vc-code").value.trim();
+    const salt = document.getElementById("vc-salt").value.trim();
+    if (!code) {
+      result.appendChild(el("div", { class: "verdict warn" }, ["Code is required."]));
+      return;
+    }
+
+    let d = await Score.decodeCode(code, salt);
+    // Fallback: maybe it's an old dash-format code.
+    if (!d) {
+      const legacy = Score.parseCode(code);
+      if (legacy) {
+        result.appendChild(el("div", { class: "verdict warn" }, [
+          "Legacy dash-format code (pre-v3). Showing embedded fields; these old codes were not encrypted."
+        ]));
+        renderTable(result, {
+          ok: null, nameToken: legacy.nameToken, moduleId: legacy.moduleId, version: legacy.version,
+          elapsedSec: 0, pretestBits: legacy.pretestBits, scaffoldBits: legacy.scaffoldBits,
+          posttestBits: legacy.posttestBits, manipulations: legacy.manipulations || {}
+        });
+        return;
+      }
+      result.appendChild(el("div", { class: "verdict bad" }, [
+        "Unreadable — not a v3 code (expected moduleNvVER.blob.tag) or a legacy dash code."
+      ]));
+      return;
+    }
+
+    if (d.ok) {
+      result.appendChild(el("div", { class: "verdict ok" }, [
+        "VALID — tamper tag matches. Decoded with the salt you provided."
+      ]));
+    } else if (!d.macOk && d.nameToken === undefined) {
+      result.appendChild(el("div", { class: "verdict bad" }, [
+        "SALT MISMATCH or CORRUPT — the payload did not decrypt to a well-formed record. "
+        + "Check the salt set in this module's Score.init."
+      ]));
+    } else {
+      result.appendChild(el("div", { class: "verdict bad" }, [
+        "INVALID — decoded, but the tamper tag does not match. The code was edited, "
+        + "or the salt is wrong. Treat the fields below with suspicion."
+      ]));
+    }
+    renderTable(result, d);
+    result.appendChild(el("details", null, [
+      el("summary", null, ["Raw decoded record"]),
+      el("pre", { class: "parsed" }, [JSON.stringify(d, null, 2)])
+    ]));
+  }
+
+  function renderTable(mount, d) {
+    const rows = [
+      ["Name", el("span", { class: "mono" }, [d.nameToken || "—"])],
+      ["Module", (d.moduleId || "?") + "  (v" + (d.version != null ? d.version : "?") + ")"],
+      ["Working time", fmtTime(d.elapsedSec)],
+      ["Pretest", right(d.pretestBits) + " / " + (d.pretestBits || "").length + "   (" + (d.pretestBits || "—") + ")"],
+      ["Scaffold", right(d.scaffoldBits) + " / " + (d.scaffoldBits || "").length + "   (" + (d.scaffoldBits || "—") + ")"],
+      ["Posttest", right(d.posttestBits) + " / " + (d.posttestBits || "").length + "   (" + (d.posttestBits || "—") + ")"],
+    ];
+    const tbl = el("table", { class: "kv" });
+    rows.forEach(([k, v]) => {
+      tbl.appendChild(el("tr", null, [
+        el("th", null, [k]),
+        typeof v === "string" ? el("td", { class: "mono" }, [v]) : el("td", null, [v])
+      ]));
+    });
+    const manipTd = el("td", null, manipPills(d.manipulations));
+    tbl.appendChild(el("tr", null, [el("th", null, ["Activity / stage"]), manipTd]));
+    mount.appendChild(tbl);
+  }
+
+  // Pre-fill the salt with the project default so most codes decode with no setup.
+  document.getElementById("vc-salt").value = (window.Score && Score.DEFAULT_SALT) || "";
+  document.getElementById("vc-go").addEventListener("click", decode);
+  document.getElementById("vc-code").addEventListener("keydown", e => { if (e.key === "Enter") decode(); });
+  document.getElementById("vc-clear").addEventListener("click", () => {
+    document.getElementById("vc-code").value = "";
+    document.getElementById("vc-result").innerHTML = "";
+  });
+</script>
+
+</body>
+</html>

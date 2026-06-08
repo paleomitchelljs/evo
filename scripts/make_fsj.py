@@ -12,13 +12,15 @@ Expected inputs (all from the figshare dump):
 Outputs (under data/clean/):
     fsj_cohort_sizes.csv     year × category → n_indiv (small, ready for use)
     fsj_allele_freq.csv      long-format: year, snp, chr, n_chroms_total,
-                             freq_total, n_chroms_nestling, freq_nestling
-    fsj_allele_freq.json     same, JSON
+                             freq_total, n_chroms_nestling, freq_nestling.
+                             CSV only — the full long format is ~250k rows, too
+                             large to ship as browser-loaded JSON.
     fsj_allele_freq_subset.csv/.json
                              ~250 SNPs with genome-wide coverage, starting
                              frequency in [0.1, 0.9], genotyped in most years
                              — small enough to load in the browser for the
-                             drift lesson
+                             drift lesson (lesson11 fetches the .json and
+                             averages 2·freq_total·(1−freq_total) per year)
 
 Alleles in the .ped are coded 1/2 with 0 denoting missing. We tally the
 count of "allele 2" copies per individual, restrict to individuals in

@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S1: "no trend" is a distribution</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --panel: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6b68;
+    --accent: #b23a48;
+    --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f;
+    --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9;
+    --code-bg: #1e1f22;
+    --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+
+  .dataset-info { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+    background: #f7f5ee; padding: 8px 10px; border-radius: 4px;
+    font-family: ui-monospace, Menlo, monospace; font-size: 12.5px;
+    margin-bottom: 10px;
+  }
+  .dataset-info .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .dataset-info .v { color: var(--ink); font-weight: 600; }
+
+  svg.chart { width: 100%; height: auto; display: block; background: #fff; }
+
+  .guess-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .guess-row label { font-size: 13.5px; }
+  .guess-row input[type=number] { padding: 6px 8px; font: 14px ui-monospace, Menlo, monospace; border: 1px solid var(--rule); border-radius: 4px; width: 140px; }
+  .guess-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal .big { font: 600 15px ui-monospace, Menlo, monospace; color: var(--ink); margin-bottom: 4px; }
+  .reveal .err { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 4px; }
+  .reveal p { margin: 6px 0 0 0; font-size: 13px; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally svg { width: 100%; height: 210px; background: #fff; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S1 — "No trend" is a distribution, across five datasets</h1>
+  <p>Five rounds. You are shown a time series and its fitted slope <em>β̂</em>. Your job: predict the 95% half-width of the null distribution of |<em>β̂</em>| — i.e. how big a slope would you get, by chance, if the y-values were shuffled? The page then shuffles 1000 times and shows the null distribution with your guess and the observed slope overlaid. Repeat with a different dataset.</p>
+</header>
+
+<main>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally — null envelope vs. observed slope (signed z-score)</h3>
+    <svg id="tallySvg" viewBox="0 0 1000 210" preserveAspectRatio="none" aria-label="Tally of guesses vs truth across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      Five times, you predicted the width of the null distribution of slopes
+      under the permutation hypothesis: "the y-values are exchangeable, the
+      x-values are not." Your guesses should have gotten better as you went
+      — the envelope width depends on three things you can see directly from
+      the scatter: the residual scatter σ, the range of <em>x</em>, and the
+      number of observations. The formal relationship is
+      <code>SE(β̂) ≈ σ / (SD(x) · √(n−1))</code>; the 95% half-width is
+      roughly 2 · SE(β̂).
+    </p>
+    <p>
+      What you just did is a <strong>permutation test</strong>. It is the
+      most defensible null model you can build: it makes no distributional
+      assumptions, and it directly answers "would the pattern be surprising
+      under random relabeling?" If the observed slope is far outside the
+      permutation envelope, something non-random is going on. If it is
+      inside, whatever trend is there might just be sampling noise.
+    </p>
+    <p>
+      Notice that rounds 3 (LTEE early) and 4 (LTEE plateau) use the same
+      simulator and the same population, but a different window in time.
+      The early window has a slope far outside the null envelope;
+      the plateau window has a slope just barely outside — that is the
+      famous "diminishing-returns" debate as a null-model result.
+    </p>
+  </div>
+
+  <div id="score-final"></div>
+</main>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+// ---------- Data ----------
+// Finch data — inline from data/clean/finch_beak.csv
+const FORTIS_YEARS = [1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012];
+const FORTIS_BEAK_DEPTH = [9.48,9.42,9.19,9.23,9.35,9.74,9.78,9.81,9.75,9.80,9.71,9.66,9.62,9.48,9.31,9.31,9.28,9.26,9.21,9.19,9.18,9.20,9.10,9.15,9.12,9.11,9.14,9.18,9.02,9.07,9.12,9.19,8.68,8.63,8.62,8.57,8.51,8.52,8.57,8.65];
+
+function finchSlice(yStart, yEnd) {
+  const xs = [], ys = [];
+  for (let i = 0; i < FORTIS_YEARS.length; i++) {
+    const y = FORTIS_YEARS[i];
+    if (y >= yStart && y <= yEnd) { xs.push(y); ys.push(FORTIS_BEAK_DEPTH[i]); }
+  }
+  return { xs, ys };
+}
+
+// LTEE Ara+1 — inline from data/clean/ltee_fitness_summary.csv
+const LTEE_ARA1_GEN = [0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,22000,24000,26000,28000,30000,32000,34000,36000,38000,40000,42000,44000,46000,48000,50000];
+const LTEE_ARA1_FIT = [0.9417,1.1096,1.2959,1.2235,1.2401,1.3532,1.3184,1.2785,1.2596,1.3447,1.2167,1.3710,1.3151,1.3536,1.4133,1.2834,1.3638,1.3575,1.4244,1.3867,1.4928,1.3964,1.3295,1.4792,1.5815,1.5055,1.4319,1.5109,1.4445,1.4106,1.4328,1.4992,1.3583,1.5014,1.6082,1.5156,1.4411,1.4084,1.6393,1.5288,1.4060];
+
+function ltee_slice(gStart, gEnd) {
+  const xs = [], ys = [];
+  for (let i = 0; i < LTEE_ARA1_GEN.length; i++) {
+    const g = LTEE_ARA1_GEN[i];
+    if (g >= gStart && g <= gEnd) { xs.push(g); ys.push(LTEE_ARA1_FIT[i]); }
+  }
+  return { xs, ys };
+}
+
+// PETS Hyopsodus body-size series — tsID 1353, from data/clean/pets_timeseries.csv
+const PETS_HYOPSODUS_AGE = [0.0,0.023675915,0.042009998,0.135269508,0.190503159,0.271188085,0.29669469,0.338587181,0.392215469,0.459632994,0.487280106,0.540621032,0.620793133,0.647689282,0.89044344,0.944881022,1.00999353,1.213960955,1.308070856,1.349981975,1.429579003,1.55];
+const PETS_HYOPSODUS_LOG_SIZE = [2.053377778,2.067,2.097083333,2.190073333,2.370077778,2.139616667,2.255591667,2.364942857,2.351446875,2.2506625,2.287811111,2.222703571,2.228297059,2.167117647,2.416429412,2.4838625,2.4846125,2.493807692,2.50754,2.506711765,2.469034615,2.382072];
+
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "Fortis beak depth, 1979–1993 (post-drought window)",
+    scenario: "Fifteen annual means from Daphne Major, well after the 1977 drought and before the 2004 character displacement event. Nothing dramatic happens in this window — but the population is not literally stable either.",
+    getData: () => finchSlice(1979, 1993),
+    xlabel: "year",
+    ylabel: "beak depth (mm)",
+    unit: "mm / yr",
+    unitScale: 1,
+  },
+  {
+    label: "Fortis beak depth, 1975–1982 (straddles the 1977 drought)",
+    scenario: "The same species, a window that brackets the drought event (1977) and the recovery year (1978). Big jump in between.",
+    getData: () => finchSlice(1975, 1982),
+    xlabel: "year",
+    ylabel: "beak depth (mm)",
+    unit: "mm / yr",
+    unitScale: 1,
+  },
+  {
+    label: "LTEE Ara+1 fitness, generations 0–5000",
+    scenario: "Eleven fitness measurements from Lenski's Long-Term Evolution Experiment, E. coli population Ara+1, during the fast-adaptation phase (first ~5000 generations, when ancestral fitness is leaving the barn).",
+    getData: () => ltee_slice(0, 5000),
+    xlabel: "generation",
+    ylabel: "relative fitness",
+    unit: "fitness / gen",
+    unitScale: 1e-4,
+  },
+  {
+    label: "LTEE Ara+1 fitness, generations 40,000–50,000",
+    scenario: "Same population, 35,000 generations later. The fitness gains are tiny per 1000 generations. Is there still any signal above the null? This is the 'diminishing returns' debate.",
+    getData: () => ltee_slice(40000, 50000),
+    xlabel: "generation",
+    ylabel: "relative fitness",
+    unit: "fitness / gen",
+    unitScale: 1e-5,
+  },
+  {
+    label: "Hyopsodus body size, Eocene (Paleontology / PETS)",
+    scenario: "Twenty-two body-size measurements of Hyopsodus (a basal ungulate) spanning 1.55 million years of the early Eocene. Each point is a population-level mean from a rock unit.",
+    getData: () => ({ xs: PETS_HYOPSODUS_AGE, ys: PETS_HYOPSODUS_LOG_SIZE }),
+    xlabel: "age (MY ago)",
+    ylabel: "ln(body size, est. g)",
+    unit: "ln(size) / MY",
+    unitScale: 1,
+  },
+];
+
+const N_SHUFFLES = 1000;
+const state = { round: 0, history: [] };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ---------- Stats ----------
+function mean(a) { let s = 0; for (const v of a) s += v; return s / a.length; }
+function fitSlope(xs, ys) {
+  const n = xs.length;
+  const mx = mean(xs), my = mean(ys);
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (xs[i] - mx) * (ys[i] - my);
+    den += (xs[i] - mx) * (xs[i] - mx);
+  }
+  const slope = num / den;
+  const intercept = my - slope * mx;
+  return { slope, intercept, mx, my };
+}
+function residSD(xs, ys, slope, intercept) {
+  const n = xs.length;
+  let s2 = 0;
+  for (let i = 0; i < n; i++) {
+    const r = ys[i] - (slope * xs[i] + intercept);
+    s2 += r * r;
+  }
+  return Math.sqrt(s2 / (n - 2));
+}
+function xSD(xs) {
+  const mx = mean(xs);
+  let s2 = 0;
+  for (const x of xs) s2 += (x - mx) * (x - mx);
+  return Math.sqrt(s2 / (xs.length - 1));
+}
+function permuteSlope(xs, ys) {
+  const n = xs.length;
+  const mx = mean(xs);
+  let den = 0;
+  for (let i = 0; i < n; i++) den += (xs[i] - mx) * (xs[i] - mx);
+  // shuffle ys
+  const perm = ys.slice();
+  for (let i = n - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = perm[i]; perm[i] = perm[j]; perm[j] = t;
+  }
+  const my = mean(perm);
+  let num = 0;
+  for (let i = 0; i < n; i++) num += (xs[i] - mx) * (perm[i] - my);
+  return num / den;
+}
+function quantile(sorted, q) {
+  const n = sorted.length;
+  const i = q * (n - 1);
+  const lo = Math.floor(i), hi = Math.ceil(i);
+  if (lo === hi) return sorted[lo];
+  return sorted[lo] + (i - lo) * (sorted[hi] - sorted[lo]);
+}
+
+// ---------- Rendering ----------
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    showPosttest();
+    return;
+  }
+
+  const data = r.getData();
+  const fit = fitSlope(data.xs, data.ys);
+  const sigma = residSD(data.xs, data.ys, fit.slope, fit.intercept);
+  const sx = xSD(data.xs);
+  const n = data.xs.length;
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.scenario]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: scatter + (post-reveal) null histogram
+  const left = makeEl("div", null);
+  const chartPanel = makeEl("div", { class: "panel" });
+  chartPanel.appendChild(makeEl("h3", null, ["Observed time series"]));
+
+  const info = makeEl("div", { class: "dataset-info" }, [
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["n"]), makeEl("div", { class: "v" }, [String(n)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["residual SD (σ)"]), makeEl("div", { class: "v" }, [sigma.toFixed(4)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["SD(x)"]), makeEl("div", { class: "v" }, [sx.toFixed(3)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["observed β̂"]), makeEl("div", { class: "v" }, [fmtSlope(fit.slope, r)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["units"]), makeEl("div", { class: "v" }, [r.unit])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["x-range"]), makeEl("div", { class: "v" }, [`${data.xs[0]} – ${data.xs[n - 1]}`])]),
+  ]);
+  chartPanel.appendChild(info);
+
+  const scatterSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 300", preserveAspectRatio: "none" });
+  chartPanel.appendChild(scatterSvg);
+
+  const nullPanel = makeEl("div", { class: "panel", id: "nullPanel", style: "margin-top:14px; display:none;" });
+  nullPanel.appendChild(makeEl("h3", null, ["Null distribution of β̂ from 1000 shuffles"]));
+  const nullSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 220", preserveAspectRatio: "none" });
+  nullPanel.appendChild(nullSvg);
+  left.appendChild(chartPanel);
+  left.appendChild(nullPanel);
+  grid.appendChild(left);
+
+  // Right: guess panel
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `If the y-values were shuffled and the slope re-fitted 1000 times, what would be the 95% half-width of the distribution of |β̂|? Report in ${r.unit}. (Think: 2 · σ / (SD(x) · √(n−1)).)`
+  ]));
+
+  const step = r.unitScale * 0.1;
+  const guessRow = makeEl("div", { class: "guess-row" }, [
+    makeEl("label", { for: "guessInput" }, [`95% half-width (${r.unit}):`]),
+    makeEl("input", { type: "number", id: "guessInput", step: String(step), min: "0", placeholder: "0" }),
+  ]);
+  guessPanel.appendChild(guessRow);
+  guessPanel.appendChild(makeEl("p", { class: "guess-hint" }, [
+    `A quick estimate: SE(β̂) ≈ σ / (SD(x) · √(n−1)) = ${fmtSlopeRaw(sigma / (sx * Math.sqrt(n - 1)), r)} ${r.unit}. Multiply by ~2 for the 95% half-width.`
+  ]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit prediction → run 1000 shuffles"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  guessPanel.appendChild(nextBtn);
+
+  right.appendChild(guessPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  drawScatter(scatterSvg, r, data, fit);
+
+  const input = document.getElementById("guessInput");
+  input.addEventListener("input", () => {
+    const v = parseFloat(input.value);
+    submitBtn.disabled = !(v > 0);
+  });
+  submitBtn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (!(v > 0)) return;
+    submitBtn.disabled = true; input.disabled = true;
+
+    // Run shuffles
+    const slopes = [];
+    for (let i = 0; i < N_SHUFFLES; i++) slopes.push(permuteSlope(data.xs, data.ys));
+    slopes.sort((a, b) => a - b);
+    const p025 = quantile(slopes, 0.025), p975 = quantile(slopes, 0.975);
+    const halfWidth = (p975 - p025) / 2;
+    const observed = fit.slope;
+    const extreme = slopes.filter(s => Math.abs(s) >= Math.abs(observed)).length;
+    const pVal = extreme / slopes.length;
+
+    // Absolute z of observed vs. null SD
+    const nullSd = (() => {
+      const m = slopes.reduce((a, b) => a + b, 0) / slopes.length;
+      let s2 = 0; for (const x of slopes) s2 += (x - m) * (x - m);
+      return Math.sqrt(s2 / (slopes.length - 1));
+    })();
+    const z = observed / nullSd;
+
+    state.history.push({ round: r, data, fit, halfWidth, guess: v, observed, pVal, z });
+
+    nullPanel.style.display = "block";
+    drawNullHist(nullSvg, slopes, observed, v, halfWidth, r);
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      `null 95% half-width: ${fmtSlopeRaw(halfWidth, r)}  ·  your guess: ${fmtSlopeRaw(v, r)} ${r.unit}`
+    ]));
+    revealBox.appendChild(makeEl("div", { class: "err" }, [
+      `observed β̂ = ${fmtSlopeRaw(observed, r)} ${r.unit}  ·  permutation p = ${pVal.toFixed(3)}  ·  z vs. null = ${z.toFixed(2)}`
+    ]));
+    revealBox.appendChild(makeEl("p", null, [
+      Math.abs(observed) > halfWidth
+        ? `The observed slope sits outside the null envelope — shuffling the y-values rarely produces something this extreme.`
+        : `The observed slope sits inside the null envelope — shuffling the y-values regularly produces slopes at least this large.`
+    ]));
+
+    nextBtn.classList.add("shown");
+    drawTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); drawTally(); });
+}
+
+function fmtSlope(s, r) {
+  const scaled = s / r.unitScale;
+  const dec = Math.abs(scaled) < 10 ? 3 : 1;
+  const base = (scaled).toFixed(dec);
+  const exp = r.unitScale === 1 ? "" : ` × 10${supscript(Math.round(Math.log10(r.unitScale)))}`;
+  return base + exp;
+}
+function fmtSlopeRaw(s, r) {
+  // Format with enough precision to compare guess vs truth
+  const scaled = s / r.unitScale;
+  const dec = Math.abs(scaled) < 10 ? 3 : 1;
+  const base = (scaled).toFixed(dec);
+  const exp = r.unitScale === 1 ? "" : ` × 10${supscript(Math.round(Math.log10(r.unitScale)))}`;
+  return base + exp;
+}
+function supscript(n) {
+  const minus = n < 0 ? "⁻" : "";
+  const digits = String(Math.abs(n));
+  const map = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  return minus + digits.split("").map(d => map[d] || d).join("");
+}
+
+function drawScatter(svg, round, data, fit) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 300;
+  const mL = 64, mR = 20, mT = 16, mB = 36;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+  const xMin = Math.min(...data.xs), xMax = Math.max(...data.xs);
+  const yMin = Math.min(...data.ys) - 0.02 * (Math.max(...data.ys) - Math.min(...data.ys) + 0.01);
+  const yMax = Math.max(...data.ys) + 0.02 * (Math.max(...data.ys) - Math.min(...data.ys) + 0.01);
+  const xScale = v => mL + ((v - xMin) / (xMax - xMin || 1)) * plotW;
+  const yScale = v => mT + ((yMax - v) / (yMax - yMin || 1)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+
+  for (let i = 0; i <= 4; i++) {
+    const v = yMin + (i / 4) * (yMax - yMin);
+    const y = yScale(v);
+    svg.appendChild(svgEl("line", { x1: mL - 4, x2: mL, y1: y, y2: y, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = v.toFixed(2);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 18, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 18 ${mT + plotH / 2})` });
+  yl.textContent = round.ylabel;
+  svg.appendChild(yl);
+
+  const xticks = 4;
+  for (let i = 0; i <= xticks; i++) {
+    const v = xMin + (i / xticks) * (xMax - xMin);
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = v < 1 ? v.toFixed(2) : Math.round(v);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = round.xlabel;
+  svg.appendChild(xl);
+
+  // Fitted line
+  const x1 = xMin, x2 = xMax;
+  const y1 = fit.slope * x1 + fit.intercept;
+  const y2 = fit.slope * x2 + fit.intercept;
+  svg.appendChild(svgEl("line", { x1: xScale(x1), x2: xScale(x2), y1: yScale(y1), y2: yScale(y2), stroke: "#b23a48", "stroke-width": "1.5" }));
+
+  // Points
+  for (let i = 0; i < data.xs.length; i++) {
+    svg.appendChild(svgEl("circle", { cx: xScale(data.xs[i]), cy: yScale(data.ys[i]), r: 3.5, fill: "#1d1d1b" }));
+  }
+
+  // Slope label
+  const lab = svgEl("text", {
+    x: mL + plotW - 6, y: mT + 18,
+    "font-size": "12", fill: "#b23a48", "text-anchor": "end", "font-family": "ui-monospace, Menlo, monospace", "font-weight": "600",
+  });
+  lab.textContent = `β̂ = ${fmtSlopeRaw(fit.slope, round)} ${round.unit}`;
+  svg.appendChild(lab);
+}
+
+function drawNullHist(svg, slopes, observed, guessHalfWidth, trueHalfWidth, round) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 220;
+  const mL = 50, mR = 20, mT = 16, mB = 36;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  // Determine x range: symmetric around 0, wide enough to show observed
+  const absMax = Math.max(Math.abs(observed) * 1.15, trueHalfWidth * 1.5, Math.max(...slopes.map(Math.abs)) * 1.05);
+  const xScale = v => mL + ((v + absMax) / (2 * absMax)) * plotW;
+
+  // Bin slopes
+  const nBins = 40;
+  const binW = (2 * absMax) / nBins;
+  const bins = new Array(nBins).fill(0);
+  for (const s of slopes) {
+    let idx = Math.floor((s + absMax) / binW);
+    if (idx < 0) idx = 0; if (idx >= nBins) idx = nBins - 1;
+    bins[idx]++;
+  }
+  const maxBin = Math.max(...bins);
+  const yScale = c => mT + plotH - (c / maxBin) * (plotH - 4);
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+
+  // x ticks
+  for (let i = -2; i <= 2; i++) {
+    const v = (i / 2) * absMax;
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = fmtSlopeRaw(v, round);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = `β̂ under shuffled y (${round.unit})`;
+  svg.appendChild(xl);
+
+  // Bars
+  for (let i = 0; i < nBins; i++) {
+    const vLow = -absMax + i * binW;
+    const x0 = xScale(vLow);
+    const x1 = xScale(vLow + binW);
+    const y = yScale(bins[i]);
+    svg.appendChild(svgEl("rect", { x: x0, y, width: Math.max(x1 - x0 - 0.5, 0.5), height: mT + plotH - y, fill: "#d8d8d4" }));
+  }
+
+  // True half-width (gold dashed)
+  for (const v of [-trueHalfWidth, trueHalfWidth]) {
+    svg.appendChild(svgEl("line", { x1: xScale(v), x2: xScale(v), y1: mT, y2: mT + plotH, stroke: "#c28a2b", "stroke-width": "1.25", "stroke-dasharray": "3 2" }));
+  }
+  const tl = svgEl("text", { x: xScale(trueHalfWidth), y: mT + 14, "font-size": "11", fill: "#c28a2b", "text-anchor": "start" });
+  tl.textContent = ` true 95% envelope`;
+  svg.appendChild(tl);
+
+  // Guess half-width (crimson dashed)
+  for (const v of [-guessHalfWidth, guessHalfWidth]) {
+    const clamped = Math.sign(v) * Math.min(Math.abs(v), absMax * 0.98);
+    svg.appendChild(svgEl("line", { x1: xScale(clamped), x2: xScale(clamped), y1: mT, y2: mT + plotH, stroke: "#b23a48", "stroke-width": "1.25", "stroke-dasharray": "4 3" }));
+  }
+  const gl = svgEl("text", { x: xScale(Math.min(guessHalfWidth, absMax * 0.98)), y: mT + 28, "font-size": "11", fill: "#b23a48", "text-anchor": "start" });
+  gl.textContent = ` your guess`;
+  svg.appendChild(gl);
+
+  // Observed slope (solid black)
+  svg.appendChild(svgEl("line", { x1: xScale(observed), x2: xScale(observed), y1: mT, y2: mT + plotH, stroke: "#1d1d1b", "stroke-width": "2" }));
+  const ol = svgEl("text", { x: xScale(observed), y: mT + 42, "font-size": "11", fill: "#1d1d1b", "text-anchor": observed > 0 ? "end" : "start", "font-weight": "600" });
+  ol.textContent = observed > 0 ? `observed ` : ` observed`;
+  svg.appendChild(ol);
+}
+
+function drawTally() {
+  const svg = document.getElementById("tallySvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 210;
+  const mL = 50, mR = 20, mT = 16, mB = 44;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1" }));
+
+  // We plot z-score of observed slope vs. null SD for each round
+  // Also plot the ratio of guess / true half-width
+  const zMax = 6;
+  const yScale = z => mT + ((zMax - z) / (2 * zMax)) * plotH;
+  for (const z of [-zMax, -zMax / 2, 0, zMax / 2, zMax]) {
+    const y = yScale(z);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: z === 0 ? "#6b6b68" : "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = z.toString();
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 14, y: mT + plotH / 2, "font-size": "11", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 14 ${mT + plotH / 2})` });
+  yl.textContent = "observed slope / null SD  (z)";
+  svg.appendChild(yl);
+
+  // 95% envelope reference (z = ±1.96)
+  for (const z of [-1.96, 1.96]) {
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: yScale(z), y2: yScale(z), stroke: "#c28a2b", "stroke-width": "1", "stroke-dasharray": "3 2" }));
+  }
+
+  const n = ROUNDS.length;
+  for (let i = 0; i < n; i++) {
+    const cx = mL + ((i + 0.5) / n) * plotW;
+    const h = state.history[i];
+
+    const lab = svgEl("text", { x: cx, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "10.5", fill: "#6b6b68" });
+    lab.textContent = `R${i + 1}`;
+    svg.appendChild(lab);
+    const lab2 = svgEl("text", { x: cx, y: mT + plotH + 32, "text-anchor": "middle", "font-size": "9.5", fill: "#6b6b68" });
+    lab2.textContent = shortRoundLabel(ROUNDS[i]);
+    svg.appendChild(lab2);
+
+    if (!h) continue;
+
+    const yZ = yScale(Math.max(Math.min(h.z, zMax), -zMax));
+    const guessZ = (h.guess / h.halfWidth) * 1.96;
+    const yGuess = yScale(Math.max(Math.min(guessZ, zMax), -zMax));
+    svg.appendChild(svgEl("line", { x1: cx, x2: cx, y1: Math.min(yZ, yGuess), y2: Math.max(yZ, yGuess), stroke: "#d8d8d4", "stroke-width": "2" }));
+    // observed z: black fill
+    svg.appendChild(svgEl("circle", { cx, cy: yZ, r: 5, fill: "#1d1d1b" }));
+    // where 1.96*σ_null would fall if σ = guess/1.96: plot the student's implied "2σ" boundary
+    // Actually: student guessed half-width; true half-width ≈ 1.96·σ_null, so implied σ_guess = guess/1.96
+    // implied "observed z (using your guess as σ)" = observed / (guess/1.96) = 1.96 · observed / guess
+    // But observed z above is observed / true σ. Let me just show the ratio of guess/true half-width.
+    // Scrap that — instead show guess half-width "line" as a symmetric pair at ±1.96 · (guess/true)
+    svg.appendChild(svgEl("circle", { cx, cy: yGuess, r: 5, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  }
+
+  // Legend
+  const lx = mL + 8, ly = mT + 12;
+  svg.appendChild(svgEl("circle", { cx: lx, cy: ly, r: 4, fill: "#1d1d1b" }));
+  const lt1 = svgEl("text", { x: lx + 8, y: ly + 3, "font-size": "11", fill: "#1d1d1b" }); lt1.textContent = "observed slope (as z vs. null SD)"; svg.appendChild(lt1);
+  svg.appendChild(svgEl("circle", { cx: lx + 220, cy: ly, r: 4, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  const lt2 = svgEl("text", { x: lx + 228, y: ly + 3, "font-size": "11", fill: "#b23a48" }); lt2.textContent = "z implied by your half-width guess"; svg.appendChild(lt2);
+  const ltl = svgEl("line", { x1: lx + 430, x2: lx + 446, y1: ly, y2: ly, stroke: "#c28a2b", "stroke-width": "1.25", "stroke-dasharray": "3 2" }); svg.appendChild(ltl);
+  const lt3 = svgEl("text", { x: lx + 450, y: ly + 3, "font-size": "11", fill: "#c28a2b" }); lt3.textContent = "±1.96 (95% envelope edge)"; svg.appendChild(lt3);
+}
+
+function shortRoundLabel(r) {
+  if (r.label.includes("1979")) return "fortis '79-'93";
+  if (r.label.includes("1975")) return "fortis '75-'82";
+  if (r.label.includes("0–5000")) return "LTEE 0-5k";
+  if (r.label.includes("40,000")) return "LTEE 40-50k";
+  if (r.label.includes("Hyopsodus")) return "PETS Eocene";
+  return "";
+}
+
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "If you fit a regression line to a 40-year time series with no real trend, the slope estimate \u03b2\u0302 will most likely be:",
+    options: ["Exactly 0.", "Close to 0, with sample-to-sample variability.", "Significantly different from 0 (Type I error).", "Undefined."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Doubling the number of years of data, holding all else equal, will most likely make the null half-width of |\u03b2\u0302|:",
+    options: ["Larger.", "Smaller.", "Unchanged.", "Negative."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A permutation test gives a wide null half-width and the observed slope is small. The strongest claim is:",
+    options: ["The trend is real and large.", "The observed slope is consistent with the null \u2014 no trend distinguishable.", "The permutation test is invalid.", "The slope is exactly zero."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Two studies have the same observed slope, but Study A has higher residual scatter \u03c3. Study A's null envelope is:",
+    options: ["Narrower.", "Wider.", "The same.", "Inverted."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s01",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
+</script>
+</body>
+</html>

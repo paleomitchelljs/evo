@@ -1,0 +1,628 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S8: selection coefficient from Δp</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f; --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9; --code-bg: #1e1f22; --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 74ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .params { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; background: #f7f5ee; padding: 8px 10px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .params .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .params .v { color: var(--ink); font-weight: 600; }
+  svg.chart { width: 100%; height: auto; display: block; background: #fff; }
+  .guess-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .guess-row label { font-size: 13.5px; }
+  .guess-row input[type=number] { padding: 6px 8px; font: 14px ui-monospace, Menlo, monospace; border: 1px solid var(--rule); border-radius: 4px; width: 120px; }
+  .guess-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal .big { font: 600 15px ui-monospace, Menlo, monospace; color: var(--ink); margin-bottom: 4px; }
+  .reveal .err { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 4px; }
+  .reveal p { margin: 6px 0 0 0; font-size: 13px; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally svg { width: 100%; height: 260px; background: #fff; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+  pre.code { background: var(--code-bg); color: var(--code-ink); padding: 11px 13px; border-radius: 4px; font: 12px/1.5 ui-monospace, Menlo, monospace; margin: 0; }
+  pre.code .line { display: block; padding: 0 6px; border-radius: 2px; }
+  pre.code .kw { color: #c792ea; } pre.code .fn { color: #82aaff; } pre.code .num { color: #f78c6c; } pre.code .com { color: #676f8a; font-style: italic; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S8 — Selection coefficient from Δ<em>p</em></h1>
+  <p>Five rounds. You are given a starting allele frequency <em>p</em><sub>0</sub>, a later frequency <em>p</em><sub>t</sub>, the number of generations elapsed <em>t</em>, and the effective population size <em>N</em><sub>e</sub>. Predict the selection coefficient <em>s</em> that best explains the change. The reveal shows the likelihood profile for <em>s</em> and the 95% confidence interval — sometimes tight, sometimes spanning zero. All calculations use the haploid-selection approximation (<code>Δ ln(p/(1−p)) ≈ s · t</code>); for diploid additive selection multiply <em>s</em> by 2.</p>
+</header>
+
+<main>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally — estimated s and 95% CI across rounds</h3>
+    <svg id="tallySvg" viewBox="0 0 1000 260" preserveAspectRatio="none" aria-label="Tally of s estimates across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      Every round reduced to the same calculation:
+      <code>Δψ = ln(p<sub>t</sub>/(1−p<sub>t</sub>)) − ln(p<sub>0</sub>/(1−p<sub>0</sub>))</code>,
+      and <code>ŝ = Δψ / t</code>. The point estimate only depends on
+      <em>p</em><sub>0</sub>, <em>p</em><sub>t</sub>, and <em>t</em>. The
+      <em>confidence</em> depends on <em>N</em><sub>e</sub>·<em>t</em>·<em>p̄</em>(1−<em>p̄</em>),
+      because the drift variance of Δψ is <code>1/(2N<sub>e</sub>·p̄(1−p̄))</code>
+      per generation.
+    </p>
+    <p>
+      Rounds 1 and 2 had identical endpoints but different <em>t</em> — so
+      the same observed change implied very different <em>s</em>. Round 3
+      used the same change in a small population: the CI spanned zero, so
+      selection was not distinguishable from drift. Round 4 (LTEE-like)
+      had a huge product of <em>N</em><sub>e</sub>·<em>t</em> and gave a
+      razor-tight CI. Round 5 (FSJ-like) had a small product and gave a CI
+      that spanned zero — the observed Δ<em>p</em> is consistent with pure
+      drift.
+    </p>
+    <p>
+      <strong>Estimating s requires all three:</strong> Δ<em>p</em>, <em>t</em>,
+      and <em>N</em><sub>e</sub>. Give up any one and the answer is either
+      unidentified or has no CI. In your own work, when you want to report
+      "how strong is selection here?", you must report all three alongside.
+    </p>
+  </div>
+
+  <div id="score-final"></div>
+</main>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "One generation, big population, big jump",
+    scenario: "A controlled allele-frequency experiment. p₀ = 0.50, after one generation p₁ = 0.55. N_e = 10,000. Estimate s.",
+    p0: 0.50, pt: 0.55, t: 1, Ne: 10000,
+  },
+  {
+    label: "Same endpoints, ten generations",
+    scenario: "Same p₀ and pₜ, but now t = 10 generations in the same large population.",
+    p0: 0.50, pt: 0.55, t: 10, Ne: 10000,
+  },
+  {
+    label: "Small population, modest change over 10 generations",
+    scenario: "A tiny population: N_e = 100. p₀ = 0.50, after 10 generations pₜ = 0.54.",
+    p0: 0.50, pt: 0.54, t: 10, Ne: 100,
+  },
+  {
+    label: "LTEE-like beneficial mutation, 1000 generations",
+    scenario: "A beneficial mutation sweeps from p₀ = 0.001 to pₜ = 0.15 over 1000 generations in a bacterial population with N_e = 10⁷.",
+    p0: 0.001, pt: 0.15, t: 1000, Ne: 1e7,
+  },
+  {
+    label: "FSJ-like SNP, 23 years in a small pedigreed population",
+    scenario: "A single SNP in the Florida Scrub-Jay population at Archbold drifted from p₀ = 0.37 to pₜ = 0.42 across 23 years. Effective size from pedigree: N_e ≈ 40.",
+    p0: 0.37, pt: 0.42, t: 23, Ne: 40,
+  },
+];
+
+const state = { round: 0, history: [] };
+
+// ---------- Selection estimators ----------
+function logit(p) { return Math.log(p / (1 - p)); }
+function estimate(round) {
+  const { p0, pt, t, Ne } = round;
+  const dpsi = logit(pt) - logit(p0);
+  const sMLE = dpsi / t;
+  // Drift variance of Δψ: integrate per-gen variance assuming p ≈ p̄ = avg(p₀, pₜ)
+  const pbar = (p0 + pt) / 2;
+  const varPerGen = 1 / (2 * Ne * pbar * (1 - pbar));
+  const varTotal = varPerGen * t;
+  const seMLE = Math.sqrt(varTotal) / t;
+  const ci95 = 1.96 * seMLE;
+  return { dpsi, sMLE, seMLE, ci95 };
+}
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function fmtS(s) {
+  if (!isFinite(s)) return "∞";
+  const a = Math.abs(s);
+  if (a === 0) return "0";
+  if (a < 1e-4) return s.toExponential(2);
+  if (a < 0.01) return s.toFixed(5);
+  if (a < 1) return s.toFixed(4);
+  return s.toFixed(3);
+}
+
+// ---------- Rendering ----------
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    showPosttest();
+    return;
+  }
+
+  const est = estimate(r);
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.scenario]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: endpoint plot + (after reveal) likelihood profile
+  const left = makeEl("div", null);
+  const chartPanel = makeEl("div", { class: "panel" });
+  chartPanel.appendChild(makeEl("h3", null, ["Observed change"]));
+  const params = makeEl("div", { class: "params" }, [
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["p₀"]), makeEl("div", { class: "v" }, [r.p0.toString()])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["pₜ"]), makeEl("div", { class: "v" }, [r.pt.toString()])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["t (gens)"]), makeEl("div", { class: "v" }, [String(r.t)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["Nₑ"]), makeEl("div", { class: "v" }, [r.Ne >= 1000 ? r.Ne.toExponential(0) : String(r.Ne)])]),
+  ]);
+  chartPanel.appendChild(params);
+
+  const endpointSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 220", preserveAspectRatio: "none" });
+  chartPanel.appendChild(endpointSvg);
+
+  const profilePanel = makeEl("div", { class: "panel", id: "profilePanel", style: "margin-top:14px; display:none;" });
+  profilePanel.appendChild(makeEl("h3", null, ["Likelihood profile of s (normal approximation)"]));
+  const profileSvg = svgEl("svg", { id: "profileSvg", class: "chart", viewBox: "0 0 700 260", preserveAspectRatio: "none" });
+  profilePanel.appendChild(profileSvg);
+  left.appendChild(chartPanel);
+  left.appendChild(profilePanel);
+
+  const codePanel = makeEl("div", { class: "panel", style: "margin-top:14px;" });
+  codePanel.appendChild(makeEl("h3", null, ["R equivalent"]));
+  codePanel.appendChild(makeEl("pre", {
+    class: "code",
+    html: `<span class="line"><span class="com"># Haploid-selection MLE from endpoints</span></span>
+<span class="line"><span class="kw">p0</span> &lt;- <span class="num">${r.p0}</span>;  <span class="kw">pt</span> &lt;- <span class="num">${r.pt}</span>;  <span class="kw">t</span> &lt;- <span class="num">${r.t}</span>;  <span class="kw">Ne</span> &lt;- <span class="num">${r.Ne}</span></span>
+<span class="line"><span class="kw">dpsi</span> &lt;- <span class="fn">log</span>(pt/(<span class="num">1</span>-pt)) - <span class="fn">log</span>(p0/(<span class="num">1</span>-p0))</span>
+<span class="line"><span class="kw">s_hat</span> &lt;- dpsi / t</span>
+<span class="line"><span class="kw">pbar</span> &lt;- (p0 + pt) / <span class="num">2</span></span>
+<span class="line"><span class="kw">se</span>    &lt;- <span class="fn">sqrt</span>(<span class="num">1</span> / (<span class="num">2</span>*Ne*pbar*(<span class="num">1</span>-pbar)*t))</span>
+<span class="line"><span class="kw">ci95</span>  &lt;- c(s_hat - <span class="num">1.96</span>*se, s_hat + <span class="num">1.96</span>*se)</span>`
+  }));
+  left.appendChild(codePanel);
+  grid.appendChild(left);
+
+  // Right: guess
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `Estimate s (per generation, haploid). The observed log-odds change Δψ = ln(pₜ/(1−pₜ)) − ln(p₀/(1−p₀)). Your s · t should roughly equal Δψ.`
+  ]));
+  const guessRow = makeEl("div", { class: "guess-row" }, [
+    makeEl("label", { for: "guessInput" }, ["ŝ (per generation):"]),
+    makeEl("input", { type: "number", id: "guessInput", step: "0.001", placeholder: "0" }),
+  ]);
+  guessPanel.appendChild(guessRow);
+  guessPanel.appendChild(makeEl("p", { class: "guess-hint" }, [
+    `Δψ for this round = ${est.dpsi.toFixed(4)}. Divide by t = ${r.t} to get the MLE. (The question worth pondering is whether the 95% CI will be tight.)`
+  ]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit prediction"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  guessPanel.appendChild(nextBtn);
+
+  right.appendChild(guessPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  drawEndpoints(endpointSvg, r, null);
+
+  const input = document.getElementById("guessInput");
+  input.addEventListener("input", () => {
+    const v = parseFloat(input.value);
+    submitBtn.disabled = Number.isNaN(v);
+  });
+  submitBtn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (Number.isNaN(v)) return;
+    submitBtn.disabled = true; input.disabled = true;
+
+    state.history.push({ round: r, guess: v, est });
+    profilePanel.style.display = "block";
+    drawLikelihood(profileSvg, est, v);
+    drawEndpoints(endpointSvg, r, est);
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      `MLE ŝ = ${fmtS(est.sMLE)}  ·  your guess: ${fmtS(v)}`
+    ]));
+    revealBox.appendChild(makeEl("div", { class: "err" }, [
+      `SE(ŝ) = ${fmtS(est.seMLE)}  ·  95% CI: [${fmtS(est.sMLE - est.ci95)}, ${fmtS(est.sMLE + est.ci95)}]`
+    ]));
+    const ciSpansZero = (est.sMLE - est.ci95) < 0 && (est.sMLE + est.ci95) > 0;
+    revealBox.appendChild(makeEl("p", null, [
+      ciSpansZero
+        ? "The 95% CI includes zero. Selection is not distinguishable from drift at this resolution."
+        : "The 95% CI excludes zero. Selection is detectable above drift."
+    ]));
+
+    nextBtn.classList.add("shown");
+    drawTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); drawTally(); });
+}
+
+function drawEndpoints(svg, round, est) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 220;
+  const mL = 54, mR = 24, mT = 18, mB = 36;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+  const xScale = t => mL + (t / round.t) * plotW;
+  const yScale = p => mT + (1 - p) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+  for (const p of [0, 0.25, 0.5, 0.75, 1]) {
+    const y = yScale(p);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = p.toFixed(2);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 14, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 14 ${mT + plotH / 2})` });
+  yl.textContent = "allele frequency";
+  svg.appendChild(yl);
+  for (let i = 0; i <= 4; i++) {
+    const v = Math.round((i / 4) * round.t);
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = String(v);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = "generation";
+  svg.appendChild(xl);
+
+  // Endpoints
+  svg.appendChild(svgEl("circle", { cx: xScale(0), cy: yScale(round.p0), r: 6, fill: "#1d1d1b" }));
+  const l1 = svgEl("text", { x: xScale(0) + 8, y: yScale(round.p0) - 6, "font-size": "11", fill: "#1d1d1b", "font-weight": "600" });
+  l1.textContent = `p₀ = ${round.p0}`;
+  svg.appendChild(l1);
+  svg.appendChild(svgEl("circle", { cx: xScale(round.t), cy: yScale(round.pt), r: 6, fill: "#1d1d1b" }));
+  const l2 = svgEl("text", { x: xScale(round.t) - 8, y: yScale(round.pt) - 6, "font-size": "11", fill: "#1d1d1b", "font-weight": "600", "text-anchor": "end" });
+  l2.textContent = `pₜ = ${round.pt}`;
+  svg.appendChild(l2);
+
+  // Deterministic MLE trajectory (haploid)
+  if (est) {
+    let d = "";
+    let p = round.p0;
+    const step = Math.max(1, Math.floor(round.t / 200));
+    for (let g = 0; g <= round.t; g += step) {
+      const x = xScale(g), y = yScale(p);
+      d += (g === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1);
+      p = p * Math.exp(est.sMLE * step) / (1 - p + p * Math.exp(est.sMLE * step));
+    }
+    svg.appendChild(svgEl("path", { d, fill: "none", stroke: "#b23a48", "stroke-width": "1.5" }));
+    const lab = svgEl("text", { x: mL + plotW - 6, y: mT + 16, "font-size": "11", fill: "#b23a48", "text-anchor": "end", "font-weight": "600" });
+    lab.textContent = `MLE trajectory (ŝ = ${fmtS(est.sMLE)})`;
+    svg.appendChild(lab);
+  }
+}
+
+function drawLikelihood(svg, est, guess) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 260;
+  const mL = 50, mR = 24, mT = 16, mB = 38;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  // x range: ŝ ± 4·SE, but symmetric around 0 if 0 is inside
+  const xHalf = Math.max(Math.abs(est.sMLE) * 1.5, est.seMLE * 4, Math.abs(guess - est.sMLE) * 1.2, est.seMLE * 2);
+  const xMin = Math.min(est.sMLE - xHalf, -est.seMLE * 2);
+  const xMax = Math.max(est.sMLE + xHalf, est.seMLE * 2);
+  const xScale = s => mL + ((s - xMin) / (xMax - xMin)) * plotW;
+
+  // y: log-likelihood, scaled to 0-1 at MLE
+  function relLL(s) { return -0.5 * Math.pow((s - est.sMLE) / est.seMLE, 2); }
+  const yMin = -6, yMax = 0.2;
+  const yScale = y => mT + ((yMax - y) / (yMax - yMin)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+
+  // 95% CI shading
+  const ciLo = est.sMLE - est.ci95, ciHi = est.sMLE + est.ci95;
+  svg.appendChild(svgEl("rect", {
+    x: xScale(ciLo), y: mT,
+    width: xScale(ciHi) - xScale(ciLo), height: plotH,
+    fill: "rgba(202,160,74,0.15)",
+  }));
+
+  // Profile curve
+  let d = "";
+  for (let i = 0; i <= 200; i++) {
+    const s = xMin + (i / 200) * (xMax - xMin);
+    const y = Math.max(yMin, relLL(s));
+    d += (i === 0 ? "M" : "L") + xScale(s).toFixed(1) + "," + yScale(y).toFixed(1);
+  }
+  svg.appendChild(svgEl("path", { d, fill: "none", stroke: "#1d1d1b", "stroke-width": "1.5" }));
+
+  // MLE line
+  svg.appendChild(svgEl("line", { x1: xScale(est.sMLE), x2: xScale(est.sMLE), y1: yScale(yMax), y2: yScale(yMin), stroke: "#1d1d1b", "stroke-width": "2" }));
+  const mleLab = svgEl("text", { x: xScale(est.sMLE) + 4, y: mT + 16, "font-size": "11", fill: "#1d1d1b", "font-weight": "600" });
+  mleLab.textContent = `MLE ŝ = ${fmtS(est.sMLE)}`;
+  svg.appendChild(mleLab);
+
+  // Zero line
+  if (xMin < 0 && xMax > 0) {
+    svg.appendChild(svgEl("line", { x1: xScale(0), x2: xScale(0), y1: mT, y2: mT + plotH, stroke: "#6b6b68", "stroke-width": "1", "stroke-dasharray": "3 2" }));
+    const zLab = svgEl("text", { x: xScale(0) + 4, y: mT + plotH - 6, "font-size": "10.5", fill: "#6b6b68" });
+    zLab.textContent = "s = 0 (drift null)";
+    svg.appendChild(zLab);
+  }
+
+  // Guess
+  if (guess >= xMin && guess <= xMax) {
+    svg.appendChild(svgEl("line", { x1: xScale(guess), x2: xScale(guess), y1: mT, y2: mT + plotH, stroke: "#b23a48", "stroke-width": "2", "stroke-dasharray": "4 3" }));
+    const gLab = svgEl("text", { x: xScale(guess) + 4, y: mT + 30, "font-size": "11", fill: "#b23a48" });
+    gLab.textContent = `your guess = ${fmtS(guess)}`;
+    svg.appendChild(gLab);
+  }
+
+  // x ticks
+  const ticks = 5;
+  for (let i = 0; i <= ticks; i++) {
+    const v = xMin + (i / ticks) * (xMax - xMin);
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = fmtS(v);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = "selection coefficient s (per generation)";
+  svg.appendChild(xl);
+
+  // 95% CI annotation
+  const ciLab = svgEl("text", { x: mL + plotW - 6, y: mT + 16, "font-size": "11", fill: "#8b7320", "text-anchor": "end", "font-weight": "600" });
+  ciLab.textContent = `95% CI: [${fmtS(ciLo)}, ${fmtS(ciHi)}]`;
+  svg.appendChild(ciLab);
+}
+
+function drawTally() {
+  const svg = document.getElementById("tallySvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 260;
+  const mL = 96, mR = 22, mT = 24, mB = 48;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1" }));
+
+  // One row per round. Each round has its own s-scale for clarity.
+  const nRows = ROUNDS.length;
+  const rowH = plotH / nRows;
+
+  for (let i = 0; i < nRows; i++) {
+    const r = ROUNDS[i];
+    const h = state.history[i];
+    const yMid = mT + (i + 0.5) * rowH;
+
+    // Label on left
+    const lab = svgEl("text", { x: mL - 6, y: yMid + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b" });
+    lab.textContent = `R${i + 1}: ${shortLabel(r)}`;
+    svg.appendChild(lab);
+
+    if (!h) {
+      const emp = svgEl("text", { x: mL + plotW / 2, y: yMid + 4, "text-anchor": "middle", "font-size": "11", fill: "#bbb", "font-style": "italic" });
+      emp.textContent = "not yet";
+      svg.appendChild(emp);
+      continue;
+    }
+
+    const est = h.est;
+    const lo = est.sMLE - est.ci95, hi = est.sMLE + est.ci95;
+    // Row-specific s-scale: max of |lo|, |hi|, |guess| with some padding
+    const sAbs = Math.max(Math.abs(lo), Math.abs(hi), Math.abs(h.guess)) * 1.15;
+    const rowXScale = s => mL + ((s + sAbs) / (2 * sAbs)) * plotW;
+
+    // Zero line
+    svg.appendChild(svgEl("line", { x1: rowXScale(0), x2: rowXScale(0), y1: yMid - rowH * 0.4, y2: yMid + rowH * 0.4, stroke: "#6b6b68", "stroke-width": "1", "stroke-dasharray": "3 2" }));
+
+    // CI bar
+    svg.appendChild(svgEl("rect", {
+      x: rowXScale(lo), y: yMid - 10,
+      width: rowXScale(hi) - rowXScale(lo), height: 20,
+      fill: "rgba(202,160,74,0.25)", stroke: "#c28a2b", "stroke-width": "1",
+    }));
+
+    // MLE point
+    svg.appendChild(svgEl("circle", { cx: rowXScale(est.sMLE), cy: yMid, r: 5, fill: "#1d1d1b" }));
+
+    // Guess
+    const gCl = Math.min(Math.max(h.guess, -sAbs * 0.98), sAbs * 0.98);
+    svg.appendChild(svgEl("circle", { cx: rowXScale(gCl), cy: yMid, r: 5, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+
+    // Row-specific s labels
+    const leftLab = svgEl("text", { x: mL + 2, y: mT + (i + 1) * rowH - 4, "font-size": "9.5", fill: "#8b8b85", "font-family": "ui-monospace, Menlo, monospace" });
+    leftLab.textContent = `${fmtS(-sAbs)}`;
+    svg.appendChild(leftLab);
+    const rightLab = svgEl("text", { x: mL + plotW - 2, y: mT + (i + 1) * rowH - 4, "font-size": "9.5", fill: "#8b8b85", "font-family": "ui-monospace, Menlo, monospace", "text-anchor": "end" });
+    rightLab.textContent = `${fmtS(sAbs)}`;
+    svg.appendChild(rightLab);
+  }
+
+  // Title
+  const tit = svgEl("text", { x: mL + plotW / 2, y: mT - 8, "text-anchor": "middle", "font-size": "11", fill: "#6b6b68" });
+  tit.textContent = "each row is its own s-scale (range shown at row edges) — focus on whether the 95% CI includes zero";
+  svg.appendChild(tit);
+
+  // Legend
+  const lx = mL + 8, ly = H - 10;
+  svg.appendChild(svgEl("circle", { cx: lx, cy: ly - 5, r: 4, fill: "#1d1d1b" }));
+  const lt1 = svgEl("text", { x: lx + 8, y: ly - 2, "font-size": "11", fill: "#1d1d1b" }); lt1.textContent = "MLE ŝ"; svg.appendChild(lt1);
+  svg.appendChild(svgEl("rect", { x: lx + 50, y: ly - 10, width: 14, height: 10, fill: "rgba(202,160,74,0.25)", stroke: "#c28a2b" }));
+  const lt2 = svgEl("text", { x: lx + 68, y: ly - 2, "font-size": "11", fill: "#8b7320" }); lt2.textContent = "95% CI"; svg.appendChild(lt2);
+  svg.appendChild(svgEl("circle", { cx: lx + 124, cy: ly - 5, r: 4, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  const lt3 = svgEl("text", { x: lx + 132, y: ly - 2, "font-size": "11", fill: "#b23a48" }); lt3.textContent = "your guess"; svg.appendChild(lt3);
+}
+
+function shortLabel(r) {
+  if (r.t === 1) return "1 gen, big jump";
+  if (r.t === 10 && r.Ne === 10000) return "10 gen, same Δp";
+  if (r.t === 10 && r.Ne === 100) return "10 gen, small Nₑ";
+  if (r.t === 1000) return "LTEE-like sweep";
+  if (r.t === 23) return "FSJ-like drift";
+  return "";
+}
+
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "An allele goes from p = 0.1 to p = 0.5 over t = 50 generations in a large population. This requires a selection coefficient s that is:",
+    options: ["Negative.", "Positive.", "Exactly zero.", "Undefined."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "If you observe \u0394p \u2248 0 across many generations, the most parsimonious estimate of s is:",
+    options: ["Strongly positive.", "Near zero.", "Strongly negative.", "Cannot be determined."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Larger N\u2091, holding the observed \u0394p and t the same, implies the inferred s is:",
+    options: ["Smaller (less drift attribution).", "Larger.", "Unchanged.", "Sign-reversed."],
+    correct: 0
+  },
+  {
+    idx: 1,
+    q: "If a small \u0394p could plausibly be produced by drift in a small N\u2091, the inferred s should be reported as:",
+    options: ["Definitely positive.", "Plausibly zero (within drift expectation).", "Definitely negative.", "Infinitely large."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s08",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
+</script>
+</body>
+</html>

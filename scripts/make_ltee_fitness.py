@@ -30,7 +30,7 @@ from collections import defaultdict
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-RAW_DEFAULT = REPO / "data" / "Concatenated.LTEE.data.all.csv"
+RAW_DEFAULT = REPO / "data" / "raw" / "Concatenated.LTEE.data.all.csv"
 OUT_DIR = REPO / "data" / "clean"
 
 # Known column aliases from the README and prior analyses of this file.

@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S24: when convergent estimates earn trust</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:82ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:780px; margin:0 auto; padding:24px; }
+  .round { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:16px 18px; margin:0 0 16px; }
+  .round.locked { opacity:.4; pointer-events:none; }
+  .round-badge { font-family:ui-monospace,Menlo,monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); }
+  .scenario { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 12px; }
+  .estimates { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; border-radius:4px; padding:8px 12px; margin:0 0 12px; }
+  .q { font-weight:600; margin:0 0 10px; }
+  .choice { display:block; width:100%; text-align:left; padding:10px 13px; margin:0 0 8px; background:#fafaf7; color:var(--ink); border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .submit { margin-top:4px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+  .next-btn { margin-top:10px; padding:7px 12px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:13.5px; display:none; }
+  .next-btn.shown { display:inline-block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S24 — When convergent estimates earn trust</h1>
+  <p>Most of the course teaches you to distrust a clean result. This is the other
+  half of calibration: <em>when</em> can you trust one? The signal is convergence —
+  several methods with <strong>independent failure modes</strong> landing on the
+  same answer. Not every agreement counts, and not every disagreement condemns the
+  naive estimate. Decide which.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:780px;margin:16px auto 0;padding:0 24px"></div>
+<main id="rounds"></main>
+<div id="score-final" style="max-width:780px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/score.js"></script>
+<script>
+const ROUNDS = [
+  {
+    scenario: "Across 40 bird species you ask whether longer wings go with longer migrations. Three estimates of the slope:",
+    estimates: "naive OLS (ignores the tree):   0.62\nPGLS (subtracts shared ancestry): 0.58\ncommon-garden experiment:        0.60",
+    q: "What does this pattern license?",
+    choices: [
+      "Trust the relationship — three methods with different failure modes agree, so the slope is not an artifact of any one of them.",
+      "Coincidence — three numbers near each other prove nothing.",
+      "Still can't trust it; you'd need a fourth method."
+    ],
+    answer: 0,
+    why: "The naive slope can be inflated by shared ancestry; PGLS removes that but assumes the tree and model; the experiment removes ancestry entirely but in an artificial setting. Those are <em>independent</em> ways to be wrong. When all three agree, the one thing they share — a real wing↔migration link — is what survives. That is the positive case the rug-pulls never show you: convergence across independent failure modes earns trust."
+  },
+  {
+    scenario: "Same question, different clade. Now the three estimates split:",
+    estimates: "naive OLS:                 0.70\nPGLS (tree-corrected):    0.05\ncommon-garden experiment: 0.08",
+    q: "Which estimate do you trust, and what did the disagreement tell you?",
+    choices: [
+      "The naive 0.70 — it used the most data.",
+      "Average them to about 0.28.",
+      "The corrected 0.05–0.08 — and the gap localizes the problem: the naive slope was mostly shared ancestry."
+    ],
+    answer: 2,
+    why: "Disagreement is information, not noise. The two methods that remove ancestry agree with each other and disagree with the one that doesn't — so the confound is shared ancestry, and its size is roughly 0.70 − 0.06. Convergence among the methods with the <em>right</em> failure mode is what you trust; the naive number is the outlier explained by the confound."
+  },
+  {
+    scenario: "A colleague says: \"My naive slope and my PGLS slope agree, so the result is solid.\"",
+    q: "When does agreement actually justify trust?",
+    choices: [
+      "Always — agreement means truth.",
+      "Only when the agreeing methods can fail in different ways; two methods that share the same blind spot agreeing proves nothing.",
+      "Never — you can only ever trust an experiment."
+    ],
+    answer: 1,
+    why: "Agreement is only evidence to the degree the methods are independent. If naive OLS and PGLS agree it can mean the phylogenetic signal was weak <em>here</em> (genuine convergence) — but two methods that share a blind spot (say, both miss the same unmeasured confound) will happily agree on the same wrong answer. The calibration rule: weight agreement by how independent the failure modes are. That is also why a single clean result, from one method, licenses so little."
+  }
+];
+
+const mount = document.getElementById("rounds");
+const state = ROUNDS.map(() => ({ picked: null, done: false }));
+
+function render() {
+  mount.innerHTML = "";
+  ROUNDS.forEach((r, i) => {
+    const locked = i > 0 && !state[i-1].done;
+    const div = document.createElement("div");
+    div.className = "round" + (locked ? " locked" : "");
+    let html = '<div class="round-badge">Case ' + (i+1) + ' / ' + ROUNDS.length + '</div>';
+    html += '<div class="scenario">' + r.scenario + '</div>';
+    html += '<pre class="estimates">' + r.estimates + '</pre>';
+    html += '<p class="q">' + r.q + '</p>';
+    r.choices.forEach((c, j) => {
+      const picked = state[i].picked === j ? " picked" : "";
+      html += '<button class="choice' + picked + '" data-r="' + i + '" data-c="' + j + '"' +
+              (state[i].done ? " disabled" : "") + '>' + c + '</button>';
+    });
+    if (!state[i].done) {
+      html += '<button class="submit" data-submit="' + i + '"' +
+              (state[i].picked === null ? " disabled" : "") + '>Submit</button>';
+    }
+    html += '<div class="reveal' + (state[i].done ? " shown" : "") + '">' +
+            '<strong>Answer:</strong> ' + r.choices[r.answer] + '<br>' + r.why + '</div>';
+    if (state[i].done && i < ROUNDS.length - 1) {
+      html += '<button class="next-btn shown" data-next="' + i + '">Next case →</button>';
+    }
+    div.innerHTML = html;
+    mount.appendChild(div);
+  });
+}
+
+mount.addEventListener("click", (e) => {
+  const t = e.target.closest("button");
+  if (!t) return;
+  if (t.dataset.c !== undefined) {
+    const i = +t.dataset.r; if (state[i].done) return;
+    state[i].picked = +t.dataset.c; render();
+  } else if (t.dataset.submit !== undefined) {
+    const i = +t.dataset.submit; if (state[i].picked === null) return;
+    state[i].done = true;
+    const correct = state[i].picked === ROUNDS[i].answer;
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(i, correct ? 1 : 0);
+    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(String.fromCharCode(65 + i));
+    render();
+    if (state.every(s => s.done) && typeof Score !== "undefined" && Score.finish) Score.finish();
+  } else if (t.dataset.next !== undefined) {
+    const el = mount.children[(+t.dataset.next) + 1];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+Score.init({
+  moduleId: "s24", version: 1, scaffold: ROUNDS.length,
+  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+  onReady: () => render()
+});
+render();
+</script>
+</body>
+</html>

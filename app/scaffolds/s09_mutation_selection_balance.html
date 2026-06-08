@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S9: mutation–selection balance</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f; --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9; --code-bg: #1e1f22; --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 74ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .params { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; background: #f7f5ee; padding: 8px 10px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+  .params .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .params .v { color: var(--ink); font-weight: 600; }
+  svg.chart { width: 100%; height: auto; display: block; background: #fff; }
+  .guess-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .guess-row label { font-size: 13.5px; }
+  .guess-row input[type=number] { padding: 6px 8px; font: 14px ui-monospace, Menlo, monospace; border: 1px solid var(--rule); border-radius: 4px; width: 140px; }
+  .guess-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal .big { font: 600 15px ui-monospace, Menlo, monospace; color: var(--ink); margin-bottom: 4px; }
+  .reveal .err { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 4px; }
+  .reveal p { margin: 6px 0 0 0; font-size: 13px; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally svg { width: 100%; height: 240px; background: #fff; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S9 — Mutation–selection balance</h1>
+  <p>Five rounds. You are given a mutation rate <em>μ</em>, a selection coefficient <em>s</em>, and a dominance coefficient <em>h</em>. Predict the equilibrium frequency <em>q̂</em> of the deleterious allele. Recessive lethals (<em>h</em> = 0) give <em>q̂</em> ≈ √(<em>μ</em>/<em>s</em>) — surprisingly high. Dominant or additive lethals give <em>q̂</em> ≈ <em>μ</em>/(<em>hs</em>) — hugely smaller. Round 5 uses the real-world case of cystic fibrosis, where the balance equation visibly fails and something else is going on.</p>
+</header>
+
+<main>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally — equilibrium frequency vs. dominance</h3>
+    <svg id="tallySvg" viewBox="0 0 1000 240" preserveAspectRatio="none" aria-label="Equilibrium q across rounds"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      The general mutation–selection balance for a deleterious allele in a
+      diploid population is:
+      <code>q̂ ≈ (−hs + √((hs)² + 4μs)) / (2s)</code>.
+      Two limiting cases cover most biology:
+    </p>
+    <ul style="margin: 0 0 10px 0; padding-left: 20px; font-size: 14px; line-height: 1.6;">
+      <li>When <em>h</em> = 0 (fully recessive), <code>q̂ = √(μ/s)</code>. The
+        carrier frequency <code>2q̂</code> can reach 0.5–1%.</li>
+      <li>When <em>hs</em> ≫ √(<em>μs</em>), the allele is exposed in
+        heterozygotes and <code>q̂ = μ/(hs)</code>. Selection sees
+        heterozygotes; the allele is hammered out.</li>
+    </ul>
+    <p>
+      Rounds 1 and 2 differed only in <em>h</em> (0 vs. 0.5) — and the
+      equilibrium frequency changed by a factor of 158. Round 4 sat near
+      the crossover <em>h</em> ≈ √(μ/s), where the two approximations give
+      different answers; the exact formula is required.
+    </p>
+    <p>
+      Round 5 was cystic fibrosis: predicted <em>q̂</em> ≈ 0.0014 from
+      mutation–selection balance, observed <em>q</em> ≈ 0.02 — an order
+      of magnitude higher than the balance equation predicts. The
+      discrepancy is real. Proposed explanations include heterozygote
+      advantage (CF carriers may have been resistant to cholera or
+      typhoid), lower effective <em>s</em> in historical populations,
+      founder effects, and population-specific mutation rate. This is a
+      genuine open question. <strong>When a balance equation fails by 10×,
+      the biology is more complicated than the equation.</strong>
+    </p>
+  </div>
+
+  <div id="score-final"></div>
+</main>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+// ---------- Rounds ----------
+const ROUNDS = [
+  {
+    label: "Recessive lethal",
+    scenario: "A lethal mutation, fully recessive: h = 0, s = 1, μ = 10⁻⁵ per generation. Because carriers (Aa) are fully healthy, selection only sees aa homozygotes.",
+    mu: 1e-5, s: 1, h: 0, realized: null,
+    hintFormula: "√(μ/s)",
+  },
+  {
+    label: "Additive lethal",
+    scenario: "Same μ = 10⁻⁵ and s = 1, but now additive: h = 0.5. Carriers have a 50% fitness hit. Selection sees the allele in every generation.",
+    mu: 1e-5, s: 1, h: 0.5, realized: null,
+    hintFormula: "μ/(hs)",
+  },
+  {
+    label: "Recessive mild",
+    scenario: "A much milder selection coefficient: s = 0.1. Still fully recessive (h = 0). μ = 10⁻⁵.",
+    mu: 1e-5, s: 0.1, h: 0, realized: null,
+    hintFormula: "√(μ/s)",
+  },
+  {
+    label: "Near-recessive, lethal",
+    scenario: "Lethal (s = 1), almost recessive — but with a whisper of dominance: h = 0.01. Slightly fitter AA than Aa. Neither of the two standard approximations is clean here.",
+    mu: 1e-5, s: 1, h: 0.01, realized: null,
+    hintFormula: "full formula",
+  },
+  {
+    label: "Cystic fibrosis (real world)",
+    scenario: "CFTR loss-of-function mutation in European populations. μ ≈ 10⁻⁶, historical s ≈ 0.5 (pre-modern treatment), h ≈ 0 (recessive). The observed q in Europe is ≈ 0.02 — a carrier frequency of about 4%.",
+    mu: 1e-6, s: 0.5, h: 0, realized: 0.02,
+    hintFormula: "√(μ/s)",
+  },
+];
+
+const state = { round: 0, history: [] };
+
+// ---------- Math ----------
+function qHat(mu, s, h) {
+  // Exact (to leading order) deterministic equilibrium:
+  // s·q² + hs·q − μ = 0  =>  q = (-hs + √((hs)² + 4μs)) / (2s)
+  const disc = Math.sqrt(h * h * s * s + 4 * mu * s);
+  return (-h * s + disc) / (2 * s);
+}
+function qRecessive(mu, s) { return Math.sqrt(mu / s); }
+function qAdditive(mu, s, h) { return h > 0 ? mu / (h * s) : Infinity; }
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function fmt(x, dec) {
+  if (!isFinite(x)) return "∞";
+  if (x === 0) return "0";
+  const a = Math.abs(x);
+  if (a < 1e-5) return x.toExponential(2);
+  const d = dec !== undefined ? dec : (a < 1e-3 ? 5 : a < 0.01 ? 4 : a < 0.1 ? 3 : 2);
+  return x.toFixed(d);
+}
+
+// ---------- Rendering ----------
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    showPosttest();
+    return;
+  }
+
+  const qExact = qHat(r.mu, r.s, r.h);
+  const qRec = qRecessive(r.mu, r.s);
+  const qAdd = qAdditive(r.mu, r.s, r.h);
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.scenario]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: curve of q̂(h) for this (μ, s)
+  const chartPanel = makeEl("div", { class: "panel" });
+  chartPanel.appendChild(makeEl("h3", null, ["Equilibrium q̂ vs. dominance h (for this μ and s)"]));
+  const params = makeEl("div", { class: "params" }, [
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["μ (mutation rate)"]), makeEl("div", { class: "v" }, [r.mu.toExponential(0)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["s (selection)"]), makeEl("div", { class: "v" }, [String(r.s)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["h (dominance)"]), makeEl("div", { class: "v" }, [String(r.h)])]),
+  ]);
+  chartPanel.appendChild(params);
+  const chartSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 320", preserveAspectRatio: "none" });
+  chartPanel.appendChild(chartSvg);
+
+  // Right: guess
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `Predict the equilibrium frequency q̂ of the deleterious allele. Value in (0, 1). Scientific notation is fine (e.g., 3.2e-3).`
+  ]));
+  const guessRow = makeEl("div", { class: "guess-row" }, [
+    makeEl("label", { for: "guessInput" }, ["q̂ (deleterious allele freq):"]),
+    makeEl("input", { type: "number", id: "guessInput", step: "any", min: "0", max: "1", placeholder: "0" }),
+  ]);
+  guessPanel.appendChild(guessRow);
+  guessPanel.appendChild(makeEl("p", { class: "guess-hint" }, [
+    `Which approximation applies? Crossover is at h ≈ √(μ/s) = ${qRecessive(r.mu, r.s).toFixed(5)}. When h is below this, use √(μ/s). When h is above, use μ/(hs).`
+  ]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit prediction"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  guessPanel.appendChild(nextBtn);
+
+  right.appendChild(guessPanel);
+
+  grid.appendChild(chartPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  drawChart(chartSvg, r, null);
+
+  const input = document.getElementById("guessInput");
+  input.addEventListener("input", () => {
+    const v = parseFloat(input.value);
+    submitBtn.disabled = !(v >= 0 && v <= 1);
+  });
+  submitBtn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (!(v >= 0 && v <= 1)) return;
+    submitBtn.disabled = true; input.disabled = true;
+
+    state.history.push({ round: r, guess: v, qExact, qRec, qAdd });
+    drawChart(chartSvg, r, { guess: v, qExact, qRec, qAdd });
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      `exact q̂ = ${fmt(qExact)}  ·  your guess: ${fmt(v)}`
+    ]));
+    const approxLines = [];
+    approxLines.push(`recessive approximation √(μ/s) = ${fmt(qRec)}`);
+    if (r.h > 0) approxLines.push(`additive approximation μ/(hs) = ${fmt(qAdd)}`);
+    revealBox.appendChild(makeEl("div", { class: "err" }, [approxLines.join("  ·  ")]));
+    const carrierFreq = 2 * qExact * (1 - qExact);
+    revealBox.appendChild(makeEl("div", { class: "err" }, [
+      `heterozygote carrier frequency ≈ 2·q̂·(1−q̂) = ${(100 * carrierFreq).toFixed(2)}%`
+    ]));
+
+    if (r.realized) {
+      const ratio = r.realized / qExact;
+      revealBox.appendChild(makeEl("p", null, [
+        `Observed q in European populations ≈ ${r.realized}. Ratio observed/predicted = ${ratio.toFixed(1)}×. Mutation–selection balance alone cannot explain this.`
+      ]));
+    }
+
+    nextBtn.classList.add("shown");
+    drawTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); drawTally(); });
+}
+
+function drawChart(svg, round, result) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 320;
+  const mL = 62, mR = 22, mT = 18, mB = 40;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  const xMin = -0.005, xMax = 0.55;
+  const qMaxRaw = qHat(round.mu, round.s, 0);
+  const yLogMin = Math.log10(Math.min(qMaxRaw, 1e-6)) - 0.5;
+  const yLogMax = Math.log10(qMaxRaw) + 0.25;
+
+  const xScale = v => mL + ((v - xMin) / (xMax - xMin)) * plotW;
+  const yScale = v => mT + ((yLogMax - v) / (yLogMax - yLogMin)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+
+  // x axis
+  for (const v of [0, 0.1, 0.2, 0.3, 0.4, 0.5]) {
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT, y2: mT + plotH, stroke: "#ececea" }));
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = v.toFixed(1);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = "dominance coefficient h";
+  svg.appendChild(xl);
+
+  // y axis (log)
+  for (let ly = Math.ceil(yLogMin); ly <= Math.floor(yLogMax); ly++) {
+    const y = yScale(ly);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(ly);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 16, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 16 ${mT + plotH / 2})` });
+  yl.textContent = "equilibrium q̂ (log scale)";
+  svg.appendChild(yl);
+
+  // Exact curve q̂(h) for this μ, s
+  let d = "";
+  for (let hi = 0; hi <= 200; hi++) {
+    const h = xMin + (hi / 200) * (xMax - xMin);
+    if (h < 0) continue;
+    const q = qHat(round.mu, round.s, h);
+    const ly = Math.max(Math.log10(q), yLogMin);
+    d += (d === "" ? "M" : "L") + xScale(h).toFixed(1) + "," + yScale(ly).toFixed(1);
+  }
+  svg.appendChild(svgEl("path", { d, fill: "none", stroke: "#1d1d1b", "stroke-width": "1.6" }));
+
+  // Additive approximation μ/(hs) for h > 0
+  let dAdd = "";
+  for (let hi = 1; hi <= 200; hi++) {
+    const h = xMin + (hi / 200) * (xMax - xMin);
+    if (h <= 0.001) continue;
+    const q = round.mu / (h * round.s);
+    if (q > 1) continue;
+    const ly = Math.max(Math.log10(q), yLogMin);
+    dAdd += (dAdd === "" ? "M" : "L") + xScale(h).toFixed(1) + "," + yScale(ly).toFixed(1);
+  }
+  svg.appendChild(svgEl("path", { d: dAdd, fill: "none", stroke: "#c28a2b", "stroke-width": "1.25", "stroke-dasharray": "4 3" }));
+
+  // Recessive line √(μ/s) — horizontal
+  const qr = Math.sqrt(round.mu / round.s);
+  const yr = yScale(Math.log10(qr));
+  svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: yr, y2: yr, stroke: "#2f6b8f", "stroke-width": "1.25", "stroke-dasharray": "4 3" }));
+
+  // Labels for approximations
+  const recLab = svgEl("text", { x: xScale(0.02), y: yr - 4, "font-size": "11", fill: "#2f6b8f", "font-weight": "600" });
+  recLab.textContent = `√(μ/s) ≈ ${fmt(qr)}`;
+  svg.appendChild(recLab);
+  const addLab = svgEl("text", { x: xScale(0.3), y: yScale(Math.log10(round.mu / (0.3 * round.s))) - 6, "font-size": "11", fill: "#c28a2b", "font-weight": "600" });
+  addLab.textContent = `μ/(hs)`;
+  svg.appendChild(addLab);
+
+  // Round's (h, q̂_exact) point
+  svg.appendChild(svgEl("circle", {
+    cx: xScale(round.h),
+    cy: yScale(Math.max(Math.log10(qHat(round.mu, round.s, round.h)), yLogMin)),
+    r: 5, fill: "#1d1d1b"
+  }));
+
+  // Guess line
+  if (result) {
+    const gVal = Math.max(result.guess, Math.pow(10, yLogMin - 0.5));
+    const yg = yScale(Math.min(Math.max(Math.log10(gVal), yLogMin), yLogMax));
+    svg.appendChild(svgEl("line", {
+      x1: xScale(round.h) - 16, x2: xScale(round.h) + 16,
+      y1: yg, y2: yg,
+      stroke: "#b23a48", "stroke-width": "2", "stroke-dasharray": "4 3",
+    }));
+    const gl = svgEl("text", { x: xScale(round.h) + 20, y: yg + 4, "font-size": "11", fill: "#b23a48" });
+    gl.textContent = `your guess = ${fmt(result.guess)}`;
+    svg.appendChild(gl);
+
+    // Realized (for CF)
+    if (round.realized) {
+      const yr = yScale(Math.min(Math.log10(round.realized), yLogMax));
+      svg.appendChild(svgEl("line", {
+        x1: xScale(round.h) - 16, x2: xScale(round.h) + 16,
+        y1: yr, y2: yr,
+        stroke: "#6f8a4a", "stroke-width": "2.5",
+      }));
+      const rl = svgEl("text", { x: xScale(round.h) + 20, y: yr + 4, "font-size": "11", fill: "#6f8a4a", "font-weight": "600" });
+      rl.textContent = `observed = ${round.realized}`;
+      svg.appendChild(rl);
+    }
+  } else {
+    // Show a hint that the student needs to guess
+    const msg = svgEl("text", { x: mL + plotW / 2, y: mT + 14, "font-size": "12", fill: "#8b8b85", "text-anchor": "middle", "font-style": "italic" });
+    msg.textContent = "the black dot marks the exact q̂ for this round's (h, s, μ) — predict its height";
+    svg.appendChild(msg);
+  }
+}
+
+function drawTally() {
+  const svg = document.getElementById("tallySvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 240;
+  const mL = 64, mR = 22, mT = 18, mB = 48;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  // x: round index; y: log10 q̂
+  const yLogMin = -7, yLogMax = -1;
+  const yScale = v => mT + ((yLogMax - v) / (yLogMax - yLogMin)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1" }));
+
+  for (let ly = yLogMin; ly <= yLogMax; ly++) {
+    const y = yScale(ly);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(ly);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 18, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 18 ${mT + plotH / 2})` });
+  yl.textContent = "q̂ (log scale)";
+  svg.appendChild(yl);
+
+  const n = ROUNDS.length;
+  for (let i = 0; i < n; i++) {
+    const r = ROUNDS[i];
+    const h = state.history[i];
+    const cx = mL + ((i + 0.5) / n) * plotW;
+
+    // Round label
+    const lab = svgEl("text", { x: cx, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "10.5", fill: "#6b6b68" });
+    lab.textContent = `R${i + 1}`;
+    svg.appendChild(lab);
+    const lab2 = svgEl("text", { x: cx, y: mT + plotH + 32, "text-anchor": "middle", "font-size": "9.5", fill: "#6b6b68" });
+    lab2.textContent = shortLabel(r);
+    svg.appendChild(lab2);
+
+    if (!h) continue;
+
+    const yQ = yScale(Math.min(Math.max(Math.log10(h.qExact), yLogMin), yLogMax));
+    const yG = yScale(Math.min(Math.max(Math.log10(Math.max(h.guess, 1e-9)), yLogMin), yLogMax));
+
+    svg.appendChild(svgEl("line", { x1: cx, x2: cx, y1: Math.min(yQ, yG), y2: Math.max(yQ, yG), stroke: "#d8d8d4", "stroke-width": "2" }));
+    svg.appendChild(svgEl("circle", { cx, cy: yQ, r: 5, fill: "#1d1d1b" }));
+    svg.appendChild(svgEl("circle", { cx, cy: yG, r: 5, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+
+    if (r.realized) {
+      const yR = yScale(Math.min(Math.max(Math.log10(r.realized), yLogMin), yLogMax));
+      svg.appendChild(svgEl("line", { x1: cx - 12, x2: cx + 12, y1: yR, y2: yR, stroke: "#6f8a4a", "stroke-width": "2.5" }));
+    }
+  }
+
+  // Legend
+  const lx = mL + 8, ly = mT + 14;
+  svg.appendChild(svgEl("circle", { cx: lx, cy: ly, r: 4, fill: "#1d1d1b" }));
+  const lt1 = svgEl("text", { x: lx + 8, y: ly + 3, "font-size": "11", fill: "#1d1d1b" }); lt1.textContent = "exact q̂"; svg.appendChild(lt1);
+  svg.appendChild(svgEl("circle", { cx: lx + 70, cy: ly, r: 4, fill: "none", stroke: "#b23a48", "stroke-width": "2" }));
+  const lt2 = svgEl("text", { x: lx + 78, y: ly + 3, "font-size": "11", fill: "#b23a48" }); lt2.textContent = "your guess"; svg.appendChild(lt2);
+  svg.appendChild(svgEl("line", { x1: lx + 154, x2: lx + 170, y1: ly, y2: ly, stroke: "#6f8a4a", "stroke-width": "2.5" }));
+  const lt3 = svgEl("text", { x: lx + 174, y: ly + 3, "font-size": "11", fill: "#6f8a4a" }); lt3.textContent = "observed (real world)"; svg.appendChild(lt3);
+}
+
+function shortLabel(r) {
+  if (r.h === 0 && r.s === 1 && r.mu === 1e-5) return "h=0 lethal";
+  if (r.h === 0.5) return "additive";
+  if (r.h === 0 && r.s === 0.1) return "recessive mild";
+  if (r.h === 0.01) return "near-recessive";
+  if (r.realized) return "CF";
+  return "";
+}
+
+function supscript(n) {
+  const minus = n < 0 ? "⁻" : "";
+  const digits = String(Math.abs(n));
+  const map = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  return minus + digits.split("").map(d => map[d] || d).join("");
+}
+
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "For a recessive lethal allele with mutation rate \u03bc, the equilibrium allele frequency q\u0302 is approximately:",
+    options: ["\u03bc.", "\u221a\u03bc.", "\u03bc/s.", "Zero."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Halving the selection coefficient s while holding \u03bc fixed will most likely:",
+    options: ["Halve q\u0302.", "Increase q\u0302.", "Leave q\u0302 unchanged.", "Drive q\u0302 to 0."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "A dominant deleterious allele reaches q\u0302 \u2248 \u03bc/s; a recessive reaches q\u0302 \u2248 \u221a(\u03bc/s). For the same \u03bc and s, which is larger?",
+    options: ["Dominant.", "Recessive.", "Equal.", "Cannot tell."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Mutation\u2013selection balance explains why deleterious alleles are not exactly extinct. The equilibrium q\u0302 depends most directly on:",
+    options: ["Population size only.", "The ratio of mutation rate to selection.", "Drift only.", "Migration rate only."],
+    correct: 1
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s09",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
+</script>
+</body>
+</html>

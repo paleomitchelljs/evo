@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S14: rates of evolution across intervals</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root {
+    --bg: #fafaf7;
+    --panel: #ffffff;
+    --ink: #1d1d1b;
+    --muted: #6b6b68;
+    --accent: #b23a48;
+    --accent-soft: #f4d3d7;
+    --accent2: #2f6b8f;
+    --accent2-soft: #d0e1ed;
+    --rule: #e2e0d9;
+    --code-bg: #1e1f22;
+    --code-ink: #e6e6e6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 16px 24px; border-bottom: 1px solid var(--rule); background: var(--panel); }
+  header h1 { margin: 0 0 4px 0; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 72ch; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  .round-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 10px; }
+  .round-badge { font-family: ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .round-head h2 { margin: 0; font-size: 21px; }
+  .round-sub { color: var(--muted); font-size: 13.5px; margin: 0 0 16px 0; max-width: 80ch; }
+
+  .grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 18px; margin-bottom: 16px; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 14px 16px; }
+  .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .params { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #f7f5ee; padding: 8px 10px; border-radius: 4px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; margin-bottom: 10px; }
+  .params .k { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .params .v { color: var(--ink); font-weight: 600; }
+  svg.chart { width: 100%; height: auto; display: block; background: #fff; }
+
+  .guess-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; }
+  .guess-row label { font-size: 13.5px; }
+  .guess-row input[type=number] { padding: 6px 8px; font: 14px ui-monospace, Menlo, monospace; border: 1px solid var(--rule); border-radius: 4px; width: 130px; }
+  .guess-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  .submit { margin-top: 8px; padding: 8px 14px; background: var(--accent); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; }
+  .submit:disabled { background: #bbb; cursor: not-allowed; }
+  .reveal { display: none; margin-top: 12px; padding: 10px 12px; background: #f4f0dd; border-left: 3px solid #caa04a; border-radius: 0 4px 4px 0; font-size: 13.5px; }
+  .reveal.shown { display: block; }
+  .reveal .big { font: 600 15px ui-monospace, Menlo, monospace; color: var(--ink); margin-bottom: 4px; }
+  .reveal .err { font: 13px ui-monospace, Menlo, monospace; color: var(--muted); margin-top: 4px; }
+  .reveal p { margin: 6px 0 0 0; font-size: 13px; }
+  .next-btn { margin-top: 10px; padding: 7px 12px; background: var(--accent2); color: #fff; border: 0; border-radius: 4px; cursor: pointer; font-size: 13.5px; display: none; }
+  .next-btn.shown { display: inline-block; }
+  .tally { margin-top: 20px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 12px 16px; }
+  .tally h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+  .tally svg { width: 100%; height: 280px; background: #fff; }
+  .finale { display: none; margin-top: 24px; padding: 20px 24px; background: var(--accent2-soft); border: 1px solid var(--accent2); border-radius: 6px; }
+  .finale.shown { display: block; }
+  .finale h2 { margin: 0 0 10px 0; font-size: 18px; color: var(--accent2); }
+  .finale p { margin: 0 0 10px 0; font-size: 14px; line-height: 1.6; max-width: 68ch; }
+  .finale p:last-child { margin-bottom: 0; }
+  .finale code { font-family: ui-monospace, Menlo, monospace; background: #fff; padding: 1px 5px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1 style="margin-top:6px;">Scaffold S14 — Rates of evolution across intervals</h1>
+  <p>Five rounds. Each round picks a dataset and an interval length. The scaffold then computes the magnitude of evolutionary change over every sub-window of that length, and you predict the median |rate|. Rounds 1–3 use the same LTEE fitness series at three interval lengths; rounds 4–5 use Grant finch beak depth and a paleontological Hyopsodus body-size series. Watch the rates drop as the interval grows.</p>
+</header>
+
+<main>
+  <div id="score-name"></div>
+
+  <div class="score-card" id="pretest-card" style="display:none;">
+    <div id="pretest-mount"></div>
+  </div>
+
+  <div id="scaffold-body" class="score-locked">
+    <div class="score-locked-banner" id="scaffold-lock-note">Locked — answer the pretest above first.</div>
+    <div id="round-container"></div>
+
+  <div class="tally">
+    <h3>Running tally — median |rate| vs. interval length</h3>
+    <svg id="tallySvg" viewBox="0 0 1000 280" preserveAspectRatio="none" aria-label="Median rate across intervals"></svg>
+  </div>
+
+  </div>
+
+  <div class="score-card" id="posttest-card" style="display:none;">
+    <div id="posttest-mount"></div>
+  </div>
+
+  <div class="finale" id="finale">
+    <h2>What you just did has a name</h2>
+    <p>
+      Rounds 1–3 showed the same LTEE population, the same 50,000
+      generations of fitness data. You only changed the length of the
+      sliding window over which you computed a rate. The median
+      rate <strong>dropped</strong> as the window grew. Nothing changed about
+      the biology.
+    </p>
+    <p>
+      This is <strong>Gingerich's 1983 result</strong>: rates of evolution
+      decline with the interval over which they are measured. Part of the
+      decline is a real biological fact (evolution proceeds in bursts
+      separated by stasis, so longer windows average burst + stasis
+      together). Part of it is a statistical artifact (measurement noise
+      and short-term reversals average out over longer intervals). Without
+      a null model you cannot separate the two.
+    </p>
+    <p>
+      The scale of the decline is enormous. LTEE at 500 generations gives
+      rates orders of magnitude larger than Grant finches at 1 year, which
+      are in turn orders of magnitude larger than Hyopsodus over
+      500,000 years. Published rate compilations (Gingerich 2019,
+      Hendry & Kinnison 1999) show the same pattern across hundreds of
+      studies. A single "rate of evolution" has no meaning without an
+      interval. Always report the interval.
+    </p>
+  </div>
+
+  <div id="score-final"></div>
+</main>
+
+<script src="../assets/score.js"></script>
+<script src="../assets/quiz.js"></script>
+<script>
+// ---------- Data ----------
+const LTEE_ARA1_GEN = [0,500,1000,1500,2000,2500,3000,3500,4000,4500,5000,6000,7000,8000,9000,10000,11000,12000,13000,14000,15000,16000,17000,18000,19000,20000,22000,24000,26000,28000,30000,32000,34000,36000,38000,40000,42000,44000,46000,48000,50000];
+const LTEE_ARA1_FIT = [0.9417,1.1096,1.2959,1.2235,1.2401,1.3532,1.3184,1.2785,1.2596,1.3447,1.2167,1.3710,1.3151,1.3536,1.4133,1.2834,1.3638,1.3575,1.4244,1.3867,1.4928,1.3964,1.3295,1.4792,1.5815,1.5055,1.4319,1.5109,1.4445,1.4106,1.4328,1.4992,1.3583,1.5014,1.6082,1.5156,1.4411,1.4084,1.6393,1.5288,1.4060];
+
+const FORTIS_YEARS = [1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012];
+const FORTIS_BEAK_DEPTH = [9.48,9.42,9.19,9.23,9.35,9.74,9.78,9.81,9.75,9.80,9.71,9.66,9.62,9.48,9.31,9.31,9.28,9.26,9.21,9.19,9.18,9.20,9.10,9.15,9.12,9.11,9.14,9.18,9.02,9.07,9.12,9.19,8.68,8.63,8.62,8.57,8.51,8.52,8.57,8.65];
+
+const PETS_AGE = [0.0,0.023675915,0.042009998,0.135269508,0.190503159,0.271188085,0.29669469,0.338587181,0.392215469,0.459632994,0.487280106,0.540621032,0.620793133,0.647689282,0.89044344,0.944881022,1.00999353,1.213960955,1.308070856,1.349981975,1.429579003,1.55];
+const PETS_SIZE = [2.053377778,2.067,2.097083333,2.190073333,2.370077778,2.139616667,2.255591667,2.364942857,2.351446875,2.2506625,2.287811111,2.222703571,2.228297059,2.167117647,2.416429412,2.4838625,2.4846125,2.493807692,2.50754,2.506711765,2.469034615,2.382072];
+
+// ---------- Rounds ----------
+// `rateUnitLabel` names the per-round unit. `rateInDarwins(rate)` converts to darwins for the tally.
+// LTEE: 1 generation ≈ 1 day ≈ 2.74e-9 MY. Trait ratio form → darwins.
+// Grants: 1 year = 1e-6 MY. Trait ratio form → darwins.
+// PETS: already MY; values appear untransformed "linear" but are small, so treat as native Δ/MY.
+const LTEE_GEN_PER_MY = 1 / 2.74e-9;   // 3.65e8 gens per MY
+
+const ROUNDS = [
+  {
+    kind: "ltee",
+    label: "LTEE Ara+1 fitness, 500-generation intervals",
+    scenario: "The finest-grained window available in Wiser et al. 2013. For every pair of adjacent sampling points 500 generations apart, compute the per-1000-generation change in fitness.",
+    xs: LTEE_ARA1_GEN, ys: LTEE_ARA1_FIT,
+    interval: 500,
+    rateUnitLabel: "Δ fitness per 1000 gens",
+    rateUnitScale: 1000, // divide Δx by this to get per-1000-gens
+    yLabel: "relative fitness",
+    xLabel: "generation",
+  },
+  {
+    kind: "ltee",
+    label: "LTEE Ara+1 fitness, 5000-generation intervals",
+    scenario: "Now slide a wider window over the same data. For every pair of points 5000 generations apart, compute the per-1000-generation change.",
+    xs: LTEE_ARA1_GEN, ys: LTEE_ARA1_FIT,
+    interval: 5000,
+    rateUnitLabel: "Δ fitness per 1000 gens",
+    rateUnitScale: 1000,
+    yLabel: "relative fitness",
+    xLabel: "generation",
+  },
+  {
+    kind: "ltee",
+    label: "LTEE Ara+1 fitness, 20,000-generation intervals",
+    scenario: "Finally, 20,000-generation windows. Only three non-overlapping windows fit (0–20k, 15k–35k, 30k–50k). What does the median rate per 1000 generations look like at this time scale?",
+    xs: LTEE_ARA1_GEN, ys: LTEE_ARA1_FIT,
+    interval: 20000,
+    rateUnitLabel: "Δ fitness per 1000 gens",
+    rateUnitScale: 1000,
+    yLabel: "relative fitness",
+    xLabel: "generation",
+  },
+  {
+    kind: "grants",
+    label: "Fortis beak depth, 1-year intervals",
+    scenario: "Thirty-nine year-over-year changes in mean beak depth from Daphne Major. Most years are quiet; the 1976→1978 drought and the 2004→2005 displacement are exceptions. Guess the median |rate| — not the mean.",
+    xs: FORTIS_YEARS, ys: FORTIS_BEAK_DEPTH,
+    interval: 1,
+    rateUnitLabel: "mm / year",
+    rateUnitScale: 1,
+    yLabel: "beak depth (mm)",
+    xLabel: "year",
+  },
+  {
+    kind: "pets",
+    label: "Hyopsodus body size, ~0.5 MY intervals",
+    scenario: "Early Eocene mammalian body-size series spanning 1.55 MY of the Willwood Formation. For every pair of sampling points at least 0.5 MY apart, compute the per-MY change.",
+    xs: PETS_AGE, ys: PETS_SIZE,
+    interval: 0.5,
+    rateUnitLabel: "Δ(trait) / MY",
+    rateUnitScale: 1,
+    yLabel: "trait (scaled)",
+    xLabel: "age (MY)",
+  },
+];
+
+const state = { round: 0, history: [] };
+
+// ---------- DOM helpers ----------
+function makeEl(tag, attrs, children) {
+  const el = document.createElement(tag);
+  if (attrs) for (const k in attrs) {
+    if (k === "class") el.className = attrs[k];
+    else if (k === "html") el.innerHTML = attrs[k];
+    else el.setAttribute(k, attrs[k]);
+  }
+  if (children) for (const c of children) {
+    if (c) el.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
+  }
+  return el;
+}
+function svgEl(tag, attrs) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+// ---------- Rate computation ----------
+// For each pair (i, j) with x_j - x_i within [interval*0.9, interval*1.1], compute
+// rate = (y_j - y_i) / (x_j - x_i) in native units.
+function computeRates(r) {
+  const rates = [];
+  const windowXMid = [];
+  const minDt = r.interval * 0.9;
+  const maxDt = r.interval * 1.1;
+  for (let i = 0; i < r.xs.length; i++) {
+    for (let j = i + 1; j < r.xs.length; j++) {
+      const dt = r.xs[j] - r.xs[i];
+      if (dt < minDt) continue;
+      if (dt > maxDt) break;
+      const rate = (r.ys[j] - r.ys[i]) / dt * r.rateUnitScale;
+      rates.push(rate);
+      windowXMid.push((r.xs[i] + r.xs[j]) / 2);
+    }
+  }
+  return { rates, windowXMid };
+}
+
+function rateInDarwins(r, rate) {
+  // rate is per r.rateUnitScale in native time unit. Convert to change-per-MY.
+  if (r.kind === "ltee") {
+    // rate is per 1000 gens. Convert fitness ratio to darwins: d = Δ ln(x) / Δt_MY
+    // Native: Δ_fitness / 1000 gens. Approximate Δ ln(x) ≈ Δx / x_mean ≈ Δx / 1.3.
+    // 1000 gens ≈ 1000 * 2.74e-9 MY = 2.74e-6 MY.
+    return Math.abs(rate) / 1.3 / 2.74e-6;
+  }
+  if (r.kind === "grants") {
+    // rate is mm/year. Δ ln(depth) per MY = (rate/depth_mean) / 1e-6
+    // depth mean ≈ 9.2 mm
+    return Math.abs(rate) / 9.2 / 1e-6;
+  }
+  if (r.kind === "pets") {
+    // rate is Δ(trait)/MY. Assume trait is already on a log-like scale; treat as darwins directly.
+    return Math.abs(rate);
+  }
+  return Math.abs(rate);
+}
+
+// ---------- Stats ----------
+function median(arr) {
+  const a = arr.slice().sort((x, y) => x - y);
+  const n = a.length;
+  if (n === 0) return 0;
+  if (n % 2 === 1) return a[(n - 1) / 2];
+  return (a[n / 2 - 1] + a[n / 2]) / 2;
+}
+
+// ---------- Rendering ----------
+function renderRound() {
+  const container = document.getElementById("round-container");
+  container.innerHTML = "";
+
+  const r = ROUNDS[state.round];
+  if (!r) {
+    showPosttest();
+    return;
+  }
+
+  container.appendChild(makeEl("div", { class: "round-head" }, [
+    makeEl("span", { class: "round-badge" }, [`Round ${state.round + 1} of ${ROUNDS.length}`]),
+    makeEl("h2", null, [r.label]),
+  ]));
+  container.appendChild(makeEl("p", { class: "round-sub" }, [r.scenario]));
+
+  const grid = makeEl("div", { class: "grid" });
+
+  // Left: scatter of raw series with a sample window highlighted
+  const left = makeEl("div", null);
+  const chartPanel = makeEl("div", { class: "panel" });
+  chartPanel.appendChild(makeEl("h3", null, ["Trait time series (sample window highlighted)"]));
+
+  const { rates } = computeRates(r);
+
+  const params = makeEl("div", { class: "params" }, [
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["interval"]), makeEl("div", { class: "v" }, [String(r.interval)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["# windows"]), makeEl("div", { class: "v" }, [String(rates.length)])]),
+    makeEl("div", null, [makeEl("div", { class: "k" }, ["rate units"]), makeEl("div", { class: "v" }, [r.rateUnitLabel])]),
+  ]);
+  chartPanel.appendChild(params);
+
+  const seriesSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 260", preserveAspectRatio: "none" });
+  chartPanel.appendChild(seriesSvg);
+
+  const histPanel = makeEl("div", { class: "panel", id: "histPanel", style: "margin-top:14px; display:none;" });
+  histPanel.appendChild(makeEl("h3", null, [`Distribution of |rate| across the ${rates.length} windows`]));
+  const histSvg = svgEl("svg", { class: "chart", viewBox: "0 0 700 240", preserveAspectRatio: "none" });
+  histPanel.appendChild(histSvg);
+  left.appendChild(chartPanel);
+  left.appendChild(histPanel);
+  grid.appendChild(left);
+
+  // Right: guess
+  const right = makeEl("div", null);
+  const guessPanel = makeEl("div", { class: "panel" });
+  guessPanel.appendChild(makeEl("h3", null, ["Your prediction"]));
+  guessPanel.appendChild(makeEl("p", { style: "margin:0 0 10px 0; font-size:13.5px;" }, [
+    `For all ${rates.length} sliding windows of length ${r.interval}, the scaffold will compute the rate (${r.rateUnitLabel}) and report the median |rate|. Predict that median.`
+  ]));
+
+  const guessRow = makeEl("div", { class: "guess-row" }, [
+    makeEl("label", { for: "guessInput" }, [`Predicted median |rate| (${r.rateUnitLabel}):`]),
+    makeEl("input", { type: "number", id: "guessInput", step: "0.001", min: "0", placeholder: "0" }),
+  ]);
+  guessPanel.appendChild(guessRow);
+  guessPanel.appendChild(makeEl("p", { class: "guess-hint" }, [
+    `Tip: estimate from the chart. Pick two points ${r.interval} apart, read |y₂−y₁|/(x₂−x₁), multiply by ${r.rateUnitScale}.`
+  ]));
+
+  const submitBtn = makeEl("button", { class: "submit", id: "submitBtn", disabled: "" }, ["Submit prediction"]);
+  guessPanel.appendChild(submitBtn);
+
+  const revealBox = makeEl("div", { class: "reveal", id: "revealBox" });
+  guessPanel.appendChild(revealBox);
+
+  const nextBtn = makeEl("button", { class: "next-btn", id: "nextBtn" }, ["Next round →"]);
+  guessPanel.appendChild(nextBtn);
+
+  right.appendChild(guessPanel);
+  grid.appendChild(right);
+  container.appendChild(grid);
+
+  // Draw
+  drawSeries(seriesSvg, r, null);
+
+  const input = document.getElementById("guessInput");
+  input.addEventListener("input", () => {
+    const v = parseFloat(input.value);
+    submitBtn.disabled = !(v >= 0);
+  });
+  submitBtn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (!(v >= 0)) return;
+    submitBtn.disabled = true; input.disabled = true;
+
+    const absRates = rates.map(Math.abs);
+    const med = median(absRates);
+    const minR = Math.min(...absRates), maxR = Math.max(...absRates);
+    const q25 = quantile(absRates, 0.25), q75 = quantile(absRates, 0.75);
+    const darwins = rateInDarwins(r, med);
+
+    state.history.push({ round: r, guess: v, median: med, min: minR, max: maxR, q25, q75, darwins });
+
+    histPanel.style.display = "block";
+    drawHist(histSvg, r, absRates, med, v);
+    drawSeries(seriesSvg, r, { median: med });
+
+    revealBox.innerHTML = "";
+    revealBox.classList.add("shown");
+    revealBox.appendChild(makeEl("div", { class: "big" }, [
+      `median |rate|: ${fmt(med)} ${r.rateUnitLabel}  ·  your guess: ${fmt(v)}`
+    ]));
+    revealBox.appendChild(makeEl("div", { class: "err" }, [
+      `range across ${absRates.length} windows: ${fmt(minR)} – ${fmt(maxR)} ${r.rateUnitLabel}  ·  IQR: ${fmt(q25)} – ${fmt(q75)}`
+    ]));
+    revealBox.appendChild(makeEl("div", { class: "err" }, [
+      `equivalent in darwins: ${fmt(darwins, 2)} darwins (ln-change per million years)`
+    ]));
+    const ratio = v > 0 ? (v / med) : NaN;
+    if (!isNaN(ratio)) {
+      const off = ratio > 1 ? `${ratio.toFixed(2)}× too high` : `${(1 / ratio).toFixed(2)}× too low`;
+      revealBox.appendChild(makeEl("p", null, [`You were ${off}.`]));
+    }
+
+    nextBtn.classList.add("shown");
+    drawTally();
+  });
+  nextBtn.addEventListener("click", () => { state.round++; renderRound(); drawTally(); });
+}
+
+function fmt(x, d) {
+  if (x === 0) return "0";
+  const abs = Math.abs(x);
+  const dec = d !== undefined ? d : (abs < 0.001 ? 5 : abs < 0.01 ? 4 : abs < 1 ? 3 : abs < 10 ? 2 : 1);
+  return x.toFixed(dec);
+}
+function quantile(a, q) {
+  const s = a.slice().sort((x, y) => x - y);
+  const n = s.length;
+  const i = q * (n - 1);
+  const lo = Math.floor(i), hi = Math.ceil(i);
+  if (lo === hi) return s[lo];
+  return s[lo] + (i - lo) * (s[hi] - s[lo]);
+}
+
+// ---------- Draw series ----------
+function drawSeries(svg, round, opts) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 260;
+  const mL = 56, mR = 22, mT = 16, mB = 38;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+  const xs = round.xs, ys = round.ys;
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys) - 0.02 * (Math.max(...ys) - Math.min(...ys) + 0.01);
+  const yMax = Math.max(...ys) + 0.02 * (Math.max(...ys) - Math.min(...ys) + 0.01);
+  const xScale = v => mL + ((v - xMin) / (xMax - xMin || 1)) * plotW;
+  const yScale = v => mT + ((yMax - v) / (yMax - yMin || 1)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+  for (let i = 0; i <= 4; i++) {
+    const v = yMin + (i / 4) * (yMax - yMin);
+    const y = yScale(v);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = v.toFixed(2);
+    svg.appendChild(t);
+  }
+  const yl = svgEl("text", { x: 14, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 14 ${mT + plotH / 2})` });
+  yl.textContent = round.yLabel;
+  svg.appendChild(yl);
+  for (let i = 0; i <= 4; i++) {
+    const v = xMin + (i / 4) * (xMax - xMin);
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = v < 10 ? v.toFixed(2) : Math.round(v);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = round.xLabel;
+  svg.appendChild(xl);
+
+  // Series
+  let d = "";
+  for (let i = 0; i < xs.length; i++) d += (i === 0 ? "M" : "L") + xScale(xs[i]).toFixed(1) + "," + yScale(ys[i]).toFixed(1);
+  svg.appendChild(svgEl("path", { d, fill: "none", stroke: "#1d1d1b", "stroke-width": "1.3" }));
+  for (let i = 0; i < xs.length; i++) svg.appendChild(svgEl("circle", { cx: xScale(xs[i]), cy: yScale(ys[i]), r: 2.6, fill: "#1d1d1b" }));
+
+  // Highlight a sample window of length `interval` near the start
+  const iStart = 0;
+  let iEnd = xs.length - 1;
+  for (let j = iStart + 1; j < xs.length; j++) {
+    if (xs[j] - xs[iStart] >= round.interval * 0.9 && xs[j] - xs[iStart] <= round.interval * 1.1) {
+      iEnd = j;
+      break;
+    }
+  }
+  const xA = xScale(xs[iStart]), xB = xScale(xs[iEnd]);
+  svg.appendChild(svgEl("rect", { x: xA, y: mT, width: xB - xA, height: plotH, fill: "rgba(47,107,143,0.08)", stroke: "#2f6b8f", "stroke-width": "1", "stroke-dasharray": "2 3" }));
+  const winLab = svgEl("text", { x: (xA + xB) / 2, y: mT + 14, "font-size": "11", fill: "#2f6b8f", "text-anchor": "middle" });
+  winLab.textContent = `sample window (Δx ≈ ${round.interval})`;
+  svg.appendChild(winLab);
+}
+
+// ---------- Draw rate histogram ----------
+function drawHist(svg, round, absRates, med, guess) {
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 700, H = 240;
+  const mL = 50, mR = 20, mT = 16, mB = 38;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+  const maxR = Math.max(...absRates) * 1.05;
+  const xScale = v => mL + (v / maxR) * plotW;
+  const nBins = Math.min(30, Math.max(10, Math.floor(absRates.length / 2)));
+  const binW = maxR / nBins;
+  const bins = new Array(nBins).fill(0);
+  for (const r of absRates) {
+    let idx = Math.floor(r / binW);
+    if (idx >= nBins) idx = nBins - 1;
+    if (idx < 0) idx = 0;
+    bins[idx]++;
+  }
+  const maxBin = Math.max(...bins);
+  const yScale = c => mT + plotH - (c / maxBin) * (plotH - 4);
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1.25" }));
+  for (let i = 0; i <= 4; i++) {
+    const v = (i / 4) * maxR;
+    const x = xScale(v);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT + plotH, y2: mT + plotH + 4, stroke: "#1d1d1b" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = fmt(v);
+    svg.appendChild(t);
+  }
+  const xl = svgEl("text", { x: mL + plotW / 2, y: H - 6, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xl.textContent = `|rate| (${round.rateUnitLabel})`;
+  svg.appendChild(xl);
+
+  for (let i = 0; i < nBins; i++) {
+    const vLow = i * binW;
+    const x0 = xScale(vLow);
+    const x1 = xScale(vLow + binW);
+    const y = yScale(bins[i]);
+    svg.appendChild(svgEl("rect", { x: x0, y, width: Math.max(x1 - x0 - 0.5, 0.5), height: mT + plotH - y, fill: "#d8d8d4" }));
+  }
+
+  // Median and guess lines
+  svg.appendChild(svgEl("line", { x1: xScale(med), x2: xScale(med), y1: mT, y2: mT + plotH, stroke: "#1d1d1b", "stroke-width": "2.5" }));
+  const ml = svgEl("text", { x: xScale(med), y: mT + 14, "font-size": "11", fill: "#1d1d1b", "text-anchor": "start", "font-weight": "600" });
+  ml.textContent = ` median = ${fmt(med)}`;
+  svg.appendChild(ml);
+
+  const gClamped = Math.min(Math.max(guess, 0), maxR * 0.98);
+  svg.appendChild(svgEl("line", { x1: xScale(gClamped), x2: xScale(gClamped), y1: mT, y2: mT + plotH, stroke: "#b23a48", "stroke-width": "2", "stroke-dasharray": "4 3" }));
+  const gl = svgEl("text", { x: xScale(gClamped), y: mT + 28, "font-size": "11", fill: "#b23a48", "text-anchor": "start" });
+  gl.textContent = ` your guess = ${fmt(guess)}`;
+  svg.appendChild(gl);
+}
+
+// ---------- Tally: log rate vs. log interval ----------
+function drawTally() {
+  const svg = document.getElementById("tallySvg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const W = 1000, H = 280;
+  const mL = 66, mR = 22, mT = 18, mB = 58;
+  const plotW = W - mL - mR, plotH = H - mT - mB;
+
+  // x = log10(interval in years); y = log10(median darwins)
+  // Convert interval to years per round:
+  function intervalYears(r) {
+    if (r.kind === "ltee") return r.interval * (1 / 365);  // LTEE ≈ 6.6 gen/day, so 1 gen ≈ 0.15 day ≈ 4e-4 year
+    if (r.kind === "grants") return r.interval;
+    if (r.kind === "pets") return r.interval * 1e6;
+  }
+
+  const xs = ROUNDS.map(intervalYears);
+  const xLogMin = Math.log10(Math.min(...xs)) - 1;
+  const xLogMax = Math.log10(Math.max(...xs)) + 1;
+  const yLogMin = -2, yLogMax = 7;
+  const xScale = v => mL + ((v - xLogMin) / (xLogMax - xLogMin)) * plotW;
+  const yScale = v => mT + ((yLogMax - v) / (yLogMax - yLogMin)) * plotH;
+
+  svg.appendChild(svgEl("rect", { x: mL, y: mT, width: plotW, height: plotH, fill: "#fff", stroke: "#1d1d1b", "stroke-width": "1" }));
+
+  // Gridlines
+  for (let lx = Math.ceil(xLogMin); lx <= Math.floor(xLogMax); lx++) {
+    const x = xScale(lx);
+    svg.appendChild(svgEl("line", { x1: x, x2: x, y1: mT, y2: mT + plotH, stroke: "#ececea" }));
+    const t = svgEl("text", { x, y: mT + plotH + 18, "text-anchor": "middle", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(lx);
+    svg.appendChild(t);
+  }
+  const xlLabel = svgEl("text", { x: mL + plotW / 2, y: H - 22, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle" });
+  xlLabel.textContent = "interval length (years, log scale)";
+  svg.appendChild(xlLabel);
+  // Anchor labels at bottom
+  const anchors = [
+    { years: 0.1, label: "day" },
+    { years: 1, label: "year" },
+    { years: 100, label: "century" },
+    { years: 1e6, label: "MY" },
+  ];
+  for (const a of anchors) {
+    const x = xScale(Math.log10(a.years));
+    if (x < mL || x > mL + plotW) continue;
+    const t = svgEl("text", { x, y: mT + plotH + 34, "text-anchor": "middle", "font-size": "10.5", fill: "#6b6b68", "font-style": "italic" });
+    t.textContent = a.label;
+    svg.appendChild(t);
+  }
+
+  for (let ly = yLogMin; ly <= yLogMax; ly++) {
+    const y = yScale(ly);
+    svg.appendChild(svgEl("line", { x1: mL, x2: mL + plotW, y1: y, y2: y, stroke: "#ececea" }));
+    const t = svgEl("text", { x: mL - 6, y: y + 4, "text-anchor": "end", "font-size": "11", fill: "#1d1d1b", "font-family": "ui-monospace, Menlo, monospace" });
+    t.textContent = "10" + supscript(ly);
+    svg.appendChild(t);
+  }
+  const ylLabel = svgEl("text", { x: 14, y: mT + plotH / 2, "font-size": "12", fill: "#1d1d1b", "text-anchor": "middle", transform: `rotate(-90 14 ${mT + plotH / 2})` });
+  ylLabel.textContent = "median |rate| (darwins, log scale)";
+  svg.appendChild(ylLabel);
+
+  for (let i = 0; i < ROUNDS.length; i++) {
+    const r = ROUNDS[i];
+    const h = state.history[i];
+    const lx = Math.log10(intervalYears(r));
+
+    // Round label at top
+    const lab = svgEl("text", { x: xScale(lx), y: mT - 4, "text-anchor": "middle", "font-size": "10", fill: "#6b6b68" });
+    lab.textContent = `R${i + 1}`;
+    svg.appendChild(lab);
+
+    if (!h) continue;
+    const ly = Math.log10(h.darwins);
+    const yClamped = Math.min(Math.max(ly, yLogMin), yLogMax);
+    svg.appendChild(svgEl("circle", { cx: xScale(lx), cy: yScale(yClamped), r: 6, fill: r.kind === "ltee" ? "#1d1d1b" : (r.kind === "grants" ? "#b23a48" : "#c28a2b") }));
+  }
+
+  // Line connecting LTEE rounds (1,2,3) — Gingerich's decline
+  const lteeRounds = [0, 1, 2].filter(i => state.history[i]);
+  if (lteeRounds.length >= 2) {
+    let d = "";
+    for (const i of lteeRounds) {
+      const r = ROUNDS[i], h = state.history[i];
+      const lx = Math.log10(intervalYears(r));
+      const ly = Math.min(Math.max(Math.log10(h.darwins), yLogMin), yLogMax);
+      d += (d === "" ? "M" : "L") + xScale(lx).toFixed(1) + "," + yScale(ly).toFixed(1);
+    }
+    svg.appendChild(svgEl("path", { d, fill: "none", stroke: "#1d1d1b", "stroke-width": "1.5", "stroke-dasharray": "4 3" }));
+  }
+
+  // Legend
+  const lx = mL + 8, ly = mT + 14;
+  svg.appendChild(svgEl("circle", { cx: lx, cy: ly, r: 4, fill: "#1d1d1b" }));
+  const lt1 = svgEl("text", { x: lx + 8, y: ly + 3, "font-size": "11", fill: "#1d1d1b" }); lt1.textContent = "LTEE"; svg.appendChild(lt1);
+  svg.appendChild(svgEl("circle", { cx: lx + 58, cy: ly, r: 4, fill: "#b23a48" }));
+  const lt2 = svgEl("text", { x: lx + 66, y: ly + 3, "font-size": "11", fill: "#b23a48" }); lt2.textContent = "Grants"; svg.appendChild(lt2);
+  svg.appendChild(svgEl("circle", { cx: lx + 128, cy: ly, r: 4, fill: "#c28a2b" }));
+  const lt3 = svgEl("text", { x: lx + 136, y: ly + 3, "font-size": "11", fill: "#c28a2b" }); lt3.textContent = "PETS (Hyopsodus)"; svg.appendChild(lt3);
+}
+
+function supscript(n) {
+  const minus = n < 0 ? "⁻" : "";
+  const digits = String(Math.abs(n));
+  const map = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
+  return minus + digits.split("").map(d => map[d] || d).join("");
+}
+
+// ---------- Pretest / posttest items (placeholder draft — revise freely) ----------
+const PRETEST_ITEMS = [
+  {
+    idx: 0,
+    q: "The same evolutionary change measured over a short interval vs. a long interval will most often give a:",
+    options: ["Higher rate over the long interval.", "Higher rate over the short interval.", "Same rate either way.", "No relationship."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Averaging |\u0394| over progressively longer intervals, the |rate| typically:",
+    options: ["Increases.", "Decreases (regression toward zero).", "Stays constant.", "Becomes negative."],
+    correct: 1
+  }
+];
+
+const POSTTEST_ITEMS = [
+  {
+    idx: 0,
+    q: "Higher measured rates at shorter timescales are best explained by:",
+    options: ["Real acceleration over short times.", "Reversals and noise averaging out over long intervals.", "Measurement error increasing with time.", "Selection pressure increasing."],
+    correct: 1
+  },
+  {
+    idx: 1,
+    q: "Comparing rates between species or studies is fair only when intervals are:",
+    options: ["The same length.", "Different lengths.", "Doesn't matter.", "Always 1 generation."],
+    correct: 0
+  }
+];
+
+// ---------- Score / quiz wiring ----------
+function showPretest() {
+  document.getElementById("pretest-card").style.display = "block";
+  Quiz.render({
+    mount: "#pretest-mount",
+    group: "pretest",
+    title: "Before you start",
+    items: PRETEST_ITEMS,
+    onComplete: () => {
+      const body = document.getElementById("scaffold-body");
+      body.classList.remove("score-locked");
+      const banner = document.getElementById("scaffold-lock-note");
+      if (banner) banner.style.display = "none";
+      renderRound();
+      drawTally();
+    }
+  });
+}
+
+function showPosttest() {
+  const card = document.getElementById("posttest-card");
+  card.style.display = "block";
+  Quiz.render({
+    mount: "#posttest-mount",
+    group: "posttest",
+    title: "After the rounds, before the reveal",
+    intro: "Take these before reading the explanation below.",
+    items: POSTTEST_ITEMS,
+    onComplete: () => {
+      document.getElementById("finale").classList.add("shown");
+      Score.finish();
+      document.getElementById("finale").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  });
+  card.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+Score.init({
+  moduleId: "s14",
+  version: 1,
+  pretest: PRETEST_ITEMS.length,
+  scaffold: 0,                  // bookend pattern — no per-round bits
+  posttest: POSTTEST_ITEMS.length,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => { showPretest(); }
+});
+</script>
+</body>
+</html>
