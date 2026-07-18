@@ -152,6 +152,11 @@ def check_file(path, ledger, rows):
 
     # G8 ratchet: a term used in prose before its unlock, or a never-named term.
     for surface, canon, useq in rows:
+        # Bare single-letter aliases (gene flow's "m") collide with units and
+        # variables in prose (e.g. "100 m of chalk"); too noisy to flag. The
+        # longer alias of the same term still catches genuine uses.
+        if len(surface.strip()) <= 1:
+            continue
         if not word_hit(surface, prose_norm):
             continue
         if useq is None:
