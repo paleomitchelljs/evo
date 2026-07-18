@@ -1,78 +1,58 @@
-# evo
+# BIO 202 — Evolution simulations
 
-Interactive homework activities for BIO 202 (Evolution) at Coe College.
+Interactive homework for a conceptual evolution course (Coe College). Each lesson
+is a self-contained HTML page: progressive locked stages, a prediction gate before
+any control unlocks, canvas simulations, a live R code panel, and a submission code
+the student pastes back for the instructor to decode.
 
-These are practice instruments, not a course. The lecture sequence introduces
-the material; each activity here drills one concept — predict, then manipulate,
-then confront data that pushes back. Every activity is a single self-contained
-HTML file. No build step, no framework, no package manager. Open `index.html`
-in a browser and everything works.
-
-## Running locally
-
-Clone the repo and open `index.html` directly, or serve the folder with anything
-that speaks HTTP:
-
-```sh
-python3 -m http.server 8000
-# then visit http://localhost:8000
-```
-
-A plain static server is enough. Nothing here needs Node, Python, or R at
-runtime.
-
-## Deploying
-
-Published via GitHub Pages from the `main` branch at the repository root.
-Pushing to `main` updates the live site. The `.nojekyll` file disables Jekyll
-so paths starting with an underscore are served as-is.
+The course is **one fixed sequence taken in order**. Each unit drills a single
+reasoning move until it is the student's own; the biology is the delivery vehicle.
+The design commitments — intuition before vocabulary, read-then-predict-then-touch,
+derive-don't-hand-over, one move across many datasets — are spelled out in
+[`structurephilosophy.md`](structurephilosophy.md). Course content is grounded in
+[`notes/references/2026_lecture_outline.tex`](notes/references/2026_lecture_outline.tex).
 
 ## Layout
 
 ```
-index.html               landing page (repo root, the GitHub Pages entry point)
-app/
-  lessons/               one self-contained HTML file per activity (lesson1..34)
-  scaffolds/             single-concept drills (s01..s20)
-  assets/                shared JS (score, quiz, dag) and CSS the pages load
-data/
-  clean/                 cleaned CSV + JSON datasets the activities load
-  raw/                   original source data
-scripts/                 Python cleaners that produce data/clean/
-instructor/              browser-only grading tools (verify_code.html, aggregate.html)
-docs/
-  ideas/                 conceptual map + activity proposals
-  reviews/               pedagogy review passes (ADVERSARIAL, STEELMAN, HOMEWORK_REVIEW)
+index.html               landing page (lessons + scaffolds)
+app/lessons/lessonN.html 34 lessons, in sequence
+app/scaffolds/sNN_*.html 24 guess-and-check drills
+app/assets/score.js      the submission-code library (name -> opaque passcode)
+instructor/              verify_code.html + aggregate.html (decode student codes)
+data/clean/*.csv         real datasets used in the "real data" stages
 ```
 
-The landing page stays at the repo root so GitHub Pages serves it as the entry
-point; everything it links to lives under `app/`. From `app/lessons/` (and
-`app/scaffolds/`), activities load assets as `../assets/…`, data as
-`../../data/clean/…`, and link home as `../../index.html`.
+## The design/validation framework
 
-See **`PROJECT_PLAN.md`** for the concept index, the design commitments, and how
-new activities are added. The concepts being reinforced are drawn from
-`evolution_course_conceptual_map.md`.
+The philosophy is not self-enforcing, so it is backed by machine checks:
 
-## Pedagogy
+- [`structurephilosophy.md`](structurephilosophy.md) — the 47-unit sequence and why the shape is the shape.
+- [`BUILD_CONTRACT.md`](BUILD_CONTRACT.md) — the binding per-unit contract, the four adversarial passes, the gates.
+- [`ledger.json`](ledger.json) — the vocabulary ratchet: each term is banned until the unit that unlocks it (or forever). A 20-name budget across the course.
+- [`validate.py`](validate.py) — the gate for JSON unit specs (`python3 validate.py ledger.json units/*.json`).
+- [`scripts/check_lessons.py`](scripts/check_lessons.py) — ports the HTML-applicable gates (vocabulary ratchet at each lesson's true sequence position, giveaway-phrase ban, title-names-no-term, front/back-matter, submission wiring) to the shipped lesson HTML.
 
-Three rules shape every activity. They are not optional.
+Check every lesson:
 
-1. **Prediction before interactivity.** Controls are locked until the student
-   commits to a prediction. They predict, then test — they do not tinker first
-   and rationalize after.
-2. **Code is always visible.** Moving a slider highlights the corresponding line
-   of R. A slider is an editable named variable, not a spell.
-3. **Show, don't tell.** The aim is intuition, not vocabulary. A student should
-   be able to look at a distribution and a slider's effect and judge whether the
-   fit improved, without being handed the name of the distribution or the
-   parameter.
+```
+python3 scripts/check_lessons.py          # all 34; exits 0 when clean
+python3 scripts/check_lessons.py app/lessons/lesson7.html   # one lesson
+```
 
-Where it fits, an activity repeats one concept across several datasets, leads
-with data the student already understands before the biological case, and offers
-a "break it" mode that lets the model fail. Some activities end in a small `.R`
-edit; many don't.
+## Running
 
-## License
+Any static server works (the "real data" stages fetch `data/clean/*.csv`):
 
-Activities are licensed for classroom use. Other uses, ask.
+```
+python3 -m http.server 8000
+# then open http://localhost:8000/
+```
+
+## Submission codes
+
+`app/assets/score.js` turns a student's name into a stable passcode and packs their
+per-question bits, elapsed time, and per-stage engagement counts into one opaque,
+tamper-evident code (`lessonNvVER.base64url(cipher).mac6`). The instructor decodes
+it with `instructor/verify_code.html`. To invalidate a class's codes, rotate
+`Score.DEFAULT_SALT` and bump each module's `version`.
