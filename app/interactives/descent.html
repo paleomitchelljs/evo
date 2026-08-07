@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIO 202 — Descent</title>
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent2: #2f6b8f; --rule: #e2e0d9;
+    --bar: #e7e4da; --bar-edge: #d3d0c6; --box: #f3f1ea;
+    /* founder-chromosome identity — validated all-pairs on the --bar surface
+       (worst CVD ΔE 9.2 deutan, worst normal-vision ΔE 16.3) */
+    --f0: #2a78d6; --f1: #eb6834; --f2: #1baf7a; --f3: #4a3aa7;
+    --novo: #1d1d1b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 12px 22px; border-bottom: 1px solid var(--rule); background: var(--panel); display: flex; align-items: baseline; gap: 16px; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; }
+  header a.back:hover { color: var(--accent); }
+  header h1 { margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+
+  main { max-width: 1180px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; margin-bottom: 10px; }
+  .ctl-group { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .ctl-group input[type=range] { width: 100px; accent-color: var(--accent2); }
+  .ctl-group output { font-variant-numeric: tabular-nums; color: var(--ink); font-weight: 600; min-width: 1.8em; }
+  .btn { padding: 6px 12px; border: 1px solid var(--rule); background: #f4f2ec; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .btn:hover { border-color: var(--accent2); }
+  .btn.primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .btn.primary:hover { filter: brightness(1.06); }
+  .spacer { flex: 1 1 auto; }
+
+  /* legend — identity is never colour-alone, and it is the relief for the
+     sub-3:1 contrast of the orange and aqua dots against the bar */
+  .legend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-bottom: 10px; font-size: 11.5px; color: var(--muted); }
+  .legend .lg-title { font-weight: 600; color: var(--ink); letter-spacing: 0.01em; }
+  .legend .lg { display: inline-flex; align-items: center; gap: 5px; }
+  .legend .lg i { width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 0 0 1.4px var(--panel); }
+  .legend .lg .dia { width: 10px; height: 10px; background: var(--novo); box-shadow: 0 0 0 1.4px var(--panel); transform: rotate(45deg); border-radius: 1px; }
+  .legend .lg .hol { width: 10px; height: 10px; border-radius: 50%; border: 1.7px solid var(--muted); }
+  .legend .lg .out { width: 13px; height: 9px; border: 1.4px dashed #a5a29a; border-radius: 3px; }
+  .legend .lg-sep { width: 1px; height: 13px; background: var(--rule); }
+
+  .stage-wrap { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 6px; overflow-x: auto; }
+  svg.stage { display: block; width: 100%; height: auto; touch-action: none; }
+
+  .status { margin-top: 10px; font-size: 12.5px; color: var(--muted); min-height: 1.4em; font-variant-numeric: tabular-nums; }
+  .status b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../../index.html">← all lessons</a>
+  <h1>Descent</h1>
+</header>
+
+<main>
+  <div class="controls">
+    <div class="ctl-group">
+      <label for="offRange">Offspring</label>
+      <input type="range" id="offRange" min="2" max="6" step="1" value="4">
+      <output id="offOut">4</output>
+    </div>
+    <div class="ctl-group">
+      <label for="recRange">Recombination</label>
+      <input type="range" id="recRange" min="0" max="4" step="0.5" value="1.5">
+      <output id="recOut">1.5</output>
+    </div>
+    <div class="ctl-group">
+      <label for="muRange">New mutations</label>
+      <input type="range" id="muRange" min="0" max="0.8" step="0.1" value="0.3">
+      <output id="muOut">0.3</output>
+    </div>
+    <div class="ctl-group">
+      <label for="inbRange">Inbreeding (F)</label>
+      <input type="range" id="inbRange" min="0" max="0.25" step="0.025" value="0">
+      <output id="inbOut">0.00</output>
+    </div>
+    <button class="btn primary" id="addGen">Add generation ↓</button>
+    <button class="btn" id="resetBtn">New founders ↺</button>
+    <div class="spacer"></div>
+  </div>
+
+  <div class="legend">
+    <span class="lg-title">Ancestral mutations, by founder chromosome</span>
+    <span class="lg"><i style="background:var(--f0)"></i>P1·a</span>
+    <span class="lg"><i style="background:var(--f1)"></i>P1·b</span>
+    <span class="lg"><i style="background:var(--f2)"></i>P2·a</span>
+    <span class="lg"><i style="background:var(--f3)"></i>P2·b</span>
+    <span class="lg-sep"></span>
+    <span class="lg"><span class="dia"></span>arose after the founders</span>
+    <span class="lg"><span class="hol"></span>came in from outside</span>
+    <span class="lg-sep"></span>
+    <span class="lg"><span class="out"></span>mate from outside the pedigree</span>
+  </div>
+
+  <div class="stage-wrap">
+    <svg class="stage" id="stage" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="status" id="status"></div>
+</main>
+
+<script>
+"use strict";
+
+// ============================================================================
+// State — one diploid pedigree, founded by a single pair
+// ============================================================================
+const FCOL  = ["var(--f0)", "var(--f1)", "var(--f2)", "var(--f3)"];
+const FNAME = ["P1·a", "P1·b", "P2·a", "P2·b"];
+
+const state = {
+  off: 4,               // offspring per generation (after the founding pair)
+  crossovers: 1.5,      // expected crossovers per meiosis
+  mu: 0.3,              // expected NEW mutations per gamete
+  finb: 0,              // requested inbreeding coefficient for each mating
+  nAnc: 10,             // ancestral variants seeded on the founders -> ~5 per individual
+  sites: [],            // ancestral variants {id, pos, origin: 0..3, kind:'anc'}
+  byId: new Map(),      // id -> variant (ancestral and de novo alike)
+  gens: [],             // gens[g] = array of diploid individuals
+  sel: null,            // pinned highlight: {type:'site',id} | {type:'indiv',g,i}
+  hover: null,          // transient highlight (same shape)
+  dragOffset: {},       // key -> px x-offset
+  _novoId: 0,
+  _nextFid: 4,
+  _outId: 0,
+  loci: [],
+  _pos: [],             // every variant position taken so far, for spacing
+  _kin: new Map(),      // memoised kinship, keyed by the pair of individuals
+  _conn: [],            // per-transition mating structure, filled by layout()
+  _hitDots: [], _hitBoxes: [],
+};
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const key = (g, i) => g + "_" + i;
+const rand = (n) => Math.floor(Math.random() * n);
+const highlight = () => state.hover || state.sel;
+const genName = (g) => g === 0 ? "P" : "F" + g;
+const OUT_INK = "#6b6b68";
+const varColor = (v) => v.kind === "novo" ? "var(--novo)" : v.kind === "out" ? OUT_INK : FCOL[v.origin];
+const fmtF = (v) => v.toFixed(2).replace(/^0\./, ".");
+
+// ============================================================================
+// Simulation
+// ============================================================================
+function poisson(lambda) {
+  if (lambda <= 0) return 0;
+  const Lp = Math.exp(-lambda); let k = 0, p = 1;
+  do { k++; p *= Math.random(); } while (p > Lp);
+  return k - 1;
+}
+
+// a gamete: recombined mosaic of one individual's two homologs, carrying forward
+// whichever de novo mutations sit on the stretches it actually inherited
+function meiosis(ind) {
+  const k = poisson(state.crossovers), bps = [];
+  for (let j = 0; j < k; j++) bps.push(Math.random());
+  bps.sort((a, b) => a - b);
+  let cur = Math.random() < 0.5 ? 0 : 1, start = 0;
+  const segs = [];
+  for (const bp of bps) { if (bp <= start || bp >= 1) { cur = 1 - cur; continue; } segs.push({ start, end: bp, which: cur }); start = bp; cur = 1 - cur; }
+  segs.push({ start, end: 1, which: cur });
+
+  const novo = [];
+  for (const seg of segs) {
+    for (const m of ind.chroms[seg.which].novo) if (m.pos >= seg.start && m.pos < seg.end) novo.push(m);
+  }
+  const novoNew = new Set();
+  const nNew = poisson(state.mu);
+  for (let j = 0; j < nNew; j++) {
+    const m = { id: "n" + (state._novoId++), pos: freePos(), origin: null, kind: "novo", gen: ind.g + 1 };
+    state.byId.set(m.id, m); novo.push(m); novoNew.add(m.id);
+  }
+  novo.sort((a, b) => a.pos - b.pos);
+  return { isFounder: false, parent: ind, segs, novo, novoIds: new Set(novo.map(m => m.id)), novoNew };
+}
+
+// A variant keeps one position for the whole run, so a dot sits at the same x
+// in every individual that carries it — that is what makes the transmission
+// arcs read as vertical. Positions are therefore spaced apart once, at birth,
+// rather than nudged apart at draw time.
+const MIN_GAP = 0.05;   // 8px on a 160px bar — wider than a dot
+// inset from both ends so a dot never hangs off the edge of the bar
+const draw1 = () => 0.03 + 0.94 * Math.random();
+function freePos() {
+  let fallback = 0.5, widest = -1;
+  for (let t = 0; t < 30; t++) {
+    const p = draw1();
+    let d = Infinity;
+    for (const q of state._pos) d = Math.min(d, Math.abs(q - p));
+    if (d >= MIN_GAP) { state._pos.push(p); return p; }
+    if (d > widest) { widest = d; fallback = p; }   // saturated: take the roomiest gap
+  }
+  state._pos.push(fallback); return fallback;
+}
+
+function makeSites() {
+  const n = state.nAnc;
+  // spread origins as evenly as the count allows, then shuffle which founder
+  // chromosome picks up the remainder
+  const origins = [];
+  for (let i = 0; i < n; i++) origins.push(i % 4);
+  for (let i = origins.length - 1; i > 0; i--) { const j = rand(i + 1); [origins[i], origins[j]] = [origins[j], origins[i]]; }
+  // A fixed set of marker loci, stratified so ten dots don't clump on a 160px
+  // bar. Every ancestral variant sits on one of them, whether it came in with a
+  // founder or with an outsider — two variants may share a locus, and they can
+  // never collide on screen, because a chromosome has exactly one ancestry at
+  // any position and so can carry only one of them.
+  const loci = [];
+  for (let i = 0; i < n; i++) loci.push((i + 0.275 + 0.45 * Math.random()) / n);
+  state.loci = loci;
+  const sites = [];
+  for (let i = 0; i < n; i++) sites.push({ id: "a" + i, pos: loci[i], origin: origins[i], kind: "anc" });
+  state.sites = sites;
+  state.byId = new Map();
+  state._pos = loci.slice();
+  for (const s of sites) state.byId.set(s.id, s);
+}
+
+// What an outsider brings in: the same density a founder chromosome carries
+// (nAnc/4 loci on average), tagged to its own chromosome so it never reads as
+// founder ancestry. Existing chromosomes cannot carry these, so no cached dot
+// set goes stale when they are added mid-run.
+function seedOutsiderSites(fid) {
+  for (const pos of state.loci) {
+    if (Math.random() >= 0.25) continue;
+    const v = { id: "o" + (state._outId++), pos, origin: fid, kind: "out" };
+    state.sites.push(v); state.byId.set(v.id, v);
+  }
+}
+
+function newIndiv(g, i, chroms, parents) {
+  const ind = { g, i, chroms, parents, isFounder: !parents, _children: [] };
+  if (parents) for (const p of parents) p._children.push(ind);
+  return ind;
+}
+
+function founderChrom(fid) { return { isFounder: true, fid, novo: [], novoIds: new Set(), novoNew: new Set() }; }
+
+function makeFounders() {
+  // two founders, four distinct founder chromosomes (0,1) and (2,3)
+  return [
+    newIndiv(0, 0, [founderChrom(0), founderChrom(1)], null),
+    newIndiv(0, 1, [founderChrom(2), founderChrom(3)], null),
+  ];
+}
+
+// ============================================================================
+// Kinship — the standard recursion. f(a,b) is the probability that an allele
+// drawn from a and one drawn from b are identical by descent; an individual's
+// inbreeding coefficient F is exactly the kinship of its two parents.
+// ============================================================================
+const MAX_F = 0.25;          // full sibs out of an unrelated pair
+const kinKey = (a, b) => { const p = key(a.g, a.i), q = key(b.g, b.i); return p < q ? p + "|" + q : q + "|" + p; };
+
+function kinship(a, b) {
+  if (a === b) return 0.5 * (1 + inbreeding(a));
+  const kk = kinKey(a, b);
+  if (state._kin.has(kk)) return state._kin.get(kk);
+  let x = a, y = b;
+  if (x.g < y.g) { x = b; y = a; }                 // recurse on the younger one
+  const v = x.parents ? 0.5 * (kinship(x.parents[0], y) + kinship(x.parents[1], y)) : 0;
+  state._kin.set(kk, v);
+  return v;
+}
+const inbreeding = (ind) => ind.parents ? kinship(ind.parents[0], ind.parents[1]) : 0;
+
+// An outsider: unrelated to everyone, drawn from a large outbred population.
+// Its chromosomes get founder ids of their own, past the founding pair's 0..3,
+// so they carry none of the seeded ancestral variants — an immigrant stretch
+// shows up empty, and the founder colours visibly thin out as gene flow proceeds.
+function newOutsider(g, i) {
+  const fa = state._nextFid++, fb = state._nextFid++;
+  seedOutsiderSites(fa); seedOutsiderSites(fb);
+  const ind = newIndiv(g, i, [founderChrom(fa), founderChrom(fb)], null);
+  ind.outsider = true;
+  return ind;
+}
+
+// Where each mating partner is drawn from. The slider sets how often a mate
+// comes from inside the pedigree: at F = 0 every partner is an unrelated
+// outsider, at F = MAX_F every partner is the closest relative on offer. In
+// between it is a coin weighted by the slider, so relatedness is genuinely a
+// distribution over matings rather than one fixed policy.
+//
+// The founding pair still mates with itself to make F1 — that premise is the
+// whole point of the picture — so gene flow begins at F2.
+function breedGeneration() {
+  const prev = state.gens[state.gens.length - 1];
+  const residents = prev.slice();          // outsiders joining now must not become focal
+  const g = state.gens.length, gen = [];
+  const inside = state.finb / MAX_F;
+  const pool = [], cap = 2;                // reuse outsiders past the cap, to bound the width
+  for (let i = 0; i < state.off; i++) {
+    let focal, mate = null;
+    if (g === 1) { focal = residents[0]; mate = residents[1]; }
+    else {
+      focal = residents[rand(residents.length)];
+      if (Math.random() < inside && residents.length > 1) {
+        let best = -1;
+        for (const cand of residents) {
+          if (cand === focal) continue;
+          const f = kinship(focal, cand);
+          if (f > best) { best = f; mate = cand; }
+        }
+      }
+      if (!mate) {
+        if (pool.length >= cap) mate = pool[rand(pool.length)];
+        else { mate = newOutsider(g - 1, prev.length); prev.push(mate); pool.push(mate); }
+      }
+    }
+    gen.push(newIndiv(g, i, [meiosis(focal), meiosis(mate)], [focal, mate]));
+  }
+  state.gens.push(gen);
+}
+
+function resetSim(nGens = 4) {
+  state._novoId = 0;
+  state._nextFid = 4;         // outsiders' chromosomes start past the founding pair's 0..3
+  state._outId = 0;
+  state._kin = new Map();
+  makeSites();
+  state.gens = [makeFounders()];
+  state.dragOffset = {};
+  for (let k = 1; k < nGens; k++) breedGeneration();
+  state.sel = null; state.hover = null;
+}
+
+// ============================================================================
+// Ancestry of a chromosome (which of the 4 founder chromosomes at position x)
+// ============================================================================
+function segAt(segs, x) { for (const s of segs) if (x >= s.start && x < s.end) return s; return segs[segs.length - 1]; }
+
+function founderIntervals(chrom) {
+  if (chrom._fint) return chrom._fint;
+  let out;
+  if (chrom.isFounder) out = [{ start: 0, end: 1, fid: chrom.fid }];
+  else {
+    out = [];
+    for (const seg of chrom.segs) {
+      for (const pi of founderIntervals(chrom.parent.chroms[seg.which])) {
+        const st = Math.max(seg.start, pi.start), en = Math.min(seg.end, pi.end);
+        if (en > st) out.push({ start: st, end: en, fid: pi.fid });
+      }
+    }
+    out.sort((a, b) => a.start - b.start);
+    const m = [];
+    for (const iv of out) { const last = m[m.length - 1]; if (last && last.fid === iv.fid && Math.abs(last.end - iv.start) < 1e-9) last.end = iv.end; else m.push({ ...iv }); }
+    out = m;
+  }
+  chrom._fint = out; return out;
+}
+function fidAt(iv, x) { for (const s of iv) if (x >= s.start && x < s.end) return s.fid; return iv[iv.length - 1].fid; }
+
+function carries(chrom, v) {
+  if (v.kind === "novo") return chrom.novoIds.has(v.id);
+  return fidAt(founderIntervals(chrom), v.pos) === v.origin;
+}
+function dotsOf(chrom) {
+  if (chrom._dots) return chrom._dots;
+  const iv = founderIntervals(chrom), res = [];
+  for (const site of state.sites) if (fidAt(iv, site.pos) === site.origin) res.push(site);
+  for (const m of chrom.novo) res.push(m);
+  res.sort((a, b) => a.pos - b.pos);
+  chrom._dots = res; return res;
+}
+
+function forEachIndiv(fn) { for (const gen of state.gens) for (const ind of gen) fn(ind); }
+
+// ============================================================================
+// Layout
+// ============================================================================
+const LAY = {
+  leftPad: 66, rightPad: 22, topPad: 24, botPad: 18,
+  barW: 160, barH: 11, chromGap: 6, gap: 46, dotR: 3.4, boxPad: 6,
+  stubDown: 14, laneStep: 8, sibUp: 14,
+};
+const boxH = () => 2 * LAY.barH + LAY.chromGap + 2 * LAY.boxPad;
+
+function maxSlots() { let m = 2; for (const gen of state.gens) m = Math.max(m, gen.length); return m; }
+
+// children of one generation, grouped by the pair that produced them
+function groupMatings(gen) {
+  const map = new Map();
+  for (const ind of gen) {
+    if (!ind.parents) continue;        // outsiders sitting in this row bred into the next one
+    const [q1, q2] = ind.parents;
+    const a = q1.i <= q2.i ? q1 : q2, b = q1.i <= q2.i ? q2 : q1;
+    const k = a.i + ":" + b.i;
+    if (!map.has(k)) map.set(k, { p1: a, p2: b, kids: [] });
+    map.get(k).kids.push(ind);
+  }
+  return [...map.values()];
+}
+
+// Pairs whose routing overlaps horizontally get stacked into separate lanes.
+// The lane index drives BOTH the mating bar (measured down from the parents)
+// and the sibship line (measured up from the children), so no two pairs ever
+// share a horizontal — that is what makes a line traceable by eye.
+function assignLanes(pairs) {
+  const sorted = [...pairs].sort((a, b) => a._s1 - b._s1);
+  const laneEnd = [];
+  for (const p of sorted) {
+    let l = 0;
+    while (l < laneEnd.length && laneEnd[l] > p._s1 - 10) l++;
+    p._lane = l; laneEnd[l] = p._s2;
+  }
+  return laneEnd.length || 1;
+}
+
+// orthogonal polyline with rounded corners
+function poly(pts, r = 5) {
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const [px, py] = pts[i - 1], [cx, cy] = pts[i], [nx, ny] = pts[i + 1];
+    const d1 = Math.hypot(cx - px, cy - py), d2 = Math.hypot(nx - cx, ny - cy);
+    if (d1 < 0.01 || d2 < 0.01) continue;
+    const rr = Math.min(r, d1 / 2, d2 / 2);
+    d += ` L${cx + (px - cx) / d1 * rr},${cy + (py - cy) / d1 * rr}`;
+    d += ` Q${cx},${cy} ${cx + (nx - cx) / d2 * rr},${cy + (ny - cy) / d2 * rr}`;
+  }
+  const last = pts[pts.length - 1];
+  return d + ` L${last[0]},${last[1]}`;
+}
+
+function layout() {
+  const cols = maxSlots(), colW = LAY.barW + LAY.gap;
+
+  // x first — it does not depend on how tall the line bands need to be
+  for (const gen of state.gens) {
+    const startX = LAY.leftPad + (cols - gen.length) / 2 * colW;
+    for (const ind of gen) ind._x = startX + ind.i * colW + (state.dragOffset[key(ind.g, ind.i)] || 0);
+  }
+
+  // mating structure, then the band each transition needs
+  state._conn = [];
+  const gapBefore = [0];
+  for (let g = 1; g < state.gens.length; g++) {
+    const pairs = groupMatings(state.gens[g]);
+    for (const p of pairs) {
+      p._x1 = Math.min(p.p1._x, p.p2._x) + LAY.barW / 2;
+      p._x2 = Math.max(p.p1._x, p.p2._x) + LAY.barW / 2;
+      p._kidXs = p.kids.map(k => k._x + LAY.barW / 2);
+      const cx = p._kidXs.reduce((s, v) => s + v, 0) / p._kidXs.length;
+      p._dropX = Math.max(p._x1, Math.min(p._x2, cx));   // drop where the sibship actually sits
+      p._s1 = Math.min(p._x1, ...p._kidXs);              // full horizontal footprint
+      p._s2 = Math.max(p._x2, ...p._kidXs);
+    }
+    const nLanes = assignLanes(pairs);
+    state._conn.push({ g, pairs });
+    gapBefore[g] = LAY.stubDown + LAY.sibUp + (2 * (nLanes - 1) + 1) * LAY.laneStep;
+  }
+
+  // now y
+  let y = LAY.topPad;
+  for (let g = 0; g < state.gens.length; g++) {
+    for (const ind of state.gens[g]) ind._y = y;
+    y += boxH() + (g + 1 < state.gens.length ? gapBefore[g + 1] : 0);
+  }
+
+  // resolve each pair's routing geometry once, so the highlight layer reuses it
+  for (const { g, pairs } of state._conn) {
+    const pb = state.gens[g - 1][0]._y - LAY.boxPad + boxH();
+    const ct = state.gens[g][0]._y - LAY.boxPad;
+    for (const p of pairs) {
+      p._pb = pb; p._ct = ct;
+      p._laneY = pb + LAY.stubDown + p._lane * LAY.laneStep;
+      p._sibY = ct - LAY.sibUp - p._lane * LAY.laneStep;
+    }
+  }
+
+  return { W: LAY.leftPad + cols * colW - LAY.gap + LAY.rightPad, H: y + LAY.botPad };
+}
+const chromY = (ind, slot) => ind._y + slot * (LAY.barH + LAY.chromGap);
+const posX = (ind, x) => ind._x + x * LAY.barW;
+
+// ============================================================================
+// Highlight computation
+// ============================================================================
+function siteHighlight(id) {
+  const v = state.byId.get(id);
+  if (!v) return null;
+  const carrierKeys = new Set();
+  const edges = [];                // transmission: {childInd,childSlot,parentInd,parentSlot}
+  let nChrom = 0, homo = 0, arose = null; const indSet = new Set();
+  forEachIndiv(ind => {
+    let cnt = 0;
+    for (let slot = 0; slot < 2; slot++) {
+      const chrom = ind.chroms[slot];
+      if (!carries(chrom, v)) continue;
+      carrierKeys.add(key(ind.g, ind.i) + "_" + slot); nChrom++; cnt++;
+      const isNewHere = v.kind === "novo" && chrom.novoNew.has(v.id);
+      if (isNewHere && !arose) arose = ind;
+      if (!chrom.isFounder && !isNewHere) edges.push({ childInd: ind, childSlot: slot, parentInd: chrom.parent, parentSlot: segAt(chrom.segs, v.pos).which });
+    }
+    if (cnt > 0) indSet.add(key(ind.g, ind.i));
+    if (cnt === 2) homo++;
+  });
+  return { v, carrierKeys, edges, nChrom, nInd: indSet.size, homo, arose };
+}
+
+function indivHighlight(g, i) {
+  const self = state.gens[g][i];
+  const nodes = new Set([key(g, i)]);
+  const edges = [];                // {child,parent}
+  (function up(ind) { if (!ind.parents) return; for (const p of ind.parents) { edges.push({ child: ind, parent: p }); if (!nodes.has(key(p.g, p.i))) { nodes.add(key(p.g, p.i)); up(p); } } })(self);
+  const nAnc = nodes.size - 1;
+  (function down(ind) { for (const c of ind._children) { edges.push({ child: c, parent: ind }); if (!nodes.has(key(c.g, c.i))) { nodes.add(key(c.g, c.i)); down(c); } } })(self);
+  const nDesc = nodes.size - 1 - nAnc;
+  const all = [...dotsOf(self.chroms[0]), ...dotsOf(self.chroms[1])];
+  const nNovo = all.filter(m => m.kind === "novo").length;
+  const nOut = all.filter(m => m.kind === "out").length;
+  return { self, nodes, edges, nAnc, nDesc, nMut: all.length, nNovo, nOut, nAncMut: all.length - nNovo - nOut, F: inbreeding(self) };
+}
+
+// ============================================================================
+// Rendering
+// ============================================================================
+const stage = document.getElementById("stage");
+function el(tag, attrs, kids) { const e = document.createElementNS(SVGNS, tag); if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]); if (kids) for (const c of kids) e.appendChild(c); return e; }
+function txt(s) { return document.createTextNode(s); }
+
+// every connector gets a surface-coloured halo first, so crossings read as
+// over/under instead of merging into a blob
+function conn(d, stroke, w, op) {
+  stage.appendChild(el("path", { d, fill: "none", stroke: "var(--panel)", "stroke-width": w + 3.2, "stroke-linejoin": "round", "stroke-linecap": "round" }));
+  stage.appendChild(el("path", { d, fill: "none", stroke, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round", opacity: op }));
+}
+
+function render() {
+  while (stage.firstChild) stage.removeChild(stage.firstChild);
+  const { W, H } = layout();
+  stage.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  stage.style.maxWidth = W + "px";
+  state._hitDots = []; state._hitBoxes = [];
+
+  const H_ = highlight();
+  let site = null, indiv = null;
+  if (H_ && H_.type === "site") site = siteHighlight(H_.id);
+  else if (H_ && H_.type === "indiv") indiv = indivHighlight(H_.g, H_.i);
+
+  drawPedigree(indiv);
+  if (site) drawSiteEdges(site);
+
+  // generation label, and the inbreeding coefficient actually realised there —
+  // the requested F is only a target, and the gap between them is the point
+  for (let g = 0; g < state.gens.length; g++) {
+    const gen = state.gens[g], ind0 = gen[0];
+    stage.appendChild(el("text", { x: LAY.leftPad - 16, y: ind0._y + LAY.barH - 2, "text-anchor": "end", "font-size": 11, "font-weight": 600, fill: "#a5a29a" }, [txt(genName(g))]));
+    // outsiders sit in this row but are not of it, so they don't count toward its F
+    const born = gen.filter(ind => !ind.outsider);
+    const meanF = born.reduce((s, ind) => s + inbreeding(ind), 0) / (born.length || 1);
+    stage.appendChild(el("text", { x: LAY.leftPad - 16, y: ind0._y + LAY.barH + 11, "text-anchor": "end", "font-size": 9, fill: "#bcb9b0" }, [txt("F=" + fmtF(meanF))]));
+  }
+
+  forEachIndiv(ind => drawIndiv(ind, site, indiv));
+  updateStatus(site, indiv);
+}
+
+// --- standard pedigree routing: mating bar -> descent node -> sibship line ---
+// each child's route is one rounded polyline from the descent node, so the
+// sibship line is simply where those routes coincide
+const kidRoute = (p, kx) => [[p._dropX, p._laneY], [p._dropX, p._sibY], [kx, p._sibY], [kx, p._ct]];
+
+// the one route a parent's contribution takes to one child — used for both the
+// lineage trace and the transmission of a single mutation
+function routeFor(child, parent) {
+  const entry = state._conn.find(c => c.g === child.g);
+  if (!entry) return null;
+  const p = entry.pairs.find(q => q.kids.includes(child) && (q.p1 === parent || q.p2 === parent));
+  if (!p) return null;
+  return poly([[parent._x + LAY.barW / 2, p._pb], [parent._x + LAY.barW / 2, p._laneY], ...kidRoute(p, child._x + LAY.barW / 2)]);
+}
+
+function drawPedigree(indiv) {
+  const op = indiv ? 0.16 : 0.55;
+  for (const { pairs } of state._conn) {
+    for (const p of pairs) {
+      conn(poly([[p._x1, p._pb], [p._x1, p._laneY], [p._x2, p._laneY], [p._x2, p._pb]]), "#55534e", 1.1, op);
+      for (const kx of p._kidXs) conn(poly(kidRoute(p, kx)), "#55534e", 1.1, op);
+      stage.appendChild(el("circle", { cx: p._dropX, cy: p._laneY, r: 2.2, fill: "#55534e", opacity: op + 0.15 }));
+    }
+  }
+  if (!indiv) return;
+  // exact lineage routes, drawn over the faint structure
+  for (const e of indiv.edges) {
+    const d = routeFor(e.child, e.parent);
+    if (d) conn(d, "var(--accent2)", 2, 0.95);
+  }
+}
+
+// A mutation travels the same wires everyone else does, so its trace follows the
+// pedigree routing rather than cutting across the figure. Which homolog carries
+// it is shown on the chromosome itself, by outlining the bar.
+function drawSiteEdges(site) {
+  const col = varColor(site.v);
+  const seen = new Set();
+  for (const e of site.edges) {
+    const k = key(e.childInd.g, e.childInd.i) + ">" + key(e.parentInd.g, e.parentInd.i);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const d = routeFor(e.childInd, e.parentInd);
+    if (d) conn(d, col, 2, 0.9);
+  }
+}
+
+function drawIndiv(ind, site, indiv) {
+  const x = ind._x, y = ind._y, k = key(ind.g, ind.i);
+  let dim = false, focal = false;
+  if (indiv) { if (!indiv.nodes.has(k)) dim = true; if (indiv.self === ind) focal = true; }
+
+  const bx = x - LAY.boxPad, by = y - LAY.boxPad, bw = LAY.barW + 2 * LAY.boxPad, bh = boxH();
+  const boxAttrs = { x: bx, y: by, width: bw, height: bh, rx: 6, fill: "var(--box)", stroke: focal ? "#1d1d1b" : (ind.outsider ? "#a5a29a" : "var(--rule)"), "stroke-width": focal ? 1.8 : 1, opacity: dim ? 0.34 : 1 };
+  if (ind.outsider && !focal) boxAttrs["stroke-dasharray"] = "4 3";
+  stage.appendChild(el("rect", boxAttrs));
+  state._hitBoxes.push({ x: bx, y: by, w: bw, h: bh, g: ind.g, i: ind.i });
+
+  for (let slot = 0; slot < 2; slot++) {
+    const cy = chromY(ind, slot), chrom = ind.chroms[slot];
+    const grp = el("g", { opacity: dim ? 0.34 : 1 });
+
+    stage.appendChild(grp);
+    // The bar stays neutral. A stretch of chromosome is not "pure" to a founder
+    // — that would only be an artefact of where this pedigree starts. What each
+    // founder does own outright is its own point mutations, so those carry the
+    // colour and the mosaic is left to be read off them.
+    grp.appendChild(el("rect", { x, y: cy, width: LAY.barW, height: LAY.barH, rx: 3, fill: "var(--bar)" }));
+
+    // crossover positions, on the focal individual only
+    if (focal && !chrom.isFounder) {
+      for (const iv of founderIntervals(chrom)) if (iv.start > 0.0001) {
+        const nx = posX(ind, iv.start);
+        grp.appendChild(el("line", { x1: nx, y1: cy - 2.5, x2: nx, y2: cy + LAY.barH + 2.5, stroke: "#1d1d1b", "stroke-width": 1, opacity: 0.5 }));
+      }
+    }
+
+    const carrier = site && site.carrierKeys.has(k + "_" + slot);
+    const edgeCol = carrier ? varColor(site.v) : "var(--bar-edge)";
+    grp.appendChild(el("rect", { x, y: cy, width: LAY.barW, height: LAY.barH, rx: 3, fill: "none", stroke: edgeCol, "stroke-width": carrier ? 1.8 : 1 }));
+
+    for (const v of dotsOf(chrom)) {
+      const cx = posX(ind, v.pos), dcy = cy + LAY.barH / 2;
+      const isFocalSite = site && v.id === site.v.id;
+      let r = LAY.dotR, op = 0.95;
+      if (site) { if (isFocalSite) { r = LAY.dotR + 1.4; op = 1; } else { r = LAY.dotR - 1.2; op = 0.34; } }
+      const ring = isFocalSite ? "#1d1d1b" : "var(--panel)";
+      const attrs = v.kind === "out"
+        ? { fill: "var(--panel)", opacity: op, stroke: isFocalSite ? "#1d1d1b" : OUT_INK, "stroke-width": 1.7 }
+        : { fill: varColor(v), opacity: op, stroke: ring, "stroke-width": isFocalSite ? 1.8 : 1.4 };
+      if (v.kind === "novo") {
+        grp.appendChild(el("path", { d: `M${cx},${dcy - r} L${cx + r},${dcy} L${cx},${dcy + r} L${cx - r},${dcy} Z`, "stroke-linejoin": "round", ...attrs }));
+      } else {
+        grp.appendChild(el("circle", { cx, cy: dcy, r, ...attrs }));
+      }
+      state._hitDots.push({ x: cx, y: dcy, vid: v.id });
+    }
+  }
+}
+
+// ============================================================================
+// Status line (one line, factual — no lecturing)
+// ============================================================================
+function updateStatus(site, indiv) {
+  const st = document.getElementById("status");
+  const s = (n) => n === 1 ? "" : "s";
+  if (site) {
+    const v = site.v;
+    const label = v.kind === "novo"
+      ? `<b>New mutation</b> at ${v.pos.toFixed(2)} · arose in ${site.arose ? genName(site.arose.g) + "·" + (site.arose.i + 1) : genName(v.gen)}`
+      : v.kind === "out"
+      ? `<b>Outside variant</b> at ${v.pos.toFixed(2)} · came in with a mate from outside the pedigree`
+      : `<b>Founder variant</b> at ${v.pos.toFixed(2)} · carried in on <b>${FNAME[v.origin]}</b>`;
+    st.innerHTML = `${label} · on <b>${site.nChrom}</b> chromosome${s(site.nChrom)} across <b>${site.nInd}</b> individual${s(site.nInd)} (${site.homo} homozygous)`;
+  } else if (indiv) {
+    st.innerHTML = `<b>${indiv.self.outsider ? "Outside mate" : "Individual"} ${genName(indiv.self.g)}·${indiv.self.i + 1}</b> · ${indiv.nAnc} ancestor${s(indiv.nAnc)}, ${indiv.nDesc} descendant${s(indiv.nDesc)} · carries <b>${indiv.nMut}</b> mutation${s(indiv.nMut)} ${indiv.nAncMut} from the founders, ${indiv.nOut} from outside, ${indiv.nNovo} new · inbreeding <b>F = ${indiv.F.toFixed(3)}</b>`;
+  } else {
+    st.innerHTML = `Each mutation is coloured by the founder chromosome it came in on · hover a mutation to follow it down the pedigree · hover an individual to trace its line of descent · click to pin, drag to rearrange`;
+  }
+}
+
+// ============================================================================
+// Interaction — hover previews, click pins, drag rearranges
+// ============================================================================
+function clientToSvg(evt) { const pt = stage.createSVGPoint(); pt.x = evt.clientX; pt.y = evt.clientY; return pt.matrixTransform(stage.getScreenCTM().inverse()); }
+
+function targetAt(p) {
+  let best = 7, tgt = null;
+  for (const d of state._hitDots) { const dist = Math.hypot(p.x - d.x, p.y - d.y); if (dist < best) { best = dist; tgt = { type: "site", id: d.vid }; } }
+  if (tgt) return tgt;
+  for (const b of state._hitBoxes) if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return { type: "indiv", g: b.g, i: b.i };
+  return null;
+}
+function sameTarget(a, b) { if (!a || !b) return a === b; if (a.type !== b.type) return false; return a.type === "site" ? a.id === b.id : (a.g === b.g && a.i === b.i); }
+
+let drag = null;
+stage.addEventListener("pointerdown", (evt) => {
+  const p = clientToSvg(evt);
+  let box = null;
+  for (const b of state._hitBoxes) if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) { box = b; break; }
+  drag = box ? { g: box.g, i: box.i, startX: p.x, offStart: state.dragOffset[key(box.g, box.i)] || 0, moved: false } : { none: true, startX: p.x, moved: false };
+  stage.setPointerCapture(evt.pointerId);
+});
+stage.addEventListener("pointermove", (evt) => {
+  const p = clientToSvg(evt);
+  if (drag) {
+    if (Math.abs(p.x - drag.startX) > 3) drag.moved = true;
+    if (drag.moved && !drag.none) { state.dragOffset[key(drag.g, drag.i)] = drag.offStart + (p.x - drag.startX); render(); }
+    return;
+  }
+  const tgt = targetAt(p);
+  if (!sameTarget(tgt, state.hover)) { state.hover = tgt; render(); }
+});
+stage.addEventListener("pointerup", (evt) => {
+  const wasDrag = drag && drag.moved;
+  drag = null;
+  if (wasDrag) return;
+  const p = clientToSvg(evt);
+  const tgt = targetAt(p);
+  state.sel = sameTarget(tgt, state.sel) ? null : tgt;   // toggle pin
+  state.hover = tgt;
+  render();
+});
+stage.addEventListener("pointerleave", () => { if (!drag && state.hover) { state.hover = null; render(); } });
+
+// ============================================================================
+// Controls
+// ============================================================================
+document.getElementById("offRange").addEventListener("input", (e) => { state.off = +e.target.value; document.getElementById("offOut").textContent = state.off; resetSim(); render(); });
+document.getElementById("recRange").addEventListener("input", (e) => { state.crossovers = +e.target.value; document.getElementById("recOut").textContent = state.crossovers.toFixed(1); resetSim(); render(); });
+document.getElementById("muRange").addEventListener("input", (e) => { state.mu = +e.target.value; document.getElementById("muOut").textContent = state.mu.toFixed(1); resetSim(); render(); });
+document.getElementById("inbRange").addEventListener("input", (e) => { state.finb = +e.target.value; document.getElementById("inbOut").textContent = state.finb.toFixed(2); resetSim(); render(); });
+document.getElementById("addGen").addEventListener("click", () => { if (state.gens.length >= 8) return; breedGeneration(); render(); });
+document.getElementById("resetBtn").addEventListener("click", () => { resetSim(); render(); });
+
+// ============================================================================
+resetSim();
+render();
+</script>
+</body>
+</html>
