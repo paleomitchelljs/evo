@@ -43,6 +43,8 @@
   .legend .lg .dia { width: 10px; height: 10px; background: var(--novo); box-shadow: 0 0 0 1.4px var(--panel); transform: rotate(45deg); border-radius: 1px; }
   .legend .lg .hol { width: 10px; height: 10px; border-radius: 50%; border: 1.7px solid var(--muted); }
   .legend .lg .out { width: 13px; height: 9px; border: 1.4px dashed #a5a29a; border-radius: 3px; }
+  .legend .lg .ramp { display: inline-flex; gap: 1px; }
+  .legend .lg .ramp b { width: 9px; height: 9px; border-radius: 1px; }
   .legend .lg-sep { width: 1px; height: 13px; background: var(--rule); }
 
   .stage-wrap { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 6px; overflow-x: auto; }
@@ -97,6 +99,8 @@
     <span class="lg"><span class="hol"></span>came in from outside</span>
     <span class="lg-sep"></span>
     <span class="lg"><span class="out"></span>mate from outside the pedigree</span>
+    <span class="lg-sep"></span>
+    <span class="lg">shared ancestor <span class="ramp"><b style="background:#4a1820"></b><b style="background:#6e2632"></b><b style="background:#963c48"></b><b style="background:#b6555f"></b><b style="background:#cf7a84"></b></span> recent → distant</span>
   </div>
 
   <div class="stage-wrap">
@@ -377,7 +381,7 @@ function forEachIndiv(fn) { for (const gen of state.gens) for (const ind of gen)
 // Layout
 // ============================================================================
 const LAY = {
-  leftPad: 66, rightPad: 22, topPad: 24, botPad: 18,
+  leftPad: 114, rightPad: 22, topPad: 24, botPad: 18,
   barW: 160, barH: 11, chromGap: 6, gap: 46, dotR: 3.4, boxPad: 6,
   stubDown: 14, laneStep: 8, sibUp: 14,
 };
@@ -520,6 +524,139 @@ function indivHighlight(g, i) {
 }
 
 // ============================================================================
+// Coalescence — where two chromosomes find their common ancestor, position by
+// position. Identity by descent and coalescence are the same fact read in two
+// directions: the stretches where two chromosomes meet an ancestor are IBD, and
+// how far back they meet is the coalescence. Recombination is what splits a
+// chromosome into stretches with different answers; migration is what makes the
+// answer "never".
+// ============================================================================
+const COAL = ["#4a1820", "#6e2632", "#963c48", "#b6555f", "#cf7a84"];   // 1 gen back -> deep
+const coalShade = (depth) => COAL[Math.max(0, Math.min(COAL.length - 1, depth - 1))];
+
+// the chain of chromosomes a position is inherited through, most recent first
+function lineageAt(chrom, self, x) {
+  const chain = [{ c: chrom, ind: self }];
+  let c = chrom;
+  while (!c.isFounder) { const owner = c.parent; c = owner.chroms[segAt(c.segs, x).which]; chain.push({ c, ind: owner }); }
+  return chain;
+}
+
+function coalesceAt(cA, indA, cB, indB, x) {
+  const A = lineageAt(cA, indA, x), idx = new Map();
+  for (let i = 0; i < A.length; i++) idx.set(A[i].c, i);
+  const B = lineageAt(cB, indB, x);
+  for (let j = 0; j < B.length; j++) if (idx.has(B[j].c)) return { ind: B[j].ind, depth: Math.max(idx.get(B[j].c), j) };
+  return null;                       // no common ancestor inside this pedigree
+}
+
+// every crossover anywhere in a chromosome's ancestry — the positions at which
+// the answer above can possibly change
+function ancBreaks(chrom, into) {
+  if (chrom.isFounder) return;
+  if (!chrom._brk) {
+    const own = new Set();
+    for (const sg of chrom.segs) if (sg.start > 1e-9) own.add(sg.start);
+    ancBreaks(chrom.parent.chroms[0], own);
+    ancBreaks(chrom.parent.chroms[1], own);
+    chrom._brk = own;
+  }
+  for (const v of chrom._brk) into.add(v);
+}
+
+// one chromosome against a set of others: the most recent coalescence per stretch
+function coalTrack(c, cInd, others) {
+  const set = new Set([0, 1]);
+  ancBreaks(c, set);
+  for (const o of others) ancBreaks(o.c, set);
+  const bs = [...set].sort((u, v) => u - v);
+  const out = [];
+  for (let i = 0; i < bs.length - 1; i++) {
+    if (bs[i + 1] - bs[i] < 1e-9) continue;
+    const mid = (bs[i] + bs[i + 1]) / 2;
+    let best = null;
+    for (const o of others) {
+      const co = coalesceAt(c, cInd, o.c, o.ind, mid);
+      if (co && (!best || co.depth < best.depth)) best = co;
+    }
+    const who = best ? best.ind : null, dep = best ? best.depth : null;
+    const last = out[out.length - 1];
+    if (last && last.ind === who && last.depth === dep) last.end = bs[i + 1];
+    else out.push({ start: bs[i], end: bs[i + 1], ind: who, depth: dep });
+  }
+  return out;
+}
+
+// An individual's autozygosity: the stretches where its own two homologs are
+// identical by descent. Its total is the realised F, as against the pedigree
+// expectation the slider is calibrated in. Cheap enough to run for everyone,
+// because founder identity alone settles it — no depth needed.
+function autozygosity(ind) {
+  if (ind._auto) return ind._auto;
+  const A = founderIntervals(ind.chroms[0]), B = founderIntervals(ind.chroms[1]);
+  const segs = [];
+  let i = 0, j = 0;
+  while (i < A.length && j < B.length) {
+    const st = Math.max(A[i].start, B[j].start), en = Math.min(A[i].end, B[j].end);
+    if (en > st && A[i].fid === B[j].fid) {
+      const last = segs[segs.length - 1];
+      if (last && Math.abs(last.end - st) < 1e-9) last.end = en; else segs.push({ start: st, end: en });
+    }
+    if (A[i].end < B[j].end) i++; else j++;
+  }
+  const frac = segs.reduce((t, g) => t + (g.end - g.start), 0);
+  ind._auto = { segs, frac, mean: segs.length ? frac / segs.length : null };
+  return ind._auto;
+}
+
+// per-generation summary shown in the margin: expected F, realised autozygosity,
+// and how long the IBD stretches are. Recombination shortens them, inbreeding
+// raises the fraction, migration drives both toward zero.
+function genStats(gen) {
+  const born = gen.filter(ind => !ind.outsider);
+  let f = 0, frac = 0, len = 0, withSeg = 0;
+  for (const ind of born) {
+    f += inbreeding(ind);
+    const az = autozygosity(ind);
+    frac += az.frac;
+    if (az.mean !== null) { len += az.mean; withSeg++; }
+  }
+  const n = born.length || 1;
+  return { F: f / n, frac: frac / n, seg: withSeg ? len / withSeg : null };
+}
+
+// How much two individuals share. Averaged over the four ways of pairing their
+// chromosomes, which is exactly the realised kinship — the same quantity the
+// pedigree recursion predicts, so the two can be read against each other. A
+// union over the four pairings would not do: in a pedigree closed on one pair
+// almost every position coalesces somewhere, so a union saturates at 100% for
+// any two individuals and says nothing.
+function pairStats(A, B) {
+  let sum = 0, longest = 0, nSeg = 0, closest = null;
+  for (let i = 0; i < 2; i++) {
+    for (let j = 0; j < 2; j++) {
+      for (const g of coalTrack(A.chroms[i], A, [{ c: B.chroms[j], ind: B }])) {
+        if (g.ind === null) continue;
+        const w = g.end - g.start;
+        sum += w; nSeg++;
+        if (w > longest) longest = w;
+        if (!closest || g.depth < closest.depth) closest = g;
+      }
+    }
+  }
+  return { kin: sum / 4, expected: kinship(A, B), longest, nSeg, closest };
+}
+
+function ancestorTrace(ind) {
+  const nodes = new Set([key(ind.g, ind.i)]), edges = [];
+  (function up(x) {
+    if (!x.parents) return;
+    for (const p of x.parents) { edges.push({ child: x, parent: p }); if (!nodes.has(key(p.g, p.i))) { nodes.add(key(p.g, p.i)); up(p); } }
+  })(ind);
+  return { nodes, edges };
+}
+
+// ============================================================================
 // Rendering
 // ============================================================================
 const stage = document.getElementById("stage");
@@ -540,27 +677,68 @@ function render() {
   stage.style.maxWidth = W + "px";
   state._hitDots = []; state._hitBoxes = [];
 
-  const H_ = highlight();
-  let site = null, indiv = null;
-  if (H_ && H_.type === "site") site = siteHighlight(H_.id);
-  else if (H_ && H_.type === "indiv") indiv = indivHighlight(H_.g, H_.i);
+  const defs = el("defs"); stage.appendChild(defs);
 
-  drawPedigree(indiv);
-  if (site) drawSiteEdges(site);
-
-  // generation label, and the inbreeding coefficient actually realised there —
-  // the requested F is only a target, and the gap between them is the point
-  for (let g = 0; g < state.gens.length; g++) {
-    const gen = state.gens[g], ind0 = gen[0];
-    stage.appendChild(el("text", { x: LAY.leftPad - 16, y: ind0._y + LAY.barH - 2, "text-anchor": "end", "font-size": 11, "font-weight": 600, fill: "#a5a29a" }, [txt(genName(g))]));
-    // outsiders sit in this row but are not of it, so they don't count toward its F
-    const born = gen.filter(ind => !ind.outsider);
-    const meanF = born.reduce((s, ind) => s + inbreeding(ind), 0) / (born.length || 1);
-    stage.appendChild(el("text", { x: LAY.leftPad - 16, y: ind0._y + LAY.barH + 11, "text-anchor": "end", "font-size": 9, fill: "#bcb9b0" }, [txt("F=" + fmtF(meanF))]));
+  // Pinning one individual and hovering another compares them; otherwise the
+  // single active target behaves as before.
+  const S = state.sel, Hv = state.hover;
+  let site = null, indiv = null, pair = null;
+  if (S && S.type === "indiv" && Hv && Hv.type === "indiv" && !sameTarget(S, Hv)) {
+    pair = { a: state.gens[S.g][S.i], b: state.gens[Hv.g][Hv.i] };
+  } else {
+    const H_ = highlight();
+    if (H_ && H_.type === "site") site = siteHighlight(H_.id);
+    else if (H_ && H_.type === "indiv") indiv = indivHighlight(H_.g, H_.i);
   }
 
-  forEachIndiv(ind => drawIndiv(ind, site, indiv));
-  updateStatus(site, indiv);
+  // coalescence tracks for whichever chromosomes are in play
+  const tracks = new Map();
+  if (pair) {
+    const A = pair.a, B = pair.b;
+    const asChrom = (x) => [{ c: x.chroms[0], ind: x }, { c: x.chroms[1], ind: x }];
+    for (let sl = 0; sl < 2; sl++) tracks.set(key(A.g, A.i) + "_" + sl, coalTrack(A.chroms[sl], A, asChrom(B)));
+    for (let sl = 0; sl < 2; sl++) tracks.set(key(B.g, B.i) + "_" + sl, coalTrack(B.chroms[sl], B, asChrom(A)));
+    pair.trace = [ancestorTrace(A), ancestorTrace(B)];
+    pair.stats = pairStats(A, B);
+  } else if (pair) {
+    const nm = (x) => `${genName(x.g)}·${x.i + 1}`;
+    const p = pair.stats;
+    st.innerHTML = p.kin <= 0
+      ? `<b>${nm(pair.a)}</b> and <b>${nm(pair.b)}</b> · no chromosome they carry meets a common ancestor inside this pedigree`
+      : `<b>${nm(pair.a)}</b> and <b>${nm(pair.b)}</b> · kinship <b>${p.kin.toFixed(3)}</b> realised, ${p.expected.toFixed(3)} expected · sharing runs in ${p.nSeg} stretch${p.nSeg === 1 ? "" : "es"}, longest <b>${Math.round(p.longest * 100)}%</b> of the chromosome · nearest shared ancestor <b>${nm(p.closest.ind)}</b>, ${p.closest.depth} generation${p.closest.depth === 1 ? "" : "s"} back`;
+  } else if (indiv) {
+    const X = indiv.self;
+    // one pairwise fact, so both homologs wear the identical track
+    const t = coalTrack(X.chroms[0], X, [{ c: X.chroms[1], ind: X }]);
+    tracks.set(key(X.g, X.i) + "_0", t);
+    tracks.set(key(X.g, X.i) + "_1", t);
+  }
+
+  drawPedigree(indiv, pair);
+  if (site) drawSiteEdges(site);
+  drawMargin();
+
+  forEachIndiv(ind => drawIndiv(ind, defs, site, indiv, pair, tracks));
+  updateStatus(site, indiv, pair);
+}
+
+// Three numbers per generation: the F the pedigree implies, the autozygosity
+// actually realised, and how long those IBD stretches run.
+function drawMargin() {
+  const cols = [LAY.leftPad - 62, LAY.leftPad - 34, LAY.leftPad - 6];
+  const head = ["F", "ibd", "seg"];
+  for (let c = 0; c < 3; c++) {
+    stage.appendChild(el("text", { x: cols[c], y: LAY.topPad - 8, "text-anchor": "end", "font-size": 8.5, fill: "#c6c3ba" }, [txt(head[c])]));
+  }
+  for (let g = 0; g < state.gens.length; g++) {
+    const gen = state.gens[g], y = gen[0]._y + LAY.barH + 4;
+    stage.appendChild(el("text", { x: LAY.leftPad - 88, y, "text-anchor": "end", "font-size": 11, "font-weight": 600, fill: "#a5a29a" }, [txt(genName(g))]));
+    const st = genStats(gen);
+    const vals = [fmtF(st.F), fmtF(st.frac), st.seg === null ? "—" : fmtF(st.seg)];
+    for (let c = 0; c < 3; c++) {
+      stage.appendChild(el("text", { x: cols[c], y, "text-anchor": "end", "font-size": 9, fill: "#bcb9b0" }, [txt(vals[c])]));
+    }
+  }
 }
 
 // --- standard pedigree routing: mating bar -> descent node -> sibship line ---
@@ -578,8 +756,8 @@ function routeFor(child, parent) {
   return poly([[parent._x + LAY.barW / 2, p._pb], [parent._x + LAY.barW / 2, p._laneY], ...kidRoute(p, child._x + LAY.barW / 2)]);
 }
 
-function drawPedigree(indiv) {
-  const op = indiv ? 0.16 : 0.55;
+function drawPedigree(indiv, pair) {
+  const op = (indiv || pair) ? 0.16 : 0.55;
   for (const { pairs } of state._conn) {
     for (const p of pairs) {
       conn(poly([[p._x1, p._pb], [p._x1, p._laneY], [p._x2, p._laneY], [p._x2, p._pb]]), "#55534e", 1.1, op);
@@ -587,9 +765,15 @@ function drawPedigree(indiv) {
       stage.appendChild(el("circle", { cx: p._dropX, cy: p._laneY, r: 2.2, fill: "#55534e", opacity: op + 0.15 }));
     }
   }
-  if (!indiv) return;
-  // exact lineage routes, drawn over the faint structure
-  for (const e of indiv.edges) {
+  // exact lineage routes, drawn over the faint structure. In pair mode both
+  // ancestries are drawn, so where they run together IS the coalescence.
+  const edges = pair ? [...pair.trace[0].edges, ...pair.trace[1].edges] : indiv ? indiv.edges : null;
+  if (!edges) return;
+  const done = new Set();
+  for (const e of edges) {
+    const ek = key(e.child.g, e.child.i) + ">" + key(e.parent.g, e.parent.i);
+    if (done.has(ek)) continue;
+    done.add(ek);
     const d = routeFor(e.child, e.parent);
     if (d) conn(d, "var(--accent2)", 2, 0.95);
   }
@@ -610,10 +794,14 @@ function drawSiteEdges(site) {
   }
 }
 
-function drawIndiv(ind, site, indiv) {
+function drawIndiv(ind, defs, site, indiv, pair, tracks) {
   const x = ind._x, y = ind._y, k = key(ind.g, ind.i);
   let dim = false, focal = false;
   if (indiv) { if (!indiv.nodes.has(k)) dim = true; if (indiv.self === ind) focal = true; }
+  else if (pair) {
+    focal = ind === pair.a || ind === pair.b;
+    dim = !focal && !pair.trace[0].nodes.has(k) && !pair.trace[1].nodes.has(k);
+  }
 
   const bx = x - LAY.boxPad, by = y - LAY.boxPad, bw = LAY.barW + 2 * LAY.boxPad, bh = boxH();
   const boxAttrs = { x: bx, y: by, width: bw, height: bh, rx: 6, fill: "var(--box)", stroke: focal ? "#1d1d1b" : (ind.outsider ? "#a5a29a" : "var(--rule)"), "stroke-width": focal ? 1.8 : 1, opacity: dim ? 0.34 : 1 };
@@ -631,6 +819,21 @@ function drawIndiv(ind, site, indiv) {
     // founder does own outright is its own point mutations, so those carry the
     // colour and the mosaic is left to be read off them.
     grp.appendChild(el("rect", { x, y: cy, width: LAY.barW, height: LAY.barH, rx: 3, fill: "var(--bar)" }));
+
+    // where this chromosome meets the other one being compared, and how far
+    // back — the painted fraction is IBD, the shade is coalescence, and the
+    // edges between shades are crossovers
+    const track = tracks && tracks.get(k + "_" + slot);
+    if (track) {
+      const cid = "cc" + ind.g + "_" + ind.i + "_" + slot;
+      defs.appendChild(el("clipPath", { id: cid }, [el("rect", { x, y: cy, width: LAY.barW, height: LAY.barH, rx: 3 })]));
+      const band = el("g", { "clip-path": `url(#${cid})` });
+      for (const sg of track) {
+        if (sg.ind === null) continue;                 // never meets: leave the bar bare
+        band.appendChild(el("rect", { x: posX(ind, sg.start), y: cy, width: (sg.end - sg.start) * LAY.barW, height: LAY.barH, fill: coalShade(sg.depth) }));
+      }
+      grp.appendChild(band);
+    }
 
     // crossover positions, on the focal individual only
     if (focal && !chrom.isFounder) {
@@ -666,7 +869,7 @@ function drawIndiv(ind, site, indiv) {
 // ============================================================================
 // Status line (one line, factual — no lecturing)
 // ============================================================================
-function updateStatus(site, indiv) {
+function updateStatus(site, indiv, pair) {
   const st = document.getElementById("status");
   const s = (n) => n === 1 ? "" : "s";
   if (site) {
@@ -677,10 +880,16 @@ function updateStatus(site, indiv) {
       ? `<b>Outside variant</b> at ${v.pos.toFixed(2)} · came in with a mate from outside the pedigree`
       : `<b>Founder variant</b> at ${v.pos.toFixed(2)} · carried in on <b>${FNAME[v.origin]}</b>`;
     st.innerHTML = `${label} · on <b>${site.nChrom}</b> chromosome${s(site.nChrom)} across <b>${site.nInd}</b> individual${s(site.nInd)} (${site.homo} homozygous)`;
+  } else if (pair) {
+    const nm = (x) => `${genName(x.g)}·${x.i + 1}`;
+    const p = pair.stats;
+    st.innerHTML = p.kin <= 0
+      ? `<b>${nm(pair.a)}</b> and <b>${nm(pair.b)}</b> · no chromosome they carry meets a common ancestor inside this pedigree`
+      : `<b>${nm(pair.a)}</b> and <b>${nm(pair.b)}</b> · kinship <b>${p.kin.toFixed(3)}</b> realised, ${p.expected.toFixed(3)} expected · sharing runs in ${p.nSeg} stretch${p.nSeg === 1 ? "" : "es"}, longest <b>${Math.round(p.longest * 100)}%</b> of the chromosome · nearest shared ancestor <b>${nm(p.closest.ind)}</b>, ${p.closest.depth} generation${p.closest.depth === 1 ? "" : "s"} back`;
   } else if (indiv) {
-    st.innerHTML = `<b>${indiv.self.outsider ? "Outside mate" : "Individual"} ${genName(indiv.self.g)}·${indiv.self.i + 1}</b> · ${indiv.nAnc} ancestor${s(indiv.nAnc)}, ${indiv.nDesc} descendant${s(indiv.nDesc)} · carries <b>${indiv.nMut}</b> mutation${s(indiv.nMut)} ${indiv.nAncMut} from the founders, ${indiv.nOut} from outside, ${indiv.nNovo} new · inbreeding <b>F = ${indiv.F.toFixed(3)}</b>`;
+    st.innerHTML = `<b>${indiv.self.outsider ? "Outside mate" : "Individual"} ${genName(indiv.self.g)}·${indiv.self.i + 1}</b> · ${indiv.nAnc} ancestor${s(indiv.nAnc)}, ${indiv.nDesc} descendant${s(indiv.nDesc)} · carries <b>${indiv.nMut}</b> mutation${s(indiv.nMut)} (${indiv.nAncMut} founder, ${indiv.nOut} outside, ${indiv.nNovo} new) · <b>F = ${indiv.F.toFixed(3)}</b> expected, autozygous over <b>${Math.round(autozygosity(indiv.self).frac * 100)}%</b> in ${autozygosity(indiv.self).segs.length} stretch${autozygosity(indiv.self).segs.length === 1 ? "" : "es"}`;
   } else {
-    st.innerHTML = `Each mutation is coloured by the founder chromosome it came in on · hover a mutation to follow it down the pedigree · hover an individual to trace its line of descent · click to pin, drag to rearrange`;
+    st.innerHTML = `Each mutation is coloured by the founder chromosome it came in on · hover a mutation to follow it down the pedigree · hover an individual to see where its two chromosomes meet an ancestor · pin one and hover another to compare them · drag to rearrange`;
   }
 }
 
