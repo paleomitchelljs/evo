@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S25: a line where some points count more than others</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:82ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:980px; margin:0 auto; padding:24px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; margin:0 0 16px; }
+  .panel h3 { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  canvas { width:100%; height:auto; display:block; background:#fff; }
+  .q { font-weight:600; margin:0 0 8px; }
+  .choice { display:block; width:100%; text-align:left; padding:9px 12px; margin:0 0 7px; background:#fafaf7; border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .choice:disabled { cursor:default; opacity:.75; }
+  .submit { padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .controls.locked { opacity:.4; pointer-events:none; }
+  .row { display:grid; grid-template-columns:150px 1fr 92px; align-items:center; gap:10px; margin-bottom:6px; }
+  .row output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .row input[type=range] { width:100%; }
+  .stat { font-family:ui-monospace,Menlo,monospace; font-size:13px; margin-top:8px; }
+  .stat .big { font-size:16px; font-weight:600; color:var(--accent); }
+  .stat .grey { font-size:16px; font-weight:600; color:#8a8a86; }
+  .tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .tracker.shown { display:block; }
+  .tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .stage2 { display:none; } .stage2.shown { display:block; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S25 — A line where some points count more than others</h1>
+  <p>Twenty-four trees, measured once each: trunk width across the bottom, height
+  up the side. Then you find out the survey did not count them evenly — some trees
+  went into the tally once, some went in many times over. Not one measurement
+  changes. Only how many times each tree counts.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:980px;margin:16px auto 0;padding:0 24px"></div>
+
+<main>
+  <div class="panel">
+    <div class="q">Predict first. Every tree stays exactly where it is on the plot. The only thing that changes is how many times each one is counted. The line through them will:</div>
+    <button class="choice" data-q="1" data-c="0">Move</button>
+    <button class="choice" data-q="1" data-c="1">Stay exactly where it is</button>
+    <button class="choice" data-q="1" data-c="2">Move only if you also move a tree</button>
+    <button class="submit" id="submit1" disabled>Submit → unlock the dial</button>
+  </div>
+
+  <div class="panel">
+    <h3>Who gets counted more</h3>
+    <div class="controls locked" id="controls">
+      <div class="row">
+        <label for="tiltIn">counted more</label>
+        <input type="range" id="tiltIn" min="-1" max="1" step="0.05" value="0">
+        <output id="tiltOut">evenly</output>
+      </div>
+    </div>
+    <div class="tracker" id="tracker">Try it at both ends and in the middle. <span class="count">0/3</span></div>
+  </div>
+
+  <div class="panel">
+    <h3>The same twenty-four trees</h3>
+    <canvas id="plot" width="900" height="380"></canvas>
+    <div class="stat">
+      <span style="color:var(--muted)">counting every tree once:</span> <span id="slopePlain" class="grey">—</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <span style="color:var(--muted)">counting them as the dial says:</span> <span id="slopeW" class="big">—</span>
+    </div>
+    <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">
+      Each circle is one tree; its area is how many times that tree is counted.
+      The grey line counts every tree once. The red line counts them as the dial says.</p>
+  </div>
+
+  <div class="panel stage2" id="stage2">
+    <div class="q">Push the dial all the way to the wide trunks, so the widest trees count for most and the narrow ones barely count at all. Against the grey line, the red line is:</div>
+    <button class="choice" data-q="2" data-c="0">Shallower</button>
+    <button class="choice" data-q="2" data-c="1">Steeper</button>
+    <button class="choice" data-q="2" data-c="2">The same — the trees never moved</button>
+    <button class="submit" id="submit2" disabled>Submit</button>
+    <div class="reveal" id="reveal"></div>
+  </div>
+</main>
+<div id="score-final" style="max-width:980px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/score.js"></script>
+<script>
+// ---- standard helpers (verbatim from the lessons) ----
+function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function gauss(rng){let u=0,v=0;while(u===0)u=rng();while(v===0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function setupCanvas(c){const dpr=window.devicePixelRatio||1;if(!c.dataset.cssW){c.dataset.cssW=String(c.width);c.dataset.cssH=String(c.height);}const W=+c.dataset.cssW,H=+c.dataset.cssH;c.width=W*dpr;c.height=H*dpr;c.style.width=W+"px";c.style.height=H+"px";const ctx=c.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);return{ctx,W,H};}
+
+// Fixed dataset, same for every student. Height rises with trunk width and then
+// flattens off, which is what real trees do — and it is what makes the counting
+// dial bite: the line you get depends on which end of the curve is doing the talking.
+const N=24, PTS=[];
+(function(){ const rng=mulberry32(7);
+  for(let i=0;i<N;i++){ const x=10+50*i/(N-1); PTS.push({x, y:25*(1-Math.exp(-0.05*x))+1.1*gauss(rng)}); }
+})();
+
+// counts[i] from the dial: -1 puts the weight on the narrow trunks, +1 on the wide.
+function countsFor(t){
+  return PTS.map(p=>{ const z=(p.x-10)/50; return Math.max(0.2, 1 + t*4*(z-0.5)*2); });
+}
+// Line through the points, counting each one w[i] times.
+function fit(w){
+  let sw=0,sx=0,sy=0;
+  for(let i=0;i<N;i++){ sw+=w[i]; sx+=w[i]*PTS[i].x; sy+=w[i]*PTS[i].y; }
+  const mx=sx/sw, my=sy/sw;
+  let sxy=0,sxx=0;
+  for(let i=0;i<N;i++){ sxy+=w[i]*(PTS[i].x-mx)*(PTS[i].y-my); sxx+=w[i]*(PTS[i].x-mx)**2; }
+  const b = sxx===0 ? 0 : sxy/sxx;
+  return {b, a: my-b*mx};
+}
+const ONES=new Array(N).fill(1);
+const PLAIN=fit(ONES);
+
+function draw(t){
+  const w=countsFor(t), W_=fit(w);
+  const c=document.getElementById("plot"); const {ctx,W,H}=setupCanvas(c);
+  ctx.clearRect(0,0,W,H);
+  const pad={l:56,r:16,t:16,b:40};
+  const xMin=5,xMax=65,yMin=0,yMax=28;
+  const X=v=>pad.l+((v-xMin)/(xMax-xMin))*(W-pad.l-pad.r);
+  const Y=v=>pad.t+(1-(v-yMin)/(yMax-yMin))*(H-pad.t-pad.b);
+
+  // axes
+  ctx.strokeStyle="#999"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+  ctx.fillStyle="#555"; ctx.font="11px ui-monospace"; ctx.textAlign="center";
+  for(let v=10;v<=60;v+=10){ ctx.fillText(String(v), X(v), H-pad.b+16); }
+  ctx.textAlign="right";
+  for(let v=0;v<=25;v+=5){ ctx.fillText(String(v), pad.l-8, Y(v)+4); }
+  ctx.textAlign="center"; ctx.font="12px -apple-system";
+  ctx.fillText("trunk width (cm)", (pad.l+W-pad.r)/2, H-8);
+  ctx.save(); ctx.translate(16,(pad.t+H-pad.b)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText("height (m)",0,0); ctx.restore();
+
+  // trees: area proportional to how many times counted
+  for(let i=0;i<N;i++){
+    const r=Math.sqrt(w[i])*4.2;
+    ctx.beginPath(); ctx.arc(X(PTS[i].x), Y(PTS[i].y), r, 0, 2*Math.PI);
+    ctx.fillStyle="rgba(47,107,143,0.30)"; ctx.fill();
+    ctx.strokeStyle="rgba(47,107,143,0.85)"; ctx.lineWidth=1; ctx.stroke();
+  }
+  // grey reference line: every tree counted once
+  ctx.strokeStyle="#8a8a86"; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(X(xMin),Y(PLAIN.a+PLAIN.b*xMin)); ctx.lineTo(X(xMax),Y(PLAIN.a+PLAIN.b*xMax)); ctx.stroke();
+  ctx.setLineDash([]);
+  // red line: counted as the dial says
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(X(xMin),Y(W_.a+W_.b*xMin)); ctx.lineTo(X(xMax),Y(W_.a+W_.b*xMax)); ctx.stroke();
+
+  document.getElementById("slopePlain").textContent=PLAIN.b.toFixed(3);
+  document.getElementById("slopeW").textContent=W_.b.toFixed(3);
+}
+
+function tiltLabel(t){
+  if(Math.abs(t)<0.03) return "evenly";
+  return (t<0 ? "narrow ×" : "wide ×") + (1+Math.abs(t)*4).toFixed(1);
+}
+
+// ---- gate 1: predict, then the dial unlocks ----
+let pick1=null, pick2=null;
+const visited={low:false, mid:false, high:false};
+
+function wire(qnum, onPick){
+  document.querySelectorAll(`.choice[data-q="${qnum}"]`).forEach(b=>b.addEventListener("click",()=>{
+    if(b.disabled) return;
+    document.querySelectorAll(`.choice[data-q="${qnum}"]`).forEach(x=>x.classList.remove("picked"));
+    b.classList.add("picked"); onPick(+b.dataset.c);
+  }));
+}
+wire(1, c=>{ pick1=c; document.getElementById("submit1").disabled=false; });
+wire(2, c=>{ pick2=c; document.getElementById("submit2").disabled=false; });
+
+document.getElementById("submit1").addEventListener("click",()=>{
+  document.getElementById("controls").classList.remove("locked");
+  document.getElementById("submit1").style.display="none";
+  document.querySelectorAll('.choice[data-q="1"]').forEach(b=>b.disabled=true);
+  document.getElementById("tracker").classList.add("shown");
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, pick1===0?1:0);
+});
+
+document.getElementById("tiltIn").addEventListener("input",e=>{
+  const t=+e.target.value;
+  document.getElementById("tiltOut").textContent=tiltLabel(t);
+  draw(t);
+  if(t<-0.4) visited.low=true; else if(t>0.4) visited.high=true; else visited.mid=true;
+  const n=(visited.low?1:0)+(visited.mid?1:0)+(visited.high?1:0);
+  const tr=document.getElementById("tracker");
+  tr.querySelector(".count").textContent=n+"/3";
+  if(n===3){ tr.classList.add("complete"); document.getElementById("stage2").classList.add("shown"); }
+  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+});
+
+document.getElementById("submit2").addEventListener("click",()=>{
+  document.getElementById("submit2").style.display="none";
+  document.querySelectorAll('.choice[data-q="2"]').forEach(b=>b.disabled=true);
+  const rev=document.getElementById("reveal");
+  rev.classList.add("shown");
+  rev.innerHTML="<strong>You just moved a line without touching a single measurement.</strong> "+
+    "Counting the wide trunks heavily gives you the line through the flat end of the cloud; counting the narrow ones heavily gives you the line through the steep end. "+
+    "The twenty-four trees never moved. A line through a set of points is not a property of the points alone — it also depends on how much each point counts. "+
+    "Keep that. You will meet it again, and there the number of times something counts will not be a survey quirk.";
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(1, pick2===0?1:0);
+  if(typeof Score!=="undefined"&&Score.finish) Score.finish();
+});
+
+Score.init({ moduleId:"s25", version:1, scaffold:2, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>{ try{ draw(0); }catch(e){} } });
+</script>
+</body>
+</html>

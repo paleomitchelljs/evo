@@ -44,8 +44,9 @@ carries two cautions that must survive every revision:
 - **The slope picks up a weighting.** An ordinary best-fit slope weights every
   point equally; the slope in the identity weights each point by how much it
   reproduces. That weighting cannot appear from nowhere at the end. Unit [22]
-  (L16a) exists solely to build it by hand. **It has never been built.** See
-  WORK_ORDER P0-1.
+  (L16a) exists solely to build it by hand, and shipped 2026-08-24 as
+  `app/scaffolds/s25_counting_weights.html`. It is not yet welded to L15 or L26
+  — see WORK_ORDER P0-2.
 
 ### Thread B — the ledger
 
@@ -65,7 +66,7 @@ what-you-see-is-what-didn't-die. Well served except the survivorship leg.
 
 ```
 app/lessons/lesson1–34.html    34 lessons; 1–19 built, 20–34 mostly skeletons
-app/scaffolds/s01–s24.html     24 working drills (20–52 KB each, canvas + handlers)
+app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
                                — live on the index, UNSCORED, absent from the atlas
 instructor/                    verify_code.html, aggregate.html
@@ -109,7 +110,9 @@ bookkeeping:
 - **[3] L3** — the flat guess (inserted rung)
 - **[8] L7a** — hold the effect fixed, move only n
 - **[11] L8a** — two dots from the same parent are not two independent readings
-- **[22] L16a** — the weighting. Highest-priority build in the repo.
+- **[22] L16a** — the weighting. **Built 2026-08-24** as `s25_counting_weights`,
+  following the established rung-as-scaffold pattern; promote it to a full unit
+  when the Arc 5 collapse renumbers the lesson files.
 - **[28] L19a** — rotate the diagram at its hinges (partly covered by lesson18 A)
 - **[39] L27b** — the nesting step; pries apart the two meanings of "leftover"
 - **Checkpoints C1, C2, C3** — never built

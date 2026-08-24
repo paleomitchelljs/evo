@@ -1,6 +1,6 @@
 # Work order — next edit round
 
-Written 2026-08-24, against the state verified that day: 34 lessons, 24 scaffolds,
+Written 2026-08-24, against the state verified that day: 34 lessons, 25 scaffolds,
 1 explorer, `scripts/check_lessons.py` green (0 hard failures, ~110 warnings).
 
 **The organizing goal.** These lessons exist to build intuition for the concepts
@@ -21,7 +21,7 @@ of it." This work order is mostly a matter of making the build match it.
 
 ## P0 — do these first
 
-### 1. Build L16a — the weighting rung
+### 1. Build L16a — the weighting rung ✅ DONE 2026-08-24
 
 **Nothing in the repo does this.** `structurephilosophy.md` [22] calls it "the
 single most load-bearing insertion in the sequence" and says that without it the
@@ -35,8 +35,14 @@ copy-count. Points that make more copies pull harder. The student moves the
 weights; the data never changes; the fitted line swings. No reproduction framing
 at all — just *a slope where some points count more than others.*
 
-**Placement.** Between the current L15 and L16, or as a new stage on L15. It has
-to be well before L26.
+**Built** as `app/scaffolds/s25_counting_weights.html`, matching the pattern by
+which the other four inserted rungs already ship (S-weld = s23, S-single = s22,
+S-cond = s21, S-agree = s24), and avoiding a lesson renumber immediately before
+the Arc 5 collapse. Twenty-four trees, trunk width against height, on a curve
+that flattens. A dial changes how many times each tree is counted; the
+measurements never move; the line swings from 0.330 to 0.175 — an 89% change.
+Two scored checkpoints, both keys verified against the scaffold's own code.
+Promote to a full unit when renumbering happens.
 
 **Why first.** It is the one build that makes your named goal — the Price equation
 landing as recognition — actually possible. Everything else in Arc 5 is downstream
@@ -57,8 +63,8 @@ Then wire these four hand-offs:
 |---|---|---|
 | L3 C | the per-5cm rate the student landed | L4 A opens on it |
 | L7 D | the recovered slope (~0.65) | L15 B **is** that lever, not a fresh dial |
-| L15 | the response the student produced | new L16a opens on it |
-| L16a | the student's weighted slope | L26 A opens on it |
+| L15 | the response the student produced | s25 opens on it *(still to wire)* |
+| s25 | the student's weighted slope | L26 A opens on it *(still to wire)* |
 
 L3 already does this *within* one lesson — B and C open on the 82 kg from A, and
 that is exactly what makes their reveals work. Extending the same mechanic across
