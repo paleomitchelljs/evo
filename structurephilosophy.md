@@ -13,7 +13,7 @@ A student walks in with no background. The whole design has to earn its way from
 there — not by promising to be gentle, but by building each unit so the first
 thing on screen is something anyone can read, and every step after it is one
 short reach from the step before. Scaffolding is not a tone. It is a shape, and
-the shape is specified in `BUILD_CONTRACT.md` so it can't quietly go missing.
+the shape is specified below so it can't quietly go missing.
 
 ## The sequence is the design
 
@@ -111,8 +111,13 @@ Seven goals, in rough order of how hard they are to hold onto.
 
 Every unit, whatever its length, is the same six stages plus two persistent
 layers. Not because uniformity is a virtue but because this shape is what makes
-the scaffolding real instead of promised. The machine-checkable version of this
-section is `BUILD_CONTRACT.md`; what follows is why the shape is what it is.
+the scaffolding real instead of promised.
+
+> **Open question, flagged 2026-08-24.** The shipped lessons use A/B/C/D/E stages
+> that do not map cleanly onto these six roles, and both vocabularies are currently
+> in circulation. Rule on it before the next build round — either map the roles onto
+> the letters lesson by lesson, or retire the six-role names. See
+> `docs/PROJECT_NOTES.md` §4 and `docs/WORK_ORDER.md` P0-5.
 
 0. **Orient.** The resting state is on screen; every control locked. One question,
    and it only asks the student to read the picture: what is a dot, what does the
@@ -477,7 +482,21 @@ move is presupposed; every unit implicitly assumes all units before it.
 ## Enforcement
 
 None of the above is self-enforcing, and a build agent working from prose will
-produce something that reads compliant and isn't. `BUILD_CONTRACT.md` is the
-machine-checkable version: the per-unit schema, the hard gates, the four
-adversarial passes, and the revision loop a draft has to survive. `validate.py` is
-the gate itself. A unit that hasn't passed it does not exist.
+produce something that reads compliant and isn't.
+
+**The gate is `scripts/check_lessons.py`**, run against the shipped lesson HTML. It
+applies the vocabulary ratchet at each lesson's true position in this sequence,
+the giveaway-phrase ban, title-names-no-term, and the front/back-matter and
+submission-wiring rules. A lesson that fails it does not ship.
+
+The checks that need judgment rather than a regex — the four adversarial passes
+(cold novice, licensing, giveaway, transfer) — are in `docs/PROJECT_NOTES.md` §4,
+along with the rest of the live rules and the map from these unit ids to the
+lesson files.
+
+> **Historical note.** This section previously named `BUILD_CONTRACT.md` and
+> `validate.py` as the enforcement layer, built around a `units/*.json` spec for
+> each of the 47 units. Those specs were never written. Both files are retired to
+> `_reference/retired/`; their durable content was folded into
+> `docs/PROJECT_NOTES.md`. The sequence below is unaffected — it remains the
+> design.

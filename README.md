@@ -10,28 +10,40 @@ reasoning move until it is the student's own; the biology is the delivery vehicl
 The design commitments — intuition before vocabulary, read-then-predict-then-touch,
 derive-don't-hand-over, one move across many datasets — are spelled out in
 [`structurephilosophy.md`](structurephilosophy.md). Course content is grounded in
-[`notes/references/2026_lecture_outline.tex`](notes/references/2026_lecture_outline.tex).
+[`docs/2026_lecture_detail.tex`](docs/2026_lecture_detail.tex).
 
 ## Layout
 
 ```
-index.html               landing page (lessons + scaffolds)
-app/lessons/lessonN.html 34 lessons, in sequence
-app/scaffolds/sNN_*.html 24 guess-and-check drills
-app/assets/score.js      the submission-code library (name -> opaque passcode)
-instructor/              verify_code.html + aggregate.html (decode student codes)
-data/clean/*.csv         real datasets used in the "real data" stages
+index.html                    landing page (lessons + scaffolds + explorer)
+app/lessons/lessonN.html      34 lessons, in sequence
+app/scaffolds/sNN_*.html      24 guess-and-check drills
+app/interactives/descent.html pedigree explorer (unscored)
+app/assets/score.js           the submission-code library (name -> opaque passcode)
+instructor/                   verify_code.html + aggregate.html (decode student codes)
+data/clean/*.csv              real datasets used in the "real data" stages
 ```
+
+## Start here
+
+- [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) — **the single notes-and-memory file.** Current state, the three recurring threads the lessons exist to build, the live rules, the old→new unit map, and the directives that are void.
+- [`docs/WORK_ORDER.md`](docs/WORK_ORDER.md) — the prioritized next round of edits.
+- [`docs/LESSON_ATLAS.md`](docs/LESSON_ATLAS.md) — stage-by-stage description of the shipped lessons.
 
 ## The design/validation framework
 
 The philosophy is not self-enforcing, so it is backed by machine checks:
 
 - [`structurephilosophy.md`](structurephilosophy.md) — the 47-unit sequence and why the shape is the shape.
-- [`BUILD_CONTRACT.md`](BUILD_CONTRACT.md) — the binding per-unit contract, the four adversarial passes, the gates.
 - [`ledger.json`](ledger.json) — the vocabulary ratchet: each term is banned until the unit that unlocks it (or forever). A 20-name budget across the course.
-- [`validate.py`](validate.py) — the gate for JSON unit specs (`python3 validate.py ledger.json units/*.json`).
-- [`scripts/check_lessons.py`](scripts/check_lessons.py) — ports the HTML-applicable gates (vocabulary ratchet at each lesson's true sequence position, giveaway-phrase ban, title-names-no-term, front/back-matter, submission wiring) to the shipped lesson HTML.
+- [`scripts/check_lessons.py`](scripts/check_lessons.py) — **the gate.** Applies the vocabulary ratchet at each lesson's true sequence position, plus the giveaway-phrase ban, title-names-no-term, front/back-matter and submission wiring, to the shipped lesson HTML.
+
+The judgment-level checks that a machine cannot run — the four adversarial passes —
+are in [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) §4.
+
+> The former `BUILD_CONTRACT.md` and `validate.py` governed a `units/*.json` spec
+> layer that was never built. Both are retired to `_reference/retired/`; their live
+> rules moved into `docs/PROJECT_NOTES.md`.
 
 Check every lesson:
 

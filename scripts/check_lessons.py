@@ -3,17 +3,21 @@
 check_lessons.py -- the philosophy's mechanical gates, applied to the actual
 lesson HTML instead of a JSON spec.
 
-structurephilosophy.md / BUILD_CONTRACT.md define the units as JSON specs that
-validate.py checks. The shipped course, though, is the HTML in app/lessons/. This
-script ports the checks that CAN run on HTML -- the vocabulary ratchet, the
-giveaway-phrase ban, the title-names-no-term rule -- and adds the voice-notes
-front/back-matter and no-jargon rules, so an overhaul can be held to the contract
-against the thing students actually see.
+THIS IS THE GATE. A lesson that fails it does not ship.
 
-Scope mirrors validate.py's onscreen_strings(): the student-facing PROSE and UI
-(headings, paragraphs, labels, buttons, options). The R code panel (<pre>) and
-<script>/<style> are excluded -- technical names are allowed to live in the code,
-per structurephilosophy.md goal 3 and VOICE_NOTES_OVERHAUL.md section 3.
+structurephilosophy.md describes the 47-unit sequence. An earlier design had each
+unit as a JSON spec under units/, checked by validate.py; those specs were never
+written and both files are retired to _reference/retired/. The shipped course is
+the HTML in app/lessons/, and this script is what holds it to the philosophy: the
+vocabulary ratchet, the giveaway-phrase ban, the title-names-no-term rule, plus the
+front/back-matter and no-jargon rules from the July voice-notes overhaul.
+
+The judgment-level checks a regex cannot run -- the four adversarial passes -- live
+in docs/PROJECT_NOTES.md section 4.
+
+Scope: the student-facing PROSE and UI (headings, paragraphs, labels, buttons,
+options). The R code panel (<pre>) and <script>/<style> are excluded -- technical
+names are allowed to live in the code, per structurephilosophy.md goal 3.
 
 Usage:  python3 scripts/check_lessons.py [app/lessons/lessonN.html ...]
         (no args -> every app/lessons/lesson*.html, in sequence order)
