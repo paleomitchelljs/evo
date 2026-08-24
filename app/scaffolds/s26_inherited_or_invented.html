@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S26: got it from someone, or came up with it</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:82ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:980px; margin:0 auto; padding:24px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; margin:0 0 16px; }
+  .panel h3 { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  canvas { width:100%; height:auto; display:block; background:#fff; cursor:pointer; }
+  .q { font-weight:600; margin:0 0 8px; }
+  .choice { display:block; width:100%; text-align:left; padding:9px 12px; margin:0 0 7px; background:#fafaf7; border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .choice:disabled { cursor:default; opacity:.75; }
+  .submit { padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .locked { opacity:.4; pointer-events:none; }
+  .presets button { padding:7px 11px; margin:0 6px 6px 0; background:#fff; border:1px solid var(--rule); border-radius:4px; cursor:pointer; font-size:13px; }
+  .presets button:hover { border-color:var(--accent2); }
+  .stat { font-family:ui-monospace,Menlo,monospace; font-size:13px; margin-top:8px; }
+  .stat .big { font-size:22px; font-weight:600; color:var(--accent); }
+  .tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .tracker.shown { display:block; }
+  .tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .tracker li { margin:3px 0; } .tracker ul { margin:6px 0 0; padding-left:18px; }
+  .tracker .hit { color:#2e4410; font-weight:600; }
+  .stage2 { display:none; } .stage2.shown { display:block; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S26 — Got it from someone, or came up with it</h1>
+  <p>Eight species, and one feature. Click any species to give it the feature or
+  take it away. The tree stays exactly as it is.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:980px;margin:16px auto 0;padding:0 24px"></div>
+
+<main>
+  <div class="panel">
+    <div class="q">Predict first. Two species both have the feature. From that alone — just the two of them, and the fact that they both have it — can you tell whether one ancestor had it and passed it to both, or whether each arrived at it on its own?</div>
+    <button class="choice" data-q="1" data-c="0">No</button>
+    <button class="choice" data-q="1" data-c="1">Yes</button>
+    <button class="choice" data-q="1" data-c="2">Only if the feature is complicated enough</button>
+    <button class="submit" id="submit1" disabled>Submit → unlock the tree</button>
+  </div>
+
+  <div class="panel" id="board">
+    <h3>Eight species</h3>
+    <canvas id="tree" width="900" height="360"></canvas>
+    <div class="stat">
+      <span style="color:var(--muted)">species with the feature:</span> <span id="nTips">0</span>
+      &nbsp;&nbsp;|&nbsp;&nbsp;
+      <span style="color:var(--muted)">fewest times it could have arisen:</span> <span id="nOrig" class="big">0</span>
+    </div>
+    <div class="presets" style="margin-top:10px" id="presets">
+      <button data-set="0,1">turtle &amp; tortoise</button>
+      <button data-set="0,7">turtle &amp; armadillo</button>
+      <button data-set="0,2,5,7">four scattered</button>
+      <button data-set="">clear</button>
+    </div>
+    <div class="tracker" id="tracker">
+      Get to each of these:
+      <ul>
+        <li id="t1">two species with the feature, and it need only have arisen <strong>once</strong></li>
+        <li id="t2">two species with the feature, and it must have arisen <strong>twice</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="panel stage2" id="stage2">
+    <div class="q">You just built both. Two species, the same feature, both times — and the fewest-origins number came out differently. What made the difference?</div>
+    <button class="choice" data-q="2" data-c="0">Which other species have it, and where they all sit on the tree</button>
+    <button class="choice" data-q="2" data-c="1">How many species have it in total</button>
+    <button class="choice" data-q="2" data-c="2">Nothing — the number was different by chance</button>
+    <button class="submit" id="submit2" disabled>Submit</button>
+    <div class="reveal" id="reveal"></div>
+  </div>
+</main>
+<div id="score-final" style="max-width:980px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+// Fixed balanced tree, eight tips: ((A,B),(C,D)) , ((E,F),(G,H)).
+const TREE=[[[0,1],[2,3]],[[4,5],[6,7]]];
+const NAMES=["turtle","tortoise","lizard","snake","bat","mouse","sloth","armadillo"];
+let state=new Array(8).fill(0);
+
+// Fewest number of separate arrivals consistent with the tree (Fitch).
+function origins(st){
+  let n=0;
+  (function go(node){
+    if(typeof node==="number") return new Set([st[node]]);
+    const a=go(node[0]), b=go(node[1]);
+    const inter=new Set([...a].filter(x=>b.has(x)));
+    if(inter.size) return inter;
+    n++; return new Set([...a,...b]);
+  })(TREE);
+  return n;
+}
+
+// --- layout: tips down the right, tree drawn to the left of them ---
+const PAD={l:24,r:150,t:26,b:26};
+let tipHit=[];   // {x,y,r,i} for click detection
+
+function draw(){
+  const c=document.getElementById("tree"); const {ctx,W,H}=setupCanvas(c);
+  ctx.clearRect(0,0,W,H);
+  const n=8, innerH=H-PAD.t-PAD.b;
+  const ty=i=>PAD.t+innerH*(i+0.5)/n;
+  const xTip=W-PAD.r;
+  const depth=(W-PAD.r-PAD.l)/3;
+  tipHit=[];
+
+  ctx.strokeStyle="#9a9a95"; ctx.lineWidth=1.5;
+  // draw the tree by recursion, returning the y of each node
+  (function go(node, d){
+    if(typeof node==="number"){
+      const y=ty(node);
+      ctx.beginPath(); ctx.moveTo(PAD.l+depth*d, y); ctx.lineTo(xTip-14, y); ctx.stroke();
+      return y;
+    }
+    const y1=go(node[0], d+1), y2=go(node[1], d+1);
+    const x=PAD.l+depth*d, xc=PAD.l+depth*(d+1);
+    ctx.beginPath(); ctx.moveTo(xc,y1); ctx.lineTo(xc,y2); ctx.stroke();      // vertical join
+    const ym=(y1+y2)/2;
+    ctx.beginPath(); ctx.moveTo(x,ym); ctx.lineTo(xc,ym); ctx.stroke();       // stem
+    return ym;
+  })(TREE, 0);
+
+  // tips
+  for(let i=0;i<n;i++){
+    const y=ty(i), x=xTip;
+    ctx.beginPath(); ctx.arc(x,y,9,0,2*Math.PI);
+    ctx.fillStyle = state[i] ? "#b23a48" : "#fff";
+    ctx.fill();
+    ctx.strokeStyle = state[i] ? "#b23a48" : "#9a9a95"; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle="#1d1d1b"; ctx.font="13px -apple-system"; ctx.textAlign="left"; ctx.textBaseline="middle";
+    ctx.fillText(NAMES[i], x+16, y);
+    tipHit.push({x,y,r:14,i});
+  }
+  ctx.fillStyle="#6b6b68"; ctx.font="11px -apple-system"; ctx.textAlign="left"; ctx.textBaseline="top";
+  ctx.fillText("filled = has the feature · click to change", PAD.l, H-PAD.b+6);
+
+  const tips=state.reduce((a,b)=>a+b,0), o=origins(state);
+  document.getElementById("nTips").textContent=tips;
+  document.getElementById("nOrig").textContent=o;
+  checkTracker(tips,o);
+}
+
+// --- the two targets: same tip count, different answer ---
+const got={once:false,twice:false};
+function checkTracker(tips,o){
+  if(tips===2 && o===1) got.once=true;
+  if(tips===2 && o===2) got.twice=true;
+  document.getElementById("t1").classList.toggle("hit",got.once);
+  document.getElementById("t2").classList.toggle("hit",got.twice);
+  if(got.once && got.twice){
+    document.getElementById("tracker").classList.add("complete");
+    document.getElementById("stage2").classList.add("shown");
+  }
+}
+
+document.getElementById("tree").addEventListener("click",e=>{
+  if(document.getElementById("board").classList.contains("locked")) return;
+  const c=e.currentTarget, r=c.getBoundingClientRect();
+  const sx=(+c.dataset.cssW||c.width)/r.width, sy=(+c.dataset.cssH||c.height)/r.height;
+  const x=(e.clientX-r.left)*sx, y=(e.clientY-r.top)*sy;
+  for(const t of tipHit){
+    if((x-t.x)**2+(y-t.y)**2 <= t.r*t.r){
+      state[t.i]=state[t.i]?0:1; draw();
+      if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+      return;
+    }
+  }
+});
+document.querySelectorAll("#presets button").forEach(b=>b.addEventListener("click",()=>{
+  if(document.getElementById("board").classList.contains("locked")) return;
+  state=new Array(8).fill(0);
+  const v=b.dataset.set;
+  if(v) v.split(",").forEach(i=>state[+i]=1);
+  draw();
+  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+}));
+
+// --- prediction gates ---
+let pick1=null, pick2=null;
+function wire(q,on){
+  document.querySelectorAll(`.choice[data-q="${q}"]`).forEach(b=>b.addEventListener("click",()=>{
+    if(b.disabled) return;
+    document.querySelectorAll(`.choice[data-q="${q}"]`).forEach(x=>x.classList.remove("picked"));
+    b.classList.add("picked"); on(+b.dataset.c);
+  }));
+}
+wire(1,c=>{pick1=c; document.getElementById("submit1").disabled=false;});
+wire(2,c=>{pick2=c; document.getElementById("submit2").disabled=false;});
+
+document.getElementById("submit1").addEventListener("click",()=>{
+  document.getElementById("board").classList.remove("locked");
+  document.getElementById("submit1").style.display="none";
+  document.querySelectorAll('.choice[data-q="1"]').forEach(b=>b.disabled=true);
+  document.getElementById("tracker").classList.add("shown");
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, pick1===0?1:0);
+});
+
+document.getElementById("submit2").addEventListener("click",()=>{
+  document.getElementById("submit2").style.display="none";
+  document.querySelectorAll('.choice[data-q="2"]').forEach(b=>b.disabled=true);
+  const rev=document.getElementById("reveal");
+  rev.classList.add("shown");
+  rev.innerHTML="<strong>Two species, one feature, and the answer was not in either of them.</strong> "+
+    "A turtle and a tortoise both carry a shell, and so do the things between them on the tree — one ancestor is enough. "+
+    "A turtle and an armadillo both carry a shell and nothing between them does — so it arrived twice, separately. "+
+    "Every feature of every living thing was either handed down or arrived on its own, and which one it was is a fact about the neighbours, never about the feature. "+
+    "You will be asked this again about a gene, about a stretch of chromosome, and about a habit.";
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(1, pick2===0?1:0);
+  if(typeof Score!=="undefined"&&Score.finish) Score.finish();
+});
+
+document.getElementById("board").classList.add("locked");
+Score.init({ moduleId:"s26", version:1, scaffold:2, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>{ try{ draw(); }catch(e){} } });
+</script>
+</body>
+</html>

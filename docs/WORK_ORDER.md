@@ -80,9 +80,18 @@ With it, it is the student's own number, on screen.
 
 ---
 
-### 3. Build Thread B
+### 3. Build Thread B  — partly done 2026-08-24
 
 Mostly connection; one genuinely new stage.
+
+**Built:** `app/scaffolds/s26_inherited_or_invented.html` — eight species on a
+fixed tree, click any to give it a feature, and the page reports the fewest number
+of times that feature could have arisen (Fitch parsimony, verified). The presets
+land on the lecture's own cases: turtle+tortoise gives 1 origin, turtle+armadillo
+gives 2. Same feature, same number of species carrying it, different answer. The
+tracker requires the student to build both.
+
+**Still owed** — the early, tree-free statement, and the chopstick promotion:
 
 - **New: the dichotomy, before any biology.** Two things share a feature — same
   source, or arrived separately? Lecture material is ready-made: turtle/tortoise
@@ -155,7 +164,7 @@ letting them stay fused "is how the rest of the arc turns to mud."
 
 ---
 
-### 7. Add the missing leg of Thread C — survivorship
+### 7. Add the missing leg of Thread C — survivorship ✅ DONE 2026-08-24
 
 Thread C has the shuffled pile (L5, L6, L8) and default-to-drift (L10, L12 E). It
 has nothing for "what you see is what didn't die," which reaches further than
@@ -163,8 +172,15 @@ either: albino alligators (`:441`), important genes varying least (`:2255`), the
 pupfish ponds that are gone (`:2223`), ancient inbreeding looking harmless
 (`:3602`), the peacock's tail meaning only "a tiger didn't get me."
 
-One mechanic: the student is shown a filtered sample and asked to infer the
-unfiltered population.
+**Built** as `app/scaffolds/s27_what_didnt_die.html`. One white alligator per
+thousand found in the swamp; two dials, the hatch rate and how a white hatchling
+fares next to a normal one. Every hatch rate from 1 to 200 per thousand can be
+dialled to that same swamp count — a 200-fold range producing one observation.
+The tracker asks for three different hatch rates that all match. Both keys
+verified across the real slider ranges.
+
+Original mechanic, for the record: the student is shown a filtered sample and
+asked to infer the unfiltered population.
 
 **Note:** S21 (collider) is *not* free for this. It is the designed conditioning
 rung `S-cond` [25], placed before units 26 and 29 because both ask the student to

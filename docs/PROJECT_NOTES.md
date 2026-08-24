@@ -369,3 +369,67 @@ that directory records why each was retired and what absorbed it.
 the lessons and the lecture tex), `_reference/design/` (the Mitchell Design System,
 a separate skill), `_reference/notes_old_ideas/` (already archived),
 `notes/questions.yaml` (question-style source material), `data/`.
+
+---
+
+## 9. Thread map — what each piece is for
+
+Which of the three threads each shipped piece serves, and the one line it exists
+to produce. **A** = the slope, **B** = the ledger (inherited or invented),
+**C** = the discipline (a pattern is not its own explanation). A piece with no
+thread is doing groundwork rather than carrying an argument, which is fine — but
+a whole arc of them is a warning.
+
+| | Piece | Thread | What it is for |
+|---|---|---|---|
+| | L1 | — | a spread has a middle and a width; misses have a sign |
+| | L2 | C | a running average settles, then leaves; overlap caps how well you can tell two crowds apart |
+| | L3 | **A** | one number → plus a group → plus a rate. The ladder |
+| | L4 | **A**, C | the best line is a cloud of lines, and its width is set by how much you measured |
+| | S23 | **A**, C | that cloud and a histogram of outcomes are one object |
+| | L5 | C | build the pile chance alone could produce, then see whether yours sits in it |
+| | S01 | C | "no trend" is a distribution, not the number zero |
+| | L6 | C | one test, four verdicts; which input moved each one |
+| | S21 | C | holding something fixed cleans one picture and poisons another |
+| | S22 | C | what a single observed change licenses you to say |
+| | L7 | **A**, **B** | a resemblance is a slope — and so is a shared first language |
+| | **S26** | **B** | two species, one feature: handed down, or arrived twice? |
+| | L8 | C | the expected ratio and the observed ratio are different objects |
+| | L9 | C | a baseline of no change, then each rule switched off |
+| | L10–L11 | C | frequencies move with no force acting; read population size off the rate of loss |
+| | S04–S06 | C | fixation odds, timing, and telling drift from selection |
+| | L12–L13 | C | a push against wandering; where harmful variants settle |
+| | S08–S09 | **A**, C | recover a rate from an observed change; recover a cost from a frequency |
+| | L14 | **A** | a shortfall splits into within and between — the ratio that returns in L26 |
+| | S10 | **A** | the same shortfall, drilled |
+| | L15 | **A** | the response is the push times the carry-over. Opens on L7's own slope |
+| | S07 | **A** | the same lever, year by year |
+| | **S25** | **A** | a slope where some points count more than others. Feeds L26 |
+| | L16 | **A** | movement between groups caps divergence; you recover a product, never its factors |
+| | S11 | **A** | the same inverter |
+| | L17 | **A** | relatedness is a slope, and it sets what a cost must buy |
+| | S12 | **A** | the same rule, drilled |
+| | L18 | **B** | what a tree encodes, and what is only how it was hung |
+| | S13 | **B** | rotate the hinges; relationships hold |
+| | L19 | **A**, **B** | subtract the shared inheritance before comparing; the slope can flip sign |
+| | S15 | **B** | the same non-independence, drilled |
+| | S19 | **B**, C | convergence, drift, or shared ancestry — and you need the tree to say |
+| | **S27** | C | you are always counting what is still there |
+| | L20–L25 | mixed | Arc 4 — skeletons; S14/S16/S17/S18/S20 cover much of the content |
+| | S24 | C | when two methods agreeing is evidence and when it is not |
+| | L26 | **A** | the change in the average *is* the slope. Opens on the student's S25 slopes |
+| | L30, L31 | **A** | the same ratio at cell→individual and individual→superorganism |
+| | L34 | **A**, **B**, C | the cascade side by side, then above the individual and off DNA |
+
+**What this table shows.** Thread A now runs unbroken from L3 to L26 with two
+welds carrying the student's own numbers. Thread C is dense through Arcs 1–2 and
+has its survivorship leg at S27. **Thread B is still the thin one** — L7, S26,
+L18, L19, S13, S15, S19 — and everything in it except S26 arrives late, in tree
+territory. The early, biology-free statement of the dichotomy is still owed.
+
+**Placement note on S26.** It poses the dichotomy before any tree is on screen
+(the first question is answerable only with "you cannot tell from the two of them
+alone"), and then introduces the tree as the instrument that settles it. That
+makes it usable either as a motivation *for* L18 or as a consolidation *after* it.
+It currently sits with the Arc 3 tree lessons on the index. Moving it earlier is a
+curricular call, not a build one.

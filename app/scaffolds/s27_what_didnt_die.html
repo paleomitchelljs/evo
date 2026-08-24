@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>BIO 202 — Scaffold S27: counting what is left after something did the removing</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; max-width:82ch; }
+  header a.back { color:var(--muted); text-decoration:none; font-size:12px; }
+  main { max-width:980px; margin:0 auto; padding:24px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; margin:0 0 16px; }
+  .panel h3 { margin:0 0 10px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  canvas { width:100%; height:auto; display:block; background:#fff; }
+  .q { font-weight:600; margin:0 0 8px; }
+  .choice { display:block; width:100%; text-align:left; padding:9px 12px; margin:0 0 7px; background:#fafaf7; border:1px solid var(--rule); border-radius:4px; font:14px -apple-system,sans-serif; cursor:pointer; }
+  .choice:hover { border-color:var(--accent2); }
+  .choice.picked { background:var(--accent2); color:#fff; border-color:var(--accent2); }
+  .choice:disabled { cursor:default; opacity:.75; }
+  .submit { padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .submit:disabled { background:#bbb; cursor:not-allowed; }
+  .controls.locked { opacity:.4; pointer-events:none; }
+  .row { display:grid; grid-template-columns:210px 1fr 110px; align-items:center; gap:10px; margin-bottom:8px; }
+  .row output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .row input[type=range] { width:100%; }
+  .stat { font-family:ui-monospace,Menlo,monospace; font-size:13px; margin-top:10px; }
+  .stat .big { font-size:22px; font-weight:600; color:var(--accent); }
+  .tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
+  .tracker.shown { display:block; }
+  .tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
+  .found { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:6px; color:#4a3a14; }
+  .stage2 { display:none; } .stage2.shown { display:block; }
+  .reveal { display:none; margin-top:12px; padding:11px 14px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e4410; }
+  .reveal.shown { display:block; }
+</style>
+</head>
+<body>
+<header>
+  <h1>S27 — Counting what is left after something did the removing</h1>
+  <p>Albino alligators hatch in the swamp and in the zoo at the same rate. You only
+  ever see them in the zoo. Walk the swamp and count: about one white alligator in
+  every thousand. Now work out how many hatched that way.
+  <a class="back" href="../../index.html">← all activities</a></p>
+</header>
+<div id="score-name" style="max-width:980px;margin:16px auto 0;padding:0 24px"></div>
+
+<main>
+  <div class="panel">
+    <div class="q">Predict first. A white hatchling does worse in the swamp than a normal one. You walk the swamp and find one white alligator in every thousand. The number that <em>hatched</em> white, per thousand, is:</div>
+    <button class="choice" data-q="1" data-c="0">More than one</button>
+    <button class="choice" data-q="1" data-c="1">Exactly one — that is what counting is for</button>
+    <button class="choice" data-q="1" data-c="2">Fewer than one</button>
+    <button class="submit" id="submit1" disabled>Submit → unlock the sliders</button>
+  </div>
+
+  <div class="panel">
+    <h3>Set the swamp</h3>
+    <div class="controls locked" id="controls">
+      <div class="row">
+        <label for="bIn">hatch white, per thousand</label>
+        <input type="range" id="bIn" min="1" max="200" step="1" value="1">
+        <output id="bOut">1</output>
+      </div>
+      <div class="row">
+        <label for="rIn">a white hatchling's chance of living, next to a normal one</label>
+        <input type="range" id="rIn" min="-2.4" max="0" step="0.05" value="0">
+        <output id="rOut">1.00×</output>
+      </div>
+    </div>
+    <div class="stat">
+      <span style="color:var(--muted)">white alligators you would find, per thousand:</span>
+      <span id="seen" class="big">—</span>
+      <span id="match" style="color:#6f8a4a;font-weight:600"></span>
+    </div>
+    <div class="tracker" id="tracker">
+      Find <strong>three different</strong> hatch rates that all leave about one white per thousand in the swamp.
+      <span class="count">0/3</span>
+      <div class="found" id="foundList"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>What hatched, and what you find</h3>
+    <canvas id="plot" width="900" height="220"></canvas>
+    <p style="font-size:12.5px;color:var(--muted);margin:8px 0 0">
+      Both marks are rates per thousand, on a scale where each step is ten times the
+      one before. The gap between them is whatever did the removing.</p>
+  </div>
+
+  <div class="panel stage2" id="stage2">
+    <div class="q">You matched the same swamp count three different ways. From the count alone — one white per thousand found — the number that hatched white is:</div>
+    <button class="choice" data-q="2" data-c="0">Not recoverable without knowing how many died</button>
+    <button class="choice" data-q="2" data-c="1">One per thousand</button>
+    <button class="choice" data-q="2" data-c="2">Recoverable if you count enough alligators</button>
+    <button class="submit" id="submit2" disabled>Submit</button>
+    <div class="reveal" id="reveal"></div>
+  </div>
+</main>
+<div id="score-final" style="max-width:980px;margin:0 auto;padding:0 24px 40px"></div>
+
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+// b = fraction hatching white; rel = a white hatchling's survival next to a
+// normal one. What you find among the living:
+//     seen = b*rel / (b*rel + (1-b))
+// The swamp count pins down b*rel and nothing else, so b is not recoverable from
+// it -- which is the whole of this scaffold.
+let b = 0.001, rel = 1;
+const seenPerK = () => 1000 * (b*rel) / (b*rel + (1-b));
+const TARGET = 1, TOL = 0.3;
+
+function draw(){
+  const c=document.getElementById("plot"); const {ctx,W,H}=setupCanvas(c);
+  ctx.clearRect(0,0,W,H);
+  const pad={l:70,r:30,t:34,b:44};
+  const lo=-1, hi=2.4;                       // log10 of rate per thousand
+  const X=v=>pad.l+((Math.log10(Math.max(v,1e-3))-lo)/(hi-lo))*(W-pad.l-pad.r);
+
+  // axis
+  ctx.strokeStyle="#999"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+  ctx.fillStyle="#555"; ctx.font="11px ui-monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for(const v of [0.1,1,10,100]){ const x=X(v);
+    ctx.beginPath(); ctx.moveTo(x,H-pad.b); ctx.lineTo(x,H-pad.b+5); ctx.stroke();
+    ctx.fillText(String(v), x, H-pad.b+8); }
+  ctx.font="12px -apple-system"; ctx.fillText("per thousand", (pad.l+W-pad.r)/2, H-14);
+
+  const yH=pad.t+16, yS=pad.t+66;
+  const xH=X(b*1000), xS=X(seenPerK());
+
+  // the removing, drawn as the gap
+  ctx.strokeStyle="#c8c8c2"; ctx.lineWidth=2; ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(xH,yH+10); ctx.lineTo(xS,yS-10); ctx.stroke(); ctx.setLineDash([]);
+
+  function mark(x,y,label,val,color){
+    ctx.beginPath(); ctx.arc(x,y,8,0,2*Math.PI); ctx.fillStyle=color; ctx.fill();
+    ctx.fillStyle="#1d1d1b"; ctx.font="12px -apple-system"; ctx.textAlign="right"; ctx.textBaseline="middle";
+    ctx.fillText(label, pad.l-12, y);
+    ctx.textAlign="left"; ctx.font="12px ui-monospace"; ctx.fillStyle=color;
+    ctx.fillText(val, x+13, y);
+  }
+  mark(xH,yH,"hatched white", (b*1000).toFixed(1), "#2f6b8f");
+  mark(xS,yS,"found white",  seenPerK().toFixed(2), "#b23a48");
+
+  // the target band
+  ctx.fillStyle="rgba(111,138,74,0.16)";
+  ctx.fillRect(X(TARGET-TOL), pad.t, X(TARGET+TOL)-X(TARGET-TOL), H-pad.t-pad.b);
+}
+
+const hits=[];
+let live=false;   // the load-time draw must not count as a match the student found
+function update(){
+  const s=seenPerK();
+  document.getElementById("seen").textContent=s.toFixed(2);
+  const ok=Math.abs(s-TARGET)<=TOL;
+  document.getElementById("match").textContent = ok ? "✓ matches the swamp" : "";
+  if(ok && live){
+    const bp=Math.round(b*1000);
+    if(!hits.includes(bp)){
+      hits.push(bp);
+      document.querySelector("#tracker .count").textContent=Math.min(hits.length,3)+"/3";
+      document.getElementById("foundList").textContent =
+        "matched at " + hits.slice().sort((x,y)=>x-y).map(v=>v+"/1000").join(",  ");
+      if(hits.length>=3){
+        document.getElementById("tracker").classList.add("complete");
+        document.getElementById("stage2").classList.add("shown");
+      }
+    }
+  }
+  draw();
+}
+
+document.getElementById("bIn").addEventListener("input",e=>{
+  b=(+e.target.value)/1000; document.getElementById("bOut").textContent=e.target.value;
+  update(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+});
+document.getElementById("rIn").addEventListener("input",e=>{
+  rel=Math.pow(10,+e.target.value);
+  document.getElementById("rOut").textContent = rel>=0.01 ? rel.toFixed(2)+"×" : rel.toExponential(1)+"×";
+  update(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+});
+
+let pick1=null, pick2=null;
+function wire(q,on){
+  document.querySelectorAll(`.choice[data-q="${q}"]`).forEach(btn=>btn.addEventListener("click",()=>{
+    if(btn.disabled) return;
+    document.querySelectorAll(`.choice[data-q="${q}"]`).forEach(x=>x.classList.remove("picked"));
+    btn.classList.add("picked"); on(+btn.dataset.c);
+  }));
+}
+wire(1,c=>{pick1=c; document.getElementById("submit1").disabled=false;});
+wire(2,c=>{pick2=c; document.getElementById("submit2").disabled=false;});
+
+document.getElementById("submit1").addEventListener("click",()=>{
+  document.getElementById("controls").classList.remove("locked");
+  document.getElementById("submit1").style.display="none";
+  document.querySelectorAll('.choice[data-q="1"]').forEach(x=>x.disabled=true);
+  document.getElementById("tracker").classList.add("shown");
+  live=true;
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, pick1===0?1:0);
+});
+document.getElementById("submit2").addEventListener("click",()=>{
+  document.getElementById("submit2").style.display="none";
+  document.querySelectorAll('.choice[data-q="2"]').forEach(x=>x.disabled=true);
+  const rev=document.getElementById("reveal");
+  rev.classList.add("shown");
+  rev.innerHTML="<strong>One white per thousand in the swamp is consistent with one per thousand hatching, and with two hundred.</strong> "+
+    "The count you can take fixes the hatch rate multiplied by the chance of surviving, and nothing separates the two. "+
+    "To get the hatch rate you have to go where nothing is doing the removing — which is the zoo, and is how anyone knows the rate is the same in both. "+
+    "Every count you will ever take in this course is a count of what is still there.";
+  if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(1, pick2===0?1:0);
+  if(typeof Score!=="undefined"&&Score.finish) Score.finish();
+});
+
+Score.init({ moduleId:"s27", version:1, scaffold:2, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady:()=>{ try{ update(); }catch(e){} } });
+</script>
+</body>
+</html>
