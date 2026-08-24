@@ -182,6 +182,66 @@
     } catch (e) { /* parse error — ignore */ }
   }
 
+  // --- cross-lesson carryover ------------------------------------------------
+  // A lesson stores the number the student produced with their own hands; a
+  // later lesson opens on that number instead of a fresh control. This is what
+  // welds the slope thread together: the rate landed in one lesson becomes the
+  // lever in the next, so "the quantity you have been fitting all along" is the
+  // student's own value on screen rather than an assertion.
+  //
+  // Scoped to the student, not the module — deliberately outside storageKey(),
+  // which is per-module and version-stamped. Carried values survive a module
+  // version bump; they are inputs to a later lesson, not scoring state.
+  //
+  //   Score.carry("l7.slope", 0.65)
+  //   Score.recall("l7.slope")          -> 0.65, or null if never set
+  //   Score.recallInfo("l7.slope")      -> {value, from, at} or null
+
+  function carryKey() {
+    return "bio202-carry:" + nameToken(state.studentName);
+  }
+
+  function readCarry() {
+    if (!state.studentName) return {};
+    try {
+      const raw = localStorage.getItem(carryKey());
+      if (!raw) return {};
+      const obj = JSON.parse(raw);
+      return (obj && typeof obj === "object") ? obj : {};
+    } catch (e) { return {}; }
+  }
+
+  function carry(key, value) {
+    if (!state.studentName) return false;   // nothing to key on yet
+    if (typeof key !== "string" || !key) return false;
+    if (typeof value === "number" && !isFinite(value)) return false;
+    try {
+      const all = readCarry();
+      all[key] = { v: value, from: state.moduleId, at: Date.now() };
+      localStorage.setItem(carryKey(), JSON.stringify(all));
+      return true;
+    } catch (e) { return false; }          // storage full or disabled — fail silent
+  }
+
+  function recall(key, fallback) {
+    const rec = readCarry()[key];
+    if (!rec || typeof rec !== "object" || !("v" in rec)) {
+      return (fallback === undefined) ? null : fallback;
+    }
+    return rec.v;
+  }
+
+  function recallInfo(key) {
+    const rec = readCarry()[key];
+    if (!rec || typeof rec !== "object" || !("v" in rec)) return null;
+    return { value: rec.v, from: rec.from || null, at: rec.at || null };
+  }
+
+  function clearCarry() {
+    if (!state.studentName) return;
+    try { localStorage.removeItem(carryKey()); } catch (e) { /* ignore */ }
+  }
+
   function init(opts) {
     state.moduleId = String(opts.moduleId);
     state.version = opts.version || 1;
@@ -573,6 +633,7 @@
   global.Score = {
     init, recordPretest, recordCheckpoint, recordPosttest, finish,
     isAnswered, allAnswered, getBit,
+    carry, recall, recallInfo, clearCarry,   // cross-lesson carryover
     bumpManipulation, getManipulations, manipulationCount,
     scoring, nameToken, elapsedSeconds,
     decodeCode,            // v3 verifier entry point

@@ -74,21 +74,22 @@
   <div class="lock-banner">Complete Stage A.</div>
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Each parent contributes to offspring: offspring_z = h²·parent_z + Normal(0, σ_e). After truncation selection at fraction f, the breeders' mean is offset by S. The offspring mean is offset by h²·S.</p></div>
+      <div class="panel scenario"><h3>Scenario</h3><p>Only the breeders from Stage A have offspring. How much of a parent's departure from the herd shows up in its offspring is set by the carry-over dial. Run it for twenty generations and watch where the herd average goes.</p>
+        <p id="B_carryNote" class="carry-note" hidden></p></div>
       <div class="panel graph-wrap"><h3>Mean trait over generations</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">h²:</span> <span id="B_h2">0.5</span> &nbsp;|&nbsp; <span class="label">f selected:</span> <span id="B_f">0.20</span> &nbsp;|&nbsp; <span class="label">S per gen:</span> <span id="B_S">—</span> &nbsp;|&nbsp; <span class="label">total response (20 gen):</span> <span id="B_total" class="big">—</span></div></div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predB"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. With h² = 0.5, S = 1.4 per generation, and 20 generations of selection, the expected total shift in trait mean is closest to:</div>
-          <label><input type="radio" name="qB1" value="small" /> 1.4 (one generation)</label>
-          <label><input type="radio" name="qB1" value="medium" /> 14 (= 20 × h² × S)</label>
-          <label><input type="radio" name="qB1" value="big" /> 28 (= 20 × S)</label>
-          <label><input type="radio" name="qB1" value="zero" /> 0 (response asymptotes immediately)</label></li></ol>
+        <ol><li><div class="q">Q1. The carry-over dial sits at 0.50. Each generation the breeders average 1.4 above the herd. After twenty generations, the herd average has moved by about:</div>
+          <label><input type="radio" name="qB1" value="small" /> 1.4</label>
+          <label><input type="radio" name="qB1" value="medium" /> 14</label>
+          <label><input type="radio" name="qB1" value="big" /> 28</label>
+          <label><input type="radio" name="qB1" value="zero" /> 0</label></li></ol>
         <button id="submitB" disabled>Submit → unlock</button>
         <div class="explore-tracker" id="exploreB">Try at least 4 (h², f) combos. <span class="count">0/4 combos</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
-          <div class="row"><label for="B_h2In">h²</label><input type="range" id="B_h2In" min="0" max="1" step="0.05" value="0.5" /><output id="B_h2Out">0.50</output></div>
-          <div class="row"><label for="B_fIn">fraction selected</label><input type="range" id="B_fIn" min="0.05" max="0.95" step="0.05" value="0.2" /><output id="B_fOut">0.20</output></div>
+          <div class="row"><label for="B_h2In">carry-over</label><input type="range" id="B_h2In" min="0" max="1" step="0.05" value="0.5" /><output id="B_h2Out">0.50</output></div>
+          <div class="row"><label for="B_fIn">fraction allowed to breed</label><input type="range" id="B_fIn" min="0.05" max="0.95" step="0.05" value="0.2" /><output id="B_fOut">0.20</output></div>
           <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
           <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div></div></div>
       <div class="panel"><h3>R code — breeder's equation</h3>
@@ -367,7 +368,34 @@ coef(fit)
 `);});
 wirePrediction("D","predD",["qD1"],"controlsD"); loadGrant();
 
-Score.init({moduleId:"lesson15", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+// If the student fitted a parent-to-offspring slope in Lesson 7, Stage B's
+// carry-over dial opens on that number instead of an anonymous 0.50. The note
+// states where the number came from and nothing else — what it means here is
+// the thing this stage exists to make them notice.
+function applyCarriedSlope() {
+  if (!(window.Score && Score.recallInfo)) return;
+  const rec = Score.recallInfo("parentChildSlope");
+  if (!rec || typeof rec.value !== "number") return;
+  const v = Math.round(rec.value / 0.05) * 0.05;
+  if (!(v >= 0 && v <= 1)) return;
+  sB.h2 = v;
+  const slider = document.getElementById("B_h2In");
+  const out    = document.getElementById("B_h2Out");
+  const codeH  = document.getElementById("cB_h");
+  if (slider) slider.value = v;
+  if (out)   out.textContent   = v.toFixed(2);
+  if (codeH) codeH.textContent = v.toFixed(2);
+  document.getElementById("B_h2").textContent = v.toFixed(2);
+  const note = document.getElementById("B_carryNote");
+  if (note) {
+    note.textContent = "Carry-over opens at " + rec.value.toFixed(2) +
+      " — the slope you fitted through Galton's families in Lesson 7.";
+    note.hidden = false;
+  }
+  if (typeof drawStageB === "function") drawStageB();
+}
+
+Score.init({moduleId:"lesson15", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); applyCarriedSlope(); }});
 </script>
 </body>
 </html>
