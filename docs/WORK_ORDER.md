@@ -198,6 +198,43 @@ to eight or nine once absorption is done.
 
 ---
 
+## Questions that need a content fix before they can be scored
+
+Found while wiring grading (2026-08-24). Each of these still gates and still
+records engagement, but occupies no scored slot, because no option on offer is
+defensibly correct at the stage's own defaults. These are content bugs, not
+wording bugs — a plain-language rewrite will not fix them.
+
+- **L9 stage B** — "which violation moves the frequency most?" Non-random mating
+  moves it *exactly* zero for any starting frequency (`p²+Fpq + pq(1−F) = p`), and
+  mutation also moves it exactly zero because the stage starts at p = 0.5, the
+  mutational equilibrium. That toggle currently produces no visible effect at all.
+  Between the two that do move it, drift vs selection is seed-dependent.
+  *Fix:* start the stage at p = 0.3 so mutation visibly pulls toward 0.5, then ask
+  which one leaves the mix exactly where it started — a single, provable answer.
+- **L9 stage C** — asks about F = 0.3 at N = 200 and keys "the test is weak at
+  this N." χ² there is ≈ N·F² = 18; it rejects strongly. *Fix:* ask what happens
+  to your ability to notice a *fixed* real shortfall as the sample shrinks.
+- **L11 stage B** — asks whether depth or duration matters more. The stage's own
+  formula makes loss depend on duration ÷ depth: matched ratios give identical
+  loss (37–39% across a 10× range of both), while the ratio swings it from 4% to
+  99%. Depth, duration, and "the product" are all wrong. *Fix:* ask what pairs of
+  settings produce the same loss.
+- **L13 stage A** — built to show that arrival alone does not accumulate because
+  drift keeps wiping new mutations out, but at μ = 10⁻⁴ and N = 1000 its own
+  readout gives mean final q ≈ 0.34. The simulator contradicts the stage.
+  *Fix:* lower μ (or track the fate of individual new mutants rather than the
+  mean) so the intended point is what the screen actually shows.
+
+## Deferred: the plain-language question pass
+
+Question wording across all lessons still carries notation and embedded
+rationale — `q̂`, `F_IS`, `Pagel's λ`, and options like "Rise (r·b = 0.15 > c =
+0.1)" that hand over the reasoning the student is meant to supply. Hold this
+pass until lesson content is settled, then do it in one sweep against the
+options-state-what-never-why rule. L8's four questions were rewritten this way as
+a sample of the target register.
+
 ## P1 — same round, lower cost
 
 - **Rewrite the skeleton TODO specs out of tell-form.** `lesson22.html:52` states
