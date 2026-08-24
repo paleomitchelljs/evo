@@ -144,11 +144,9 @@ That map is the Rosetta stone for the whole project and it is a Python dict.
 Seven lessons with an identical A/B/C/D shape is the opposite of the variety that
 makes Arc 1 work, and the atlas concedes the repetition itself. Keep:
 
-- **L26** — the identity (keystone; Stage A built; now fed by L16a)
-- **L30** — cell → individual (has a working simulator; it is the student's own
-  body; reuses L14's split bar)
-- **L31** — individual → superorganism (L17 D explicitly sets it up; this is where
-  it cashes)
+- **L26** — the identity. **Stages A, B, C, E built 2026-08-24** on one two-level engine; stage D (the three lower transitions) still a spec
+- **L30** — cell → individual. Its simulator now has a prediction gate and scores; the intro no longer printed the reveal
+- **L31** — individual → superorganism. **Built 2026-08-24** on the same engine: queen mating number sets what two workers share, which sets how much colonies differ; a policing dial shrinks the within-colony term
 
 **Done.** 27/28/29 are now lesson26 stage D, "the same diagnostic, three times
 down the stack" — one panel, a three-way toggle, one plot, three anchors

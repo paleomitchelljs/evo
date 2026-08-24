@@ -28,6 +28,7 @@
   footer.wrap-up .closing .src { display:block; margin-top:8px; font-size:12px; color:var(--quote-src); font-family:ui-monospace,Menlo,monospace; }
   footer.wrap-up a.next { display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600; }
   footer.wrap-up a.home { color:var(--muted); text-decoration:none; margin-left:14px; }
+  .locked-until-predicted input[type=range]{opacity:.4;pointer-events:none}
 </style>
 </head>
 <body>
@@ -60,8 +61,15 @@
     <span class="src">— 202_lec30_03</span>
   </div>
   <div id="lesson30-sim" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
-    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;"><strong>Move the within-colony relatedness slider.</strong> 200 cells, 10 colonies of 20. Each cell has a "selfish growth" trait z and a fitness w. As cells become more related within a colony, between-colony cov(W, Z) takes over from within-colony cov(w, z).</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
+    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">200 cells in 10 colonies of 20. Each cell has a selfish-growth trait <em>z</em> and a fitness <em>w</em>; each colony has a fitness of its own. Grey dots are cells, red dots are colonies.</p>
+    <div class="prediction" id="predB" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:12px 14px;margin:0 0 12px;">
+      <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. Cells in a colony start out unrelated and you make them steadily more alike. The level carrying the change will end up being:</div>
+      <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qB" value="colony" /> The colony</label>
+      <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qB" value="cell" /> The cell</label>
+      <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qB" value="same" /> Neither — the split does not move</label>
+      <button id="submitB" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the sliders</button>
+    </div>
+    <div id="l30controls" class="locked-until-predicted" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
       <div>
         <canvas id="l30plot" width="380" height="240" style="width:100%;display:block;background:#fafaf7;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
         <div style="font:12px ui-monospace,Menlo,monospace;color:#1d1d1b;margin-top:6px;">
@@ -213,8 +221,21 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson30", version: 1, pretest: 0, scaffold: 0, posttest: 0,
+  Score.init({ moduleId: "lesson30", version: 2, pretest: 0, scaffold: 1, posttest: 0,
     mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  (function wireB(){
+    const root=document.getElementById("predB"), btn=document.getElementById("submitB");
+    root.querySelectorAll('input[name="qB"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=root.querySelector('input[name="qB"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, p.value==="colony");
+      const m=document.createElement("div");
+      m.style.cssText="background:#f4d3d7;border:1px solid #b23a48;color:#b23a48;padding:8px 10px;border-radius:4px;font-size:13px;margin-bottom:6px";
+      m.textContent="Locked in. Now try it and see.";
+      root.insertBefore(m, root.firstChild); btn.style.display="none";
+      const c=document.getElementById("l30controls"); if(c) c.classList.remove("locked-until-predicted");
+    });
+  })();
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>

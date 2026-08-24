@@ -65,7 +65,7 @@ what-you-see-is-what-didn't-die. Well served except the survivorship leg.
 ## 2. Verified state (2026-08-24)
 
 ```
-app/lessons/lesson*.html       29 lessons; 1–19 built, 20–26/30/31/34 skeletons
+app/lessons/lesson*.html       29 lessons; 1–19 and 26/30/31 built, 20–25 + 34 skeletons
                                (27/28/29/32/33 folded away — see below)
 app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
@@ -417,8 +417,9 @@ a whole arc of them is a warning.
 | | **S27** | C | you are always counting what is still there |
 | | L20–L25 | mixed | Arc 4 — skeletons; S14/S16/S17/S18/S20 cover much of the content |
 | | S24 | C | when two methods agreeing is evidence and when it is not |
-| | L26 | **A** | the change in the average *is* the slope. Opens on the student's S25 slopes |
-| | L30, L31 | **A** | the same ratio at cell→individual and individual→superorganism |
+| | L26 | **A** | the change in the average *is* the slope. Stages A/B/C/E built on one two-level engine; stage D still a spec |
+| | L30 | **A** | the same ratio at cell→individual; gated and scored |
+| L31 | **A** | the same engine at individual→superorganism; what two workers share sets how much colonies differ |
 | | L34 | **A**, **B**, C | the cascade side by side, then above the individual and off DNA |
 
 **What this table shows.** Thread A now runs unbroken from L3 to L26 with two
