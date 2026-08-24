@@ -207,7 +207,34 @@ const EXPLORE_THRESHOLD = { A:4, B:4, C:3, D:2 };
 function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="D"?"resamples":"combos"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
 function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
 function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
-function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+/* Scored scaffold slot each stage's questions write to. A stage absent from
+   this map still gates and still records engagement, but is not scored. */
+const PRED_POS = {A:0, B:1, C:2, D:3};
+
+/* Graded prediction gate. `answers[i]` is either the winning value= token for a
+   radio group, or a predicate over the array of checked values for a checkbox
+   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
+   revealed on screen — the student finds out by running it. */
+function wirePrediction(stage, predId, names, answers, controlsId){
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
+  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
+  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
+  btn.addEventListener("click",()=>{
+    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
+      if(typeof key==="function") return !!key(vals);
+      return vals.length===1 && vals[0]===key;});
+    const ol=root.querySelector("ol"); const msg=document.createElement("div");
+    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
+    root.insertBefore(msg, ol); btn.style.display="none";
+    Gates[stage].predicted=true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
+    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
+      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
+  });
+}
 
 const sA = { N:100, p:0.5, seed:42 };
 function drawStageA() {
@@ -236,7 +263,7 @@ document.getElementById("A_download").addEventListener("click",()=>{downloadText
 Fs <- replicate(reps, { obs <- rmultinom(1, N, c(p^2, 2*p*(1-p), (1-p)^2))[,1]; phat <- (2*obs[1]+obs[2])/(2*N); Hexp <- 2*phat*(1-phat); Hobs <- obs[2]/N; 1 - Hobs/Hexp })
 mean(Fs); sd(Fs)
 `);});
-wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+wirePrediction("A","predA",["qA1"],["small"],"controlsA"); drawStageA();
 
 const sB = { p1:0.7, p2:0.3, w:0.5, N:500, seed:42 };
 function drawStageB() {
@@ -276,7 +303,7 @@ o2 <- rmultinom(1,N2,c(p2^2,2*p2*(1-p2),(1-p2)^2))[,1]
 obs <- o1 + o2; phat <- (2*obs[1]+obs[2])/(2*N)
 1 - (obs[2]/N) / (2*phat*(1-phat))
 `);});
-wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+wirePrediction("B","predB",["qB1"],["medium"],"controlsB"); drawStageB();
 
 const sC = { FIS:0.1, demes:5, spread:0.05, seed:42, split:0 };
 function drawStageC() {
@@ -353,7 +380,7 @@ pbar <- mean(ps); FST <- var(ps)/(pbar*(1-pbar))
 FIT <- 1 - (1-F_IS)*(1-FST)
 c(FIS = F_IS, FST = FST, FIT = FIT)
 `);});
-wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+wirePrediction("C","predC",["qC1"],["mult"],"controlsC"); drawStageC();
 
 const sD = { seed:42, data:null };
 async function loadFSJ() {
@@ -412,7 +439,7 @@ Fs <- sapply(unique(fsj$locus), function(L) {
 })
 hist(Fs); mean(Fs > 0.2)
 `);});
-wirePrediction("D","predD",["qD1"],"controlsD"); loadFSJ();
+wirePrediction("D","predD",["qD1"],["few"],"controlsD"); loadFSJ();
 
 Score.init({moduleId:"lesson14", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>

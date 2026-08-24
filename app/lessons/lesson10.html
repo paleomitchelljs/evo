@@ -235,7 +235,34 @@ const EXPLORE_THRESHOLD = { A:5, B:4, C:3, D:3 };
 function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"N values":stage==="C"?"s values":"sims"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
 function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
 function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
-function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+/* Scored scaffold slot each stage's questions write to. A stage absent from
+   this map still gates and still records engagement, but is not scored. */
+const PRED_POS = {A:0, B:1, C:2, D:3};
+
+/* Graded prediction gate. `answers[i]` is either the winning value= token for a
+   radio group, or a predicate over the array of checked values for a checkbox
+   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
+   revealed on screen — the student finds out by running it. */
+function wirePrediction(stage, predId, names, answers, controlsId){
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
+  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
+  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
+  btn.addEventListener("click",()=>{
+    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
+      if(typeof key==="function") return !!key(vals);
+      return vals.length===1 && vals[0]===key;});
+    const ol=root.querySelector("ol"); const msg=document.createElement("div");
+    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
+    root.insertBefore(msg, ol); btn.style.display="none";
+    Gates[stage].predicted=true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
+    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
+      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
+  });
+}
 
 /* STAGE A — trajectories */
 const sA = { N:100, p0:0.5, gens:200, seed:42, fan:false, guessHi:null, guessLo:null, guessSubmitted:false };
@@ -321,7 +348,7 @@ traj <- numeric(gens+1); traj[1] <- p
 for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj[g+1] <- p }
 plot(traj, type="l", ylim=c(0,1))
 `);});
-wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+wirePrediction("A","predA",["qA1"],["spread"],"controlsA"); drawStageA();
 
 /* STAGE B — time to fixation */
 const sB = { N:50, p0:0.5, seed:42 };
@@ -352,7 +379,7 @@ document.getElementById("B_download").addEventListener("click",()=>{downloadText
 tfix <- replicate(reps, { p <- p0; g <- 0; while (p > 0 && p < 1) { p <- rbinom(1, 2*N, p)/(2*N); g <- g + 1 }; g })
 mean(tfix)
 `);});
-wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+wirePrediction("B","predB",["qB1"],["medium"],"controlsB"); drawStageB();
 
 /* STAGE C — fixation prob vs p0 */
 const sC = { N:50, s:0, seed:42 };
@@ -381,7 +408,7 @@ pfix <- sapply(p0s, function(p0) mean(replicate(reps, {
 })))
 plot(p0s, pfix); abline(0, 1)
 `);});
-wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+wirePrediction("C","predC",["qC1"],["diagonal"],"controlsC"); drawStageC();
 
 /* STAGE D — Buri overlay */
 const sD = { seed:42, buri:null };
@@ -432,7 +459,7 @@ set.seed(${sD.seed}); N <- 16; gens <- 19; lines <- 107; p0 <- 0.5
 sim <- replicate(lines, { p <- p0; traj <- p; for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj <- c(traj, p) }; traj })
 matplot(t(sim), type="l", col=rgb(0,0,0,0.1))
 `);});
-wirePrediction("D","predD",["qD1"],"controlsD"); loadBuri();
+wirePrediction("D","predD",["qD1"],["many"],"controlsD"); loadBuri();
 
 /* Pretest / Posttest */
 Score.init({moduleId:"lesson10", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});

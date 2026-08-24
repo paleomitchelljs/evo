@@ -273,7 +273,34 @@ const EXPLORE_THRESHOLD = { A:5, B:3, C:3, D:2, E:1 };
 function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=(stage==="D"?"toggles":(stage==="C"?"values":"seeds")); c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
 function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"E",E:null}[s];}
 function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
-function wirePrediction(stage, predId, names, controlsId){const root=document.getElementById(predId); const btn=root.querySelector("button"); function check(){btn.disabled=!names.every(n=>root.querySelector(`input[name="${n}"]:checked`));} names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check))); btn.addEventListener("click",()=>{const ol=root.querySelector("ol"); const msg=document.createElement("div"); msg.className="prediction-done"; msg.innerHTML="Submitted. Controls unlocked — see what happens."; root.insertBefore(msg, ol); btn.style.display="none"; Gates[stage].predicted=true; document.getElementById("explore"+stage).classList.add("shown"); if(controlsId) document.getElementById(controlsId).classList.remove("locked");}); }
+/* Scored scaffold slot each stage's questions write to. A stage absent from
+   this map still gates and still records engagement, but is not scored. */
+const PRED_POS = {A:0, B:1, C:2, D:3, E:4};
+
+/* Graded prediction gate. `answers[i]` is either the winning value= token for a
+   radio group, or a predicate over the array of checked values for a checkbox
+   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
+   revealed on screen — the student finds out by running it. */
+function wirePrediction(stage, predId, names, answers, controlsId){
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
+  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
+  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
+  btn.addEventListener("click",()=>{
+    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
+      if(typeof key==="function") return !!key(vals);
+      return vals.length===1 && vals[0]===key;});
+    const ol=root.querySelector("ol"); const msg=document.createElement("div");
+    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
+    root.insertBefore(msg, ol); btn.style.display="none";
+    Gates[stage].predicted=true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
+    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
+      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
+  });
+}
 
 const sA = { seed:42, n:30 };
 function drawStageA() {
@@ -301,7 +328,7 @@ document.getElementById("A_download").addEventListener("click",()=>{downloadText
 tr <- rcoal(N); x <- rTraitCont(tr); y <- rTraitCont(tr)
 summary(lm(y ~ x))
 `);});
-wirePrediction("A","predA",["qA1"],"controlsA"); drawStageA();
+wirePrediction("A","predA",["qA1"],["more"],"controlsA"); drawStageA();
 
 const sB = { seed:42, corr:0 };
 function drawStageB() {
@@ -328,7 +355,7 @@ document.getElementById("B_download").addEventListener("click",()=>{downloadText
 tr <- rcoal(30); x <- rTraitCont(tr); y <- rTraitCont(tr)
 summary(lm(pic(y,tr) ~ 0 + pic(x,tr)))
 `);});
-wirePrediction("B","predB",["qB1"],"controlsB"); drawStageB();
+wirePrediction("B","predB",["qB1"],["zero"],"controlsB"); drawStageB();
 
 const sC = { trueLambda:1, seed:42 };
 function drawStageC() {
@@ -370,7 +397,7 @@ document.getElementById("C_download").addEventListener("click",()=>{downloadText
 set.seed(${sC.seed}); tr <- rcoal(40); x <- rTraitCont(tr)
 phylosig(tr, x, method = "lambda", test = TRUE)
 `);});
-wirePrediction("C","predC",["qC1"],"controlsC"); drawStageC();
+wirePrediction("C","predC",["qC1"],["one"],"controlsC"); drawStageC();
 
 const sD = { seed:42, data:null };
 async function loadAvonet() {
@@ -423,7 +450,7 @@ birds <- read.csv("data/clean/avonet_birds.csv")
 m <- gls(migration_distance ~ hand_wing_index, data = birds, correlation = corBrownian(phy = bird_tree))
 summary(m)
 `);});
-wirePrediction("D","predD",["qD1"],"controlsD"); loadAvonet();
+wirePrediction("D","predD",["qD1"],["smaller"],"controlsD"); loadAvonet();
 
 /* ====== STAGE E — earthworm Simpson's paradox ====== */
 // Synthetic data: 6 clades × 5 species each. Within-clade slope (body→pH)
@@ -509,7 +536,7 @@ function drawStageE() {
   document.getElementById("E_within").textContent = medW.toFixed(2);
 }
 document.getElementById("E_modeIn").addEventListener("change", (e) => { sE.mode = e.target.value; drawStageE(); bumpExplore("E"); });
-wirePrediction("E","predE",["qE1","qE2"],"controlsE");
+wirePrediction("E","predE",["qE1","qE2"],["flipped","clade"],"controlsE");
 drawStageE();
 
 /* ====== DAG widget — Stage C ====== */
@@ -531,7 +558,7 @@ drawStageE();
   });
 })();
 
-Score.init({moduleId:"lesson19", version:3, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+Score.init({moduleId:"lesson19", version:4, scaffold:6, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>
