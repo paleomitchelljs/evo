@@ -130,7 +130,7 @@ That map is the Rosetta stone for the whole project and it is a Python dict.
 
 ---
 
-### 6. Collapse Arc 5 from seven transitions to three
+### 6. Collapse Arc 5 from seven transitions to three ✅ DONE 2026-08-24
 
 Seven lessons with an identical A/B/C/D shape is the opposite of the variety that
 makes Arc 1 work, and the atlas concedes the repetition itself. Keep:
@@ -141,9 +141,13 @@ makes Arc 1 work, and the atlas concedes the repetition itself. Keep:
 - **L31** — individual → superorganism (L17 D explicitly sets it up; this is where
   it cashes)
 
-Fold 27 / 28 / 29 into L26 as three worked examples of one diagnostic. Fold 32 / 33
-into L34. Frees roughly five builds and removes a repetition problem students would
-feel by the third one.
+**Done.** 27/28/29 are now lesson26 stage D, "the same diagnostic, three times
+down the stack" — one panel, a three-way toggle, one plot, three anchors
+(dachshund FGFR3, the Alu in a Hox regulator, endosymbiosis and somatic
+lineages). 32/33 are now lesson34 stage B, the same instrument pointed above the
+individual and then off DNA. Five builds freed; the repetition is gone. The
+retired files keep the fuller specs — read them when building these two stages
+out.
 
 Also keep **L27b** (`structurephilosophy.md` [39]) on the list — the nesting step
 that pries apart the two meanings of "leftover." The philosophy is explicit that

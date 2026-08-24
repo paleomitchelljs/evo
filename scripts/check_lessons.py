@@ -42,9 +42,13 @@ LESSON_UNIT = {
     13: ("L14", 19), 14: ("L15", 21), 15: ("L16", 23), 16: ("L17", 24),
     17: ("L18", 26), 18: ("L19", 27), 19: ("L20", 29), 20: ("L21", 31),
     21: ("L22", 32), 22: ("L23", 33), 23: ("L24", 34), 24: ("L25", 35),
-    25: ("L26", 37), 26: ("L27", 38), 27: ("L28", 40), 28: ("L29", 41),
-    29: ("L30", 42), 30: ("L31", 43), 31: ("L32", 44), 32: ("L33", 45),
-    33: ("L34", 46), 34: ("L35", 47),
+    25: ("L26", 37), 26: ("L27", 38),
+    # 27/28/29 (gene->chromosome, ->genome, ->cell) folded into lesson26 stage D,
+    # and 32/33 (lineage, off-DNA) into lesson34 stage B, 2026-08-24. Their unit
+    # ids stay in UNIT_SEQ; only the lesson files are gone. Numbering gaps are
+    # deliberate -- renumber in one sweep if ever, not piecemeal.
+    30: ("L31", 43), 31: ("L32", 44),
+    34: ("L35", 47),
 }
 
 # The full 47-unit id->seq table, so ledger unlock ids resolve to positions even

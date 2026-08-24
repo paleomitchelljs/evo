@@ -65,7 +65,8 @@ what-you-see-is-what-didn't-die. Well served except the survivorship leg.
 ## 2. Verified state (2026-08-24)
 
 ```
-app/lessons/lesson1–34.html    34 lessons; 1–19 built, 20–34 mostly skeletons
+app/lessons/lesson*.html       29 lessons; 1–19 built, 20–26/30/31/34 skeletons
+                               (27/28/29/32/33 folded away — see below)
 app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
                                — live on the index, UNSCORED, absent from the atlas
@@ -93,7 +94,7 @@ survive a version bump. A receiving lesson must degrade silently when the value 
 absent, because students will skip things. Live hand-offs are listed in
 `docs/WORK_ORDER.md` P0-2.
 
-`python3 scripts/check_lessons.py` → **34 lessons, 0 hard failures.** Warnings
+`python3 scripts/check_lessons.py` → **29 lessons, 0 hard failures.** Warnings
 (~110) are prose jargon for terms the ledger has already unlocked at that unit —
 stylistic, not violations.
 
@@ -136,6 +137,16 @@ bookkeeping:
 - **[28] L19a** — rotate the diagram at its hinges (partly covered by lesson18 A)
 - **[39] L27b** — the nesting step; pries apart the two meanings of "leftover"
 - **Checkpoints C1, C2, C3** — never built
+
+**Arc 5 was collapsed 2026-08-24.** Seven transitions with an identical
+A/B/C/D shape became four lessons: **26** (the identity; stage D now runs the
+diagnostic at gene→chromosome, gene→genome and genome→cell as three cases of one
+instrument), **30** (cell→individual, the only working simulator in the arc),
+**31** (individual→superorganism), **34** (capstone; stage B runs the same
+diagnostic above the individual and then off DNA entirely). The five folded files
+are in `_reference/retired/lessons/` and still hold the fullest build specs.
+Lesson numbering now has gaps — deliberate, since module ids carry the submission
+codes. Renumber in one sweep or not at all.
 
 **The four `S-` drills are the scaffolds:** [6] S-weld = s23, [10] S-single = s22,
 [25] S-cond = s21, [36] S-agree = s24. Their placement in the sequence is
