@@ -138,6 +138,82 @@ def word_hit(surface, hay_norm):
     return re.search(r"(?<![a-z0-9])" + re.escape(s) + r"(?![a-z0-9])", hay_norm) is not None
 
 
+# Identifiers that are always available: JS builtins, browser globals, and the
+# two libraries every page loads. Anything called but not defined and not on this
+# list is a crash waiting at page load.
+JS_GLOBALS = {
+    "Math","JSON","Array","Object","String","Number","Boolean","Date","Error","Map","Set",
+    "Promise","RegExp","Symbol","BigInt","Proxy","Reflect","WeakMap","WeakSet","Blob","URL",
+    "parseInt","parseFloat","isNaN","isFinite","encodeURIComponent","decodeURIComponent",
+    "setTimeout","setInterval","clearTimeout","clearInterval","requestAnimationFrame",
+    "fetch","alert","console","document","window","navigator","localStorage","performance",
+    "structuredClone","queueMicrotask","TextEncoder","TextDecoder","Uint8Array","Float64Array",
+    "Event","CustomEvent","Image","FileReader","Worker","Intl","AbortController",
+    "Int32Array","ArrayBuffer","DataView","crypto","atob","btoa","escape","unescape",
+    "if","for","while","switch","catch","return","function","typeof","new","await","super",
+    "constructor","get","set","of","in","do","else","try","case","void","delete","yield",
+}
+SCORE_EXPORTS = {
+    "Score","init","recordPretest","recordCheckpoint","recordPosttest","finish","isAnswered",
+    "allAnswered","getBit","carry","recall","recallInfo","clearCarry","bumpManipulation",
+    "getManipulations","manipulationCount","scoring","nameToken","elapsedSeconds","decodeCode",
+    "hashName","parseCode",
+}
+
+
+def _sim_exports():
+    """function names defined in app/assets/sim.js"""
+    p = os.path.join(ROOT, "app", "assets", "sim.js")
+    if not os.path.exists(p):
+        return set()
+    return set(re.findall(r"\bfunction\s+([A-Za-z_$][\w$]*)", open(p, encoding="utf-8").read()))
+
+
+def undefined_calls(raw_html):
+    """Names called as f(...) inside the page's inline <script> blocks that no
+    inline script, sim.js or score.js defines. Deliberately conservative: it
+    ignores anything after a dot (method calls) and anything bound as a
+    parameter or local, so it under-reports rather than crying wolf."""
+    scripts = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", raw_html, flags=re.S | re.I)
+    js = "\n".join(scripts)
+    js = re.sub(r"//[^\n]*", "", js)
+    js = re.sub(r"/\*.*?\*/", "", js, flags=re.S)
+    # Blank out string bodies. DOTALL matters: the .R files the lessons offer for
+    # download are multi-line template literals full of R calls (lm, rnorm,
+    # sapply...), and without it every one of them reads as an undefined helper.
+    js = re.sub(r"`(?:\\.|[^`\\])*`", '""', js, flags=re.S)
+    js = re.sub(r"\"(?:\\.|[^\"\\\n])*\"", '""', js)
+    js = re.sub(r"'(?:\\.|[^'\\\n])*'", '""', js)
+
+    defined = set(re.findall(r"\bfunction\s+([A-Za-z_$][\w$]*)", js))
+    defined |= set(re.findall(r"\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)", js))
+    # Any `name =` binding. Deliberately broad -- `const rng = mulberry32(1), nrm
+    # = makeNormal(rng)` declares two names and the const regex above sees only
+    # the first. Over-approximating what counts as defined keeps this check on
+    # the under-reporting side, which is where a gate like this belongs.
+    defined |= set(re.findall(r"(?<![.\w$=!<>])([A-Za-z_$][\w$]*)\s*=(?!=)", js))
+    # destructured bindings, e.g. const {ctx,W,H} = setupCanvas(c)
+    for grp in re.findall(r"\b(?:const|let|var)\s*\{([^}]*)\}", js):
+        defined |= {t.strip().split(":")[-1].strip() for t in grp.split(",") if t.strip()}
+    # parameter lists
+    for grp in re.findall(r"\bfunction\s+[\w$]*\s*\(([^)]*)\)", js):
+        defined |= {t.strip().split("=")[0].strip() for t in grp.split(",") if t.strip()}
+    for grp in re.findall(r"\(([^()]*)\)\s*=>", js):
+        defined |= {t.strip().split("=")[0].strip() for t in grp.split(",") if t.strip()}
+    defined |= set(re.findall(r"([A-Za-z_$][\w$]*)\s*=>", js))   # single-arg arrows
+
+    known = defined | JS_GLOBALS
+    # Only credit a library's exports if the page actually loads it. Reading
+    # sim.js off disk regardless would hide exactly the failure this check is
+    # for: a lesson that dropped both its local copy and the <script> tag.
+    if re.search(r'<script[^>]*\bsrc="[^"]*sim\.js"', raw_html):
+        known |= _sim_exports()
+    if re.search(r'<script[^>]*\bsrc="[^"]*score\.js"', raw_html):
+        known |= SCORE_EXPORTS
+    called = set(re.findall(r"(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(", js))
+    return sorted(c for c in called - known if not c.startswith("_"))
+
+
 def check_file(path, ledger, rows):
     fails, warns = [], []
     fname = os.path.basename(path)
@@ -207,6 +283,24 @@ def check_file(path, ledger, rows):
             fails.append("submission: score.js included but Score.init never called")
         if "Score.finish" not in raw:
             warns.append("submission: Score.finish not called -- no final code panel?")
+
+    # Undefined helpers. A lesson that calls a function nothing defines throws at
+    # load, which means no name box and no submission code -- and nothing on the
+    # page says so. This is what took out lesson12 and lesson18 earlier, so it is
+    # a hard failure rather than a warning.
+    if not re.search(r'<script[^>]*\bsrc="[^"]*sim\.js"', raw):
+        fails.append("assets: sim.js not included -- no fallback for shared helpers")
+    for missing in undefined_calls(raw):
+        fails.append(f"undefined helper: {missing}() is called but never defined "
+                     f"(not in the lesson, sim.js or score.js)")
+
+    # Declared scaffold slots that nothing ever writes. Such a lesson emits a
+    # valid code whose answer bits are all zero, so every student decodes as
+    # having got every checkpoint wrong.
+    mi = re.search(r"scaffold:\s*(\d+)", raw)
+    if mi and int(mi.group(1)) > 0 and "recordCheckpoint" not in raw:
+        fails.append(f"scoring: declares scaffold:{mi.group(1)} but never calls "
+                     f"recordCheckpoint -- every answer bit ships as zero")
 
     return fails, warns, (uid, seq)
 
