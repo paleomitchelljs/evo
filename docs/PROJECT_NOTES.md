@@ -69,9 +69,29 @@ app/lessons/lesson1–34.html    34 lessons; 1–19 built, 20–34 mostly skelet
 app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
                                — live on the index, UNSCORED, absent from the atlas
+app/assets/sim.js              canonical shared helpers (fallback; locals shadow it)
+app/assets/score.js            submission codes + cross-lesson carryover
 instructor/                    verify_code.html, aggregate.html
 scripts/check_lessons.py       THE LIVE GATE
 ```
+
+**Front-end architecture.** Every page loads `sim.js` then `score.js` then its own
+inline script, in that order. `sim.js` holds twelve helpers (mulberry32, gauss,
+makeNormal, setupCanvas, makeFrame, drawAxes, quantile, rbinom, olsSlope, chi2P,
+downloadText, highlightByDataLine). Lessons still carry their own local copies,
+which shadow the library — so `sim.js` is a *safety net*, not yet a single source
+of truth. Do not mass-strip the locals: drawAxes has 7 variants in the wild,
+makeFrame 4, rbinom 4, and reconciling them needs the picture checked one lesson
+at a time. `bumpExplore` is deliberately excluded — all 16 copies differ because
+each counts stage combinations specific to its lesson.
+
+**Cross-lesson carryover.** `Score.carry(key, value)` / `Score.recall(key)` /
+`Score.recallInfo(key)` persist to a course-wide, per-student namespace
+(`bio202-carry:<nameToken>`), deliberately outside the per-module, version-stamped
+score key — carried values are inputs to a later lesson, not scoring state, and
+survive a version bump. A receiving lesson must degrade silently when the value is
+absent, because students will skip things. Live hand-offs are listed in
+`docs/WORK_ORDER.md` P0-2.
 
 `python3 scripts/check_lessons.py` → **34 lessons, 0 hard failures.** Warnings
 (~110) are prose jargon for terms the ledger has already unlocked at that unit —
@@ -171,6 +191,17 @@ Never before.
 **One move, many datasets; the last one is unscaffolded.** The final dataset is the
 measurement, and it must not be the famous one — a canonical set is a feature in the
 scaffolded stage and worthless as the transfer test.
+
+**Never call a helper nothing defines.** The gate fails any lesson that calls a
+function absent from the lesson, `sim.js` and `score.js`, and any lesson that
+omits the `sim.js` include. A missing helper throws at page load, which means no
+name box and no submission code, with nothing on screen saying so — it is how
+lesson12 and lesson18 were both silently dead for a while.
+
+**Never declare scoring you do not do.** The gate fails any lesson with
+`scaffold: N` (N > 0) that never calls `recordCheckpoint`. Such a lesson emits a
+valid code whose answer bits are all zero, so every student decodes as having got
+every checkpoint wrong.
 
 **The break opens a door.** Every clean intuition ends on the case that breaks it,
 and the break names the forward unit that handles it. Some stage must accept a
