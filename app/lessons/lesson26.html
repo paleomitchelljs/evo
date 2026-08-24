@@ -167,22 +167,45 @@
 <!-- ===== STAGE D — the three lower transitions, one diagnostic ===== -->
 <section class="stage" id="stageD">
   <h2 class="stage-h">D — The same diagnostic, three times down the stack</h2>
-  <p class="stage-sub">Nothing new is introduced here. Stage C's ratio is run at three places where a lower unit and a higher one are in competition, and the biology is different every time.</p>
-
-  <div class="anchor">This is not cells competing with cells. This is loci in your genome competing with other loci in your genome — because the loci copy themselves, the loci have differential reproduction, and they have heritable variation.<span class="src">— 202_lec15_04</span></div>
-
-  <div class="preview"><strong>Preview.</strong> One panel, a three-way toggle, and the same stacked bar as Stage C. Each setting loads a different pair of levels and a different real anchor; the diagnostic and the plot never change.
-
-  <p><strong>Gene inside a chromosome.</strong> Two loci with a recombination dial. Wide open, selection at one locus leaves the other alone. Closed down, a sweep at one drags its neighbours and the block starts behaving as one thing. <em>Anchor:</em> the roughly 20-megabase stretch of near-zero diversity flanking FGFR3 in dachshunds, and the width of that stretch as a reading of how hard selection had to outrun recombination.</p>
-
-  <p><strong>Gene inside a genome.</strong> Fair meiosis first, then an allele that biases itself into more than half the gametes. It wins at its own level while the genome carrying it does worse. Add a suppressor at another locus and watch which level the ratio lands on. <em>Anchor:</em> the Alu insertion in a Hox regulator that removed the ape tail — an element copying itself, with the tail as collateral.</p>
-
-  <p><strong>Genome inside a cell.</strong> Organelles with their own replication, so there is now variation inside a single cell. The cell's counter-move is to move the essential genes into the nucleus, and the within-cell term collapses. <em>Anchor:</em> the failure mode — a somatic lineage that reproduces faster than its neighbours inside one body.</p>
-
-  <p>These were drafted as Lessons 27, 28 and 29. They were three lessons; they are three readings of one instrument, and they belong in one stage.</p></div>
+  <p class="stage-sub">Nothing new is introduced here. Stage C's two terms are computed at three places where a part and a whole are in competition. Only the biology changes, and only the dial changes with it.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <div id="D_tabs" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dtab" data-case="chrom">a gene inside a chromosome</button>
+          <button class="dtab" data-case="genome">a gene inside a genome</button>
+          <button class="dtab" data-case="cell">a genome inside a cell</button>
+        </div>
+      </div>
+      <div class="panel graph-wrap"><h3>The two terms, to scale</h3>
+        <canvas id="plotD" width="560" height="150"></canvas>
+        <div class="fit-stats">
+          <span class="label">between (the whole):</span> <span id="D_bet">—</span> &nbsp;|&nbsp;
+          <span class="label">within (the parts):</span> <span id="D_wit">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px">
+          <span class="label">bigger term:</span> <span id="D_big" class="big">—</span> &nbsp;|&nbsp;
+          <span class="label">the trait:</span> <span id="D_dir">—</span>
+        </div>
+      </div>
+      <div class="panel" id="D_anchorBox"></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD"><h3>Prediction</h3>
+        <div class="q">Q. Three different pieces of biology, three different dials. The thing that stays the same across all three is:</div>
+        <label><input type="radio" name="qD" value="diag" /> The two terms being compared</label>
+        <label><input type="radio" name="qD" value="answer" /> Which level turns out to be the unit</label>
+        <label><input type="radio" name="qD" value="nothing" /> Nothing — they are three separate problems</label>
+        <button id="submitD" disabled>Submit → unlock the dial</button>
+      </div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
+        <div class="row"><label for="D_dIn" id="D_dLab">dial</label><input type="range" id="D_dIn" min="0" max="1" step="0.02" value="0.5" /><output id="D_dOut">0.50</output></div>
+      </div>
+      <p style="font-size:12.5px;color:var(--muted);margin:10px 0 0" id="D_note"></p></div>
+    </div>
+  </div>
 </section>
 
-<!-- ===== STAGE E — preview ===== -->
 <section class="stage" id="stageE">
   <h2 class="stage-h">E — The rule you already have</h2>
   <p class="stage-sub">Nothing is swapped in and nothing is added. The fitness rule has been the altruism one since Stage B — pay for your own trait, receive according to your group. Read the crossing off Stage C's sweep and put it beside the two dials.</p>
@@ -452,6 +475,77 @@ function drawStageC(){
   });
 })();
 
+/* ---------- Stage D: one diagnostic, three biologies ---------- */
+const D_CASES={
+  chrom:{ label:"how freely crossovers separate neighbours",
+    note:"Wide open, a gene is shuffled away from its neighbours every generation and stands on its own. Closed down, the block travels intact and is selected as one thing.",
+    anchor:["FGFR3 is the receptor for fibroblast growth factor — the protein that tells limb cells to grow. In dachshunds, we bred them to have short legs — under positive selection. Around FGFR3 there is basically zero genetic diversity for about 20 megabases either side.","202_lec19_04"],
+    f:d=>({r:Math.max(0.02,1-0.95*d), b:0.9, c:0.3}) },
+  genome:{ label:"how hard the genome suppresses the cheat",
+    note:"A gene that gets itself into more than half the gametes wins at its own level whatever the genome does. The genome's counter-move is not to win that contest but to remove the thing the cheat acts on.",
+    anchor:["At some point in the past, an Alu transposon jumped into a regulator of a Hox gene that activates the posterior region of the trunk. That region got broken because an Alu jumped into it. It took our tail.","202_lec15_02"],
+    f:s=>({r:0.35, b:-0.9*(1-s), c:-0.6*(1-s)}) },
+  cell:{ label:"essential genes moved into the nucleus",
+    note:"An organelle with its own genome and its own replication is a part that can act for itself. Move the genes it needs to replicate into the nucleus and it can no longer do so.",
+    anchor:["We are just prokaryotes that got delusions of grandeur. The way you get from a prokaryote to a eukaryote is by squishing some prokaryotes together a whole bunch.","145_lec07_07"],
+    f:d=>({r:Math.max(0.02,0.02+0.93*d), b:0.9, c:0.3}) }
+};
+const sD={c:"chrom",d:0.5,predicted:false,seen:new Set()};
+function drawStageD(){
+  const cfg=D_CASES[sD.c], {r,b,c}=cfg.f(sD.d);
+  const o=twoLevel(r,b,c,42);
+  document.getElementById("D_bet").textContent=o.between.toExponential(2);
+  document.getElementById("D_wit").textContent=o.within.toExponential(2);
+  const partWins=Math.abs(o.within)>Math.abs(o.between);
+  document.getElementById("D_big").textContent = partWins ? "the parts" : "the whole";
+  document.getElementById("D_dir").textContent =
+    o.dz>1e-9 ? "spreads" : (o.dz<-1e-9 ? "fades" : "sits still");
+  document.getElementById("D_dLab").textContent=cfg.label;
+  document.getElementById("D_note").textContent=cfg.note;
+  document.getElementById("D_anchorBox").innerHTML =
+    '<div class="anchor">'+cfg.anchor[0]+'<span class="src">— '+cfg.anchor[1]+'</span></div>';
+  document.querySelectorAll(".dtab").forEach(t=>{
+    const on=t.dataset.case===sD.c;
+    t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
+      (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
+  });
+  const cv=document.getElementById("plotD"); const g=setupCanvas(cv); const ctx=g.ctx;
+  ctx.clearRect(0,0,g.W,g.H);
+  const mag=Math.max(Math.abs(o.between),Math.abs(o.within),1e-9)*1.35;
+  const mid=g.W/2, half=g.W/2-90;
+  ctx.strokeStyle="#bbb";ctx.beginPath();ctx.moveTo(mid,10);ctx.lineTo(mid,g.H-24);ctx.stroke();
+  function bar(v,y,label,col){
+    const len=(v/mag)*half;
+    ctx.fillStyle=col; ctx.fillRect(Math.min(mid,mid+len),y,Math.abs(len),24);
+    ctx.fillStyle="#1d1d1b";ctx.font="12px -apple-system";ctx.textAlign=len>=0?"right":"left";ctx.textBaseline="middle";
+    ctx.fillText(label,len>=0?mid-6:mid+6,y+12);
+  }
+  bar(o.between,16,"the whole","#2f6b8f");
+  bar(o.within, 62,"the parts","#b23a48");
+  ctx.fillStyle="#777";ctx.font="10px ui-monospace";ctx.textAlign="center";ctx.textBaseline="top";
+  ctx.fillText("0",mid,g.H-20);
+}
+document.querySelectorAll(".dtab").forEach(t=>t.addEventListener("click",()=>{
+  if(document.getElementById("controlsD").classList.contains("locked")) return;
+  sD.c=t.dataset.case; sD.seen.add(sD.c); drawStageD();
+  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
+}));
+document.getElementById("D_dIn").addEventListener("input",e=>{
+  sD.d=+e.target.value; document.getElementById("D_dOut").textContent=sD.d.toFixed(2);
+  drawStageD(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
+});
+(function wireD(){
+  const root=document.getElementById("predD"), btn=document.getElementById("submitD");
+  root.querySelectorAll('input[name="qD"]').forEach(x=>x.addEventListener("change",()=>{btn.disabled=false;}));
+  btn.addEventListener("click",()=>{
+    const p=root.querySelector('input[name="qD"]:checked'); if(!p) return;
+    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(3, p.value==="diag");
+    const m=document.createElement("div");m.className="prediction-done";m.textContent="Locked in. Try all three.";
+    root.insertBefore(m,root.querySelector(".q")); btn.style.display="none";
+    sD.predicted=true; document.getElementById("controlsD").classList.remove("locked"); drawStageD();
+  });
+})();
+
 /* ---------- Stage E: the boundary, read off the same engine ---------- */
 const sE={c:0.3,b:0.9,predicted:false};
 const boundaryCache={c:null,pts:[]};
@@ -524,7 +618,7 @@ function drawStageESoon(){                       // one redraw per frame while d
   root.querySelectorAll('input[name="qE"]').forEach(x=>x.addEventListener("change",()=>{btn.disabled=false;}));
   btn.addEventListener("click",()=>{
     const p=root.querySelector('input[name="qE"]:checked'); if(!p) return;
-    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(3, p.value==="same"?1:0);
+    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(4, p.value==="same"?1:0);
     const m=document.createElement("div");m.className="prediction-done";m.textContent="Submitted. Dials unlocked.";
     root.insertBefore(m,root.querySelector(".q")); btn.style.display="none";
     sE.predicted=true;
@@ -548,7 +642,7 @@ function showCarriedWeighting(){
   note.hidden = false;
 }
 
-Score.init({moduleId:"lesson26",version:2,scaffold:4,mountNamePrompt:"#score-name",mountFinalCode:"#score-final",onReady:()=>{showCarriedWeighting();drawStageB();drawStageC();drawStageE();const s=document.getElementById("stageA");if(s)s.classList.remove("stage-locked");const t=document.getElementById("tocA");if(t)t.classList.remove("locked");drawStageA();}});
+Score.init({moduleId:"lesson26",version:2,scaffold:5,mountNamePrompt:"#score-name",mountFinalCode:"#score-final",onReady:()=>{showCarriedWeighting();drawStageB();drawStageC();drawStageD();drawStageE();const s=document.getElementById("stageA");if(s)s.classList.remove("stage-locked");const t=document.getElementById("tocA");if(t)t.classList.remove("locked");drawStageA();}});
 </script>
 </body>
 </html>

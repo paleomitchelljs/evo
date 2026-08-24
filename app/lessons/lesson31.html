@@ -149,11 +149,37 @@
 <!-- ===== STAGE D ===== -->
 <section class="stage" id="stageD">
   <h2 class="stage-h">D — Two real colonies</h2>
-  <div class="anchor">What the relatedness coefficient does is take all altruism and turn it into selfish help. You're not helping your brother. You're helping your genes inside your brother.<span class="src">— 202_lec32_04</span></div>
-  <div class="preview"><strong>Preview.</strong> Two species where the numbers are known, run through Stage C's sweep and compared with what the animals actually do.
-    <p><strong>Honeybees.</strong> Queens mate with roughly ten to twenty males, so what two workers share sits near 0.28 — below what a worker shares with a daughter. Kinship alone does not get there, and honeybees do police: workers eat each other's eggs. The prediction and the observation agree, and neither is the textbook story that haplodiploidy explains eusociality on its own.</p>
-    <p><strong>Naked mole rats.</strong> Diploid, so no three-quarters anywhere — but heavily inbred, which raises what two colony members share by a different route entirely. Same diagnostic, same verdict, different mechanism.</p>
-    <p>Build: load the published mating numbers and relatedness estimates for both, run each through Stage C, and put the policing each needs beside what each is observed to do.</p></div>
+  <p class="stage-sub">Two species where the mating numbers are known. Load each, read the policing Stage C says it needs, and put that beside what the animals actually do.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="dtab" data-sp="bee">honeybee</button>
+          <button class="dtab" data-sp="molerat">naked mole rat</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="fit-stats" style="font-size:14px;line-height:1.9">
+          <span class="label">what two colony members share:</span> <span id="D_r" class="big">—</span><br>
+          <span class="label">policing this predicts they need:</span> <span id="D_need" class="big">—</span><br>
+          <span class="label">what they are observed to do:</span> <span id="D_obs">—</span>
+        </div>
+        <p id="D_note" style="font-size:13px;color:var(--muted);margin:12px 0 0"></p>
+      </div>
+      <div class="panel" id="D_anchor"></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD"><h3>Prediction</h3>
+        <div class="q">Q. Naked mole rats are diploid — no three-quarters anywhere, and no haplodiploidy to appeal to. Against honeybees, what two colony members share will be:</div>
+        <label><input type="radio" name="qD" value="higher" /> Higher</label>
+        <label><input type="radio" name="qD" value="lower" /> Lower</label>
+        <label><input type="radio" name="qD" value="same" /> About the same</label>
+        <button id="submitD" disabled>Submit → unlock the two species</button>
+      </div>
+      <div class="panel"><h3>Where the numbers come from</h3>
+        <p style="font-size:12.5px;color:var(--muted);margin:0">Honeybee: queens mate with ten to twenty males, so Stage A's formula applies directly. Naked mole rats: diploid and heavily inbred, so what two colony members share is raised by inbreeding instead — a different route to the same place, and Stage C does not care which route it was.</p></div>
+    </div>
+  </div>
 </section>
 
 <footer class="wrap-up">
@@ -309,8 +335,50 @@ document.getElementById("C_kIn").addEventListener("input",e=>{
   drawStageC(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("C");
 });
 
+/* ---------- Stage D: two real colonies ---------- */
+const SPECIES={
+  bee:{ name:"honeybee", k:15, r:null,
+    obs:"workers eat each other's eggs — policing is well documented",
+    note:"Queens mate with ten to twenty males, so what two workers share falls well short of what a worker shares with her own daughter. Kinship alone does not carry worker sterility here, and the colony does police.",
+    anchor:["Bees: males are haploid, females diploid. Female bees are 75% related to their sisters but only 50% related to their own kids.","145_lec24_04"] },
+  molerat:{ name:"naked mole rat", k:null, r:0.62,
+    obs:"a breeding female suppresses others behaviourally, not by egg-eating",
+    note:"Diploid, so no three-quarters anywhere. Generations of close inbreeding raise what two colony members share by an entirely different route, and the diagnostic does not ask which route it was.",
+    anchor:["What the relatedness coefficient does is take all altruism and turn it into selfish help. You're not helping your brother. You're helping your genes inside your brother.","202_lec32_04"] }
+};
+const sD={sp:"bee",predicted:false};
+function policingNeeded(r){
+  const pts=[];
+  for(let i=0;i<=24;i++){const pp=i/24; pts.push({p:pp,dz:colonyRun(r,0.9,0.3,pp,7).dz});}
+  if(pts[0].dz>=0) return 0;
+  for(let i=1;i<pts.length;i++) if(pts[i-1].dz<0&&pts[i].dz>=0){
+    const t=(0-pts[i-1].dz)/(pts[i].dz-pts[i-1].dz); return pts[i-1].p+t*(pts[i].p-pts[i-1].p);}
+  return null;
+}
+function drawStageD(){
+  const sp=SPECIES[sD.sp];
+  const r = sp.r!==null ? sp.r : workerShare(sp.k);
+  const need = policingNeeded(r);
+  document.getElementById("D_r").textContent=r.toFixed(3);
+  document.getElementById("D_need").textContent = need===null ? "more than this model reaches" : need.toFixed(2);
+  document.getElementById("D_obs").textContent=sp.obs;
+  document.getElementById("D_note").textContent=sp.note;
+  document.getElementById("D_anchor").innerHTML =
+    '<div class="anchor">'+sp.anchor[0]+'<span class="src">— '+sp.anchor[1]+'</span></div>';
+  document.querySelectorAll(".dtab").forEach(t=>{
+    const on=t.dataset.sp===sD.sp;
+    t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
+      (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
+  });
+}
+document.querySelectorAll(".dtab").forEach(t=>t.addEventListener("click",()=>{
+  if(!sD.predicted) return;
+  sD.sp=t.dataset.sp; drawStageD();
+  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
+}));
+
 /* ---------- prediction gates ---------- */
-const PRED_POS={A:0,B:1,C:2};
+const PRED_POS={A:0,B:1,C:2,D:3};
 function gate(stage,name,answer,controlsId,after){
   const root=document.getElementById("pred"+stage), btn=document.getElementById("submit"+stage);
   root.querySelectorAll('input[name="'+name+'"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
@@ -326,14 +394,15 @@ function gate(stage,name,answer,controlsId,after){
 gate("A","qA","fall","controlsA",drawStageA);
 gate("B","qB","not","controlsB",()=>{sB.predicted=true;drawStageB();});
 gate("C","qC","more","controlsC",()=>{sC.predicted=true;drawStageC();});
+gate("D","qD","higher",null,()=>{sD.predicted=true;drawStageD();});
 
 document.getElementById("finishBtn").addEventListener("click",()=>{ if(typeof Score!=="undefined") Score.finish(); });
 
-Score.init({ moduleId:"lesson31", version:2, scaffold:3,
+Score.init({ moduleId:"lesson31", version:2, scaffold:4,
   mountNamePrompt:"#score-name", mountFinalCode:"#score-final",
   onReady:()=>{
     const s=document.getElementById("stageA"); if(s) s.classList.remove("stage-locked");
-    try{ drawStageA(); drawStageB(); drawStageC(); }catch(e){}
+    try{ drawStageA(); drawStageB(); drawStageC(); drawStageD(); }catch(e){}
   }});
 </script>
 </body>
