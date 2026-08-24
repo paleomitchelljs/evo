@@ -1,5 +1,23 @@
 # BIO 202 — Lesson Atlas
 
+> **Stale as of 2026-08-24.** This atlas has not been regenerated since the Arc 5
+> collapse and the scoring work. Known divergences from the repo:
+>
+> - **Arc 5 is now four lessons, not nine.** Lessons 27/28/29 folded into Lesson 26
+>   stage D; 32/33 into Lesson 34 stage B; the five files are in
+>   `_reference/retired/lessons/`. Sections below for those five describe files
+>   that no longer ship.
+> - **The checkpoint counts below are declarations, not scored questions.** Ten
+>   lessons declared slots and recorded nothing until 2026-08-24. Current counts
+>   live in each lesson's `Score.init`.
+> - **It omits the 25 scaffolds and the Descent explorer**, which are shipped,
+>   student-facing, and cover several gaps this document reports as empty.
+> - **Lesson 15 stage B** now opens on the slope carried from Lesson 7, and
+>   **Lesson 26 stage A** on the slopes carried from scaffold S25.
+>
+> `docs/PROJECT_NOTES.md` §2 is the accurate statement of what exists.
+> Regenerate this file after the next content pass rather than patching it.
+
 Every lesson as it currently stands, part by part. For each part: what the interactive
 actually does, what intuition it is built to produce, and what it hands to the next part.
 
