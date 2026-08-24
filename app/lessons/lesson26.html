@@ -92,22 +92,76 @@
   </div>
 </section>
 
-<!-- ===== STAGE B — preview ===== -->
+<!-- ===== STAGE B — two levels, interactive ===== -->
 <section class="stage" id="stageB">
   <h2 class="stage-h">B — Two levels: between and within</h2>
-  <p class="stage-sub">Assemble individuals into groups. Now there are two covariances at once.</p>
-  <div class="eq">Δz̄ &nbsp;=&nbsp; cov(W<sub>k</sub>, Z<sub>k</sub>) &nbsp;+&nbsp; E<sub>k</sub>[ cov(w<sub>i</sub>, z<sub>i</sub> | k) ]<br><span style="color:var(--muted);font-size:12px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;between groups&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;within groups</span></div>
-  <div class="anchor">Selection operates at the species level, the individual level, the cellular level, the genomic level — all manifesting at the same time. The unit of selection depends on the scope.<span class="src">— 202_lec29_03</span></div>
-  <div class="preview"><strong>Preview.</strong> The full two-level simulator — sliders for within-group change, between-group change, assortment <em>r</em>, and policing — splits Δz̄ into the two covariances above and shows a stacked bar of which term dominates. It is the same one-level engine from Stage A, run once between groups and once within. Built out alongside Lessons 30 and 31.</div>
+  <p class="stage-sub">The same individuals, now sorted into groups. Each one pays for its own trait and receives according to its group's average. Two covariances appear at once, and they do not have to agree.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="eq">Δz̄ &nbsp;=&nbsp; cov(W<sub>k</sub>, Z<sub>k</sub>) &nbsp;+&nbsp; E<sub>k</sub>[ cov(w<sub>i</sub>, z<sub>i</sub> | k) ]<br><span style="color:var(--muted);font-size:12px">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;between groups&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;within groups</span></div>
+      <div class="panel graph-wrap"><h3>Every individual, coloured by group</h3>
+        <canvas id="plotB" width="560" height="300"></canvas>
+        <div class="fit-stats">
+          <span class="label">between:</span> <span id="B_bet">—</span> &nbsp;|&nbsp;
+          <span class="label">within:</span> <span id="B_wit">—</span> &nbsp;|&nbsp;
+          <span class="label">Δz̄:</span> <span id="B_dz" class="big">—</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap"><h3>The two terms, to scale</h3>
+        <canvas id="barB" width="560" height="110"></canvas></div>
+      <div class="anchor">Selection operates at the species level, the individual level, the cellular level, the genomic level — all manifesting at the same time. The unit of selection depends on the scope.<span class="src">— 202_lec29_03</span></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB"><h3>Prediction</h3>
+        <div class="q">Q. Helping costs the helper and benefits its group. Set the cost above zero. The within-group term will be:</div>
+        <label><input type="radio" name="qB" value="neg" /> Negative, at every setting</label>
+        <label><input type="radio" name="qB" value="pos" /> Positive, at every setting</label>
+        <label><input type="radio" name="qB" value="either" /> Either, depending on the benefit</label>
+        <button id="submitB" disabled>Submit → unlock the dials</button>
+        <div class="explore" id="exploreB" style="display:none;margin-top:8px;font-size:12.5px;color:#4a3a14">Reach a setting where the two terms have opposite signs, and one where Δz̄ is positive. <span id="B_count">0/2</span></div>
+      </div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
+        <div class="row" data-line="c"><label for="B_cIn">cost to the helper</label><input type="range" id="B_cIn" min="0" max="1" step="0.05" value="0.3" /><output id="B_cOut">0.30</output></div>
+        <div class="row" data-line="b"><label for="B_bIn">benefit to the group</label><input type="range" id="B_bIn" min="0" max="1.5" step="0.05" value="0.9" /><output id="B_bOut">0.90</output></div>
+        <div class="row" data-line="r"><label for="B_rIn">how much groups differ</label><input type="range" id="B_rIn" min="0.02" max="0.95" step="0.01" value="0.15" /><output id="B_rOut">0.15</output></div>
+      </div></div>
+      <div class="panel"><h3>R code — one identity, run twice</h3>
+<pre class="code" id="codeB"><span class="line">Zk &lt;- <span class="fn">tapply</span>(z, grp, mean)          <span class="com"># each group's mean trait</span></span><span class="line">Wk &lt;- <span class="fn">tapply</span>(w, grp, mean)          <span class="com"># each group's mean fitness</span></span><span class="line"><span class="com"># between: the identity, with groups as the individuals</span></span><span class="line">between &lt;- <span class="fn">cov</span>(Wk, Zk)</span><span class="line"><span class="com"># within: the identity inside each group, averaged</span></span><span class="line">within  &lt;- <span class="fn">mean</span>(<span class="fn">tapply</span>(<span class="fn">seq_along</span>(z), grp, <span class="kw">function</span>(i) <span class="fn">cov</span>(w[i], z[i])))</span><span class="line">(between + within) / <span class="fn">mean</span>(w)</span></pre></div>
+    </div>
+  </div>
 </section>
 
-<!-- ===== STAGE C — preview ===== -->
+<!-- ===== STAGE C — the diagnostic, interactive ===== -->
 <section class="stage" id="stageC">
   <h2 class="stage-h">C — The diagnostic: which level is selection at?</h2>
-  <p class="stage-sub">The ratio of the between-group covariance to the within-group covariance is the diagnostic. When it crosses 1, the group becomes the unit of selection.</p>
-  <div class="eq">unit = "group" &nbsp;⇔&nbsp; cov(W<sub>k</sub>, Z<sub>k</sub>) / E<sub>k</sub>[ cov(w<sub>i</sub>, z<sub>i</sub> | k) ] &nbsp;&gt;&nbsp; 1</div>
-  <div class="anchor">Fitness is not the number of children you have. It's the number of copies of yourself in the next generation. Self is your genes, not just your body.<span class="src">— 461_lec28_04</span></div>
-  <div class="preview"><strong>Preview.</strong> The test is the Lesson 5 shuffle, one level up: permute group membership and see how often the between-group covariance beats the within-group covariance by chance. The tail fraction is the P-value for "selection is acting at the higher level." Same permutation null, different scope.</div>
+  <p class="stage-sub">Sweep how much the groups differ from each other, and watch the two terms trade places. Somewhere in that sweep the sum crosses zero.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap"><h3>Both terms, across the whole sweep</h3>
+        <canvas id="plotC" width="560" height="320"></canvas>
+        <div class="fit-stats">
+          <span class="label">groups differ (measured):</span> <span id="C_r">—</span> &nbsp;|&nbsp;
+          <span class="label">crossing at:</span> <span id="C_cross" class="big">—</span>
+        </div>
+      </div>
+      <div class="anchor">Your neurons cooperate because they're nearly genetically identical. The cost to a neuron to help another nearly identical neuron isn't actually a cost — genetically speaking. That's why thought is possible.<span class="src">— 202_lec30_03</span></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC"><h3>Prediction</h3>
+        <div class="q">Q. Keep the cost and the benefit fixed. Make the groups differ from each other more and more. The level that ends up carrying the change is:</div>
+        <label><input type="radio" name="qC" value="between" /> The between-group term</label>
+        <label><input type="radio" name="qC" value="within" /> The within-group term</label>
+        <label><input type="radio" name="qC" value="same" /> Neither — the split does not move</label>
+        <button id="submitC" disabled>Submit → unlock the sweep</button>
+      </div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsC">
+        <div class="row"><label for="C_cIn">cost to the helper</label><input type="range" id="C_cIn" min="0.05" max="1" step="0.05" value="0.3" /><output id="C_cOut">0.30</output></div>
+        <div class="row"><label for="C_bIn">benefit to the group</label><input type="range" id="C_bIn" min="0.1" max="1.5" step="0.05" value="0.9" /><output id="C_bOut">0.90</output></div>
+      </div></div>
+      <div class="panel" id="C_reveal" style="display:none"><h3>What the crossing sat on</h3>
+        <p id="C_revealText" style="font-size:13.5px;margin:0"></p></div>
+    </div>
+  </div>
 </section>
 
 <!-- ===== STAGE D — the three lower transitions, one diagnostic ===== -->
@@ -130,10 +184,38 @@
 
 <!-- ===== STAGE E — preview ===== -->
 <section class="stage" id="stageE">
-  <h2 class="stage-h">E — Re-derive Hamilton's rule</h2>
-  <p class="stage-sub">Swap the fitness function for the altruism form <code>w(z) = 1 − c·z + b·z̄<sub>k</sub></code> and recompute both Price terms.</p>
-  <div class="eq">altruism favored &nbsp;⇔&nbsp; b · r &nbsp;&gt;&nbsp; c</div>
-  <div class="preview"><strong>Preview.</strong> With the altruism fitness plugged into the two-level engine, Lesson 17's <code>r·b &gt; c</code> falls straight out of the algebra — the kin-selection rule is the Price equation read at the relatedness scope, not a separate theory.</div>
+  <h2 class="stage-h">E — The rule you already have</h2>
+  <p class="stage-sub">Nothing is swapped in and nothing is added. The fitness rule has been the altruism one since Stage B — pay for your own trait, receive according to your group. Read the crossing off Stage C's sweep and put it beside the two dials.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel"><h3>At the crossing</h3>
+        <div class="fit-stats" style="font-size:15px;line-height:2">
+          <span class="label">how much the groups differ, at the crossing:</span> <span id="E_r" class="big">—</span><br>
+          <span class="label">that, times the benefit:</span> <span id="E_rb" class="big">—</span><br>
+          <span class="label">the cost:</span> <span id="E_c" class="big">—</span>
+        </div>
+        <p id="E_verdict" style="margin:12px 0 0;font-size:13.5px;color:#2e4410"></p>
+      </div>
+      <div class="panel graph-wrap"><h3>Where the boundary sits, across every benefit</h3>
+        <canvas id="plotE" width="560" height="280"></canvas></div>
+      <div class="anchor">I help a stranger have 500 more kids; I'm 1/1000 related, so I "got" half a kid. I help my sister have 500 more kids; I'm 1/2 related, so I got 250. That scaling — relatedness times benefit against cost — is Hamilton's rule. It's a derivative of the Price equation.<span class="src">— 202_lec30_04</span></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predE"><h3>Prediction</h3>
+        <div class="q">Q. You met a rule for when helping spreads back in Lesson 17, with its own three dials. Against the boundary this two-level accounting produces, that rule will be:</div>
+        <label><input type="radio" name="qE" value="same" /> The same boundary</label>
+        <label><input type="radio" name="qE" value="close" /> Close, but an approximation to it</label>
+        <label><input type="radio" name="qE" value="diff" /> A different rule about a different thing</label>
+        <button id="submitE" disabled>Submit → unlock the dials</button>
+      </div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsE">
+        <div class="row"><label for="E_cIn">cost to the helper</label><input type="range" id="E_cIn" min="0.05" max="1" step="0.05" value="0.3" /><output id="E_cOut">0.30</output></div>
+        <div class="row"><label for="E_bIn">benefit to the group</label><input type="range" id="E_bIn" min="0.1" max="1.5" step="0.05" value="0.9" /><output id="E_bOut">0.90</output></div>
+      </div></div>
+      <div class="panel"><h3>R code — nothing new added</h3>
+<pre class="code" id="codeE"><span class="line">w &lt;- <span class="num">1</span> - c*z + b*Zk[grp]        <span class="com"># the fitness rule since Stage B</span></span><span class="line"><span class="com"># sweep how much the groups differ, find where (between + within) crosses 0</span></span><span class="line">r_star &lt;- <span class="fn">uniroot</span>(<span class="kw">function</span>(r) dz(r, b, c), <span class="fn">c</span>(<span class="num">0.02</span>, <span class="num">0.95</span>))$root</span><span class="line">r_star * b            <span class="com"># and compare it with c</span></span></pre></div>
+    </div>
+  </div>
 </section>
 
 <div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 28px"></div>
@@ -198,6 +280,260 @@ document.getElementById("A_seedIn").addEventListener("input",e=>{sA.seed=+e.targ
 })();
 
 
+/* ===================== the two-level engine =========================
+   One population, sorted into groups. Each individual pays c for its own
+   trait and receives b scaled by its group's mean trait:
+       w_i = 1 - c*z_i + b*Z_k
+   Both covariance terms are MEASURED off the generated individuals rather
+   than read from a formula, so the numbers on screen are the ones the R in
+   the panel would produce.
+
+   How much the groups differ is reported as measured, never as the dial:
+   with finite groups, sampling puts more variance between them than the dial
+   asks for. Measured is also what makes the crossing land exactly on c/b.
+   ==================================================================== */
+const NG=140, MG=12;
+function cov(xs,ys){const n=xs.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=xs[i];my+=ys[i];}mx/=n;my/=n;
+  let s=0;for(let i=0;i<n;i++)s+=(xs[i]-mx)*(ys[i]-my);return s/n;}
+
+function twoLevel(rDial,b,c,seed){
+  const rng=mulberry32(seed), sd=0.15;
+  const sB=sd*Math.sqrt(rDial), sW=sd*Math.sqrt(1-rDial);
+  const groups=[];
+  for(let k=0;k<NG;k++){
+    const centre=0.5+sB*gauss(rng), zs=[];
+    for(let i=0;i<MG;i++) zs.push(Math.max(0,Math.min(1,centre+sW*gauss(rng))));
+    groups.push(zs);
+  }
+  const Zk=groups.map(zs=>zs.reduce((a,x)=>a+x,0)/zs.length);
+  const Wk=groups.map((zs,k)=>zs.map(z=>1-c*z+b*Zk[k]).reduce((a,x)=>a+x,0)/zs.length);
+  const between=cov(Wk,Zk);
+  let within=0;
+  groups.forEach((zs,k)=>{ within+=cov(zs, zs.map(z=>1-c*z+b*Zk[k])); });
+  within/=groups.length;
+  const zAll=[],wAll=[];
+  groups.forEach((zs,k)=>zs.forEach(z=>{zAll.push(z);wAll.push(1-c*z+b*Zk[k]);}));
+  const wbar=wAll.reduce((a,x)=>a+x,0)/wAll.length;
+  return {groups,Zk,Wk,zAll,wAll,between,within,wbar,
+          dz:(between+within)/wbar, rHat:cov(Zk,Zk)/cov(zAll,zAll)};
+}
+
+/* ---------- Stage B ---------- */
+const sB={c:0.3,b:0.9,r:0.15,seenOpposite:false,seenPositive:false,predicted:false};
+function drawStageB(){
+  const o=twoLevel(sB.r,sB.b,sB.c,42);
+  document.getElementById("B_bet").textContent=o.between.toExponential(2);
+  document.getElementById("B_wit").textContent=o.within.toExponential(2);
+  document.getElementById("B_dz").textContent=o.dz.toExponential(2);
+
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:52,r:14,t:14,b:40};
+  const wLo=Math.min(...o.wAll), wHi=Math.max(...o.wAll);
+  const f=makeFrame(pad,W,H,0,1,wLo-0.02,wHi+0.02);
+  drawAxes(ctx,f,"trait  z","fitness  w");
+  o.groups.forEach((zs,k)=>{
+    const hue=(k*47)%360;
+    ctx.fillStyle=`hsla(${hue},55%,45%,0.55)`;
+    zs.forEach(z=>{const y=1-sB.c*z+sB.b*o.Zk[k];
+      ctx.beginPath();ctx.arc(f.x(z),f.y(y),2,0,2*Math.PI);ctx.fill();});
+  });
+  // group means, larger
+  o.Zk.forEach((Z,k)=>{ ctx.fillStyle="rgba(30,30,30,0.75)";
+    ctx.beginPath();ctx.arc(f.x(Z),f.y(o.Wk[k]),3.2,0,2*Math.PI);ctx.fill(); });
+
+  // the two terms as a diverging bar
+  const bc=document.getElementById("barB"); const g=setupCanvas(bc);
+  const c2=g.ctx; c2.clearRect(0,0,g.W,g.H);
+  const mag=Math.max(Math.abs(o.between),Math.abs(o.within),1e-9)*1.35;
+  const mid=g.W/2, half=g.W/2-70;
+  c2.strokeStyle="#bbb";c2.beginPath();c2.moveTo(mid,8);c2.lineTo(mid,g.H-8);c2.stroke();
+  function bar(v,y,label,col){
+    const len=(v/mag)*half;
+    c2.fillStyle=col; c2.fillRect(Math.min(mid,mid+len), y, Math.abs(len), 22);
+    c2.fillStyle="#1d1d1b"; c2.font="12px -apple-system"; c2.textAlign=len>=0?"right":"left";
+    c2.textBaseline="middle"; c2.fillText(label, len>=0?mid-6:mid+6, y+11);
+  }
+  bar(o.between,14,"between","#2f6b8f");
+  bar(o.within, 56,"within", "#b23a48");
+  c2.fillStyle="#777";c2.font="10px ui-monospace";c2.textAlign="center";c2.textBaseline="top";
+  c2.fillText("0", mid, g.H-14);
+
+  if(sB.predicted){
+    if(o.between*o.within<0) sB.seenOpposite=true;
+    if(o.dz>0) sB.seenPositive=true;
+    const n=(sB.seenOpposite?1:0)+(sB.seenPositive?1:0);
+    const el=document.getElementById("B_count");
+    if(el) el.textContent = n>=2 ? "2/2 ✓" : n+"/2";
+  }
+}
+["c","b","r"].forEach(k=>{
+  const el=document.getElementById("B_"+k+"In");
+  el.addEventListener("input",e=>{ sB[k]=+e.target.value;
+    document.getElementById("B_"+k+"Out").textContent=sB[k].toFixed(2);
+    drawStageB(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("B"); });
+});
+(function wireB(){
+  const root=document.getElementById("predB"), btn=document.getElementById("submitB");
+  root.querySelectorAll('input[name="qB"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
+  btn.addEventListener("click",()=>{
+    const p=root.querySelector('input[name="qB"]:checked'); if(!p) return;
+    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(1, p.value==="neg"?1:0);
+    const m=document.createElement("div");m.className="prediction-done";m.textContent="Submitted. Dials unlocked.";
+    root.insertBefore(m,root.querySelector(".q")); btn.style.display="none";
+    sB.predicted=true;
+    document.getElementById("controlsB").classList.remove("locked");
+    document.getElementById("exploreB").style.display="block";
+    drawStageB();
+  });
+})();
+
+/* ---------- Stage C ---------- */
+const sC={c:0.3,b:0.9,predicted:false};
+function drawStageC(){
+  const pts=[];
+  for(let i=0;i<=40;i++){
+    const rDial=0.02+(0.95-0.02)*i/40;
+    const o=twoLevel(rDial,sC.b,sC.c,7);
+    pts.push({r:o.rHat,bet:o.between,wit:o.within,dz:o.dz});
+  }
+  pts.sort((a,b)=>a.r-b.r);
+  let cross=null;
+  for(let i=1;i<pts.length;i++){
+    if(pts[i-1].dz<0 && pts[i].dz>=0){
+      const t=(0-pts[i-1].dz)/(pts[i].dz-pts[i-1].dz);
+      cross=pts[i-1].r+t*(pts[i].r-pts[i-1].r); break;
+    }
+  }
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:60,r:16,t:16,b:42};
+  const vals=pts.flatMap(p=>[p.bet,p.wit,p.dz]);
+  const lo=Math.min(...vals), hi=Math.max(...vals), padY=(hi-lo)*0.12;
+  const f=makeFrame(pad,W,H,pts[0].r,pts[pts.length-1].r,lo-padY,hi+padY);
+  drawAxes(ctx,f,"how much the groups differ (measured)","contribution to Δz̄");
+  ctx.strokeStyle="#ccc";ctx.setLineDash([3,3]);ctx.beginPath();
+  ctx.moveTo(f.pad.l,f.y(0));ctx.lineTo(f.pad.l+f.W,f.y(0));ctx.stroke();ctx.setLineDash([]);
+  function line(key,col,wid){ ctx.strokeStyle=col;ctx.lineWidth=wid;ctx.beginPath();
+    pts.forEach((p,i)=>{const x=f.x(p.r),y=f.y(p[key]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke(); }
+  line("bet","#2f6b8f",2); line("wit","#b23a48",2); line("dz","#1d1d1b",2.6);
+  ctx.font="11px -apple-system";ctx.textAlign="left";
+  ctx.fillStyle="#2f6b8f";ctx.fillText("between",f.pad.l+6,f.y(pts[pts.length-1].bet)-6);
+  ctx.fillStyle="#b23a48";ctx.fillText("within", f.pad.l+6,f.y(pts[pts.length-1].wit)+14);
+  ctx.fillStyle="#1d1d1b";ctx.fillText("sum",    f.pad.l+6,f.y(pts[pts.length-1].dz)-6);
+  if(cross!==null){
+    ctx.strokeStyle="#6f8a4a";ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(f.x(cross),f.pad.t);ctx.lineTo(f.x(cross),f.pad.t+f.H);ctx.stroke();ctx.setLineDash([]);
+  }
+  document.getElementById("C_r").textContent = cross!==null ? "swept 0.02 – 0.95" : "swept";
+  document.getElementById("C_cross").textContent = cross!==null ? cross.toFixed(3) : "no crossing in range";
+  if(sC.predicted && cross!==null){
+    const box=document.getElementById("C_reveal");
+    document.getElementById("C_revealText").innerHTML =
+      "The sum crosses zero at <strong>"+cross.toFixed(3)+"</strong>. Cost divided by benefit is <strong>"+
+      (sC.c/sC.b).toFixed(3)+"</strong>. Move either dial and they move together.";
+    box.style.display="block";
+  }
+}
+["c","b"].forEach(k=>{
+  document.getElementById("C_"+k+"In").addEventListener("input",e=>{ sC[k]=+e.target.value;
+    document.getElementById("C_"+k+"Out").textContent=sC[k].toFixed(2);
+    drawStageC(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("C"); });
+});
+(function wireC(){
+  const root=document.getElementById("predC"), btn=document.getElementById("submitC");
+  root.querySelectorAll('input[name="qC"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
+  btn.addEventListener("click",()=>{
+    const p=root.querySelector('input[name="qC"]:checked'); if(!p) return;
+    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(2, p.value==="between"?1:0);
+    const m=document.createElement("div");m.className="prediction-done";m.textContent="Submitted. Dials unlocked.";
+    root.insertBefore(m,root.querySelector(".q")); btn.style.display="none";
+    sC.predicted=true;
+    document.getElementById("controlsC").classList.remove("locked");
+    drawStageC();
+  });
+})();
+
+/* ---------- Stage E: the boundary, read off the same engine ---------- */
+const sE={c:0.3,b:0.9,predicted:false};
+const boundaryCache={c:null,pts:[]};
+function crossingFor(b,c,steps){
+  // steps trades precision for speed: the headline number uses the fine sweep,
+  // the illustrative boundary curve uses a coarse one so dragging stays smooth.
+  const n = steps || 40;
+  const pts=[];
+  for(let i=0;i<=n;i++){const rD=0.02+(0.95-0.02)*i/n; const o=twoLevel(rD,b,c,7); pts.push({r:o.rHat,dz:o.dz});}
+  pts.sort((a,b2)=>a.r-b2.r);
+  for(let i=1;i<pts.length;i++) if(pts[i-1].dz<0&&pts[i].dz>=0){
+    const t=(0-pts[i-1].dz)/(pts[i].dz-pts[i-1].dz); return pts[i-1].r+t*(pts[i].r-pts[i-1].r);}
+  return null;
+}
+function drawStageE(){
+  const r=crossingFor(sE.b,sE.c);
+  // With groups of 12, sampling alone puts about 1/12 of the variance between
+  // them, so the measured figure cannot go below roughly 0.08. A boundary under
+  // that, or above 1, is outside what this sweep can show -- say so rather than
+  // printing a dash.
+  const reach = r===null ? (sE.c/sE.b>1 ? "above 1 — the cost outruns the benefit"
+                                        : "below what groups of twelve can reach")
+                         : null;
+  document.getElementById("E_r").textContent  = r===null ? reach : r.toFixed(3);
+  document.getElementById("E_rb").textContent = r===null ? "—" : (r*sE.b).toFixed(3);
+  document.getElementById("E_c").textContent  = sE.c.toFixed(3);
+  if(sE.predicted && r!==null){
+    document.getElementById("E_verdict").textContent =
+      "Move either dial. The boundary moves with them, and the middle number keeps landing on the bottom one.";
+  }
+  const cv=document.getElementById("plotE"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:58,r:16,t:16,b:42};
+  const f=makeFrame(pad,W,H,0.1,1.5,0,1);
+  drawAxes(ctx,f,"benefit to the group","how much groups must differ");
+  // Measured boundary across benefit at the current cost. It does not depend on
+  // the benefit dial, so it is cached and only recomputed when the cost moves --
+  // without that, dragging either slider recomputes 29 full sweeps and the page
+  // stutters (measured at ~160 ms per nudge).
+  if(boundaryCache.c!==sE.c){
+    boundaryCache.c=sE.c; boundaryCache.pts=[];
+    for(let i=0;i<=22;i++){
+      const b=0.1+(1.5-0.1)*i/22, x=crossingFor(b,sE.c,14);
+      boundaryCache.pts.push({b,x});
+    }
+  }
+  ctx.strokeStyle="#6f8a4a"; ctx.lineWidth=2.5; ctx.beginPath(); let started=false;
+  for(const pt of boundaryCache.pts){
+    if(pt.x===null||pt.x>1){started=false;continue;}
+    const px=f.x(pt.b),py=f.y(pt.x); started?ctx.lineTo(px,py):ctx.moveTo(px,py); started=true;
+  }
+  ctx.stroke();
+  // where the current setting sits
+  if(r!==null&&r<=1){ ctx.fillStyle="#b23a48";
+    ctx.beginPath();ctx.arc(f.x(sE.b),f.y(r),5,0,2*Math.PI);ctx.fill(); }
+  ctx.fillStyle="#6f8a4a";ctx.font="11px -apple-system";ctx.textAlign="left";
+  ctx.fillText("below this line helping fades; above it, it spreads", f.pad.l+8, f.pad.t+14);
+}
+let ePending=false;
+function drawStageESoon(){                       // one redraw per frame while dragging
+  if(ePending) return; ePending=true;
+  requestAnimationFrame(()=>{ ePending=false; drawStageE(); });
+}
+["c","b"].forEach(k=>{
+  document.getElementById("E_"+k+"In").addEventListener("input",e=>{ sE[k]=+e.target.value;
+    document.getElementById("E_"+k+"Out").textContent=sE[k].toFixed(2);
+    drawStageESoon(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("E"); });
+});
+(function wireE(){
+  const root=document.getElementById("predE"), btn=document.getElementById("submitE");
+  root.querySelectorAll('input[name="qE"]').forEach(x=>x.addEventListener("change",()=>{btn.disabled=false;}));
+  btn.addEventListener("click",()=>{
+    const p=root.querySelector('input[name="qE"]:checked'); if(!p) return;
+    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(3, p.value==="same"?1:0);
+    const m=document.createElement("div");m.className="prediction-done";m.textContent="Submitted. Dials unlocked.";
+    root.insertBefore(m,root.querySelector(".q")); btn.style.display="none";
+    sE.predicted=true;
+    document.getElementById("controlsE").classList.remove("locked");
+    drawStageE();
+    if(typeof Score!=="undefined"&&Score.finish) Score.finish();
+  });
+})();
+
 // If the student swung a line by hand in S25, say so before they meet this one.
 // Only that they did it, and with which numbers -- what the two have in common
 // is the thing this stage exists to make them notice.
@@ -212,7 +548,7 @@ function showCarriedWeighting(){
   note.hidden = false;
 }
 
-Score.init({moduleId:"lesson26",version:1,scaffold:1,mountNamePrompt:"#score-name",mountFinalCode:"#score-final",onReady:()=>{showCarriedWeighting();const s=document.getElementById("stageA");if(s)s.classList.remove("stage-locked");const t=document.getElementById("tocA");if(t)t.classList.remove("locked");drawStageA();}});
+Score.init({moduleId:"lesson26",version:2,scaffold:4,mountNamePrompt:"#score-name",mountFinalCode:"#score-final",onReady:()=>{showCarriedWeighting();drawStageB();drawStageC();drawStageE();const s=document.getElementById("stageA");if(s)s.classList.remove("stage-locked");const t=document.getElementById("tocA");if(t)t.classList.remove("locked");drawStageA();}});
 </script>
 </body>
 </html>
