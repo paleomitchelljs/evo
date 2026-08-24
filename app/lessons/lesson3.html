@@ -4,7 +4,6 @@
 <meta charset="utf-8" />
 <title>BIO 202 — Lesson 3: Subtracting the line and reading what's left</title>
 <link rel="stylesheet" href="../assets/score.css">
-<link rel="stylesheet" href="../assets/dag.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
   * { box-sizing: border-box; }
@@ -30,17 +29,15 @@
   .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
   .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
-  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
   .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
   .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
   .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
   .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
   .prediction button:disabled { background:#bbb; cursor:not-allowed; }
+  .prediction select { padding:6px 10px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; margin-right:8px; }
   .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
-  .prediction-done.correct { background:#e6f0dd; border-color:#6f8a4a; color:#3d5728; }
-  .prediction-done.wrong { background:#fbe4c6; border-color:#a86a1a; color:#5c3802; }
   .controls.locked { opacity:0.4; pointer-events:none; }
-  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls .row { display:grid; grid-template-columns:170px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
   .controls label { font-size:13px; }
   .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
@@ -49,45 +46,26 @@
   .controls button.secondary { background:#888; }
   .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
   .controls button.accent { background:var(--accent); }
+  .controls select { padding:6px 8px; font:13px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:3px; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
   .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:#3d5728; font-weight:600; }
+  .fit-stats .off { color:#a8331a; font-weight:600; }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
   pre.code .line { display:block; padding:0 6px; border-radius:2px; }
   pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
-  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; }
-  .teaching-note strong { color:#2e230a; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
-  footer.wrap-up h2 { color:var(--ink); font-size:16px; }
-  footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
-  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .outcomes p { margin:0 0 8px; }
-  .outcomes ul { margin:0 0 10px; padding-left:20px; columns:2; column-gap:28px; font-size:14px; }
-  .outcomes li { margin-bottom:4px; break-inside:avoid; }
-  .stage-outcome { font-size:12.5px; color:var(--muted); margin:4px 0 14px; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; }
-  .stage-outcome strong { color:var(--ink); }
   .stretch { margin-top:20px; padding:16px; background:var(--accent2-soft); border:1px dashed var(--accent2); border-radius:6px; }
   .stretch h3 { margin:0 0 8px; font-size:13px; color:var(--accent2); text-transform:uppercase; letter-spacing:.06em; }
   .stretch p { margin:0 0 8px; font-size:13.5px; }
   .stretch button { margin-top:6px; padding:7px 13px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
   .stretch button.done { background:#6f8a4a; }
   .stretch .opt-in-status { margin-top:8px; font-size:12.5px; color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
-  /* S2 drill UI */
-  .drill-tally { display:flex; gap:6px; margin:8px 0 10px; flex-wrap:wrap; }
-  .drill-tally .dot { width:18px; height:18px; border-radius:3px; background:#ddd; border:1px solid #ccc; font-size:11px; line-height:18px; text-align:center; color:#666; }
-  .drill-tally .dot.correct { background:#6f8a4a; border-color:#3d5728; color:#fff; }
-  .drill-tally .dot.wrong   { background:#a86a1a; border-color:#5c3802; color:#fff; }
-  .drill-tally .dot.now     { border-color:#000; box-shadow:0 0 0 2px var(--accent); }
-  .drill-buttons { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-  .drill-buttons button { padding:8px 14px; border:1px solid var(--rule); background:#fff; cursor:pointer; border-radius:4px; font-size:13px; }
-  .drill-buttons button:hover { background:#f6f4ec; }
-  .drill-buttons button.locked { pointer-events:none; opacity:0.4; }
-  .drill-reveal { padding:10px 12px; border-radius:4px; margin-top:8px; display:none; font-size:13px; }
-  .drill-reveal.shown { display:block; }
-  .drill-reveal.correct { background:#e6f0dd; border:1px solid #6f8a4a; color:#3d5728; }
-  .drill-reveal.wrong   { background:#fbe4c6; border:1px solid #a86a1a; color:#5c3802; }
+  .paces { font:13px ui-monospace,Menlo,monospace; margin:0; }
+  .paces div { padding:4px 0; border-bottom:1px solid #f0eee5; }
+  .paces div:last-child { border-bottom:0; }
   /* Click-to-predict canvas */
   .click-canvas { cursor: crosshair; }
   .click-canvas.locked { cursor: not-allowed; }
@@ -96,258 +74,168 @@
 <body>
 <header>
   <h1>Lesson 3 — Subtracting the line and reading what's left</h1>
-  <p>In Lesson 1 you knew nothing about each person. Here you get one extra fact about each — and a choice about what to do with it.</p>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
 <nav class="toc" id="toc">
-  <a href="#stageL" id="tocL">L. Warm-up — fit a line by hand</a>
-  <a href="#stageA" id="tocA" class="locked">A. Expect a weight with no other facts</a>
-  <a href="#stageB" id="tocB" class="locked">B. Now use each person's height</a>
-  <a href="#stageC" id="tocC" class="locked">C. Read the leftovers (5 rounds)</a>
-  <a href="#stageD" id="tocD" class="locked">D. Beren and Cyrus: place the missing point</a>
-  <a href="#stageE" id="tocE" class="locked">E. The leftovers had a hidden cause</a>
+  <a href="#stageA" id="tocA">A. One number for everyone</a>
+  <a href="#stageB" id="tocB" class="locked">B. One number plus a group</a>
+  <a href="#stageC" id="tocC" class="locked">C. One number plus a count</a>
+  <a href="#stageD" id="tocD" class="locked">D. Beren and Cyrus</a>
+  <a href="#stageE" id="tocE" class="locked">E. Three films</a>
 </nav>
 
-<!-- ============ STAGE L — LOTR warm-up (intercept, slope, residual semantics) === -->
-<section class="stage" id="stageL">
-  <h2 class="stage-h">L — Warm-up: intercept and slope, on data you already have intuition for</h2>
-  <p class="stage-sub">Every spoken-aloud quote in a film adaptation maps to a page in the source book. Plot minute vs. page, drag a line by hand, read what the intercept and slope mean.</p>
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Each point is a quote from Peter Jackson's <em>Fellowship of the Ring</em> theatrical cut. The <em>x</em>-coordinate is what minute it appears in the film. The <em>y</em>-coordinate is what page it appears on in the book.</p>
-        <p>Drag the α (intercept) and β (slope) sliders to fit a line by eye. Then read what each parameter <em>is</em>:</p>
-        <ul style="margin:6px 0 0 18px;font-size:13.5px;">
-          <li><strong>α</strong> = what page the film opens on at minute 0 (probably not page 0 — Jackson cuts the prologue).</li>
-          <li><strong>β</strong> = pages per minute of runtime (the film's pacing).</li>
-          <li><strong>residual</strong> = how far this quote is from where a perfectly linear adaptation would put it (out-of-order moments).</li>
-        </ul>
-      </div>
-      <div class="panel graph-wrap">
-        <h3>Jackson's Fellowship of the Ring — quote position</h3>
-        <canvas id="plotL" width="560" height="320"></canvas>
-        <div class="fit-stats" id="statsL">
-          <span class="label">α (intercept):</span> <span id="L_a">—</span> pages
-          &nbsp;|&nbsp;
-          <span class="label">β (slope):</span> <span id="L_b" class="big">—</span> pages/min
-          &nbsp;|&nbsp;
-          <span class="label">SSR:</span> <span id="L_ssr">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">OLS optimum:</span> α* = <span id="L_aStar">—</span>, β* = <span id="L_bStar">—</span>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel">
-        <h3>Controls</h3>
-        <div class="controls">
-          <div class="row"><label for="L_aIn">α (intercept, pages)</label><input type="range" id="L_aIn" min="-50" max="100" step="1" value="20" /><output id="L_aOut">20</output></div>
-          <div class="row"><label for="L_bIn">β (slope, pages/min)</label><input type="range" id="L_bIn" min="0" max="5" step="0.05" value="2.0" /><output id="L_bOut">2.00</output></div>
-          <div class="buttons"><button id="L_snap" class="accent">Snap to OLS</button> <button id="L_continue">Continue → Stage A</button></div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Why this warm-up?</h3>
-        <p style="font-size:13.5px;color:#4a4a48;">"Pages per minute" is a quantity you can imagine without learning new vocabulary. The same arithmetic — α, β, residual, fit-to-minimize-SSR — will appear with body weight and finch beaks for the rest of the lesson. The math is the new thing in the room; the data should not also be new.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ STAGE A — predict weight, no info ===================== -->
+<!-- ============ STAGE A — one number for everyone ===================== -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Predict an adult's weight with no other information</h2>
-  <p class="stage-sub">Same setup as Lesson 1 Stage B, with weight instead of height. Move the slider, watch the errors.</p>
+  <h2 class="stage-h">A — Expect a person's weight</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>NHANES adult weights. The slider is your constant guess. Gray = the truth, red = your signed errors. Move the slider and watch the two distributions move relative to each other.</p>
+        <p>Seven thousand adults, and one number to cover all of them. Slide it until you are over as often as you are under.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Weight (gray) and signed errors from your guess (red)</h3>
-        <canvas id="plotA" width="560" height="360"></canvas>
+        <h3>Everyone's weight, and your number</h3>
+        <canvas id="plotA" width="560" height="340"></canvas>
         <div class="fit-stats" id="statsA">
-          <span class="label">N:</span> <span id="A_N">—</span>
+          <span class="label">heavier than your number:</span> <span id="A_over">—</span>
           &nbsp;|&nbsp;
-          <span class="label">center:</span> <span id="A_mu">—</span>
+          <span class="label">lighter:</span> <span id="A_under">—</span>
           &nbsp;|&nbsp;
-          <span class="label">spread:</span> <span id="A_sigma">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">your guess:</span> <span id="A_guess">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">MSE:</span> <span id="A_mse">—</span>
+          <span class="label">average miss:</span> <span id="A_lean">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predA">
-        <h3>Prediction (required before slider unlocks)</h3>
+        <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. You have to make one guess for every NHANES adult's weight and you'll be graded on squared error. Which single number minimizes the average penalty?</div>
-            <label><input type="radio" name="qA1" value="mu" /> The population mean</label>
-            <label><input type="radio" name="qA1" value="med" /> The population median</label>
-            <label><input type="radio" name="qA1" value="any" /> Any constant — they all score the same</label>
-          </li>
-          <li>
-            <div class="q">Q2. If you compared MSE and median-absolute-error, which would the mean and the median win?</div>
-            <label><input type="radio" name="qA2" value="mean-mse" /> mean wins MSE; median wins absolute error</label>
-            <label><input type="radio" name="qA2" value="same" /> they win the same metrics</label>
-            <label><input type="radio" name="qA2" value="median-mse" /> median wins MSE; mean wins absolute error</label>
+            <div class="q">Q1. One number has to serve every adult. Which one leaves you over as often as under?</div>
+            <label><input type="radio" name="qA1" value="mid" /> Halfway between the lightest and the heaviest</label>
+            <label><input type="radio" name="qA1" value="mode" /> The weight that comes up most often</label>
+            <label><input type="radio" name="qA1" value="avg" /> Everyone's weights added together and divided by how many</label>
           </li>
         </ol>
-        <button id="submitA" disabled>Submit prediction → unlock slider</button>
-        <div class="explore-tracker" id="exploreA">Try at least 5 different guesses to unlock Stage B. <span class="count">0/5 guesses</span></div>
+        <button id="submitA" disabled>Submit → unlock the slider</button>
+        <div class="explore-tracker" id="exploreA">Land the average miss inside ±0.5 kg. <span class="count">not yet</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsA">
-          <div class="row" data-line="guess"><label for="A_guessIn">your guess (kg)</label><input type="range" id="A_guessIn" min="50" max="120" step="0.5" value="81" /><output id="A_guessOut">81.0</output></div>
-          <div class="buttons">
-            <button id="A_download" class="ghost">Download .R</button>
-          </div>
+          <div class="row" data-line="num"><label for="A_num">your number (kg)</label><input type="range" id="A_num" min="50" max="120" step="0.5" value="60" /><output id="A_numOut">60.0</output></div>
+          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — constant predictor for weight</h3>
-<pre class="code" id="codeA"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">y &lt;- nh$Weight</span><span class="line"><span class="fn">mean</span>(y); <span class="fn">median</span>(y); <span class="fn">sd</span>(y)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cA_guess">81.0</span></span><span class="line">err &lt;- guess - y</span><span class="line"><span class="fn">mean</span>(err^<span class="num">2</span>)        <span class="com"># MSE -- minimized by guess = mean</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(err))     <span class="com"># MAE -- minimized by guess = median</span></span></pre>
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">y  &lt;- nh$Weight</span><span class="line"></span><span class="line" data-line="num">guess &lt;- <span class="num" id="cA_num">60.0</span></span><span class="line"><span class="fn">mean</span>(guess - y)      <span class="com"># which way you lean</span></span><span class="line"><span class="fn">sum</span>(y &gt; guess); <span class="fn">sum</span>(y &lt; guess)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ STAGE B — covariate added ============================ -->
+<!-- ============ STAGE B — one number plus a group ===================== -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Now you know each person's height. Use it.</h2>
-  <p class="stage-sub">Same dataset. One new piece of information per person.</p>
-  <div class="lock-banner">Complete Stage A (submit prediction, try 5 guesses) to unlock this section.</div>
+  <h2 class="stage-h">B — Now you are told whether the person is a woman or a man</h2>
+  <div class="lock-banner">Complete Stage A to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Each NHANES adult has a height and a weight. Blue line: a sloped fit of weight on height. Dashed gray: the flat guess from Stage A.</p>
-        <p>Toggle the leftover bars to see each vertical miss, and watch how far they spread compared with Stage A's.</p>
+        <p>Same seven thousand adults. Your number now has two parts: a starting number for everyone, and an extra that you add only when the person is a man.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Weight vs height with fitted line (and leftover bars)</h3>
-        <canvas id="plotB" width="560" height="400"></canvas>
+        <h3>How far off you are, by group</h3>
+        <canvas id="plotB" width="560" height="360"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">intercept:</span> <span id="B_a">—</span>
+          <span class="label" style="color:#b23a48;">women:</span> <span id="B_leanW">—</span>
           &nbsp;|&nbsp;
-          <span class="label">slope:</span> <span id="B_b">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">R²:</span> <span id="B_r2">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">typical leftover:</span> <span id="B_sres">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">MSE constant predictor (Stage A):</span> <span id="B_mseA">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">MSE line (Stage B):</span> <span id="B_mseB">—</span>
+          <span class="label" style="color:#2f6b8f;">men:</span> <span id="B_leanM">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predB">
-        <h3>Prediction (required before controls unlock)</h3>
+        <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. When you fit a line of weight on height, the residual SD compared to the marginal SD of weight will be:</div>
-            <label><input type="radio" name="qB1" value="smaller" /> smaller</label>
-            <label><input type="radio" name="qB1" value="same" /> the same</label>
-            <label><input type="radio" name="qB1" value="bigger" /> bigger</label>
-          </li>
-          <li>
-            <div class="q">Q2. R prints an intercept α̂ when you fit <code>lm(weight ~ height)</code>. What is that number actually predicting?</div>
-            <label><input type="radio" name="qB2" value="ymean" /> The average weight in the sample</label>
-            <label><input type="radio" name="qB2" value="zero" /> The predicted weight of an adult with height = 0 cm</label>
-            <label><input type="radio" name="qB2" value="slope" /> The weight gained per cm of height</label>
+            <div class="q">Q1. With the extra still at zero — one number for everyone — how do the two groups sit?</div>
+            <label><input type="radio" name="qB1" value="both0" /> Both groups land on zero</label>
+            <label><input type="radio" name="qB1" value="opposite" /> One group leans over, the other leans under</label>
+            <label><input type="radio" name="qB1" value="same" /> Both groups lean the same way</label>
           </li>
         </ol>
-        <button id="submitB" disabled>Submit prediction → unlock controls</button>
-        <div class="explore-tracker" id="exploreB">Toggle controls (residuals on/off, subsample, refit) at least 5 times to unlock Stage C. <span class="count">0/5 toggles</span></div>
+        <button id="submitB" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreB">Bring both groups inside ±0.75 kg. <span class="count">not yet</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsB">
-          <div class="row"><label><input type="checkbox" id="B_resid" /> show residual bars</label><div></div><output></output></div>
-          <div class="row" data-line="subsample"><label for="B_nIn">subsample n</label><input type="range" id="B_nIn" min="50" max="2000" step="50" value="400" /><output id="B_nOut">400</output></div>
-          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
-          <div class="buttons">
-            <button id="B_refit" class="accent">Re-draw subsample</button>
-            <button id="B_download" class="ghost">Download .R</button>
-          </div>
+          <div class="row" data-line="base"><label for="B_base">starting number (kg)</label><input type="range" id="B_base" min="50" max="110" step="0.5" value="60" /><output id="B_baseOut">60.0</output></div>
+          <div class="row" data-line="extra"><label for="B_extra">extra if a man (kg)</label><input type="range" id="B_extra" min="0" max="40" step="0.5" value="0" /><output id="B_extraOut">0.0</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — fit weight on height</h3>
-<pre class="code" id="codeB"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="subsample">idx &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num" id="cB_n">400</span>)</span><span class="line">d &lt;- nh[idx, ]</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(Weight ~ Height, data = d)</span><span class="line"><span class="fn">summary</span>(fit)</span><span class="line"><span class="fn">sd</span>(<span class="fn">residuals</span>(fit))   <span class="com"># residual SD -- smaller than sd(d$Weight)</span></span><span class="line"></span><span class="line"><span class="fn">plot</span>(d$Height, d$Weight, pch = <span class="num">16</span>, col = <span class="str">"#444"</span>,</span><span class="line">     xlab = <span class="str">"height (cm)"</span>, ylab = <span class="str">"weight (kg)"</span>)</span><span class="line"><span class="fn">abline</span>(fit, col = <span class="str">"#2f6b8f"</span>, lwd = <span class="num">2</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="fn">mean</span>(d$Weight), col = <span class="str">"gray60"</span>, lty = <span class="num">2</span>)</span></pre>
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">is_man &lt;- <span class="fn">as.numeric</span>(nh$Gender == <span class="str">"male"</span>)</span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cB_base">60.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cB_extra">0.0</span></span><span class="line">guess &lt;- base + extra * is_man</span><span class="line"></span><span class="line"><span class="fn">tapply</span>(guess - nh$Weight, is_man, <span class="fn">mean</span>)</span><span class="line"></span><span class="line"><span class="com"># the same two numbers, found for you</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(Weight ~ is_man, data = nh))</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ STAGE C — S2 residual-pattern drill =================== -->
+<!-- ============ STAGE C — one number plus a count ===================== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Residual-pattern drill (5 rounds)</h2>
-  <p class="stage-sub">Five scatters. Each has a straight-line fit. Some are wrong on purpose. Pick the residual pattern. Move on.</p>
-  <div class="lock-banner">Complete Stage B (submit prediction, toggle controls 5 times) to unlock this section.</div>
+  <h2 class="stage-h">C — Now you are told how tall the person is</h2>
+  <div class="lock-banner">Complete Stage B to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Each round: a scatter with a fitted line (top) and a residuals plot (bottom). Pick the pattern. Five rounds, real data each time.</p>
+        <p>The adults are sorted into 5 cm height bands. Each dot is one band: how far off you are, on average, for the people in it. Your extra is now added once for every 5 cm above 170, and taken away once for every 5 cm below.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3 id="C_title">Round 1 of 5 — fit and residuals</h3>
-        <canvas id="plotC1" width="560" height="220"></canvas>
-        <canvas id="plotC2" width="560" height="160"></canvas>
+        <h3>How far off you are, band by band</h3>
+        <canvas id="plotC" width="560" height="360"></canvas>
         <div class="fit-stats" id="statsC">
-          <span class="label">round:</span> <span id="C_round">1</span>/5
+          <span class="label">worst band:</span> <span id="C_worst">—</span>
           &nbsp;|&nbsp;
-          <span class="label">correct so far:</span> <span id="C_correct">0</span>
+          <span class="label">bands you read high:</span> <span id="C_high">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">bands you read low:</span> <span id="C_low">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predC">
-        <h3>Prediction (required before the drill starts)</h3>
+        <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. The leftovers, plotted against the line, bend into a curve — a smile or a frown. Most likely reason:</div>
-            <label><input type="radio" name="qC1" value="curve" /> a straight line is the wrong shape here</label>
-            <label><input type="radio" name="qC1" value="hetero" /> the leftovers fan out as the line rises</label>
-            <label><input type="radio" name="qC1" value="outlier" /> one stray point is bending the pattern</label>
-          </li>
-          <li>
-            <div class="q">Q2. The leftovers fall in two separate clouds, one above the zero line and one below. Most likely reason:</div>
-            <label><input type="radio" name="qC2" value="missgroup" /> two hidden groups are mixed together</label>
-            <label><input type="radio" name="qC2" value="hetero" /> the leftovers fan out as the line rises</label>
-            <label><input type="radio" name="qC2" value="curve" /> a straight line is the wrong shape here</label>
+            <div class="q">Q1. With the extra at zero, the bands of taller people come out:</div>
+            <label><input type="radio" name="qC1" value="heavier" /> heavier than your number</label>
+            <label><input type="radio" name="qC1" value="lighter" /> lighter than your number</label>
+            <label><input type="radio" name="qC1" value="even" /> sitting on your number like every other band</label>
           </li>
         </ol>
-        <button id="submitC" disabled>Submit prediction → start the drill</button>
-        <div class="explore-tracker" id="exploreC">Finish all 5 rounds to unlock Stage D. <span class="count">0/5 rounds</span></div>
-      </div>
-      <div class="panel" id="drillPanel" style="display:none;">
-        <h3>What residual pattern is this?</h3>
-        <div class="drill-tally" id="C_tally"></div>
-        <div class="drill-buttons" id="C_buttons">
-          <button data-pick="clean">Clean noise</button>
-          <button data-pick="curve">Curvature</button>
-          <button data-pick="clouds">Two clouds</button>
-          <button data-pick="hetero">Heteroskedasticity</button>
-        </div>
-        <div class="drill-reveal" id="C_reveal"></div>
+        <button id="submitC" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreC">Bring every band inside ±2.5 kg. <span class="count">not yet</span></div>
       </div>
       <div class="panel">
-        <h3>R code — residuals as a diagnostic</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># Round 1: mammal mass vs gestation, log-log (clean)</span></span><span class="line">m &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/pantheria_mammals.csv"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(<span class="fn">log</span>(AdultBodyMass_g) ~ <span class="fn">log</span>(GestationLen_d), data = m)</span><span class="line"><span class="fn">plot</span>(<span class="fn">fitted</span>(fit), <span class="fn">residuals</span>(fit), pch = <span class="num">16</span>)</span><span class="line"><span class="fn">abline</span>(h = <span class="num">0</span>, col = <span class="str">"#b23a48"</span>)</span><span class="line"></span><span class="line"><span class="com"># Same plot, linear-linear: curvature appears</span></span><span class="line"><span class="fn">plot</span>(<span class="fn">lm</span>(AdultBodyMass_g ~ GestationLen_d, data = m))</span></pre>
+        <h3>Controls</h3>
+        <div class="controls locked" id="controlsC">
+          <div class="row" data-line="base"><label for="C_base">number at 170 cm (kg)</label><input type="range" id="C_base" min="50" max="120" step="0.5" value="60" /><output id="C_baseOut">60.0</output></div>
+          <div class="row" data-line="extra"><label for="C_extra">extra per 5 cm (kg)</label><input type="range" id="C_extra" min="0" max="12" step="0.1" value="0" /><output id="C_extraOut">0.0</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+        </div>
+      </div>
+      <div class="panel prediction" id="postC" style="display:none;">
+        <p class="q">You settled on about <strong id="C_settled">—</strong> kg for every 5 cm. For one extra centimetre of height, how much extra weight?</p>
+        <label><input type="radio" name="qC2" value="one" /> About 1 kg</label>
+        <label><input type="radio" name="qC2" value="five" /> About 5 kg</label>
+        <label><input type="radio" name="qC2" value="twentyfive" /> About 25 kg</label>
+        <button id="submitC2" disabled>Submit → unlock Stage D</button>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">steps &lt;- (nh$Height - <span class="num">170</span>) / <span class="num">5</span>    <span class="com"># how many 5 cm steps from 170</span></span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cC_base">60.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cC_extra">0.0</span></span><span class="line">guess &lt;- base + extra * steps</span><span class="line"></span><span class="line">band &lt;- <span class="fn">cut</span>(nh$Height, <span class="fn">seq</span>(<span class="num">145</span>, <span class="num">190</span>, <span class="num">5</span>))</span><span class="line"><span class="fn">tapply</span>(guess - nh$Weight, band, <span class="fn">mean</span>)</span><span class="line"></span><span class="line"><span class="com"># the same two numbers, found for you</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(Weight ~ steps, data = nh))</span></pre>
       </div>
     </div>
   </div>
@@ -355,54 +243,51 @@
 
 <!-- ============ STAGE D — predict the missing point =================== -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Beren and Cyrus: click where the missing measurement should sit</h2>
-  <p class="stage-sub">Real growth data for both kids. One measurement is hidden per round. Click where you think it goes; the reveal tells you what was actually there.</p>
-  <div class="lock-banner">Complete Stage C (finish all 5 drill rounds) to unlock this section.</div>
+  <h2 class="stage-h">D — Beren and Cyrus: where does the missing measurement go?</h2>
+  <div class="lock-banner">Complete Stage C to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>One kid's mass-by-age trajectory with a single point hidden. WHO median in gray. Click where you think the missing point belongs.</p>
-        <p>The reveal color tells you something about that point. Six rounds.</p>
+        <p>Two children, weighed at home for years. One weighing is hidden each round. Click where you think it goes. Six rounds.</p>
       </div>
       <div class="panel graph-wrap">
         <h3 id="D_title">Round 1 of 6 — click where the missing point should be</h3>
         <canvas id="plotD" class="click-canvas locked" width="560" height="380"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">kid:</span> <span id="D_kid">—</span>
+          <span class="label">child:</span> <span id="D_kid">—</span>
           &nbsp;|&nbsp;
           <span class="label">round:</span> <span id="D_round">1</span>/6
           &nbsp;|&nbsp;
           <span class="label">your click:</span> <span id="D_click">—</span>
         </div>
         <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">actual:</span> <span id="D_actual">—</span>
+          <span class="label">actually:</span> <span id="D_actual">—</span>
           &nbsp;|&nbsp;
-          <span class="label">prediction error:</span> <span id="D_err">—</span>
+          <span class="label">you were off by:</span> <span id="D_err">—</span>
           &nbsp;|&nbsp;
-          <span class="label">sick proxy:</span> <span id="D_sick">—</span>
+          <span class="label">ill within a week:</span> <span id="D_sick">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predD">
-        <h3>Prediction (required before the canvas unlocks)</h3>
+        <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. A child is measured at the doctor when they are sick. Compared to a same-age clean measurement, the sick-day mass measurement will tend to be:</div>
+            <div class="q">Q1. A child is weighed on a day they are ill. Next to a well-day weighing at the same age, it will come out:</div>
             <label><input type="radio" name="qD1" value="lower" /> lower</label>
             <label><input type="radio" name="qD1" value="higher" /> higher</label>
             <label><input type="radio" name="qD1" value="same" /> the same</label>
           </li>
           <li>
-            <div class="q">Q2. If you fit "mass = f(age)" and ignore the sick-day flag, the residuals from that fit on sick-day measurements will:</div>
-            <label><input type="radio" name="qD2" value="negative" /> tend to be more negative than clean-day residuals</label>
-            <label><input type="radio" name="qD2" value="positive" /> tend to be more positive</label>
-            <label><input type="radio" name="qD2" value="same" /> show the same distribution</label>
+            <div class="q">Q2. Draw one smooth line through a child's weighings and ignore which days they were ill. The ill-day points sit:</div>
+            <label><input type="radio" name="qD2" value="below" /> below the line</label>
+            <label><input type="radio" name="qD2" value="above" /> above the line</label>
+            <label><input type="radio" name="qD2" value="even" /> evenly on either side</label>
           </li>
         </ol>
-        <button id="submitD" disabled>Submit prediction → unlock the canvas</button>
-        <div class="explore-tracker" id="exploreD">Complete all 6 rounds to wrap up. <span class="count">0/6 rounds</span></div>
+        <button id="submitD" disabled>Submit → unlock the canvas</button>
+        <div class="explore-tracker" id="exploreD">Six rounds. <span class="count">0/6 rounds</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
@@ -414,40 +299,35 @@
         </div>
       </div>
       <div class="panel">
-        <h3>R code — kids' growth with sick-proxy flag</h3>
-<pre class="code" id="codeD"><span class="line">k &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/kids_growth.csv"</span>)</span><span class="line">b &lt;- <span class="fn">subset</span>(k, kid == <span class="str">"beren"</span> &amp; measure == <span class="str">"mass"</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(value ~ <span class="fn">poly</span>(age_years, <span class="num">2</span>), data = b)</span><span class="line">b$residual &lt;- <span class="fn">residuals</span>(fit)</span><span class="line"></span><span class="line"><span class="com"># compare residuals by sick_proxy flag</span></span><span class="line"><span class="fn">aggregate</span>(residual ~ sick_proxy, data = b, <span class="fn">mean</span>)</span><span class="line"><span class="fn">boxplot</span>(residual ~ sick_proxy, data = b,</span><span class="line">        col = <span class="fn">c</span>(<span class="str">"#6f8a4a"</span>, <span class="str">"#a86a1a"</span>))</span></pre>
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line">k &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/kids_growth.csv"</span>)</span><span class="line">b &lt;- <span class="fn">subset</span>(k, kid == <span class="str">"beren"</span> &amp; measure == <span class="str">"mass"</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(value ~ <span class="fn">poly</span>(age_years, <span class="num">2</span>), data = b)</span><span class="line">b$leftover &lt;- <span class="fn">residuals</span>(fit)</span><span class="line"></span><span class="line"><span class="fn">aggregate</span>(leftover ~ sick_proxy, data = b, <span class="fn">mean</span>)</span><span class="line"><span class="fn">boxplot</span>(leftover ~ sick_proxy, data = b,</span><span class="line">        col = <span class="fn">c</span>(<span class="str">"#6f8a4a"</span>, <span class="str">"#a86a1a"</span>))</span></pre>
       </div>
     </div>
   </div>
   <div class="stretch" id="stretchD">
     <h3>Stretch challenge (optional, recorded)</h3>
-    <p>The downloaded <code>.R</code> for Stage D shows the boxplot move: pull residuals from the smooth "mass = f(age)" fit on Beren, then split them by sick_proxy. Do it. Are the sick-day residuals systematically more negative? Refit including <code>sick_proxy</code> as a predictor and report the new residual SD.</p>
+    <p>Take the downloaded <code>.R</code> and run it on Cyrus instead of Beren. Then add <code>sick_proxy</code> to the fit and see what happens to the size of what is left over.</p>
     <button id="stretchD_btn">I tried it</button>
     <div class="opt-in-status" id="stretchD_status">Not yet attempted.</div>
   </div>
 </section>
 
-<!-- ============ STAGE E — LOTR rug pull: residuals partition by film === -->
+<!-- ============ STAGE E — three films, one line ======================= -->
 <section class="stage stage-locked" id="stageE">
-  <h2 class="stage-h">E — A scatter where the "noise" turned out to be a missing variable</h2>
-  <p class="stage-sub">Every quote from <em>The Lord of the Rings</em> film adaptations, plotted as <strong>book page</strong> against <strong>film minute</strong>. Fit one line to all of them — read R². Then color by which film the quote came from.</p>
-  <div class="lock-banner">Complete Stage D.</div>
+  <h2 class="stage-h">E — Three films, one line</h2>
+  <div class="lock-banner">Complete Stage D to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Three film adaptations of Tolkien's trilogy. Each colored point is one quote spoken on screen: the <em>x</em> coordinate is what minute it appears in the film, the <em>y</em> coordinate is what page it appears on in the source book.</p>
-        <p>If the films were perfect linear adaptations, every point would sit on one line. They don't. The residuals from a pooled fit look like noise — until you color them.</p>
+        <p>Each dot is a line of dialogue: when it is spoken in the film, and what page it falls on in the book. All three films run back to back, so the second starts where the first ended, on screen and on the page.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Quote position — film minute (x) vs book page (y)</h3>
+        <h3 id="E_title">All three, end to end</h3>
         <canvas id="plotE" width="560" height="380"></canvas>
         <div class="fit-stats" id="statsE">
-          <span class="label">pooled R²:</span> <span id="E_r2_pool">—</span>
+          <span class="label">your line misses by, on average:</span> <span id="E_miss">—</span> pages
           &nbsp;|&nbsp;
-          <span class="label">colored by film R²:</span> <span id="E_r2_strat" class="big">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">slope diff (Jackson Fellowship vs Bakshi):</span> <span id="E_slopeDiff">—</span>
+          <span class="label">worst miss:</span> <span id="E_worst">—</span> pages
         </div>
       </div>
     </div>
@@ -456,89 +336,86 @@
         <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. Before you color by film, the pooled fit looks noisy. After you color by film, which one is true?</div>
-            <label><input type="radio" name="qE1" value="noisy" /> The noise was real noise — no hidden structure</label>
-            <label><input type="radio" name="qE1" value="parallel" /> The films share roughly the same slope</label>
-            <label><input type="radio" name="qE1" value="distinct" /> The films have <em>different</em> slopes, each tighter than the pooled fit</label>
-          </li>
-          <li>
-            <div class="q">Q2. Which of these is a fair statistical reading of what just happened? (Pick the strongest.)</div>
-            <label><input type="radio" name="qE2" value="residuals" /> Coloring revealed the variable the pooled model was missing</label>
-            <label><input type="radio" name="qE2" value="moredata" /> Just need more data to get the pooled fit right.</label>
-            <label><input type="radio" name="qE2" value="film" /> The film variable adds nothing; the pooled line is just as good.</label>
+            <div class="q">Q1. Run end to end, do the three films move through the books at one steady pace?</div>
+            <label><input type="radio" name="qE1" value="one" /> One pace the whole way</label>
+            <label><input type="radio" name="qE1" value="three" /> A different pace in each film</label>
+            <label><input type="radio" name="qE1" value="drift" /> A pace that speeds up steadily from start to finish</label>
           </li>
         </ol>
-        <button id="submitE" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreE">Toggle the color-by-film view at least once. <span class="count">0/1 toggles</span></div>
+        <button id="submitE" disabled>Submit → unlock the sliders</button>
+        <div class="explore-tracker" id="exploreE">Record a pace for each of the three films. <span class="count">0/3 recorded</span></div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls locked" id="controlsE">
-          <div class="row"><label for="E_colorIn">view</label>
-            <select id="E_colorIn" style="grid-column:2 / 4; padding:6px;">
-              <option value="pool">single pooled fit (no film coloring)</option>
-              <option value="strat">color by film (separate fits per film)</option>
-            </select></div>
-          <div class="buttons"><button id="E_download" class="ghost">Download .R</button></div>
+          <div class="row"><label for="E_view">what you are looking at</label>
+            <select id="E_view" style="grid-column:2 / 4;">
+              <option value="joined">all three, end to end</option>
+              <option value="split">each film from its own start</option>
+            </select>
+          </div>
+          <div class="row" id="E_filmRow" style="display:none;"><label for="E_film">which film</label>
+            <select id="E_film" style="grid-column:2 / 4;"></select>
+          </div>
+          <div class="row" data-line="start"><label for="E_start">what page it starts on</label><input type="range" id="E_start" min="-200" max="400" step="1" value="0" /><output id="E_startOut">0</output></div>
+          <div class="row" data-line="pace"><label for="E_pace">page pace (pages a minute)</label><input type="range" id="E_pace" min="0" max="6" step="0.01" value="1" /><output id="E_paceOut">1.00</output></div>
+          <div class="buttons">
+            <button id="E_record" class="accent" disabled>Record this pace</button>
+            <button id="E_download" class="ghost">Download .R</button>
+          </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — residuals partition by a categorical</h3>
-<pre class="code" id="codeE"><span class="line">lotr &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/lotr_quotes.csv"</span>)</span><span class="line"><span class="com"># Pooled fit ignores 'film'</span></span><span class="line">pooled &lt;- <span class="fn">lm</span>(page ~ minute, data = lotr)</span><span class="line"><span class="com"># Stratified fit lets each film have its own slope</span></span><span class="line">strat  &lt;- <span class="fn">lm</span>(page ~ minute * film, data = lotr)</span><span class="line"><span class="fn">summary</span>(pooled)$r.squared; <span class="fn">summary</span>(strat)$r.squared</span></pre>
+        <h3>Paces you have recorded</h3>
+        <div class="paces" id="E_paces"><div style="color:var(--muted);">none yet</div></div>
+      </div>
+      <div class="panel prediction" id="postE" style="display:none;">
+        <p class="q">Which film moves through its book fastest?</p>
+        <label><input type="radio" name="qE2" value="fotr" /> The Fellowship of the Ring</label>
+        <label><input type="radio" name="qE2" value="ttt" /> The Two Towers</label>
+        <label><input type="radio" name="qE2" value="rotk" /> The Return of the King</label>
+        <button id="submitE2" disabled>Submit</button>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line">q &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/lotr_quotes.csv"</span>)</span><span class="line"></span><span class="line"><span class="com"># one line over the whole run</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(page_total ~ minute_total, data = q))</span><span class="line"></span><span class="line"><span class="com"># one line per film, each from its own start</span></span><span class="line"><span class="fn">sapply</span>(<span class="fn">split</span>(q, q$film), <span class="kw">function</span>(d)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(page ~ minute, data = d))[<span class="num">2</span>])</span></pre>
       </div>
     </div>
-  </div>
-
-  <!-- DAG sub-panel: draw the missing variable as a causal node. -->
-  <div class="stage-body" style="margin-top:24px;border-top:1px dashed #c9c4b3;padding-top:20px;">
-    <div class="panel scenario" style="max-width:1100px;margin:0 auto 14px;">
-      <h3>Draw the missing variable</h3>
-      <p>The pooled fit ignored "film". In a DAG, "film" is a categorical node that affects both <em>minute</em> (when does this film's runtime end?) and <em>page</em> (which book is this film adapting?). Build that DAG below and watch the scatter behave: pooled vs colored-by-film. This is the same picture you saw above, generated from a causal model you control.</p>
-    </div>
-    <div id="dag-l3-mount" style="max-width:1180px;margin:0 auto;"></div>
   </div>
 </section>
 
-<!-- ============ SHOWCASE — vagus residual (open, no gate) ============= -->
+<!-- ============ SHOWCASE — vagus leftover (open, no gate) ============= -->
 <section class="stage" id="stageVagus" style="background:#fcfaf2;">
-  <h2 class="stage-h">Showcase — the same leftover, drawn on the lecture example</h2>
-  <p class="stage-sub">No prediction, no controls. The same fit-and-leftover move, applied to the anatomy example from lecture.</p>
+  <h2 class="stage-h">Showcase — the same leftover, on a nerve</h2>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <h3>What you're looking at</h3>
-        <p>Ten mammals. <em>x</em> = the direct distance from the brainstem to the larynx (cm) — the path a sensible engineer would route the nerve down. <em>y</em> = the actual length of the recurrent laryngeal nerve (cm) — the path evolution actually took, looping under the aortic arch at the heart and back up.</p>
-        <p>The line is fit to the nine non-giraffe mammals. The giraffe is plotted in red — and the residual panel below shows how far off the line it sits.</p>
-        <p style="font-size:12px; color:var(--muted);">Approximate values from comparative-anatomy references (Wedel 2012 for giraffe; standard texts for the rest). Treat as pedagogical rather than research-grade.</p>
+        <p>Ten mammals. Across the bottom: the direct distance from brainstem to larynx — the route a sensible engineer would run the wire. Up the side: how long the nerve actually is.</p>
+        <p>The line is drawn through the nine non-giraffe mammals. The giraffe is in red.</p>
+        <p style="font-size:12px; color:var(--muted);">Approximate values from comparative-anatomy references (Wedel 2012 for giraffe; standard texts for the rest). Pedagogical rather than research-grade.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>Top: brain-to-larynx distance vs. nerve length. Bottom: residuals from a fit on the non-giraffe mammals.</h3>
+        <h3>Top: distance against nerve length. Bottom: what the line leaves over.</h3>
         <canvas id="plotVagus1" width="560" height="280"></canvas>
         <canvas id="plotVagus2" width="560" height="180"></canvas>
         <div class="fit-stats" id="statsVagus">
-          <span class="label">fit on non-giraffe (n = 9):</span>
-          <span class="label">slope:</span> <span id="V_b">—</span>
+          <span class="label">line through the other nine — per cm of distance:</span> <span id="V_b">—</span> cm of nerve
           &nbsp;|&nbsp;
-          <span class="label">R²:</span> <span id="V_r2">—</span>
+          <span class="label">giraffe, expected:</span> <span id="V_pred">—</span> cm
           &nbsp;|&nbsp;
-          <span class="label">giraffe predicted:</span> <span id="V_pred">—</span> cm
+          <span class="label">giraffe, actual:</span> <span id="V_obs">—</span> cm
           &nbsp;|&nbsp;
-          <span class="label">giraffe actual:</span> <span id="V_obs">—</span> cm
-          &nbsp;|&nbsp;
-          <span class="label">residual:</span> <span id="V_res" style="color:var(--accent); font-weight:600;">—</span> cm
+          <span class="label">left over:</span> <span id="V_res" style="color:var(--accent); font-weight:600;">—</span> cm
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel">
-        <h3>What is this leftover telling you?</h3>
-        <p>The nine-mammal fit says: for every 1 cm of direct brain-to-larynx distance, expect roughly 2–3 cm of nerve. For a giraffe, with a ~25 cm direct distance, the line predicts about 60 cm.</p>
-        <p>The giraffe's actual nerve is roughly <strong>270 cm</strong> — it runs the full length of the neck, loops under an artery at the heart, and comes back up. That gap between predicted and actual is the leftover you have been drawing all lesson, now at its most extreme.</p>
-        <p style="margin-top:10px; font-size:12.5px; color:var(--muted);">Same machine you used on Beren's sick-day weights. So ask yourself: is a leftover this large the kind of scatter a sharper measurement would shrink — or is it the "what should a nerve do?" line running up against something it was never built to see? Hold your answer. You will meet leftovers like this one at every scale of life, and each time the same question decides what they mean.</p>
+        <h3>R code</h3>
+<pre class="code" id="codeVagus"><span class="line">v &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/vagus_nerve.csv"</span>)</span><span class="line">non_g &lt;- <span class="fn">subset</span>(v, species != <span class="str">"giraffe"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(rln_length_cm ~ direct_cm, data = non_g)</span><span class="line"></span><span class="line">giraffe &lt;- <span class="fn">subset</span>(v, species == <span class="str">"giraffe"</span>)</span><span class="line">giraffe$rln_length_cm - <span class="fn">predict</span>(fit, newdata = giraffe)</span></pre>
       </div>
-      <div class="panel">
-        <h3>R code — fit on non-giraffe, then look where the giraffe sits</h3>
-<pre class="code" id="codeVagus"><span class="line">v &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/vagus_nerve.csv"</span>)</span><span class="line">non_g &lt;- <span class="fn">subset</span>(v, species != <span class="str">"giraffe"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(rln_length_cm ~ direct_cm, data = non_g)</span><span class="line"></span><span class="line"><span class="com"># predict the giraffe from the non-giraffe regression</span></span><span class="line">giraffe &lt;- <span class="fn">subset</span>(v, species == <span class="str">"giraffe"</span>)</span><span class="line">pred &lt;- <span class="fn">predict</span>(fit, newdata = giraffe)</span><span class="line">giraffe$rln_length_cm - pred   <span class="com"># the residual: ~200 cm</span></span></pre>
+      <div class="panel scenario">
+        <p>You have spent the whole lesson turning a lean into a missing piece of the recipe: a group, then a count. This one is the biggest leftover you will meet all term. Decide for yourself whether a sharper measurement would shrink it, or whether the line was asking the wrong question.</p>
       </div>
     </div>
   </div>
@@ -547,7 +424,6 @@
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
 <footer class="wrap-up">
-  <p style="margin:0 0 14px;">You fit a line, then looked hard at what it missed. Keep that pair of moves. The next lesson puts its weight on the first half of the pair — the line itself.</p>
   <p>
     <a href="lesson4.html" style="display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600;">Continue → Lesson 4</a>
     &nbsp;·&nbsp;
@@ -557,7 +433,6 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/score.js"></script>
-<script src="../assets/dag.js"></script>
 <script>
 /* ====== Shared helpers (verbatim from Lesson 1) ===================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
@@ -573,14 +448,13 @@ function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
   ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
   ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
-  ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+  ctx.save(); ctx.translate(f.pad.l-40, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
 }
 function drawVLine(ctx, f, xv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); }
 function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
 function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
-function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
 function ols(xs, ys) {
   const n = xs.length; const mx = mean(xs), my = mean(ys);
   let sxy = 0, sxx = 0;
@@ -589,30 +463,41 @@ function ols(xs, ys) {
   const yhat = xs.map(x => a + b*x);
   const ss_res = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
   const ss_tot = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
-  return { a, b, r2: 1 - ss_res/ss_tot, sres: Math.sqrt(ss_res/(n-2)), yhat };
+  return { a, b, r2: 1 - ss_res/ss_tot, yhat };
 }
 
-const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 6, E: 1 };
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:false,explores:0,done:false} };
-function bumpExplore(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); 
-  const g = Gates[stage]; if (!g.predicted || g.done) return;
-  g.explores += 1;
-  const tracker = document.getElementById("explore"+stage);
-  const c = tracker.querySelector(".count");
-  const noun = stage==="A"?"guesses":stage==="B"?"toggles":stage==="C"?"rounds":"rounds";
-  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
-  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
-    g.done = true; tracker.classList.add("complete");
-    c.textContent = `${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`);
-    unlockNext(stage);
-  }
-}
+/* ====== Stage gates ================================================= */
+// A, B and C open the next stage by hitting a target with the sliders, not by
+// counting fiddles: the student has to actually land the thing.
+const Gates = { A:{predicted:false,done:false}, B:{predicted:false,done:false},
+                C:{predicted:false,done:false}, D:{predicted:false,done:false},
+                E:{predicted:false,done:false} };
 function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"E",E:null}[s]; }
 function unlockNext(stage) {
   const next = {A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage];
-  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
-  else if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  if (!next) return;
+  document.getElementById(next).classList.remove("stage-locked");
+  const toc = document.getElementById("toc"+nextStageLabel(stage));
+  if (toc) toc.classList.remove("locked");
 }
+function markDone(stage, message) {
+  const g = Gates[stage];
+  if (g.done) return;
+  g.done = true;
+  const tracker = document.getElementById("explore"+stage);
+  tracker.classList.add("complete");
+  tracker.querySelector(".count").textContent = message;
+  if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage);
+}
+function record(pos, ok) {
+  if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok);
+}
+function bump(stage) {
+  if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage);
+}
+// Prediction bits. Bit 6 belongs to Stage C's per-centimetre follow-up, so
+// Stage D's two questions start at 7.
+const PRED_POS = { A:0, B:2, C:4, D:7, E:9 };
 function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
   const root=document.getElementById(predId); const btn=root.querySelector("button");
   function allFilled() { return names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
@@ -620,325 +505,348 @@ function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) 
   names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
   btn.addEventListener("click", () => {
     const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
-    const nc = results.filter(r=>r.correct).length;
     const ol = root.querySelector("ol");
     const msg = document.createElement("div");
     msg.className = "prediction-done";
-    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
+    msg.textContent = "Submitted. Controls unlocked.";
     root.insertBefore(msg, ol);
     btn.style.display = "none";
     Gates[stage].predicted = true;
     document.getElementById("explore"+stage).classList.add("shown");
     if (controlsId) document.getElementById(controlsId).classList.remove("locked");
     if (afterUnlock) afterUnlock();
-    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
-    if (typeof stageIdx === "number" && typeof Score !== "undefined" && Score.recordCheckpoint) {
-      Score.recordCheckpoint(stageIdx*2,     results[0].correct);
-      if (results.length > 1) Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
-    }
+    results.forEach((r,i) => record(PRED_POS[stage] + i, r.correct));
   });
 }
 
-/* ====== Data loading ================================================ */
-const Data = { nhanes: null, mammals: null, birds: null, finch: null, finchPop: null, pets: null, petsMeta: null, kids: null, who: null };
+/* ====== Data ======================================================== */
+const Data = { rows: [], women: [], men: [], weights: [], bands: [], kids: [], who: [] };
 async function fetchJSON(p, fallback) {
   try { const r = await fetch(p); return await r.json(); }
   catch (e) { console.warn("fallback for "+p, e); return fallback; }
 }
+const BAND_LO = 145, BAND_HI = 190, BAND_W = 5, BAND_N = (BAND_HI - BAND_LO) / BAND_W;
+
 async function loadData() {
-  Data.nhanes  = await fetchJSON("../../data/clean/nhanes_adults.json", []);
-  Data.mammals = await fetchJSON("../../data/clean/pantheria_mammals.json", []);
-  Data.birds   = await fetchJSON("../../data/clean/avonet_birds.json", []);
-  Data.finch   = await fetchJSON("../../data/clean/finch_beak.json", []);
-  Data.finchPop= await fetchJSON("../../data/clean/finch_pop.json", []);
-  Data.pets    = await fetchJSON("../../data/clean/pets_timeseries.json", []);
-  Data.petsMeta= await fetchJSON("../../data/clean/pets_series_metadata.json", []);
-  Data.kids    = await fetchJSON("../../data/clean/kids_growth.json", []);
-  Data.who     = await fetchJSON("../../data/clean/who_growth_reference.json", []);
-  drawStageA(); drawStageB(); /* drill drawn on demand, stage D drawn on demand */
+  const raw = await fetchJSON("../../data/clean/nhanes_adults.json", []);
+  const rows = [];
+  for (const r of raw) {
+    const h = parseFloat(r.Height), w = parseFloat(r.Weight);
+    if (isNaN(h) || isNaN(w)) continue;
+    rows.push({ h, w, man: (r.Gender || r.Sex || "").toLowerCase() === "male" });
+  }
+  if (!rows.length) {
+    // Simulated stand-in with the same shape, so the page still works offline.
+    const rng = mulberry32(9);
+    const nrm = () => { let s = 0; for (let i=0;i<12;i++) s += rng(); return s - 6; };
+    for (let i = 0; i < 7000; i++) {
+      const man = rng() < 0.49;
+      const h = (man ? 175.9 : 162.1) + 7.4 * nrm();
+      rows.push({ h, w: 0.95 * h - 78 + 19 * nrm(), man });
+    }
+  }
+  Data.rows = rows;
+  Data.weights = rows.map(r => r.w);
+  Data.women = rows.filter(r => !r.man);
+  Data.men   = rows.filter(r =>  r.man);
+  Data.bands = Array.from({ length: BAND_N }, () => []);
+  for (const r of rows) {
+    if (r.h < BAND_LO || r.h >= BAND_HI) continue;
+    Data.bands[Math.floor((r.h - BAND_LO) / BAND_W)].push(r);
+  }
+  Data.kids = await fetchJSON("../../data/clean/kids_growth.json", []);
+  Data.who  = await fetchJSON("../../data/clean/who_growth_reference.json", []);
+  drawStageA(); drawStageB(); drawStageC();
 }
 
-/* ====== STAGE A =================================================== */
-const sA = { guess: 81 };
+/* ====== STAGE A — one number for everyone ========================== */
+const sA = { num: 60 };
+const A_TOL = 0.5;
 
 function drawStageA() {
   const cv = document.getElementById("plotA");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  if (!Data.nhanes || !Data.nhanes.length) { ctx.fillStyle="#888"; ctx.fillText("loading…", 20, 30); return; }
-  const ys = Data.nhanes.map(r => parseFloat(r.Weight)).filter(v=>!isNaN(v));
-  const mu = mean(ys), sigma = std(ys);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, 30, 180, 0, 0.04);
-  drawAxes(ctx, f, "weight (kg) / your guess", "density", 8, 4, v=>v.toFixed(0), v=>v.toFixed(3));
-  function densityHist(values, color, minX, maxX) {
-    const bins = 40, binW = (maxX-minX)/bins;
-    const counts = new Array(bins).fill(0);
-    for (const v of values) { if (v<minX||v>=maxX) continue; counts[Math.min(bins-1,Math.floor((v-minX)/binW))]++; }
-    const N = values.length;
-    ctx.fillStyle = color;
-    for (let i=0;i<bins;i++) { const d = counts[i]/(N*binW); if(d===0)continue; ctx.fillRect(f.x(minX+i*binW)+0.5, f.y(d), f.x(minX+(i+1)*binW)-f.x(minX+i*binW)-1, f.y(0)-f.y(d)); }
+  const pad = { l: 56, r: 14, t: 16, b: 46 };
+  const minX = 30, maxX = 180, bins = 50, binW = (maxX-minX)/bins;
+  const counts = new Array(bins).fill(0);
+  for (const w of Data.weights) {
+    if (w < minX || w >= maxX) continue;
+    counts[Math.min(bins-1, Math.floor((w-minX)/binW))]++;
   }
-  densityHist(ys, "rgba(120,120,120,0.6)", 30, 180);
-  // Errors centered at guess
-  const errs = ys.map(y => sA.guess - y);
-  densityHist(errs.map(e => sA.guess + e), "rgba(178,58,72,0.55)", 30, 180);
-  drawVLine(ctx, f, mu, "#000", 1.5, [4,3]);
-  drawVLine(ctx, f, sA.guess, "#b23a48", 2, []);
-  document.getElementById("A_N").textContent = ys.length;
-  document.getElementById("A_mu").textContent = mu.toFixed(2);
-  document.getElementById("A_sigma").textContent = sigma.toFixed(2);
-  document.getElementById("A_guess").textContent = sA.guess.toFixed(1);
-  document.getElementById("A_mse").textContent = mean(errs.map(e=>e*e)).toFixed(1);
+  const maxC = Math.max(...counts, 1);
+  const f = makeFrame(pad, W, H, minX, maxX, 0, maxC*1.12);
+  drawAxes(ctx, f, "weight (kg)", "people", 6, 4, v=>v.toFixed(0), v=>v.toFixed(0));
+  ctx.fillStyle = "rgba(120,120,120,0.55)";
+  for (let i=0;i<bins;i++) {
+    if (!counts[i]) continue;
+    const x0=f.x(minX+i*binW), x1=f.x(minX+(i+1)*binW);
+    ctx.fillRect(x0+0.5, f.y(counts[i]), x1-x0-1, f.y(0)-f.y(counts[i]));
+  }
+  drawVLine(ctx, f, sA.num, "#b23a48", 2, [5,4]);
+  ctx.fillStyle="#b23a48"; ctx.font="11px -apple-system, sans-serif";
+  ctx.textAlign="left"; ctx.textBaseline="top";
+  ctx.fillText("your number", f.x(sA.num)+4, pad.t+2);
+
+  if (Data.weights.length) {
+    const over = Data.weights.filter(w => w > sA.num).length;
+    const lean = mean(Data.weights.map(w => sA.num - w));
+    document.getElementById("A_over").textContent = over;
+    document.getElementById("A_under").textContent = Data.weights.length - over;
+    const el = document.getElementById("A_lean");
+    el.textContent = (lean>0?"+":"") + lean.toFixed(2) + " kg";
+    el.className = Math.abs(lean) <= A_TOL ? "ok" : "off";
+    if (Gates.A.predicted && !Gates.A.done && Math.abs(lean) <= A_TOL) {
+      markDone("A", "landed — Stage B unlocked.");
+      record(1, true);
+      carryNumberForward(sA.num);
+      unlockNext("A");
+    }
+  }
 }
-document.getElementById("A_guessIn").addEventListener("input", (e) => {
-  sA.guess = parseFloat(e.target.value);
-  document.getElementById("A_guessOut").textContent = sA.guess.toFixed(1);
-  document.getElementById("cA_guess").textContent = sA.guess.toFixed(1);
-  highlightByDataLine("codeA", "guess");
-  drawStageA(); bumpExplore("A");
-});
+function onA() {
+  sA.num = parseFloat(document.getElementById("A_num").value);
+  document.getElementById("A_numOut").textContent = sA.num.toFixed(1);
+  document.getElementById("cA_num").textContent = sA.num.toFixed(1);
+  highlightByDataLine("codeA","num");
+  bump("A");
+  drawStageA();
+}
+document.getElementById("A_num").addEventListener("input", onA);
 document.getElementById("A_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageA.R`, `# Lesson 3, Stage A
+  downloadText("lesson3_stageA.R", `# Lesson 3, Stage A -- one number for every adult.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-y <- nh$Weight
-mean(y); median(y); sd(y)
-guess <- ${sA.guess}
-err <- guess - y
-mean(err^2); mean(abs(err))
+y  <- nh$Weight
+guess <- ${sA.num.toFixed(1)}
+mean(guess - y)
+sum(y > guess); sum(y < guess)
 `);
 });
-wirePrediction("A", "predA", ["qA1","qA2"], ["mu","mean-mse"], "controlsA");
+wirePrediction("A","predA",["qA1"],["avg"],"controlsA");
 
-/* ====== STAGE B ================================================== */
-const sB = { n: 400, seed: 42, showResid: false, sample: null };
-function drawSubsampleB() {
-  if (!Data.nhanes || !Data.nhanes.length) return;
-  const rng = mulberry32(sB.seed);
-  const all = Data.nhanes.filter(r => r.Height && r.Weight);
-  const ids = new Set();
-  while (ids.size < Math.min(sB.n, all.length)) ids.add(Math.floor(rng()*all.length));
-  sB.sample = Array.from(ids).map(i => ({ h: parseFloat(all[i].Height), w: parseFloat(all[i].Weight) }));
+/* ====== STAGE B — one number plus a group ========================== */
+const sB = { base: 60, extra: 0 };
+const B_TOL = 0.75;
+
+// Stages B and C open on the number the student just landed in Stage A, with
+// the extra still at zero. That is the whole point of the next two stages: the
+// number that had no lean at all, taken apart by group and by height, does.
+function carryNumberForward(num) {
+  const bBase = document.getElementById("B_base");
+  bBase.value = String(num); bBase.dispatchEvent(new Event("input"));
+  const cBase = document.getElementById("C_base");
+  cBase.value = String(num); cBase.dispatchEvent(new Event("input"));
 }
+
 function drawStageB() {
   const cv = document.getElementById("plotB");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  if (!sB.sample) drawSubsampleB();
-  if (!sB.sample) { ctx.fillStyle="#888"; ctx.fillText("loading…", 20, 30); return; }
-  const xs = sB.sample.map(d=>d.h), ys = sB.sample.map(d=>d.w);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, 140, 200, 30, 180);
-  drawAxes(ctx, f, "height (cm)", "weight (kg)", 6, 6, v=>v.toFixed(0), v=>v.toFixed(0));
-  const fit = ols(xs, ys);
-  if (sB.showResid) {
-    ctx.strokeStyle = "rgba(178,58,72,0.4)"; ctx.lineWidth = 0.8;
-    for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.moveTo(f.x(xs[i]), f.y(ys[i])); ctx.lineTo(f.x(xs[i]), f.y(fit.yhat[i])); ctx.stroke(); }
+  const pad = { l: 56, r: 14, t: 18, b: 46 };
+  const minX = -70, maxX = 70, bins = 56, binW = (maxX-minX)/bins;
+  function missOf(rows, forMan) {
+    const g = sB.base + (forMan ? sB.extra : 0);
+    return rows.map(r => g - r.w);
   }
-  ctx.fillStyle = "rgba(80,80,80,0.6)";
-  for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 2, 0, 2*Math.PI); ctx.fill(); }
-  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(f.x(140), f.y(fit.a + fit.b*140)); ctx.lineTo(f.x(200), f.y(fit.a + fit.b*200)); ctx.stroke();
-  drawHLine(ctx, f, mean(ys), "#888", 1.5, [4,4]);
-  document.getElementById("B_a").textContent = fit.a.toFixed(2);
-  document.getElementById("B_b").textContent = fit.b.toFixed(3);
-  document.getElementById("B_r2").textContent = fit.r2.toFixed(3);
-  document.getElementById("B_sres").textContent = fit.sres.toFixed(2);
-  document.getElementById("B_mseA").textContent = mean(ys.map(y=>(y-mean(ys))*(y-mean(ys)))).toFixed(1);
-  document.getElementById("B_mseB").textContent = mean(fit.yhat.map((yh,i)=>(yh-ys[i])*(yh-ys[i]))).toFixed(1);
+  const mw = missOf(Data.women, false), mm = missOf(Data.men, true);
+  function binOf(vals) {
+    const c = new Array(bins).fill(0);
+    for (const v of vals) {
+      if (v < minX || v >= maxX) continue;
+      c[Math.min(bins-1, Math.floor((v-minX)/binW))]++;
+    }
+    const tot = vals.length || 1;
+    return c.map(x => x/tot);
+  }
+  const cw = binOf(mw), cm = binOf(mm);
+  const maxD = Math.max(...cw, ...cm, 0.01);
+  // Women's misses grow upward from the middle, men's downward — mirrored so a
+  // lean in opposite directions is impossible to miss.
+  const f = makeFrame(pad, W, H, minX, maxX, -maxD*1.2, maxD*1.2);
+  drawAxes(ctx, f, "how far off you are (kg)", "women above, men below", 7, 4,
+           v=>v.toFixed(0), v=>Math.abs(v).toFixed(2));
+  ctx.fillStyle = "rgba(178,58,72,0.55)";
+  for (let i=0;i<bins;i++) {
+    if (!cw[i]) continue;
+    const x0=f.x(minX+i*binW), x1=f.x(minX+(i+1)*binW);
+    ctx.fillRect(x0+0.5, f.y(cw[i]), x1-x0-1, f.y(0)-f.y(cw[i]));
+  }
+  ctx.fillStyle = "rgba(47,107,143,0.55)";
+  for (let i=0;i<bins;i++) {
+    if (!cm[i]) continue;
+    const x0=f.x(minX+i*binW), x1=f.x(minX+(i+1)*binW);
+    ctx.fillRect(x0+0.5, f.y(0), x1-x0-1, f.y(-cm[i])-f.y(0));
+  }
+  drawVLine(ctx, f, 0, "#1d1d1b", 1.5, []);
+  drawHLine(ctx, f, 0, "#999", 1, []);
+
+  if (!Data.women.length) return;
+  const lw = mean(mw), lm = mean(mm);
+  // A marker on the zero line for each group's average miss.
+  function marker(v, color) {
+    const x = f.x(Math.max(minX, Math.min(maxX, v)));
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(x, f.y(0)-7); ctx.lineTo(x-6, f.y(0)-16); ctx.lineTo(x+6, f.y(0)-16); ctx.closePath(); ctx.fill();
+  }
+  marker(lw, "#b23a48");
+  const xm = f.x(Math.max(minX, Math.min(maxX, lm)));
+  ctx.fillStyle = "#2f6b8f";
+  ctx.beginPath(); ctx.moveTo(xm, f.y(0)+7); ctx.lineTo(xm-6, f.y(0)+16); ctx.lineTo(xm+6, f.y(0)+16); ctx.closePath(); ctx.fill();
+
+  const ew = document.getElementById("B_leanW"), em = document.getElementById("B_leanM");
+  ew.textContent = (lw>0?"+":"") + lw.toFixed(2) + " kg";
+  em.textContent = (lm>0?"+":"") + lm.toFixed(2) + " kg";
+  ew.className = Math.abs(lw) <= B_TOL ? "ok" : "off";
+  em.className = Math.abs(lm) <= B_TOL ? "ok" : "off";
+  if (Gates.B.predicted && !Gates.B.done && Math.abs(lw) <= B_TOL && Math.abs(lm) <= B_TOL) {
+    markDone("B", "both groups landed — Stage C unlocked.");
+    record(3, true);
+    unlockNext("B");
+  }
 }
-document.getElementById("B_resid").addEventListener("change", (e) => { sB.showResid = e.target.checked; drawStageB(); bumpExplore("B"); });
-document.getElementById("B_nIn").addEventListener("input", (e) => { sB.n = parseInt(e.target.value,10); document.getElementById("B_nOut").textContent = sB.n; document.getElementById("cB_n").textContent = sB.n; highlightByDataLine("codeB","subsample"); });
-document.getElementById("B_seedIn").addEventListener("input", (e) => { sB.seed = parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent = sB.seed; document.getElementById("cB_seed").textContent = sB.seed; highlightByDataLine("codeB","seed"); });
-document.getElementById("B_refit").addEventListener("click", () => { drawSubsampleB(); drawStageB(); bumpExplore("B"); });
+function onB() {
+  sB.base  = parseFloat(document.getElementById("B_base").value);
+  sB.extra = parseFloat(document.getElementById("B_extra").value);
+  document.getElementById("B_baseOut").textContent = sB.base.toFixed(1);
+  document.getElementById("B_extraOut").textContent = sB.extra.toFixed(1);
+  document.getElementById("cB_base").textContent = sB.base.toFixed(1);
+  document.getElementById("cB_extra").textContent = sB.extra.toFixed(1);
+  bump("B");
+  drawStageB();
+}
+document.getElementById("B_base").addEventListener("input", () => { highlightByDataLine("codeB","base"); onB(); });
+document.getElementById("B_extra").addEventListener("input", () => { highlightByDataLine("codeB","extra"); onB(); });
 document.getElementById("B_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageB_seed${sB.seed}.R`, `# Lesson 3, Stage B
+  downloadText("lesson3_stageB.R", `# Lesson 3, Stage B -- a starting number plus a group.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-set.seed(${sB.seed})
-idx <- sample(nrow(nh), ${sB.n})
-d <- nh[idx, ]
-fit <- lm(Weight ~ Height, data = d); summary(fit); sd(residuals(fit))
-plot(d$Height, d$Weight, pch=16, col="#444", xlab="height (cm)", ylab="weight (kg)")
-abline(fit, col="#2f6b8f", lwd=2)
-abline(h = mean(d$Weight), col="gray60", lty=2)
+is_man <- as.numeric(nh$Gender == "male")
+
+base  <- ${sB.base.toFixed(1)}
+extra <- ${sB.extra.toFixed(1)}
+guess <- base + extra * is_man
+tapply(guess - nh$Weight, is_man, mean)
+
+coef(lm(Weight ~ is_man, data = nh))
 `);
 });
-wirePrediction("B", "predB", ["qB1","qB2"], ["smaller","zero"], "controlsB");
+wirePrediction("B","predB",["qB1"],["opposite"],"controlsB");
 
-/* ====== STAGE C — S2 drill ====================================== */
-const sC = { round: 0, correct: 0, picks: [] };
-// Five built-in rounds. Each prepares (xs, ys, fit, expected, explanation) at draw time.
-const sC_rounds = [
-  { name: "Mammal body mass vs gestation (log-log)", expected: "clean",
-    build: () => {
-      const m = Data.mammals.filter(r => +r.adult_body_mass_g > 0 && +r.gestation_days > 0);
-      const rng = mulberry32(11);
-      const sub = m.sort(() => rng()-0.5).slice(0, 250);
-      return { xs: sub.map(r => Math.log(+r.gestation_days)), ys: sub.map(r => Math.log(+r.adult_body_mass_g)),
-               xlab: "log(gestation, days)", ylab: "log(body mass, g)" };
-    },
-    explain: "Log-log makes the relationship linear. Residuals are roughly symmetric, no obvious pattern — clean noise."
-  },
-  { name: "Mammal body mass vs gestation (linear-linear)", expected: "curve",
-    build: () => {
-      const m = Data.mammals.filter(r => +r.adult_body_mass_g > 0 && +r.gestation_days > 0 && +r.adult_body_mass_g < 1e6);
-      const rng = mulberry32(12);
-      const sub = m.sort(() => rng()-0.5).slice(0, 250);
-      return { xs: sub.map(r => +r.gestation_days), ys: sub.map(r => +r.adult_body_mass_g),
-               xlab: "gestation (days)", ylab: "body mass (g)" };
-    },
-    explain: "Raw scale: a straight line underpredicts at both extremes. The residual plot bends — curvature."
-  },
-  { name: "Bird beak length vs beak depth (across orders)", expected: "clouds",
-    build: () => {
-      const b = Data.birds.filter(r => +r.beak_length_culmen_mm > 0 && +r.beak_depth_mm > 0);
-      const rng = mulberry32(13);
-      const sub = b.sort(() => rng()-0.5).slice(0, 300);
-      return { xs: sub.map(r => Math.log(+r.beak_depth_mm)), ys: sub.map(r => Math.log(+r.beak_length_culmen_mm)),
-               xlab: "log(beak depth, mm)", ylab: "log(beak length, mm)" };
-    },
-    explain: "Different trophic guilds (granivores, nectarivores, raptors) sit at different positions in beak-shape space. Residuals cluster into more than one cloud."
-  },
-  { name: "Fortis beak depth across years (Grant 40-year)", expected: "hetero",
-    build: () => {
-      // finch_beak.json is nested: { years: [...], fortis: { beak_depth: [...] }, ... }
-      const years = Data.finch.years || [];
-      const depths = (Data.finch.fortis && Data.finch.fortis.beak_depth) || [];
-      const xs = [], ys = [];
-      for (let i=0;i<years.length && i<depths.length;i++) { xs.push(+years[i]); ys.push(+depths[i]); }
-      return { xs, ys, xlab: "year", ylab: "fortis mean beak depth (mm)" };
-    },
-    explain: "Drought-year 1977 and post-magnirostris 2003+ stand out as outliers. The variance of residuals isn't constant across years — heteroskedasticity that flags external events the linear-in-time model misses."
-  },
-  { name: "PETS body-size series — log rate vs log interval", expected: "curve",
-    build: () => {
-      // pets_timeseries: rows have (tsID, age_MY, trait_mean). Pair consecutive rows within a series.
-      const groups = {};
-      Data.pets.forEach(r => { (groups[r.tsID] = groups[r.tsID] || []).push(r); });
-      const xs = [], ys = [];
-      const rng = mulberry32(15);
-      const keys = Object.keys(groups).sort(() => rng()-0.5).slice(0, 80);
-      keys.forEach(k => {
-        const rows = groups[k].sort((a,b) => +a.age_MY - +b.age_MY);
-        for (let i = 1; i < rows.length; i++) {
-          const dt = Math.abs(+rows[i].age_MY - +rows[i-1].age_MY);
-          const dy = Math.abs(+rows[i].trait_mean - +rows[i-1].trait_mean);
-          if (dt > 0 && dy > 0) { xs.push(Math.log(dt)); ys.push(Math.log(dy / dt)); }
-        }
-      });
-      return { xs, ys, xlab: "log(interval, MY)", ylab: "log(|Δtrait| / interval)" };
-    },
-    explain: "Gingerich's rates-vs-interval pattern: short-interval rates are much higher than long-interval rates. A straight-line fit on log–log axes underestimates the curvature near short intervals."
-  },
-];
+/* ====== STAGE C — one number plus a count ========================== */
+const sC = { base: 60, extra: 0, settled: null };
+const C_TOL = 2.5;
 
-function startDrill() {
-  document.getElementById("drillPanel").style.display = "block";
-  sC.round = 0; sC.correct = 0; sC.picks = [];
-  drawDrillRound();
+function bandLeans() {
+  return Data.bands.map(rows => {
+    if (rows.length < 60) return null;
+    return mean(rows.map(r => sC.base + sC.extra * ((r.h - 170) / 5) - r.w));
+  });
 }
 
-function drawDrillRound() {
-  const i = sC.round;
-  const round = sC_rounds[i];
-  const data = round.build();
-  document.getElementById("C_title").textContent = `Round ${i+1} of 5 — ${round.name}`;
-  document.getElementById("C_round").textContent = i+1;
-  document.getElementById("C_correct").textContent = sC.correct;
-  // Scatter
-  const cv1 = document.getElementById("plotC1");
-  const { ctx, W, H } = setupCanvas(cv1);
+function drawStageC() {
+  const cv = document.getElementById("plotC");
+  const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  if (!data.xs.length) { ctx.fillStyle="#888"; ctx.fillText("loading…",20,30); return; }
-  const xmin = Math.min(...data.xs), xmax = Math.max(...data.xs);
-  const ymin = Math.min(...data.ys), ymax = Math.max(...data.ys);
-  const dx = xmax-xmin, dy = ymax-ymin;
-  const pad = { l: 56, r: 12, t: 14, b: 38 };
-  const f = makeFrame(pad, W, H, xmin-0.05*dx, xmax+0.05*dx, ymin-0.05*dy, ymax+0.05*dy);
-  drawAxes(ctx, f, data.xlab, data.ylab, 5, 4, v=>v.toFixed(1), v=>v.toFixed(1));
-  ctx.fillStyle = "rgba(60,60,60,0.5)";
-  for (let k=0;k<data.xs.length;k++) { ctx.beginPath(); ctx.arc(f.x(data.xs[k]), f.y(data.ys[k]), 2, 0, 2*Math.PI); ctx.fill(); }
-  const fit = ols(data.xs, data.ys);
-  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(f.x(f.xMin), f.y(fit.a+fit.b*f.xMin)); ctx.lineTo(f.x(f.xMax), f.y(fit.a+fit.b*f.xMax)); ctx.stroke();
-  // Residual plot
-  const cv2 = document.getElementById("plotC2");
-  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
-  ctx2.clearRect(0,0,W2,H2);
-  const resid = data.ys.map((y,j) => y - (fit.a + fit.b*data.xs[j]));
-  const rmin = Math.min(...resid), rmax = Math.max(...resid);
-  const rPad = { l: 56, r: 12, t: 14, b: 30 };
-  const fR = makeFrame(rPad, W2, H2, f.xMin, f.xMax, rmin*1.1, rmax*1.1);
-  drawAxes(ctx2, fR, data.xlab, "residual", 5, 4, v=>v.toFixed(1), v=>v.toFixed(1));
-  drawHLine(ctx2, fR, 0, "#b23a48", 1.5, [4,3]);
-  ctx2.fillStyle = "rgba(60,60,60,0.55)";
-  for (let k=0;k<data.xs.length;k++) { ctx2.beginPath(); ctx2.arc(fR.x(data.xs[k]), fR.y(resid[k]), 1.8, 0, 2*Math.PI); ctx2.fill(); }
-  // Reset buttons
-  document.querySelectorAll("#C_buttons button").forEach(b => b.classList.remove("locked"));
-  document.getElementById("C_reveal").className = "drill-reveal";
-  document.getElementById("C_reveal").textContent = "";
-  // Tally
-  const tally = document.getElementById("C_tally");
-  tally.innerHTML = "";
-  for (let k=0;k<5;k++) {
-    const d = document.createElement("div");
-    d.className = "dot";
-    if (k < sC.picks.length) d.classList.add(sC.picks[k] ? "correct" : "wrong");
-    else if (k === sC.round) d.classList.add("now");
-    d.textContent = k+1;
-    tally.appendChild(d);
+  const pad = { l: 60, r: 14, t: 18, b: 46 };
+  const f = makeFrame(pad, W, H, BAND_LO, BAND_HI, -28, 28);
+  drawAxes(ctx, f, "height band (cm)", "how far off you are (kg)", 9, 4,
+           v=>v.toFixed(0), v=>v.toFixed(0));
+  // The band you are allowed to be wrong inside.
+  ctx.fillStyle = "rgba(111,138,74,0.13)";
+  ctx.fillRect(f.pad.l, f.y(C_TOL), f.W, f.y(-C_TOL)-f.y(C_TOL));
+  drawHLine(ctx, f, 0, "#1d1d1b", 1.5, []);
+
+  const leans = bandLeans();
+  let worst = 0, high = 0, low = 0;
+  leans.forEach((lean, i) => {
+    if (lean === null) return;
+    const x = f.x(BAND_LO + i*BAND_W + BAND_W/2);
+    const yv = Math.max(-27, Math.min(27, lean));
+    ctx.strokeStyle = "#999"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, f.y(0)); ctx.lineTo(x, f.y(yv)); ctx.stroke();
+    ctx.fillStyle = Math.abs(lean) <= C_TOL ? "#4a7a2a" : "#a8331a";
+    ctx.beginPath(); ctx.arc(x, f.y(yv), 5, 0, 2*Math.PI); ctx.fill();
+    worst = Math.max(worst, Math.abs(lean));
+    if (lean > C_TOL) high++; else if (lean < -C_TOL) low++;
+  });
+
+  if (!Data.rows.length) return;
+  const el = document.getElementById("C_worst");
+  el.textContent = worst.toFixed(1) + " kg";
+  el.className = worst <= C_TOL ? "ok" : "off";
+  document.getElementById("C_high").textContent = high;
+  document.getElementById("C_low").textContent = low;
+  if (Gates.C.predicted && !Gates.C.done && worst <= C_TOL) {
+    sC.settled = sC.extra;
+    markDone("C", "every band landed.");
+    record(5, true);
+    document.getElementById("C_settled").textContent = sC.extra.toFixed(1);
+    document.getElementById("postC").style.display = "block";
   }
 }
+function onC() {
+  sC.base  = parseFloat(document.getElementById("C_base").value);
+  sC.extra = parseFloat(document.getElementById("C_extra").value);
+  document.getElementById("C_baseOut").textContent = sC.base.toFixed(1);
+  document.getElementById("C_extraOut").textContent = sC.extra.toFixed(1);
+  document.getElementById("cC_base").textContent = sC.base.toFixed(1);
+  document.getElementById("cC_extra").textContent = sC.extra.toFixed(1);
+  bump("C");
+  drawStageC();
+}
+document.getElementById("C_base").addEventListener("input", () => { highlightByDataLine("codeC","base"); onC(); });
+document.getElementById("C_extra").addEventListener("input", () => { highlightByDataLine("codeC","extra"); onC(); });
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText("lesson3_stageC.R", `# Lesson 3, Stage C -- a starting number plus a count.
+nh <- read.csv("data/clean/nhanes_adults.csv")
+steps <- (nh$Height - 170) / 5
 
-document.querySelectorAll("#C_buttons button").forEach(btn => {
-  btn.addEventListener("click", () => {
-    if (btn.classList.contains("locked")) return;
-    const pick = btn.dataset.pick;
-    const round = sC_rounds[sC.round];
-    const isCorrect = pick === round.expected;
-    sC.picks.push(isCorrect); if (isCorrect) sC.correct++;
-    document.querySelectorAll("#C_buttons button").forEach(b => b.classList.add("locked"));
-    const rev = document.getElementById("C_reveal");
-    rev.className = "drill-reveal shown " + (isCorrect ? "correct" : "wrong");
-    rev.innerHTML = `<strong>${isCorrect ? "Correct" : "Not quite"}.</strong> The intended diagnosis was <em>${round.expected}</em>. ${round.explain} <button id="C_nextBtn" style="margin-left:8px;">Next round →</button>`;
-    document.getElementById("C_nextBtn").addEventListener("click", () => {
-      sC.round++;
-      if (sC.round >= 5) {
-        document.getElementById("C_title").textContent = `Done — ${sC.correct}/5 correct`;
-        bumpExplore("C"); Gates.C.explores = 5; bumpExplore("C");
-      } else {
-        bumpExplore("C");
-        drawDrillRound();
-      }
-    });
-  });
+base  <- ${sC.base.toFixed(1)}
+extra <- ${sC.extra.toFixed(1)}
+guess <- base + extra * steps
+
+band <- cut(nh$Height, seq(145, 190, 5))
+tapply(guess - nh$Weight, band, mean)
+
+coef(lm(Weight ~ steps, data = nh))
+`);
 });
-wirePrediction("C", "predC", ["qC1","qC2"], ["curve","missgroup"], null, () => { document.getElementById("drillPanel").style.display = "block"; startDrill(); });
+wirePrediction("C","predC",["qC1"],["heavier"],"controlsC");
 
-/* ====== STAGE D — kids' growth click-to-predict ================== */
+document.querySelectorAll('input[name="qC2"]').forEach(r => {
+  r.addEventListener("change", () => { document.getElementById("submitC2").disabled = false; });
+});
+document.getElementById("submitC2").addEventListener("click", () => {
+  const choice = document.querySelector('input[name="qC2"]:checked');
+  if (!choice) return;
+  record(6, choice.value === "one");
+  document.getElementById("submitC2").disabled = true;
+  document.querySelectorAll('input[name="qC2"]').forEach(r => { r.disabled = true; });
+  unlockNext("C");
+  document.getElementById("stageD").scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+/* ====== STAGE D — kids' growth click-to-predict ==================== */
 const sD = {
-  round: 0, totalRounds: 6, byKidMeasure: null,
-  current: null,   // { kid, points, hiddenIdx, hiddenPoint }
-  click: null, locked: true};
+  round: 0, totalRounds: 6, byKid: null,
+  current: null, click: null, locked: true };
 
 function organizeKids() {
-  sD.byKidMeasure = {};
+  sD.byKid = {};
   Data.kids.forEach(r => {
     if (r.measure !== "mass") return;
-    const k = r.kid;
-    (sD.byKidMeasure[k] = sD.byKidMeasure[k] || []).push(r);
+    (sD.byKid[r.kid] = sD.byKid[r.kid] || []).push(r);
   });
-  Object.keys(sD.byKidMeasure).forEach(k => sD.byKidMeasure[k].sort((a,b) => a.day_of_life - b.day_of_life));
+  Object.keys(sD.byKid).forEach(k => sD.byKid[k].sort((a,b) => a.day_of_life - b.day_of_life));
 }
 
 function setupRoundD() {
-  if (!sD.byKidMeasure) organizeKids();
-  // Alternate kids; pick a hidden point in the interior (not first/last).
+  if (!sD.byKid) organizeKids();
   const kid = (sD.round % 2 === 0) ? "beren" : "cyrus";
-  const pts = sD.byKidMeasure[kid];
+  const pts = sD.byKid[kid];
   if (!pts || pts.length < 4) { sD.current = null; return; }
   const rng = mulberry32(sD.round*131 + 7);
-  // Prefer hidden = sick_proxy:true at least once if available
+  // At least twice, hide a day the child was ill — that is the round where the
+  // point lands somewhere the line did not expect.
   const sickIdx = pts.map((p,i) => p.sick_proxy ? i : -1).filter(i => i > 0 && i < pts.length-1);
   let hiddenIdx;
   if (sickIdx.length && (sD.round === 1 || sD.round === 3)) {
@@ -950,8 +858,17 @@ function setupRoundD() {
   sD.click = null;
 }
 
+function frameD(cv) {
+  const pts = sD.current.points;
+  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
+  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
+  const dpr = window.devicePixelRatio || 1;
+  return makeFrame({ l: 56, r: 12, t: 14, b: 40 },
+                   cv.width/dpr, cv.height/dpr, 0, xMax, 0, yMax);
+}
+
 function drawStageD() {
-  if (!sD.current) { sD.locked = false; setupRoundD(); }
+  if (!sD.current) { setupRoundD(); }
   if (!sD.current) return;
   const cv = document.getElementById("plotD");
   const { ctx, W, H } = setupCanvas(cv);
@@ -959,10 +876,8 @@ function drawStageD() {
   const pts = sD.current.points;
   const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
   const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
-  const pad = { l: 56, r: 12, t: 14, b: 40 };
-  const f = makeFrame(pad, W, H, 0, xMax, 0, yMax);
-  drawAxes(ctx, f, "age (years)", "mass (kg)", 6, 5, v=>v.toFixed(1), v=>v.toFixed(0));
-  // WHO reference
+  const f = makeFrame({ l: 56, r: 12, t: 14, b: 40 }, W, H, 0, xMax, 0, yMax);
+  drawAxes(ctx, f, "age (years)", "weight (kg)", 6, 5, v=>v.toFixed(1), v=>v.toFixed(0));
   if (Data.who && Data.who.length) {
     ctx.strokeStyle = "#aaa"; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.beginPath();
     Data.who.forEach((r,i) => {
@@ -971,18 +886,15 @@ function drawStageD() {
     });
     ctx.stroke(); ctx.setLineDash([]);
   }
-  // Visible kid points (excluding hidden)
   ctx.fillStyle = "rgba(60,60,60,0.7)";
   pts.forEach((p, i) => {
     if (i === sD.current.hiddenIdx && !sD.current.revealed) return;
     ctx.beginPath(); ctx.arc(f.x(p.age_years), f.y(p.value), 4, 0, 2*Math.PI); ctx.fill();
   });
-  // Highlight hidden if revealed
   if (sD.current.revealed) {
     const hp = sD.current.hiddenPoint;
     ctx.fillStyle = hp.sick_proxy ? "#a86a1a" : "#6f8a4a";
     ctx.beginPath(); ctx.arc(f.x(hp.age_years), f.y(hp.value), 6, 0, 2*Math.PI); ctx.fill();
-    // also draw user's click and a line connecting them
     if (sD.click) {
       ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(f.x(sD.click.x), f.y(sD.click.y)); ctx.lineTo(f.x(hp.age_years), f.y(hp.value)); ctx.stroke();
@@ -993,15 +905,13 @@ function drawStageD() {
     ctx.fillStyle = "#b23a48";
     ctx.beginPath(); ctx.arc(f.x(sD.click.x), f.y(sD.click.y), 4, 0, 2*Math.PI); ctx.fill();
   } else {
-    // Show a marker at the hidden age, indicating that's the age we need a click for
     const hp = sD.current.hiddenPoint;
     ctx.strokeStyle = "#888"; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(f.x(hp.age_years), f.pad.t); ctx.lineTo(f.x(hp.age_years), f.pad.t+f.H); ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = "#888"; ctx.textAlign = "center"; ctx.font = "12px -apple-system";
-    ctx.fillText(`click here at age ${hp.age_years.toFixed(2)} y`, f.x(hp.age_years), f.pad.t + 12);
+    ctx.fillText(`click here, at age ${hp.age_years.toFixed(2)} y`, f.x(hp.age_years), f.pad.t + 12);
   }
-  // Update info
   document.getElementById("D_kid").textContent = sD.current.kid;
   document.getElementById("D_round").textContent = sD.round + 1;
   document.getElementById("D_click").textContent = sD.click ? `(${sD.click.x.toFixed(2)} y, ${sD.click.y.toFixed(1)} kg)` : "—";
@@ -1009,7 +919,7 @@ function drawStageD() {
     const hp = sD.current.hiddenPoint;
     document.getElementById("D_actual").textContent = `(${hp.age_years.toFixed(2)} y, ${hp.value.toFixed(1)} kg)`;
     document.getElementById("D_err").textContent = sD.click ? `${(sD.click.y - hp.value).toFixed(2)} kg`: "—";
-    document.getElementById("D_sick").textContent = hp.sick_proxy ? "yes (antibiotic / temperature within ±7 days)" : "no";
+    document.getElementById("D_sick").textContent = hp.sick_proxy ? "yes" : "no";
   } else {
     document.getElementById("D_actual").textContent = "—";
     document.getElementById("D_err").textContent = "—";
@@ -1021,29 +931,27 @@ document.getElementById("plotD").addEventListener("click", (e) => {
   if (sD.locked || !sD.current || sD.current.revealed) return;
   const cv = e.currentTarget;
   const rect = cv.getBoundingClientRect();
-  const px = (e.clientX - rect.left) * (cv.width / rect.width / (window.devicePixelRatio||1));
-  const py = (e.clientY - rect.top)  * (cv.height / rect.height / (window.devicePixelRatio||1));
-  // Convert pixel → data using the same frame the draw used
-  const pts = sD.current.points;
-  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
-  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
-  const pad = { l: 56, r: 12, t: 14, b: 40 };
-  const f = makeFrame(pad, cv.width/(window.devicePixelRatio||1), cv.height/(window.devicePixelRatio||1), 0, xMax, 0, yMax);
+  const dpr = window.devicePixelRatio || 1;
+  const px = (e.clientX - rect.left) * (cv.width / rect.width / dpr);
+  const py = (e.clientY - rect.top)  * (cv.height / rect.height / dpr);
+  const f = frameD(cv);
   sD.click = { x: f.xInv(px), y: f.yInv(py) };
   sD.current.revealed = true;
   drawStageD();
+  bump("D");
   document.getElementById("D_next").disabled = false;
-  // record
-  if (sD.click.x !== null) sD.round; // no-op
 });
 
 document.getElementById("D_next").addEventListener("click", () => {
   sD.round++;
   document.getElementById("D_next").disabled = true;
-  bumpExplore("D");
+  const tracker = document.getElementById("exploreD");
+  tracker.querySelector(".count").textContent = sD.round + "/6 rounds";
   if (sD.round >= sD.totalRounds) {
-    document.getElementById("D_title").textContent = "Done — review your last reveal above.";
-    // Final advance triggers Score.finish() via bumpExplore → unlockNext.
+    document.getElementById("D_title").textContent = "Six done.";
+    markDone("D", "six done — Stage E unlocked.");
+    unlockNext("D");
+    document.getElementById("stageE").scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
   document.getElementById("D_title").textContent = `Round ${sD.round+1} of ${sD.totalRounds} — click where the missing point should be`;
@@ -1051,13 +959,13 @@ document.getElementById("D_next").addEventListener("click", () => {
 });
 
 document.getElementById("D_download").addEventListener("click", () => {
-  downloadText(`lesson3_stageD.R`, `# Lesson 3, Stage D
+  downloadText("lesson3_stageD.R", `# Lesson 3, Stage D
 k <- read.csv("data/clean/kids_growth.csv")
 b <- subset(k, kid == "beren" & measure == "mass")
 fit <- lm(value ~ poly(age_years, 2), data = b)
-b$residual <- residuals(fit)
-aggregate(residual ~ sick_proxy, data = b, mean)
-boxplot(residual ~ sick_proxy, data = b, col = c("#6f8a4a","#a86a1a"))
+b$leftover <- residuals(fit)
+aggregate(leftover ~ sick_proxy, data = b, mean)
+boxplot(leftover ~ sick_proxy, data = b, col = c("#6f8a4a","#a86a1a"))
 `);
 });
 
@@ -1065,17 +973,202 @@ document.getElementById("stretchD_btn").addEventListener("click", () => {
   const btn = document.getElementById("stretchD_btn");
   btn.classList.add("done"); btn.textContent = "Recorded ✓"; btn.disabled = true;
   document.getElementById("stretchD_status").textContent = "Noted.";
-  if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, true);
+  record(11, true);
 });
 
-wirePrediction("D", "predD", ["qD1","qD2"], ["lower","negative"], null, () => {
+wirePrediction("D", "predD", ["qD1","qD2"], ["lower","below"], null, () => {
   sD.locked = false;
   document.getElementById("plotD").classList.remove("locked");
   setupRoundD(); drawStageD();
 });
 
-/* ====== Pretest / Posttest / Score ============================== */
-/* ====== Showcase — vagus residual (open, no gate) ================= */
+/* ====== STAGE E — three films, one line ============================
+   Quote positions for the three Jackson films. Runtimes are the theatrical
+   cuts; page numbers are within each film's own volume. Each film moves
+   through its book at its own pace: Fellowship is the quickest, Return of
+   the King the slowest, and Two Towers sits close enough to Fellowship that
+   telling them apart is a genuine question.
+   ================================================================== */
+const FILMS = [
+  { id:"fotr", name:"The Fellowship of the Ring", runtime:178, pages:398, colour:"#2f6b8f" },
+  { id:"ttt",  name:"The Two Towers",             runtime:179, pages:352, colour:"#6f8a4a" },
+  { id:"rotk", name:"The Return of the King",     runtime:201, pages:311, colour:"#b23a48" }
+];
+// A quote's page is not a clean function of its minute: films skip chapters,
+// reorder scenes, and invent moments. The scatter here is that, and it is what
+// makes two of the three paces genuinely hard to tell apart in Lesson 4.
+const QUOTES = [
+  {f:"fotr", m:  8, p:  2}, {f:"fotr", m: 22, p: 63}, {f:"fotr", m: 35, p: 69},
+  {f:"fotr", m: 48, p:126}, {f:"fotr", m: 62, p:148}, {f:"fotr", m: 75, p:171},
+  {f:"fotr", m: 90, p:202}, {f:"fotr", m:108, p:231}, {f:"fotr", m:125, p:294},
+  {f:"fotr", m:140, p:344}, {f:"fotr", m:155, p:335}, {f:"fotr", m:172, p:397},
+  {f:"ttt",  m: 10, p: 29}, {f:"ttt",  m: 28, p: 72}, {f:"ttt",  m: 45, p: 93},
+  {f:"ttt",  m: 60, p:143}, {f:"ttt",  m: 78, p:151}, {f:"ttt",  m: 95, p:195},
+  {f:"ttt",  m:115, p:217}, {f:"ttt",  m:132, p:265}, {f:"ttt",  m:150, p:289},
+  {f:"ttt",  m:168, p:300},
+  {f:"rotk", m: 12, p:  4}, {f:"rotk", m: 30, p: 74}, {f:"rotk", m: 52, p:106},
+  {f:"rotk", m: 70, p: 86}, {f:"rotk", m: 92, p:133}, {f:"rotk", m:112, p:190},
+  {f:"rotk", m:133, p:197}, {f:"rotk", m:155, p:227}, {f:"rotk", m:176, p:282},
+  {f:"rotk", m:196, p:296}
+];
+// Where each film starts once they are run back to back.
+(function buildOffsets() {
+  let m = 0, p = 0;
+  for (const film of FILMS) {
+    film.mOff = m; film.pOff = p;
+    m += film.runtime;
+    p += film.pages;
+  }
+})();
+const TOTAL_MIN = FILMS.reduce((a,f) => a + f.runtime, 0);
+const TOTAL_PAGE = FILMS[2].pOff + FILMS[2].pages;
+
+const sE = { view: "joined", film: "fotr", start: 0, pace: 1, recorded: {} };
+
+function activeQuotes() {
+  if (sE.view === "joined") {
+    return QUOTES.map(q => {
+      const film = FILMS.find(f => f.id === q.f);
+      return { x: q.m + film.mOff, y: q.p + film.pOff, colour: film.colour };
+    });
+  }
+  const film = FILMS.find(f => f.id === sE.film);
+  return QUOTES.filter(q => q.f === sE.film).map(q => ({ x: q.m, y: q.p, colour: film.colour }));
+}
+
+function drawStageE() {
+  const cv = document.getElementById("plotE");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0,0,W,H);
+  const pad = { l: 60, r: 14, t: 22, b: 46 };
+  const joined = sE.view === "joined";
+  const xMax = joined ? TOTAL_MIN : 210;
+  const yMax = joined ? TOTAL_PAGE * 1.05 : 460;
+  const f = makeFrame(pad, W, H, 0, xMax, 0, yMax);
+  drawAxes(ctx, f, joined ? "minute of the whole run" : "minute of this film",
+           joined ? "page of the whole story" : "page of this book",
+           6, 5, v=>v.toFixed(0), v=>v.toFixed(0));
+
+  // Where each film hands over to the next.
+  if (joined) {
+    ctx.strokeStyle = "#ddd"; ctx.setLineDash([3,4]); ctx.lineWidth = 1;
+    for (const film of FILMS) {
+      if (film.mOff === 0) continue;
+      ctx.beginPath(); ctx.moveTo(f.x(film.mOff), f.pad.t); ctx.lineTo(f.x(film.mOff), f.pad.t+f.H); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+
+  const pts = activeQuotes();
+  // Your line.
+  ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(f.x(0), f.y(sE.start));
+  ctx.lineTo(f.x(xMax), f.y(sE.start + sE.pace * xMax));
+  ctx.stroke();
+  // How far each dot sits off it.
+  ctx.strokeStyle = "rgba(140,140,140,0.65)"; ctx.lineWidth = 1;
+  for (const pt of pts) {
+    const yhat = sE.start + sE.pace * pt.x;
+    ctx.beginPath(); ctx.moveTo(f.x(pt.x), f.y(pt.y)); ctx.lineTo(f.x(pt.x), f.y(yhat)); ctx.stroke();
+  }
+  for (const pt of pts) {
+    ctx.fillStyle = pt.colour;
+    ctx.beginPath(); ctx.arc(f.x(pt.x), f.y(pt.y), 4, 0, 2*Math.PI); ctx.fill();
+  }
+  // Legend, in joined view only — in split view the film is named in the title.
+  if (joined) {
+    ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    let lx = f.pad.l + 8;
+    for (const film of FILMS) {
+      ctx.fillStyle = film.colour; ctx.fillRect(lx, pad.t - 12, 10, 8);
+      ctx.fillStyle = "#555"; ctx.fillText(film.name, lx + 14, pad.t - 8);
+      lx += 20 + ctx.measureText(film.name).width;
+    }
+  }
+
+  const misses = pts.map(pt => Math.abs(pt.y - (sE.start + sE.pace * pt.x)));
+  document.getElementById("E_miss").textContent = mean(misses).toFixed(1);
+  document.getElementById("E_worst").textContent = Math.max(...misses).toFixed(1);
+  document.getElementById("E_title").textContent = joined
+    ? "All three, end to end"
+    : FILMS.find(f2 => f2.id === sE.film).name;
+  document.getElementById("E_record").disabled = joined || !Gates.E.predicted;
+}
+
+function renderPaces() {
+  const box = document.getElementById("E_paces");
+  const keys = FILMS.filter(f => sE.recorded[f.id] !== undefined);
+  if (!keys.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
+  box.innerHTML = keys.map(f =>
+    `<div><span style="color:${f.colour};">■</span> ${f.name} — <strong>${sE.recorded[f.id].toFixed(2)}</strong> pages a minute</div>`
+  ).join("");
+}
+
+function onE() {
+  sE.start = parseFloat(document.getElementById("E_start").value);
+  sE.pace  = parseFloat(document.getElementById("E_pace").value);
+  document.getElementById("E_startOut").textContent = sE.start.toFixed(0);
+  document.getElementById("E_paceOut").textContent = sE.pace.toFixed(2);
+  bump("E");
+  drawStageE();
+}
+document.getElementById("E_start").addEventListener("input", onE);
+document.getElementById("E_pace").addEventListener("input", onE);
+document.getElementById("E_view").addEventListener("change", () => {
+  sE.view = document.getElementById("E_view").value;
+  document.getElementById("E_filmRow").style.display = (sE.view === "split") ? "grid" : "none";
+  drawStageE();
+});
+(function fillFilmSelect() {
+  const sel = document.getElementById("E_film");
+  for (const film of FILMS) {
+    const o = document.createElement("option");
+    o.value = film.id; o.textContent = film.name;
+    sel.appendChild(o);
+  }
+  sel.addEventListener("change", () => { sE.film = sel.value; drawStageE(); });
+})();
+
+document.getElementById("E_record").addEventListener("click", () => {
+  if (sE.view !== "split") return;
+  sE.recorded[sE.film] = sE.pace;
+  renderPaces();
+  const n = Object.keys(sE.recorded).length;
+  const tracker = document.getElementById("exploreE");
+  tracker.querySelector(".count").textContent = n + "/3 recorded";
+  if (n >= 3 && !Gates.E.done) {
+    markDone("E", "all three recorded.");
+    document.getElementById("postE").style.display = "block";
+  }
+});
+
+document.getElementById("E_download").addEventListener("click", () => {
+  downloadText("lesson3_stageE.R", `# Lesson 3, Stage E -- three films, one line.
+q <- read.csv("data/clean/lotr_quotes.csv")
+coef(lm(page_total ~ minute_total, data = q))
+sapply(split(q, q$film), function(d) coef(lm(page ~ minute, data = d))[2])
+`);
+});
+
+wirePrediction("E","predE",["qE1"],["three"],"controlsE", () => { drawStageE(); });
+
+document.querySelectorAll('input[name="qE2"]').forEach(r => {
+  r.addEventListener("change", () => { document.getElementById("submitE2").disabled = false; });
+});
+document.getElementById("submitE2").addEventListener("click", () => {
+  const choice = document.querySelector('input[name="qE2"]:checked');
+  if (!choice) return;
+  record(10, choice.value === "fotr");
+  document.getElementById("submitE2").disabled = true;
+  document.querySelectorAll('input[name="qE2"]').forEach(r => { r.disabled = true; });
+  if (typeof Score !== "undefined" && Score.finish) Score.finish();
+});
+
+drawStageE();
+renderPaces();
+
+/* ====== Showcase — vagus leftover (open, no gate) ================= */
 const VAGUS_DATA = [
   { sp: "mouse",    x: 1.5, y: 3,   ox: 6,  oy: -10 },
   { sp: "rat",      x: 3,   y: 6,   ox: 6,  oy: -10 },
@@ -1090,285 +1183,87 @@ const VAGUS_DATA = [
 ];
 function drawVagus() {
   const nonG = VAGUS_DATA.filter(d => !d.special);
-  const xs = nonG.map(d => d.x), ys = nonG.map(d => d.y);
-  const fit = ols(xs, ys);
+  const fit = ols(nonG.map(d => d.x), nonG.map(d => d.y));
   const giraffe = VAGUS_DATA.find(d => d.special);
   const pred = fit.a + fit.b * giraffe.x;
   const residual = giraffe.y - pred;
 
   document.getElementById("V_b").textContent = fit.b.toFixed(2);
-  document.getElementById("V_r2").textContent = fit.r2.toFixed(3);
   document.getElementById("V_pred").textContent = pred.toFixed(0);
   document.getElementById("V_obs").textContent = giraffe.y.toFixed(0);
   document.getElementById("V_res").textContent = "+" + residual.toFixed(0);
 
-  // Top panel: scatter + fit
   {
     const c = document.getElementById("plotVagus1");
     const { ctx, W, H } = setupCanvas(c);
     ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
     const f = makeFrame({ l: 56, r: 16, t: 10, b: 38 }, W, H, 0, 40, 0, 300);
-    drawAxes(ctx, f, "direct brain → larynx distance (cm)", "recurrent laryngeal nerve length (cm)", 4, 6);
-    // fit line over the non-giraffe x range
+    drawAxes(ctx, f, "direct brain → larynx distance (cm)", "nerve length (cm)", 4, 6);
     ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2; ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(f.x(0), f.y(fit.a));
     ctx.lineTo(f.x(40), f.y(fit.a + fit.b * 40));
     ctx.stroke();
-    // non-giraffe points
     ctx.fillStyle = "#444";
-    for (const d of nonG) {
-      ctx.beginPath(); ctx.arc(f.x(d.x), f.y(d.y), 4, 0, Math.PI * 2); ctx.fill();
-    }
-    // giraffe point (red)
+    for (const d of nonG) { ctx.beginPath(); ctx.arc(f.x(d.x), f.y(d.y), 4, 0, Math.PI * 2); ctx.fill(); }
     ctx.fillStyle = "#b23a48";
     ctx.beginPath(); ctx.arc(f.x(giraffe.x), f.y(giraffe.y), 6, 0, Math.PI * 2); ctx.fill();
-    // label predicted-vs-actual: dashed vertical from line to giraffe
     ctx.strokeStyle = "#b23a48"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(f.x(giraffe.x), f.y(pred));
     ctx.lineTo(f.x(giraffe.x), f.y(giraffe.y));
     ctx.stroke(); ctx.setLineDash([]);
-    // species labels
-    ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace, monospace";
+    ctx.font = "11px ui-monospace, monospace";
     for (const d of VAGUS_DATA) {
-      const align = d.ox < 0 ? "right" : "left";
-      ctx.textAlign = align; ctx.textBaseline = "middle";
+      ctx.textAlign = d.ox < 0 ? "right" : "left"; ctx.textBaseline = "middle";
       ctx.fillStyle = d.special ? "#b23a48" : "#555";
       ctx.fillText(d.sp, f.x(d.x) + d.ox, f.y(d.y) + d.oy);
     }
   }
-
-  // Bottom panel: residuals
   {
     const c = document.getElementById("plotVagus2");
     const { ctx, W, H } = setupCanvas(c);
     ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
-    const allResids = VAGUS_DATA.map(d => ({ sp: d.sp, fitted: fit.a + fit.b * d.x, r: d.y - (fit.a + fit.b * d.x), special: !!d.special }));
-    const maxAbs = Math.max(220, ...allResids.map(d => Math.abs(d.r)));
+    const all = VAGUS_DATA.map(d => ({ sp: d.sp, fitted: fit.a + fit.b * d.x, r: d.y - (fit.a + fit.b * d.x), special: !!d.special }));
+    const maxAbs = Math.max(220, ...all.map(d => Math.abs(d.r)));
     const f = makeFrame({ l: 56, r: 16, t: 10, b: 38 }, W, H, 0, 40, -maxAbs * 0.2, maxAbs * 1.05);
-    drawAxes(ctx, f, "fitted nerve length (cm) from the non-giraffe line", "residual (actual − fitted) (cm)", 4, 4);
+    drawAxes(ctx, f, "what the line expected (cm)", "actual − expected (cm)", 4, 4);
     drawHLine(ctx, f, 0, "#b23a48", 1.5, [4, 3]);
-    for (const d of allResids) {
+    for (const d of all) {
       ctx.fillStyle = d.special ? "#b23a48" : "#444";
-      const r = d.special ? 6 : 4;
-      ctx.beginPath(); ctx.arc(f.x(d.fitted), f.y(d.r), r, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(f.x(d.fitted), f.y(d.r), d.special ? 6 : 4, 0, Math.PI * 2); ctx.fill();
       if (d.special) {
-        ctx.fillStyle = "#b23a48"; ctx.font = "12px ui-monospace, monospace";
-        ctx.textAlign = "left"; ctx.textBaseline = "middle";
+        ctx.font = "12px ui-monospace, monospace"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
         ctx.fillText(d.sp + "  +" + d.r.toFixed(0) + " cm", f.x(d.fitted) + 8, f.y(d.r));
       }
     }
   }
 }
+drawVagus();
 
-/* ====== STAGE E — LOTR rug pull (residuals partition by film) ============ */
-// Synthetic quote data for 3 LOTR adaptations. Each film has its own pages-per-
-// minute slope (Jackson's Fellowship is slower than Two Towers; Bakshi's 1978
-// animated version covers more book per minute). The pooled fit looks noisy.
-// Stratify by film and the within-film fits are much tighter — and have
-// different slopes. Same residuals, new categorical variable.
-const LOTR_DATA = [
-  // Jackson Fellowship (2001), 178 min theatrical, ~420 pages of source.
-  // Slope ≈ 2.2 pg/min, intercept ≈ 15 pg (skips early Shire chapters).
-  {film:"Jackson FOTR",  minute: 8,  page: 25},  {film:"Jackson FOTR", minute: 22, page: 55},
-  {film:"Jackson FOTR",  minute: 35, page: 88},  {film:"Jackson FOTR", minute: 48, page:125},
-  {film:"Jackson FOTR",  minute: 62, page:155},  {film:"Jackson FOTR", minute: 75, page:190},
-  {film:"Jackson FOTR",  minute: 90, page:225},  {film:"Jackson FOTR", minute:108, page:268},
-  {film:"Jackson FOTR",  minute:125, page:310},  {film:"Jackson FOTR", minute:140, page:340},
-  {film:"Jackson FOTR",  minute:155, page:380},  {film:"Jackson FOTR", minute:172, page:415},
-  // Jackson Two Towers (2002), 179 min, ~360 pages (Books III–IV).
-  // Slope ≈ 2.0 pg/min, intercept ≈ 0 (resumes where FOTR left off, on its own page-numbering).
-  {film:"Jackson TTT",   minute: 10, page: 12},  {film:"Jackson TTT",  minute: 28, page: 50},
-  {film:"Jackson TTT",   minute: 45, page: 80},  {film:"Jackson TTT",  minute: 60, page:115},
-  {film:"Jackson TTT",   minute: 78, page:155},  {film:"Jackson TTT",  minute: 95, page:180},
-  {film:"Jackson TTT",   minute:115, page:225},  {film:"Jackson TTT",  minute:132, page:265},
-  {film:"Jackson TTT",   minute:150, page:300},  {film:"Jackson TTT",  minute:168, page:340},
-  // Bakshi 1978 animated, 132 min covering Fellowship + half of Two Towers (~600 pages).
-  // Slope ≈ 4.5 pg/min (much faster), intercept ≈ 5 pg.
-  {film:"Bakshi 1978",   minute:  5, page: 28},  {film:"Bakshi 1978",  minute: 18, page: 80},
-  {film:"Bakshi 1978",   minute: 32, page:155},  {film:"Bakshi 1978",  minute: 48, page:225},
-  {film:"Bakshi 1978",   minute: 62, page:290},  {film:"Bakshi 1978",  minute: 78, page:360},
-  {film:"Bakshi 1978",   minute: 95, page:430},  {film:"Bakshi 1978",  minute:112, page:510},
-  {film:"Bakshi 1978",   minute:126, page:575}
-];
-const LOTR_COLORS = { "Jackson FOTR":"#2f6b8f", "Jackson TTT":"#2f6b3a", "Bakshi 1978":"#b23a48" };
-const sE = { mode: "pool" };
-function lotrOLS(xs, ys) {
-  const mx = mean(xs), my = mean(ys); let sxx=0, sxy=0, syy=0;
-  for (let i=0;i<xs.length;i++) { const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy; syy+=dy*dy; }
-  const slope = sxx > 0 ? sxy/sxx : 0;
-  const intercept = my - slope*mx;
-  // R² = explained / total
-  let ssRes = 0;
-  for (let i=0;i<xs.length;i++){ const pred = slope*xs[i]+intercept; ssRes += (ys[i]-pred)**2; }
-  const r2 = syy > 0 ? 1 - ssRes/syy : 0;
-  return { slope, intercept, r2 };
-}
-function drawStageE() {
-  const cv = document.getElementById("plotE"); const {ctx, W, H} = setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad = { l: 60, r: 12, t: 26, b: 38 };
-  const xs = LOTR_DATA.map(d => d.minute), ys = LOTR_DATA.map(d => d.page);
-  const xMin = 0, xMax = Math.max(...xs) * 1.05;
-  const yMin = 0, yMax = Math.max(...ys) * 1.08;
-  const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
-  drawAxes(ctx, f, "film minute", "book page", 5, 5, v => v.toFixed(0), v => v.toFixed(0));
-  // Always compute pooled and per-film fits so we can report both.
-  const pooled = lotrOLS(xs, ys);
-  const byFilm = {};
-  for (const d of LOTR_DATA) (byFilm[d.film] = byFilm[d.film] || []).push(d);
-  const fits = {};
-  for (const film in byFilm) {
-    const sub = byFilm[film];
-    fits[film] = lotrOLS(sub.map(d=>d.minute), sub.map(d=>d.page));
-  }
-  // Average within-film R² across films (weighted by N).
-  let r2Sum = 0, nSum = 0;
-  for (const film in byFilm) { const n = byFilm[film].length; r2Sum += fits[film].r2 * n; nSum += n; }
-  const r2Strat = r2Sum / nSum;
-  // Plot points
-  for (const d of LOTR_DATA) {
-    ctx.fillStyle = (sE.mode === "strat") ? LOTR_COLORS[d.film] : "#1d1d1baa";
-    ctx.beginPath(); ctx.arc(f.x(d.minute), f.y(d.page), 4.5, 0, 2*Math.PI); ctx.fill();
-  }
-  // Pooled fit (always show, as red line)
-  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = (sE.mode === "pool") ? 2.5 : 1.4;
-  ctx.setLineDash(sE.mode === "strat" ? [5,4] : []);
-  ctx.beginPath();
-  ctx.moveTo(f.x(xMin), f.y(pooled.intercept + pooled.slope * xMin));
-  ctx.lineTo(f.x(xMax), f.y(pooled.intercept + pooled.slope * xMax));
-  ctx.stroke(); ctx.setLineDash([]);
-  // Per-film fits (only in strat mode)
-  if (sE.mode === "strat") {
-    for (const film in byFilm) {
-      const fit = fits[film];
-      const sub = byFilm[film];
-      const xLo = Math.min(...sub.map(d=>d.minute)), xHi = Math.max(...sub.map(d=>d.minute));
-      ctx.strokeStyle = LOTR_COLORS[film]; ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(f.x(xLo), f.y(fit.intercept + fit.slope * xLo));
-      ctx.lineTo(f.x(xHi), f.y(fit.intercept + fit.slope * xHi));
-      ctx.stroke();
-    }
-    // Legend
-    let lx = f.pad.l + 8, ly = f.pad.t + 6;
-    ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle";
-    for (const film in byFilm) {
-      ctx.fillStyle = LOTR_COLORS[film]; ctx.fillRect(lx, ly - 5, 12, 10);
-      ctx.fillStyle = "#333"; ctx.textAlign = "left";
-      const slopeTxt = "  (β = " + fits[film].slope.toFixed(2) + " pg/min)";
-      ctx.fillText(film + slopeTxt, lx + 16, ly);
-      lx += ctx.measureText(film + slopeTxt).width + 32;
-    }
-  } else {
-    ctx.fillStyle = "#b23a48"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "left";
-    ctx.fillText("pooled β = " + pooled.slope.toFixed(2) + " pg/min", f.pad.l + 8, f.pad.t + 12);
-  }
-  document.getElementById("E_r2_pool").textContent = pooled.r2.toFixed(3);
-  document.getElementById("E_r2_strat").textContent = r2Strat.toFixed(3);
-  document.getElementById("E_slopeDiff").textContent = (fits["Jackson FOTR"].slope - fits["Bakshi 1978"].slope).toFixed(2) + " pg/min";
-}
-document.getElementById("E_colorIn").addEventListener("change", (e) => {
-  sE.mode = e.target.value; drawStageE(); bumpExplore("E");
-});
-document.getElementById("E_download").addEventListener("click", () => {
-  downloadText("lesson3_stageE.R", `lotr <- read.csv("data/clean/lotr_quotes.csv")
-pooled <- lm(page ~ minute, data = lotr)
-strat  <- lm(page ~ minute * film, data = lotr)
-c(R2_pooled = summary(pooled)$r.squared, R2_strat = summary(strat)$r.squared)
-`);
-});
-wirePrediction("E", "predE", ["qE1","qE2"], ["distinct","residuals"], "controlsE", null);
-drawStageE();
-
-/* ====== STAGE L — LOTR warm-up: drag α/β, read pages/min ====== */
-// Use only the Jackson-FOTR subset of the LOTR_DATA defined for Stage E.
-(function wireStageL(){
-  const data = LOTR_DATA.filter(d => d.film === "Jackson FOTR");
-  const xs = data.map(d => d.minute), ys = data.map(d => d.page);
-  // OLS for snap & display
-  const mx = xs.reduce((a,b)=>a+b,0)/xs.length, my = ys.reduce((a,b)=>a+b,0)/ys.length;
-  let sxx = 0, sxy = 0;
-  for (let i = 0; i < xs.length; i++) { sxx += (xs[i]-mx)*(xs[i]-mx); sxy += (xs[i]-mx)*(ys[i]-my); }
-  const bStar = sxy / sxx, aStar = my - bStar * mx;
-  document.getElementById("L_aStar").textContent = aStar.toFixed(1);
-  document.getElementById("L_bStar").textContent = bStar.toFixed(2);
-  const sL = { a: 20, b: 2.0 };
-  function drawL() {
-    const cv = document.getElementById("plotL"); const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
-    const pad = { l: 50, r: 12, t: 16, b: 32 };
-    const xMin = 0, xMax = Math.max(...xs) * 1.05;
-    const yMin = -10, yMax = Math.max(...ys) * 1.1;
-    const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
-    drawAxes(ctx, f, "film minute", "book page", 5, 5, v => v.toFixed(0), v => v.toFixed(0));
-    // Student line
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.4;
-    ctx.beginPath();
-    ctx.moveTo(f.x(xMin), f.y(sL.a + sL.b * xMin));
-    ctx.lineTo(f.x(xMax), f.y(sL.a + sL.b * xMax));
-    ctx.stroke();
-    // Residual segments
-    let ssr = 0;
-    ctx.strokeStyle = "rgba(178,58,72,0.35)"; ctx.lineWidth = 1;
-    for (let i = 0; i < xs.length; i++) {
-      const pred = sL.a + sL.b * xs[i];
-      const res = ys[i] - pred; ssr += res * res;
-      ctx.beginPath(); ctx.moveTo(f.x(xs[i]), f.y(pred)); ctx.lineTo(f.x(xs[i]), f.y(ys[i])); ctx.stroke();
-    }
-    // Points
-    ctx.fillStyle = "#1d1d1b";
-    for (let i = 0; i < xs.length; i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 4, 0, 2*Math.PI); ctx.fill(); }
-    document.getElementById("L_a").textContent = sL.a.toFixed(0);
-    document.getElementById("L_b").textContent = sL.b.toFixed(2);
-    document.getElementById("L_ssr").textContent = ssr.toFixed(0);
-  }
-  document.getElementById("L_aIn").addEventListener("input", (e) => { sL.a = +e.target.value; document.getElementById("L_aOut").textContent = sL.a.toFixed(0); drawL(); if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("L"); });
-  document.getElementById("L_bIn").addEventListener("input", (e) => { sL.b = +e.target.value; document.getElementById("L_bOut").textContent = sL.b.toFixed(2); drawL(); if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("L"); });
-  document.getElementById("L_snap").addEventListener("click", () => {
-    sL.a = aStar; sL.b = bStar;
-    document.getElementById("L_aIn").value = Math.round(aStar);
-    document.getElementById("L_bIn").value = bStar.toFixed(2);
-    document.getElementById("L_aOut").textContent = aStar.toFixed(0);
-    document.getElementById("L_bOut").textContent = bStar.toFixed(2);
-    drawL();
-  });
-  document.getElementById("L_continue").addEventListener("click", () => {
-    // Unlock Stage A and scroll to it. (Stage L is open from the start.)
-    const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked");
-    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
-    s && s.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-  drawL();
-})();
-
-/* ====== DAG widget — Stage E addendum ====== */
-(function mountDAGl3(){
-  if (typeof DAG === "undefined") return;
-  DAG.init({
-    mount: "#dag-l3-mount",
-    nodes: [
-      { id: "film",   label: "Film",        x: 290, y: 60, type: "categorical", levels: 3 },
-      { id: "minute", label: "Film minute", x: 110, y: 200 },
-      { id: "page",   label: "Book page",   x: 470, y: 200 }
-    ],
-    arrows: [
-      { from: "minute", to: "page", strength: 0.6 }
-    ],
-    initialAxes: { x: "minute", y: "page" },
-    initialColor: "film",
-    n: 240,
-    seed: 901,
-    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("E"); }
-  });
-})();
+/* ====== Boot + Score ================================================
+   Scaffold layout (12 bits):
+     0   A prediction        1   A landed
+     2   B prediction        3   B landed
+     4   C prediction        5   C landed
+     6   C: extra per centimetre
+     7,8 D prediction (two questions)
+     9   E prediction       10   E: which film is quickest
+     11  stretch challenge (optional)
+   ================================================================== */
+loadData();
 
 Score.init({
-  moduleId: "lesson3", version: 4, scaffold: 9,
-  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-  onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
+  moduleId: "lesson3",
+  version: 5,
+  scaffold: 12,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+  }
 });
-loadData();
-drawVagus();
 </script>
 </body>
 </html>
