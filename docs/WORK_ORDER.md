@@ -59,12 +59,18 @@ of it.
 
 Then wire these four hand-offs:
 
-| From | Artifact | To |
-|---|---|---|
-| L3 C | the per-5cm rate the student landed | L4 A opens on it |
-| L7 D | the recovered slope (~0.65) | L15 B **is** that lever, not a fresh dial |
-| L15 | the response the student produced | s25 opens on it *(still to wire)* |
-| s25 | the student's weighted slope | L26 A opens on it *(still to wire)* |
+| From | Artifact | To | State |
+|---|---|---|---|
+| L7 D | the slope fitted through Galton's families | L15 B **is** that lever, not a fresh dial | ✅ wired |
+| s25 | the two slopes the student swung by hand | L26 A opens by naming them | ✅ wired |
+| L3 C | the per-5cm rate the student landed | L4 A opens on it | still to wire |
+
+**Dropped: L15 → s25.** The original plan chained the response L15 produces into
+s25's dial. There is nothing real behind it — s25's dial is a counting tilt over
+tree measurements, and no number L15 produces sets it. Forcing the link would be
+decorative continuity, which is worse than none: it teaches the student that
+these hand-offs are a UI motif rather than the same quantity travelling. The two
+welds that survive are both genuine reappearances of one number.
 
 L3 already does this *within* one lesson — B and C open on the 82 kg from A, and
 that is exactly what makes their reveals work. Extending the same mechanic across
