@@ -167,11 +167,11 @@
         <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. Which violation moves p (the allele frequency) most, in a fixed run of 100 generations?</div>
-            <label><input type="radio" name="qB1" value="finite" /> Finite population (small-number wandering)</label>
+            <div class="q">Q1. Switch each one on by itself and run it out. Three of them shift how common the two versions are. One leaves them exactly where they started — not close, exactly. Which one?</div>
+            <label><input type="radio" name="qB1" value="nrm" /> Non-random mating</label>
+            <label><input type="radio" name="qB1" value="finite" /> Finite population</label>
             <label><input type="radio" name="qB1" value="mutation" /> Mutation</label>
             <label><input type="radio" name="qB1" value="selection" /> Selection</label>
-            <label><input type="radio" name="qB1" value="nrm" /> Non-random mating</label>
           </li>
         </ol>
         <button id="submitB" disabled>Submit → unlock the toggles</button>
@@ -229,10 +229,10 @@
         <h3>Prediction</h3>
         <ol>
           <li>
-            <div class="q">Q1. With F = 0.3 (moderate inbreeding) and N = 200, the check on the tidy ratio will:</div>
-            <label><input type="radio" name="qC1" value="reject" /> Almost always reject HWE</label>
-            <label><input type="radio" name="qC1" value="rarely" /> Rarely reject — the test is weak at this N</label>
-            <label><input type="radio" name="qC1" value="depends" /> Depends entirely on the seed</label>
+            <div class="q">Q1. Leave the shortfall dial fixed, so the group really is short of carriers by the same amount throughout. Now sample fewer and fewer individuals. Your ability to spot that shortfall will:</div>
+            <label><input type="radio" name="qC1" value="fades" /> Fade away — below some size it stops showing up</label>
+            <label><input type="radio" name="qC1" value="holds" /> Hold up — the shortfall is real, so it shows at any size</label>
+            <label><input type="radio" name="qC1" value="sharpens" /> Sharpen — fewer individuals means less clutter to see through</label>
           </li>
         </ol>
         <button id="submitC" disabled>Submit → unlock the slider</button>
@@ -346,7 +346,7 @@ function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
 function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 /* Scored scaffold slot each stage's questions write to. A stage absent from
    this map still gates and still records engagement, but is not scored. */
-const PRED_POS = {A:0, D:1};
+const PRED_POS = {A:0, B:1, C:2, D:3};
 
 /* Graded prediction gate. `answers[i]` is either the winning value= token for a
    radio group, or a predicate over the array of checked values for a checkbox
@@ -412,7 +412,8 @@ wirePrediction("A","predA",["qA1"],["half"],"controlsA"); drawStageA();
 const sB = { finite:false, N:100, mutation:false, selection:false, s:0.05, inbreed:false, F:0.3, seed:42, mu:1e-3 };
 function drawStageB() {
   const rng=mulberry32(sB.seed); const gens=100; const traj=new Array(gens+1);
-  let p=0.5; traj[0]=p;
+  let p=0.3; traj[0]=p;   // not 0.5: at 0.5 the mutation toggle is invisible,
+                          // because 0.5 is exactly where symmetric mutation sends it
   for(let g=1;g<=gens;g++){
     const q=1-p;
     let fAA=p*p, fAa=2*p*q, faa=q*q;
@@ -445,7 +446,7 @@ function drawStageB() {
 ["B_finite","B_mutation","B_selection","B_inbreed"].forEach(id=>document.getElementById(id).addEventListener("change",(e)=>{sB[id.replace("B_","")]=e.target.checked; drawStageB(); bumpExplore("B");}));
 ["B_NIn","B_sIn","B_FIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key=id.replace("B_","").replace("In",""); sB[key]=v; document.getElementById(id.replace("In","Out")).textContent= key==="seed"||key==="N"?v:v.toFixed(2); if (key==="s") document.getElementById("cB_s").textContent=v.toFixed(2); if (key==="F") document.getElementById("cB_F").textContent=v.toFixed(2); if (key==="N") document.getElementById("cB_N").textContent=v; if (key==="seed") { document.getElementById("cB_seed").textContent=v; highlightByDataLine("codeB","seed"); } drawStageB();}));
 document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson9_stageB.R",`set.seed(${sB.seed})
-N <- ${sB.N}; gens <- 100; p <- 0.5
+N <- ${sB.N}; gens <- 100; p <- 0.3
 mu <- 1e-3; s <- ${sB.s}; F <- ${sB.F}
 finite <- ${sB.finite}; mutation <- ${sB.mutation}; selection <- ${sB.selection}; inbreed <- ${sB.inbreed}
 traj <- numeric(gens + 1); traj[1] <- p
@@ -462,7 +463,7 @@ for (g in 1:gens) {
 }
 plot(traj, type = "l", ylim = c(0,1), xlab = "generation", ylab = "p")
 `);});
-wirePrediction("B","predB",["qB1"],[],"controlsB"); drawStageB();
+wirePrediction("B","predB",["qB1"],["nrm"],"controlsB"); drawStageB();
 
 /* STAGE C — chi-squared on counts */
 const sC = { N:200, p:0.5, F:0.3, seed:42 };
@@ -500,7 +501,7 @@ phat <- (2*obs[1] + obs[2]) / (2*N)
 e <- N * c(phat^2, 2*phat*(1-phat), (1-phat)^2)
 sum((obs - e)^2 / e)
 `);});
-wirePrediction("C","predC",["qC1"],[],"controlsC"); drawStageC();
+wirePrediction("C","predC",["qC1"],["fades"],"controlsC"); drawStageC();
 
 /* STAGE D — wild loci */
 const sD = { seed:42, loci:null };
@@ -566,7 +567,7 @@ mean(pchisq(chi_per_locus, df = 1, lower.tail = FALSE) < 0.05)
 wirePrediction("D","predD",["qD1","qD2"],["more",v=>v.includes("structure")&&!v.includes("mutation")],"controlsD"); loadLoci();
 
 /* Pretest / Posttest */
-Score.init({moduleId:"lesson9", version:3, scaffold:3, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+Score.init({moduleId:"lesson9", version:4, scaffold:5, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

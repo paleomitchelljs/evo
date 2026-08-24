@@ -52,20 +52,19 @@
     </div>
     <div class="col">
       <div class="panel prediction" id="predA"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. With mutation rate μ = 10⁻⁴ and no selection in N = 1000, after 2000 generations the equilibrium mean q across replicates will be:</div>
-          <label><input type="radio" name="qA1" value="zero" /> Essentially 0 (drift wipes new mutations)</label>
-          <label><input type="radio" name="qA1" value="mu" /> About μ × t (mutations accumulate linearly)</label>
-          <label><input type="radio" name="qA1" value="half" /> About 0.5 (drift averages)</label>
-          <label><input type="radio" name="qA1" value="rises" /> Mostly low but rising slowly (some mutants drift up)</label></li></ol>
+        <ol><li><div class="q">Q1. New copies of the second version keep appearing, generation after generation, for two thousand generations. Nothing is removing them. Of the twenty runs, how many end up with none of it at all?</div>
+          <label><input type="radio" name="qA1" value="most" /> Almost all of them</label>
+          <label><input type="radio" name="qA1" value="none" /> None — it has been arriving the whole time</label>
+          <label><input type="radio" name="qA1" value="half" /> About half</label></li></ol>
         <button id="submitA" disabled>Submit → unlock</button>
         <div class="explore-tracker" id="exploreA">Try at least 4 (μ, N) combos. <span class="count">0/4 combos</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsA">
-          <div class="row" data-line="mu"><label for="A_muIn">mutation rate</label><input type="range" id="A_muIn" min="-7" max="-2" step="0.1" value="-4" /><output id="A_muOut">1e-4</output></div>
+          <div class="row" data-line="mu"><label for="A_muIn">mutation rate</label><input type="range" id="A_muIn" min="-7" max="-2" step="0.1" value="-6" /><output id="A_muOut">1.0e-6</output></div>
           <div class="row" data-line="N"><label for="A_NIn">N</label><input type="range" id="A_NIn" min="100" max="10000" step="100" value="1000" /><output id="A_NOut">1000</output></div>
           <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
           <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div></div></div>
       <div class="panel"><h3>R code — mutation only</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="mu">mu &lt;- <span class="num" id="cA_mu">1e-4</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cA_N">1000</span></span><span class="line">q &lt;- <span class="num">0</span>; traj &lt;- q</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:<span class="num">2000</span>) {</span><span class="line">  q_mut &lt;- (<span class="num">1</span>-q)*mu + q*(<span class="num">1</span>-mu)   <span class="com"># symmetric for simplicity</span></span><span class="line">  q &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,q_mut)/(<span class="num">2</span>*N)</span><span class="line">  traj &lt;- <span class="fn">c</span>(traj, q)</span><span class="line">}</span></pre></div>
+<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="mu">mu &lt;- <span class="num" id="cA_mu">1.0e-6</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cA_N">1000</span></span><span class="line">q &lt;- <span class="num">0</span>; traj &lt;- q</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:<span class="num">2000</span>) {</span><span class="line">  q_mut &lt;- (<span class="num">1</span>-q)*mu + q*(<span class="num">1</span>-mu)   <span class="com"># symmetric for simplicity</span></span><span class="line">  q &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,q_mut)/(<span class="num">2</span>*N)</span><span class="line">  traj &lt;- <span class="fn">c</span>(traj, q)</span><span class="line">}</span></pre></div>
     </div>
   </div>
 </section>
@@ -183,7 +182,7 @@ function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
 function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 /* Scored scaffold slot each stage's questions write to. A stage absent from
    this map still gates and still records engagement, but is not scored. */
-const PRED_POS = {B:0, C:1, D:2};
+const PRED_POS = {A:0, B:1, C:2, D:3};
 
 /* Graded prediction gate. `answers[i]` is either the winning value= token for a
    radio group, or a predicate over the array of checked values for a checkbox
@@ -210,7 +209,8 @@ function wirePrediction(stage, predId, names, answers, controlsId){
   });
 }
 
-const sA = { logMu:-4, N:1000, seed:42 };
+const sA = { logMu:-6, N:1000, seed:42 };   // 1e-4 let mutations accumulate
+                                           // (mean final q ~ 0.34) and contradicted the stage
 function drawStageA() {
   const mu=Math.pow(10,sA.logMu); const reps=20, gens=2000;
   const trajs=[]; const finalQs=[];
@@ -236,7 +236,7 @@ q <- 0; traj <- q
 for (g in 1:2000) { qm <- (1-q)*mu + q*(1-mu); q <- rbinom(1,2*N,qm)/(2*N); traj <- c(traj, q) }
 plot(traj, type="l")
 `);});
-wirePrediction("A","predA",["qA1"],[],"controlsA"); drawStageA();
+wirePrediction("A","predA",["qA1"],["most"],"controlsA"); drawStageA();
 
 const sB = { logMu:-5, s:0.1, h:0.5 };
 function drawStageB() {
@@ -320,7 +320,7 @@ c(rec = q_rec, partial = q_pd, hetadv = q_ha, observed = 0.022)
 `);});
 wirePrediction("D","predD",["qD1"],[v=>v.includes("hetadv")&&!v.includes("meas")],"controlsD"); drawStageD();
 
-Score.init({moduleId:"lesson13", version:3, scaffold:3, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+Score.init({moduleId:"lesson13", version:4, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>
