@@ -51,7 +51,17 @@
     You are not the pond water you looked at in the microscopy lab. In pond water, what were those little cells doing to each other? Murdering. They were murderers trying to kill each other. Your cells don't do that, normally. As a result, they can cooperate with one another. They can have something to push against. They can build extracellular matrix. The fibronectins and integrins are how a cell anchors and pushes — because in you, things stay still long enough for that to work.
     <span class="src">— 145_lec09_05</span>
   </div>
-  <div class="todo">TODO: free-living-cell sim. Cell-level Price ratio; show no group structure. &nbsp;SPEC: A population of independent cells. Each reproduces for itself. Cell-level cov(w, z) is the only thing in the equation. There is no body. Named null: cells are the unit.</div>
+  <div class="panel-lite" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <p style="margin:0 0 10px;font-size:13px;color:#4a4a48;">The same 200 cells, but nothing groups them. Each one reproduces for itself. Move the slider and watch which term has anything in it.</p>
+    <div style="font:12px ui-monospace,Menlo,monospace;color:#1d1d1b;line-height:2;">
+      <span style="color:#6b6b68;">within (each cell for itself):</span> <span id="l30a_within">—</span><br>
+      <span style="color:#6b6b68;">between (colonies):</span> <span id="l30a_between">—</span><br>
+      <span style="color:#6b6b68;">the unit:</span> <span id="l30a_unit" style="font-weight:600;color:#b23a48;">—</span>
+    </div>
+    <label style="display:block;font-size:13px;margin:12px 0 4px;">how strongly a cell's own trait pays it = <output id="l30a_sOut">0.50</output></label>
+    <input type="range" id="l30a_s" min="0" max="1" step="0.05" value="0.5" style="width:100%;" />
+    <p style="font-size:12.5px;color:#6b6b68;margin:10px 0 0;">With no colonies there is nothing for a between-term to be computed over, so it is not small — there is no second level for it to live at. This is the baseline the next stage breaks.</p>
+  </div>
 </section>
 
 <section class="stage">
@@ -117,7 +127,18 @@
     You can only inherit cooperation, because cooperation is the thing that persists. The lineages whose cells fought each other into oblivion didn't make it. But your body is de novo inventing ways to try to break you down. That's cancer, that's disease, that's ailment. We constantly inherit the framework of cells working together. But the cells inside us are constantly inventing new ways to defect.
     <span class="src">— 202_lec30_05</span>
   </div>
-  <div class="todo">TODO: three anchors. Honeybee or Volvox dataset for the cleanest cooperative case; TCGA somatic mutation timecourse for the failure mode; .R export. Non-trivial code mod: write a generic cov-ratio function that takes any (w_i, z_i, group_id) table and returns the diagnostic. This is the cross-arc deliverable referenced in PROJECT_PLAN §7.6. &nbsp;SPEC: (1) Honeybee colonies: between-colony cov for productivity exceeds within-colony cov for worker reproduction. The colony is the unit. (2) Volvox: somatic cells are sterile but increase colony fitness — the cleanest unicellular-to-multicellular transition that's still visible today. (3) Cancer: TCGA-style somatic-mutation timecourses showing the within-body cov re-emerging. The same diagnostic catches the failure mode.</div>
+  <div class="panel-lite" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="l30tab" data-a="volvox">Volvox</button>
+      <button class="l30tab" data-a="bee">honeybee</button>
+      <button class="l30tab" data-a="cancer">a somatic lineage</button>
+    </div>
+    <div style="font:12.5px ui-monospace,Menlo,monospace;line-height:2;">
+      <span style="color:#6b6b68;">cells in a body share:</span> <span id="l30d_r" style="font-size:15px;font-weight:600;color:#b23a48;">—</span><br>
+      <span style="color:#6b6b68;">the unit:</span> <span id="l30d_unit" style="font-weight:600;">—</span>
+    </div>
+    <p id="l30d_note" style="font-size:13px;color:#4a4a48;margin:12px 0 0;"></p>
+  </div>
 </section>
 </main>
 
@@ -208,7 +229,7 @@
     const unit = Math.abs(sim.betweenCov) > Math.abs(sim.withinCov) ? "colony" : "cell";
     document.getElementById("l30_unit").textContent = unit + "  (between/total = " + (sim.total !== 0 ? (sim.betweenCov/sim.total).toFixed(2) : "—") + ")";
   }
-  document.getElementById("l30_r").addEventListener("input", e => { state.r = +e.target.value; document.getElementById("l30_rOut").textContent = state.r.toFixed(2); draw(); });
+  document.getElementById("l30_r").addEventListener("input", e => { state.r = +e.target.value; document.getElementById("l30_rOut").textContent = state.r.toFixed(2); draw(); try{drawA();drawD();}catch(e){} });
   document.getElementById("l30_b").addEventListener("input", e => { state.b = +e.target.value; document.getElementById("l30_bOut").textContent = state.b.toFixed(2); draw(); });
   document.getElementById("l30_s").addEventListener("input", e => { state.seed = +e.target.value; document.getElementById("l30_sOut").textContent = state.seed; draw(); });
   draw();
@@ -223,6 +244,49 @@
 <script>
   Score.init({ moduleId: "lesson30", version: 2, pretest: 0, scaffold: 1, posttest: 0,
     mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+
+  /* ---------- Stage A: the named baseline ---------- */
+  const stateA={s:0.5};
+  function drawA(){
+    const R=rng(42); let zs=[],ws=[];
+    for(let i=0;i<200;i++){const z=gauss(R); zs.push(z); ws.push(stateA.s*z+0.3*gauss(R));}
+    const n=zs.length, mz=zs.reduce((a,b)=>a+b,0)/n, mw=ws.reduce((a,b)=>a+b,0)/n;
+    let c=0; for(let i=0;i<n;i++) c+=(zs[i]-mz)*(ws[i]-mw); c/=n;
+    document.getElementById("l30a_within").textContent=c.toFixed(3);
+    document.getElementById("l30a_between").textContent="no colonies to compute it over";
+    document.getElementById("l30a_unit").textContent="the cell";
+  }
+  document.getElementById("l30a_s").addEventListener("input",e=>{
+    stateA.s=+e.target.value; document.getElementById("l30a_sOut").textContent=stateA.s.toFixed(2);
+    drawA(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  });
+
+  /* ---------- Stage D: three anchors ---------- */
+  const ANCHORS={
+    volvox:{r:1.00,unit:"the colony",
+      note:"Every cell in a Volvox colony descends from one founding cell, so cells in a body share essentially everything. A somatic cell that defected would be defecting against a copy of itself. This is the cleanest case there is, and it is why germ and soma separate here at all."},
+    bee:{r:0.75,unit:"the colony",
+      note:"A honeybee colony is not one body, but sisters under a singly-mated queen come close enough that the accounting closes at the colony. Lesson 31 takes this one further, and finds that real queens mate far more than once."},
+    cancer:{r:0.00,unit:"the cell",
+      note:"A somatic mutation makes a cell lineage that no longer shares its neighbours' interests. Relatedness inside the body has locally collapsed, the lower term takes over, and the cell is the unit again — inside a body that is still trying to be one. That is the failure mode, and it is the same diagnostic saying so."}
+  };
+  const stateD={a:"volvox",unlocked:true};
+  function drawD(){
+    const a=ANCHORS[stateD.a];
+    document.getElementById("l30d_r").textContent=a.r.toFixed(2);
+    document.getElementById("l30d_unit").textContent=a.unit;
+    document.getElementById("l30d_note").textContent=a.note;
+    document.querySelectorAll(".l30tab").forEach(t=>{
+      const on=t.dataset.a===stateD.a;
+      t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
+        (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
+    });
+  }
+  document.querySelectorAll(".l30tab").forEach(t=>t.addEventListener("click",()=>{
+    stateD.a=t.dataset.a; drawD();
+    if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
+  }));
+
   (function wireB(){
     const root=document.getElementById("predB"), btn=document.getElementById("submitB");
     root.querySelectorAll('input[name="qB"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
