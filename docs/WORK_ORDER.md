@@ -1,230 +1,34 @@
 # Work order — next edit round
 
-Written 2026-08-24, against the state verified that day: 34 lessons, 25 scaffolds,
-1 explorer, `scripts/check_lessons.py` green (0 hard failures, ~110 warnings).
+**Status 2026-08-24.** Arcs 4 and 5 are built out. All 29 lessons now carry a
+working interactive with a prediction gate and at least one scored checkpoint;
+`scripts/check_lessons.py` is green. What remains is content review, not
+construction — which is the point at which the prose and question wording want
+your passes rather than more building.
 
-**The organizing goal.** These lessons exist to build intuition for the concepts
-that recur across every topic, not to cover the lecture list. Lecture-coverage gaps
-are not defects. Three things recur, and the priorities below are ordered by how
-badly each is served right now.
+**What is built.** Every lesson has a simulator. Every scored slot has a writer.
+Every answer key in Arcs 4 and 5, and in the ten lessons graded earlier, was
+measured off the shipped code rather than assumed.
 
-| Thread | What it is | State |
-|---|---|---|
-| **A — the slope** | One number → plus a group → plus a rate → the rate is a covariance → the covariance is the change in the average. Regression, R², heritability, breeder's equation, F_ST and Hamilton's *r* are one object. | ~70% built, **not welded**, and missing its keystone rung |
-| **B — the ledger** | Every feature was inherited or invented. Heritability, mutation-as-not-inheriting, IBD vs IBS, homology vs homoplasy, the chopstick fallacy. | ~20% built, scattered, unnamed |
-| **C — the discipline** | A pattern is not its own explanation. | ~60% built, one leg missing |
+**What is still spec.** Lessons 21–25 each keep three later-stage TODO blocks —
+the classification drills and real-data stages. Those are deliberately not faked:
+several are already covered by scaffolds (S14, S16, S17, S18, S19, S20), and
+deciding whether to fold the scaffold in or build a separate stage is a
+curricular call.
 
-`structurephilosophy.md` already states Thread A as "the one thing underneath all
-of it." This work order is mostly a matter of making the build match it.
+**Deferred, and waiting on you.**
 
----
-
-## P0 — do these first
-
-### 1. Build L16a — the weighting rung ✅ DONE 2026-08-24
-
-**Nothing in the repo does this.** `structurephilosophy.md` [22] calls it "the
-single most load-bearing insertion in the sequence" and says that without it the
-identity at unit 38 is "a magic trick instead of a reunion." Lesson 26 Stage A
-currently jumps straight to a reweighted readout (`lesson26.html:68`,
-`Δz̄ measured directly (reweight by w)`), so the student sees the answer without
-ever having built the object.
-
-**Spec.** A plain scatter the student has already met. Give each point a
-copy-count. Points that make more copies pull harder. The student moves the
-weights; the data never changes; the fitted line swings. No reproduction framing
-at all — just *a slope where some points count more than others.*
-
-**Built** as `app/scaffolds/s25_counting_weights.html`, matching the pattern by
-which the other four inserted rungs already ship (S-weld = s23, S-single = s22,
-S-cond = s21, S-agree = s24), and avoiding a lesson renumber immediately before
-the Arc 5 collapse. Twenty-four trees, trunk width against height, on a curve
-that flattens. A dial changes how many times each tree is counted; the
-measurements never move; the line swings from 0.330 to 0.175 — an 89% change.
-Two scored checkpoints, both keys verified against the scaffold's own code.
-Promote to a full unit when renumbering happens.
-
-**Why first.** It is the one build that makes your named goal — the Price equation
-landing as recognition — actually possible. Everything else in Arc 5 is downstream
-of it.
-
----
-
-### 2. Weld Thread A with numeric carryover across lessons
-
-`app/assets/score.js:141` already persists per-module state to
-`bio202-score:<moduleId>v<version>:<nameToken>`. Add a course-wide namespace —
-`Score.carry(key, value)` / `Score.recall(key)` writing to
-`bio202-carry:<nameToken>` — roughly fifteen lines, no change to the code format.
-
-Then wire these four hand-offs:
-
-| From | Artifact | To | State |
-|---|---|---|---|
-| L7 D | the slope fitted through Galton's families | L15 B **is** that lever, not a fresh dial | ✅ wired |
-| s25 | the two slopes the student swung by hand | L26 A opens by naming them | ✅ wired |
-| L3 C | the per-5cm rate the student landed | L4 A opens on it | still to wire |
-
-**Dropped: L15 → s25.** The original plan chained the response L15 produces into
-s25's dial. There is nothing real behind it — s25's dial is a counting tilt over
-tree measurements, and no number L15 produces sets it. Forcing the link would be
-decorative continuity, which is worse than none: it teaches the student that
-these hand-offs are a UI motif rather than the same quantity travelling. The two
-welds that survive are both genuine reappearances of one number.
-
-L3 already does this *within* one lesson — B and C open on the 82 kg from A, and
-that is exactly what makes their reveals work. Extending the same mechanic across
-lessons is what turns five self-contained lessons into one argument. Without it,
-L26 A's "the quantity you have been computing since Lesson 3" is an assertion.
-With it, it is the student's own number, on screen.
-
----
-
-### 3. Build Thread B  — partly done 2026-08-24
-
-Mostly connection; one genuinely new stage.
-
-**Built:** `app/scaffolds/s26_inherited_or_invented.html` — eight species on a
-fixed tree, click any to give it a feature, and the page reports the fewest number
-of times that feature could have arisen (Fitch parsimony, verified). The presets
-land on the lecture's own cases: turtle+tortoise gives 1 origin, turtle+armadillo
-gives 2. Same feature, same number of species carrying it, different answer. The
-tracker requires the student to build both.
-
-**Still owed** — the early, tree-free statement, and the chopstick promotion:
-
-- **New: the dichotomy, before any biology.** Two things share a feature — same
-  source, or arrived separately? Lecture material is ready-made: turtle/tortoise
-  vs turtle/armadillo (`2026_lecture_detail.tex:141`), lactase persistence with
-  four independent origins (`:150`). Place around L2–L3, well before L18 needs it.
-- **Promote the chopstick fallacy out of L7's footer into a stage.** It is
-  currently a closing caution nobody acts on. It is the cross-topic form of the
-  whole thread — genes, language, wealth, religion and diet all vertically
-  inherited from the same parents (`:2490`) — and the single best guard against the
-  GWAS-style misreading. L6 E's causal-model builder is the right machine already
-  built; point it at parents → (genes, culture).
-- **Retro-label the existing beads.** L7, L13 A, L18 D and L19 are already running
-  Thread B without saying so. Use the S19 pattern — a "what you just did has a
-  name" panel that unlocks *after* the doing, never before.
-
----
-
-### 4. Integrate Descent, split by payload
-
-Do not ship it as one sandbox. It carries three separable things:
-
-| Payload | Destination | Why there |
-|---|---|---|
-| Coalescence / MRCA | **L10, new Stage E** | Fixation and coalescence are one process run two directions, same 4N (`:1762`). L10 already builds forward fixation; this is its mirror. |
-| IBD segments | **Thread B stage, or L14** | IBD is the physical instance of "inherited"; IBS is the trap. |
-| Gene dropping | keep as the reveal | "You are genetically zero-related to most of your ancestors" (`:1376`) is the strongest pretest-buster available. |
-
-**Score it.** Unscored means skipped.
-
----
-
-### 5. Reconcile the 47-unit sequence with the 34 shipped lessons
-
-Right now the sequence in `structurephilosophy.md` and the shipped lessons are
-related only through a lookup table buried in `scripts/check_lessons.py:36-47`.
-That map is the Rosetta stone for the whole project and it is a Python dict.
-
-- Lift it into `docs/PROJECT_NOTES.md` (done) and keep it current.
-- Rule the stage-shape question explicitly: the six roles
-  (`orient/predict/act/rebuild/real/break`) are the *design intent*; A–E stages are
-  the *shipped form*. Either map the roles onto the letters lesson by lesson, or
-  drop the six-role vocabulary. Leaving both in circulation means the next agent
-  either enforces a shape that breaks working lessons or ignores the scaffolding
-  entirely.
-
----
-
-### 6. Collapse Arc 5 from seven transitions to three ✅ DONE 2026-08-24
-
-Seven lessons with an identical A/B/C/D shape is the opposite of the variety that
-makes Arc 1 work, and the atlas concedes the repetition itself. Keep:
-
-- **L26** — the identity. **Stages A, B, C, E built 2026-08-24** on one two-level engine; stage D (the three lower transitions) still a spec
-- **L30** — cell → individual. Its simulator now has a prediction gate and scores; the intro no longer printed the reveal
-- **L31** — individual → superorganism. **Built 2026-08-24** on the same engine: queen mating number sets what two workers share, which sets how much colonies differ; a policing dial shrinks the within-colony term
-
-**Done.** 27/28/29 are now lesson26 stage D, "the same diagnostic, three times
-down the stack" — one panel, a three-way toggle, one plot, three anchors
-(dachshund FGFR3, the Alu in a Hox regulator, endosymbiosis and somatic
-lineages). 32/33 are now lesson34 stage B, the same instrument pointed above the
-individual and then off DNA. Five builds freed; the repetition is gone. The
-retired files keep the fuller specs — read them when building these two stages
-out.
-
-Also keep **L27b** (`structurephilosophy.md` [39]) on the list — the nesting step
-that pries apart the two meanings of "leftover." The philosophy is explicit that
-letting them stay fused "is how the rest of the arc turns to mud."
-
----
-
-### 7. Add the missing leg of Thread C — survivorship ✅ DONE 2026-08-24
-
-Thread C has the shuffled pile (L5, L6, L8) and default-to-drift (L10, L12 E). It
-has nothing for "what you see is what didn't die," which reaches further than
-either: albino alligators (`:441`), important genes varying least (`:2255`), the
-pupfish ponds that are gone (`:2223`), ancient inbreeding looking harmless
-(`:3602`), the peacock's tail meaning only "a tiger didn't get me."
-
-**Built** as `app/scaffolds/s27_what_didnt_die.html`. One white alligator per
-thousand found in the swamp; two dials, the hatch rate and how a white hatchling
-fares next to a normal one. Every hatch rate from 1 to 200 per thousand can be
-dialled to that same swamp count — a 200-fold range producing one observation.
-The tracker asks for three different hatch rates that all match. Both keys
-verified across the real slider ranges.
-
-Original mechanic, for the record: the student is shown a filtered sample and
-asked to infer the unfiltered population.
-
-**Note:** S21 (collider) is *not* free for this. It is the designed conditioning
-rung `S-cond` [25], placed before units 26 and 29 because both ask the student to
-hold something fixed. Reuse its machinery; do not relocate it.
-
----
-
-## Scaffold absorption
-
-The four `S-` drills in the sequence already exist as scaffolds. That mapping is
-load-bearing and was previously undocumented:
-
-| Sequence unit | Scaffold |
-|---|---|
-| [6] S-weld | s23_sampling_weld |
-| [10] S-single | s22_minimal_inference |
-| [25] S-cond | s21_collider_dag |
-| [36] S-agree | s24_convergent_evidence |
-
-The rest fold into lessons:
-
-| Scaffold | Destination | Note |
-|---|---|---|
-| s02 residual reading | L3 | Thread A rung |
-| s01 no-trend envelope | L5 | |
-| s03 HWE counting | L9 | |
-| s04 fixation probability | L10 C | **duplicate — retire** |
-| s05 time to fixation | L10 B | **duplicate — retire** |
-| s06 drift or selection | L12 E | **duplicate — retire** |
-| s07 breeder's equation | L15 B | Thread A rung |
-| s08 selection coefficient | L12 C | |
-| s09 mutation–selection balance | L13 | |
-| s10 F / heterozygote deficit | L14 | |
-| s11 F_ST and migration | L16 | Thread A rung |
-| s12 Hamilton's rule | L17 | Thread A rung — *r* is a slope |
-| s13 tree rotation | L18 A | **duplicate — retire** |
-| s14 rates across intervals | L20 | fills the skeleton |
-| s15 phylogenetic non-independence | L19 | |
-| s16 DM snowball | L23 | fills the skeleton |
-| s17 mutation target | L21 | fills the skeleton |
-| s18 dN/dS | L22 | fills the skeleton |
-| s19 convergence vs drift | L24 | **dedupe Anolis** (L18 D, L24 D and s19 are three builds of one demonstration) |
-| s20 species as hypothesis | L25 | fills the skeleton |
-
-Six scaffolds fill Arc 4 skeletons outright. "Fifteen builds outstanding" is closer
-to eight or nine once absorption is done.
+1. **The plain-language question pass.** Wording across all lessons still carries
+   notation and, in places, options that explain themselves. Hold until content
+   settles, then sweep once against the options-state-what-never-why rule.
+2. **The stage-shape ruling.** Six roles in `structurephilosophy.md` versus the
+   shipped A–E stages; both vocabularies are still in circulation.
+3. **Thread B's early rung.** The dichotomy still arrives late, in tree
+   territory. S26 poses it but the biology-free version is still owed.
+4. **Regenerate `docs/LESSON_ATLAS.md`.** It is banner-flagged as stale and
+   should be rebuilt in one pass now that the structure has stopped moving.
+5. **Lesson numbering.** Gaps at 27/28/29/32/33 after the Arc 5 collapse.
+   Renumber in one sweep or not at all — module ids carry the submission codes.
 
 ---
 

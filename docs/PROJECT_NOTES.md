@@ -65,7 +65,7 @@ what-you-see-is-what-didn't-die. Well served except the survivorship leg.
 ## 2. Verified state (2026-08-24)
 
 ```
-app/lessons/lesson*.html       29 lessons; 1–19 and 26/30/31 built, 20–25 + 34 skeletons
+app/lessons/lesson*.html       29 lessons, all with a working interactive
                                (27/28/29/32/33 folded away — see below)
 app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
@@ -415,7 +415,12 @@ a whole arc of them is a warning.
 | | S15 | **B** | the same non-independence, drilled |
 | | S19 | **B**, C | convergence, drift, or shared ancestry — and you need the tree to say |
 | | **S27** | C | you are always counting what is still there |
-| | L20–L25 | mixed | Arc 4 — skeletons; S14/S16/S17/S18/S20 cover much of the content |
+| | L20 | C | the rate you measure depends on the window; real fossils say the trait is going nowhere |
+| L21 | **B** | how often something arises is set by how many ways in there are |
+| L22 | C | a ratio between two kinds of change measures what has been sifting them |
+| L23 | — | incompatibilities count pairs, so they outrun the changes that cause them |
+| L24 | **B** | one tree, three deals, the same two species — only the rest of the tree separates the histories |
+| L25 | — | the call is a claim about what happens next, tested by running it forward |
 | | S24 | C | when two methods agreeing is evidence and when it is not |
 | | L26 | **A** | the change in the average *is* the slope. Stages A/B/C/E built on one two-level engine; stage D still a spec |
 | | L30 | **A** | the same ratio at cell→individual; gated and scored |
