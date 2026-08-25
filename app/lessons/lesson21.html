@@ -49,7 +49,26 @@
     The word "mother" varies less across languages than the word "cup." Changing the word "cup" is easy — if I use a different word for cup, that's not a big deal. If, on the other hand, a lost child asks for their mother in a different way so that the person they're asking doesn't understand the kid is looking for their mother — that's a problem. Some things are important, so they change less.
     <span class="src">— 202_lec01_10</span>
   </div>
-  <div class="todo">TODO: two-locus sim. Target-size slider; substitution-rate readout. &nbsp;SPEC: Simulate two loci. One has 10× the mutation rate of the other. Watch their substitution rates over time. The pattern is exactly what you'd expect when the per-base mutation rate is the same but the target size differs.</div>
+  <div style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. A hundred separate populations, watched for the same time. A trait that many different mutations could produce will turn up:</div>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q21" value="many" /> In many of them, each arriving on its own</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q21" value="one" /> In one of them, and then spread to the rest</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q21" value="none" /> In none — any single mutation is far too unlikely</label>
+    <button id="l21submit" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the controls</button>
+    <div id="l21box" style="opacity:.4;pointer-events:none;margin-top:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Two traits. The first needs one specific change. The second can be reached by any of several. Every individual change is exactly as likely as every other, and that never moves.</p>
+      <canvas id="l21plot" width="640" height="300" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">ways in to the second trait = <output id="l21_nOut">10</output></label>
+      <input type="range" id="l21_n" min="1" max="100" step="1" value="10" style="width:100%;" />
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">generations you watch = <output id="l21_gOut">300</output></label>
+      <input type="range" id="l21_g" min="50" max="1000" step="50" value="300" style="width:100%;" />
+      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:10px;line-height:1.9;">
+        <span style="color:#6b6b68;">reached trait one (one way in):</span> <span id="l21_p1" style="font-weight:600;color:#2f6b8f;">—</span><br>
+        <span style="color:#6b6b68;">reached trait two:</span> <span id="l21_p2" style="font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">chance of any one particular change:</span> 1.0e-4 <span style="color:#6b6b68;">— identical for both, at every setting</span>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -94,8 +113,60 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson21", version: 1, pretest: 0, scaffold: 0, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  
+  /* Same per-change probability for both traits. The only thing that differs is
+     how many distinct changes would do the job. */
+  const MU=1e-4, REPS=400;
+  const s21={n:10,g:300};
+  function reachShare(routes,gens,seed){
+    const r=mulberry32(seed); let hits=0;
+    for(let x=0;x<REPS;x++){ let got=false;
+      for(let i=0;i<gens && !got;i++) if(r()<routes*MU) got=true;
+      if(got) hits++; }
+    return hits/REPS;
+  }
+  function redraw(){
+    const p1=reachShare(1,s21.g,17), p2=reachShare(s21.n,s21.g,23);
+    document.getElementById("l21_p1").textContent=(100*p1).toFixed(1)+"%";
+    document.getElementById("l21_p2").textContent=(100*p2).toFixed(1)+"%";
+    const cv=document.getElementById("l21plot"); const o=setupCanvas(cv);
+    const ctx=o.ctx; ctx.clearRect(0,0,o.W,o.H);
+    const f=makeFrame({l:64,r:16,t:16,b:44},o.W,o.H,1,100,0,1);
+    drawAxes(ctx,f,"ways in to the trait","share of populations that got there");
+    ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath();
+    for(let k=1;k<=100;k+=2){const x=f.x(k),y=f.y(reachShare(k,s21.g,23)); k===1?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.stroke();
+    ctx.strokeStyle="#2f6b8f"; ctx.setLineDash([4,4]); ctx.beginPath();
+    ctx.moveTo(f.pad.l,f.y(p1)); ctx.lineTo(f.pad.l+f.W,f.y(p1)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#2f6b8f"; ctx.font="11px -apple-system"; ctx.textAlign="left";
+    ctx.fillText("one way in", f.pad.l+8, f.y(p1)-6);
+    ctx.fillStyle="#b23a48"; ctx.beginPath(); ctx.arc(f.x(s21.n),f.y(p2),5,0,2*Math.PI); ctx.fill();
+  }
+  ["n","g"].forEach(k=>document.getElementById("l21_"+k).addEventListener("input",e=>{
+    s21[k]=+e.target.value; document.getElementById("l21_"+k+"Out").textContent=s21[k];
+    redraw(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  }));
+  (function(){
+    const btn=document.getElementById("l21submit");
+    document.querySelectorAll('input[name="q21"]').forEach(r=>
+      r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=document.querySelector('input[name="q21"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint)
+        Score.recordCheckpoint(0, p.value==="many");
+      btn.style.display="none";
+      const b=document.getElementById("l21box");
+      if(b){ b.style.opacity="1"; b.style.pointerEvents="auto"; }
+      redraw();
+    });
+  })();
+  (function(){
+    const f=document.getElementById("finishBtn");
+    if(f) f.addEventListener("click",function(){ if(typeof Score!=="undefined") Score.finish(); });
+  })();
+  Score.init({ moduleId: "lesson21", version: 2, pretest: 0, scaffold: 1, posttest: 0,
+    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+    onReady: function(){ try{ redraw(); }catch(e){} } });
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>

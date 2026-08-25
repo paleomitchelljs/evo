@@ -49,7 +49,24 @@
     The big thing with species is to what extent these barriers just happen versus to what extent they're actively selected for. This bothers people at first: the vast majority of speciation has absolutely nothing to do with selection. We're not selecting for those differences. Drift is random, mutations are random, and differences accumulate over time. If two things are separated for long enough, when they come back together they often just don't work.
     <span class="src">— 202_lec26_04</span>
   </div>
-  <div class="todo">TODO: two-lineage divergence sim. Track substitutions; track potential pairwise incompatibilities (n choose 2). &nbsp;SPEC: Simulate two populations evolving in isolation, each picking up substitutions independently. Each substitution is fine on its own background. The hybrid is also mostly fine — but each new substitution adds a pair of loci that might not work together.</div>
+  <div style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. Two lineages drift apart, each fixing changes that work fine at home. Double the time apart, and the number of combinations that fail together will:</div>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q23" value="quad" /> More than double</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q23" value="lin" /> Double</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q23" value="half" /> Less than double</label>
+    <button id="l23submit" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the controls</button>
+    <div id="l23box" style="opacity:.4;pointer-events:none;margin-top:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Each lineage fixes changes over time. A change from one lineage has never been tested beside a change from the other, and some of those pairings do not work. Count the pairs, not the changes.</p>
+      <canvas id="l23plot" width="640" height="300" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">chance any one pairing fails = <output id="l23_pOut">0.020</output></label>
+      <input type="range" id="l23_p" min="0.002" max="0.08" step="0.002" value="0.02" style="width:100%;" />
+      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:10px;line-height:1.9;">
+        <span style="color:#6b6b68;">at 40 changes each:</span> <span id="l23_a" style="font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">at 80 changes each:</span> <span id="l23_b" style="font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">doubling the time multiplied the failures by:</span> <span id="l23_x" style="font-size:16px;font-weight:600;color:#2f6b8f;">—</span>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -94,8 +111,61 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson23", version: 1, pretest: 0, scaffold: 0, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  
+  /* Each lineage fixes k changes. Every cross-lineage pair is a combination that
+     has never been tried, so the number of chances to fail grows as k*k while
+     the number of changes grows as k. */
+  const s23={p:0.02};
+  function failures(k,p,seed){
+    const r=mulberry32(seed); let n=0;
+    for(let i=0;i<k;i++) for(let j=0;j<k;j++) if(r()<p) n++;
+    return n;
+  }
+  function redraw(){
+    const a=failures(40,s23.p,5), b=failures(80,s23.p,5);
+    document.getElementById("l23_a").textContent=a+" failing combinations";
+    document.getElementById("l23_b").textContent=b+" failing combinations";
+    document.getElementById("l23_x").textContent=a? (b/a).toFixed(1)+"x" : "—";
+    const cv=document.getElementById("l23plot"); const o=setupCanvas(cv);
+    const ctx=o.ctx; ctx.clearRect(0,0,o.W,o.H);
+    const ks=[]; for(let k=5;k<=160;k+=5) ks.push(k);
+    const ys=ks.map(k=>failures(k,s23.p,5));
+    const f=makeFrame({l:64,r:16,t:16,b:44},o.W,o.H,0,160,0,Math.max(10,Math.max(...ys)*1.1));
+    drawAxes(ctx,f,"changes fixed in each lineage","combinations that fail");
+    // what straight-line growth would have looked like
+    const perChange=ys[3]/ks[3];
+    ctx.strokeStyle="#9a9a95"; ctx.setLineDash([5,4]); ctx.lineWidth=1.5; ctx.beginPath();
+    ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(160),f.y(perChange*160)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#8a8a86"; ctx.font="11px -apple-system"; ctx.textAlign="left";
+    ctx.fillText("if it grew in step with the changes", f.x(6), f.y(perChange*160)-8);
+    ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath();
+    ks.forEach((k,i)=>{const x=f.x(k),y=f.y(ys[i]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke();
+  }
+  document.getElementById("l23_p").addEventListener("input",e=>{
+    s23.p=+e.target.value; document.getElementById("l23_pOut").textContent=s23.p.toFixed(3);
+    redraw(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  });
+  (function(){
+    const btn=document.getElementById("l23submit");
+    document.querySelectorAll('input[name="q23"]').forEach(r=>
+      r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=document.querySelector('input[name="q23"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint)
+        Score.recordCheckpoint(0, p.value==="quad");
+      btn.style.display="none";
+      const b=document.getElementById("l23box");
+      if(b){ b.style.opacity="1"; b.style.pointerEvents="auto"; }
+      redraw();
+    });
+  })();
+  (function(){
+    const f=document.getElementById("finishBtn");
+    if(f) f.addEventListener("click",function(){ if(typeof Score!=="undefined") Score.finish(); });
+  })();
+  Score.init({ moduleId: "lesson23", version: 2, pretest: 0, scaffold: 1, posttest: 0,
+    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+    onReady: function(){ try{ redraw(); }catch(e){} } });
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>

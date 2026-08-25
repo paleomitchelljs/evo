@@ -49,7 +49,26 @@
     Looking for an answer is a terrible way to learn anything. Knowing a bunch of definitions for species does not help you understand a concept. Working your way through something hard, to understand the nuance, even if you arrive at a different answer than somebody else does. If you and Abby agree on the same five forces but weight them differently, you can productively discuss. If you just are focused on a definition and you meet someone with a different definition, you just disagree and you're stuck.
     <span class="src">— 202_lec23_01</span>
   </div>
-  <div class="todo">TODO: one-or-two decision UI. Show data; let student commit; require a free-text "what would change my mind" before unlocking. &nbsp;SPEC: Show the student data on a marginal pair — overlapping but distinguishable in phenotype, weakly interfertile in the lab, geographically distinct. Ask: one species or two? Whichever they pick, ask what observation would flip their answer.</div>
+  <div style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. Two populations look different and rarely interbreed today. Calling them one species or two is a claim about:</div>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q25" value="future" /> Whether they stay independent in future</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q25" value="now" /> How different they look right now</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q25" value="rule" /> Which published definition you picked</label>
+    <button id="l25submit" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the controls</button>
+    <div id="l25box" style="opacity:.4;pointer-events:none;margin-top:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Two populations, currently apart. Set how often individuals move between them and how well the offspring of a mixed pairing do, then run time forward and see whether they stay two things.</p>
+      <canvas id="l25plot" width="640" height="300" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">movement between them = <output id="l25_mOut">0.010</output></label>
+      <input type="range" id="l25_m" min="0" max="0.1" step="0.002" value="0.01" style="width:100%;" />
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">how well mixed offspring do = <output id="l25_hOut">0.50</output></label>
+      <input type="range" id="l25_h" min="0" max="1" step="0.02" value="0.5" style="width:100%;" />
+      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:10px;line-height:1.9;">
+        <span style="color:#6b6b68;">difference between them after 500 generations:</span> <span id="l25_gap" style="font-size:16px;font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">the call this supports:</span> <span id="l25_call" style="font-weight:600;">—</span>
+      </div>
+      <p style="font-size:12.5px;color:#6b6b68;margin:10px 0 0;">Nothing about how they look today changed. Only what happens next.</p>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -94,8 +113,64 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson25", version: 1, pretest: 0, scaffold: 0, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  
+  /* Two populations, one locus. Movement pulls them together; poor performance
+     of mixed offspring stops the movement translating into mixing. The call is
+     read off where they end up, not off where they start. */
+  const s25={m:0.01,h:0.5};
+  function run(m,h,gens){
+    let p=0.9,q=0.1; const track=[];
+    for(let g=0;g<gens;g++){
+      const eff=m*h;                       // movement only counts if the offspring work
+      const np=p+eff*(q-p), nq=q+eff*(p-q);
+      p=np; q=nq; if(g%5===0) track.push(Math.abs(p-q));
+    }
+    return {gap:Math.abs(p-q), track};
+  }
+  function redraw(){
+    const o1=run(s25.m,s25.h,500);
+    document.getElementById("l25_gap").textContent=o1.gap.toFixed(3);
+    document.getElementById("l25_call").textContent =
+      o1.gap>0.5 ? "two — they stay apart" :
+      o1.gap>0.1 ? "unsettled — they are still drifting together" : "one — they merge";
+    const cv=document.getElementById("l25plot"); const o=setupCanvas(cv);
+    const ctx=o.ctx; ctx.clearRect(0,0,o.W,o.H);
+    const f=makeFrame({l:64,r:16,t:16,b:44},o.W,o.H,0,500,0,0.85);
+    drawAxes(ctx,f,"generations from now","difference between the two");
+    ctx.strokeStyle="#9a9a95"; ctx.setLineDash([4,4]); ctx.beginPath();
+    ctx.moveTo(f.pad.l,f.y(0.5)); ctx.lineTo(f.pad.l+f.W,f.y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#8a8a86"; ctx.font="11px -apple-system"; ctx.textAlign="left";
+    ctx.fillText("still clearly two", f.pad.l+6, f.y(0.5)-6);
+    ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath();
+    o1.track.forEach((v,i)=>{const x=f.x(i*5),y=f.y(v); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+    ctx.stroke();
+  }
+  ["m","h"].forEach(k=>document.getElementById("l25_"+k).addEventListener("input",e=>{
+    s25[k]=+e.target.value;
+    document.getElementById("l25_"+k+"Out").textContent=s25[k].toFixed(k==="m"?3:2);
+    redraw(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  }));
+  (function(){
+    const btn=document.getElementById("l25submit");
+    document.querySelectorAll('input[name="q25"]').forEach(r=>
+      r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=document.querySelector('input[name="q25"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint)
+        Score.recordCheckpoint(0, p.value==="future");
+      btn.style.display="none";
+      const b=document.getElementById("l25box");
+      if(b){ b.style.opacity="1"; b.style.pointerEvents="auto"; }
+      redraw();
+    });
+  })();
+  (function(){
+    const f=document.getElementById("finishBtn");
+    if(f) f.addEventListener("click",function(){ if(typeof Score!=="undefined") Score.finish(); });
+  })();
+  Score.init({ moduleId: "lesson25", version: 2, pretest: 0, scaffold: 1, posttest: 0,
+    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+    onReady: function(){ try{ redraw(); }catch(e){} } });
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>

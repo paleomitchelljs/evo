@@ -49,7 +49,28 @@
     These basic building blocks — the nerve tube, the gut tube, the notochord, the arches, the somites — they form in all vertebrates, and in different vertebrates we just fold them in a weird way. That gives us the different anatomies. We'll see this with various bones of the body, lots of muscles. They're just folded and shifted and warped in different ways. So a lot of the anatomy is looking at the same structure across different vertebrates and asking: why is it bent this way?
     <span class="src">— 440_lec02_01</span>
   </div>
-  <div class="todo">TODO: trait-on-tree sim. Pull trait values on tips; rank tip pairs by similarity; ask whether similarity correlates with phylogenetic distance. &nbsp;SPEC: Simulate a continuous trait evolving up a tree. Tips with similar trait values can be similar because they share an ancestor (homology), because they each independently arrived at the same value (homoplasy / convergence), or because the trait is so neutral that anyone can have any value (drift).</div>
+  <div style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. Two species share a trait. To tell whether they inherited it from one ancestor or arrived at it separately, what do you need?</div>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q24" value="tree" /> The other species and how they are all related</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q24" value="detail" /> A closer look at the trait in those two</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q24" value="time" /> How long ago the two of them split</label>
+    <button id="l24submit" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the controls</button>
+    <div id="l24box" style="opacity:.4;pointer-events:none;margin-top:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Eight species on a fixed tree. Deal a trait three different ways and see how the histories differ — then check whether the two highlighted species alone could have told you which was which.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+        <button class="l24tab" data-k="inherited">handed down once</button>
+        <button class="l24tab" data-k="convergent">arrived separately</button>
+        <button class="l24tab" data-k="retained">kept by some, lost by others</button>
+      </div>
+      <canvas id="l24plot" width="640" height="330" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:10px;line-height:1.9;">
+        <span style="color:#6b6b68;">species with the trait:</span> <span id="l24_n">—</span><br>
+        <span style="color:#6b6b68;">fewest times it could have arisen:</span> <span id="l24_o" style="font-size:17px;font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">the two highlighted species:</span> <span id="l24_pair" style="font-weight:600;">—</span>
+      </div>
+      <p id="l24_note" style="font-size:13px;color:#4a4a48;margin:10px 0 0;"></p>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -94,8 +115,96 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson24", version: 1, pretest: 0, scaffold: 0, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  
+  /* Eight species on a fixed balanced tree. Three deals of one trait; in all
+     three the SAME two species (0 and 4) carry it, so nothing about that pair
+     distinguishes the histories -- only the rest of the tree does. */
+  const L24_TREE=[[[0,1],[2,3]],[[4,5],[6,7]]];
+  const L24_NAMES=["A","B","C","D","E","F","G","H"];
+  const L24_PAIR=[0,2];                      // A and C: not sisters, but inside one half
+  const L24_DEALS={
+    inherited:{ state:[1,1,1,1,0,0,0,0],
+      note:"A, B, C and D carry it and they are exactly one branch of the tree. One ancestor had it and passed it to all four — nothing arrived twice." },
+    convergent:{ state:[1,0,1,0,0,0,0,0],
+      note:"Only A and C carry it, and B and D, sitting between them, do not. No single ancestor works: it had to arrive twice, separately." },
+    retained:{ state:[1,0,1,1,1,1,1,1],
+      note:"Almost everything carries it and B alone does not. The cheapest story is not an arrival at all — an early ancestor had it and B lost it." }
+  };
+  function l24Origins(st){
+    let n=0;
+    (function go(node){
+      if(typeof node==="number") return new Set([st[node]]);
+      const a=go(node[0]), b=go(node[1]);
+      const inter=new Set([...a].filter(x=>b.has(x)));
+      if(inter.size) return inter;
+      n++; return new Set([...a,...b]);
+    })(L24_TREE);
+    return n;
+  }
+  const s24={k:"inherited"};
+  function redraw(){
+    const deal=L24_DEALS[s24.k], st=deal.state;
+    document.getElementById("l24_n").textContent=st.reduce((a,b)=>a+b,0);
+    document.getElementById("l24_o").textContent=l24Origins(st);
+    document.getElementById("l24_pair").textContent =
+      L24_PAIR.every(i=>st[i]===1) ? "both carry it — in all three deals" : "not both";
+    document.getElementById("l24_note").textContent=deal.note;
+    document.querySelectorAll(".l24tab").forEach(t=>{
+      const on=t.dataset.k===s24.k;
+      t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
+        (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
+    });
+    const cv=document.getElementById("l24plot"); const o=setupCanvas(cv);
+    const ctx=o.ctx; ctx.clearRect(0,0,o.W,o.H);
+    const pad={l:24,r:150,t:26,b:26}, n=8, innerH=o.H-pad.t-pad.b;
+    const ty=i=>pad.t+innerH*(i+0.5)/n, xTip=o.W-pad.r, depth=(o.W-pad.r-pad.l)/3;
+    ctx.strokeStyle="#9a9a95"; ctx.lineWidth=1.5;
+    (function go(node,d){
+      if(typeof node==="number"){ const y=ty(node);
+        ctx.beginPath(); ctx.moveTo(pad.l+depth*d,y); ctx.lineTo(xTip-14,y); ctx.stroke(); return y; }
+      const y1=go(node[0],d+1), y2=go(node[1],d+1);
+      const x=pad.l+depth*d, xc=pad.l+depth*(d+1);
+      ctx.beginPath(); ctx.moveTo(xc,y1); ctx.lineTo(xc,y2); ctx.stroke();
+      const ym=(y1+y2)/2;
+      ctx.beginPath(); ctx.moveTo(x,ym); ctx.lineTo(xc,ym); ctx.stroke();
+      return ym;
+    })(L24_TREE,0);
+    for(let i=0;i<n;i++){
+      const y=ty(i), highlight=L24_PAIR.includes(i);
+      ctx.beginPath(); ctx.arc(xTip,y,9,0,2*Math.PI);
+      ctx.fillStyle = st[i] ? "#b23a48" : "#fff"; ctx.fill();
+      ctx.strokeStyle = st[i] ? "#b23a48" : "#9a9a95"; ctx.lineWidth=2; ctx.stroke();
+      if(highlight){ ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2.5;
+        ctx.beginPath(); ctx.arc(xTip,y,14,0,2*Math.PI); ctx.stroke(); }
+      ctx.fillStyle="#1d1d1b"; ctx.font="13px -apple-system"; ctx.textAlign="left"; ctx.textBaseline="middle";
+      ctx.fillText(L24_NAMES[i]+(highlight?"  (highlighted)":""), xTip+20, y);
+    }
+  }
+  document.querySelectorAll(".l24tab").forEach(t=>t.addEventListener("click",()=>{
+    s24.k=t.dataset.k; redraw();
+    if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  }));
+  (function(){
+    const btn=document.getElementById("l24submit");
+    document.querySelectorAll('input[name="q24"]').forEach(r=>
+      r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=document.querySelector('input[name="q24"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint)
+        Score.recordCheckpoint(0, p.value==="tree");
+      btn.style.display="none";
+      const b=document.getElementById("l24box");
+      if(b){ b.style.opacity="1"; b.style.pointerEvents="auto"; }
+      redraw();
+    });
+  })();
+  (function(){
+    const f=document.getElementById("finishBtn");
+    if(f) f.addEventListener("click",function(){ if(typeof Score!=="undefined") Score.finish(); });
+  })();
+  Score.init({ moduleId: "lesson24", version: 2, pretest: 0, scaffold: 1, posttest: 0,
+    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+    onReady: function(){ try{ redraw(); }catch(e){} } });
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>

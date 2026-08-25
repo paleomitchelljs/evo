@@ -49,7 +49,26 @@
     The more important a gene is, the less variation you'll see at it — not because mutations don't happen there, but because mutations that do happen there never persist. The things you see in the world are the outcome of having not died.
     <span class="src">— 202_lec16_07</span>
   </div>
-  <div class="todo">TODO: neutral codon-evolution sim. Track dN/dS over time; show the ratio centered on 1 with sampling noise. &nbsp;SPEC: Simulate a coding sequence under neutral evolution. Count substitutions per synonymous site (dS) and per non-synonymous site (dN). The ratio dN/dS hovers around 1.</div>
+  <div style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
+    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. A stretch of DNA that nothing is acting on. Count the changes that alter the protein against the changes that do not. The ratio will sit:</div>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q22" value="one" /> At about one</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q22" value="low" /> Well below one</label>
+    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="q22" value="high" /> Well above one</label>
+    <button id="l22submit" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the controls</button>
+    <div id="l22box" style="opacity:.4;pointer-events:none;margin-top:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Changes arrive at the same rate everywhere. Some alter the protein and some do not. Set what it costs to alter the protein, and count both kinds after they have been sifted.</p>
+      <canvas id="l22plot" width="640" height="300" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
+      <label style="display:block;font-size:13px;margin:12px 0 4px;">what it costs to alter the protein = <output id="l22_sOut">0.00</output></label>
+      <input type="range" id="l22_s" min="-0.9" max="0.98" step="0.02" value="0" style="width:100%;" />
+      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:10px;line-height:1.9;">
+        <span style="color:#6b6b68;">changes that altered the protein:</span> <span id="l22_n" style="font-weight:600;color:#b23a48;">—</span><br>
+        <span style="color:#6b6b68;">changes that did not:</span> <span id="l22_s2" style="font-weight:600;color:#2f6b8f;">—</span><br>
+        <span style="color:#6b6b68;">the ratio:</span> <span id="l22_r" style="font-size:17px;font-weight:600;color:#b23a48;">—</span>
+        <span id="l22_verdict" style="color:#4a4a48;"></span>
+      </div>
+      <p style="font-size:12.5px;color:#6b6b68;margin:10px 0 0;">A negative cost means altering the protein is favoured rather than penalised.</p>
+    </div>
+  </div>
 </section>
 
 <section class="stage">
@@ -94,8 +113,76 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-  Score.init({ moduleId: "lesson22", version: 1, pretest: 0, scaffold: 0, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final" });
+  
+  /* Both kinds of change arrive at the same rate. Only the chance of surviving
+     the sifting differs, and only for the kind that alters the protein. */
+  const s22={s:0};
+  function counts(cost,seed){
+    const r=mulberry32(seed), TRIES=20000;
+    // Relative survival, normalised so neither chance exceeds one. A negative
+    // cost means altering the protein is favoured, and it is the changes that
+    // leave it alone that then get left behind -- without the normalisation a
+    // favoured change just saturates at certainty and the ratio can never rise
+    // above the neutral value.
+    const wAlt=1-cost, top=Math.max(wAlt,1);
+    const pAlt=wAlt/top, pSilent=1/top;
+    let alt=0, silent=0;
+    for(let i=0;i<TRIES;i++){
+      const altersProtein = r()<0.75;              // most positions alter it
+      if(r() < (altersProtein?pAlt:pSilent)){ altersProtein ? alt++ : silent++; }
+    }
+    return {alt, silent, ratio: silent? (alt/0.75)/(silent/0.25) : NaN};
+  }
+  function redraw(){
+    const c=counts(s22.s,13);
+    document.getElementById("l22_n").textContent=c.alt;
+    document.getElementById("l22_s2").textContent=c.silent;
+    document.getElementById("l22_r").textContent=c.ratio.toFixed(2);
+    document.getElementById("l22_verdict").textContent =
+      c.ratio>1.15 ? "  — change is being favoured" :
+      c.ratio<0.85 ? "  — change is being weeded out" : "  — nothing is sifting it";
+    const cv=document.getElementById("l22plot"); const o=setupCanvas(cv);
+    const ctx=o.ctx; ctx.clearRect(0,0,o.W,o.H);
+    const f=makeFrame({l:64,r:16,t:16,b:44},o.W,o.H,-0.9,0.98,0,2.4);
+    drawAxes(ctx,f,"what it costs to alter the protein","the ratio");
+    ctx.strokeStyle="#9a9a95"; ctx.setLineDash([4,4]); ctx.beginPath();
+    ctx.moveTo(f.pad.l,f.y(1)); ctx.lineTo(f.pad.l+f.W,f.y(1)); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle="#8a8a86"; ctx.font="11px -apple-system"; ctx.textAlign="left";
+    ctx.fillText("one", f.pad.l+6, f.y(1)-6);
+    ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath();
+    let first=true;
+    for(let v=-0.9;v<=0.98;v+=0.04){const y=counts(v,13).ratio;
+      if(!isFinite(y)) continue;
+      const px=f.x(v),py=f.y(Math.min(2.4,y)); first?ctx.moveTo(px,py):ctx.lineTo(px,py); first=false;}
+    ctx.stroke();
+    ctx.fillStyle="#2f6b8f"; ctx.beginPath();
+    ctx.arc(f.x(s22.s),f.y(Math.min(2.4,c.ratio)),5,0,2*Math.PI); ctx.fill();
+  }
+  document.getElementById("l22_s").addEventListener("input",e=>{
+    s22.s=+e.target.value; document.getElementById("l22_sOut").textContent=s22.s.toFixed(2);
+    redraw(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("A");
+  });
+  (function(){
+    const btn=document.getElementById("l22submit");
+    document.querySelectorAll('input[name="q22"]').forEach(r=>
+      r.addEventListener("change",()=>{btn.disabled=false;}));
+    btn.addEventListener("click",()=>{
+      const p=document.querySelector('input[name="q22"]:checked'); if(!p) return;
+      if(typeof Score!=="undefined"&&Score.recordCheckpoint)
+        Score.recordCheckpoint(0, p.value==="one");
+      btn.style.display="none";
+      const b=document.getElementById("l22box");
+      if(b){ b.style.opacity="1"; b.style.pointerEvents="auto"; }
+      redraw();
+    });
+  })();
+  (function(){
+    const f=document.getElementById("finishBtn");
+    if(f) f.addEventListener("click",function(){ if(typeof Score!=="undefined") Score.finish(); });
+  })();
+  Score.init({ moduleId: "lesson22", version: 2, pretest: 0, scaffold: 1, posttest: 0,
+    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
+    onReady: function(){ try{ redraw(); }catch(e){} } });
   document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
 </script>
 </body>
