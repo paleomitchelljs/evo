@@ -374,7 +374,7 @@
         <div class="fit-stats" style="margin:0 0 12px;">
           <span class="label">you called right:</span> <span id="E_finalRight">—</span> of 20
           &nbsp;|&nbsp;
-          <span class="label">best possible here:</span> <span id="E_ceiling">—</span> of 20
+          <span class="label">expected wrong, even at best:</span> <span id="E_expectedWrong">—</span> of 20
         </div>
         <p class="q">If you get the group right 19 out of 20 times, what
         proportion of the time are you correctly telling the groups apart?</p>
@@ -890,9 +890,14 @@ const FANS = (function () {
   return { home: draw(5000, 176.0, 7.5), away: draw(5000, 177.6, 7.5) };
 })();
 
-/* The ceiling: score every possible cut-off and keep the best. Shown to the
-   student afterwards so "I did badly" and "nobody could do better" are told
-   apart — the number they should take away is the second one. */
+/* Score every cut-off and keep the best rate. What gets shown to the student is
+   its complement: how many of the twenty the best available rule still expects
+   to get wrong. That is an expectation, not a ceiling — a student can call all
+   twenty right by luck, and some will — so it is the number to compare their
+   own score against, not a limit their score cannot pass.
+   It is measured on this page's own five thousand a side, so it is an in-sample
+   best and a shade optimistic; at n = 5000 the shade is far below the one
+   decimal place shown. */
 function bestCallRate(lo, hi) {
   let best = 0.5;
   for (let cut = 150; cut <= 210; cut += 0.1) {
@@ -914,8 +919,8 @@ const drillE = makeDrill({
   poolA: () => FANS.away, poolB: () => FANS.home,
   onFinish: (s) => {
     document.getElementById("E_finalRight").textContent = s.right;
-    document.getElementById("E_ceiling").textContent =
-      (bestCallRate(FANS.home, FANS.away) * DRILL_N).toFixed(1);
+    document.getElementById("E_expectedWrong").textContent =
+      ((1 - bestCallRate(FANS.home, FANS.away)) * DRILL_N).toFixed(1);
     document.getElementById("postE").style.display = "block";
     document.getElementById("postE").scrollIntoView({ behavior: "smooth", block: "center" });
   }
