@@ -305,6 +305,35 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   per-question bits, elapsed time and per-stage engagement into one opaque
   tamper-evident code. Rotate `Score.DEFAULT_SALT` and bump module `version` to
   invalidate a class's codes.
+- **Every page seeds itself at random, per load.** Lessons used to ship
+  `seed: 42`, so the whole class saw byte-identical "random" data — the same
+  coin flips, the same drift walk, the same sampled thirty. Any answer read off
+  the picture was shareable, and a result everyone sees identically is not a
+  stochastic result. `sim.js` now draws one 32-bit `PAGE_SEED_BASE` per page
+  load and derives every seed from it via `pageSeed(label)`, which is random
+  across loads and *fixed within* one — so moving a slider redraws the same
+  dataset instead of reshuffling it under a half-answered question. Stages with
+  a seed slider need no per-lesson code: `randomizeSeedSliders()` sets the
+  control and fires the `input` event the lesson already handles.
+  `SEEDING_IN_PROGRESS` makes `Score.bumpManipulation` ignore those synthetic
+  events, so engagement counts still measure the student.
+- **Two datasets are drawn by rejection, not blind.** Lesson 6's cinema data and
+  lesson 19's worms exist to display one specific reversal, and a scored
+  question asks the student to read it off the screen. Measured over 20,000
+  seeds the reversal survives 89% of draws in lesson 6 and 97% in lesson 19 — so
+  seeding blind would hand about one student in nine a picture that does not
+  show the thing they are being asked to see. `seedSatisfying()` draws at
+  random, checks the property, and redraws if it is missing: ~1.16 draws on
+  average, every student still getting their own dataset. If either generator is
+  edited, re-check its predicate.
+- **Cross-lesson navigation is gone.** Lessons are handed out one at a time, so
+  the "Continue → Lesson N" buttons and "All lessons" links were removed from
+  every lesson, scaffold and interactive. `index.html` still lists everything —
+  it is the instructor's way in, not a path the student is meant to walk.
+- **`app/decoder/`** is the paste-codes-get-a-CSV tool, sitting beside the older
+  `instructor/aggregate.html` (which keeps a persistent roster and does item
+  analysis). Both decode with `Score.decodeCode` and emit the same CSV columns
+  as `scripts/decode_codes.py`, so their output stacks.
 
 ---
 

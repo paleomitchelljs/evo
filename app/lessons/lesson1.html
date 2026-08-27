@@ -449,7 +449,7 @@
 
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line"><span class="com"># 30 random adult heights from real data.</span></span><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">7</span>)</span><span class="line">truths &lt;- <span class="fn">sample</span>(nh$Height, <span class="num">30</span>)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cB_guess">___</span>    <span class="com"># type a value; aim for an average error near zero</span></span><span class="line"><span class="fn">mean</span>(guess - truths)</span></pre>
+<pre class="code" id="codeB"><span class="line"><span class="com"># 30 random adult heights from real data.</span></span><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">7</span>)</span><span class="line">truths &lt;- <span class="fn">sample</span>(nh$Height, <span class="num">30</span>)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cB_guess">___</span>    <span class="com"># type a value; aim for an average error near zero</span></span><span class="line"><span class="fn">mean</span>(guess - truths)</span></pre>
       </div>
     </div>
   </div>
@@ -507,21 +507,13 @@
 
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">73</span>)</span><span class="line">second &lt;- <span class="fn">sample</span>(nh$Height, <span class="num">30</span>)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cC_guess">___</span>   <span class="com"># the number you kept from before</span></span><span class="line"><span class="fn">mean</span>(guess - second)</span><span class="line"><span class="fn">sum</span>(second &gt; guess); <span class="fn">sum</span>(second &lt; guess)</span></pre>
+<pre class="code" id="codeC"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">73</span>)</span><span class="line">second &lt;- <span class="fn">sample</span>(nh$Height, <span class="num">30</span>)</span><span class="line"></span><span class="line" data-line="guess">guess &lt;- <span class="num" id="cC_guess">___</span>   <span class="com"># the number you kept from before</span></span><span class="line"><span class="fn">mean</span>(guess - second)</span><span class="line"><span class="fn">sum</span>(second &gt; guess); <span class="fn">sum</span>(second &lt; guess)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
 <div id="score-final" style="max-width: 1300px; margin: 0 auto; padding: 0 24px 40px 24px;"></div>
-
-<footer class="wrap-up">
-  <p>
-    <a href="lesson2.html" style="display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600;">Continue → Lesson 2</a>
-    &nbsp;·&nbsp;
-    <a href="../../index.html" style="color:var(--muted); text-decoration:none;">All lessons</a>
-  </p>
-</footer>
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
@@ -743,7 +735,7 @@ async function loadHeights() {
     if (a.length > 100 && b.length > 100) { Heights.first = a; Heights.second = b; }
   } catch (e) { /* fall through to the simulated stand-in below */ }
   if (!Heights.first) {
-    const rng = mulberry32(11), nrm = makeNormal(rng);
+    const rng = mulberry32(pageSeed("l1heights")), nrm = makeNormal(rng);
     Heights.first  = Array.from({ length: 3651 }, () => 175.9 + 7.5 * nrm());
     Heights.second = Array.from({ length: 3763 }, () => 162.1 + 7.3 * nrm());
   }
@@ -757,7 +749,7 @@ const TOTAL_FLIPS = 10;
 const TOTAL_ROUNDS = 3;
 // A round counts as ✓ only when the prediction matches the actual heads count exactly.
 const sA = {
-  seed: 42, rng: null,
+  seed: pageSeed("l1A"), rng: null,
   flips: [],            // current round flips (resets per round)
   prediction: null,     // current round prediction
   busy: false,
@@ -1021,7 +1013,7 @@ const sB = {
   // see this number — only the running average error and the pass/fail outcome.
   threshold: 1.75, batchSize: 30,
   rng: null,
-  seed: 7};
+  seed: pageSeed("l1B")};
 sB.rng = mulberry32(sB.seed);
 
 function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
@@ -1172,7 +1164,7 @@ document.getElementById("B_download").addEventListener("click", () => {
   downloadText(`lesson1_stageB${isNaN(g) ? "" : "_guess" + g}.R`,
 `# Lesson 1, Stage B -- one guess, 30 random heights from NHANES.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-set.seed(7)
+set.seed(${sB.seed})
 truths <- sample(nh$Height, 30)
 
 guess <- ${guessLit}
@@ -1191,9 +1183,13 @@ drawStageB(); updateStatsB();
 const sC = {
   guess: null,
   truths: [], errors: [],
-  rng: mulberry32(73),
+  seed: pageSeed("l1C"), rng: null,
   busy: false, done: false,
   batchSize: 30 };
+sC.rng = mulberry32(sC.seed);
+
+// Show the seed the page actually drew, in all three R listings.
+paintSeed("A", sA.seed); paintSeed("B", sB.seed); paintSeed("C", sC.seed);
 
 function startStageC() {
   sC.guess = sB.guess;
@@ -1287,7 +1283,7 @@ document.getElementById("C_download").addEventListener("click", () => {
   const g = sC.guess === null ? "___" : sC.guess.toFixed(1);
   downloadText("lesson1_stageC.R", `# Lesson 1, Stage C -- the same number, thirty new people.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-set.seed(73)
+set.seed(${sC.seed})
 second <- sample(nh$Height, 30)
 
 guess <- ${g}

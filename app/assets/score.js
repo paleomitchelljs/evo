@@ -418,6 +418,13 @@
   // input handlers, simulate/reseed buttons, drag-to-predict canvases, etc.
   function bumpManipulation(key) {
     if (!key) return;
+    // sim.js randomises each stage's seed at load by firing the `input` event
+    // the lesson already listens for. That event is indistinguishable from a
+    // student dragging the slider, so without this guard every lesson would
+    // open having already logged a manipulation on every seeded stage — and
+    // the engagement column in the instructor's export would be measuring the
+    // page setting itself up rather than the student doing anything.
+    if (typeof SEEDING_IN_PROGRESS !== "undefined" && SEEDING_IN_PROGRESS) return;
     // The wire format packs the map as KEYCOUNT pairs (`A12B8`), so a key
     // containing a digit would make the token ambiguous on the way back.
     // Strip to letters and drop the call rather than emit a code the

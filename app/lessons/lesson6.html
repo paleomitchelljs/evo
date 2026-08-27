@@ -412,14 +412,6 @@
 
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
-<footer class="wrap-up">
-  <p>
-    <a href="lesson7.html" style="display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600;">Continue → Lesson 7</a>
-    &nbsp;·&nbsp;
-    <a href="../../index.html" style="color:var(--muted); text-decoration:none;">All lessons</a>
-  </p>
-</footer>
-
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
@@ -785,8 +777,13 @@ drawStageD();
 // negative *because* violent-movie weekends draw the highest attendance and
 // also have the strongest crime drop — but the drop is driven by who's in
 // the theater, not by what's on screen.
-const DV_DATA = (function(){
-  const rng = mulberry32(20080915);
+// The seed varies per student, but not blindly: Stage E asks the student to
+// compare the pooled slope against the within-group slopes, so a draw where the
+// pooled slope is not the steeper one would ask them to see something that is
+// not there. About one seed in nine does that, so the draw is rejected and
+// retried until the reversal is present. See seedSatisfying() in sim.js.
+function buildDV(seed) {
+  const rng = mulberry32(seed);
   function g(){let u=0,v=0;while(u==0)u=rng();while(v==0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
   const rows = [];
   // Violent-movie weekends: higher attendance band (8–25M), bigger crime drops (1–5%).
@@ -802,7 +799,16 @@ const DV_DATA = (function(){
     rows.push({ attendance: att, crime, viol: 0 });
   }
   return rows;
-})();
+}
+const DV_DATA = buildDV(seedSatisfying("l6dv", function (seed) {
+  const rows = buildDV(seed);
+  const slope = (rs) => dvOLS(rs.map(r => r.attendance), rs.map(r => r.crime)).slope;
+  const pooled = slope(rows);
+  // The lesson's claim: pooling the two kinds of weekend makes the apparent
+  // effect of attendance steeper than it is inside either kind.
+  return pooled < slope(rows.filter(r => r.viol === 1))
+      && pooled < slope(rows.filter(r => r.viol === 0));
+}));
 const sE = { mode: "pool" };
 function dvOLS(xs, ys) {
   const mx = xs.reduce((a,b)=>a+b,0)/xs.length;
@@ -884,7 +890,7 @@ drawStageE();
     initialAxes: { x: "attendance", y: "crime" },
     initialColor: "movieType",
     n: 220,
-    seed: 2008,
+    seed: pageSeed("l6dag"),
     onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("E"); }
   });
 })();

@@ -132,7 +132,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">404</span>)</span><span class="line">d &lt;- nh[<span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num">60</span>), ]</span><span class="line">steps &lt;- (d$Height - <span class="num">170</span>) / <span class="num">5</span></span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cA_base">70.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cA_extra">0.0</span></span><span class="line">guess &lt;- base + extra * steps</span><span class="line"><span class="num">1</span> - <span class="fn">sum</span>((d$Weight - guess)^<span class="num">2</span>) / <span class="fn">sum</span>((d$Weight - <span class="fn">mean</span>(d$Weight))^<span class="num">2</span>)</span><span class="line"></span><span class="line"><span class="com"># every pair on this grid that gets within 0.05 of the best</span></span><span class="line">g &lt;- <span class="fn">expand.grid</span>(base = <span class="fn">seq</span>(<span class="num">55</span>, <span class="num">115</span>, <span class="num">0.5</span>), extra = <span class="fn">seq</span>(<span class="num">0</span>, <span class="num">12</span>, <span class="num">0.1</span>))</span><span class="line"><span class="fn">nrow</span>(g)   <span class="com"># out of this many</span></span></pre>
+<pre class="code" id="codeA"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">404</span>)</span><span class="line">d &lt;- nh[<span class="fn">sample</span>(<span class="fn">nrow</span>(nh), <span class="num">60</span>), ]</span><span class="line">steps &lt;- (d$Height - <span class="num">170</span>) / <span class="num">5</span></span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cA_base">70.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cA_extra">0.0</span></span><span class="line">guess &lt;- base + extra * steps</span><span class="line"><span class="num">1</span> - <span class="fn">sum</span>((d$Weight - guess)^<span class="num">2</span>) / <span class="fn">sum</span>((d$Weight - <span class="fn">mean</span>(d$Weight))^<span class="num">2</span>)</span><span class="line"></span><span class="line"><span class="com"># every pair on this grid that gets within 0.05 of the best</span></span><span class="line">g &lt;- <span class="fn">expand.grid</span>(base = <span class="fn">seq</span>(<span class="num">55</span>, <span class="num">115</span>, <span class="num">0.5</span>), extra = <span class="fn">seq</span>(<span class="num">0</span>, <span class="num">12</span>, <span class="num">0.1</span>))</span><span class="line"><span class="fn">nrow</span>(g)   <span class="com"># out of this many</span></span></pre>
       </div>
     </div>
   </div>
@@ -302,14 +302,6 @@
 
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
-<footer class="wrap-up">
-  <p>
-    <a href="lesson5.html" style="display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600;">Continue → Lesson 5</a>
-    &nbsp;·&nbsp;
-    <a href="../../index.html" style="color:var(--muted); text-decoration:none;">All lessons</a>
-  </p>
-</footer>
-
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
@@ -379,7 +371,7 @@ function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) 
 
 /* ====== Data ======================================================== */
 const Pop = { rows: [], ready: false };
-const SAMPLE_N = 60, SAMPLE_SEED = 404;
+const SAMPLE_N = 60, SAMPLE_SEED = pageSeed("l4A");
 const sampleA = { rows: [], bestR2: 0 };
 
 async function loadData() {
@@ -395,7 +387,7 @@ async function loadData() {
     rows.push({ h, w });
   }
   if (!rows.length) {
-    const rng = mulberry32(9);
+    const rng = mulberry32(pageSeed("l4standin"));
     const nrm = () => { let s = 0; for (let i=0;i<12;i++) s += rng(); return s - 6; };
     for (let i = 0; i < 7000; i++) {
       const h = 169 + 10 * nrm();
@@ -404,9 +396,13 @@ async function loadData() {
   }
   Pop.rows = rows;
   Pop.ready = true;
+  paintSeed("A", SAMPLE_SEED);
 
-  // Stage A works on one fixed sixty-person draw so every student sees the
-  // same picture and the same ceiling.
+  // Stage A works on one sixty-person draw, fixed for the whole visit so the
+  // ceiling the student is fitting against does not move under them — but drawn
+  // fresh per page load, so the sixty people are this student's sixty and the
+  // best achievable R² is a number they found rather than one going round the
+  // class.
   const rng = mulberry32(SAMPLE_SEED);
   const taken = new Set();
   while (sampleA.rows.length < SAMPLE_N) {
@@ -527,7 +523,7 @@ document.getElementById("A_clear").addEventListener("click", () => {
 document.getElementById("A_download").addEventListener("click", () => {
   downloadText("lesson4_stageA.R", `# Lesson 4, Stage A -- many lines, one ceiling.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-set.seed(404)
+set.seed(${SAMPLE_SEED})
 d <- nh[sample(nrow(nh), 60), ]
 steps <- (d$Height - 170) / 5
 
@@ -540,7 +536,7 @@ guess <- base + extra * steps
 wirePrediction("A","predA",["qA1"],["many"],"controlsA");
 
 /* ====== STAGE B — the cloud narrows with more people =============== */
-const sB = { n: 40, rng: mulberry32(8123), lines: [], bySize: {} };
+const sB = { n: 40, rng: mulberry32(pageSeed("l4B")), lines: [], bySize: {} };
 
 function takeSampleB() {
   if (!Pop.ready) return;
@@ -682,7 +678,7 @@ const QUOTES = [
   {f:"rotk", m:196, p:296}
 ];
 const C_TARGET = 200;
-const sC = { rng: mulberry32(6151), clouds: { fotr: [], ttt: [], rotk: [] }, reps: 0 };
+const sC = { rng: mulberry32(pageSeed("l4C")), clouds: { fotr: [], ttt: [], rotk: [] }, reps: 0 };
 
 function oneViewing() {
   for (const film of FILMS) {
@@ -830,7 +826,7 @@ function drawChalk() {
   const meanRate = mean(rates);
   const cliffCm = 10000;
   const ptAgeYr = cliffCm / meanRate * 1000;
-  const rng = mulberry32(20240412);
+  const rng = mulberry32(pageSeed("l4chalk"));
   const B = 5000;
   const ageYr = new Array(B);
   for (let b = 0; b < B; b++) {

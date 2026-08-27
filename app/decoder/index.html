@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BIO 202 — Code decoder</title>
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b68;
+    --line: #e2e0d9; --accent: #2f6b8f; --bad: #b23a48; --warn: #caa04a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+         background: var(--bg); color: var(--ink); }
+  header { padding: 18px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { margin: 0 0 4px; font-size: 19px; }
+  header p { margin: 0; color: var(--muted); font-size: 13px; max-width: 80ch; }
+  main { max-width: 1100px; margin: 0 auto; padding: 22px 24px 60px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px;
+          padding: 16px 18px; margin: 0 0 16px; }
+  .card h2 { margin: 0 0 10px; font-size: 12px; text-transform: uppercase;
+             letter-spacing: 0.07em; color: var(--muted); font-weight: 600; }
+  textarea { width: 100%; min-height: 150px; padding: 9px 11px; resize: vertical;
+             font: 13px/1.5 ui-monospace, Menlo, monospace;
+             border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+  .row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; margin-top: 12px; }
+  label.lbl { font-size: 12.5px; color: var(--muted); display: block; margin: 0 0 4px; }
+  input.salt { padding: 7px 10px; width: 340px; max-width: 100%;
+               font: 13px ui-monospace, Menlo, monospace;
+               border: 1px solid var(--line); border-radius: 4px; background: var(--bg); color: var(--ink); }
+  button { padding: 8px 15px; font-size: 13.5px; border: 0; border-radius: 4px;
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button.secondary { background: var(--panel); color: var(--muted); border: 1px solid var(--line); }
+  button:disabled { opacity: 0.45; cursor: default; }
+  .status { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 6px 9px; border-bottom: 1px solid #eceae3; text-align: left; white-space: nowrap; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+       color: var(--muted); border-bottom: 1px solid var(--line); }
+  td.num { text-align: right; font-family: ui-monospace, Menlo, monospace; }
+  td.bits { font-family: ui-monospace, Menlo, monospace; color: var(--muted); }
+  tr.tampered td { background: #fdf4f5; }
+  .pill { display: inline-block; border-radius: 3px; padding: 0 6px; font-size: 11.5px; }
+  .pill.ok { background: #eef4f0; color: #2f6b3a; }
+  .pill.no { background: #fbeef0; color: var(--bad); border: 1px solid #e7c3c8; }
+  .badlist { font: 12.5px/1.6 ui-monospace, Menlo, monospace; color: var(--bad);
+             white-space: pre-wrap; margin: 10px 0 0; }
+  .hint { font-size: 12.5px; color: var(--muted); margin: 10px 0 0; max-width: 80ch; }
+  code.inl { font-family: ui-monospace, Menlo, monospace; background: #f1efe9;
+             padding: 1px 4px; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Code decoder</h1>
+  <p>Paste the completion codes students send in — one per line, or a whole
+  pasted email; anything that is not a code is skipped. Everything runs in this
+  browser, so no code and no name leaves this machine.</p>
+</header>
+
+<main>
+
+  <div class="card">
+    <h2>Codes</h2>
+    <textarea id="codes" spellcheck="false"
+      placeholder="lesson1v6.Q0p9c2V4dGc-bHpx0Z3.a4f19c&#10;lesson8v1.…&#10;lesson12v2.…"></textarea>
+    <div class="row">
+      <div>
+        <label class="lbl" for="salt">Salt (leave as-is unless a lesson overrides it)</label>
+        <input class="salt" id="salt" spellcheck="false">
+      </div>
+      <button id="decode">Decode</button>
+      <button id="csv" class="secondary" disabled>Download CSV</button>
+      <button id="clear" class="secondary">Clear</button>
+    </div>
+    <p class="status" id="status">Nothing decoded yet.</p>
+    <div id="bad"></div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <h2>Decoded</h2>
+    <div class="scroll">
+      <table id="table"></table>
+    </div>
+    <p class="hint">
+      <strong>Score</strong> counts the 1-bits across all three question groups.
+      <strong>Active</strong> is time on task with idle gaps discarded;
+      <strong>elapsed</strong> is the raw wall clock, so a tab left open over
+      lunch inflates the second and not the first. <strong>Moves</strong> is how
+      many times the student actually worked the controls, per stage — an
+      engagement figure, not a score. A row flagged
+      <span class="pill no">edited</span> failed its checksum: the code was
+      altered after it was issued, or it was typed out by hand with a slip in it.
+    </p>
+  </div>
+
+</main>
+
+<script src="../assets/score.js"></script>
+<script>
+/* Decoding is Score.decodeCode() — the same routine the lesson pages use to
+   build a code, run backwards. Keeping it in score.js rather than reimplemented
+   here means the format can only ever be changed in one place. */
+
+let rows = [];
+
+/* A code is MODULEvVERSION.PAYLOAD.MAC. Harvesting by pattern rather than by
+   line lets an instructor paste a whole email — greeting, signature and all —
+   without having to tidy it first. */
+const CODE_RE = /[A-Za-z][A-Za-z0-9_]*v\d+\.[A-Za-z0-9_-]+\.[0-9a-f]{4,}/g;
+
+function harvest(text) {
+  const found = [];
+  const leftovers = [];
+  text.split(/\r?\n/).forEach(line => {
+    const t = line.trim();
+    if (!t) return;
+    const m = t.match(CODE_RE);
+    if (m) m.forEach(c => found.push(c));
+    else leftovers.push(t);
+  });
+  return { found, leftovers };
+}
+
+function bitsScore(r) {
+  const all = (r.pretestBits || "") + (r.scaffoldBits || "") + (r.posttestBits || "");
+  let correct = 0;
+  for (const ch of all) if (ch === "1") correct++;
+  return { correct, total: all.length };
+}
+
+function prettyName(tok) {
+  const words = String(tok || "").split("_").filter(Boolean);
+  if (!words.length) return "(no name)";
+  return words.map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+}
+
+function mmss(sec) {
+  if (sec == null || sec === "") return "—";
+  const s = Math.max(0, sec | 0);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return h ? h + ":" + pad(m) + ":" + pad(ss) : m + ":" + pad(ss);
+}
+
+function movesToken(map) {
+  return Object.keys(map || {}).sort().map(k => k + map[k]).join(" ");
+}
+function movesTotal(map) {
+  return Object.keys(map || {}).reduce((a, k) => a + (map[k] | 0), 0);
+}
+
+/* Sort lesson12 after lesson2, not between lesson1 and lesson2. */
+function modKey(id) {
+  const m = String(id).match(/^([a-z_]*?)(\d+)$/i);
+  return m ? [m[1], parseInt(m[2], 10)] : [String(id), 0];
+}
+function cmpMod(a, b) {
+  const ka = modKey(a), kb = modKey(b);
+  return ka[0] < kb[0] ? -1 : ka[0] > kb[0] ? 1 : ka[1] - kb[1];
+}
+
+async function decode() {
+  const text = document.getElementById("codes").value;
+  const salt = document.getElementById("salt").value;
+  const { found, leftovers } = harvest(text);
+  const status = document.getElementById("status");
+
+  if (!found.length) {
+    rows = [];
+    status.textContent = "No codes found in that text.";
+    document.getElementById("csv").disabled = true;
+    document.getElementById("resultCard").style.display = "none";
+    renderBad(leftovers);
+    return;
+  }
+
+  status.textContent = "Decoding " + found.length + "…";
+  const out = [];
+  const failed = [];
+  // Duplicates are common — a student resends, or a code appears in both an
+  // email and a forwarded copy. Keep the last one per (student, module).
+  const seen = new Map();
+
+  for (const code of found) {
+    let rec = null;
+    try { rec = await Score.decodeCode(code, salt); }
+    catch (e) { rec = null; }
+    if (!rec || rec.nameToken === undefined) { failed.push(code); continue; }
+    seen.set(rec.nameToken + "|" + rec.moduleId, rec);
+  }
+  seen.forEach(v => out.push(v));
+
+  out.sort((a, b) => {
+    const na = prettyName(a.nameToken), nb = prettyName(b.nameToken);
+    return na < nb ? -1 : na > nb ? 1 : cmpMod(a.moduleId, b.moduleId);
+  });
+
+  rows = out;
+  render();
+  renderBad(leftovers.concat(failed.map(c => c + "   ← would not decode")));
+
+  const dupes = found.length - seen.size;
+  status.textContent = out.length + " decoded" +
+    (dupes > 0 ? " (" + dupes + " duplicate" + (dupes === 1 ? "" : "s") + " collapsed)" : "") +
+    (failed.length ? " · " + failed.length + " would not decode" : "");
+  document.getElementById("csv").disabled = out.length === 0;
+}
+
+function render() {
+  const t = document.getElementById("table");
+  const head = "<tr><th>Name</th><th>Lesson</th><th>Ver</th><th>Score</th><th>%</th>" +
+               "<th>Active</th><th>Elapsed</th><th>Moves</th><th>By stage</th>" +
+               "<th>Bits</th><th>Checksum</th></tr>";
+  const body = rows.map(r => {
+    const { correct, total } = bitsScore(r);
+    const pct = total ? Math.round(100 * correct / total) : "";
+    const bits = [r.pretestBits, r.scaffoldBits, r.posttestBits].filter(Boolean).join(" ");
+    return "<tr class='" + (r.ok ? "" : "tampered") + "'>" +
+      "<td>" + esc(prettyName(r.nameToken)) + "</td>" +
+      "<td>" + esc(r.moduleId) + "</td>" +
+      "<td class='num'>" + r.version + "</td>" +
+      "<td class='num'>" + correct + " / " + total + "</td>" +
+      "<td class='num'>" + (pct === "" ? "—" : pct) + "</td>" +
+      "<td class='num'>" + mmss(r.activeSec) + "</td>" +
+      "<td class='num'>" + mmss(r.elapsedSec) + "</td>" +
+      "<td class='num'>" + movesTotal(r.manipulations) + "</td>" +
+      "<td class='bits'>" + esc(movesToken(r.manipulations) || "—") + "</td>" +
+      "<td class='bits'>" + esc(bits || "—") + "</td>" +
+      "<td>" + (r.ok ? "<span class='pill ok'>ok</span>"
+                     : "<span class='pill no'>edited</span>") + "</td>" +
+      "</tr>";
+  }).join("");
+  t.innerHTML = head + body;
+  document.getElementById("resultCard").style.display = rows.length ? "" : "none";
+}
+
+function renderBad(lines) {
+  const box = document.getElementById("bad");
+  const real = (lines || []).filter(Boolean);
+  box.innerHTML = real.length
+    ? "<div class='badlist'>Skipped:\n  " +
+      real.map(s => s.length > 90 ? s.slice(0, 87) + "…" : s).join("\n  ") + "</div>"
+    : "";
+}
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* Quote every field that could carry a comma, a quote or a newline, so a name
+   with a comma in it cannot silently shift every later column by one. */
+function csvCell(v) {
+  const s = (v == null) ? "" : String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+/* Columns and order match scripts/decode_codes.py and the class aggregator, so
+   output from any of the three stacks into one sheet. */
+const CSV_HEADER = [
+  "name_token", "name", "module", "version",
+  "correct", "out_of", "percent",
+  "pretest_bits", "checkpoint_bits", "posttest_bits",
+  "active_sec", "elapsed_sec", "moves_total", "moves_by_stage",
+  "tamper_ok", "notes"
+];
+
+function csvRows() {
+  return rows.map(r => {
+    const { correct, total } = bitsScore(r);
+    const notes = [];
+    if (!r.ok) notes.push("checksum failed");
+    if (r.activeSec == null) notes.push("no active clock (pre-v3 code)");
+    return [
+      r.nameToken, prettyName(r.nameToken), r.moduleId, r.version,
+      correct, total, total ? Math.round(100 * correct / total) : "",
+      r.pretestBits || "", r.scaffoldBits || "", r.posttestBits || "",
+      r.activeSec == null ? "" : r.activeSec, r.elapsedSec,
+      movesTotal(r.manipulations), movesToken(r.manipulations),
+      r.ok ? 1 : 0, notes.join("; ")
+    ].map(csvCell).join(",");
+  });
+}
+
+function downloadCsv() {
+  if (!rows.length) return;
+  // A BOM so Excel opens it as UTF-8 rather than mangling accented names.
+  const csv = "﻿" + CSV_HEADER.join(",") + "\n" + csvRows().join("\n") + "\n";
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = "bio202_codes_" + stamp + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+  document.getElementById("status").textContent =
+    "Downloaded " + rows.length + " row" + (rows.length === 1 ? "" : "s") + ".";
+}
+
+document.getElementById("salt").value = (window.Score && Score.DEFAULT_SALT) || "";
+document.getElementById("decode").addEventListener("click", decode);
+document.getElementById("csv").addEventListener("click", downloadCsv);
+document.getElementById("clear").addEventListener("click", () => {
+  document.getElementById("codes").value = "";
+  rows = [];
+  render();
+  renderBad([]);
+  document.getElementById("csv").disabled = true;
+  document.getElementById("status").textContent = "Cleared.";
+});
+// Cmd/Ctrl-Enter from the textarea decodes, so a paste-and-go never needs the mouse.
+document.getElementById("codes").addEventListener("keydown", e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter") decode();
+});
+</script>
+</body>
+</html>

@@ -112,3 +112,182 @@ function highlightByDataLine(codeId, key) {
   pre.querySelectorAll(".line").forEach(l => l.classList.remove("hi"));
   pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l => l.classList.add("hi"));
 }
+
+/* ===========================================================================
+ * PER-PAGE SEEDING
+ *
+ * WHY THIS EXISTS. Every lesson shipped with `seed: 42` (or another constant),
+ * so every student in the class saw byte-identical "random" data: the same ten
+ * coin flips, the same drift walk, the same 30 sampled heights. Two costs. The
+ * cheap one is that any answer read off the picture is shareable -- the first
+ * student to finish can tell the rest that the third round came up 7 heads.
+ * The expensive one is pedagogical: a stochastic result that the whole class
+ * sees identically is not a stochastic result. It is a fixed figure wearing a
+ * seed, and a lesson that spends its time saying "this varies" while showing
+ * everyone the same picture is arguing against its own evidence.
+ *
+ * WHAT CHANGES. Each page LOAD draws its own base at random, and every seed on
+ * the page is derived from it. Two students opening the same lesson get
+ * different draws of the same process; so does one student who reloads.
+ *
+ * WHAT DOES NOT CHANGE. pageSeed() is stable WITHIN a load. Call it twice with
+ * the same label and the same number comes back, so a redraw triggered by
+ * moving some other slider does not reshuffle the data underneath the student
+ * mid-question. Only a refresh moves it. This matters because the draw
+ * functions are called on every control change: a raw Math.random() at the
+ * point of use would make the picture flicker to a new dataset on every drag.
+ *
+ * WHAT IS DELIBERATELY LEFT FIXED. A few synthetic datasets exist to display
+ * one specific structure -- a collider, a Simpson's-paradox reversal, a
+ * within-clade slope that flips sign across clades -- and a scored question
+ * asks the student to read that structure off the screen. Those generators
+ * impose their structure by construction rather than by luck, but they are
+ * called out at their definitions so the choice is visible rather than
+ * accidental. See PROJECT_NOTES.
+ * ========================================================================= */
+
+/* One 32-bit draw per page load. Everything else on the page hangs off it, so
+ * a single value is all that separates one student's copy from another's. */
+var PAGE_SEED_BASE = (function () {
+  try {
+    const b = new Uint32Array(1);
+    (window.crypto || window.msCrypto).getRandomValues(b);
+    if (b[0]) return b[0] >>> 0;
+  } catch (e) { /* no WebCrypto (file:// on an old browser) -- fall through */ }
+  return ((Date.now() ^ (Math.random() * 0xFFFFFFFF)) >>> 0) || 1;
+})();
+
+/* True only while randomizeSeedSliders() is synthesising input events, so the
+ * engagement counters can tell "the page seeded itself" from "the student
+ * moved a control". Without this every lesson would open claiming the student
+ * had already manipulated four panels. */
+var SEEDING_IN_PROGRESS = false;
+
+const __pageSeedCache = Object.create(null);
+
+/* A fresh integer in [min,max] every call. For "re-roll this now" buttons. */
+function randomSeed(min, max) {
+  min = (min == null) ? 1 : (min | 0);
+  max = (max == null) ? 999 : (max | 0);
+  return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+/* The page's seed for `label`: random across loads, fixed within one.
+ * Labels are hashed (FNV-1a over the base) rather than offset, so two stages
+ * on a page get unrelated draws instead of adjacent integers -- adjacent
+ * mulberry32 seeds produce visibly similar first values. */
+function pageSeed(label, min, max) {
+  const key = String(label);
+  if (key in __pageSeedCache) return __pageSeedCache[key];
+  min = (min == null) ? 1 : (min | 0);
+  max = (max == null) ? 999 : (max | 0);
+  let h = PAGE_SEED_BASE >>> 0;
+  for (let i = 0; i < key.length; i++) {
+    h = Math.imul(h ^ key.charCodeAt(i), 0x01000193) >>> 0;
+  }
+  h = Math.imul(h ^ (h >>> 15), 0x2545F491) >>> 0;
+  h = (h ^ (h >>> 13)) >>> 0;
+  const v = min + (h % (max - min + 1));
+  __pageSeedCache[key] = v;
+  return v;
+}
+
+/* Paint a seed value into the three places a stage can show it: the range
+ * input, its <output>, and the `set.seed(...)` number in the R listing beside
+ * the plot. All three are optional -- a stage with no slider still gets its
+ * code listing updated, and a stage with no listing is left alone. Returns the
+ * value so it can be used inline: `sA.seed = paintSeed("A", pageSeed("l8A"))`.
+ */
+function paintSeed(prefix, value) {
+  const v = String(value);
+  const inp = document.getElementById(prefix + "_seedIn");
+  if (inp) inp.value = v;
+  const out = document.getElementById(prefix + "_seedOut");
+  if (out) out.textContent = v;
+  const code = document.getElementById("c" + prefix + "_seed");
+  if (code) code.textContent = v;
+  return value;
+}
+
+/* Randomise every stage that already exposes a seed slider.
+ *
+ * The lesson's own `input` handler owns the state object, the <output>, the
+ * code listing and the redraw, so the cheapest correct move is to set the
+ * slider and fire the event the lesson is already listening for. That is why
+ * no slider-driven stage needs a per-lesson edit for this.
+ */
+function randomizeSeedSliders(root) {
+  const scope = root || document;
+  const inputs = scope.querySelectorAll('input[type="range"][id$="_seedIn"]');
+  SEEDING_IN_PROGRESS = true;
+  try {
+    inputs.forEach(inp => {
+      const prefix = inp.id.slice(0, -"_seedIn".length);
+      const min = (inp.min === "" || inp.min == null) ? 1 : +inp.min;
+      const max = (inp.max === "" || inp.max == null) ? 999 : +inp.max;
+      const v = pageSeed("slider:" + prefix, min, max);
+      inp.value = String(v);
+      try {
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch (e) {
+        // A stage whose draw throws before its data has loaded must not stop
+        // the remaining stages from being seeded.
+        console.warn("seeding: " + inp.id + " handler threw", e);
+      }
+      // Belt and braces: a handler that updates state but not the readout
+      // still ends up displaying the seed it actually used.
+      paintSeed(prefix, v);
+    });
+  } finally {
+    SEEDING_IN_PROGRESS = false;
+  }
+  // Those handlers highlight the seed line in the listing as a side effect of
+  // "the student touched this control". Nobody touched it. Clear the marks.
+  scope.querySelectorAll("pre.code .line.hi").forEach(l => l.classList.remove("hi"));
+}
+
+/* Inline lesson scripts run before DOMContentLoaded, so by the time this fires
+ * every stage has defined its state and wired its handlers. */
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", function () { randomizeSeedSliders(); });
+}
+
+/* A page seed whose DATA passes a test.
+ *
+ * Most seeds can be drawn blind: a drift walk is a drift walk whichever way it
+ * goes, and that it goes differently for different students is the point. A few
+ * datasets are not like that. Lesson 6's cinema data and lesson 19's worms are
+ * built to display one specific reversal, and a scored question asks the student
+ * to read that reversal off the screen. Measured over 20,000 seeds, lesson 6's
+ * pooled-vs-within reversal survives 89% of draws and lesson 19's survives 97% —
+ * so seeding those blind would hand roughly one student in nine a picture that
+ * does not show the thing they are being asked to see, and mark them wrong for
+ * reporting what was actually on it.
+ *
+ * Pinning the seed fixes that and reintroduces the shared-answer problem. So:
+ * draw at random, build the data, check the property the lesson depends on, and
+ * draw again if it is missing. Every student still gets their own dataset; every
+ * student's dataset still shows the phenomenon.
+ *
+ *   const seed = seedSatisfying("l6dv", s => hasReversal(buildDV(s)));
+ *
+ * `test` must be cheap and must not mutate anything — it runs up to `tries`
+ * times. If nothing passes (a test that is wrong, or far stricter than the
+ * caller thought), the first candidate is returned and a warning is logged: a
+ * page that renders a merely-unlucky dataset beats a page that hangs or throws.
+ */
+function seedSatisfying(label, test, tries, min, max) {
+  tries = tries || 200;
+  let first = null;
+  for (let i = 0; i < tries; i++) {
+    const s = pageSeed(label + "#" + i, min, max);
+    if (first === null) first = s;
+    let ok = false;
+    try { ok = !!test(s); }
+    catch (e) { console.warn("seedSatisfying(" + label + "): test threw", e); return first; }
+    if (ok) return s;
+  }
+  console.warn("seedSatisfying(" + label + "): no seed passed in " + tries +
+               " tries; using the first draw. Is the test too strict?");
+  return first;
+}
