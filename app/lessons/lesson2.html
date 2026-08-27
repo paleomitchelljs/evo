@@ -376,12 +376,11 @@
           &nbsp;|&nbsp;
           <span class="label">best possible here:</span> <span id="E_ceiling">—</span> of 24
         </div>
-        <p class="q">If you get the group wrong, on average, 1 in 20 times — what
-        proportion of the time are you getting the group wrong?</p>
+        <p class="q">If you get the group right 19 out of 20 times, what
+        proportion of the time are you correctly telling the groups apart?</p>
         <label><input type="radio" name="qE1" value="0.05" /> 0.05</label>
-        <label><input type="radio" name="qE1" value="0.1" /> 0.1</label>
-        <label><input type="radio" name="qE1" value="0.2" /> 0.2</label>
         <label><input type="radio" name="qE1" value="0.5" /> 0.5</label>
+        <label><input type="radio" name="qE1" value="0.95" /> 0.95</label>
         <button id="submitE1" disabled>Submit</button>
       </div>
 
@@ -394,9 +393,17 @@
         <button id="submitE2" disabled>Submit</button>
       </div>
 
+      <div class="panel prediction single-q" id="postE3" style="display:none;">
+        <p class="q">If you only correctly tell the groups apart 75% of the time
+        with 24 guesses, does that mean:</p>
+        <label><input type="radio" name="qE3" value="nodiff" /> The two groups aren't different.</label>
+        <label><input type="radio" name="qE3" value="tooFew" /> The two groups aren't clearly different when checking only 24 times.</label>
+        <button id="submitE3" disabled>Submit</button>
+      </div>
+
       <div class="panel" id="E_wrap" style="display:none;">
         <div class="stage-outcome" id="E_wrapText"></div>
-        <button id="E_finish" style="padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Get my completion code</button>
+        <p style="margin:0;font-size:13.5px;"><strong>Completion code available at the bottom. Please copy &amp; submit it.</strong></p>
       </div>
 
       <div class="panel">
@@ -910,43 +917,56 @@ const drillE = makeDrill({
   }
 });
 
-/* The two closing questions. The second is the reward for the first: get the
-   arithmetic right and the name of the quantity is handed over. A student who
-   misses the first still sees the term — they just do not score it, so bit 8
-   stays 0 for them by design rather than by omission. */
+/* The three closing questions.
+   Q1 is arithmetic: 19 of 20 is 0.95, and the 0.05 left over is the half that
+   the next question names. Q2 is the reward for getting Q1 right — a student
+   who misses Q1 is still shown the term, they just do not score it, so bit 8
+   is 0 for them by design rather than by omission.
+   Q3 is asked of everyone regardless of Q1 and Q2. It is about how much 24
+   calls can settle, not about vocabulary, so gating it behind the jargon
+   question would punish the wrong thing. Both routes converge on it. */
 function wireFinalQuestions() {
   const q1 = document.querySelectorAll('input[name="qE1"]');
   const q2 = document.querySelectorAll('input[name="qE2"]');
+  const q3 = document.querySelectorAll('input[name="qE3"]');
   const b1 = document.getElementById("submitE1");
   const b2 = document.getElementById("submitE2");
+  const b3 = document.getElementById("submitE3");
   const wrap = document.getElementById("E_wrap");
   const wrapText = document.getElementById("E_wrapText");
 
   q1.forEach(r => r.addEventListener("change", () => { b1.disabled = false; }));
   q2.forEach(r => r.addEventListener("change", () => { b2.disabled = false; }));
+  q3.forEach(r => r.addEventListener("change", () => { b3.disabled = false; }));
+
+  function note(panelId, text) {
+    const d = document.createElement("div");
+    d.className = "prediction-done";
+    d.textContent = text;
+    document.getElementById(panelId).appendChild(d);
+  }
+  function openQ3() {
+    document.getElementById("postE3").style.display = "block";
+    document.getElementById("postE3").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   b1.addEventListener("click", () => {
     const pick = document.querySelector('input[name="qE1"]:checked');
     if (!pick) return;
-    const ok = pick.value === "0.05";
+    const ok = pick.value === "0.95";
     if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(7, ok);
     b1.disabled = true;
     q1.forEach(r => { r.disabled = true; });
-    const note = document.createElement("div");
-    note.className = "prediction-done";
-    note.textContent = ok
-      ? "Yes — 1 in 20 is 0.05."
-      : "Not quite: 1 in 20 is 1 ÷ 20 = 0.05.";
-    document.getElementById("postE").appendChild(note);
+    note("postE", ok
+      ? "Yes — 19 out of 20 is 0.95. The 0.05 left over is how often you are wrong."
+      : "Not quite: 19 out of 20 is 19 ÷ 20 = 0.95. The 0.05 left over is how often you are wrong.");
     if (ok) {
       document.getElementById("postE2").style.display = "block";
       document.getElementById("postE2").scrollIntoView({ behavior: "smooth", block: "center" });
     } else {
-      wrapText.textContent =
-        "That proportion — how often you would be wrong — is what a p-value " +
-        "reports. On this pair of crowds it sits near 0.5, which is why the " +
-        "difference you can see is a difference you cannot act on.";
-      wrap.style.display = "block";
+      // The term still gets handed over; it just does not get scored.
+      note("postE", "That leftover 0.05 — how often you would be wrong — is what a p-value reports.");
+      openQ3();
     }
   });
 
@@ -957,18 +977,31 @@ function wireFinalQuestions() {
     if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, ok);
     b2.disabled = true;
     q2.forEach(r => { r.disabled = true; });
-    wrapText.textContent = ok
-      ? "That is the p-value: the proportion of the time you would be wrong. " +
-        "On these two crowds it sits near 0.5 — the difference you can see is " +
-        "a difference you cannot act on."
-      : "It is the p-value. R-squared and the intercept describe a fitted line; " +
-        "neither counts how often a call comes out wrong.";
-    wrap.style.display = "block";
-    wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+    note("postE2", ok
+      ? "Yes — that is the p-value."
+      : "It is the p-value. R-squared and the intercept describe a fitted line; neither counts how often a call comes out wrong.");
+    openQ3();
   });
 
-  document.getElementById("E_finish").addEventListener("click", () => {
-    document.getElementById("E_finish").disabled = true;
+  b3.addEventListener("click", () => {
+    const pick = document.querySelector('input[name="qE3"]:checked');
+    if (!pick) return;
+    const ok = pick.value === "tooFew";
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(9, ok);
+    b3.disabled = true;
+    q3.forEach(r => { r.disabled = true; });
+    wrapText.textContent = ok
+      ? "Right. These two crowds really do sit in different places — you can see " +
+        "it in the shapes. Twenty-four calls is simply not enough to show it. " +
+        "\u201cI could not tell them apart\u201d and \u201cthey are the same\u201d are " +
+        "different claims, and only the first one is yours to make here."
+      : "Careful — the two crowds really are in different places, and you can see " +
+        "it in the shapes on the left. What 24 calls cannot do is demonstrate it. " +
+        "\u201cI could not tell them apart\u201d and \u201cthey are the same\u201d are " +
+        "different claims, and only the first one is yours to make here.";
+    wrap.style.display = "block";
+    wrap.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Nothing left to answer, so mint the code now rather than behind a button.
     if (typeof Score !== "undefined" && Score.finish) Score.finish();
   });
 }
@@ -1003,15 +1036,17 @@ loadData();
      4    Stage C: their own call-rate estimate landed within two
      5    Stage D: same
      6    the closing comparison, graded against their own two rounds
-     7    Stage E: 1 in 20 as a proportion
-     8    Stage E: the name for that proportion. Only asked of a student who
-          got bit 7 right, so it is 0 for anyone who did not — intended, and
+     7    Stage E: 19 out of 20 as a proportion
+     8    Stage E: the name for the leftover proportion. Only asked of a student
+          who got bit 7 right, so it is 0 for anyone who did not — intended, and
           the reason it is written down here.
-   Version bumped 4 → 5: two new bits, so old codes must not decode against
-   the new layout.
+     9    Stage E: 75% right on 24 calls means "not clearly different on 24
+          calls", not "not different". Asked of everyone, either route.
+   Version bumped 5 → 6: another bit and a changed answer on bit 7, so v5 codes
+   must not decode against this layout.
    ==================================================================== */
 Score.init({
-  moduleId: "lesson2", version: 5, scaffold: 9,
+  moduleId: "lesson2", version: 6, scaffold: 10,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
   onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
 });
