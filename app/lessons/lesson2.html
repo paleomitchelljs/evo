@@ -384,15 +384,6 @@
         <button id="submitE1" disabled>Submit</button>
       </div>
 
-      <div class="panel prediction single-q" id="postE2" style="display:none;">
-        <p class="q">What is the term for the expected proportion of miscalls in
-        data like these?</p>
-        <label><input type="radio" name="qE2" value="p" /> p-value</label>
-        <label><input type="radio" name="qE2" value="r2" /> R-squared</label>
-        <label><input type="radio" name="qE2" value="int" /> intercept</label>
-        <button id="submitE2" disabled>Submit</button>
-      </div>
-
       <div class="panel prediction single-q" id="postE3" style="display:none;">
         <p class="q">If you only correctly tell the groups apart 75% of the time
         with 20 guesses, does that mean:</p>
@@ -927,26 +918,24 @@ const drillE = makeDrill({
   }
 });
 
-/* The three closing questions.
-   Q1 is arithmetic: 19 of 20 is 0.95, and the 0.05 left over is the half that
-   the next question names. Q2 is the reward for getting Q1 right — a student
-   who misses Q1 is still shown the term, they just do not score it, so bit 8
-   is 0 for them by design rather than by omission.
-   Q3 is asked of everyone regardless of Q1 and Q2. It is about how much 20
-   calls can settle, not about vocabulary, so gating it behind the jargon
-   question would punish the wrong thing. Both routes converge on it. */
+/* The two closing questions. Neither names anything.
+   Q1 is arithmetic on the student's own hit rate: 19 of 20 is 0.95, and the
+   0.05 left over is how often you are wrong. That leftover is deliberately
+   left unnamed — the quantity it resembles is not the one the stage measures,
+   and the intuition is worth more here than the vocabulary. The term arrives
+   later, at the unit that earns it.
+   Q2 is the point of the stage, and is asked whichever way Q1 went: 15 of 20
+   does not settle whether these two crowds differ, and the two crowds plainly
+   do differ, as the shapes on the left show. */
 function wireFinalQuestions() {
   const q1 = document.querySelectorAll('input[name="qE1"]');
-  const q2 = document.querySelectorAll('input[name="qE2"]');
   const q3 = document.querySelectorAll('input[name="qE3"]');
   const b1 = document.getElementById("submitE1");
-  const b2 = document.getElementById("submitE2");
   const b3 = document.getElementById("submitE3");
   const wrap = document.getElementById("E_wrap");
   const wrapText = document.getElementById("E_wrapText");
 
   q1.forEach(r => r.addEventListener("change", () => { b1.disabled = false; }));
-  q2.forEach(r => r.addEventListener("change", () => { b2.disabled = false; }));
   q3.forEach(r => r.addEventListener("change", () => { b3.disabled = false; }));
 
   function note(panelId, text) {
@@ -954,10 +943,6 @@ function wireFinalQuestions() {
     d.className = "prediction-done";
     d.textContent = text;
     document.getElementById(panelId).appendChild(d);
-  }
-  function openQ3() {
-    document.getElementById("postE3").style.display = "block";
-    document.getElementById("postE3").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   b1.addEventListener("click", () => {
@@ -970,34 +955,15 @@ function wireFinalQuestions() {
     note("postE", ok
       ? "Yes — 19 out of 20 is 0.95. The 0.05 left over is how often you are wrong."
       : "Not quite: 19 out of 20 is 19 ÷ 20 = 0.95. The 0.05 left over is how often you are wrong.");
-    if (ok) {
-      document.getElementById("postE2").style.display = "block";
-      document.getElementById("postE2").scrollIntoView({ behavior: "smooth", block: "center" });
-    } else {
-      // The term still gets handed over; it just does not get scored.
-      note("postE", "That leftover 0.05 — how often you would be wrong — is what a p-value reports.");
-      openQ3();
-    }
-  });
-
-  b2.addEventListener("click", () => {
-    const pick = document.querySelector('input[name="qE2"]:checked');
-    if (!pick) return;
-    const ok = pick.value === "p";
-    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, ok);
-    b2.disabled = true;
-    q2.forEach(r => { r.disabled = true; });
-    note("postE2", ok
-      ? "Yes — that is the p-value."
-      : "It is the p-value. R-squared and the intercept describe a fitted line; neither counts how often a call comes out wrong.");
-    openQ3();
+    document.getElementById("postE3").style.display = "block";
+    document.getElementById("postE3").scrollIntoView({ behavior: "smooth", block: "center" });
   });
 
   b3.addEventListener("click", () => {
     const pick = document.querySelector('input[name="qE3"]:checked');
     if (!pick) return;
     const ok = pick.value === "tooFew";
-    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(9, ok);
+    if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(8, ok);
     b3.disabled = true;
     q3.forEach(r => { r.disabled = true; });
     // Same closing line either way — it is the point of the stage, not a reward
@@ -1046,16 +1012,14 @@ loadData();
      5    Stage D: same
      6    the closing comparison, graded against their own two rounds
      7    Stage E: 19 out of 20 as a proportion
-     8    Stage E: the name for the leftover proportion. Only asked of a student
-          who got bit 7 right, so it is 0 for anyone who did not — intended, and
-          the reason it is written down here.
-     9    Stage E: 75% right on 20 calls means "not clearly different on 20
+     8    Stage E: 75% right on 20 calls means "not clearly different on 20
           calls", not "not different". Asked of everyone, either route.
-   Version bumped 5 → 6: another bit and a changed answer on bit 7, so v5 codes
-   must not decode against this layout.
+   Version bumped 6 → 7: the jargon question that used to hold bit 8 is gone and
+   the last question moved down into its slot, so v6 codes must not decode
+   against this layout.
    ==================================================================== */
 Score.init({
-  moduleId: "lesson2", version: 6, scaffold: 10,
+  moduleId: "lesson2", version: 7, scaffold: 9,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
   onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
 });
