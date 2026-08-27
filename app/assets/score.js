@@ -343,7 +343,7 @@
       '<div class="score-card score-name-card">' +
         '<h3 class="score-card-h">Enter your name</h3>' +
         '<div class="score-name-row">' +
-          '<input id="score-name-input" type="text" autocomplete="off" placeholder="full name" />' +
+          '<input id="score-name-input" type="text" autocomplete="off" placeholder="first &amp; last name" />' +
           '<button id="score-name-confirm" type="button">Confirm</button>' +
         '</div>' +
         '<p id="score-name-status" class="score-name-status"></p>' +
