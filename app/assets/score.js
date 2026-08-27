@@ -29,7 +29,12 @@
 // right/wrong bits, elapsed seconds, per-stage manipulation counts — is packed
 // into one payload string:
 //
-//   NAMETOKEN | PRETESTBITS | SCAFFOLDBITS | POSTTESTBITS | ELAPSEDSEC | MANIP
+//   NAMETOKEN | PRETESTBITS | SCAFFOLDBITS | POSTTESTBITS | ELAPSEDSEC | MANIP | ACTIVESEC
+//
+// ELAPSEDSEC is wall clock from name-confirm to finish(); ACTIVESEC is the same
+// span with every pause longer than IDLE_GAP_MS discarded, so a tab left open
+// over lunch inflates the first and not the second. Codes emitted before
+// ACTIVESEC existed carry six fields; the decoder accepts both.
 //
 // which is XOR'd with a keystream derived from (salt | module | version) and
 // base64url-encoded, so a student staring at the code cannot read their own
@@ -133,6 +138,11 @@
     // "how fast they worked"). Persisted so a reload measures from the true
     // first start, not the reload.
     startTime: null,
+    // Attention-weighted counterpart to startTime: milliseconds accumulated
+    // between consecutive signs of life, with any gap longer than IDLE_GAP_MS
+    // thrown away. Persisted, so it survives reloads the same way.
+    activeMs: 0,
+    lastTick: null,
     mountFinalCode: null,
     onReady: null,
     finished: false,
@@ -148,7 +158,8 @@
     try {
       localStorage.setItem(storageKey(), JSON.stringify({
         bits: state.bits, answered: state.answered, finished: state.finished,
-        manipulations: state.manipulations, startedAt: state.startTime
+        manipulations: state.manipulations, startedAt: state.startTime,
+        activeMs: state.activeMs
       }));
     } catch (e) { /* storage full or disabled — fail silent */ }
   }
@@ -177,6 +188,9 @@
       }
       if (typeof obj.startedAt === "number" && isFinite(obj.startedAt)) {
         state.startTime = obj.startedAt;
+      }
+      if (typeof obj.activeMs === "number" && isFinite(obj.activeMs) && obj.activeMs >= 0) {
+        state.activeMs = obj.activeMs;
       }
       state.finished = !!obj.finished;
     } catch (e) { /* parse error — ignore */ }
@@ -240,6 +254,54 @@
   function clearCarry() {
     if (!state.studentName) return;
     try { localStorage.removeItem(carryKey()); } catch (e) { /* ignore */ }
+  }
+
+  // ---- Attention clock ------------------------------------------------------
+  // Wall-clock elapsed is an upper bound on effort and a bad one: a student who
+  // opens the lesson, walks away, and comes back after dinner reads as three
+  // hours of work. So alongside it we accumulate *active* time — the sum of the
+  // gaps between consecutive signs of life, discarding any gap longer than
+  // IDLE_GAP_MS. Two minutes of genuine staring at a chart still counts; a
+  // lunch break does not.
+  //
+  // "Signs of life" are deliberately broad (pointer, key, scroll, tab-focus)
+  // rather than only Score's own record/bump calls, because reading is work
+  // too and a student can spend a legitimate stretch on a stage without
+  // touching a control. The floor is honest either way: active time can never
+  // exceed wall-clock time, and both travel in the code so a suspicious ratio
+  // is visible to the instructor rather than hidden.
+  const IDLE_GAP_MS = 120 * 1000;
+  let activityBound = false;
+
+  function tickActivity() {
+    if (!state.startTime) return;         // clock has not started yet
+    const now = Date.now();
+    if (state.lastTick != null) {
+      const gap = now - state.lastTick;
+      if (gap > 0 && gap <= IDLE_GAP_MS) state.activeMs += gap;
+    }
+    state.lastTick = now;
+  }
+
+  function bindActivity() {
+    if (activityBound || typeof document === "undefined") return;
+    activityBound = true;
+    const evts = ["pointerdown", "keydown", "wheel", "input", "change", "scroll"];
+    evts.forEach(e => document.addEventListener(e, tickActivity, { passive: true, capture: true }));
+    // Returning to the tab restarts the clock without crediting the time away:
+    // reset lastTick so the gap spanning the absence is never counted, and
+    // leaving persists what has accrued so far.
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") { tickActivity(); state.lastTick = null; save(); }
+      else { state.lastTick = Date.now(); }
+    });
+  }
+
+  // Seconds of attention, floored at 0 and never above wall-clock elapsed.
+  function activeSeconds() {
+    if (!state.startTime) return 0;
+    const ms = Math.max(0, state.activeMs);
+    return Math.min(elapsedSeconds(), Math.round(ms / 1000));
   }
 
   function init(opts) {
@@ -307,6 +369,8 @@
         // Start the clock on first confirm; a resumed session keeps the
         // original start restored by load() above.
         if (!state.startTime) { state.startTime = Date.now(); save(); }
+        state.lastTick = Date.now();
+        bindActivity();
         stat.textContent = "Confirmed.";
         if (state.onReady) state.onReady(state.passcode);
       } catch (e) {
@@ -328,6 +392,7 @@
     }
     state.bits[group][idx] = bit ? 1 : 0;
     state.answered[group][idx] = true;
+    tickActivity();
     save();
   }
 
@@ -353,8 +418,14 @@
   // input handlers, simulate/reseed buttons, drag-to-predict canvases, etc.
   function bumpManipulation(key) {
     if (!key) return;
-    const k = String(key);
+    // The wire format packs the map as KEYCOUNT pairs (`A12B8`), so a key
+    // containing a digit would make the token ambiguous on the way back.
+    // Strip to letters and drop the call rather than emit a code the
+    // instructor's decoder will mis-parse.
+    const k = String(key).replace(/[^A-Za-z]/g, "");
+    if (!k) { console.warn("Score: manipulation key has no letters:", key); return; }
     state.manipulations[k] = (state.manipulations[k] | 0) + 1;
+    tickActivity();
     save();
     renderManipTracker();
   }
@@ -408,8 +479,9 @@
 
   // ---- Elapsed working time -------------------------------------------------
   // Wall-clock seconds between name-confirm and finish(). This is an upper
-  // bound on effort (a student who leaves the tab open inflates it); the
-  // per-stage manipulation counts travel alongside as an engagement cross-check.
+  // bound on effort (a student who leaves the tab open inflates it);
+  // activeSeconds() above is the idle-trimmed lower bound, and the per-stage
+  // manipulation counts travel alongside both as an engagement cross-check.
   function elapsedSeconds() {
     if (!state.startTime) return 0;
     return Math.max(0, Math.round((Date.now() - state.startTime) / 1000));
@@ -463,7 +535,8 @@
       state.bits.scaffold.join(""),
       state.bits.posttest.join(""),
       String(elapsedSeconds()),
-      manipulationsToken(state.manipulations)
+      manipulationsToken(state.manipulations),
+      String(activeSeconds())
     ].join("|");
   }
 
@@ -500,18 +573,25 @@
     catch (e) { return null; }
     const f = payload.split("|");
     const base = { moduleId: m[1], version: parseInt(m[2], 10), raw: code.trim() };
-    if (f.length !== 6) {
+    // Six fields is the original layout; seven adds active seconds. Anything
+    // else means the payload did not decrypt to a record at all.
+    if (f.length !== 6 && f.length !== 7) {
       return Object.assign(base, { ok: false, macOk: false, reason: "wrong salt or corrupt code" });
     }
     const expectMac = await macHex(payload, salt, modVer);
-    const [nameTok, pre, sc, po, elapsed, manip] = f;
+    const [nameTok, pre, sc, po, elapsed, manip, active] = f;
     const bitsOk = /^[01]*$/.test(pre) && /^[01]*$/.test(sc) && /^[01]*$/.test(po);
+    const elapsedSec = parseInt(elapsed, 10) || 0;
     return Object.assign(base, {
       ok: expectMac === mac && bitsOk,
       macOk: expectMac === mac,
       nameToken: nameTok,
       pretestBits: pre, scaffoldBits: sc, posttestBits: po,
-      elapsedSec: parseInt(elapsed, 10) || 0,
+      elapsedSec: elapsedSec,
+      // null, not 0, for the older six-field codes: "this code predates the
+      // attention clock" and "this student was never active" must not print
+      // the same way in the instructor's tools.
+      activeSec: (f.length === 7) ? (parseInt(active, 10) || 0) : null,
       manipulationsToken: manip,
       manipulations: parseManipulationsToken(manip)
     });
@@ -635,7 +715,7 @@
     isAnswered, allAnswered, getBit,
     carry, recall, recallInfo, clearCarry,   // cross-lesson carryover
     bumpManipulation, getManipulations, manipulationCount,
-    scoring, nameToken, elapsedSeconds,
+    scoring, nameToken, elapsedSeconds, activeSeconds,
     decodeCode,            // v3 verifier entry point
     DEFAULT_SALT,          // so instructor tools can prefill the salt field
     hashName, parseCode,   // legacy dash-format only

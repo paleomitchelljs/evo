@@ -160,9 +160,11 @@ JS_GLOBALS = {
 SCORE_EXPORTS = {
     "Score","init","recordPretest","recordCheckpoint","recordPosttest","finish","isAnswered",
     "allAnswered","getBit","carry","recall","recallInfo","clearCarry","bumpManipulation",
-    "getManipulations","manipulationCount","scoring","nameToken","elapsedSeconds","decodeCode",
-    "hashName","parseCode",
+    "getManipulations","manipulationCount","scoring","nameToken","elapsedSeconds","activeSeconds",
+    "decodeCode","hashName","parseCode",
 }
+# app/assets/lock.js, included by every student-facing page.
+LOCK_EXPORTS = {"Lock", "load", "parse", "pageKey", "isPreview"}
 
 
 def _sim_exports():
@@ -214,6 +216,8 @@ def undefined_calls(raw_html):
         known |= _sim_exports()
     if re.search(r'<script[^>]*\bsrc="[^"]*score\.js"', raw_html):
         known |= SCORE_EXPORTS
+    if re.search(r'<script[^>]*\bsrc="[^"]*lock\.js"', raw_html):
+        known |= LOCK_EXPORTS
     called = set(re.findall(r"(?<![.\w$])([A-Za-z_$][\w$]*)\s*\(", js))
     return sorted(c for c in called - known if not c.startswith("_"))
 
@@ -309,6 +313,67 @@ def check_file(path, ledger, rows):
     return fails, warns, (uid, seq)
 
 
+def lock_key(path):
+    """The LOCKS.txt key for a page: its filename without .html, with the
+    descriptive tail trimmed off a scaffold (s04_fixation_probability -> s04)."""
+    stem = os.path.basename(path)[:-len(".html")]
+    m = re.match(r"^(s\d+)_", stem)
+    return m.group(1) if m else stem
+
+
+def check_locks():
+    """Every shipped page needs a LOCKS.txt row and the lock.js include.
+
+    The gate fails open by design -- a page with no row is treated as open --
+    which is the right runtime behaviour and exactly why it needs a check here.
+    A lesson silently missing from the release file would look released, stay
+    released, and never announce itself.
+    """
+    fails, warns = [], []
+    locks_path = os.path.join(ROOT, "LOCKS.txt")
+    if not os.path.exists(locks_path):
+        return ["LOCKS.txt is missing -- the release gate has nothing to read"], []
+
+    keys, dupes = set(), []
+    for line in open(locks_path, encoding="utf-8"):
+        s = line.strip()
+        if not s or s.startswith("#") or re.match(r"^display\s*:", s, re.I):
+            continue
+        m = re.match(r"^([A-Za-z][\w-]*)\s+([oxOX])\b", s)
+        if not m:
+            warns.append(f"LOCKS.txt: cannot read line, ignored at runtime: {s[:60]}")
+            continue
+        if m.group(1) in keys:
+            dupes.append(m.group(1))
+        keys.add(m.group(1))
+    for d in sorted(set(dupes)):
+        fails.append(f"LOCKS.txt: '{d}' listed twice -- the last row silently wins")
+
+    pages = (sorted(glob.glob(os.path.join(ROOT, "app", "lessons", "lesson*.html")))
+             + sorted(glob.glob(os.path.join(ROOT, "app", "scaffolds", "s*.html")))
+             + sorted(glob.glob(os.path.join(ROOT, "app", "interactives", "*.html"))))
+    for p in pages:
+        rel = os.path.relpath(p, ROOT)
+        if lock_key(p) not in keys:
+            fails.append(f"LOCKS.txt: no row for {rel} (key '{lock_key(p)}') "
+                         f"-- it can never be locked")
+        if 'src="../assets/lock.js"' not in open(p, encoding="utf-8").read():
+            fails.append(f"release gate: {rel} does not include lock.js "
+                         f"-- locking it would do nothing")
+
+    listed = {lock_key(p) for p in pages}
+    for k in sorted(keys - listed):
+        warns.append(f"LOCKS.txt: row '{k}' matches no page on disk")
+
+    index = os.path.join(ROOT, "index.html")
+    if os.path.exists(index):
+        raw = open(index, encoding="utf-8").read()
+        if "lock.js" not in raw:
+            fails.append("release gate: index.html does not load lock.js -- "
+                         "locked lessons would still be clickable on the landing page")
+    return fails, warns
+
+
 def main(argv):
     ledger = load_ledger()
     rows = term_rows(ledger)
@@ -338,6 +403,21 @@ def main(argv):
         for w in warns:
             print(f"       warn  {w}")
         total_fail += len(fails)
+
+    # The release gate covers every page, not just the lessons named on the
+    # command line, so it runs once at the end rather than per file.
+    lock_fails, lock_warns = check_locks()
+    if lock_fails or lock_warns:
+        print(f"\n{'FAIL' if lock_fails else 'warn'} release gate  "
+              f"({len(lock_fails)} fail, {len(lock_warns)} warn)")
+        for f in lock_fails:
+            print(f"       FAIL  {f}")
+        for w in lock_warns:
+            print(f"       warn  {w}")
+        total_fail += len(lock_fails)
+    else:
+        print("\nOK   release gate  (LOCKS.txt covers every page)")
+
     print(f"\n{len(paths)} lessons checked | {total_fail} hard failures")
     return 1 if total_fail else 0
 

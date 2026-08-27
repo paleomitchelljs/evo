@@ -44,6 +44,27 @@
   .card .sub { font-size: 14px; color: var(--muted); margin-top: 4px; }
   .card.outline { opacity: 0.72; border-style: dashed; }
   .card.outline:hover { border-color: var(--accent); }
+
+  /* Release gate. A locked card is inert: greyed, not clickable, and labelled
+     so the sequence of the term stays legible without the work being open. */
+  .card.locked {
+    opacity: 0.5;
+    background: repeating-linear-gradient(
+      -45deg, var(--panel), var(--panel) 8px, #f4f2ec 8px, #f4f2ec 16px);
+    pointer-events: none;
+    cursor: default;
+  }
+  .card.locked:hover { border-color: var(--rule); }
+  .card.locked .ttl { font-weight: 500; }
+  .card .lockmark {
+    float: right; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--muted); border: 1px solid var(--rule); border-radius: 10px;
+    padding: 1px 9px; background: var(--bg);
+  }
+  /* display: hide in LOCKS.txt */
+  .card.locked.gone { display: none; }
+  /* A heading whose whole section is hidden goes with it. */
+  h2.gone, h3.gone { display: none; }
   footer {
     max-width: 760px; margin: 72px auto 0; padding-top: 18px;
     border-top: 1px solid var(--rule); font-size: 13px; color: var(--muted);
@@ -151,7 +172,68 @@
 </main>
 
 <footer>
+  <p id="lock-note" style="margin:0 0 8px; display:none;"></p>
   Source: <a href="https://github.com/paleomitchelljs/evo">github.com/paleomitchelljs/evo</a>
 </footer>
+
+<script src="app/assets/lock.js"></script>
+<script>
+  // Apply LOCKS.txt to the cards. Each card's key is read off its href rather
+  // than duplicated into a data attribute, so adding a lesson to this page is
+  // still a one-line edit: app/lessons/lesson7.html -> "lesson7",
+  // app/scaffolds/s04_fixation_probability.html -> "s04".
+  function cardKey(href) {
+    const file = (href || "").split("/").pop().replace(/\.html?$/i, "");
+    const m = file.match(/^(s\d+)_/);
+    return m ? m[1] : file;
+  }
+
+  Lock.load().then(cfg => {
+    const cards = Array.from(document.querySelectorAll("main a.card"));
+    let lockedCount = 0;
+
+    cards.forEach(card => {
+      if (!cfg.locked[cardKey(card.getAttribute("href"))]) return;
+      lockedCount++;
+      card.classList.add("locked");
+      // Strip the href outright. Leaving it and relying on pointer-events
+      // would still let a keyboard or a middle-click through, and would leak
+      // the target in the status bar on hover.
+      card.removeAttribute("href");
+      card.setAttribute("aria-disabled", "true");
+      if (cfg.display === "hide") {
+        card.classList.add("gone");
+      } else {
+        const num = card.querySelector(".num");
+        if (num) num.insertAdjacentHTML("beforebegin",
+          '<span class="lockmark">opens later</span>');
+      }
+    });
+
+    // In hide mode a section can empty out completely; its heading should not
+    // sit there over nothing.
+    if (cfg.display === "hide") {
+      const heads = Array.from(document.querySelectorAll("main h2, main h3"));
+      heads.forEach(head => {
+        const between = [];
+        for (let el = head.nextElementSibling;
+             el && !/^H[23]$/.test(el.tagName);
+             el = el.nextElementSibling) between.push(el);
+        const inSection = between.filter(el => el.classList.contains("card"));
+        if (inSection.length && inSection.every(el => el.classList.contains("gone"))) {
+          head.classList.add("gone");
+          between.forEach(el => el.classList.add("gone"));
+        }
+      });
+    }
+
+    if (lockedCount && cfg.display !== "hide") {
+      const note = document.getElementById("lock-note");
+      note.textContent = lockedCount + " " +
+        (lockedCount === 1 ? "lesson opens" : "lessons open") + " later in the term.";
+      note.style.display = "block";
+    }
+  });
+</script>
 </body>
 </html>

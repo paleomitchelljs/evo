@@ -72,8 +72,12 @@ app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene droppin
                                — live on the index, UNSCORED, absent from the atlas
 app/assets/sim.js              canonical shared helpers (fallback; locals shadow it)
 app/assets/score.js            submission codes + cross-lesson carryover
+app/assets/lock.js             release gate: reads LOCKS.txt, hides a locked page
+LOCKS.txt                      one row per page, o = open / x = locked
 instructor/                    verify_code.html, aggregate.html
 scripts/check_lessons.py       THE LIVE GATE
+scripts/decode_codes.py        batch code decoder + class item analysis
+scripts/test_codec.py          pins the Python codec to the JavaScript one
 ```
 
 **Front-end architecture.** Every page loads `sim.js` then `score.js` then its own
@@ -85,6 +89,34 @@ of truth. Do not mass-strip the locals: drawAxes has 7 variants in the wild,
 makeFrame 4, rbinom 4, and reconciling them needs the picture checked one lesson
 at a time. `bumpExplore` is deliberately excluded — all 16 copies differ because
 each counts stage combinations specific to its lesson.
+
+**What a submission code carries (2026-08-25).** Name token, per-question bits for
+the three groups, wall-clock seconds, *active* seconds, and per-stage control-move
+counts — packed as
+`NAME|PRE|SCAFFOLD|POST|WALL|MANIP|ACTIVE`, XOR'd against a salt-derived keystream
+and tagged. Active seconds is the attention clock: consecutive signs of life
+summed, with any pause over two minutes discarded, so a tab left open all evening
+inflates the wall clock and not this. Codes minted before it existed carry six
+fields and decode with `activeSec: null` — the decoders distinguish *not measured*
+from *zero*, and must keep doing so.
+
+Neither clock is proof of thought, and nothing in the code can be. Attention still
+counts a student idly wiggling a slider; the per-stage move counts are the
+cross-check, and a ratio that looks wrong is a prompt to look, not a verdict.
+
+**Reading the lessons, not the students.** `decode_codes.py --items` and the item
+panel in `aggregate.html` give per-question class-wide pass rates plus pretest →
+posttest movement. This is the efficacy instrument: a checkpoint the whole class
+misses is either the hard-won move the lesson exists to teach or a question that
+does not say what it means, and only opening the item settles which.
+
+**The release gate.** `LOCKS.txt` + `app/assets/lock.js`. One row per page, `x`
+locked / `o` open; a locked page greys out on the index and refuses to render
+itself if URL-guessed. `?preview=1` bypasses it. Fails *open* on any error, by
+design — a fetch hiccup must never strand a student mid-homework — which is
+exactly why `check_lessons.py` fails when a page has no row: a page missing from
+the file would look released forever and never say so. Client-side, therefore a
+curtain and not a vault; nothing that must stay unseen belongs in a public repo.
 
 **Cross-lesson carryover.** `Score.carry(key, value)` / `Score.recall(key)` /
 `Score.recallInfo(key)` persist to a course-wide, per-student namespace
@@ -293,6 +325,23 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 - Anolis ecomorph counting is built three times: lesson18 D, lesson24 D, s19.
 - `docs/LESSON_ATLAS.md` claims to describe every lesson and omits all 24 scaffolds
   and the Descent explorer.
+- **Eight lessons score a single bit.** `lesson20`–`lesson25`, `lesson30` and
+  `lesson34` each declare `scaffold: 1` and record one checkpoint. Their codes
+  decode correctly, but one bit per student is a coin flip: not enough to grade a
+  student on, and not enough for the item analysis to say anything about the
+  lesson. 21–25 still carry three TODO stages each, so this is expected there;
+  `lesson20`, `lesson30` and `lesson34` are built out and still score once. Adding
+  checkpoints is lesson-design work, not wiring — the slots have to attach to
+  predictions worth scoring.
+- **`index.html` undersells Arc 4/5.** Units 4 and 5 are still captioned
+  "outlines (text ready, simulators pending)". `lesson20` (5 canvases, no TODOs),
+  `lesson26`, `lesson30`, `lesson31` and `lesson34` are built; only 21–25 still
+  match the caption.
+- `s01`–`s20` score the bookends only (`scaffold: 0`); the five rounds carry no
+  answer bits. **Partly addressed 2026-08-25** — each round now bumps an `R`
+  engagement count and each control move a `G`, so a code shows how much of the
+  drill was actually worked. Whether the round guesses should also be *scored* is
+  still open; the bookend pattern was a deliberate choice.
 
 ---
 

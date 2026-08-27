@@ -56,6 +56,13 @@
     margin: 6px 0 0 0; white-space: pre-wrap;
   }
   code.inl { font-family: ui-monospace, Menlo, monospace; background:#f1efe9; padding:1px 4px; border-radius:3px; }
+  .bitrow { font-family: ui-monospace, Menlo, monospace; display:flex; gap:3px; flex-wrap:wrap; align-items:center; }
+  .bit { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:3px; font-size:12px; font-weight:600; }
+  .bit.y { background:#d0e1ed; color:#1d5674; border:1px solid #a8c7db; }
+  .bit.n { background:#f4d3d7; color:#8c2b37; border:1px solid #e0aeb5; }
+  .bitnum { font-size:10px; color:#b9b7b0; margin-left:2px; }
+  .note-flag { display:inline-block; background:#f4f0dd; border:1px solid #caa04a; color:#5c4a1c; border-radius:3px; padding:1px 7px; font-size:12px; margin-right:5px; }
+  .subtle { color:#6b6b68; font-size:12.5px; }
 </style>
 </head>
 <body>
@@ -63,11 +70,14 @@
 <header>
   <h1>Score code verifier</h1>
   <p>Instructor tool — runs entirely in the browser, nothing is sent anywhere.
-  Paste one student code and the salt you set in that module's <code class="inl">Score.init</code>.
-  The code is opaque to students; this tool decodes the name, the per-question
-  right/wrong bits, the elapsed working time, and the per-stage activity counts,
-  and confirms the tamper tag. For a whole class at once, use
-  <code class="inl">aggregate.html</code>.</p>
+  Paste one student code; the salt is pre-filled from <code class="inl">score.js</code>
+  and only needs changing if that module set its own. The code is opaque to
+  students; this tool decodes the name, which questions they got right, how long
+  they actually worked, and how many times they moved a control on each stage,
+  and confirms the tamper tag. For a whole class at once use
+  <code class="inl">aggregate.html</code>, or
+  <code class="inl">python3 scripts/decode_codes.py -f codes.txt --items</code>
+  from the terminal.</p>
 </header>
 
 <main>
@@ -94,12 +104,22 @@
   <p style="margin:0; font-size:13px; color:#6b6b68;">
     The cleartext prefix <code class="inl">moduleNvVERSION</code> tells you which
     lesson and scoring revision the code is for. Everything after the first
-    <code class="inl">.</code> is the student's name, their right/wrong bits, the
-    elapsed seconds, and the per-stage manipulation counts, XOR-encrypted with a
-    keystream derived from your salt and base64url-encoded, followed by a 6-hex
-    tamper tag. A <strong>VALID</strong> verdict means the tag matches — the code
-    decoded cleanly and was not edited. A <strong>salt mismatch</strong> verdict
-    means the salt you typed is not the one the module used.
+    <code class="inl">.</code> is the student's name, their right/wrong bits, two
+    clocks, and the per-stage manipulation counts, XOR-encrypted with a keystream
+    derived from your salt and base64url-encoded, followed by a 6-hex tamper tag.
+    A <strong>VALID</strong> verdict means the tag matches — the code decoded
+    cleanly and was not edited. A <strong>salt mismatch</strong> verdict means the
+    salt you typed is not the one the module used.
+  </p>
+  <p style="margin:10px 0 0; font-size:13px; color:#6b6b68;">
+    <strong>The two clocks.</strong> <em>Wall clock</em> runs from the moment the
+    student confirms their name to the moment they submit, so a tab left open
+    over dinner reads as hours. <em>Attention</em> adds up only the intervals
+    between consecutive signs of life — clicks, keys, scrolling, returning to the
+    tab — discarding any pause longer than two minutes. Neither is proof of
+    thought: attention still counts a student who idly wiggles a slider, and the
+    per-stage move counts are the cross-check. Codes issued before this was added
+    show attention as <em>not measured</em>.
   </p>
 </section>
 
@@ -118,9 +138,44 @@
   }
   const right = (bits) => (bits || "").split("").filter(b => b === "1").length;
   function fmtTime(sec) {
+    if (sec == null) return "not measured";
     sec = Math.max(0, sec | 0);
-    const m = Math.floor(sec / 60), s = sec % 60;
+    const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (h) return h + "h " + (m < 10 ? "0" : "") + m + "m";
     return m + "m " + (s < 10 ? "0" : "") + s + "s";
+  }
+  // "ada_lovelace_byron" -> "Ada Lovelace Byron". The token is a slug of
+  // whatever the student typed, so this is display only; the raw token stays
+  // visible underneath as the thing that actually joins across lessons.
+  function prettyName(tok) {
+    const words = (tok || "").split("_").filter(Boolean);
+    if (!words.length) return "(no name)";
+    return words.map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  }
+  // One square per question, so a glance shows *which* checkpoint went wrong
+  // rather than only how many did.
+  function bitSquares(bits) {
+    if (!bits) return [document.createTextNode("—")];
+    const row = el("span", { class: "bitrow" });
+    bits.split("").forEach((b, i) => {
+      const sq = el("span", { class: "bit " + (b === "1" ? "y" : "n"),
+                              title: "question " + (i + 1) + ": " + (b === "1" ? "correct" : "wrong") },
+                    [String(i + 1)]);
+      row.appendChild(sq);
+    });
+    return [row];
+  }
+  // Things worth a second look. Not verdicts — the code cannot tell diligence
+  // from a lucky guess, only report what it carries.
+  function flagsFor(d) {
+    const out = [];
+    const moves = Object.values(d.manipulations || {}).reduce((a, b) => a + (b | 0), 0);
+    if (moves === 0) out.push("never moved a control");
+    if (d.activeSec != null) {
+      if (d.activeSec < 60) out.push("under a minute of attention");
+      else if (d.elapsedSec > 900 && d.activeSec / d.elapsedSec < 0.25) out.push("tab open, mostly idle");
+    }
+    return out;
   }
   function manipPills(map) {
     const keys = Object.keys(map || {}).sort();
@@ -151,7 +206,8 @@
         ]));
         renderTable(result, {
           ok: null, nameToken: legacy.nameToken, moduleId: legacy.moduleId, version: legacy.version,
-          elapsedSec: 0, pretestBits: legacy.pretestBits, scaffoldBits: legacy.scaffoldBits,
+          elapsedSec: 0, activeSec: null,
+          pretestBits: legacy.pretestBits, scaffoldBits: legacy.scaffoldBits,
           posttestBits: legacy.posttestBits, manipulations: legacy.manipulations || {}
         });
         return;
@@ -185,23 +241,46 @@
   }
 
   function renderTable(mount, d) {
-    const rows = [
-      ["Name", el("span", { class: "mono" }, [d.nameToken || "—"])],
-      ["Module", (d.moduleId || "?") + "  (v" + (d.version != null ? d.version : "?") + ")"],
-      ["Working time", fmtTime(d.elapsedSec)],
-      ["Pretest", right(d.pretestBits) + " / " + (d.pretestBits || "").length + "   (" + (d.pretestBits || "—") + ")"],
-      ["Scaffold", right(d.scaffoldBits) + " / " + (d.scaffoldBits || "").length + "   (" + (d.scaffoldBits || "—") + ")"],
-      ["Posttest", right(d.posttestBits) + " / " + (d.posttestBits || "").length + "   (" + (d.posttestBits || "—") + ")"],
-    ];
+    const nameCell = el("td", null, [
+      el("div", null, [prettyName(d.nameToken)]),
+      el("div", { class: "subtle mono" }, [d.nameToken || "—"])
+    ]);
+
+    const total = (d.pretestBits || "").length + (d.scaffoldBits || "").length + (d.posttestBits || "").length;
+    const correct = right(d.pretestBits) + right(d.scaffoldBits) + right(d.posttestBits);
+    const scoreCell = el("td", null, [
+      el("span", { class: "mono" }, [correct + " / " + total]),
+      el("span", { class: "subtle" }, ["   " + (total ? Math.round(100 * correct / total) + "%" : "no scored questions")])
+    ]);
+
+    // Two clocks. Attention is the sum of working intervals with pauses over
+    // two minutes discarded; wall is name-confirm to submit. A big gap between
+    // them means the tab sat open, not that the student worked for hours.
+    const timeCell = el("td", null, [
+      el("span", { class: "mono" }, [fmtTime(d.activeSec)]),
+      el("span", { class: "subtle" }, [" attention  ·  "]),
+      el("span", { class: "mono" }, [fmtTime(d.elapsedSec)]),
+      el("span", { class: "subtle" }, [" wall clock"])
+    ]);
+
     const tbl = el("table", { class: "kv" });
-    rows.forEach(([k, v]) => {
-      tbl.appendChild(el("tr", null, [
-        el("th", null, [k]),
-        typeof v === "string" ? el("td", { class: "mono" }, [v]) : el("td", null, [v])
-      ]));
-    });
-    const manipTd = el("td", null, manipPills(d.manipulations));
-    tbl.appendChild(el("tr", null, [el("th", null, ["Activity / stage"]), manipTd]));
+    function row(label, cell) {
+      tbl.appendChild(el("tr", null, [el("th", null, [label]),
+        typeof cell === "string" ? el("td", { class: "mono" }, [cell]) : cell]));
+    }
+    row("Name", nameCell);
+    row("Module", (d.moduleId || "?") + "  (v" + (d.version != null ? d.version : "?") + ")");
+    row("Score", scoreCell);
+    row("Time", timeCell);
+    row("Activity / stage", el("td", null, manipPills(d.manipulations)));
+    if (d.pretestBits)  row("Pretest",     el("td", null, bitSquares(d.pretestBits)));
+    if (d.scaffoldBits) row("Checkpoints", el("td", null, bitSquares(d.scaffoldBits)));
+    if (d.posttestBits) row("Posttest",    el("td", null, bitSquares(d.posttestBits)));
+
+    const notes = flagsFor(d);
+    if (notes.length) {
+      row("Worth a look", el("td", null, notes.map(n => el("span", { class: "note-flag" }, [n]))));
+    }
     mount.appendChild(tbl);
   }
 

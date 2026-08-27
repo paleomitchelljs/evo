@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
 <title>BIO 202 — Scaffold S17: mutation target size</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
@@ -284,6 +286,7 @@ function renderRound() {
 
     const correct = state.choice === r.truth;
     state.history.push({ round: r, choice: state.choice, correct });
+    if (window.Score && Score.bumpManipulation) Score.bumpManipulation("R");
 
     revealBox.innerHTML = "";
     revealBox.classList.add("shown", correct ? "correct" : "wrong");
@@ -396,6 +399,31 @@ Score.init({
   mountFinalCode:  "#score-final",
   onReady: () => { showPretest(); }
 });
+
+// ---- Engagement ------------------------------------------------------------
+// The five rounds are where a scaffold's work actually happens, but none of it
+// used to reach the submission code: the bookend pattern scores the pretest and
+// the posttest only, so a student who ground through every round and one who
+// typed the same number five times decoded identically. Two counters close
+// that gap, scoped to the round area so answering the quizzes does not inflate
+// them:
+//     R  rounds actually committed
+//     G  moves of a control while working a round
+// Both are engagement evidence for the instructor. Neither touches a scored bit.
+(function trackRoundEngagement() {
+  const zone = document.getElementById("round-container");
+  if (!zone) return;
+  const bump = () => { if (window.Score && Score.bumpManipulation) Score.bumpManipulation("G"); };
+  zone.addEventListener("input", (e) => {
+    if (e.target && /^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) bump();
+  }, true);
+  zone.addEventListener("click", (e) => {
+    const t = e.target && e.target.closest
+      ? e.target.closest("button, label, .choice, [data-choice], svg") : null;
+    if (t) bump();
+  }, true);
+})();
+
 </script>
 </body>
 </html>
