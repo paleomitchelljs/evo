@@ -127,7 +127,7 @@ has a ceiling set by how much they overlap.
 ---
 
 ### Lesson 3 — Subtracting the line and reading what's left
-`lesson3.html` · v6 · 10 checkpoints · **Built**
+`lesson3.html` · v7 · 9 checkpoints · **Built**
 
 *The move:* the ladder from one number, to one number plus a group, to asking whether that
 group difference is bigger than the measuring, to one number plus a group plus a rate —
@@ -138,7 +138,16 @@ landing the thing it puts in front of you. The two written questions are numeric
 scored on their first attempt only, say right or wrong on the spot, and never block the
 next stage. Old stages C and D (height bands; click-to-place a hidden weighing) are gone.
 
-- **A — Expect a person's weight**
+*Text refit, same day.* Every scenario panel is now a splice from the lecture-quote corpus
+(`_reference/quotes/`) — JM's own words, cut but not paraphrased, with the source lecture
+named underneath — followed by a bulleted setup with no prose in it. Stage titles come off
+the quotes wherever one fits. Two quotes are held back as **reveals**: they appear in a
+stage's solved-banner and nowhere else, so they land after the work rather than instead of
+it. Groups are "male"/"female" throughout, in the prose, the plot labels and the R panel.
+The vagus showcase and the stretch challenge were removed to
+`_reference/retired/showcases-and-stretch/`.
+
+- **A — One number, and you add them up** *(quote: 202_lec18_06)*
   - *Interactive* — One slider, one number for all 7,414 adults. Histogram with your number
     as a line; readouts for heavier/lighter counts and the average miss. Gate: land the
     miss inside ±0.3 kg, on a 0.1 kg step (lands at 82.0 kg).
@@ -147,7 +156,7 @@ next stage. Old stages C and D (height bands; click-to-place a hidden weighing) 
   - *Hands to* — B **opens on the number just landed here**, which is what makes its
     reveal work.
 
-- **B — Now you are told whether the person is a woman or a man**
+- **B — Now you are told male or female** *(quote: 202_lec22_01, the Venn-diagram caution)*
   - *Interactive* — Two sliders: a starting number, and an extra added only for men. The
     plot is a mirrored pair of miss-distributions — women's above the axis in red, men's
     below in blue — with a marker on the zero line for each group's average miss. Gate:
@@ -158,7 +167,7 @@ next stage. Old stages C and D (height bands; click-to-place a hidden weighing) 
   - *Hands to* — Stage C keeps the same two numbers and takes away the seven thousand
     people; C's sliders open on the pair landed here.
 
-- **C — Weigh a handful of each and the gap moves**
+- **C — Is that difference clear?** *(title and panel: 202_lec07_08 + 145_lec01_07)*
   - *Interactive* — A handful of n women and n men drawn from the 7,414 (n on a slider,
     2–60). Top: two dot columns with the two numbers drawn over their own column. Bottom:
     a gap axis carrying every handful weighed so far, a shaded band of what weighing that
@@ -173,7 +182,7 @@ next stage. Old stages C and D (height bands; click-to-place a hidden weighing) 
     job — and shuffling is left alone for the same reason.
   - *Hands to* — Stage D, where the group difference has to share the fit with a rate.
 
-- **D — Beren and Cyrus, from their first birthdays on**
+- **D — They look physically similar** *(quote: 202_lec05_03)*
   - *Interactive* — Both boys' real home weighing records, mass, age ≥ 1 year (Beren 11
     points, Cyrus 7). **Cyrus's are filed in grams and Beren's in kilograms; the page
     normalises on the way in.** Three sliders: weight at age two, kilograms added per year,
@@ -187,7 +196,7 @@ next stage. Old stages C and D (height bands; click-to-place a hidden weighing) 
     stretch of time.
   - *Hands to* — Stage E, which asks what happens when one rate is not enough either.
 
-- **E — Three films, and what one line cannot do**
+- **E — One baseline for all three** *(quote: 202_lec08_04; reveal on solve: 202_lec26_02)*
   - *Interactive* — Every quoted moment from the three Jackson films: minute **within its
     own film** on the bottom, page of the whole 1,061-page story up the side, so the three
     films sit at three heights as well as three tilts. Six sliders (an opening page and a
@@ -202,25 +211,23 @@ next stage. Old stages C and D (height bands; click-to-place a hidden weighing) 
     that separates them.
   - *Hands to* — Lesson 4, which asks how sure you can be about any one of those paces.
 
-- **Showcase — the same leftover, on a nerve** *(open, ungated)*
-  - *Interactive* — Ten mammals, brain-to-larynx distance against actual nerve length. The
-    line is drawn through the nine non-giraffes; the giraffe sits in red about 210 cm above
-    it. Residual panel below.
-  - *Goal* — The largest leftover in the course, left as a question rather than an answer.
-
 ---
 
 ### Lesson 4 — Finding the cloud of lines that all fit the data
-`lesson4.html` · v6 · 7 checkpoints · **Built**
+`lesson4.html` · v7 · 6 checkpoints · **Built**
 
 *The move:* the best line is not one line, and how wide the cloud is depends on how much
 data you have.
 
 *Revised 2026-09-01.* Same treatment as Lesson 3: the three prediction gates are gone, each
 stage is opened by solving its own puzzle, and each closes with a numeric question that
-says right or wrong on the spot and is scored on the first attempt only.
+says right or wrong on the spot and is scored on the first attempt only. Same text refit —
+lecture-quote splice plus a bulleted setup in every scenario panel, titles off the quotes,
+and 202_lec10_02 held back as the reveal on Stage C's solved-banner. The Dover chalk
+showcase and the stretch challenge were removed to
+`_reference/retired/showcases-and-stretch/`.
 
-- **A — Find ten lines that fit this data equally well**
+- **A — Wrong, but usefully wrong** *(quotes: 461_lec35_05 + 461_lec07_09)*
   - *Interactive* — 60 adults (drawn fresh per page load, so the ceiling is this student's
     own number), same two knobs as Lesson 3. R² painted large in the plot corner, two
     decimals only. **No reference line is drawn.** `Lock in line` enables only when you are
@@ -232,7 +239,7 @@ says right or wrong on the spot and is scored on the first attempt only.
     settings of the slope knob sit at the same number, spanning about 4.5 kg per 5 cm.
   - *Hands to* — Stage B asks what changes the width of that range.
 
-- **B — Measure more people and close the fan down to a set width**
+- **B — Look at sample sizes** *(quote: 336_lec14_04)*
   - *Interactive* — A slider for how many adults go into each sample, then `Take a sample`
     or `Take 20 samples`. Each sample's best line is drawn on the scatter; below, each
     sample's pace is a dot on a row per sample size, with a bar for the middle 95% that
@@ -245,7 +252,7 @@ says right or wrong on the spot and is scored on the first attempt only.
     n=500 about 1.6.
   - *Hands to* — Stage C applies it where you cannot go get more data.
 
-- **C — Note down enough moments to tell all three films apart**
+- **C — Sure about one, not sure about the other** *(quote: 461_lec07_05; reveal on solve: 202_lec10_02)*
   - *Interactive* — The three films again, each from its own start. A knob sets **how many
     moments a viewing catches** (4–48, opening at 5); `Watch it again` draws that many at
     random from the ones noted — some twice, some not at all — and refits each film. Paces
@@ -257,20 +264,12 @@ says right or wrong on the spot and is scored on the first attempt only.
     the width of the clouds, and the width is bought with effort. Measured: at 5 moments
     two pairs overlap, at 8–10 only Two Towers/Return, and all three come apart at about
     12. Fellowship 2.30, Two Towers 1.76, Return 1.49 pages a minute.
-  - *Hands to* — the stretch challenge, which asks what that number becomes when the gap
-    being chased is half as wide.
-
-- **Showcase — how old the bottom of a cliff has to be** *(open, ungated)*
-  - *Interactive* — Twelve modern carbonate deposition rates, redrawn 5,000 times, each
-    redraw implying an age for 100 m of chalk. Log-scale histogram with a marked line at
-    6,000 years.
-  - *Goal* — The same redrawing move, pointed at deep time. Zero of 5,000 redraws fall
-    under 6,000 years.
+  - *Hands to* — Lesson 5, which builds the pile of results chance alone could produce.
 
 ---
 
 ### Lesson 5 — Shuffling the predictor to see what chance can do
-`lesson5.html` · v4 · 9 checkpoints · **Built**
+`lesson5.html` · v5 · 8 checkpoints · **Built**
 
 *The move:* build the pile of results chance alone could produce, then see whether yours
 sits in it.
@@ -302,8 +301,7 @@ sits in it.
 
 - **D — Three knobs, one pile of shuffled gaps**
   - *Interactive* — Same simulator, three targets to hit in order: a tiny gap that still
-    clears the pile; a huge gap that does not; an honest middle case. Plus an optional
-    stretch challenge.
+    clears the pile; a huge gap that does not; an honest middle case.
   - *Goal* — Separate "big" from "clearly distinguishable" as two independent things.
   - *Hands to* — Lesson 6, which shows the same machine giving four different verdicts.
 
@@ -356,7 +354,7 @@ moved the verdict.
 ---
 
 ### Lesson 7 — Tracing how much of a parent ends up in their child
-`lesson7.html` · v2 · 9 checkpoints · **Built**
+`lesson7.html` · v3 · 8 checkpoints · **Built**
 
 *The move:* a resemblance is a slope, and the slope has a ceiling you can see.
 
