@@ -320,7 +320,10 @@
     state.onReady = typeof opts.onReady === "function" ? opts.onReady : null;
     state.mountFinalCode = opts.mountFinalCode
       ? document.querySelector(opts.mountFinalCode) : null;
-    state.manipTracker = (opts.showManipulationTracker !== false);
+    // Opt-in as of 2026-09-02: students do not need a running count of their
+    // own fiddling on screen. The counts are still gathered and still travel
+    // inside the submission code; pass showManipulationTracker:true to show it.
+    state.manipTracker = (opts.showManipulationTracker === true);
 
     renderNamePrompt(opts.mountNamePrompt);
   }

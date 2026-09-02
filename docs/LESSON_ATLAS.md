@@ -148,7 +148,16 @@ has a ceiling set by how much they overlap.
 ---
 
 ### Lesson 3 — Subtracting the line and reading what's left
-`lesson3.html` · v7 · 9 checkpoints · **Built**
+`lesson3.html` · v8 · 8 checkpoints · **Built**
+
+*Rebuilt from JM's voice notes, 2026-09-02.* The quote splices are gone; every stage's
+text is now his dictated notes, edited only for flow. Three interactives changed with
+them — C is solved by producing a negative male adjustment in a small sample rather than
+by naming a sample size; D fits Beren first and only then reveals Cyrus and his one
+offset; E plots each film against its own book's pages, so the three clouds overlap and
+the opening pages can be compared. Stage D's closing question is cut (JM: Beren reaches
+a weight later in age but earlier in time, which made the question confusing), as is
+stage C's. The activity box is off for every lesson.
 
 *The move:* the ladder from one number, to one number plus a group, to asking whether that
 group difference is bigger than the measuring, to one number plus a group plus a rate —
@@ -175,7 +184,7 @@ R code, To open Stage X. Groups are "male"/"female" throughout, in the prose, th
 The vagus showcase and the stretch challenge were removed to
 `_reference/retired/showcases-and-stretch/`.
 
-- **A — one number for all 7,414** *(quotes: 202_lec10_02, which streaks need explaining; 461_lec07_09, axes and legend)*
+- **A — one number for all 7,414** *(text: JM voice notes — statistics as a framework, prediction as the mechanism)*
   - *Interactive* — One slider, one number for all 7,414 adults. Histogram with your number
     as a line; readouts for heavier/lighter counts and the average miss. Gate: land the
     miss inside ±0.3 kg, on a 0.1 kg step (lands at 82.0 kg).
@@ -184,7 +193,7 @@ The vagus showcase and the stretch challenge were removed to
   - *Hands to* — B **opens on the number just landed here**, which is what makes its
     reveal work.
 
-- **B — plus a group label** *(quote: 202_lec04_02, the clam and the T-Rex — same move, being handed one more fact about a case; last line generalised off fossils)*
+- **B — plus a group label** *(text: JM voice notes — one number is not enough, so split by biological sex; one number for females plus an adjustment for males)*
   - *Interactive* — Two sliders: a starting number, and an extra added only for men. The
     plot is a mirrored pair of miss-distributions — women's above the axis in red, men's
     below in blue — with a marker on the zero line for each group's average miss. Gate:
@@ -195,7 +204,7 @@ The vagus showcase and the stretch challenge were removed to
   - *Hands to* — Stage C keeps the same two numbers and takes away the seven thousand
     people; C's sliders open on the pair landed here.
 
-- **C — is the gap bigger than the weighing** *(quotes: 202_lec07_08, N=5 vs N=2 million; 145_lec01_07, two dice rolled forever)*
+- **C — small samples go the wrong way** *(text: JM voice notes. Gate: land a handful whose fitted male adjustment is negative, which the full 7,414 never are — about one draw in four at n=3. The lower panel now shows that adjustment and the room a handful this size leaves around it, replacing a band that referred to the population while the dots referred to the sample: a dot could sit plainly outside a band the readout called "no".)*
   - *Interactive* — A handful of n women and n men drawn from the 7,414 (n on a slider,
     2–60). Top: two dot columns with the two numbers drawn over their own column. Bottom:
     a gap axis carrying every handful weighed so far, a shaded band of what weighing that
@@ -210,7 +219,7 @@ The vagus showcase and the stretch challenge were removed to
     job — and shuffling is left alone for the same reason.
   - *Hands to* — Stage D, where the group difference has to share the fit with a rate.
 
-- **D — one rate, two starting points** *(quote: 202_lec03_05, hard the first time — the hardest fit in the lesson gets it)*
+- **D — one rate, two starting points** *(text: JM voice notes. Two phases: fit Beren with two knobs, and only then do Cyrus's weighings and his single offset appear. Three numbers where four would have been the obvious choice.)*
   - *Interactive* — Both boys' real home weighing records, mass, age ≥ 1 year (Beren 11
     points, Cyrus 7). **Cyrus's are filed in grams and Beren's in kilograms; the page
     normalises on the way in.** Three sliders: weight at age two, kilograms added per year,
@@ -224,7 +233,7 @@ The vagus showcase and the stretch challenge were removed to
     stretch of time.
   - *Hands to* — Stage E, which asks what happens when one rate is not enough either.
 
-- **E — split the slopes and the intercepts** *(quote: 202_lec08_04, the penny and the car; reveal on solve: 202_lec26_02, cut down to the bare statistical claim)*
+- **E — same start, different paces** *(text: JM voice notes. Now plotted against each film's own book pages. On that axis the finding changes: one opening page and one pace bottoms out at 47.8, three openings and one pace at 17.5, and three paces reach 11.7 — so the films begin in roughly the same place and differ in pace, which is what the framing question asks. Target 15 clears only with the paces split.)*
   - *Interactive* — Every quoted moment from the three Jackson films: minute **within its
     own film** on the bottom, page of the whole 1,061-page story up the side, so the three
     films sit at three heights as well as three tilts. Six sliders (an opening page and a
