@@ -55,6 +55,15 @@ off by ~24 cm, and the stage is cleared by bringing a round back balanced — ov
 often as under, and by about as much. Every person drawn stays on the plot, because they
 are what the next prediction is for.
 
+*Pause graphs and a layout fix, same day.* The Pause carries two histograms of head count
+— three rounds on a 0–3 axis, then all hundred and three — with the average printed under
+each, so the question tests whether a student recognises that the balancing number *is* the
+average rather than whether they can divide. **Across lessons 1–4 the framing text now spans
+the page** instead of sitting in the left column: a 568 px intro in lesson 4 stage A had been
+pushing the canvas 397 px below the knobs that drive it, which no viewport could hold. The
+controls panel is also first in its column, so every stage now opens its graph and its
+controls 29 px apart.
+
 *Converted 2026-09-02* to the same shape as lessons 3 and 4: no titles (bare-letter
 stage headings and table of contents), no prediction gate, controls live from the
 start, one numeric question per closing point with instant right/wrong scored on the
