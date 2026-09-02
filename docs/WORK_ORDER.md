@@ -1,5 +1,13 @@
 # Work order — next edit round
 
+**Deferred and queued, 2026-09-02 — the copy framework.** Every student-facing string
+(1,825 across 54 pages) moves into one keyed block per lesson, so a lesson's words can be
+read and changed in one place instead of being welded into markup and JavaScript. Full plan
+in [`COPY_FRAMEWORK_PLAN.md`](COPY_FRAMEWORK_PLAN.md); JM asked to pick it up the weekend of
+6–7 September or the week after. The one thing that must not be skipped is ordering: the
+gate strips `<script>`, so `check_lessons.py` has to learn to read the copy block *before*
+any lesson migrates, or the vocabulary ratchet goes silently blind.
+
 **Status 2026-08-24.** Arcs 4 and 5 are built out. All 29 lessons now carry a
 working interactive with a prediction gate and at least one scored checkpoint;
 `scripts/check_lessons.py` is green. What remains is content review, not
