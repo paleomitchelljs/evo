@@ -40,7 +40,18 @@ are allowed to condition on, and how you would know if you were leaning.
 ---
 
 ### Lesson 1 — Adding up coin flips until a bell appears
-`lesson1.html` · v8 · 7 checkpoints · **Built**
+`lesson1.html` · v9 · 5 checkpoints · **Built**
+
+*Converted 2026-09-02* to the same shape as lessons 3 and 4: no titles (bare-letter
+stage headings and table of contents), no prediction gate, controls live from the
+start, one numeric question per closing point with instant right/wrong scored on the
+first attempt only, and voice blocks spliced from the lecture corpus over bulleted
+setups. Stage A used to lock the flip button behind a guess at the head count and
+score three bits on whether that guess was exact — a one-in-four coin toss recorded
+as knowledge; it now opens the Pause by being done. The Pause's two questions became
+one numeric; stage B's "taller or shorter?" panel is gone; stage C's closing
+multiple-choice became "how far would the number have to move", graded against the
+student's own run. Voice: 202_lec10_01 on A, 202_lec24_01 on B, 202_lec10_02 on C.
 
 *The move:* one number, used every time, and the two directions you can be wrong in.
 
@@ -82,7 +93,17 @@ are allowed to condition on, and how you would know if you were leaning.
 ---
 
 ### Lesson 2 — Resampling to ask if new data still belongs
-`lesson2.html` · v4 · 7 checkpoints · **Built**
+`lesson2.html` · v8 · 7 checkpoints · **Built**
+
+*Converted 2026-09-02*, same treatment. (This row previously read v4 · 7, which was
+already wrong for the shipped file — it was v7 · 9.) The four prediction bits are gone
+with the panels that held them. Stages C, D and E no longer make the student submit a
+guess at their own hit rate before the drill will start — the calls are the stage, and
+every drill opens as soon as its people have loaded. The closing comparison and the
+19-out-of-20 question became numeric; the "does 75% mean no difference" question was
+dropped and its reveal moved onto the end of stage E, where it now fires whichever way
+the numeric went. Voice: 461_lec07_09 on A, 202_lec10_02 on B, 145_lec01_08 on D,
+202_lec07_06 on E; C carries bullets only.
 
 *The move:* a running average settles, then leaves — and telling two crowds apart by eye
 has a ceiling set by how much they overlap.
