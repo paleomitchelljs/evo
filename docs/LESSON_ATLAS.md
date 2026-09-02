@@ -40,7 +40,20 @@ are allowed to condition on, and how you would know if you were leaning.
 ---
 
 ### Lesson 1 — Adding up coin flips until a bell appears
-`lesson1.html` · v9 · 5 checkpoints · **Built**
+`lesson1.html` · v10 · 6 checkpoints · **Built**
+
+*Rebuilt from JM's voice notes, 2026-09-02.* Text throughout is his notes — patterns as
+mental models, and statistics as the framework that says when the evidence is good enough
+to overturn one. Three structural changes came with it. **The Pause is graded against the
+student's own three rounds**, not against what a fair coin is supposed to do: three rounds
+of 3, 6 and 4 make 4.33 the right answer and 5 a wrong one. It then hands them a button
+that flips a hundred more rounds and asks again, where the answer lands near 5 — the small
+sample and the large one giving different answers is the whole point, and the head-count
+tally is the bell of the lesson's title appearing. **Stage B runs in rounds of ten**,
+anchored on being told only that JM is 198 cm: the first round comes back 10 over, 0 under,
+off by ~24 cm, and the stage is cleared by bringing a round back balanced — over about as
+often as under, and by about as much. Every person drawn stays on the plot, because they
+are what the next prediction is for.
 
 *Converted 2026-09-02* to the same shape as lessons 3 and 4: no titles (bare-letter
 stage headings and table of contents), no prediction gate, controls live from the
