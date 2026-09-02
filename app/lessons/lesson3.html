@@ -7,7 +7,7 @@
 <title>BIO 202 — Lesson 3: Subtracting the line and reading what's left</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
   * { box-sizing: border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
@@ -23,54 +23,71 @@
   section.stage.stage-locked .lock-banner { display:block; }
   section.stage.stage-locked .stage-body { pointer-events:none; }
   .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
-  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
-  .explore-tracker.shown { display:block; }
-  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .col { display:flex; flex-direction:column; gap:16px; }
   .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
   .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
-  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
-  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
-  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
-  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
-  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
-  .prediction select { padding:6px 10px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; margin-right:8px; }
-  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
-  .controls.locked { opacity:0.4; pointer-events:none; }
-  .controls .row { display:grid; grid-template-columns:170px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  /* Task checklist — replaces the old prediction gate. Nothing is locked behind
+     an opinion any more; a stage opens the next one by being solved. */
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:120px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:186px 1fr 84px; align-items:center; gap:10px; margin-bottom:6px; }
   .controls label { font-size:13px; }
   .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
+  .controls input[type=range]:disabled { opacity:0.4; }
+  .controls .row.tied label, .controls .row.tied output { color:#a8a49a; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
   .controls button.secondary { background:#888; }
   .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
   .controls button.accent { background:var(--accent); }
-  .controls select { padding:6px 8px; font:13px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:3px; }
+  .split-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .split-row button { flex:1 1 220px; text-align:left; padding:9px 12px; border:1px solid var(--rule); border-radius:5px; background:#f6f5ef; color:var(--ink); cursor:pointer; font-size:13px; }
+  .split-row button.on { background:var(--accent2-soft); border-color:var(--accent2); color:#1b465e; font-weight:600; }
+  .split-row button .state { display:block; font-size:12px; font-weight:400; color:var(--muted); }
+  .split-row button.on .state { color:#2f6b8f; }
+  .filmhead { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
   .fit-stats .label { color:var(--muted); }
-  .fit-stats .ok { color:#3d5728; font-weight:600; }
-  .fit-stats .off { color:#a8331a; font-weight:600; }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
   pre.code .line { display:block; padding:0 6px; border-radius:2px; }
   pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
-  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  .ledger { font:12.5px ui-monospace,Menlo,monospace; margin:0; }
+  .ledger div { padding:4px 0; border-bottom:1px solid #f2f0e8; display:flex; justify-content:space-between; gap:10px; }
+  .ledger div:last-child { border-bottom:0; }
+  .ledger .best { font-weight:600; }
   .stretch { margin-top:20px; padding:16px; background:var(--accent2-soft); border:1px dashed var(--accent2); border-radius:6px; }
   .stretch h3 { margin:0 0 8px; font-size:13px; color:var(--accent2); text-transform:uppercase; letter-spacing:.06em; }
   .stretch p { margin:0 0 8px; font-size:13.5px; }
   .stretch button { margin-top:6px; padding:7px 13px; background:var(--accent2); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
   .stretch button.done { background:#6f8a4a; }
   .stretch .opt-in-status { margin-top:8px; font-size:12.5px; color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
-  .paces { font:13px ui-monospace,Menlo,monospace; margin:0; }
-  .paces div { padding:4px 0; border-bottom:1px solid #f0eee5; }
-  .paces div:last-child { border-bottom:0; }
-  /* Click-to-predict canvas */
-  .click-canvas { cursor: crosshair; }
-  .click-canvas.locked { cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -81,7 +98,7 @@
 <nav class="toc" id="toc">
   <a href="#stageA" id="tocA">A. One number for everyone</a>
   <a href="#stageB" id="tocB" class="locked">B. One number plus a group</a>
-  <a href="#stageC" id="tocC" class="locked">C. One number plus a count</a>
+  <a href="#stageC" id="tocC" class="locked">C. Weigh a handful</a>
   <a href="#stageD" id="tocD" class="locked">D. Beren and Cyrus</a>
   <a href="#stageE" id="tocE" class="locked">E. Three films</a>
 </nav>
@@ -108,23 +125,18 @@
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predA">
-        <h3>Prediction</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. One number has to serve every adult. Which one leaves you over as often as under?</div>
-            <label><input type="radio" name="qA1" value="mid" /> Halfway between the lightest and the heaviest</label>
-            <label><input type="radio" name="qA1" value="mode" /> The weight that comes up most often</label>
-            <label><input type="radio" name="qA1" value="avg" /> Everyone's weights added together and divided by how many</label>
-          </li>
-        </ol>
-        <button id="submitA" disabled>Submit → unlock the slider</button>
-        <div class="explore-tracker" id="exploreA">Land the average miss inside ±0.5 kg. <span class="count">not yet</span></div>
+      <div class="panel">
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Bring the average miss inside ±0.3 kg.
+            <span class="hint">currently <span id="A1_now">—</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsA">
-          <div class="row" data-line="num"><label for="A_num">your number (kg)</label><input type="range" id="A_num" min="50" max="120" step="0.5" value="60" /><output id="A_numOut">60.0</output></div>
+        <div class="controls" id="controlsA">
+          <div class="row" data-line="num"><label for="A_num">your number (kg)</label><input type="range" id="A_num" min="50" max="120" step="0.1" value="60" /><output id="A_numOut">60.0</output></div>
           <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
         </div>
       </div>
@@ -139,7 +151,7 @@
 <!-- ============ STAGE B — one number plus a group ===================== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B — Now you are told whether the person is a woman or a man</h2>
-  <div class="lock-banner">Complete Stage A to unlock this section.</div>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
@@ -156,24 +168,19 @@
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predB">
-        <h3>Prediction</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. With the extra still at zero — one number for everyone — how do the two groups sit?</div>
-            <label><input type="radio" name="qB1" value="both0" /> Both groups land on zero</label>
-            <label><input type="radio" name="qB1" value="opposite" /> One group leans over, the other leans under</label>
-            <label><input type="radio" name="qB1" value="same" /> Both groups lean the same way</label>
-          </li>
-        </ol>
-        <button id="submitB" disabled>Submit → unlock the sliders</button>
-        <div class="explore-tracker" id="exploreB">Bring both groups inside ±0.75 kg. <span class="count">not yet</span></div>
+      <div class="panel">
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Bring both groups inside ±0.4 kg at once.
+            <span class="hint">worst of the two: <span id="B1_now">—</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsB">
-          <div class="row" data-line="base"><label for="B_base">starting number (kg)</label><input type="range" id="B_base" min="50" max="110" step="0.5" value="60" /><output id="B_baseOut">60.0</output></div>
-          <div class="row" data-line="extra"><label for="B_extra">extra if a man (kg)</label><input type="range" id="B_extra" min="0" max="40" step="0.5" value="0" /><output id="B_extraOut">0.0</output></div>
+        <div class="controls" id="controlsB">
+          <div class="row" data-line="base"><label for="B_base">starting number (kg)</label><input type="range" id="B_base" min="50" max="110" step="0.1" value="60" /><output id="B_baseOut">60.0</output></div>
+          <div class="row" data-line="extra"><label for="B_extra">extra if a man (kg)</label><input type="range" id="B_extra" min="0" max="40" step="0.1" value="0" /><output id="B_extraOut">0.0</output></div>
           <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
         </div>
       </div>
@@ -185,202 +192,215 @@
   </div>
 </section>
 
-<!-- ============ STAGE C — one number plus a count ===================== -->
+<!-- ============ STAGE C — the gap, and what weighing alone can do ===== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Now you are told how tall the person is</h2>
-  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <h2 class="stage-h">C — Weigh a handful of each and the gap moves</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <p>The adults are sorted into 5 cm height bands. Each dot is one band: how far off you are, on average, for the people in it. Your extra is now added once for every 5 cm above 170, and taken away once for every 5 cm below.</p>
+        <p>You no longer have seven thousand people. You have however many you can get onto a scale: a few women, the same number of men. Same two parts as Stage B — a number for the women, an extra for the men — but fitted to the handful in front of you.</p>
+        <p>The lower panel keeps every handful you have weighed. The shaded band is where a handful this size lands when the two groups are alike.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3>How far off you are, band by band</h3>
-        <canvas id="plotC" width="560" height="360"></canvas>
-        <div class="fit-stats" id="statsC">
-          <span class="label">worst band:</span> <span id="C_worst">—</span>
+        <h3>The handful you just weighed</h3>
+        <canvas id="plotC1" width="560" height="270"></canvas>
+        <div class="fit-stats" id="statsC1">
+          <span class="label" style="color:#b23a48;">women, off by:</span> <span id="C_leanW">—</span>
           &nbsp;|&nbsp;
-          <span class="label">bands you read high:</span> <span id="C_high">—</span>
+          <span class="label" style="color:#2f6b8f;">men, off by:</span> <span id="C_leanM">—</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>Every handful you have weighed, and what weighing alone can hand you</h3>
+        <canvas id="plotC2" width="560" height="210"></canvas>
+        <div class="fit-stats" id="statsC2">
+          <span class="label">weighing alone reaches:</span> <span id="C_reach">—</span>
           &nbsp;|&nbsp;
-          <span class="label">bands you read low:</span> <span id="C_low">—</span>
+          <span class="label">the gap across all seven thousand:</span> <span id="C_true">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">clear of the band:</span> <span id="C_clears">—</span>
+        </div>
+        <div class="fit-stats" style="margin-top:2px;">
+          <span class="label">handfuls weighed:</span> <span id="C_count">0</span>
+          &nbsp;|&nbsp;
+          <span class="label">handfuls where the men came out lighter:</span> <span id="C_flips">0</span>
         </div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predC">
-        <h3>Prediction</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. With the extra at zero, the bands of taller people come out:</div>
-            <label><input type="radio" name="qC1" value="heavier" /> heavier than your number</label>
-            <label><input type="radio" name="qC1" value="lighter" /> lighter than your number</label>
-            <label><input type="radio" name="qC1" value="even" /> sitting on your number like every other band</label>
-          </li>
-        </ol>
-        <button id="submitC" disabled>Submit → unlock the sliders</button>
-        <div class="explore-tracker" id="exploreC">Bring every band inside ±2.5 kg. <span class="count">not yet</span></div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Land both groups of the handful in front of you, inside ±1.0 kg.
+            <span class="hint">worst of the two: <span id="C1_now">—</span></span></li>
+          <li data-task="C2">Weigh handfuls until one comes back with the men lighter than the women.
+            <span class="hint">none yet</span></li>
+          <li data-task="C3">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedC">Stage D is open.</div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsC">
-          <div class="row" data-line="base"><label for="C_base">number at 170 cm (kg)</label><input type="range" id="C_base" min="50" max="120" step="0.5" value="60" /><output id="C_baseOut">60.0</output></div>
-          <div class="row" data-line="extra"><label for="C_extra">extra per 5 cm (kg)</label><input type="range" id="C_extra" min="0" max="12" step="0.1" value="0" /><output id="C_extraOut">0.0</output></div>
-          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+        <div class="controls" id="controlsC">
+          <div class="row" data-line="n"><label for="C_n">people in each group</label><input type="range" id="C_n" min="2" max="60" step="1" value="6" /><output id="C_nOut">6</output></div>
+          <div class="row" data-line="base"><label for="C_base">number for the women (kg)</label><input type="range" id="C_base" min="40" max="130" step="0.1" value="70" /><output id="C_baseOut">70.0</output></div>
+          <div class="row" data-line="extra"><label for="C_extra">extra for the men (kg)</label><input type="range" id="C_extra" min="-50" max="50" step="0.1" value="0" /><output id="C_extraOut">0.0</output></div>
+          <div class="buttons">
+            <button id="C_draw" class="accent">Weigh another handful</button>
+            <button id="C_draw10" class="secondary">Weigh 10 more</button>
+            <button id="C_clear" class="ghost">Clear the record</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
         </div>
       </div>
-      <div class="panel prediction" id="postC" style="display:none;">
-        <p class="q">You settled on about <strong id="C_settled">—</strong> kg for every 5 cm. For one extra centimetre of height, how much extra weight?</p>
-        <label><input type="radio" name="qC2" value="one" /> About 1 kg</label>
-        <label><input type="radio" name="qC2" value="five" /> About 5 kg</label>
-        <label><input type="radio" name="qC2" value="twentyfive" /> About 25 kg</label>
-        <button id="submitC2" disabled>Submit → unlock Stage D</button>
+      <div class="panel numq" id="numqC">
+        <div class="q">Turn the number of people up until the gap clears the band and stays clear. What is the smallest number in each group that does it?</div>
+        <div class="row">
+          <input type="number" id="C_ans" min="2" max="60" step="1" placeholder="people" />
+          <span class="unit">in each group</span>
+          <button id="C_submit">Submit</button>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line">steps &lt;- (nh$Height - <span class="num">170</span>) / <span class="num">5</span>    <span class="com"># how many 5 cm steps from 170</span></span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cC_base">60.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cC_extra">0.0</span></span><span class="line">guess &lt;- base + extra * steps</span><span class="line"></span><span class="line">band &lt;- <span class="fn">cut</span>(nh$Height, <span class="fn">seq</span>(<span class="num">145</span>, <span class="num">190</span>, <span class="num">5</span>))</span><span class="line"><span class="fn">tapply</span>(guess - nh$Weight, band, <span class="fn">mean</span>)</span><span class="line"></span><span class="line"><span class="com"># the same two numbers, found for you</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(Weight ~ steps, data = nh))</span></pre>
+<pre class="code" id="codeC"><span class="line">nh &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/nhanes_adults.csv"</span>)</span><span class="line" data-line="n">n  &lt;- <span class="num" id="cC_n">6</span></span><span class="line">w  &lt;- <span class="fn">sample</span>(nh$Weight[nh$Gender == <span class="str">"female"</span>], n)</span><span class="line">m  &lt;- <span class="fn">sample</span>(nh$Weight[nh$Gender == <span class="str">"male"</span>],   n)</span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cC_base">70.0</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cC_extra">0.0</span></span><span class="line"><span class="fn">mean</span>(base - w); <span class="fn">mean</span>(base + extra - m)</span><span class="line"></span><span class="line"><span class="com"># the same two numbers, and the same band, found for you</span></span><span class="line"><span class="fn">t.test</span>(m, w, var.equal = <span class="kw">TRUE</span>)</span><span class="line"></span><span class="line"><span class="com"># how wide the band is, for any n</span></span><span class="line">s &lt;- <span class="fn">sd</span>(nh$Weight[nh$Gender == <span class="str">"male"</span>])</span><span class="line"><span class="num">2</span> * s * <span class="fn">sqrt</span>(<span class="num">2</span> / n)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ============ STAGE D — predict the missing point =================== -->
+<!-- ============ STAGE D — Beren and Cyrus ============================= -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Beren and Cyrus: where does the missing measurement go?</h2>
-  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <h2 class="stage-h">D — Beren and Cyrus, from their first birthdays on</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <p>Two children, weighed at home for years. One weighing is hidden each round. Click where you think it goes. Six rounds.</p>
+        <p>Two children, weighed at home for years. Your number now has three parts: a weight at age two, so much added for every year older, and an extra that applies only to Cyrus.</p>
+        <p>The lower panel splits each boy's leftovers into his younger half and his older half. All four have to sit in the shaded band at the same time.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3 id="D_title">Round 1 of 6 — click where the missing point should be</h3>
-        <canvas id="plotD" class="click-canvas locked" width="560" height="380"></canvas>
+        <h3>Every weighing, and the two lines you have set</h3>
+        <canvas id="plotD1" width="560" height="290"></canvas>
+      </div>
+      <div class="panel graph-wrap">
+        <h3>What your lines leave over</h3>
+        <canvas id="plotD2" width="560" height="220"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">child:</span> <span id="D_kid">—</span>
+          <span class="label" style="color:#2f6b8f;">Beren younger:</span> <span id="D_be">—</span>
           &nbsp;|&nbsp;
-          <span class="label">round:</span> <span id="D_round">1</span>/6
+          <span class="label" style="color:#2f6b8f;">older:</span> <span id="D_bl">—</span>
           &nbsp;|&nbsp;
-          <span class="label">your click:</span> <span id="D_click">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">actually:</span> <span id="D_actual">—</span>
+          <span class="label" style="color:#a8611a;">Cyrus younger:</span> <span id="D_ce">—</span>
           &nbsp;|&nbsp;
-          <span class="label">you were off by:</span> <span id="D_err">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">ill within a week:</span> <span id="D_sick">—</span>
+          <span class="label" style="color:#a8611a;">older:</span> <span id="D_cl">—</span>
         </div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predD">
-        <h3>Prediction</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. A child is weighed on a day they are ill. Next to a well-day weighing at the same age, it will come out:</div>
-            <label><input type="radio" name="qD1" value="lower" /> lower</label>
-            <label><input type="radio" name="qD1" value="higher" /> higher</label>
-            <label><input type="radio" name="qD1" value="same" /> the same</label>
-          </li>
-          <li>
-            <div class="q">Q2. Draw one smooth line through a child's weighings and ignore which days they were ill. The ill-day points sit:</div>
-            <label><input type="radio" name="qD2" value="below" /> below the line</label>
-            <label><input type="radio" name="qD2" value="above" /> above the line</label>
-            <label><input type="radio" name="qD2" value="even" /> evenly on either side</label>
-          </li>
-        </ol>
-        <button id="submitD" disabled>Submit → unlock the canvas</button>
-        <div class="explore-tracker" id="exploreD">Six rounds. <span class="count">0/6 rounds</span></div>
+      <div class="panel">
+        <h3>To open Stage E</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Get all four inside ±0.4 kg at once.
+            <span class="hint">worst of the four: <span id="D1_now">—</span></span></li>
+          <li data-task="D2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedD">Stage E is open.</div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsD">
-          <div class="buttons">
-            <button id="D_next" class="accent" disabled>Next round →</button>
-            <button id="D_download" class="ghost">Download .R</button>
-          </div>
+          <div class="row" data-line="base"><label for="D_base">weight at age two (kg)</label><input type="range" id="D_base" min="10" max="18" step="0.1" value="12" /><output id="D_baseOut">12.0</output></div>
+          <div class="row" data-line="grow"><label for="D_grow">added per year (kg)</label><input type="range" id="D_grow" min="0" max="5" step="0.05" value="0" /><output id="D_growOut">0.00</output></div>
+          <div class="row" data-line="extra"><label for="D_extra">extra for Cyrus (kg)</label><input type="range" id="D_extra" min="-2" max="3" step="0.1" value="0" /><output id="D_extraOut">0.0</output></div>
+          <div class="buttons"><button id="D_download" class="ghost">Download .R</button></div>
         </div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">Beren reaches any given weight some time after Cyrus did. How long after?</div>
+        <div class="row">
+          <input type="number" id="D_ans" min="0" max="60" step="0.5" placeholder="months" />
+          <span class="unit">months</span>
+          <button id="D_submit">Submit</button>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line">k &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/kids_growth.csv"</span>)</span><span class="line">b &lt;- <span class="fn">subset</span>(k, kid == <span class="str">"beren"</span> &amp; measure == <span class="str">"mass"</span>)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(value ~ <span class="fn">poly</span>(age_years, <span class="num">2</span>), data = b)</span><span class="line">b$leftover &lt;- <span class="fn">residuals</span>(fit)</span><span class="line"></span><span class="line"><span class="fn">aggregate</span>(leftover ~ sick_proxy, data = b, <span class="fn">mean</span>)</span><span class="line"><span class="fn">boxplot</span>(leftover ~ sick_proxy, data = b,</span><span class="line">        col = <span class="fn">c</span>(<span class="str">"#6f8a4a"</span>, <span class="str">"#a86a1a"</span>))</span></pre>
+<pre class="code" id="codeD"><span class="line">k &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/kids_growth.csv"</span>)</span><span class="line">k$kg &lt;- <span class="fn">ifelse</span>(k$units == <span class="str">"g"</span>, k$value / <span class="num">1000</span>, k$value)</span><span class="line">d &lt;- <span class="fn">subset</span>(k, measure == <span class="str">"mass"</span> &amp; age_years &gt;= <span class="num">1</span>)</span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cD_base">12.0</span></span><span class="line" data-line="grow">grow  &lt;- <span class="num" id="cD_grow">0.00</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cD_extra">0.0</span></span><span class="line">guess &lt;- base + grow * (d$age_years - <span class="num">2</span>) +</span><span class="line">         extra * (d$kid == <span class="str">"cyrus"</span>)</span><span class="line"><span class="fn">tapply</span>(d$kg - guess, d$kid, <span class="fn">mean</span>)</span><span class="line"></span><span class="line"><span class="com"># the same three numbers, found for you</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kg ~ <span class="fn">I</span>(age_years - <span class="num">2</span>) + kid, data = d))</span></pre>
       </div>
     </div>
   </div>
   <div class="stretch" id="stretchD">
     <h3>Stretch challenge (optional, recorded)</h3>
-    <p>Take the downloaded <code>.R</code> and run it on Cyrus instead of Beren. Then add <code>sick_proxy</code> to the fit and see what happens to the size of what is left over.</p>
+    <p>Take the downloaded <code>.R</code> and put the weighings from before their first birthdays back in. One line per boy will no longer do it. Then add <code>sick_proxy</code> to the fit and see which side of the line those days sit on.</p>
     <button id="stretchD_btn">I tried it</button>
     <div class="opt-in-status" id="stretchD_status">Not yet attempted.</div>
   </div>
 </section>
 
-<!-- ============ STAGE E — three films, one line ======================= -->
+<!-- ============ STAGE E — three films ================================= -->
 <section class="stage stage-locked" id="stageE">
-  <h2 class="stage-h">E — Three films, one line</h2>
-  <div class="lock-banner">Complete Stage D to unlock this section.</div>
+  <h2 class="stage-h">E — Three films, and what one line cannot do</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
   <div class="stage-body grid">
     <div class="col">
       <div class="panel scenario">
-        <p>Each dot is a line of dialogue: when it is spoken in the film, and what page it falls on in the book. All three films run back to back, so the second starts where the first ended, on screen and on the page.</p>
+        <p>Each dot is a line of dialogue: how far into its film it is spoken, and what page of the whole three-book story it falls on. Read end to end, the story runs from page 1 to page 1061.</p>
+        <p>You start with one opening page and one pace for all three films. The two buttons hand each film its own.</p>
       </div>
       <div class="panel graph-wrap">
-        <h3 id="E_title">All three, end to end</h3>
-        <canvas id="plotE" width="560" height="380"></canvas>
+        <h3 id="E_title">All three films, against the pages of the whole story</h3>
+        <canvas id="plotE" width="560" height="420"></canvas>
         <div class="fit-stats" id="statsE">
-          <span class="label">your line misses by, on average:</span> <span id="E_miss">—</span> pages
+          <span class="label">average miss:</span> <span id="E_miss">—</span> pages
           &nbsp;|&nbsp;
           <span class="label">worst miss:</span> <span id="E_worst">—</span> pages
         </div>
+        <div class="fit-stats" style="margin-top:2px;" id="E_perfilm"></div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predE">
-        <h3>Prediction</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. Run end to end, do the three films move through the books at one steady pace?</div>
-            <label><input type="radio" name="qE1" value="one" /> One pace the whole way</label>
-            <label><input type="radio" name="qE1" value="three" /> A different pace in each film</label>
-            <label><input type="radio" name="qE1" value="drift" /> A pace that speeds up steadily from start to finish</label>
-          </li>
-        </ol>
-        <button id="submitE" disabled>Submit → unlock the sliders</button>
-        <div class="explore-tracker" id="exploreE">Record a pace for each of the three films. <span class="count">0/3 recorded</span></div>
+      <div class="panel">
+        <h3>To finish the lesson</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">Get the average miss down to 15 pages or better.
+            <span class="hint">best so far: <span id="E1_now">—</span></span></li>
+          <li data-task="E2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedE">Fit accepted.</div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsE">
-          <div class="row"><label for="E_view">what you are looking at</label>
-            <select id="E_view" style="grid-column:2 / 4;">
-              <option value="joined">all three, end to end</option>
-              <option value="split">each film from its own start</option>
-            </select>
-          </div>
-          <div class="row" id="E_filmRow" style="display:none;"><label for="E_film">which film</label>
-            <select id="E_film" style="grid-column:2 / 4;"></select>
-          </div>
-          <div class="row" data-line="start"><label for="E_start">what page it starts on</label><input type="range" id="E_start" min="-200" max="400" step="1" value="0" /><output id="E_startOut">0</output></div>
-          <div class="row" data-line="pace"><label for="E_pace">page pace (pages a minute)</label><input type="range" id="E_pace" min="0" max="6" step="0.01" value="1" /><output id="E_paceOut">1.00</output></div>
-          <div class="buttons">
-            <button id="E_record" class="accent" disabled>Record this pace</button>
-            <button id="E_download" class="ghost">Download .R</button>
-          </div>
+        <div class="split-row">
+          <button id="E_splitStart" type="button">Opening page
+            <span class="state">one for all three</span></button>
+          <button id="E_splitPace" type="button">Pace
+            <span class="state">one for all three</span></button>
+        </div>
+        <div class="controls" id="controlsE">
+          <div id="E_rows"></div>
+          <div class="buttons"><button id="E_download" class="ghost">Download .R</button></div>
         </div>
       </div>
       <div class="panel">
-        <h3>Paces you have recorded</h3>
-        <div class="paces" id="E_paces"><div style="color:var(--muted);">none yet</div></div>
+        <h3>The best you have reached each way</h3>
+        <div class="ledger" id="E_ledger"></div>
       </div>
-      <div class="panel prediction" id="postE" style="display:none;">
-        <p class="q">Which film moves through its book fastest?</p>
-        <label><input type="radio" name="qE2" value="fotr" /> The Fellowship of the Ring</label>
-        <label><input type="radio" name="qE2" value="ttt" /> The Two Towers</label>
-        <label><input type="radio" name="qE2" value="rotk" /> The Return of the King</label>
-        <button id="submitE2" disabled>Submit</button>
+      <div class="panel numq" id="numqE">
+        <div class="q">The Return of the King has 311 pages. At the pace you gave The Fellowship of the Ring, how many minutes of film would those 311 pages take?</div>
+        <div class="row">
+          <input type="number" id="E_ans" min="0" max="600" step="1" placeholder="minutes" />
+          <span class="unit">minutes</span>
+          <button id="E_submit">Submit</button>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line">q &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/lotr_quotes.csv"</span>)</span><span class="line"></span><span class="line"><span class="com"># one line over the whole run</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(page_total ~ minute_total, data = q))</span><span class="line"></span><span class="line"><span class="com"># one line per film, each from its own start</span></span><span class="line"><span class="fn">sapply</span>(<span class="fn">split</span>(q, q$film), <span class="kw">function</span>(d)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(page ~ minute, data = d))[<span class="num">2</span>])</span></pre>
+<pre class="code" id="codeE"><span class="line">q &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/lotr_quotes.csv"</span>)</span><span class="line"></span><span class="line"><span class="com"># one opening page, one pace</span></span><span class="line"><span class="fn">lm</span>(page_total ~ minute, data = q)</span><span class="line"></span><span class="line"><span class="com"># one for each film, opening page only</span></span><span class="line"><span class="fn">lm</span>(page_total ~ minute + film, data = q)</span><span class="line"></span><span class="line"><span class="com"># one of each for each film</span></span><span class="line">fit &lt;- <span class="fn">lm</span>(page_total ~ minute * film, data = q)</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(<span class="fn">residuals</span>(fit)))</span></pre>
       </div>
     </div>
   </div>
@@ -417,7 +437,7 @@
 <pre class="code" id="codeVagus"><span class="line">v &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/vagus_nerve.csv"</span>)</span><span class="line">non_g &lt;- <span class="fn">subset</span>(v, species != <span class="str">"giraffe"</span>)</span><span class="line">fit &lt;- <span class="fn">lm</span>(rln_length_cm ~ direct_cm, data = non_g)</span><span class="line"></span><span class="line">giraffe &lt;- <span class="fn">subset</span>(v, species == <span class="str">"giraffe"</span>)</span><span class="line">giraffe$rln_length_cm - <span class="fn">predict</span>(fit, newdata = giraffe)</span></pre>
       </div>
       <div class="panel scenario">
-        <p>You have spent the whole lesson turning a lean into a missing piece of the recipe: a group, then a count. This one is the biggest leftover you will meet all term. Decide for yourself whether a sharper measurement would shrink it, or whether the line was asking the wrong question.</p>
+        <p>You have spent the whole lesson turning a lean into a missing piece of the recipe: a group, then a rate, then both at once. This one is the biggest leftover you will meet all term. Decide for yourself whether a sharper measurement would shrink it, or whether the line was asking the wrong question.</p>
       </div>
     </div>
   </div>
@@ -429,7 +449,7 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-/* ====== Shared helpers (verbatim from Lesson 1) ===================== */
+/* ====== Shared helpers ============================================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
 function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H, xInv:px=>xMin+(px-pad.l)/W*(xMax-xMin), yInv:py=>yMin+(pad.t+H-py)/H*(yMax-yMin)}; }
@@ -443,13 +463,14 @@ function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
   ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
   ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
-  ctx.save(); ctx.translate(f.pad.l-40, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+  ctx.save(); ctx.translate(f.pad.l-42, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
 }
 function drawVLine(ctx, f, xv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); }
 function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
-function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
+function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function sdOf(arr) { if (arr.length < 2) return 0; const m = mean(arr); return Math.sqrt(arr.reduce((s,v)=>s+(v-m)*(v-m),0)/arr.length); }
 function ols(xs, ys) {
   const n = xs.length; const mx = mean(xs), my = mean(ys);
   let sxy = 0, sxx = 0;
@@ -460,29 +481,42 @@ function ols(xs, ys) {
   const ss_tot = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
   return { a, b, r2: 1 - ss_res/ss_tot, yhat };
 }
+function fmtKg(v) { return (v>0?"+":"") + v.toFixed(2) + " kg"; }
 
-/* ====== Stage gates ================================================= */
-// A, B and C open the next stage by hitting a target with the sliders, not by
-// counting fiddles: the student has to actually land the thing.
-const Gates = { A:{predicted:false,done:false}, B:{predicted:false,done:false},
-                C:{predicted:false,done:false}, D:{predicted:false,done:false},
-                E:{predicted:false,done:false} };
-function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:"E",E:null}[s]; }
+/* ====== Stage gates =================================================
+   No stage is opened by an opinion. Every stage is opened by landing the
+   thing it puts in front of you; the written questions are recorded but
+   never block the next section.
+   ================================================================== */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false},
+                C:{open:false,done:false}, D:{open:false,done:false},
+                E:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+
 function unlockNext(stage) {
-  const next = {A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage];
-  if (!next) return;
-  document.getElementById(next).classList.remove("stage-locked");
-  const toc = document.getElementById("toc"+nextStageLabel(stage));
-  if (toc) toc.classList.remove("locked");
+  const nx = NEXT[stage];
+  if (!nx) return;
+  const sec = document.getElementById("stage"+nx);
+  if (sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc"+nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
 }
-function markDone(stage, message) {
-  const g = Gates[stage];
-  if (g.done) return;
-  g.done = true;
-  const tracker = document.getElementById("explore"+stage);
-  tracker.classList.add("complete");
-  tracker.querySelector(".count").textContent = message;
-  if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage);
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function taskDone(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  return !!(li && li.classList.contains("done"));
+}
+function showSolved(stage, text) {
+  const el = document.getElementById("solved"+stage);
+  if (!el) return;
+  if (text) el.textContent = text;
+  el.classList.add("shown");
 }
 function record(pos, ok) {
   if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok);
@@ -490,37 +524,39 @@ function record(pos, ok) {
 function bump(stage) {
   if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage);
 }
-// Prediction bits. Bit 6 belongs to Stage C's per-centimetre follow-up, so
-// Stage D's two questions start at 7.
-const PRED_POS = { A:0, B:2, C:4, D:7, E:9 };
-function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
-  const root=document.getElementById(predId); const btn=root.querySelector("button");
-  function allFilled() { return names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
-  function check() { btn.disabled = !allFilled(); }
-  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
+// Scaffold slots. Every one has exactly one writer.
+const BIT = { A_solve:0, B_solve:1, C_land:2, C_flip:3, C_num:4,
+              D_solve:5, D_num:6, E_solve:7, E_num:8, stretch:9 };
+
+/* A written question is scored on its first attempt only, and says so on the
+   spot. Getting it wrong never closes a door. */
+function wireNumeric(id, opts) {
+  const box   = document.getElementById("numq"+id);
+  const input = document.getElementById(id+"_ans");
+  const btn   = document.getElementById(id+"_submit");
+  const out   = document.getElementById(id+"_verdict");
+  let scored = false;
   btn.addEventListener("click", () => {
-    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
-    const ol = root.querySelector("ol");
-    const msg = document.createElement("div");
-    msg.className = "prediction-done";
-    msg.textContent = "Submitted. Controls unlocked.";
-    root.insertBefore(msg, ol);
-    btn.style.display = "none";
-    Gates[stage].predicted = true;
-    document.getElementById("explore"+stage).classList.add("shown");
-    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
-    if (afterUnlock) afterUnlock();
-    results.forEach((r,i) => record(PRED_POS[stage] + i, r.correct));
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const ok = opts.check(v);
+    out.className = "verdict shown " + (ok ? "right" : "wrong");
+    out.textContent = ok ? opts.right : opts.wrong;
+    if (ok) { btn.disabled = true; input.disabled = true; }
+    // Scored on the first attempt only, and the door opens on that attempt
+    // whichever way it went. A wrong answer costs a bit, never the lesson.
+    if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
   });
+  return { show: () => { box.classList.add("shown"); } };
 }
 
 /* ====== Data ======================================================== */
-const Data = { rows: [], women: [], men: [], weights: [], bands: [], kids: [], who: [] };
+const Data = { rows: [], women: [], men: [], weights: [], kids: [] };
+const POP = { gapTrue: 0, sdPooled: 0, nClears: 0 };
 async function fetchJSON(p, fallback) {
   try { const r = await fetch(p); return await r.json(); }
   catch (e) { console.warn("fallback for "+p, e); return fallback; }
 }
-const BAND_LO = 145, BAND_HI = 190, BAND_W = 5, BAND_N = (BAND_HI - BAND_LO) / BAND_W;
 
 async function loadData() {
   const raw = await fetchJSON("../../data/clean/nhanes_adults.json", []);
@@ -544,19 +580,26 @@ async function loadData() {
   Data.weights = rows.map(r => r.w);
   Data.women = rows.filter(r => !r.man);
   Data.men   = rows.filter(r =>  r.man);
-  Data.bands = Array.from({ length: BAND_N }, () => []);
-  for (const r of rows) {
-    if (r.h < BAND_LO || r.h >= BAND_HI) continue;
-    Data.bands[Math.floor((r.h - BAND_LO) / BAND_W)].push(r);
+
+  // The scatter inside each group is not in doubt — there are seven thousand
+  // people to read it off. Stage C holds it fixed and asks only how many you
+  // would have to weigh.
+  const vw = sdOf(Data.women.map(r=>r.w)), vm = sdOf(Data.men.map(r=>r.w));
+  POP.sdPooled = Math.sqrt((vw*vw + vm*vm) / 2);
+  POP.gapTrue  = mean(Data.men.map(r=>r.w)) - mean(Data.women.map(r=>r.w));
+  POP.nClears  = 61;
+  for (let n = 2; n <= 60; n++) {
+    if (POP.gapTrue > reachAt(n)) { POP.nClears = n; break; }
   }
+
   Data.kids = await fetchJSON("../../data/clean/kids_growth.json", []);
-  Data.who  = await fetchJSON("../../data/clean/who_growth_reference.json", []);
-  drawStageA(); drawStageB(); drawStageC();
+  organizeKids();
+  drawStageA(); drawStageB(); drawStageC(); drawStageD();
 }
 
 /* ====== STAGE A — one number for everyone ========================== */
 const sA = { num: 60 };
-const A_TOL = 0.5;
+const A_TOL = 0.3;
 
 function drawStageA() {
   const cv = document.getElementById("plotA");
@@ -583,20 +626,22 @@ function drawStageA() {
   ctx.textAlign="left"; ctx.textBaseline="top";
   ctx.fillText("your number", f.x(sA.num)+4, pad.t+2);
 
-  if (Data.weights.length) {
-    const over = Data.weights.filter(w => w > sA.num).length;
-    const lean = mean(Data.weights.map(w => sA.num - w));
-    document.getElementById("A_over").textContent = over;
-    document.getElementById("A_under").textContent = Data.weights.length - over;
-    const el = document.getElementById("A_lean");
-    el.textContent = (lean>0?"+":"") + lean.toFixed(2) + " kg";
-    el.className = Math.abs(lean) <= A_TOL ? "ok" : "off";
-    if (Gates.A.predicted && !Gates.A.done && Math.abs(lean) <= A_TOL) {
-      markDone("A", "landed — Stage B unlocked.");
-      record(1, true);
-      carryNumberForward(sA.num);
-      unlockNext("A");
-    }
+  if (!Data.weights.length) return;
+  const over = Data.weights.filter(w => w > sA.num).length;
+  const lean = mean(Data.weights.map(w => sA.num - w));
+  document.getElementById("A_over").textContent = over;
+  document.getElementById("A_under").textContent = Data.weights.length - over;
+  const el = document.getElementById("A_lean");
+  el.textContent = fmtKg(lean);
+  el.className = Math.abs(lean) <= A_TOL ? "ok" : "off";
+  document.getElementById("A1_now").textContent = fmtKg(lean);
+  if (Gates.A.open && !Gates.A.done && Math.abs(lean) <= A_TOL) {
+    Gates.A.done = true;
+    markTask("A", "A1");
+    showSolved("A");
+    record(BIT.A_solve, true);
+    carryNumberForward(sA.num);
+    unlockNext("A");
   }
 }
 function onA() {
@@ -617,20 +662,18 @@ mean(guess - y)
 sum(y > guess); sum(y < guess)
 `);
 });
-wirePrediction("A","predA",["qA1"],["avg"],"controlsA");
 
 /* ====== STAGE B — one number plus a group ========================== */
 const sB = { base: 60, extra: 0 };
-const B_TOL = 0.75;
+const B_TOL = 0.4;
 
-// Stages B and C open on the number the student just landed in Stage A, with
-// the extra still at zero. That is the whole point of the next two stages: the
-// number that had no lean at all, taken apart by group and by height, does.
+// Stage B opens on the number the student just landed in Stage A, with the extra
+// still at zero. That is the whole point of the stage: the number that had no
+// lean at all, taken apart by group, does.
 function carryNumberForward(num) {
   const bBase = document.getElementById("B_base");
-  bBase.value = String(num); bBase.dispatchEvent(new Event("input"));
-  const cBase = document.getElementById("C_base");
-  cBase.value = String(num); cBase.dispatchEvent(new Event("input"));
+  bBase.value = String(Math.max(50, Math.min(110, num)));
+  bBase.dispatchEvent(new Event("input"));
 }
 
 function drawStageB() {
@@ -678,24 +721,25 @@ function drawStageB() {
   if (!Data.women.length) return;
   const lw = mean(mw), lm = mean(mm);
   // A marker on the zero line for each group's average miss.
-  function marker(v, color) {
-    const x = f.x(Math.max(minX, Math.min(maxX, v)));
-    ctx.fillStyle = color;
-    ctx.beginPath(); ctx.moveTo(x, f.y(0)-7); ctx.lineTo(x-6, f.y(0)-16); ctx.lineTo(x+6, f.y(0)-16); ctx.closePath(); ctx.fill();
-  }
-  marker(lw, "#b23a48");
+  const xw = f.x(Math.max(minX, Math.min(maxX, lw)));
+  ctx.fillStyle = "#b23a48";
+  ctx.beginPath(); ctx.moveTo(xw, f.y(0)-7); ctx.lineTo(xw-6, f.y(0)-16); ctx.lineTo(xw+6, f.y(0)-16); ctx.closePath(); ctx.fill();
   const xm = f.x(Math.max(minX, Math.min(maxX, lm)));
   ctx.fillStyle = "#2f6b8f";
   ctx.beginPath(); ctx.moveTo(xm, f.y(0)+7); ctx.lineTo(xm-6, f.y(0)+16); ctx.lineTo(xm+6, f.y(0)+16); ctx.closePath(); ctx.fill();
 
   const ew = document.getElementById("B_leanW"), em = document.getElementById("B_leanM");
-  ew.textContent = (lw>0?"+":"") + lw.toFixed(2) + " kg";
-  em.textContent = (lm>0?"+":"") + lm.toFixed(2) + " kg";
+  ew.textContent = fmtKg(lw); em.textContent = fmtKg(lm);
   ew.className = Math.abs(lw) <= B_TOL ? "ok" : "off";
   em.className = Math.abs(lm) <= B_TOL ? "ok" : "off";
-  if (Gates.B.predicted && !Gates.B.done && Math.abs(lw) <= B_TOL && Math.abs(lm) <= B_TOL) {
-    markDone("B", "both groups landed — Stage C unlocked.");
-    record(3, true);
+  const worst = Math.max(Math.abs(lw), Math.abs(lm));
+  document.getElementById("B1_now").textContent = worst.toFixed(2) + " kg";
+  if (Gates.B.open && !Gates.B.done && worst <= B_TOL) {
+    Gates.B.done = true;
+    markTask("B", "B1");
+    showSolved("B");
+    record(BIT.B_solve, true);
+    seedStageC(sB.base, sB.extra);
     unlockNext("B");
   }
 }
@@ -724,60 +768,147 @@ tapply(guess - nh$Weight, is_man, mean)
 coef(lm(Weight ~ is_man, data = nh))
 `);
 });
-wirePrediction("B","predB",["qB1"],["opposite"],"controlsB");
 
-/* ====== STAGE C — one number plus a count ========================== */
-const sC = { base: 60, extra: 0, settled: null };
-const C_TOL = 2.5;
+/* ====== STAGE C — the gap against what weighing alone can do =======
+   The scatter inside each group is fixed and known (seven thousand people
+   measured it). What moves is how many you put on the scale. The band is
+   two of those weighing-widths either side of nothing at all.
+   ================================================================== */
+const sC = { n: 6, base: 70, extra: 0, rng: mulberry32(pageSeed("l3C")),
+             draw: null, gaps: [], flips: 0 };
+const C_TOL = 1.0;
 
-function bandLeans() {
-  return Data.bands.map(rows => {
-    if (rows.length < 60) return null;
-    return mean(rows.map(r => sC.base + sC.extra * ((r.h - 170) / 5) - r.w));
-  });
+function reachAt(n) { return 2 * POP.sdPooled * Math.sqrt(2 / n); }
+
+function seedStageC(base, extra) {
+  const b = document.getElementById("C_base"), e = document.getElementById("C_extra");
+  b.value = String(Math.max(40, Math.min(130, base)));
+  e.value = String(Math.max(-50, Math.min(50, extra)));
+  // The handfuls drawn while the stage was still shut do not count towards it.
+  sC.gaps = []; sC.flips = 0;
+  onC();
+}
+
+// keep=false redraws what is on the scale without adding a row to the record —
+// that is what changing the number of people does, so dragging that slider
+// cannot quietly farm the reversed handful the stage asks for.
+function drawHandful(keep) {
+  if (!Data.women.length) return;
+  const pick = (pool, n) => {
+    const out = [];
+    for (let i = 0; i < n; i++) out.push(pool[Math.floor(sC.rng() * pool.length)].w);
+    return out;
+  };
+  sC.draw = { n: sC.n, w: pick(Data.women, sC.n), m: pick(Data.men, sC.n) };
+  if (keep !== false) {
+    const gap = mean(sC.draw.m) - mean(sC.draw.w);
+    sC.gaps.push({ n: sC.n, gap });
+    if (gap < 0) sC.flips++;
+  }
+  bump("C");
 }
 
 function drawStageC() {
-  const cv = document.getElementById("plotC");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const pad = { l: 60, r: 14, t: 18, b: 46 };
-  const f = makeFrame(pad, W, H, BAND_LO, BAND_HI, -28, 28);
-  drawAxes(ctx, f, "height band (cm)", "how far off you are (kg)", 9, 4,
-           v=>v.toFixed(0), v=>v.toFixed(0));
-  // The band you are allowed to be wrong inside.
-  ctx.fillStyle = "rgba(111,138,74,0.13)";
-  ctx.fillRect(f.pad.l, f.y(C_TOL), f.W, f.y(-C_TOL)-f.y(C_TOL));
-  drawHLine(ctx, f, 0, "#1d1d1b", 1.5, []);
-
-  const leans = bandLeans();
-  let worst = 0, high = 0, low = 0;
-  leans.forEach((lean, i) => {
-    if (lean === null) return;
-    const x = f.x(BAND_LO + i*BAND_W + BAND_W/2);
-    const yv = Math.max(-27, Math.min(27, lean));
-    ctx.strokeStyle = "#999"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x, f.y(0)); ctx.lineTo(x, f.y(yv)); ctx.stroke();
-    ctx.fillStyle = Math.abs(lean) <= C_TOL ? "#4a7a2a" : "#a8331a";
-    ctx.beginPath(); ctx.arc(x, f.y(yv), 5, 0, 2*Math.PI); ctx.fill();
-    worst = Math.max(worst, Math.abs(lean));
-    if (lean > C_TOL) high++; else if (lean < -C_TOL) low++;
-  });
-
-  if (!Data.rows.length) return;
-  const el = document.getElementById("C_worst");
-  el.textContent = worst.toFixed(1) + " kg";
-  el.className = worst <= C_TOL ? "ok" : "off";
-  document.getElementById("C_high").textContent = high;
-  document.getElementById("C_low").textContent = low;
-  if (Gates.C.predicted && !Gates.C.done && worst <= C_TOL) {
-    sC.settled = sC.extra;
-    markDone("C", "every band landed.");
-    record(5, true);
-    document.getElementById("C_settled").textContent = sC.extra.toFixed(1);
-    document.getElementById("postC").style.display = "block";
+  if (!sC.draw && Data.women.length) drawHandful(false);
+  // --- top: the handful in front of you -----------------------------------
+  {
+    const cv = document.getElementById("plotC1");
+    const { ctx, W, H } = setupCanvas(cv);
+    ctx.clearRect(0,0,W,H);
+    const pad = { l: 56, r: 14, t: 14, b: 42 };
+    const f = makeFrame(pad, W, H, 0, 2, 20, 190);
+    drawAxes(ctx, f, "", "weight (kg)", 0, 5, () => "", v=>v.toFixed(0));
+    ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillStyle = "#b23a48"; ctx.fillText("women", f.x(0.5), f.pad.t+f.H+8);
+    ctx.fillStyle = "#2f6b8f"; ctx.fillText("men",   f.x(1.5), f.pad.t+f.H+8);
+    if (sC.draw) {
+      const jit = (i) => (Math.abs(Math.sin(i*12.9898)*43758.5453) % 1) * 0.5;
+      sC.draw.w.forEach((v,i) => {
+        ctx.fillStyle = "rgba(178,58,72,0.7)";
+        ctx.beginPath(); ctx.arc(f.x(0.25 + jit(i)), f.y(v), 4, 0, 2*Math.PI); ctx.fill();
+      });
+      sC.draw.m.forEach((v,i) => {
+        ctx.fillStyle = "rgba(47,107,143,0.7)";
+        ctx.beginPath(); ctx.arc(f.x(1.25 + jit(i+99)), f.y(v), 4, 0, 2*Math.PI); ctx.fill();
+      });
+      // The two numbers you have set, drawn over their own column.
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#b23a48";
+      ctx.beginPath(); ctx.moveTo(f.x(0.12), f.y(sC.base)); ctx.lineTo(f.x(0.88), f.y(sC.base)); ctx.stroke();
+      ctx.strokeStyle = "#2f6b8f";
+      ctx.beginPath(); ctx.moveTo(f.x(1.12), f.y(sC.base+sC.extra)); ctx.lineTo(f.x(1.88), f.y(sC.base+sC.extra)); ctx.stroke();
+    }
+  }
+  // --- bottom: the record of every handful --------------------------------
+  const reach = reachAt(sC.n);
+  {
+    const cv = document.getElementById("plotC2");
+    const { ctx, W, H } = setupCanvas(cv);
+    ctx.clearRect(0,0,W,H);
+    const pad = { l: 56, r: 14, t: 16, b: 44 };
+    const f = makeFrame(pad, W, H, -45, 45, 0, 1);
+    drawAxes(ctx, f, "men's average minus women's average (kg)", "", 6, 0, v=>v.toFixed(0));
+    ctx.fillStyle = "rgba(120,120,120,0.20)";
+    ctx.fillRect(f.x(-reach), f.pad.t, f.x(reach)-f.x(-reach), f.H);
+    drawVLine(ctx, f, 0, "#666", 1.5, [4,3]);
+    // Where the whole seven thousand actually sits.
+    drawVLine(ctx, f, POP.gapTrue, "#4a7a2a", 2, []);
+    ctx.fillStyle = "#4a7a2a"; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("all seven thousand", f.x(POP.gapTrue)+4, f.pad.t+2);
+    sC.gaps.forEach((g,i) => {
+      const yy = f.pad.t + f.H * (0.25 + 0.55 * (((i*0.618)%1)));
+      ctx.fillStyle = g.gap < 0 ? "#a8331a" : "rgba(60,60,60,0.5)";
+      ctx.beginPath(); ctx.arc(f.x(Math.max(-45, Math.min(45, g.gap))), yy, g.gap<0?4:2.8, 0, 2*Math.PI); ctx.fill();
+    });
+  }
+  // --- readouts ------------------------------------------------------------
+  if (sC.draw) {
+    const lw = sC.base - mean(sC.draw.w);
+    const lm = sC.base + sC.extra - mean(sC.draw.m);
+    const ew = document.getElementById("C_leanW"), em = document.getElementById("C_leanM");
+    ew.textContent = fmtKg(lw); em.textContent = fmtKg(lm);
+    ew.className = Math.abs(lw) <= C_TOL ? "ok" : "off";
+    em.className = Math.abs(lm) <= C_TOL ? "ok" : "off";
+    const worst = Math.max(Math.abs(lw), Math.abs(lm));
+    if (!taskDone("C","C1")) document.getElementById("C1_now").textContent = worst.toFixed(2) + " kg";
+    if (Gates.C.open && !taskDone("C","C1") && worst <= C_TOL) {
+      markTask("C","C1");
+      document.getElementById("C1_now").textContent = "landed";
+      record(BIT.C_land, true);
+      checkStageC();
+    }
+  }
+  document.getElementById("C_reach").textContent = "±" + reach.toFixed(1) + " kg";
+  document.getElementById("C_true").textContent = POP.gapTrue.toFixed(1) + " kg";
+  const cl = document.getElementById("C_clears");
+  const clears = POP.gapTrue > reach;
+  cl.textContent = clears ? "yes" : "no";
+  cl.className = clears ? "ok" : "off";
+  document.getElementById("C_count").textContent = sC.gaps.length;
+  const fl = document.getElementById("C_flips");
+  fl.textContent = sC.flips;
+  fl.className = sC.flips ? "ok" : "";
+  if (Gates.C.open && !taskDone("C","C2") && sC.flips > 0) {
+    markTask("C","C2");
+    const li = document.querySelector('#tasksC li[data-task="C2"] .hint');
+    if (li) li.textContent = "caught one";
+    record(BIT.C_flip, true);
+    checkStageC();
   }
 }
+
+// Stage D opens once the handful has been landed and a reversed handful has
+// been caught. The written question is recorded but never blocks the door.
+function checkStageC() {
+  if (!taskDone("C","C1") || !taskDone("C","C2")) return;
+  numqC.show();
+  if (!Gates.C.done) {
+    Gates.C.done = true;
+    showSolved("C", "Stage D is open once you have answered below.");
+  }
+}
+
 function onC() {
   sC.base  = parseFloat(document.getElementById("C_base").value);
   sC.extra = parseFloat(document.getElementById("C_extra").value);
@@ -790,208 +921,216 @@ function onC() {
 }
 document.getElementById("C_base").addEventListener("input", () => { highlightByDataLine("codeC","base"); onC(); });
 document.getElementById("C_extra").addEventListener("input", () => { highlightByDataLine("codeC","extra"); onC(); });
+document.getElementById("C_n").addEventListener("input", () => {
+  sC.n = parseInt(document.getElementById("C_n").value, 10);
+  document.getElementById("C_nOut").textContent = sC.n;
+  document.getElementById("cC_n").textContent = sC.n;
+  highlightByDataLine("codeC","n");
+  drawHandful(false);
+  drawStageC();
+});
+document.getElementById("C_draw").addEventListener("click", () => { drawHandful(); drawStageC(); });
+document.getElementById("C_draw10").addEventListener("click", () => {
+  for (let i = 0; i < 10; i++) drawHandful();
+  drawStageC();
+});
+document.getElementById("C_clear").addEventListener("click", () => {
+  sC.gaps = []; sC.flips = 0; drawStageC();
+});
 document.getElementById("C_download").addEventListener("click", () => {
-  downloadText("lesson3_stageC.R", `# Lesson 3, Stage C -- a starting number plus a count.
+  downloadText("lesson3_stageC.R", `# Lesson 3, Stage C -- the gap, and what weighing alone can hand you.
 nh <- read.csv("data/clean/nhanes_adults.csv")
-steps <- (nh$Height - 170) / 5
+n  <- ${sC.n}
+w  <- sample(nh$Weight[nh$Gender == "female"], n)
+m  <- sample(nh$Weight[nh$Gender == "male"],   n)
 
 base  <- ${sC.base.toFixed(1)}
 extra <- ${sC.extra.toFixed(1)}
-guess <- base + extra * steps
+mean(base - w); mean(base + extra - m)
 
-band <- cut(nh$Height, seq(145, 190, 5))
-tapply(guess - nh$Weight, band, mean)
+t.test(m, w, var.equal = TRUE)
 
-coef(lm(Weight ~ steps, data = nh))
+s <- sd(nh$Weight[nh$Gender == "male"])
+2 * s * sqrt(2 / n)
 `);
 });
-wirePrediction("C","predC",["qC1"],["heavier"],"controlsC");
 
-document.querySelectorAll('input[name="qC2"]').forEach(r => {
-  r.addEventListener("change", () => { document.getElementById("submitC2").disabled = false; });
-});
-document.getElementById("submitC2").addEventListener("click", () => {
-  const choice = document.querySelector('input[name="qC2"]:checked');
-  if (!choice) return;
-  record(6, choice.value === "one");
-  document.getElementById("submitC2").disabled = true;
-  document.querySelectorAll('input[name="qC2"]').forEach(r => { r.disabled = true; });
-  unlockNext("C");
-  document.getElementById("stageD").scrollIntoView({ behavior: "smooth", block: "start" });
+const numqC = wireNumeric("C", {
+  bit: BIT.C_num,
+  check: v => Math.round(v) === POP.nClears,
+  right: "Right. Below that, the gap sits inside what weighing alone hands you.",
+  wrong: "Not that one. Watch the band shrink as you turn the number of people up, and find the first setting where the gap sits outside it.",
+  after: () => { markTask("C","C3"); showSolved("C","Stage D is open."); unlockNext("C"); }
 });
 
-/* ====== STAGE D — kids' growth click-to-predict ==================== */
-const sD = {
-  round: 0, totalRounds: 6, byKid: null,
-  current: null, click: null, locked: true };
+/* ====== STAGE D — Beren and Cyrus ==================================
+   Their weighings are filed in different units: Beren's in kilograms,
+   Cyrus's in grams. Normalised here on the way in.
+   ================================================================== */
+const D_MIN_AGE = 1.0, D_TOL = 0.4;
+const sD = { base: 12, grow: 0, extra: 0, beren: [], cyrus: [], medB: 0, medC: 0 };
 
 function organizeKids() {
-  sD.byKid = {};
-  Data.kids.forEach(r => {
-    if (r.measure !== "mass") return;
-    (sD.byKid[r.kid] = sD.byKid[r.kid] || []).push(r);
+  const grab = (kid) => Data.kids
+    .filter(r => r.kid === kid && r.measure === "mass" && r.age_years >= D_MIN_AGE)
+    .map(r => ({ age: r.age_years, kg: (r.units === "g" ? r.value / 1000 : r.value), sick: !!r.sick_proxy }))
+    .sort((a,b) => a.age - b.age);
+  sD.beren = grab("beren");
+  sD.cyrus = grab("cyrus");
+  const med = (arr) => arr.length ? arr[Math.floor(arr.length/2)].age : 0;
+  sD.medB = med(sD.beren);
+  sD.medC = med(sD.cyrus);
+}
+
+function guessD(age, isCyrus) { return sD.base + sD.grow * (age - 2) + (isCyrus ? sD.extra : 0); }
+function cellsD() {
+  const out = {};
+  [["b", sD.beren, sD.medB, false], ["c", sD.cyrus, sD.medC, true]].forEach(([tag, pts, med, isC]) => {
+    ["e","l"].forEach(half => {
+      const sel = pts.filter(p => half === "l" ? p.age >= med : p.age < med);
+      out[tag+half] = sel.length ? mean(sel.map(p => p.kg - guessD(p.age, isC))) : 0;
+    });
   });
-  Object.keys(sD.byKid).forEach(k => sD.byKid[k].sort((a,b) => a.day_of_life - b.day_of_life));
-}
-
-function setupRoundD() {
-  if (!sD.byKid) organizeKids();
-  const kid = (sD.round % 2 === 0) ? "beren" : "cyrus";
-  const pts = sD.byKid[kid];
-  if (!pts || pts.length < 4) { sD.current = null; return; }
-  const rng = mulberry32(pageSeed("l3D" + sD.round));
-  // At least twice, hide a day the child was ill — that is the round where the
-  // point lands somewhere the line did not expect.
-  const sickIdx = pts.map((p,i) => p.sick_proxy ? i : -1).filter(i => i > 0 && i < pts.length-1);
-  let hiddenIdx;
-  if (sickIdx.length && (sD.round === 1 || sD.round === 3)) {
-    hiddenIdx = sickIdx[Math.floor(rng()*sickIdx.length)];
-  } else {
-    hiddenIdx = 1 + Math.floor(rng() * (pts.length - 2));
-  }
-  sD.current = { kid, points: pts, hiddenIdx, hiddenPoint: pts[hiddenIdx], revealed: false };
-  sD.click = null;
-}
-
-function frameD(cv) {
-  const pts = sD.current.points;
-  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
-  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
-  const dpr = window.devicePixelRatio || 1;
-  return makeFrame({ l: 56, r: 12, t: 14, b: 40 },
-                   cv.width/dpr, cv.height/dpr, 0, xMax, 0, yMax);
+  return out;
 }
 
 function drawStageD() {
-  if (!sD.current) { setupRoundD(); }
-  if (!sD.current) return;
-  const cv = document.getElementById("plotD");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const pts = sD.current.points;
-  const xMax = Math.max(...pts.map(p => p.age_years)) * 1.05;
-  const yMax = Math.max(...pts.map(p => p.value)) * 1.10;
-  const f = makeFrame({ l: 56, r: 12, t: 14, b: 40 }, W, H, 0, xMax, 0, yMax);
-  drawAxes(ctx, f, "age (years)", "weight (kg)", 6, 5, v=>v.toFixed(1), v=>v.toFixed(0));
-  if (Data.who && Data.who.length) {
-    ctx.strokeStyle = "#aaa"; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.beginPath();
-    Data.who.forEach((r,i) => {
-      const x = f.x(r.day_of_life/365.25), y = f.y(r.mass_kg);
-      i===0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  if (!sD.beren.length) return;
+  const all = sD.beren.concat(sD.cyrus);
+  const ageMax = Math.max(...all.map(p => p.age)) + 0.3;
+  // --- top: the weighings and your two lines --------------------------------
+  {
+    const cv = document.getElementById("plotD1");
+    const { ctx, W, H } = setupCanvas(cv);
+    ctx.clearRect(0,0,W,H);
+    const f = makeFrame({ l: 56, r: 14, t: 14, b: 42 }, W, H, D_MIN_AGE - 0.2, ageMax, 8, 24);
+    drawAxes(ctx, f, "age (years)", "weight (kg)", 5, 4, v=>v.toFixed(1), v=>v.toFixed(0));
+    [["#2f6b8f", false], ["#a8611a", true]].forEach(([col, isC]) => {
+      ctx.strokeStyle = col; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x(f.xMin), f.y(guessD(f.xMin, isC)));
+      ctx.lineTo(f.x(f.xMax), f.y(guessD(f.xMax, isC)));
+      ctx.stroke();
     });
-    ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = "#2f6b8f";
+    for (const p of sD.beren) { ctx.beginPath(); ctx.arc(f.x(p.age), f.y(p.kg), 4, 0, 2*Math.PI); ctx.fill(); }
+    ctx.fillStyle = "#a8611a";
+    for (const p of sD.cyrus) { ctx.beginPath(); ctx.arc(f.x(p.age), f.y(p.kg), 4, 0, 2*Math.PI); ctx.fill(); }
+    ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillStyle = "#2f6b8f"; ctx.fillRect(f.pad.l+8, f.pad.t+6, 10, 8);
+    ctx.fillStyle = "#555"; ctx.fillText("Beren", f.pad.l+22, f.pad.t+10);
+    ctx.fillStyle = "#a8611a"; ctx.fillRect(f.pad.l+72, f.pad.t+6, 10, 8);
+    ctx.fillStyle = "#555"; ctx.fillText("Cyrus", f.pad.l+86, f.pad.t+10);
   }
-  ctx.fillStyle = "rgba(60,60,60,0.7)";
-  pts.forEach((p, i) => {
-    if (i === sD.current.hiddenIdx && !sD.current.revealed) return;
-    ctx.beginPath(); ctx.arc(f.x(p.age_years), f.y(p.value), 4, 0, 2*Math.PI); ctx.fill();
-  });
-  if (sD.current.revealed) {
-    const hp = sD.current.hiddenPoint;
-    ctx.fillStyle = hp.sick_proxy ? "#a86a1a" : "#6f8a4a";
-    ctx.beginPath(); ctx.arc(f.x(hp.age_years), f.y(hp.value), 6, 0, 2*Math.PI); ctx.fill();
-    if (sD.click) {
-      ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(f.x(sD.click.x), f.y(sD.click.y)); ctx.lineTo(f.x(hp.age_years), f.y(hp.value)); ctx.stroke();
-      ctx.fillStyle = "#b23a48";
-      ctx.beginPath(); ctx.arc(f.x(sD.click.x), f.y(sD.click.y), 4, 0, 2*Math.PI); ctx.fill();
-    }
-  } else if (sD.click) {
-    ctx.fillStyle = "#b23a48";
-    ctx.beginPath(); ctx.arc(f.x(sD.click.x), f.y(sD.click.y), 4, 0, 2*Math.PI); ctx.fill();
-  } else {
-    const hp = sD.current.hiddenPoint;
-    ctx.strokeStyle = "#888"; ctx.setLineDash([3,3]); ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(f.x(hp.age_years), f.pad.t); ctx.lineTo(f.x(hp.age_years), f.pad.t+f.H); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#888"; ctx.textAlign = "center"; ctx.font = "12px -apple-system";
-    ctx.fillText(`click here, at age ${hp.age_years.toFixed(2)} y`, f.x(hp.age_years), f.pad.t + 12);
+  // --- bottom: the leftovers, and the four halves ---------------------------
+  const c = cellsD();
+  {
+    const cv = document.getElementById("plotD2");
+    const { ctx, W, H } = setupCanvas(cv);
+    ctx.clearRect(0,0,W,H);
+    const f = makeFrame({ l: 56, r: 14, t: 14, b: 42 }, W, H, D_MIN_AGE - 0.2, ageMax, -3, 3);
+    drawAxes(ctx, f, "age (years)", "actual − your line (kg)", 5, 4, v=>v.toFixed(1), v=>v.toFixed(0));
+    ctx.fillStyle = "rgba(111,138,74,0.14)";
+    ctx.fillRect(f.pad.l, f.y(D_TOL), f.W, f.y(-D_TOL)-f.y(D_TOL));
+    drawHLine(ctx, f, 0, "#1d1d1b", 1.5, []);
+    const plot = (pts, isC, col) => {
+      ctx.fillStyle = col;
+      for (const p of pts) {
+        const r = Math.max(-2.9, Math.min(2.9, p.kg - guessD(p.age, isC)));
+        ctx.beginPath(); ctx.arc(f.x(p.age), f.y(r), 3.2, 0, 2*Math.PI); ctx.fill();
+      }
+    };
+    plot(sD.beren, false, "rgba(47,107,143,0.55)");
+    plot(sD.cyrus, true,  "rgba(168,97,26,0.55)");
+    // One bar per half, so the three knobs each have something to answer to.
+    const bars = [
+      { v: c.be, x0: D_MIN_AGE - 0.15, x1: sD.medB, col: "#2f6b8f" },
+      { v: c.bl, x0: sD.medB,          x1: ageMax - 0.1, col: "#2f6b8f" },
+      { v: c.ce, x0: D_MIN_AGE - 0.15, x1: sD.medC, col: "#a8611a" },
+      { v: c.cl, x0: sD.medC,          x1: Math.max(...sD.cyrus.map(p=>p.age)) + 0.1, col: "#a8611a" }
+    ];
+    bars.forEach(b => {
+      const v = Math.max(-2.9, Math.min(2.9, b.v));
+      ctx.strokeStyle = b.col; ctx.lineWidth = 3;
+      ctx.setLineDash(Math.abs(b.v) <= D_TOL ? [] : [5,3]);
+      ctx.beginPath(); ctx.moveTo(f.x(b.x0), f.y(v)); ctx.lineTo(f.x(b.x1), f.y(v)); ctx.stroke();
+      ctx.setLineDash([]);
+    });
   }
-  document.getElementById("D_kid").textContent = sD.current.kid;
-  document.getElementById("D_round").textContent = sD.round + 1;
-  document.getElementById("D_click").textContent = sD.click ? `(${sD.click.x.toFixed(2)} y, ${sD.click.y.toFixed(1)} kg)` : "—";
-  if (sD.current.revealed) {
-    const hp = sD.current.hiddenPoint;
-    document.getElementById("D_actual").textContent = `(${hp.age_years.toFixed(2)} y, ${hp.value.toFixed(1)} kg)`;
-    document.getElementById("D_err").textContent = sD.click ? `${(sD.click.y - hp.value).toFixed(2)} kg`: "—";
-    document.getElementById("D_sick").textContent = hp.sick_proxy ? "yes" : "no";
-  } else {
-    document.getElementById("D_actual").textContent = "—";
-    document.getElementById("D_err").textContent = "—";
-    document.getElementById("D_sick").textContent = "—";
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    el.textContent = fmtKg(v);
+    el.className = Math.abs(v) <= D_TOL ? "ok" : "off";
+  };
+  set("D_be", c.be); set("D_bl", c.bl); set("D_ce", c.ce); set("D_cl", c.cl);
+  const worst = Math.max(Math.abs(c.be), Math.abs(c.bl), Math.abs(c.ce), Math.abs(c.cl));
+  document.getElementById("D1_now").textContent = worst.toFixed(2) + " kg";
+  if (Gates.D.open && !Gates.D.done && worst <= D_TOL) {
+    Gates.D.done = true;
+    markTask("D","D1");
+    record(BIT.D_solve, true);
+    showSolved("D", "Stage E is open once you have answered below.");
+    numqD.show();
   }
 }
-
-document.getElementById("plotD").addEventListener("click", (e) => {
-  if (sD.locked || !sD.current || sD.current.revealed) return;
-  const cv = e.currentTarget;
-  const rect = cv.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  const px = (e.clientX - rect.left) * (cv.width / rect.width / dpr);
-  const py = (e.clientY - rect.top)  * (cv.height / rect.height / dpr);
-  const f = frameD(cv);
-  sD.click = { x: f.xInv(px), y: f.yInv(py) };
-  sD.current.revealed = true;
-  drawStageD();
+function onD() {
+  sD.base  = parseFloat(document.getElementById("D_base").value);
+  sD.grow  = parseFloat(document.getElementById("D_grow").value);
+  sD.extra = parseFloat(document.getElementById("D_extra").value);
+  document.getElementById("D_baseOut").textContent  = sD.base.toFixed(1);
+  document.getElementById("D_growOut").textContent  = sD.grow.toFixed(2);
+  document.getElementById("D_extraOut").textContent = sD.extra.toFixed(1);
+  document.getElementById("cD_base").textContent  = sD.base.toFixed(1);
+  document.getElementById("cD_grow").textContent  = sD.grow.toFixed(2);
+  document.getElementById("cD_extra").textContent = sD.extra.toFixed(1);
   bump("D");
-  document.getElementById("D_next").disabled = false;
-});
-
-document.getElementById("D_next").addEventListener("click", () => {
-  sD.round++;
-  document.getElementById("D_next").disabled = true;
-  const tracker = document.getElementById("exploreD");
-  tracker.querySelector(".count").textContent = sD.round + "/6 rounds";
-  if (sD.round >= sD.totalRounds) {
-    document.getElementById("D_title").textContent = "Six done.";
-    markDone("D", "six done — Stage E unlocked.");
-    unlockNext("D");
-    document.getElementById("stageE").scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
-  }
-  document.getElementById("D_title").textContent = `Round ${sD.round+1} of ${sD.totalRounds} — click where the missing point should be`;
-  setupRoundD(); drawStageD();
-});
-
+  drawStageD();
+}
+document.getElementById("D_base").addEventListener("input",  () => { highlightByDataLine("codeD","base");  onD(); });
+document.getElementById("D_grow").addEventListener("input",  () => { highlightByDataLine("codeD","grow");  onD(); });
+document.getElementById("D_extra").addEventListener("input", () => { highlightByDataLine("codeD","extra"); onD(); });
 document.getElementById("D_download").addEventListener("click", () => {
-  downloadText("lesson3_stageD.R", `# Lesson 3, Stage D
+  downloadText("lesson3_stageD.R", `# Lesson 3, Stage D -- one rate, two starting points.
 k <- read.csv("data/clean/kids_growth.csv")
-b <- subset(k, kid == "beren" & measure == "mass")
-fit <- lm(value ~ poly(age_years, 2), data = b)
-b$leftover <- residuals(fit)
-aggregate(leftover ~ sick_proxy, data = b, mean)
-boxplot(leftover ~ sick_proxy, data = b, col = c("#6f8a4a","#a86a1a"))
+k$kg <- ifelse(k$units == "g", k$value / 1000, k$value)
+d <- subset(k, measure == "mass" & age_years >= 1)
+
+base  <- ${sD.base.toFixed(1)}
+grow  <- ${sD.grow.toFixed(2)}
+extra <- ${sD.extra.toFixed(1)}
+guess <- base + grow * (d$age_years - 2) + extra * (d$kid == "cyrus")
+tapply(d$kg - guess, d$kid, mean)
+
+coef(lm(kg ~ I(age_years - 2) + kid, data = d))
 `);
+});
+
+const numqD = wireNumeric("D", {
+  bit: BIT.D_num,
+  // Graded against the fit the student actually landed, not against mine.
+  check: v => sD.grow > 0 && Math.abs(v - 12 * sD.extra / sD.grow) <= 2,
+  right: "Right. That is the gap between the boys turned into a stretch of time.",
+  wrong: "Not that. You have a gap in kilograms and a rate in kilograms per year; put them together, then say it in months.",
+  after: () => { markTask("D","D2"); showSolved("D","Stage E is open."); unlockNext("D"); }
 });
 
 document.getElementById("stretchD_btn").addEventListener("click", () => {
   const btn = document.getElementById("stretchD_btn");
   btn.classList.add("done"); btn.textContent = "Recorded ✓"; btn.disabled = true;
   document.getElementById("stretchD_status").textContent = "Noted.";
-  record(11, true);
+  record(BIT.stretch, true);
 });
 
-wirePrediction("D", "predD", ["qD1","qD2"], ["lower","below"], null, () => {
-  sD.locked = false;
-  document.getElementById("plotD").classList.remove("locked");
-  setupRoundD(); drawStageD();
-});
-
-/* ====== STAGE E — three films, one line ============================
+/* ====== STAGE E — three films ======================================
    Quote positions for the three Jackson films. Runtimes are the theatrical
-   cuts; page numbers are within each film's own volume. Each film moves
-   through its book at its own pace: Fellowship is the quickest, Return of
-   the King the slowest, and Two Towers sits close enough to Fellowship that
-   telling them apart is a genuine question.
+   cuts. The page on the vertical axis is the page of the whole three-book
+   story, so the three films sit at three heights as well as three tilts.
    ================================================================== */
 const FILMS = [
-  { id:"fotr", name:"The Fellowship of the Ring", runtime:178, pages:398, colour:"#2f6b8f" },
-  { id:"ttt",  name:"The Two Towers",             runtime:179, pages:352, colour:"#6f8a4a" },
-  { id:"rotk", name:"The Return of the King",     runtime:201, pages:311, colour:"#b23a48" }
+  { id:"fotr", name:"The Fellowship of the Ring", short:"Fellowship", pages:398, colour:"#2f6b8f" },
+  { id:"ttt",  name:"The Two Towers",             short:"Two Towers", pages:352, colour:"#6f8a4a" },
+  { id:"rotk", name:"The Return of the King",     short:"Return",     pages:311, colour:"#b23a48" }
 ];
-// A quote's page is not a clean function of its minute: films skip chapters,
-// reorder scenes, and invent moments. The scatter here is that, and it is what
-// makes two of the three paces genuinely hard to tell apart in Lesson 4.
 const QUOTES = [
   {f:"fotr", m:  8, p:  2}, {f:"fotr", m: 22, p: 63}, {f:"fotr", m: 35, p: 69},
   {f:"fotr", m: 48, p:126}, {f:"fotr", m: 62, p:148}, {f:"fotr", m: 75, p:171},
@@ -1006,162 +1145,211 @@ const QUOTES = [
   {f:"rotk", m:133, p:197}, {f:"rotk", m:155, p:227}, {f:"rotk", m:176, p:282},
   {f:"rotk", m:196, p:296}
 ];
-// Where each film starts once they are run back to back.
-(function buildOffsets() {
-  let m = 0, p = 0;
-  for (const film of FILMS) {
-    film.mOff = m; film.pOff = p;
-    m += film.runtime;
-    p += film.pages;
-  }
+(function buildPageOffsets() {
+  let p = 0;
+  for (const film of FILMS) { film.pOff = p; p += film.pages; }
 })();
-const TOTAL_MIN = FILMS.reduce((a,f) => a + f.runtime, 0);
-const TOTAL_PAGE = FILMS[2].pOff + FILMS[2].pages;
+const E_TOTAL_PAGES = FILMS[2].pOff + FILMS[2].pages;
+const E_TARGET = 15;
 
-const sE = { view: "joined", film: "fotr", start: 0, pace: 1, recorded: {} };
+const sE = {
+  splitStart: false, splitPace: false,
+  start: { fotr: 300, ttt: 300, rotk: 300 },
+  pace:  { fotr: 2.0, ttt: 2.0, rotk: 2.0 },
+  best: {}
+};
 
-function activeQuotes() {
-  if (sE.view === "joined") {
-    return QUOTES.map(q => {
-      const film = FILMS.find(f => f.id === q.f);
-      return { x: q.m + film.mOff, y: q.p + film.pOff, colour: film.colour };
+function comboKey() { return (sE.splitStart ? "S" : "s") + (sE.splitPace ? "P" : "p"); }
+const COMBO_LABEL = {
+  sp: "one opening page, one pace",
+  Sp: "three opening pages, one pace",
+  sP: "one opening page, three paces",
+  SP: "three opening pages, three paces"
+};
+
+function fitOf(q) {
+  return sE.start[q.f] + sE.pace[q.f] * q.m;
+}
+function missesE() {
+  return QUOTES.map(q => {
+    const film = FILMS.find(f => f.id === q.f);
+    return Math.abs((q.p + film.pOff) - fitOf(q));
+  });
+}
+
+function buildRowsE() {
+  const host = document.getElementById("E_rows");
+  host.innerHTML = FILMS.map(f => `
+    <div class="filmhead" style="color:${f.colour};">${f.name}</div>
+    <div class="row" data-film="${f.id}" data-kind="start">
+      <label for="E_start_${f.id}">opening page</label>
+      <input type="range" id="E_start_${f.id}" min="-50" max="850" step="1" value="${sE.start[f.id]}" />
+      <output id="E_startOut_${f.id}">${sE.start[f.id]}</output>
+    </div>
+    <div class="row" data-film="${f.id}" data-kind="pace">
+      <label for="E_pace_${f.id}">pace (pages a minute)</label>
+      <input type="range" id="E_pace_${f.id}" min="0.8" max="3.2" step="0.01" value="${sE.pace[f.id]}" />
+      <output id="E_paceOut_${f.id}">${sE.pace[f.id].toFixed(2)}</output>
+    </div>`).join("");
+  FILMS.forEach(f => {
+    document.getElementById("E_start_"+f.id).addEventListener("input", (ev) => {
+      setE("start", f.id, parseFloat(ev.target.value));
     });
-  }
-  const film = FILMS.find(f => f.id === sE.film);
-  return QUOTES.filter(q => q.f === sE.film).map(q => ({ x: q.m, y: q.p, colour: film.colour }));
+    document.getElementById("E_pace_"+f.id).addEventListener("input", (ev) => {
+      setE("pace", f.id, parseFloat(ev.target.value));
+    });
+  });
+  syncRowsE();
+}
+
+// A knob that is not split drags the other two films with it, and their sliders
+// go dim: that is what "one for all three" means.
+function setE(kind, id, v) {
+  const split = kind === "start" ? sE.splitStart : sE.splitPace;
+  if (split) sE[kind][id] = v;
+  else FILMS.forEach(f => { sE[kind][f.id] = v; });
+  bump("E");
+  syncRowsE();
+  drawStageE();
+}
+function syncRowsE() {
+  FILMS.forEach((f, i) => {
+    const st = document.getElementById("E_start_"+f.id), pc = document.getElementById("E_pace_"+f.id);
+    st.value = String(sE.start[f.id]); pc.value = String(sE.pace[f.id]);
+    document.getElementById("E_startOut_"+f.id).textContent = sE.start[f.id].toFixed(0);
+    document.getElementById("E_paceOut_"+f.id).textContent  = sE.pace[f.id].toFixed(2);
+    const tiedStart = !sE.splitStart && i > 0, tiedPace = !sE.splitPace && i > 0;
+    st.disabled = tiedStart; pc.disabled = tiedPace;
+    st.closest(".row").classList.toggle("tied", tiedStart);
+    pc.closest(".row").classList.toggle("tied", tiedPace);
+  });
+  const sb = document.getElementById("E_splitStart"), pb = document.getElementById("E_splitPace");
+  sb.classList.toggle("on", sE.splitStart);
+  pb.classList.toggle("on", sE.splitPace);
+  sb.querySelector(".state").textContent = sE.splitStart ? "one for each film" : "one for all three";
+  pb.querySelector(".state").textContent = sE.splitPace  ? "one for each film" : "one for all three";
+}
+
+function renderLedgerE() {
+  const box = document.getElementById("E_ledger");
+  box.innerHTML = ["sp","Sp","sP","SP"].map(k => {
+    const v = sE.best[k];
+    return `<div><span>${COMBO_LABEL[k]}</span><span class="${k===comboKey()?"best":""}">${
+      v === undefined ? "—" : v.toFixed(1) + " pages"}</span></div>`;
+  }).join("");
 }
 
 function drawStageE() {
   const cv = document.getElementById("plotE");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  const pad = { l: 60, r: 14, t: 22, b: 46 };
-  const joined = sE.view === "joined";
-  const xMax = joined ? TOTAL_MIN : 210;
-  const yMax = joined ? TOTAL_PAGE * 1.05 : 460;
-  const f = makeFrame(pad, W, H, 0, xMax, 0, yMax);
-  drawAxes(ctx, f, joined ? "minute of the whole run" : "minute of this film",
-           joined ? "page of the whole story" : "page of this book",
-           6, 5, v=>v.toFixed(0), v=>v.toFixed(0));
-
-  // Where each film hands over to the next.
-  if (joined) {
-    ctx.strokeStyle = "#ddd"; ctx.setLineDash([3,4]); ctx.lineWidth = 1;
-    for (const film of FILMS) {
-      if (film.mOff === 0) continue;
-      ctx.beginPath(); ctx.moveTo(f.x(film.mOff), f.pad.t); ctx.lineTo(f.x(film.mOff), f.pad.t+f.H); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-  }
-
-  const pts = activeQuotes();
-  // Your line.
-  ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(f.x(0), f.y(sE.start));
-  ctx.lineTo(f.x(xMax), f.y(sE.start + sE.pace * xMax));
-  ctx.stroke();
-  // How far each dot sits off it.
-  ctx.strokeStyle = "rgba(140,140,140,0.65)"; ctx.lineWidth = 1;
-  for (const pt of pts) {
-    const yhat = sE.start + sE.pace * pt.x;
-    ctx.beginPath(); ctx.moveTo(f.x(pt.x), f.y(pt.y)); ctx.lineTo(f.x(pt.x), f.y(yhat)); ctx.stroke();
-  }
-  for (const pt of pts) {
-    ctx.fillStyle = pt.colour;
-    ctx.beginPath(); ctx.arc(f.x(pt.x), f.y(pt.y), 4, 0, 2*Math.PI); ctx.fill();
-  }
-  // Legend, in joined view only — in split view the film is named in the title.
-  if (joined) {
-    ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    let lx = f.pad.l + 8;
-    for (const film of FILMS) {
-      ctx.fillStyle = film.colour; ctx.fillRect(lx, pad.t - 12, 10, 8);
-      ctx.fillStyle = "#555"; ctx.fillText(film.name, lx + 14, pad.t - 8);
-      lx += 20 + ctx.measureText(film.name).width;
-    }
-  }
-
-  const misses = pts.map(pt => Math.abs(pt.y - (sE.start + sE.pace * pt.x)));
-  document.getElementById("E_miss").textContent = mean(misses).toFixed(1);
-  document.getElementById("E_worst").textContent = Math.max(...misses).toFixed(1);
-  document.getElementById("E_title").textContent = joined
-    ? "All three, end to end"
-    : FILMS.find(f2 => f2.id === sE.film).name;
-  document.getElementById("E_record").disabled = joined || !Gates.E.predicted;
-}
-
-function renderPaces() {
-  const box = document.getElementById("E_paces");
-  const keys = FILMS.filter(f => sE.recorded[f.id] !== undefined);
-  if (!keys.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
-  box.innerHTML = keys.map(f =>
-    `<div><span style="color:${f.colour};">■</span> ${f.name} — <strong>${sE.recorded[f.id].toFixed(2)}</strong> pages a minute</div>`
-  ).join("");
-}
-
-function onE() {
-  sE.start = parseFloat(document.getElementById("E_start").value);
-  sE.pace  = parseFloat(document.getElementById("E_pace").value);
-  document.getElementById("E_startOut").textContent = sE.start.toFixed(0);
-  document.getElementById("E_paceOut").textContent = sE.pace.toFixed(2);
-  bump("E");
-  drawStageE();
-}
-document.getElementById("E_start").addEventListener("input", onE);
-document.getElementById("E_pace").addEventListener("input", onE);
-document.getElementById("E_view").addEventListener("change", () => {
-  sE.view = document.getElementById("E_view").value;
-  document.getElementById("E_filmRow").style.display = (sE.view === "split") ? "grid" : "none";
-  drawStageE();
-});
-(function fillFilmSelect() {
-  const sel = document.getElementById("E_film");
+  const pad = { l: 62, r: 14, t: 24, b: 46 };
+  const f = makeFrame(pad, W, H, 0, 210, 0, E_TOTAL_PAGES * 1.02);
+  drawAxes(ctx, f, "minute of the film", "page of the whole story", 6, 5,
+           v=>v.toFixed(0), v=>v.toFixed(0));
+  // Where each book hands over to the next.
+  ctx.strokeStyle = "#e6e4db"; ctx.setLineDash([3,4]); ctx.lineWidth = 1;
   for (const film of FILMS) {
-    const o = document.createElement("option");
-    o.value = film.id; o.textContent = film.name;
-    sel.appendChild(o);
+    if (!film.pOff) continue;
+    ctx.beginPath(); ctx.moveTo(f.pad.l, f.y(film.pOff)); ctx.lineTo(f.pad.l+f.W, f.y(film.pOff)); ctx.stroke();
   }
-  sel.addEventListener("change", () => { sE.film = sel.value; drawStageE(); });
-})();
+  ctx.setLineDash([]);
+  // The lines you have set, each drawn across its own film's running time.
+  for (const film of FILMS) {
+    ctx.strokeStyle = film.colour; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(f.x(0),   f.y(sE.start[film.id]));
+    ctx.lineTo(f.x(210), f.y(sE.start[film.id] + sE.pace[film.id] * 210));
+    ctx.stroke();
+  }
+  // How far each dot sits off its own film's line.
+  ctx.strokeStyle = "rgba(140,140,140,0.6)"; ctx.lineWidth = 1;
+  for (const q of QUOTES) {
+    const film = FILMS.find(f2 => f2.id === q.f);
+    ctx.beginPath();
+    ctx.moveTo(f.x(q.m), f.y(q.p + film.pOff));
+    ctx.lineTo(f.x(q.m), f.y(fitOf(q)));
+    ctx.stroke();
+  }
+  for (const q of QUOTES) {
+    const film = FILMS.find(f2 => f2.id === q.f);
+    ctx.fillStyle = film.colour;
+    ctx.beginPath(); ctx.arc(f.x(q.m), f.y(q.p + film.pOff), 4, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  let lx = f.pad.l + 8;
+  for (const film of FILMS) {
+    ctx.fillStyle = film.colour; ctx.fillRect(lx, pad.t - 14, 10, 8);
+    ctx.fillStyle = "#555"; ctx.fillText(film.short, lx + 14, pad.t - 10);
+    lx += 20 + ctx.measureText(film.short).width;
+  }
 
-document.getElementById("E_record").addEventListener("click", () => {
-  if (sE.view !== "split") return;
-  sE.recorded[sE.film] = sE.pace;
-  renderPaces();
-  const n = Object.keys(sE.recorded).length;
-  const tracker = document.getElementById("exploreE");
-  tracker.querySelector(".count").textContent = n + "/3 recorded";
-  if (n >= 3 && !Gates.E.done) {
-    markDone("E", "all three recorded.");
-    document.getElementById("postE").style.display = "block";
+  const ms = missesE();
+  const avg = mean(ms), worst = Math.max(...ms);
+  const el = document.getElementById("E_miss");
+  el.textContent = avg.toFixed(1);
+  el.className = avg <= E_TARGET ? "ok" : "off";
+  document.getElementById("E_worst").textContent = worst.toFixed(1);
+  document.getElementById("E_perfilm").innerHTML = FILMS.map(film => {
+    const v = QUOTES.filter(q => q.f === film.id)
+      .map(q => Math.abs((q.p + film.pOff) - fitOf(q)));
+    return `<span class="label" style="color:${film.colour};">${film.short}:</span> ${mean(v).toFixed(1)}`;
+  }).join(" &nbsp;|&nbsp; ") + " &nbsp;pages off, on average";
+
+  const k = comboKey();
+  if (sE.best[k] === undefined || avg < sE.best[k]) sE.best[k] = avg;
+  renderLedgerE();
+  document.getElementById("E1_now").textContent =
+    (sE.best[k] === undefined ? "—" : Math.min(...Object.values(sE.best)).toFixed(1) + " pages");
+
+  if (Gates.E.open && !Gates.E.done && avg <= E_TARGET) {
+    Gates.E.done = true;
+    markTask("E","E1");
+    record(BIT.E_solve, true);
+    showSolved("E", "Fit accepted. One question left.");
+    numqE.show();
   }
+}
+
+document.getElementById("E_splitStart").addEventListener("click", () => {
+  sE.splitStart = !sE.splitStart;
+  if (!sE.splitStart) FILMS.forEach(f => { sE.start[f.id] = sE.start.fotr; });
+  bump("E"); syncRowsE(); drawStageE();
 });
-
+document.getElementById("E_splitPace").addEventListener("click", () => {
+  sE.splitPace = !sE.splitPace;
+  if (!sE.splitPace) FILMS.forEach(f => { sE.pace[f.id] = sE.pace.fotr; });
+  bump("E"); syncRowsE(); drawStageE();
+});
 document.getElementById("E_download").addEventListener("click", () => {
-  downloadText("lesson3_stageE.R", `# Lesson 3, Stage E -- three films, one line.
+  downloadText("lesson3_stageE.R", `# Lesson 3, Stage E -- three films against the pages of the whole story.
 q <- read.csv("data/clean/lotr_quotes.csv")
-coef(lm(page_total ~ minute_total, data = q))
-sapply(split(q, q$film), function(d) coef(lm(page ~ minute, data = d))[2])
+
+# one opening page, one pace
+mean(abs(residuals(lm(page_total ~ minute, data = q))))
+
+# one opening page for each film, one pace between them
+mean(abs(residuals(lm(page_total ~ minute + film, data = q))))
+
+# one of each, for each film
+mean(abs(residuals(lm(page_total ~ minute * film, data = q))))
 `);
 });
 
-wirePrediction("E","predE",["qE1"],["three"],"controlsE", () => { drawStageE(); });
-
-document.querySelectorAll('input[name="qE2"]').forEach(r => {
-  r.addEventListener("change", () => { document.getElementById("submitE2").disabled = false; });
-});
-document.getElementById("submitE2").addEventListener("click", () => {
-  const choice = document.querySelector('input[name="qE2"]:checked');
-  if (!choice) return;
-  record(10, choice.value === "fotr");
-  document.getElementById("submitE2").disabled = true;
-  document.querySelectorAll('input[name="qE2"]').forEach(r => { r.disabled = true; });
-  if (typeof Score !== "undefined" && Score.finish) Score.finish();
+const numqE = wireNumeric("E", {
+  bit: BIT.E_num,
+  check: v => sE.pace.fotr > 0 && Math.abs(v - 311 / sE.pace.fotr) <= 15,
+  right: "Right — and the film they actually made runs 201 minutes.",
+  wrong: "Not that. You have a pace in pages a minute and 311 pages to get through.",
+  after: () => {
+    markTask("E","E2");
+    showSolved("E", "Done. Your code is at the foot of the page.");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  }
 });
 
+buildRowsE();
 drawStageE();
-renderPaces();
 
 /* ====== Showcase — vagus leftover (open, no gate) ================= */
 const VAGUS_DATA = [
@@ -1237,26 +1425,26 @@ function drawVagus() {
 drawVagus();
 
 /* ====== Boot + Score ================================================
-   Scaffold layout (12 bits):
-     0   A prediction        1   A landed
-     2   B prediction        3   B landed
-     4   C prediction        5   C landed
-     6   C: extra per centimetre
-     7,8 D prediction (two questions)
-     9   E prediction       10   E: which film is quickest
-     11  stretch challenge (optional)
+   Scaffold layout (10 bits):
+     0  A landed             1  B landed
+     2  C landed a handful   3  C caught a reversed handful
+     4  C how many people    5  D landed all four halves
+     6  D how far behind     7  E fit accepted
+     8  E how many minutes   9  stretch challenge (optional)
    ================================================================== */
 loadData();
 
 Score.init({
   moduleId: "lesson3",
-  version: 5,
-  scaffold: 12,
+  version: 6,
+  scaffold: 10,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
     document.getElementById("stageA").classList.remove("stage-locked");
     const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+    drawStageA();
   }
 });
 </script>

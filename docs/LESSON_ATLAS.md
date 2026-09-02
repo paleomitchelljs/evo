@@ -127,58 +127,79 @@ has a ceiling set by how much they overlap.
 ---
 
 ### Lesson 3 — Subtracting the line and reading what's left
-`lesson3.html` · v5 · 12 checkpoints · **Built**
+`lesson3.html` · v6 · 10 checkpoints · **Built**
 
-*The move:* the ladder from one number, to one number plus a group, to one number plus a
-count — which is a regression, built without ever saying so.
+*The move:* the ladder from one number, to one number plus a group, to asking whether that
+group difference is bigger than the measuring, to one number plus a group plus a rate —
+which is a regression, built without ever saying so.
+
+*Revised 2026-09-01.* No stage is opened by a prediction any more: every stage is opened by
+landing the thing it puts in front of you. The two written questions are numeric, are
+scored on their first attempt only, say right or wrong on the spot, and never block the
+next stage. Old stages C and D (height bands; click-to-place a hidden weighing) are gone.
 
 - **A — Expect a person's weight**
-  - *Interactive* — One slider, one number for all 7,000 adults. Histogram with your
-    number as a line; readouts for heavier/lighter counts and the average miss. Gate: land
-    the miss inside ±0.5 kg (lands at 82.0 kg).
+  - *Interactive* — One slider, one number for all 7,414 adults. Histogram with your number
+    as a line; readouts for heavier/lighter counts and the average miss. Gate: land the
+    miss inside ±0.3 kg, on a 0.1 kg step (lands at 82.0 kg).
   - *Goal* — Repeat Lesson 1's move on a new measurement, so the ladder starts from
     something already earned.
-  - *Hands to* — B and C both **open on the number just landed here**, which is what makes
-    their reveals work.
+  - *Hands to* — B **opens on the number just landed here**, which is what makes its
+    reveal work.
 
 - **B — Now you are told whether the person is a woman or a man**
   - *Interactive* — Two sliders: a starting number, and an extra added only for men. The
     plot is a mirrored pair of miss-distributions — women's above the axis in red, men's
     below in blue — with a marker on the zero line for each group's average miss. Gate:
-    both groups inside ±0.75 kg (lands at base 75.4 + extra 13.5).
+    both groups inside ±0.4 kg (lands at base 75.4 + extra 13.5).
   - *Goal* — Carrying 82 kg in, women lean +6.6 and men −6.9. **Opposite leans.** One
     number with no overall lean can still be systematically wrong for everybody. The fix
     is one extra term.
-  - *Hands to* — Stage C swaps the yes/no group for something that counts.
+  - *Hands to* — Stage C keeps the same two numbers and takes away the seven thousand
+    people; C's sliders open on the pair landed here.
 
-- **C — Now you are told how tall the person is**
-  - *Interactive* — Adults sorted into 5 cm height bands; each band is a dot showing its
-    average miss, with a green tolerance ribbon. Two sliders: the number at 170 cm, and an
-    extra applied once per 5 cm step. Carrying 82 kg in with the extra at zero, the dots
-    run +17.8 down to −19.9 — a clean staircase. Gate: every band inside ±2.5 kg (best
-    achievable is 2.14). A follow-up question asks what 4.8 kg per 5 cm means per
-    centimetre.
-  - *Goal* — The "extra" is a rate. This is the slope, arrived at as a per-unit
-    adjustment rather than a definition.
-  - *Hands to* — Stage D makes the rate continuous and physical.
+- **C — Weigh a handful of each and the gap moves**
+  - *Interactive* — A handful of n women and n men drawn from the 7,414 (n on a slider,
+    2–60). Top: two dot columns with the two numbers drawn over their own column. Bottom:
+    a gap axis carrying every handful weighed so far, a shaded band of what weighing that
+    many hands you when the groups are alike (±2·s·√(2/n), with s the pooled scatter of all
+    7,414 — fixed and known, so the band is a function of n alone), and a marker at the
+    whole-population gap of 13.5 kg. Gate: land both groups of one handful inside ±1.0 kg,
+    **and** catch a handful where the men come out lighter (about 1 draw in 6 at n = 6).
+    Then a numeric question: the smallest n per group at which the gap clears the band —
+    18, computed live from the data, not hard-coded.
+  - *Goal* — A t-test, assembled out of the two numbers from Stage B. The gap is real; how
+    many you weigh decides whether you can see it. No p-value is named — that is Lesson 5's
+    job — and shuffling is left alone for the same reason.
+  - *Hands to* — Stage D, where the group difference has to share the fit with a rate.
 
-- **D — Beren and Cyrus: where does the missing measurement go?**
-  - *Interactive* — Two children's real home weighing records. One weighing is hidden per
-    round; click on the canvas where you think it goes; the reveal draws the true point
-    (coloured by whether the child was ill that week) and a line to your click. Six rounds.
-  - *Goal* — Size at birth and growth per day are an intercept and a slope you can see.
-    Ill-day points sit below the line — a leftover with a cause.
-  - *Hands to* — Stage E, where the leftovers have a cause you can name.
+- **D — Beren and Cyrus, from their first birthdays on**
+  - *Interactive* — Both boys' real home weighing records, mass, age ≥ 1 year (Beren 11
+    points, Cyrus 7). **Cyrus's are filed in grams and Beren's in kilograms; the page
+    normalises on the way in.** Three sliders: weight at age two, kilograms added per year,
+    and an extra that applies only to Cyrus. Lower panel: leftovers against age, plus one
+    bar per (boy × younger/older half). Gate: all four half-means inside ±0.4 kg at once —
+    334 of 417,231 slider settings do it. Lands near 13.7 / 2.68 / +1.18. Then a numeric
+    question: how many months behind Cyrus Beren is at the same weight, graded against the
+    student's own three numbers (12·extra/rate ≈ 5.3).
+  - *Goal* — One rate and two starting points. The two-group comparison from B and the
+    rate arrive in the same fit, and the vertical gap between two lines converts into a
+    stretch of time.
+  - *Hands to* — Stage E, which asks what happens when one rate is not enough either.
 
-- **E — Three films, one line**
-  - *Interactive* — Every quoted moment from the three Jackson films: minute on the bottom,
-    book page up the side. A view toggle runs them **end to end** (one continuous 558-minute
-    timeline, faint dividers at the handovers) or restarts **each film at its own zero**.
-    Two sliders — what page it starts on, page pace — draw one line; grey drop-lines show
-    every miss. In split view, pick a film and `Record this pace`. Gate: record all three.
-  - *Goal* — One pace cannot fit the whole run (best single line misses by ~32 pages on
-    average). Rescale and three different paces appear. This absorbed the old warm-up
-    stage, so hand-fitting a line is the payoff rather than the preamble.
+- **E — Three films, and what one line cannot do**
+  - *Interactive* — Every quoted moment from the three Jackson films: minute **within its
+    own film** on the bottom, page of the whole 1,061-page story up the side, so the three
+    films sit at three heights as well as three tilts. Six sliders (an opening page and a
+    pace per film) and two buttons that **split** them: with a knob unsplit, the other two
+    films' sliders dim and follow the first. A running table records the best average miss
+    reached under each of the four combinations. Gate: average miss ≤ 15 pages. Then a
+    numeric question: how many minutes 311 pages would take at the pace they gave
+    Fellowship (≈135; the film runs 201).
+  - *Goal* — **You need both splits.** Verified against the actual slider grid: one opening
+    page and one pace bottoms out at 238.6 pages; three openings and one pace at 16.8; one
+    opening and three paces at 161.1; both split at 11.1. The target sits in the only gap
+    that separates them.
   - *Hands to* — Lesson 4, which asks how sure you can be about any one of those paces.
 
 - **Showcase — the same leftover, on a nerve** *(open, ungated)*
@@ -190,46 +211,60 @@ count — which is a regression, built without ever saying so.
 ---
 
 ### Lesson 4 — Finding the cloud of lines that all fit the data
-`lesson4.html` · v5 · 7 checkpoints · **Built**
+`lesson4.html` · v6 · 7 checkpoints · **Built**
 
 *The move:* the best line is not one line, and how wide the cloud is depends on how much
 data you have.
 
+*Revised 2026-09-01.* Same treatment as Lesson 3: the three prediction gates are gone, each
+stage is opened by solving its own puzzle, and each closes with a numeric question that
+says right or wrong on the spot and is scored on the first attempt only.
+
 - **A — Find ten lines that fit this data equally well**
-  - *Interactive* — 60 adults (fixed seed, so everyone sees the same picture), same two
-    knobs as Lesson 3C. R² painted large in the plot corner, two decimals only. **No
-    reference line is drawn.** `Lock in line` enables only when you are within 0.05 of the
-    ceiling *and* the pair is new — duplicates are refused with the button reading
-    `Already locked in`. Locked lines stack up as faint blue. Target: 10.
-  - *Goal* — Pushing R² to its ceiling does not pin down a line. A wide range of
-    slope/intercept pairs sit at the same number.
+  - *Interactive* — 60 adults (drawn fresh per page load, so the ceiling is this student's
+    own number), same two knobs as Lesson 3. R² painted large in the plot corner, two
+    decimals only. **No reference line is drawn.** `Lock in line` enables only when you are
+    within 0.05 of the ceiling *and* **no line already locked uses that extra per 5 cm** —
+    a repeat reads `That extra is taken`, so ten nudges of the same line will not do.
+    Target: 10. Then a numeric question: the largest extra per 5 cm that still reaches the
+    ceiling, computed live on the same grid the sliders offer (±0.3).
+  - *Goal* — Pushing R² to its ceiling does not pin down a line. Roughly 45–50 of the 121
+    settings of the slope knob sit at the same number, spanning about 4.5 kg per 5 cm.
   - *Hands to* — Stage B asks what changes the width of that range.
 
-- **B — Measure more people and watch the cloud close in**
+- **B — Measure more people and close the fan down to a set width**
   - *Interactive* — A slider for how many adults go into each sample, then `Take a sample`
     or `Take 20 samples`. Each sample's best line is drawn on the scatter; below, each
-    sample's pace is a dot on a row per sample size. Gate: 20 samples at three different
-    sizes. Measured: n=20 gives paces from 0.29 to 8.33; n=500 gives 3.88 to 5.57.
+    sample's pace is a dot on a row per sample size, with a bar for the middle 95% that
+    turns green when it is inside target. Gate: at least 60 samples at one size with the
+    middle 95% of their paces spanning 2.0 kg per 5 cm or less — which needs roughly 340
+    adults a sample. Then a numeric question: how many per sample to halve that span again
+    (4× whatever size they used, ±30%).
   - *Goal* — The cloud is not a property of the method, it is a property of how much you
-    measured. This is where sample size becomes intuitive rather than asserted.
+    measured, and the exchange rate is four-for-one. Measured: n=40 spans about 6.8;
+    n=500 about 1.6.
   - *Hands to* — Stage C applies it where you cannot go get more data.
 
-- **C — Which of these three move through their book at the same rate?**
-  - *Interactive* — The three films again, each from its own start. `Watch it again` draws
-    a fresh dozen moments at random from the ones noted — some twice, some not at all — and
-    refits each film. Paces accumulate as three clouds on one shared axis, with a 95% bar
-    once there are enough. Gate: 200 viewings.
-  - *Goal* — Fellowship lands at 2.14–2.46, Two Towers at 1.63–1.89, Return of the King at
-    1.30–1.66. **Two overlap and one does not.** Whether two things are "clearly different"
-    depends jointly on the gap and on the width of the clouds.
-  - *Hands to* — a closing question naming which pair could not be told apart, graded
-    against the clouds the student actually built.
+- **C — Note down enough moments to tell all three films apart**
+  - *Interactive* — The three films again, each from its own start. A knob sets **how many
+    moments a viewing catches** (4–48, opening at 5); `Watch it again` draws that many at
+    random from the ones noted — some twice, some not at all — and refits each film. Paces
+    accumulate as three clouds on one shared axis with a middle-95% bar; the readout names
+    which pairs still touch. Changing the knob starts the record again. Gate: all three
+    clouds pairwise apart on at least 150 viewings. Then a numeric question: how far apart
+    the middles of the closest two sit (±0.12), graded against the clouds actually built.
+  - *Goal* — Whether two things are "clearly different" depends jointly on the gap and on
+    the width of the clouds, and the width is bought with effort. Measured: at 5 moments
+    two pairs overlap, at 8–10 only Two Towers/Return, and all three come apart at about
+    12. Fellowship 2.30, Two Towers 1.76, Return 1.49 pages a minute.
+  - *Hands to* — the stretch challenge, which asks what that number becomes when the gap
+    being chased is half as wide.
 
 - **Showcase — how old the bottom of a cliff has to be** *(open, ungated)*
-  - *Interactive* — Twelve modern carbonate deposition rates, resampled 5,000 times, each
-    resample implying an age for 100 m of chalk. Log-scale histogram with a marked line at
+  - *Interactive* — Twelve modern carbonate deposition rates, redrawn 5,000 times, each
+    redraw implying an age for 100 m of chalk. Log-scale histogram with a marked line at
     6,000 years.
-  - *Goal* — The same resampling move, pointed at deep time. Zero of 5,000 resamples fall
+  - *Goal* — The same redrawing move, pointed at deep time. Zero of 5,000 redraws fall
     under 6,000 years.
 
 ---
