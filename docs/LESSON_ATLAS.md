@@ -139,16 +139,22 @@ scored on their first attempt only, say right or wrong on the spot, and never bl
 next stage. Old stages C and D (height bands; click-to-place a hidden weighing) are gone.
 
 *Text refit, same day.* Every scenario panel is now a splice from the lecture-quote corpus
-(`_reference/quotes/`) — JM's own words, cut but not paraphrased, unattributed on screen —
-followed by a bulleted setup with no prose in it. Stage titles come off the quotes wherever
-one fits. Two quotes are held back as **reveals**: they appear in a stage's solved-banner
-and nowhere else, so they land after the work rather than instead of it. Plot panels carry
-no headings: the setup bullets say what the panels hold, so a heading would only repeat
-them. Groups are "male"/"female" throughout, in the prose, the plot labels and the R panel.
+(`_reference/quotes/`) — JM's own words, spliced, cut and lightly edited, unattributed on
+screen — over a bulleted setup with no prose in it. The quotes are deliberately **generic**:
+statistics, models and philosophy, not biology the student has not earned yet. One quote is
+held back as a **reveal**, appearing in the stage's solved-banner and nowhere else, so it
+lands after the work rather than instead of it.
+
+**There are no titles.** The `<h1>` is "Lesson 3" and the stage headings are the bare letters
+A–E, as is the table of contents. (`<h1>` cannot be empty — the gate hard-fails — and
+`<title>` still feeds `lock.js`'s "not open yet" curtain, so both keep the identifier and
+nothing else.) Plot panels carry no headings either: the setup bullets and the axes already
+say what is in them. Titles that survive name a thing rather than restate one — Controls,
+R code, To open Stage X. Groups are "male"/"female" throughout, in the prose, the plot labels and the R panel.
 The vagus showcase and the stretch challenge were removed to
 `_reference/retired/showcases-and-stretch/`.
 
-- **A — One number, and you add them up** *(quote: 202_lec18_06)*
+- **A — one number for all 7,414** *(quotes: 202_lec10_02, which streaks need explaining; 461_lec07_09, axes and legend)*
   - *Interactive* — One slider, one number for all 7,414 adults. Histogram with your number
     as a line; readouts for heavier/lighter counts and the average miss. Gate: land the
     miss inside ±0.3 kg, on a 0.1 kg step (lands at 82.0 kg).
@@ -157,7 +163,7 @@ The vagus showcase and the stretch challenge were removed to
   - *Hands to* — B **opens on the number just landed here**, which is what makes its
     reveal work.
 
-- **B — Now you are told male or female** *(quote: 202_lec22_01, the Venn-diagram caution)*
+- **B — plus a group label** *(quote: 202_lec04_02, the clam and the T-Rex — same move, being handed one more fact about a case; last line generalised off fossils)*
   - *Interactive* — Two sliders: a starting number, and an extra added only for men. The
     plot is a mirrored pair of miss-distributions — women's above the axis in red, men's
     below in blue — with a marker on the zero line for each group's average miss. Gate:
@@ -168,7 +174,7 @@ The vagus showcase and the stretch challenge were removed to
   - *Hands to* — Stage C keeps the same two numbers and takes away the seven thousand
     people; C's sliders open on the pair landed here.
 
-- **C — Is that difference clear?** *(title and panel: 202_lec07_08 + 145_lec01_07)*
+- **C — is the gap bigger than the weighing** *(quotes: 202_lec07_08, N=5 vs N=2 million; 145_lec01_07, two dice rolled forever)*
   - *Interactive* — A handful of n women and n men drawn from the 7,414 (n on a slider,
     2–60). Top: two dot columns with the two numbers drawn over their own column. Bottom:
     a gap axis carrying every handful weighed so far, a shaded band of what weighing that
@@ -183,7 +189,7 @@ The vagus showcase and the stretch challenge were removed to
     job — and shuffling is left alone for the same reason.
   - *Hands to* — Stage D, where the group difference has to share the fit with a rate.
 
-- **D — They look physically similar** *(quote: 202_lec05_03)*
+- **D — one rate, two starting points** *(quote: 202_lec03_05, hard the first time — the hardest fit in the lesson gets it)*
   - *Interactive* — Both boys' real home weighing records, mass, age ≥ 1 year (Beren 11
     points, Cyrus 7). **Cyrus's are filed in grams and Beren's in kilograms; the page
     normalises on the way in.** Three sliders: weight at age two, kilograms added per year,
@@ -197,7 +203,7 @@ The vagus showcase and the stretch challenge were removed to
     stretch of time.
   - *Hands to* — Stage E, which asks what happens when one rate is not enough either.
 
-- **E — One baseline for all three** *(quote: 202_lec08_04; reveal on solve: 202_lec26_02)*
+- **E — split the slopes and the intercepts** *(quote: 202_lec08_04, the penny and the car; reveal on solve: 202_lec26_02, cut down to the bare statistical claim)*
   - *Interactive* — Every quoted moment from the three Jackson films: minute **within its
     own film** on the bottom, page of the whole 1,061-page story up the side, so the three
     films sit at three heights as well as three tilts. Six sliders (an opening page and a
@@ -223,12 +229,12 @@ data you have.
 *Revised 2026-09-01.* Same treatment as Lesson 3: the three prediction gates are gone, each
 stage is opened by solving its own puzzle, and each closes with a numeric question that
 says right or wrong on the spot and is scored on the first attempt only. Same text refit —
-lecture-quote splice plus a bulleted setup in every scenario panel, titles off the quotes,
-and 202_lec10_02 held back as the reveal on Stage C's solved-banner. The Dover chalk
+lecture-quote splice plus a bulleted setup in every scenario panel, no titles anywhere, and
+202_lec23_05 held back as the reveal on Stage C's solved-banner. The Dover chalk
 showcase and the stretch challenge were removed to
 `_reference/retired/showcases-and-stretch/`.
 
-- **A — Wrong, but usefully wrong** *(quotes: 461_lec35_05 + 461_lec07_09)*
+- **A — ten lines at the same ceiling** *(quote: 461_lec35_05, models are wrong but usefully wrong)*
   - *Interactive* — 60 adults (drawn fresh per page load, so the ceiling is this student's
     own number), same two knobs as Lesson 3. R² painted large in the plot corner, two
     decimals only. **No reference line is drawn.** `Lock in line` enables only when you are
@@ -240,7 +246,7 @@ showcase and the stretch challenge were removed to
     settings of the slope knob sit at the same number, spanning about 4.5 kg per 5 cm.
   - *Hands to* — Stage B asks what changes the width of that range.
 
-- **B — Look at sample sizes** *(quote: 336_lec14_04)*
+- **B — close the fan to a set width** *(quote: 202_lec10_01, random is streakier than we want it to be)*
   - *Interactive* — A slider for how many adults go into each sample, then `Take a sample`
     or `Take 20 samples`. Each sample's best line is drawn on the scatter; below, each
     sample's pace is a dot on a row per sample size, with a bar for the middle 95% that
@@ -253,7 +259,7 @@ showcase and the stretch challenge were removed to
     n=500 about 1.6.
   - *Hands to* — Stage C applies it where you cannot go get more data.
 
-- **C — Sure about one, not sure about the other** *(quote: 461_lec07_05; reveal on solve: 202_lec10_02)*
+- **C — pull the three clouds apart** *(quote: 461_lec07_05, two drugs; reveal on solve: 202_lec23_05, no clean yes-or-no answers)*
   - *Interactive* — The three films again, each from its own start. A knob sets **how many
     moments a viewing catches** (4–48, opening at 5); `Watch it again` draws that many at
     random from the ones noted — some twice, some not at all — and refits each film. Paces
