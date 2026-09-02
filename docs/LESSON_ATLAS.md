@@ -115,7 +115,15 @@ student's own run. Voice: 202_lec10_01 on A, 202_lec24_01 on B, 202_lec10_02 on 
 ---
 
 ### Lesson 2 — Resampling to ask if new data still belongs
-`lesson2.html` · v8 · 7 checkpoints · **Built**
+`lesson2.html` · v9 · 8 checkpoints · **Built**
+
+*Rebuilt from JM's voice notes, 2026-09-02.* Text throughout is his notes: A and B follow
+the mean as data accumulates and then as the population changes underneath it; C, D and E
+are the same calling drill at three sizes of real difference — NBA players against ordinary
+adults, males against females, home fans against away fans. Stage E gains a second closing
+question (95% right means 5% wrong) after the first, with the framing paragraph that names
+all three gaps as real and puts the difficulty on their size. Answering the second in
+proportion rather than percentage counts, and the verdict names the unit.
 
 *Converted 2026-09-02*, same treatment. (This row previously read v4 · 7, which was
 already wrong for the shipped file — it was v7 · 9.) The four prediction bits are gone

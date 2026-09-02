@@ -129,11 +129,13 @@
     <div class="panel stage-intro">
         <div class="intro-grid">
         <div class="voice">
-          <p>A graph can only tell you what's on the axes and in the legend.</p>
+          <p>At the end of the last lesson we tested how well our prediction method worked when we tried adding in a different group. That is what we are going to explore here.</p>
+          <p>We are going to graph the same kinds of data, slightly differently. For this first graph we are going to explore how our mean changes as we accumulate more data.</p>
+          <p>From last time, the average was the best single number for predicting a new observation from the same population. We are going to see how adding more data influences how well that single number predicts, and how much error it leaves.</p>
         </div>
         <ul class="setup">
           <li>Adults go in one at a time. You measure each one.</li>
-          <li>Blue line: your running average. The band around it: how unsure you still are of it.</li>
+          <li>Blue line: the running mean. The band around it: how unsure you still are of it.</li>
           <li>Measure sixty people.</li>
         </ul>
       
@@ -185,11 +187,13 @@
     <div class="panel stage-intro">
         <div class="intro-grid">
         <div class="voice">
-          <p>We invented statistics to say: this much of a jump — this requires an explanation. This much — this does not.</p>
+          <p>At the end of Lesson 1 we applied our one number — the mean — to predict new outcomes, and found that our error had a structure to it: we consistently overestimated the new observations.</p>
+          <p>We are going to explore something similar with the graph from Part A. This time you will watch the mean change, and at some point the population is going to change too. You will keep tracking the mean, and see how it shifts as the new population begins to outnumber the starting one.</p>
+          <p>Pay particular attention to the shape of the mean as you accumulate more data.</p>
         </div>
         <ul class="setup">
           <li>The same stream, still one person at a time.</li>
-          <li>Faint red line: where your average sat before.</li>
+          <li>Faint red line: where your mean sat before.</li>
           <li>At some point a bus arrives. Nothing announces it.</li>
         </ul>
       
@@ -289,10 +293,12 @@
     <div class="panel stage-intro">
         <div class="intro-grid">
         <div class="voice">
-          <p>Are these two crowds different from each other? With twenty calls, you cannot always say.</p>
+          <p>You probably did pretty well at telling basketball players from ordinary adults by height. The difference between them is extremely clear. You likely made one or two errors, but for the most part you got them right — by height alone, the difference is clear.</p>
+          <p>Now a similar problem. What if the two groups are still clearly different, but the difference is smaller? Here it is the heights of males and females, and based only on height you are trying to predict which an individual is.</p>
+          <p>Once again there is a solid black line. Once again the two groups have a clear difference in height. And once again you are going to try to call it correctly. The idea is to compare how often you are right assigning male or female by height alone against how often you were right assigning NBA player or not.</p>
         </div>
         <ul class="setup">
-          <li>Same game, the two crowds from the end of Lesson 1.</li>
+          <li>The two crowds from the end of Lesson 1.</li>
           <li>Twenty people, one at a time. All you are told is the height.</li>
         </ul>
       
@@ -352,7 +358,9 @@
     <div class="panel stage-intro">
         <div class="intro-grid">
         <div class="voice">
-          <p>"Significant" is a normal English word we usually use to mean big or large or important. It does not mean that here. It means clear.</p>
+          <p>These are two distributions representing the home fans and the away fans from that basketball game.</p>
+          <p>Look at the graph: the two distributions do not overlap perfectly. There are differences. Look at the R code and you can see that this is mechanically true — the two distributions are different. They are truly different. They are not the same data. But the difference between them is quite small.</p>
+          <p>So, based only on height, tell me whether each black line is a home fan or an away fan.</p>
         </div>
         <ul class="setup">
           <li>The people who turned up for the home side, and the people who travelled with the away side.</li>
@@ -394,12 +402,25 @@
           &nbsp;|&nbsp;
           <span class="label">expected right:</span> <span id="E_expectedRight">—</span> of 20
         </div>
-        <div class="q">If you get the group right 19 out of 20 times, what proportion of the time are you correctly telling the groups apart?</div>
+        <div class="voice" style="margin-bottom:14px;">
+          <p>The two groups — away fans and home fans — are truly different, just by a small amount. Males and females truly differ in their average height by a somewhat larger amount. NBA players truly differ from ordinary adults by a large amount. All of these are real differences. But your ability to tell them apart differs with the size of the difference.</p>
+        </div>
+        <div class="q">If you have a method for assigning a person to one of these groups that works 19 times out of 20, what proportion of the time does your method work?</div>
         <div class="row">
           <input type="number" id="E_ans" min="0" max="1" step="0.01" placeholder="0.00" />
           <button id="E_submit">Submit</button>
         </div>
         <div class="verdict" id="E_verdict"></div>
+      </div>
+
+      <div class="panel numq" id="numqE2">
+        <div class="q">If your method works 95% of the time, what percentage of the time is it wrong?</div>
+        <div class="row">
+          <input type="number" id="E2_ans" min="0" max="100" step="0.01" placeholder="0" />
+          <span class="unit">%</span>
+          <button id="E2_submit">Submit</button>
+        </div>
+        <div class="verdict" id="E2_verdict"></div>
       </div>
 
       <div class="panel" id="E_wrap" style="display:none;">
@@ -448,7 +469,7 @@ function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.l
 // Only A and B run on a "measure enough people" gate; C and D gate on finishing
 // their sixteen calls, handled inside the drill itself.
 const EXPLORE_THRESHOLD = { A: 60, B: 1 };
-const BIT = { A:0, B:1, C_drill:2, D_drill:3, D_num:4, E_drill:5, E_num:6 };
+const BIT = { A:0, B:1, C_drill:2, D_drill:3, D_num:4, E_drill:5, E_num:6, E_num2:7 };
 const Gates = { A:{explores:0,done:false}, B:{explores:0,done:false} };
 function bumpExplore(stage) {
   if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage);
@@ -916,10 +937,23 @@ const drillE = makeDrill({
 const numqE = wireNumeric("E", {
   bit: BIT.E_num,
   check: v => Math.abs(v - 0.95) < 0.005,
-  right: "Right. 19 out of 20 is 19 \u00f7 20 = 0.95, and the 0.05 left over is how often you are wrong.",
+  right: "Right. 19 out of 20 is 19 \u00f7 20 = 0.95.",
   wrong: "Not that. 19 out of 20 is 19 \u00f7 20.",
   after: () => {
-    // The same closing line either way: it is the point of the stage, not a
+    numqE2.show();
+    document.getElementById("numqE2").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+});
+
+// Answering in the proportion rather than the percentage is the same thought in
+// the wrong unit, so it counts, and the verdict names the unit either way.
+const numqE2 = wireNumeric("E2", {
+  bit: BIT.E_num2,
+  check: v => Math.abs(v - 5) < 0.05 || Math.abs(v - 0.05) < 0.0005,
+  right: "Right. 5% of the time \u2014 the 0.05 left over from 0.95.",
+  wrong: "Not that. If it works 95 times in every 100, how many of the 100 are left?",
+  after: () => {
+    // The same closing line either way: it is the finding of the stage, not a
     // reward for answering correctly.
     document.getElementById("E_wrapText").textContent =
       "Whether two groups are different, and whether two groups are so clearly " +
@@ -947,7 +981,7 @@ const numqD = wireNumeric("D", {
 loadData();
 
 /* ====== Score ========================================================
-   Scaffold layout (7 bits):
+   Scaffold layout (8 bits):
      0  Stage A: measured sixty people
      1  Stage B: kept measuring through the bus
      2  Stage C: twenty calls made
@@ -955,11 +989,11 @@ loadData();
      4  Stage D: how many more the players round got, their own two rounds
      5  Stage E: twenty calls made
      6  Stage E: 19 out of 20 as a proportion
-   Version 7 -> 8: the prediction bits are gone and everything moved down, so
-   v7 codes must not decode against this layout.
+     7  Stage E: and what percentage of the time it is wrong
+   Version 8 -> 9: a second closing question was added on the end.
    ==================================================================== */
 Score.init({
-  moduleId: "lesson2", version: 8, scaffold: 7,
+  moduleId: "lesson2", version: 9, scaffold: 8,
   mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
   onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
 });
