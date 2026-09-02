@@ -26,6 +26,18 @@
 // student wandering into next week's homework, not to withstand one who is
 // trying. Nothing that must genuinely stay unseen belongs in a public repo.
 //
+// PERSONAL UNLOCK
+// The notice on a locked page carries a passphrase box. Entering the right one
+// sets a flag in this browser's localStorage and every locked page opens for
+// good, so a lesson can be tested and refined before it is released. Clear it
+// again with ?relock=1 on any page, or by clearing site data.
+//
+// The passphrase is checked against a salted SHA-256 kept below, so the phrase
+// itself is not sitting in the source. That is the only claim being made: this
+// is a convenience for the instructor, not a security boundary. Anyone who
+// reads this file can set the same localStorage key by hand, exactly as they
+// could already read LOCKS.txt or turn JavaScript off. See WHAT THIS IS NOT.
+//
 // FAILURE MODE
 // Deliberately fail-open. If LOCKS.txt is missing, unreachable, or malformed,
 // every page opens, and a page with no row of its own opens too. A student
@@ -77,6 +89,9 @@
     cached = fetch(locksUrl(), { cache: "no-store" })
       .then(r => (r.ok ? r.text() : ""))
       .then(t => parse(t))
+      // An instructor unlock makes every row read as open, so the landing page
+      // stops greying cards out as well.
+      .then(cfg => (isUnlocked() ? { locked: {}, display: cfg.display } : cfg))
       // Any failure at all -> nothing is locked. See FAILURE MODE above.
       .catch(() => ({ locked: {}, display: "dim" }));
     return cached;
@@ -84,6 +99,35 @@
 
   function isPreview() {
     return /[?&]preview=?1?\b/.test(global.location.search);
+  }
+
+  // Salted SHA-256 of the instructor passphrase, so the phrase itself is not in
+  // the source. See PERSONAL UNLOCK above for what that does and does not buy.
+  const UNLOCK_SALT = "bio202-lock-2026-preview";
+  const UNLOCK_HASH = "7aa815f8ca97c9dec65305f9a2603a0a938033a6c1b8a14ed074828d021fc5d5";
+  const UNLOCK_KEY  = "bio202-unlocked";
+
+  function store() {
+    try { return global.localStorage; } catch (e) { return null; }   // private mode throws
+  }
+  function isUnlocked() {
+    if (/[?&]relock=?1?\b/.test(global.location.search)) {
+      const s = store(); if (s) { try { s.removeItem(UNLOCK_KEY); } catch (e) {} }
+      return false;
+    }
+    const s = store();
+    try { return !!s && s.getItem(UNLOCK_KEY) === "1"; } catch (e) { return false; }
+  }
+  function setUnlocked() {
+    const s = store();
+    try { if (s) s.setItem(UNLOCK_KEY, "1"); } catch (e) {}
+  }
+  async function checkPhrase(phrase) {
+    if (!global.crypto || !global.crypto.subtle) return false;
+    const buf = new TextEncoder().encode(String(phrase) + UNLOCK_SALT);
+    const digest = await global.crypto.subtle.digest("SHA-256", buf);
+    return Array.from(new Uint8Array(digest))
+      .map(b => b.toString(16).padStart(2, "0")).join("") === UNLOCK_HASH;
   }
 
   function noticeHtml(title) {
@@ -98,6 +142,19 @@
       + '<p style="color:#6b6b68;margin:0 0 22px;">This one opens later in the term. '
       + 'It will appear on the course page when it does.</p>'
       + '<a href="' + rootPrefix() + 'index.html" style="color:#2f6b8f;">Back to the course page</a>'
+      + '<form id="lock-unlock" style="margin:30px auto 0;max-width:22rem;'
+      + 'border-top:1px solid #e2e0d9;padding-top:18px;">'
+      + '<label for="lock-phrase" style="display:block;font-size:12px;letter-spacing:0.06em;'
+      + 'text-transform:uppercase;color:#6b6b68;margin-bottom:8px;">Instructor access</label>'
+      + '<div style="display:flex;gap:8px;">'
+      + '<input id="lock-phrase" type="password" autocomplete="current-password" '
+      + 'placeholder="passphrase" style="flex:1;min-width:0;padding:8px 10px;'
+      + 'border:1px solid #e2e0d9;border-radius:4px;font:14px inherit;background:#fff;">'
+      + '<button type="submit" style="padding:8px 14px;border:0;border-radius:4px;'
+      + 'background:#b23a48;color:#fff;font:14px inherit;cursor:pointer;">Unlock</button>'
+      + '</div>'
+      + '<div id="lock-msg" style="margin-top:9px;font-size:13px;color:#a8331a;min-height:1.2em;"></div>'
+      + '</form>'
       + '</div></div>';
   }
 
@@ -124,7 +181,7 @@
   // of this file; a lesson does not have to call anything.
   function guard() {
     const key = pageKey();
-    if (!key || key === "index" || isPreview()) return;
+    if (!key || key === "index" || isPreview() || isUnlocked()) return;
     drawCurtain();
     load().then(cfg => {
       if (!cfg.locked[key]) { liftCurtain(); return; }
@@ -136,11 +193,43 @@
         "<head><meta charset='utf-8'><title>" + keep + "</title></head><body>"
         + noticeHtml(title) + "</body>";
       liftCurtain();
+      wireUnlockForm();
       // Stop whatever the lesson was about to do next.
       if (global.stop) global.stop();
     }).catch(liftCurtain);
   }
 
-  global.Lock = { load, parse, pageKey, isPreview };
+  // Wired after the notice replaces the document, and before window.stop(),
+  // so the handler survives the halt.
+  function wireUnlockForm() {
+    const form = document.getElementById("lock-unlock");
+    if (!form) return;
+    const input = document.getElementById("lock-phrase");
+    const msg = document.getElementById("lock-msg");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.style.color = "#6b6b68";
+      msg.textContent = "checking…";
+      let ok = false;
+      try { ok = await checkPhrase(input.value); } catch (err) { ok = false; }
+      if (ok) {
+        setUnlocked();
+        msg.style.color = "#4a7a2a";
+        msg.textContent = "Unlocked. Opening…";
+        // Reload without ?relock, or the flag we just set is cleared on the way
+        // back in and the unlock looks like it silently failed.
+        const url = new URL(global.location.href);
+        url.searchParams.delete("relock");
+        global.location.replace(url.toString());
+      } else {
+        msg.style.color = "#a8331a";
+        msg.textContent = "Not that one.";
+        input.select();
+      }
+    });
+    input.focus();
+  }
+
+  global.Lock = { load, parse, pageKey, isPreview, isUnlocked };
   guard();
 })(typeof window !== "undefined" ? window : globalThis);
