@@ -139,11 +139,12 @@ scored on their first attempt only, say right or wrong on the spot, and never bl
 next stage. Old stages C and D (height bands; click-to-place a hidden weighing) are gone.
 
 *Text refit, same day.* Every scenario panel is now a splice from the lecture-quote corpus
-(`_reference/quotes/`) — JM's own words, cut but not paraphrased, with the source lecture
-named underneath — followed by a bulleted setup with no prose in it. Stage titles come off
-the quotes wherever one fits. Two quotes are held back as **reveals**: they appear in a
-stage's solved-banner and nowhere else, so they land after the work rather than instead of
-it. Groups are "male"/"female" throughout, in the prose, the plot labels and the R panel.
+(`_reference/quotes/`) — JM's own words, cut but not paraphrased, unattributed on screen —
+followed by a bulleted setup with no prose in it. Stage titles come off the quotes wherever
+one fits. Two quotes are held back as **reveals**: they appear in a stage's solved-banner
+and nowhere else, so they land after the work rather than instead of it. Plot panels carry
+no headings: the setup bullets say what the panels hold, so a heading would only repeat
+them. Groups are "male"/"female" throughout, in the prose, the plot labels and the R panel.
 The vagus showcase and the stretch challenge were removed to
 `_reference/retired/showcases-and-stretch/`.
 
