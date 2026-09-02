@@ -139,7 +139,7 @@
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="A1">Bring the average miss inside ±0.3 kg.
+          <li data-task="A1">Settle on a number and lock it in. Inside ±0.3 kg and you are through.
             <span class="hint">currently <span id="A1_now">—</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedA">Stage B is open.</div>
@@ -148,7 +148,11 @@
         <h3>Controls</h3>
         <div class="controls" id="controlsA">
           <div class="row" data-line="num"><label for="A_num">your number (kg)</label><input type="range" id="A_num" min="50" max="120" step="0.1" value="60" /><output id="A_numOut">60.0</output></div>
-          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
+          <div class="buttons">
+            <button id="A_lockBtn" class="accent">Lock in this number</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+          <div class="verdict" id="A_verdict"></div>
         </div>
       </div>
       <div class="panel">
@@ -219,7 +223,7 @@
     <div class="col">
       <div class="panel">
         <div class="voice">
-          <p>It is rare to have a data set this size. The bigger the data set, the easier it is to find a clear difference: with a lot of data, even a small difference is relatively easy to detect. With a smaller sample you get less reliable — and sometimes counterintuitive — results. The smaller the sample, the more likely you are to find something counterintuitive, or even flatly wrong in direction.</p>
+          <p>The bigger the data set, the easier it is to find a clear difference: with a lot of data, even a small difference is relatively easy to detect. With a smaller sample you get less reliable — and sometimes counterintuitive — results. The smaller the sample, the more likely you are to find something counterintuitive, or even flatly wrong in direction.</p>
           <p>Here you estimate the female number and the male adjustment in a small sample, and find a case where <strong>the adjustment for males comes out negative</strong> — males lighter than females. In the full data set that does not happen. In a small sample it can.</p>
           <p>Think about how many people you want in each group for that to happen. Weighing handful after handful blindly will take a long time; look at the graph before you fit, and stop when you see a handful you suspect will hold.</p>
         </div>
@@ -326,7 +330,7 @@
         <ul class="tasks" id="tasksD">
           <li data-task="D1">Fit Beren: both halves inside ±0.4 kg.
             <span class="hint">worst of his two: <span id="D1_now">—</span></span></li>
-          <li data-task="D2">Then fit Cyrus, moving only his weight at age two.
+          <li data-task="D2">Then settle on Cyrus's weight at age two and lock it in.
             <span class="hint"><span id="D2_now">Beren first</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedD">Stage E is open.</div>
@@ -337,7 +341,11 @@
           <div class="row" data-line="base"><label for="D_base">weight at age two (kg)</label><input type="range" id="D_base" min="10" max="18" step="0.1" value="12" /><output id="D_baseOut">12.0</output></div>
           <div class="row" data-line="grow"><label for="D_grow">added per year (kg)</label><input type="range" id="D_grow" min="0" max="5" step="0.05" value="0" /><output id="D_growOut">0.00</output></div>
           <div class="row" data-line="extra" id="D_extraRow" style="display:none;"><label for="D_extra">Cyrus, added at age two (kg)</label><input type="range" id="D_extra" min="-2" max="3" step="0.1" value="0" /><output id="D_extraOut">0.0</output></div>
-          <div class="buttons"><button id="D_download" class="ghost">Download .R</button></div>
+          <div class="buttons">
+            <button id="D_lockBtn" class="accent" style="display:none;">Lock in Cyrus</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+          <div class="verdict" id="D_verdict"></div>
         </div>
       </div>
       <div class="panel" id="D_phase2" style="display:none;">
@@ -620,15 +628,31 @@ function drawStageA() {
   el.textContent = fmtKg(lean);
   el.className = Math.abs(lean) <= A_TOL ? "ok" : "off";
   document.getElementById("A1_now").textContent = fmtKg(lean);
-  if (Gates.A.open && !Gates.A.done && Math.abs(lean) <= A_TOL) {
+}
+// Sliding past the answer is not choosing it. The number has to be committed,
+// and a lock-in that misses says so and hands the slider back.
+function lockInA() {
+  if (!Gates.A.open || Gates.A.done || !Data.weights.length) return;
+  const lean = mean(Data.weights.map(w => sA.num - w));
+  const out = document.getElementById("A_verdict");
+  if (Math.abs(lean) <= A_TOL) {
     Gates.A.done = true;
     markTask("A", "A1");
+    document.getElementById("A1_now").textContent = "locked in at " + sA.num.toFixed(1) + " kg";
+    out.className = "verdict shown right";
+    out.textContent = "Locked in at " + sA.num.toFixed(1) + " kg.";
+    document.getElementById("A_lockBtn").disabled = true;
     showSolved("A");
     record(BIT.A_solve, true);
     carryNumberForward(sA.num);
     unlockNext("A");
+  } else {
+    out.className = "verdict shown wrong";
+    out.textContent = "Not close enough — at " + sA.num.toFixed(1) +
+      " kg you are off by " + fmtKg(lean) + " on average. Move it and lock in again.";
   }
 }
+document.getElementById("A_lockBtn").addEventListener("click", lockInA);
 function onA() {
   sA.num = parseFloat(document.getElementById("A_num").value);
   document.getElementById("A_numOut").textContent = sA.num.toFixed(1);
@@ -1078,6 +1102,7 @@ function drawStageD() {
     // Cyrus arrives only once Beren is explained.
     sD.phase = 2;
     document.getElementById("D_extraRow").style.display = "grid";
+    document.getElementById("D_lockBtn").style.display = "inline-block";
     document.getElementById("D_phase2").style.display = "block";
     document.getElementById("D_phase2").scrollIntoView({ behavior: "smooth", block: "center" });
     drawStageD();
@@ -1085,16 +1110,37 @@ function drawStageD() {
   }
   if (showC && !taskDone("D","D2")) {
     document.getElementById("D2_now").textContent = worstC.toFixed(2) + " kg";
-    if (Gates.D.open && worstC <= D_TOL && worstB <= D_TOL) {
-      markTask("D","D2");
-      document.getElementById("D2_now").textContent = "fitted";
-      Gates.D.done = true;
-      record(BIT.D_cyrus, true);
-      showSolved("D", "Stage E is open.");
-      unlockNext("D");
-    }
   }
 }
+
+function lockInD() {
+  if (!Gates.D.open || Gates.D.done || sD.phase < 2) return;
+  const c = cellsD();
+  const worstB = Math.max(Math.abs(c.be), Math.abs(c.bl));
+  const worstC = Math.max(Math.abs(c.ce), Math.abs(c.cl));
+  const out = document.getElementById("D_verdict");
+  if (worstC <= D_TOL && worstB <= D_TOL) {
+    markTask("D","D2");
+    document.getElementById("D2_now").textContent =
+      "locked in at " + (sD.extra >= 0 ? "+" : "") + sD.extra.toFixed(1) + " kg";
+    out.className = "verdict shown right";
+    out.textContent = "Locked in. One extra number for Cyrus, and the same growth rate covers both boys.";
+    document.getElementById("D_lockBtn").disabled = true;
+    Gates.D.done = true;
+    record(BIT.D_cyrus, true);
+    showSolved("D", "Stage E is open.");
+    unlockNext("D");
+  } else if (worstB > D_TOL) {
+    out.className = "verdict shown wrong";
+    out.textContent = "Beren no longer fits — his halves are out by " + worstB.toFixed(2) +
+      " kg. Put his two numbers back before locking Cyrus in.";
+  } else {
+    out.className = "verdict shown wrong";
+    out.textContent = "Not there yet — Cyrus's halves are out by " + worstC.toFixed(2) +
+      " kg. Move his weight at age two and lock in again.";
+  }
+}
+document.getElementById("D_lockBtn").addEventListener("click", lockInD);
 function onD() {
   sD.base  = parseFloat(document.getElementById("D_base").value);
   sD.grow  = parseFloat(document.getElementById("D_grow").value);

@@ -159,6 +159,11 @@ the opening pages can be compared. Stage D's closing question is cut (JM: Beren 
 a weight later in age but earlier in time, which made the question confusing), as is
 stage C's. The activity box is off for every lesson.
 
+*Lock-ins, same day.* Stages A and D no longer open the next stage the instant a slider
+passes the answer — the number has to be committed with a **Lock in** button, and a
+lock-in that misses says by how much and hands the slider back. Stage B and Beren's half
+of stage D still open on landing.
+
 *The move:* the ladder from one number, to one number plus a group, to asking whether that
 group difference is bigger than the measuring, to one number plus a group plus a rate —
 which is a regression, built without ever saying so.
