@@ -256,7 +256,20 @@ The vagus showcase and the stretch challenge were removed to
 ---
 
 ### Lesson 4 — Finding the cloud of lines that all fit the data
-`lesson4.html` · v7 · 6 checkpoints · **Built**
+`lesson4.html` · v8 · 5 checkpoints · **Built**
+
+*Rebuilt from JM's voice notes, 2026-09-02.* Text is his notes throughout; the quote
+splices are gone. Stage A keeps the relative threshold (within 0.05 of what this
+student's sixty can reach) but now **states that band on screen, computed from the draw**,
+rounded outwards so every R² the plot paints green sits inside the quoted range. Stage B
+is a six-rung ladder — the sample-size slider opens to 20, then 80, 100, 150, 200, 500,
+and each rung has to be run above the previous cap, so nobody can jump to the biggest
+sample and skip the point; a measured run gave spans of 5.60, 3.83, 2.75, 2.86, 2.26,
+1.49. Stage C is rebuilt onto one set of axes: the second plot is gone, quotes appear on
+the familiar minute-vs-page graph one viewing at a time, and the pale lines are every
+pace still consistent with what has been noted. Measured: at 3–4 quotes a film everything
+overlaps, Fellowship comes apart from Return at about 5–7, and **Two Towers never
+separates from Return** — which is the finding.
 
 *The move:* the best line is not one line, and how wide the cloud is depends on how much
 data you have.
@@ -269,7 +282,7 @@ lecture-quote splice plus a bulleted setup in every scenario panel, no titles an
 showcase and the stretch challenge were removed to
 `_reference/retired/showcases-and-stretch/`.
 
-- **A — ten lines at the same ceiling** *(quote: 461_lec35_05, models are wrong but usefully wrong)*
+- **A — ten lines that are all the same answer** *(text: JM voice notes — every model is wrong; find the subset of factors useful for your purpose)*
   - *Interactive* — 60 adults (drawn fresh per page load, so the ceiling is this student's
     own number), same two knobs as Lesson 3. R² painted large in the plot corner, two
     decimals only. **No reference line is drawn.** `Lock in line` enables only when you are
@@ -281,7 +294,7 @@ showcase and the stretch challenge were removed to
     settings of the slope knob sit at the same number, spanning about 4.5 kg per 5 cm.
   - *Hands to* — Stage B asks what changes the width of that range.
 
-- **B — close the fan to a set width** *(quote: 202_lec10_01, random is streakier than we want it to be)*
+- **B — the spread of equivalent lines against sample size** *(text: JM voice notes. Six rungs, forced upward.)*
   - *Interactive* — A slider for how many adults go into each sample, then `Take a sample`
     or `Take 20 samples`. Each sample's best line is drawn on the scatter; below, each
     sample's pace is a dot on a row per sample size, with a bar for the middle 95% that
@@ -294,7 +307,7 @@ showcase and the stretch challenge were removed to
     n=500 about 1.6.
   - *Hands to* — Stage C applies it where you cannot go get more data.
 
-- **C — pull the three clouds apart** *(quote: 461_lec07_05, two drugs; reveal on solve: 202_lec23_05, no clean yes-or-no answers)*
+- **C — one viewing at a time** *(text: JM voice notes. One graph, points accumulating, a cloud of consistent lines per film.)*
   - *Interactive* — The three films again, each from its own start. A knob sets **how many
     moments a viewing catches** (4–48, opening at 5); `Watch it again` draws that many at
     random from the ones noted — some twice, some not at all — and refits each film. Paces
