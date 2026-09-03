@@ -435,51 +435,97 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
 placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings are the bare
 "Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
 
-### Lesson 6 — Watching the same biology give four different verdicts
-`lesson6.html` · v4 · 4 checkpoints · **Built**
+### Lesson 6 — Building a model of a population, one cause at a time
+`lesson6.html` · v5 · 10 checkpoints · **Skeleton built, text still owed**
 
-*The move:* four setups, one test, four answers — and each time, identify which input
-moved the verdict.
+*Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
+that two scalar rates cannot hold, then arrows from causes to rates, then the same move
+on Isle Royale — first finding the bad winters by hand, then replacing them with the
+wolves.* **Interactives, gates and answer keys are finished and measured off the shipped
+code; the five `.voice` blocks and five solved-banners are placeholders marked
+`TEXT FOR JM` in the source.**
 
-- **A — Three groups, two tests run, one not**
-  - *Interactive* — Low / Middle / High groups. Low-vs-Middle and Middle-vs-High both come
-    back unremarkable; you commit a prediction for Low-vs-High before unlocking the sliders.
-  - *Goal* — Non-significance is not transitive. Two "no differences" do not add to no
-    difference.
-  - *Hands to* — Stage B holds the effect fixed and moves n.
+*The model, all five stages:* `N(t+1) = N(t) · (1 + b − d)`, run forward from the first
+real count. Nothing in the lesson ever changes that line — what changes is whether `b`
+and `d` are numbers or functions of something. **The score is one number throughout: the
+"typical miss", `10^mean(|log10(model/counted)|)`, the factor the model is usually out
+by.** 2.0 means it is typically double or half the real count. Every gate is a threshold
+on it, so the five stages are directly comparable.
 
-- **B — Two experiments, same true effect**
-  - *Interactive* — Two experiments side by side, n = 30 and n = 300, with a shared
-    true-difference slider. Four canvases: groups and shuffled pile for each.
-  - *Goal* — Same biology, different verdicts, purely from sample size.
-  - *Hands to* — Stage C pits effect size against precision directly.
+**Data.** Cactus finch counts and Daphne Major rainfall for A–C; Isle Royale moose and
+wolves for D–E, **cut at 2000** — the wolf population collapsed genetically after that
+and was re-founded from the mainland in 2018–19, which is a different system. Both sets
+are embedded in the page, as in Lesson 5.
 
-- **C — Which one is "clear"?**
-  - *Interactive* — Experiment A: small true difference, tight scatter, n = 200.
-    Experiment B: huge true difference, big scatter, n = 12. You call which one clears the
-    bar before seeing them, then reseed.
-  - *Goal* — The bigger effect is not the one the test flags. This is the sharpest form of
-    the Lesson 5 Stage D lesson.
-  - *Hands to* — Stage D removes the effect entirely.
+**A new primitive: the arrow widget.** Stages C and E carry a small clickable
+node-and-arrow diagram, built in-page (`buildArrows`) rather than with `app/assets/dag.js`
+— dag.js pairs its nodes with a synthetic scatter, and what is wanted here is an arrow
+that turns a rate into a function and switches on the one slider it pays for. Grey solid
+arrows are structure and are not clickable; dashed ones are offers. The readout counts
+the numbers in the model, so parameter cost is on screen rather than asserted.
 
-- **D — Same centre, very different spread**
-  - *Interactive* — Two groups with identical means; a slider controls only how spread out
-    the second group is.
-  - *Goal* — A test aimed at the centre is blind to a difference in spread. The verdict
-    answers the question it was asked, not the question you had.
-  - *Hands to* — Stage E, where the verdict is correct and still misleads.
+- **A — births, deaths, a hundred generations** *(the sandbox, no data)*
+  - *Interactive* — 100 individuals, 100 years, two sliders. Three targets: finish above
+    1,000, finish below 10, finish between 90 and 110. The third is the point — holding
+    steady is not a setting but an exact tie. Then a numeric question: births 0.30 against
+    deaths 0.28, two in a hundred, gives 724 of the original 100 at year 100 (±80).
+  - *Hands to* — B, which asks the same two numbers to hold a real record.
 
-- **E — A verdict that is true and still misleading**
-  - *Interactive* — Weekend movie attendance against change in violent crime (synthetic,
-    faithful to Dahl & DellaVigna 2009). The pooled slope is clearly negative. A view
-    toggle colours by whether the weekend's big release was violent, and reports the pooled
-    slope against the two within-group slopes. A causal-model builder underneath lets you
-    add the unmeasured "young men in theatres" cause and watch the pooled pattern appear
-    without any direct arrow.
-  - *Goal* — "Violent movies reduce crime" is the wrong reading of a correct number.
-  - *Hands to* — Lesson 7, which puts a parent on one axis and their child on the other.
+- **B — a real population, and two numbers that cannot hold it** *(cactus finches)*
+  - *Interactive* — 37 counts, 1976–2012, model started on the 1976 count. Two tasks that
+    are individually easy and jointly impossible: put the model at or below 150 birds in
+    1977 (needs b−d ≈ −0.21), and at or above 500 in 2012 (needs b−d ≥ +0.03). Then a
+    numeric question: the b−d that makes the typical miss smallest.
+  - *Goal* — **The answer is zero.** The best two-number model of a wild population is a
+    flat line at 185 birds, typical miss 1.52×. Measured on the shipped grid.
+  - *Hands to* — C, which lets the rates move.
 
----
+- **C — one arrow at a time** *(rain, and the birds themselves)*
+  - *Interactive* — Two arrows on offer: rain → birth rate, and finches → death rate. Each
+    drawn arrow switches on one slider. Gate: typical miss under 1.32. Then a numeric
+    question: the smallest miss the rain arrow reaches on its own (1.35, ±0.04).
+  - *Goal* — Measured, on the shipped grid: no arrows 1.52×, crowding alone 1.50×, rain
+    alone 1.35×, both 1.29×. **The crowding arrow alone buys almost nothing** — an extra
+    number that is not a cause of much. The bar at 1.32 sits below what one arrow can do,
+    so it takes both.
+  - *Hands to* — D, where no cause is on offer at all.
+
+- **D — the moose, and the years that went wrong** *(event-finding, not fitting)*
+  - *Interactive* — 42 winter counts, 1959–2000, and a strip of clickable years below the
+    plot. One birth rate, one death rate, and one "extra deaths in a bad year" that applies
+    to every year marked. Gate: typical miss under 1.13. Then a numeric question: the
+    fewest marked years that get there — **two**.
+  - *Goal* — Measured: nothing marked 1.24×, one year 1.18×, **1977 + 1996 → 1.10×**, which
+    are the severe-winter die-off years. Marking a third makes it *worse* (1.15×), because
+    every marked year shares one extra-death number — so picking the right years matters,
+    not picking many.
+  - *Hands to* — E, which offers a reason for those years.
+
+- **E — the wolves** *(two phases: the arrow that works, and the one that does not)*
+  - *Interactive* — The wolf counts appear. The marked years are gone; in their place is
+    one arrow, wolves → moose deaths, reading the counted wolves. Gate 1: moose under 1.22.
+    That opens the wolf panel and the second arrow, moose → wolf births. Gate 2: wolves
+    under 1.45. Then a numeric question: the setting of the second arrow that makes the
+    wolves' miss smallest — **graded against the student's own two wolf rates**, because
+    the arrow and the birth rate pull on the same thing.
+  - *Goal* — Measured: the moose go from 1.24× to **1.17×** on two numbers plus one arrow,
+    against 1.10× for three numbers plus two hand-picked years. Fewer numbers, nearly as
+    good, and now pointing at something. The wolves go from 1.35× to **1.345×** — the
+    arrow back the other way is worth nothing, and its best setting is about zero. **The
+    honest finding: the moose can be explained partly by the wolves, and the wolves cannot
+    be explained by the moose.** Their crashes (parvovirus in 1981, inbreeding later) come
+    from outside both series.
+  - *Hands to* — Lesson 7.
+
+**Still owed on this lesson.** Five `.voice` blocks and five solved-banners are
+placeholders. The four verdict strings are the bare "Recorded — right/not right."
+
+**Displaced content, needs a ruling.** The old Lesson 6 — three groups where two
+non-significant comparisons do not add to one, n = 30 against n = 300 on the same true
+effect, and the movie-attendance-versus-crime showcase — is archived at
+`_reference/retired/lessons/lesson6_four_verdicts_2026-09-03.html`. Those were Thread-A
+points about reading a test's verdict, and the sequence no longer makes them anywhere.
+Fold them into Lesson 7, or into a drill, or drop them deliberately.
 
 ### Lesson 7 — Tracing how much of a parent ends up in their child
 `lesson7.html` · v3 · 8 checkpoints · **Built**

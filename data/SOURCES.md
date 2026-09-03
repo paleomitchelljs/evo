@@ -34,8 +34,10 @@ consumption.
   files. See `data/guide_to_grant_data.txt` for the full per-figure index.
 - **Used in.** Lesson 3 (empirical Step D); **Lesson 5 throughout** (the two
   species compared as individuals in one season, then as forty annual means,
-  then against the seed crop); and the target time series for the IBM
-  parameterization work.
+  then against the seed crop); **Lesson 6 stages B and C** (the *scandens* count
+  series against annual rainfall — *scandens* rather than *fortis* because its
+  counts swing less year to year, so a 37-year forward run can track them at all);
+  and the target time series for the IBM parameterization work.
 - **Clean derivative.**
   - `data/clean/finch_beak.csv` / `.json` — annual beak means for fortis
     and scandens (from Fig. 01-06 and Fig. 01-07).
@@ -474,3 +476,31 @@ consumption.
 - **Used in.** Lesson 7 (Mendel without Punnett squares) — students compute expected counts from the 3:1 ratio and a chi-square goodness-of-fit, observing that "even Mendel's data has variance" but also noting (a la Fisher 1936) that the chi-square values are suspiciously small.
 - **Clean derivative.** `data/clean/mendel_pea.csv`/`.json` — 7 rows, columns: trait, dominant_phenotype, recessive_phenotype, dominant_count, recessive_count, total, observed_ratio, expected_ratio (= 3.0), chi2_vs_3to1.
 - **Redistribution.** Public domain.
+
+## Vucetich & Peterson — Isle Royale wolves and moose, 1959–2019
+
+- **Citation.** Vucetich, J. A. & Peterson, R. O. *Ecological Studies of Wolves on
+  Isle Royale.* Michigan Technological University, Houghton MI. Annual reports,
+  1959–present. The longest continuous predator–prey study on record.
+- **URL / DOI.** `isleroyalewolf.org`. The cut used here is the project's own
+  `Data_wolves_moose_Isle_Royale_June2019` table, obtained via the `data-raw/`
+  directory of the `dsem` R package (James Thorson, NOAA), which redistributes it.
+- **What it is.** One row per winter, 1959–2019: wolf count, moose count, kill rate,
+  predation rate, moose recruitment, diet composition, browse indices, and a climate
+  block (rainfall, seasonal temperatures, winter NAO, snow depth, ice bridges).
+  Wolves range 2–50; moose 385–2,398.
+- **Used in.** **Lesson 6 stages D and E** — the moose alone (find the winters when
+  the death rate spiked: 1977 and 1996), then the wolves brought in as a cause.
+- **Clean derivative.** `data/clean/isle_royale.csv`/`.json` — all 61 rows, 1959–2019.
+  Columns: year, wolves, moose, snow_depth_cm, nao_djfm, ice_bridge, jan_feb_temp_f.
+  The three climate columns are carried but not yet used by any lesson. Snow depth is
+  missing before 1974 and NAO for 2019.
+- **Lesson 6 embeds 1959–2000 only, deliberately.** After 2000 the wolf population
+  collapsed from inbreeding to two animals and was re-founded from the mainland in
+  2018–19. Measured on this file: over 1959–2000 a wolves → moose-deaths term improves
+  a forward run from a typical miss of 1.24× to 1.17×; over the full 1959–2019 record
+  the best fitted coupling coefficient is **zero** — it buys nothing. The lesson uses
+  the window where the coupling is real. The clean file keeps every year, so widening
+  the window is a one-line change to the embedded block.
+- **Redistribution.** Counts and climate summaries only; the project's per-kill and
+  per-individual records are not redistributed here.

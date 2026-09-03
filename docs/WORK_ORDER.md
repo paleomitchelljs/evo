@@ -26,6 +26,14 @@ curricular call.
 
 **Deferred, and waiting on you.**
 
+0. **Lesson 6's displaced content.** The rebuild of 2026-09-03 replaced the old
+   Lesson 6 ("same biology, four different verdicts": non-transitive
+   non-significance, n = 30 against n = 300, the movie-versus-crime showcase). It is
+   archived at `_reference/retired/lessons/lesson6_four_verdicts_2026-09-03.html`.
+   Those Thread-A points about reading a verdict are now made nowhere in the
+   sequence. Fold them into Lesson 7, make a drill of them, or drop them on purpose —
+   but decide, rather than losing them by omission.
+
 1. **The plain-language question pass.** Wording across all lessons still carries
    notation and, in places, options that explain themselves. Hold until content
    settles, then sweep once against the options-state-what-never-why rule.

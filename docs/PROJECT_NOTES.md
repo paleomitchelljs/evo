@@ -285,6 +285,28 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **`JSMitchell` in the name box opens every stage.** Added 2026-09-03, in
+  `app/assets/score.js`, so it works on all 29 lessons and every scaffold without
+  touching them. Confirming as `JSMitchell` (or `JS Mitchell`) sets `state.bypass`,
+  strips `.stage-locked` off every `section.stage`, unlocks the table of contents,
+  and fires a `score:bypass` event on `document`. Lessons 5 and 6 listen for it and
+  also undo the gates that live *inside* a stage — L5 stage B's second pair of
+  sliders, L6 stage E's wolf panel — plus reveal every closing question; a lesson
+  that does not listen still gets all its sections open, which is the point.
+  `Score.isBypass()` reports it. **Why it needs no protection:** the submission code
+  is built from whatever name was typed, so a bypassed run emits a code whose token
+  decodes as `jsmitchell`. Verified. A student who learns the name gains a code they
+  cannot hand in. The status line under the box says "Confirmed — every stage open."
+  so it is never on by accident.
+- **The typical miss, `10^mean(|log10(model/observed)|)`.** Lesson 6's single score,
+  across all five stages: the factor the model is usually out by, so 2.0 reads as
+  "typically double or half". Chosen over R² because the same number then works for a
+  sandbox with no data, a 37-year forward run, and a 42-year one, and because the
+  gates become directly comparable across stages. Note it is computed over **every**
+  year including the first, where the model is seeded from the observation and
+  contributes zero — so it runs slightly lower than the same quantity computed over
+  transitions only.
+
 - **Covariance/Price naming lives in the code panel, not prose.** An earlier pass
   named `cov(x,y)/var(x)` in the closers of lessons 3/12/15/17. The ratchet reserves
   "the identity" for unit 38. Reconciled by keeping the thread as *the recurring
