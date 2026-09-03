@@ -393,7 +393,13 @@ consumption.
 - **Citation.** Pelletier, F., Hogg, J. T., Festa-Bianchet, M., Coltman, D. W., et al. (2022). Intense selective hunting leads to artificial evolution in horn size. *Evolutionary Applications* (and predecessors: Coltman et al. 2003 *Nature*).
 - **URL / DOI.** Dryad: <https://doi.org/10.5061/dryad.41d7q>. License: CC0.
 - **What it is.** 39 years of phenotypic data on horn size in Ram Mountain (Alberta) bighorn sheep, paired with a pedigree of 1,133 individuals (253 founders, 880 with assigned parents). Horn length, "Avhb114" (average horn base at age class), relative longevity, by sex × age × cohort × year. The dataset that supports the trophy-hunting selection-response and post-protection plateau analysis.
-- **Used in.** Lesson 15 (selection II — heritability as a state; selection-coefficient drill). The horn-length trajectory shows initial decline under hunting, then plateau after protection — the discussion case for V_A exhaustion vs. survivor bias.
+- **Used in.** **Lesson 7 stage E**, as the one real population that supplies all four of that lesson's knobs at once — see the measured values below. Also Lesson 15 (selection II — heritability as a state; selection-coefficient drill). The horn-length trajectory shows initial decline under hunting, then plateau after protection — the discussion case for V_A exhaustion vs. survivor bias.
+- **The four numbers Lesson 7 reads off it**, computed from `bighorn_horn.csv` + `bighorn_pedigree.csv` and stated on that page:
+  - *how many there are* — **86**, the median count of distinct sheep seen per year over 1973–2013 (range 19–219).
+  - *how much is handed on* — **0.40**, from parent–offspring slopes of 0.228 (430 dam–offspring pairs) and 0.182 (181 sire–offspring pairs). **Standardised within sex first**: males average 51.9 cm and females 21.3 cm, so the raw pooled slope is an artefact of the dimorphism and means nothing.
+  - *how much the trait helps you breed* — **+0.27**, horn length against number of offspring in the pedigree, 213 ewes (sires give +0.14 on 69, a thinner sample).
+  - *how different they are* — **1.00** by construction; the lesson's units are the rams' own spread, 8.2 cm.
+  - *what the rams actually did* — adult (age 4+) male horn length by year, standardised on the whole record: +0.53 in 1975 falling to −1.69 in 1995, a move of **2.21** on the lesson's own ruler against a pass mark of 0.05. Only years with at least five rams are used, which is 14 years; between 5 and 13 rams in most of them, so some of the wobble is sampling.
 - **Clean derivative.**
   - `data/clean/bighorn_horn.csv`/`.json` — 4,015 individual-year records. Columns: ID, yr, age, sex, cohort, hlM, hlF, Avhb114M, Avhb114F, relLongM, relLongF (NA preserved).
   - `data/clean/bighorn_pedigree.csv`/`.json` — 1,133 rows: (id, dam, sire). 253 founders (both parents NA).

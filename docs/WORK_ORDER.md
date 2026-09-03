@@ -26,6 +26,15 @@ curricular call.
 
 **Deferred, and waiting on you.**
 
+0b. **Lesson 8 inherits heritability's definition.** Lesson 7's rebuild of 2026-09-03
+   plays with heritability as a knob and never defines it, per your ruling. The old
+   Lesson 7 — the Galton parent–offspring build, four stages of it — is archived at
+   `_reference/retired/lessons/lesson7_galton_heritability_2026-09-03.html` and is the
+   material for that definition. Note the ledger still pins the `heritability` unlock to
+   unit L8, which is `lesson7.html`; if the definition lands in `lesson8.html` (unit L9,
+   seq 14) the unlock should move with it. Either seat passes the gate today, so this is
+   tidiness, not breakage.
+
 0. **Lesson 6's displaced content.** The rebuild of 2026-09-03 replaced the old
    Lesson 6 ("same biology, four different verdicts": non-transitive
    non-significance, n = 30 against n = 300, the movie-versus-crime showcase). It is

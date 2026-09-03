@@ -4,14 +4,15 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 7: Tracing how much of a parent ends up in their child</title>
+<title>BIO 202 — Lesson 7</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
-  * { box-sizing: border-box; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
   nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
   nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
   nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
@@ -22,342 +23,502 @@
   section.stage.stage-locked .lock-banner { display:block; }
   section.stage.stage-locked .stage-body { pointer-events:none; }
   .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
-  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
-  .explore-tracker.shown { display:block; }
-  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .col { display:flex; flex-direction:column; gap:16px; }
   .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
-  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
-  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
-  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
-  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
-  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
-  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
-  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
-  .prediction-done.correct { background:#e6f0dd; border-color:#6f8a4a; color:#3d5728; }
-  .prediction-done.wrong { background:#fbe4c6; border-color:#a86a1a; color:#5c3802; }
-  .controls.locked { opacity:0.4; pointer-events:none; }
-  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
-  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  /* Lecture voice — JM's own words. The framing text spans the page, so the first
+     row of the two-column body is always graph | controls, at the same height. */
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } blockquote.voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:220px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls .row.muted label { color:#a9a69c; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
+  .controls input[type=range]:disabled { opacity:0.4; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
-  .controls button.secondary { background:#888; } .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
-  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
+  /* The flat test's verdict, and the table of numbers measured off real sheep. */
+  .verdictline { font-family:ui-monospace,Menlo,monospace; font-size:13px; margin-top:6px; padding:5px 9px; border-radius:4px; display:inline-block; }
+  .verdictline.moving { background:#f8dfdb; color:#7c2230; }
+  .verdictline.flat { background:#e4efd4; color:#2e4410; }
+  table.knobs { border-collapse:collapse; font-size:13px; width:100%; }
+  table.knobs th, table.knobs td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--rule); }
+  table.knobs th { color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.05em; }
+  table.knobs td.n { font-family:ui-monospace,Menlo,monospace; }
+  table.knobs td.src { color:var(--muted); font-size:12px; }
+  ul.tasks li.fail::before { content:"●"; color:var(--accent); }
+  ul.tasks li.fail { color:#7c2230; }
+  .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
+  .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
+  .key .sw:first-child { margin-left:0; }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
-  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
-  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; } .teaching-note strong { color:#2e230a; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
-  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
-  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .outcomes p { margin:0 0 8px; }
-  .outcomes ul { margin:0 0 10px; padding-left:20px; columns:2; column-gap:28px; font-size:14px; }
-  .outcomes li { margin-bottom:4px; break-inside:avoid; }
-  .stage-outcome { font-size:12.5px; color:var(--muted); margin:4px 0 14px; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; }
-  .stage-outcome strong { color:var(--ink); }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 7 — Tracing how much of a parent ends up in their child</h1>
-  <p>The same line-fitting you have done since Lesson 3, now with a parent on one axis and their child on the other.</p>
-</header>
+  <h1>Lesson 7</h1>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. Two unrelated traits</a>
-  <a href="#stageB" id="tocB" class="locked">B. Let the child inherit part of the parent</a>
-  <a href="#stageC" id="tocC" class="locked">C. Fit the child on the parents</a>
-  <a href="#stageD" id="tocD" class="locked">D. Real families</a>
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+  <a href="#stageE" id="tocE" class="locked">E</a>
 </nav>
 
-<!-- ====== STAGE A — independent traits ============================== -->
+<!-- ========== STAGE A — the advantage ================================ -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Two traits that have nothing to do with each other</h2>
+  <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage A voice block. The job here is to establish the ruler
+           and the scale, and to land the third task -- that turning the advantage
+           off does not turn the change off. The two numbers are deliberately kept
+           separate: a population that comes back to where it started has still
+           been somewhere. -->
+      <div class="voice">
+        <p>A hundred individuals, a trait that varies between them, and sixty generations. Half of what makes an individual big or small is handed on to its offspring; the other half is not.</p>
+        <p>One knob to start with: how strongly the trait goes with the number of offspring an individual leaves. Push it up and the big ones out-breed the small ones. Push it below zero and it is the small ones.</p>
+        <p>Then set it to nothing at all — no advantage either way — and run it again.</p>
+      </div>
+      <ul class="setup">
+        <li>The solid line is the part of the trait that gets handed on. The pale dots are what you would have measured that year.</li>
+        <li><strong>Ended</strong> — how far the line finished from where it began.</li>
+        <li><strong>Strayed</strong> — the furthest it ever got from where it began, at any point.</li>
+        <li>Both are in units of the spread the population started with.</li>
+        <li>A batch is ten populations. The test is judged on the worst of the ten, because one flat run proves nothing.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Two simulated traits, drawn independently from Normal(0, 1). n individuals. Read the three numbers that each measure how two things move together, and watch them jump around as you reseed.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Scatter of two independent traits</h3>
-        <canvas id="plotA" width="560" height="400"></canvas>
+        <canvas id="plotA" width="560" height="360"></canvas>
         <div class="fit-stats" id="statsA">
-          <span class="label">n:</span> <span id="A_n">200</span>
-          &nbsp;|&nbsp;
-          <span class="label">cov(x, y):</span> <span id="A_cov">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">link:</span> <span id="A_r">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">rank agreement:</span> <span id="A_rho">—</span>
+          <span class="label">worst of the batch —</span>
+          <span class="label">ended:</span> <span id="A_ended">—</span>
+          &nbsp; <span class="label">strayed:</span> <span id="A_strayed">—</span>
         </div>
+        <div class="verdictline" id="A_verdictline">run a batch</div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predA">
-        <h3>Prediction (required before sliders unlock)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. You simulate two traits that are <em>truly</em> independent (no real connection) and measure 200 individuals. What do you predict the measured link will be?</div>
-            <label><input type="radio" name="qA1" value="exact" /> Exactly 0</label>
-            <label><input type="radio" name="qA1" value="close" /> Near 0 but generally nonzero</label>
-            <label><input type="radio" name="qA1" value="any" /> Equally likely anywhere in (−1, 1)</label>
-          </li>
-          <li>
-            <div class="q">Q2. You keep simulating the same two independent traits but increase n from 200 → 2,000 → 20,000. What happens to the typical sample r?</div>
-            <label><input type="radio" name="qA2" value="zero" /> The wobble around 0 shrinks</label>
-            <label><input type="radio" name="qA2" value="wob" /> The wobble stays the same size</label>
-            <label><input type="radio" name="qA2" value="grow" /> Sample r grows away from 0</label>
-          </li>
-        </ol>
-        <button id="submitA" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreA">Try at least 5 seed/n combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsA">
-          <div class="row" data-line="n"><label for="A_nIn">n</label><input type="range" id="A_nIn" min="20" max="1000" step="10" value="200" /><output id="A_nOut">200</output></div>
-          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+        <div class="controls" id="controlsA">
+          <div class="row" data-line="r"><label for="A_r">how much the trait helps you breed</label><input type="range" id="A_r" min="-0.5" max="0.5" step="0.05" value="0.3" /><output id="A_rOut">+0.30</output></div>
           <div class="buttons">
-            <button id="A_newSeed" class="secondary">Regenerate (new seed)</button>
+            <button id="A_run" class="accent">Run ten</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — independent traits, three summaries</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cA_n">200</span></span><span class="line">x &lt;- <span class="fn">rnorm</span>(n); y &lt;- <span class="fn">rnorm</span>(n)</span><span class="line"></span><span class="line"><span class="fn">cov</span>(x, y)</span><span class="line"><span class="fn">cor</span>(x, y)                <span class="com"># Pearson</span></span><span class="line"><span class="fn">cor</span>(x, y, method = <span class="str">"spearman"</span>)   <span class="com"># Spearman rank correlation</span></span></pre>
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Finish more than 5 above where you started. <span class="hint"><span id="A1_now">not yet</span></span></li>
+          <li data-task="A2">Finish more than 5 below. <span class="hint"><span id="A2_now">not yet</span></span></li>
+          <li data-task="A3">Set the knob to zero and run a batch — and watch it move anyway. <span class="hint"><span id="A3_now">not yet</span></span></li>
+          <li data-task="A4">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Stage B is open.</div>
+      </div>
+      <div class="panel numq" id="numqA">
+        <div class="q">With the knob at zero, what was the worst <em>strayed</em> in your batch of ten?</div>
+        <div class="row">
+          <input type="number" id="A_ans" min="0" max="99" step="0.01" placeholder="strayed" />
+          <span class="unit">spreads</span>
+          <button id="A_submit">Submit</button>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line">N &lt;- <span class="num">100</span>; h &lt;- <span class="num">0.5</span>; gens &lt;- <span class="num">60</span></span><span class="line" data-line="r">adv &lt;- <span class="num" id="cA_r">0.30</span></span><span class="line">g &lt;- <span class="fn">rnorm</span>(N, <span class="num">0</span>, <span class="fn">sqrt</span>(h)); e &lt;- <span class="fn">rnorm</span>(N, <span class="num">0</span>, <span class="fn">sqrt</span>(<span class="num">1</span>-h))</span><span class="line">handed &lt;- <span class="fn">numeric</span>(gens)</span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  p &lt;- g + e; handed[t] &lt;- <span class="fn">mean</span>(g)</span><span class="line">  w &lt;- <span class="fn">pmax</span>(<span class="num">0.02</span>, <span class="num">1</span> + adv * <span class="fn">scale</span>(p))</span><span class="line">  a &lt;- <span class="fn">sample</span>(N, N, TRUE, w); b &lt;- <span class="fn">sample</span>(N, N, TRUE, w)</span><span class="line">  g &lt;- (g[a] + g[b])/<span class="num">2</span> + <span class="fn">rnorm</span>(N, <span class="num">0</span>, <span class="fn">sqrt</span>(h/<span class="num">2</span>))</span><span class="line">  e &lt;- <span class="fn">rnorm</span>(N, <span class="num">0</span>, <span class="fn">sqrt</span>(<span class="num">1</span>-h))</span><span class="line">}</span><span class="line"><span class="fn">abs</span>(handed[gens] - handed[<span class="num">1</span>])            <span class="com"># ended</span></span><span class="line"><span class="fn">max</span>(<span class="fn">abs</span>(handed - handed[<span class="num">1</span>]))            <span class="com"># strayed</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== STAGE B — couple with h² ================================= -->
+<!-- ========== STAGE B — how many there are =========================== -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Let the child inherit part of the parent</h2>
-  <div class="lock-banner">Complete Stage A (submit prediction, try 5 combos) to unlock this section.</div>
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage B voice block. The four-for-one exchange rate from
+           Lesson 4 arrives again, in a setting that has nothing to do with
+           sampling adults off a street. Worth naming the callback. -->
+      <div class="voice">
+        <p>With no advantage at all the population still went somewhere, and it went there because a hundred is not very many. Every generation, which individuals happen to breed is a draw, and a draw off a hundred is a coarse one.</p>
+        <p>So take more of them. The slider goes from twenty-five up to eight hundred. Work up the ladder with the advantage held at zero, and watch what the two numbers do.</p>
+        <p>You have seen this exchange rate before, in a completely different place.</p>
+      </div>
+      <ul class="setup">
+        <li>Both knobs stay live. The ladder only means something with the advantage at zero.</li>
+        <li>Every rung is kept in the panel below. It records the middle of all the runs you have done at that size, which is steadier to read a pattern off than the worst of them — and it steadies further the more you run.</li>
+        <li>Eight hundred is where the slider stops. It is not where the change stops.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Simulated pairs: each child and the average of its two parents. Move the slider — how much of a parent's departure from the crowd's average is handed to the child — and watch the cloud tilt.</p>
-        <p>At one end of the slider, the child is built entirely from the parents. At the other, the parents tell you nothing.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Parents' average vs. child</h3>
-        <canvas id="plotB" width="560" height="400"></canvas>
+        <canvas id="plotB" width="560" height="330"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">carry-over you set:</span> <span id="B_h2">0.50</span>
-          &nbsp;|&nbsp;
-          <span class="label">move-together:</span> <span id="B_cov">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">tightness:</span> <span id="B_r">—</span>
+          <span class="label">worst of the batch —</span>
+          <span class="label">ended:</span> <span id="B_ended">—</span>
+          &nbsp; <span class="label">strayed:</span> <span id="B_strayed">—</span>
         </div>
+        <div class="verdictline" id="B_verdictline">run a batch</div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predB">
-        <h3>Prediction (required before sliders unlock)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. As h² moves from 0 to 1, how much the parents' average and the child move together will:</div>
-            <label><input type="radio" name="qB1" value="grow" /> Grow with h²</label>
-            <label><input type="radio" name="qB1" value="stay" /> Stay near zero</label>
-            <label><input type="radio" name="qB1" value="drop" /> Drop toward negative</label>
-          </li>
-          <li>
-            <div class="q">Q2. At h² = 1, the cloud of (midparent, offspring) points looks like:</div>
-            <label><input type="radio" name="qB2" value="round" /> A round cloud</label>
-            <label><input type="radio" name="qB2" value="line" /> A tight line</label>
-            <label><input type="radio" name="qB2" value="flat" /> A flat horizontal band</label>
-          </li>
-        </ol>
-        <button id="submitB" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreB">Try at least 6 carry-over settings to unlock Stage C. <span class="count">0/6 settings</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsB">
-          <div class="row" data-line="h2"><label for="B_h2In">h² (heritability)</label><input type="range" id="B_h2In" min="0" max="1" step="0.01" value="0.5" /><output id="B_h2Out">0.50</output></div>
-          <div class="row" data-line="n"><label for="B_nIn">n pairs</label><input type="range" id="B_nIn" min="30" max="2000" step="10" value="300" /><output id="B_nOut">300</output></div>
-          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+        <div class="controls" id="controlsB">
+          <div class="row" data-line="r"><label for="B_r">how much the trait helps you breed</label><input type="range" id="B_r" min="-0.5" max="0.5" step="0.05" value="0" /><output id="B_rOut">+0.00</output></div>
+          <div class="row" data-line="N"><label for="B_N">how many there are</label><input type="range" id="B_N" min="0" max="5" step="1" value="2" /><output id="B_NOut">100</output></div>
           <div class="buttons">
-            <button id="B_newSeed" class="secondary">Regenerate (new seed)</button>
+            <button id="B_run" class="accent">Run ten</button>
+            <button id="B_forty" class="secondary">Run forty</button>
             <button id="B_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — couple two traits via h²</h3>
-<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cB_n">300</span></span><span class="line" data-line="h2">h2 &lt;- <span class="num" id="cB_h2">0.50</span></span><span class="line">mu &lt;- <span class="num">68</span>; sigma &lt;- <span class="num">3</span></span><span class="line">father &lt;- <span class="fn">rnorm</span>(n, mu, sigma); mother &lt;- <span class="fn">rnorm</span>(n, mu, sigma)</span><span class="line">midparent &lt;- (father + mother) / <span class="num">2</span></span><span class="line">offspring &lt;- mu + h2 * (midparent - mu) +</span><span class="line">             <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma * <span class="fn">sqrt</span>(<span class="num">1</span> - h2))</span><span class="line"><span class="fn">cov</span>(midparent, offspring); <span class="fn">cor</span>(midparent, offspring)</span></pre>
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Forty runs at every rung of the ladder, with no advantage. <span class="hint"><span id="B1_now">0 of 6 rungs</span></span></li>
+          <li data-task="B2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Stage C is open.</div>
+      </div>
+      <div class="panel">
+        <h3>What each size gave you</h3>
+        <div class="locked-lines" id="B_list"><div style="color:var(--muted);">nothing yet</div></div>
+      </div>
+      <div class="panel numq" id="numqB">
+        <div class="q">The slider stops at 800 and the population is still moving. How many individuals would you need to halve the <em>typical strayed</em> one more time?</div>
+        <div class="row">
+          <input type="number" id="B_ans" min="1" max="10000000" step="1" placeholder="individuals" />
+          <span class="unit">individuals</span>
+          <button id="B_submit">Submit</button>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line" data-line="N">N &lt;- <span class="num" id="cB_N">100</span></span><span class="line" data-line="r">adv &lt;- <span class="num" id="cB_r">0.00</span></span><span class="line"><span class="com"># the same loop as Stage A, ten times over</span></span><span class="line">batch &lt;- <span class="fn">replicate</span>(<span class="num">10</span>, <span class="fn">oneRun</span>(N, h = <span class="num">0.5</span>, adv = adv))</span><span class="line"><span class="fn">max</span>(batch[<span class="str">"strayed"</span>, ])   <span class="com"># the worst of the ten</span></span><span class="line"></span><span class="line"><span class="com"># the spread of a mean falls with the square root of how many</span></span><span class="line"><span class="com"># went into it -- so four times as many halves it</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== STAGE C — slope = h² ====================================== -->
+<!-- ========== STAGE C — how much is handed on ======================== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Draw the line from the parents to the child</h2>
-  <div class="lock-banner">Complete Stage B (submit prediction, try 6 h² values) to unlock this section.</div>
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage C voice block. The knob arrives, they get to feel what
+           it does to the parent-and-offspring cloud, and then it fails to stop
+           anything. The slider deliberately bottoms out at 0.20. -->
+      <div class="voice">
+        <p>Half of what made an individual big or small has been handed on this whole time. That was a setting, and here it becomes a knob.</p>
+        <p>The panel underneath shows one generation of parents against their offspring. Turn the knob up and the cloud tightens into a line. Turn it down and it goes round — offspring that look nothing like the parents they came from.</p>
+        <p>So turn it down. Take it as low as the slider goes, with as many individuals as the slider allows and no advantage at all, and see whether that is enough.</p>
+      </div>
+      <ul class="setup">
+        <li>The knob stops at 0.20. It does not go to nothing here.</li>
+        <li>Lower panel: each dot is one parent's departure from the crowd, against their offspring's.</li>
+        <li>All three knobs stay live.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Same simulator as Stage B. Now we explicitly fit <code>lm(offspring ~ midparent)</code> and display the slope β̂ next to the true h² slider.</p>
-        <p>Drag how much carries over from parent to child, and watch the slope of the line.</p>
-        <p style="font-size:13px; color:var(--muted);">The predictor is the <em>midparent</em> average of both parents, so this slope reads h² directly. A regression on <em>one</em> parent alone would give ½h² (you'd double it to recover h²) — keep track of which slope you're reading.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Midparent × offspring with fitted line</h3>
-        <canvas id="plotC" width="560" height="400"></canvas>
+        <canvas id="plotC1" width="560" height="250"></canvas>
+        <canvas id="plotC2" width="560" height="215"></canvas>
         <div class="fit-stats" id="statsC">
-          <span class="label">true h²:</span> <span id="C_truth">0.50</span>
-          &nbsp;|&nbsp;
-          <span class="label">fitted slope:</span> <span id="C_slope" class="big">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">how far the slope sits from the dial:</span> <span id="C_gap">—</span>
+          <span class="label">worst of the batch —</span>
+          <span class="label">ended:</span> <span id="C_ended">—</span>
+          &nbsp; <span class="label">strayed:</span> <span id="C_strayed">—</span>
         </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">R²:</span> <span id="C_r2">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">how much the slope wobbles:</span> <span id="C_se">—</span>
-        </div>
+        <div class="verdictline" id="C_verdictline">run a batch</div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predC">
-        <h3>Prediction (required before slider unlocks)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. What does the slope of that line actually give you?</div>
-            <label><input type="radio" name="qC1" value="h2" /> The child's predicted deviation from the mean, per unit of the parents' deviation</label>
-            <label><input type="radio" name="qC1" value="r" /> The correlation r between offspring and midparent</label>
-            <label><input type="radio" name="qC1" value="one" /> 1, no matter how strong inheritance is</label>
-          </li>
-          <li>
-            <div class="q">Q2. You set the true h² yourself with the slider. Whenever h² is below 1, a child whose parents are well above average is predicted to land:</div>
-            <label><input type="radio" name="qC2" value="h2" /> Above average, but by less than the parents</label>
-            <label><input type="radio" name="qC2" value="full" /> Above average by exactly the parents' amount</label>
-            <label><input type="radio" name="qC2" value="flat" /> At the population average, whatever the parents</label>
-          </li>
-          <li>
-            <div class="q">Q3. (Reflection — not scored.) Suppose β̂ came out as <strong>1.0</strong> in some other population. In one sentence, what would that say about the heritability of height in that population? Write your answer below.</div>
-            <textarea id="qC3" rows="3" style="width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #c9c4b3; border-radius:3px; font: 13px -apple-system,sans-serif; resize:vertical;" placeholder="One sentence."></textarea>
-          </li>
-        </ol>
-        <button id="submitC" disabled>Submit prediction → unlock the slider</button>
-        <div class="explore-tracker" id="exploreC">Try at least 8 different settings of the dial to unlock Stage D. <span class="count">0/8 values</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsC">
-          <div class="row" data-line="h2"><label for="C_h2In">h² (truth)</label><input type="range" id="C_h2In" min="0" max="1" step="0.01" value="0.5" /><output id="C_h2Out">0.50</output></div>
-          <div class="row" data-line="n"><label for="C_nIn">n pairs</label><input type="range" id="C_nIn" min="30" max="2000" step="10" value="500" /><output id="C_nOut">500</output></div>
-          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+        <div class="controls" id="controlsC">
+          <div class="row" data-line="r"><label for="C_r">how much the trait helps you breed</label><input type="range" id="C_r" min="-0.5" max="0.5" step="0.05" value="0" /><output id="C_rOut">+0.00</output></div>
+          <div class="row" data-line="N"><label for="C_N">how many there are</label><input type="range" id="C_N" min="0" max="5" step="1" value="2" /><output id="C_NOut">100</output></div>
+          <div class="row" data-line="h"><label for="C_h">how much of it is handed on</label><input type="range" id="C_h" min="0.20" max="0.90" step="0.05" value="0.50" /><output id="C_hOut">0.50</output></div>
           <div class="buttons">
+            <button id="C_run" class="accent">Run ten</button>
             <button id="C_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — read h² off the regression slope</h3>
-<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cC_n">500</span></span><span class="line" data-line="h2">h2 &lt;- <span class="num" id="cC_h2">0.50</span></span><span class="line">mu &lt;- <span class="num">68</span>; sigma &lt;- <span class="num">3</span></span><span class="line">f &lt;- <span class="fn">rnorm</span>(n, mu, sigma); m &lt;- <span class="fn">rnorm</span>(n, mu, sigma)</span><span class="line">midparent &lt;- (f + m) / <span class="num">2</span></span><span class="line">offspring &lt;- mu + h2 * (midparent - mu) + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma * <span class="fn">sqrt</span>(<span class="num">1</span> - h2))</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(offspring ~ midparent)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]               <span class="com"># the slope IS h-hat-squared</span></span><span class="line"><span class="fn">summary</span>(fit)$coefficients[<span class="num">2</span>, <span class="num">2</span>]   <span class="com"># SE on h²-hat</span></span></pre>
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Run a batch with the knob as low as it goes, the population as big as it goes, and no advantage. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->Stage D is open.</div>
+      </div>
+      <div class="panel numq" id="numqC">
+        <div class="q">At that setting — everything pushed as far as it will go — what was the worst <em>strayed</em> in your batch of ten?</div>
+        <div class="row">
+          <input type="number" id="C_ans" min="0" max="99" step="0.01" placeholder="strayed" />
+          <span class="unit">spreads</span>
+          <button id="C_submit">Submit</button>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line" data-line="h">h &lt;- <span class="num" id="cC_h">0.50</span>   <span class="com"># the fraction handed on</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cC_N">100</span></span><span class="line" data-line="r">adv &lt;- <span class="num" id="cC_r">0.00</span></span><span class="line"></span><span class="line"><span class="com"># parents against offspring, one generation</span></span><span class="line"><span class="fn">plot</span>(midparent, offspring)</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(offspring ~ midparent))[<span class="num">2</span>]</span><span class="line"></span><span class="line">batch &lt;- <span class="fn">replicate</span>(<span class="num">10</span>, <span class="fn">oneRun</span>(N, h, adv))</span><span class="line"><span class="fn">max</span>(batch[<span class="str">"strayed"</span>, ])</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== STAGE D — Galton real ===================================== -->
+<!-- ========== STAGE D — the two that work ============================ -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Galton's 1885 data: 934 children, 197 families</h2>
-  <div class="lock-banner">Complete Stage C (submit prediction, try 8 h² values) to unlock this section.</div>
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage D voice block. Both routes work and both are the same
+           move: stop the differences, or stop them being handed on. Worth being
+           blunt in the banner about what has actually been switched off. -->
+      <div class="voice">
+        <p>Two things change here. The handing-on knob now goes all the way to nothing, and a fourth knob appears: how different from each other the individuals are in the first place.</p>
+        <p>Either one of them will do it. Take the handing-on to zero and the line goes dead flat — the dots still bounce, because you are still measuring a hundred individuals, but nothing carries from one generation to the next. Take the differences to zero and there is nothing to bounce.</p>
+        <p>Do it both ways. Then look at what you had to switch off to get there.</p>
+      </div>
+      <ul class="setup">
+        <li>The test: both numbers at or under 0.05, on the worst of ten.</li>
+        <li>Passing it once by each route opens the last part.</li>
+        <li>The pale dots are what you would have measured. Watch what they do when the line goes flat.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>934 child-records, 197 Victorian-era families. Midparent height = (father + 1.08·mother) / 2 (Galton's sex correction).</p>
-        <p>Fit <code>lm(childHeight ~ midparentHeight)</code>. Bootstrap it. The slope is what you came here for.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Galton family data: midparent height vs child height</h3>
-        <canvas id="plotD" width="560" height="400"></canvas>
+        <canvas id="plotD" width="560" height="360"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">N children:</span> <span id="D_N">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">families:</span> <span id="D_F">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">slope (= ĥ²):</span> <span id="D_b" class="big">—</span>
+          <span class="label">worst of the batch —</span>
+          <span class="label">ended:</span> <span id="D_ended">—</span>
+          &nbsp; <span class="label">strayed:</span> <span id="D_strayed">—</span>
         </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">intercept:</span> <span id="D_a">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">R²:</span> <span id="D_r2">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">95% bootstrap on ĥ²:</span> <span id="D_qi">—</span>
-        </div>
+        <div class="verdictline" id="D_verdictline">run a batch</div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predD">
-        <h3>Prediction (required before bootstrap unlocks)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. The slope of childHeight on midparentHeight in Galton's data will be:</div>
-            <label><input type="radio" name="qD1" value="one" /> Exactly 1</label>
-            <label><input type="radio" name="qD1" value="below" /> About 0.65</label>
-            <label><input type="radio" name="qD1" value="zero" /> Near 0</label>
-          </li>
-          <li>
-            <div class="q">Q2. Split the data by child sex. The two sex-specific slopes will:</div>
-            <label><input type="radio" name="qD2" value="same" /> Be roughly equal</label>
-            <label><input type="radio" name="qD2" value="opposite" /> Have opposite signs</label>
-            <label><input type="radio" name="qD2" value="zero" /> Both be near zero</label>
-          </li>
-        </ol>
-        <button id="submitD" disabled>Submit prediction → unlock bootstrap</button>
-        <div class="explore-tracker" id="exploreD">Run the bootstrap and split-by-sex toggle to wrap up. <span class="count">0/2 actions</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsD">
-          <div class="row"><label><input type="checkbox" id="D_split" /> color by child sex</label><div></div><output></output></div>
-          <div class="row" data-line="reps"><label for="D_reps">bootstrap reps</label><input type="range" id="D_reps" min="50" max="500" step="50" value="200" /><output id="D_repsOut">200</output></div>
-          <div class="row" data-line="seed"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+        <div class="controls" id="controlsD">
+          <div class="row" data-line="r"><label for="D_r">how much the trait helps you breed</label><input type="range" id="D_r" min="-0.5" max="0.5" step="0.05" value="0" /><output id="D_rOut">+0.00</output></div>
+          <div class="row" data-line="N"><label for="D_N">how many there are</label><input type="range" id="D_N" min="0" max="5" step="1" value="5" /><output id="D_NOut">800</output></div>
+          <div class="row" data-line="h"><label for="D_h">how much of it is handed on</label><input type="range" id="D_h" min="0" max="0.90" step="0.05" value="0.50" /><output id="D_hOut">0.50</output></div>
+          <div class="row" data-line="sd"><label for="D_sd">how different they are to begin with</label><input type="range" id="D_sd" min="0" max="1.50" step="0.05" value="1.00" /><output id="D_sdOut">1.00</output></div>
           <div class="buttons">
-            <button id="D_boot" class="accent">Run bootstrap on ĥ²</button>
+            <button id="D_run" class="accent">Run ten</button>
             <button id="D_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — Galton in 5 lines</h3>
-<pre class="code" id="codeD"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$midparent &lt;- (g$father + <span class="num">1.08</span> * g$mother) / <span class="num">2</span></span><span class="line">fit &lt;- <span class="fn">lm</span>(childHeight ~ midparent, data = g)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]   <span class="com"># the slope IS h-hat-squared</span></span><span class="line"></span><span class="line" data-line="reps">B &lt;- <span class="num" id="cD_reps">200</span></span><span class="line"><span class="fn">replicate</span>(B, {</span><span class="line">  k &lt;- <span class="fn">sample</span>(<span class="fn">nrow</span>(g), <span class="fn">nrow</span>(g), replace = <span class="kw">TRUE</span>)</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(childHeight ~ midparent, data = g[k, ]))[<span class="num">2</span>]</span><span class="line">}) |&gt; <span class="fn">quantile</span>(<span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span></pre>
+        <h3>To open Stage E</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Pass the test with nothing handed on. <span class="hint"><span id="D1_now">not yet</span></span></li>
+          <li data-task="D2">Pass it again with no differences to begin with. <span class="hint"><span id="D2_now">not yet</span></span></li>
+          <li data-task="D3">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Stage E is open.</div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">Put the differences back to 1.00, the population at 800 and the advantage at zero. Now walk the handing-on knob up from nothing. What is the largest setting that still passes the test?</div>
+        <div class="row">
+          <input type="number" id="D_ans" min="0" max="1" step="0.05" placeholder="handed on" />
+          <span class="unit">handed on</span>
+          <button id="D_submit">Submit</button>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line" data-line="sd">spread &lt;- <span class="num" id="cD_sd">1.00</span></span><span class="line" data-line="h">h &lt;- <span class="num" id="cD_h">0.50</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cD_N">800</span></span><span class="line" data-line="r">adv &lt;- <span class="num" id="cD_r">0.00</span></span><span class="line"></span><span class="line">g &lt;- <span class="fn">rnorm</span>(N, <span class="num">0</span>, spread*<span class="fn">sqrt</span>(h))</span><span class="line">e &lt;- <span class="fn">rnorm</span>(N, <span class="num">0</span>, spread*<span class="fn">sqrt</span>(<span class="num">1</span>-h))</span><span class="line"><span class="com"># h = 0  -> g is all zeros, nothing carries</span></span><span class="line"><span class="com"># spread = 0 -> g and e are both all zeros</span></span><span class="line"></span><span class="line">batch &lt;- <span class="fn">replicate</span>(<span class="num">10</span>, <span class="fn">oneRun</span>(N, h, adv, spread))</span><span class="line"><span class="fn">max</span>(batch[<span class="str">"ended"</span>, ]) &lt;= <span class="num">0.05</span> &amp;&amp; <span class="fn">max</span>(batch[<span class="str">"strayed"</span>, ]) &lt;= <span class="num">0.05</span></span></pre>
       </div>
     </div>
   </div>
+</section>
+
+<!-- ========== STAGE E — the sheep ==================================== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage E voice block. Four numbers off one real population,
+           none of them anywhere near the settings that worked in D, and a measured
+           trajectory on the same ruler for comparison. The second task is the one
+           that matters: removing the whole advantage is not enough either.
+
+           NEEDS A SENTENCE FROM YOU: the measured advantage is positive (+0.27, bigger
+           horns breed more), so the model climbs — while the real rams fell, because
+           hunters were removing exactly the big-horned ones. Without a line about that,
+           the page reads as a broken model. The two disagree about the direction and
+           agree about the only thing this lesson asks, which is whether anything held
+           still. -->
+      <div class="voice">
+        <p>Rams on Ram Mountain in Alberta were caught, marked and measured for forty years, and their parents are known. That gives all four of your knobs for one real population, measured rather than chosen.</p>
+        <p>Set them. Then compare where the model goes with where those sheep actually went, on the same two numbers you have been using all lesson.</p>
+        <p>Then take away the whole advantage — the one number of the four that anyone has ever managed to change on purpose — and run it again.</p>
+      </div>
+      <ul class="setup">
+        <li>Horn length in adult rams, 1975 to 1995, as departures from the forty-year average.</li>
+        <li>The black dots are the sheep. The line is your model.</li>
+        <li>Small samples: between 5 and 13 rams in most years, so some of the wobble is the counting.</li>
+        <li>The model and the rams need not move the same way. Both are being asked one question: did anything hold still?</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotE" width="560" height="330"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">your model —</span>
+          <span class="label">ended:</span> <span id="E_ended">—</span>
+          &nbsp; <span class="label">strayed:</span> <span id="E_strayed">—</span>
+          <br>
+          <span class="label">the real rams, 1975–1995 —</span>
+          <span class="label">ended:</span> <span class="off">2.21</span>
+          &nbsp; <span class="label">strayed:</span> <span class="off">2.21</span>
+        </div>
+        <div class="verdictline" id="E_verdictline">run a batch</div>
+      </div>
+      <div class="panel">
+        <h3>Measured on Ram Mountain</h3>
+        <table class="knobs">
+          <tr><th>knob</th><th>measured</th><th>from</th></tr>
+          <tr><td>how many there are</td><td class="n">86</td><td class="src">sheep seen per year, median over 1973–2013 (range 19–219)</td></tr>
+          <tr><td>how much is handed on</td><td class="n">0.40</td><td class="src">430 mother–offspring and 181 father–offspring pairs</td></tr>
+          <tr><td>how much the trait helps you breed</td><td class="n">+0.27</td><td class="src">horn length against number of offspring, 213 ewes</td></tr>
+          <tr><td>how different they are</td><td class="n">1.00</td><td class="src">by definition — the units are the rams' own spread, 8.2 cm</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsE">
+          <div class="row" data-line="r"><label for="E_r">how much the trait helps you breed</label><input type="range" id="E_r" min="-0.5" max="0.5" step="0.01" value="0" /><output id="E_rOut">+0.00</output></div>
+          <div class="row" data-line="N"><label for="E_N">how many there are</label><input type="range" id="E_N" min="20" max="240" step="1" value="100" /><output id="E_NOut">100</output></div>
+          <div class="row" data-line="h"><label for="E_h">how much of it is handed on</label><input type="range" id="E_h" min="0" max="0.90" step="0.05" value="0.50" /><output id="E_hOut">0.50</output></div>
+          <div class="row" data-line="sd"><label for="E_sd">how different they are to begin with</label><input type="range" id="E_sd" min="0" max="1.50" step="0.05" value="1.00" /><output id="E_sdOut">1.00</output></div>
+          <div class="buttons">
+            <button id="E_run" class="accent">Run ten</button>
+            <button id="E_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish the lesson</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">Set all four knobs to the measured numbers and run a batch. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E2">Now put the advantage at zero, leaving the other three, and run again. <span class="hint"><span id="E2_now">not yet</span></span></li>
+          <li data-task="E3">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. --></div>
+      </div>
+      <div class="panel numq" id="numqE">
+        <div class="q">With the sheep's advantage removed and the other three left as measured, what was the worst <em>strayed</em> in your batch of ten?</div>
+        <div class="row">
+          <input type="number" id="E_ans" min="0" max="99" step="0.01" placeholder="strayed" />
+          <span class="unit">spreads</span>
+          <button id="E_submit">Submit</button>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line">h &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/bighorn_horn.csv"</span>)</span><span class="line">p &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/bighorn_pedigree.csv"</span>)</span><span class="line"></span><span class="line"><span class="com"># adult rams, standardised on the whole record</span></span><span class="line">r &lt;- h[!<span class="fn">is.na</span>(h$hlM) &amp; h$age &gt;= <span class="num">4</span>, ]</span><span class="line">z &lt;- (r$hlM - <span class="fn">mean</span>(r$hlM)) / <span class="fn">sd</span>(r$hlM)</span><span class="line"><span class="fn">tapply</span>(z, r$yr, mean)</span><span class="line"></span><span class="line"><span class="com"># the four numbers, then the same loop as every stage before</span></span><span class="line" data-line="N">N   &lt;- <span class="num" id="cE_N">100</span></span><span class="line" data-line="h">hh  &lt;- <span class="num" id="cE_h">0.50</span></span><span class="line" data-line="r">adv &lt;- <span class="num" id="cE_r">0.00</span></span><span class="line" data-line="sd">spread &lt;- <span class="num" id="cE_sd">1.00</span></span></pre>
+      </div>
+    </div>
   </div>
 </section>
 
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 
-<footer class="wrap-up">
-  <p style="margin:0 0 14px;">Ask someone's first language and you can guess plenty about their parents. Ask their genes and you land on the same parents. A steep line does not say which one you were reading. <a href="../scaffolds/s26_inherited_or_invented.html" style="color:var(--accent2)">Scaffold S26</a> asks the same question about a feature two species share.</p>
-</footer>
-
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
+/* ====== Shared helpers ============================================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
+function makeNorm(rng) { let spare = null; return function () { if (spare !== null) { const v = spare; spare = null; return v; } let u = 0, v = 0, s = 0; do { u = rng()*2-1; v = rng()*2-1; s = u*u+v*v; } while (s >= 1 || s === 0); const f = Math.sqrt(-2*Math.log(s)/s); spare = v*f; return u*f; }; }
 function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
 function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
 function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
@@ -369,315 +530,540 @@ function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   ctx.textAlign="right"; ctx.textBaseline="middle";
   for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
   ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
-  ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
-  ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+  if (xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
+  if (yLabel) { ctx.save(); ctx.translate(f.pad.l-44, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore(); }
 }
 function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
-function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
-function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
-function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
-function covar(xs, ys) { const mx=mean(xs), my=mean(ys); let s=0; for(let i=0;i<xs.length;i++) s+=(xs[i]-mx)*(ys[i]-my); return s/(xs.length-1); }
-function corr(xs, ys) { return covar(xs, ys) / (std(xs)*std(ys)); }
-function spearman(xs, ys) {
-  const rank = arr => {
-    const sorted = arr.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
-    const r = new Array(arr.length);
-    sorted.forEach((s,k) => r[s.i] = k+1);
-    return r;
-  };
-  return corr(rank(xs), rank(ys));
-}
-function ols(xs, ys) {
-  const mx = mean(xs), my = mean(ys);
-  let sxy = 0, sxx = 0;
-  for (let i=0;i<xs.length;i++) { sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
-  const b = sxy/sxx; const a = my - b*mx;
-  const yhat = xs.map(x => a + b*x);
-  const ssr = ys.reduce((s,y,i) => s + (y-yhat[i])*(y-yhat[i]), 0);
-  const sst = ys.reduce((s,y) => s + (y-my)*(y-my), 0);
-  const sres = Math.sqrt(ssr/(xs.length-2));
-  const seB = sres / Math.sqrt(sxx);
-  return { a, b, r2: 1 - ssr/sst, sres, seB };
-}
+function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function sdOf(arr) { if (arr.length < 2) return 0; const m = mean(arr); let s = 0; for (const v of arr) s += (v-m)*(v-m); return Math.sqrt(s/arr.length); }
+function signed(v, n) { const s = v.toFixed(n); return v > 0 ? "+" + s : s; }
 
-const EXPLORE_THRESHOLD = { A: 5, B: 6, C: 8, D: 2 };
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-function bumpExplore(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); 
-  const g = Gates[stage]; if (!g.predicted || g.done) return;
-  g.explores += 1;
-  const tracker = document.getElementById("explore"+stage);
-  const c = tracker.querySelector(".count");
-  const noun = stage==="A"?"combos":stage==="B"?"h² values":stage==="C"?"values":"actions";
-  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
-  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
-    g.done = true; tracker.classList.add("complete");
-    c.textContent = `${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`);
-    unlockNext(stage);
-  }
-}
-function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:null}[s]; }
-function unlockNext(stage) {
-  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
-  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
-  else if (typeof Score !== "undefined" && Score.finish) Score.finish();
-}
-function wirePrediction(stage, predId, names, answers, controlsId) {
-  const root=document.getElementById(predId); const btn=root.querySelector("button");
-  function check() { btn.disabled = !names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
-  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
-  btn.addEventListener("click", () => {
-    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
-    const nc = results.filter(r=>r.correct).length;
-    const ol = root.querySelector("ol");
-    const msg = document.createElement("div");
-    msg.className = "prediction-done";
-    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
-    root.insertBefore(msg, ol);
-    btn.style.display = "none";
-    Gates[stage].predicted = true;
-    document.getElementById("explore"+stage).classList.add("shown");
-    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
-    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
-    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
-      Score.recordCheckpoint(stageIdx*2,     results[0].correct);
-      Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
+/* ====== The population ==============================================
+   One trait per individual, split into the part that is handed on (g) and
+   the part that is not (e). Four knobs and nothing else:
+     N       how many there are
+     h       what fraction of the spread is the handed-on part
+     spread  how different they are to begin with
+     r       how strongly the trait goes with number of offspring
+   The line the lesson scores is the mean of g -- what the next generation
+   actually starts from. The observed mean (g+e) is drawn faintly beside it,
+   because with nothing handed on that one still bounces and the difference
+   between the two is the whole point of Stage D.
+   ================================================================== */
+const GENS = 60, PASS = 0.05, BATCH = 10;
+function runPop(N, h, spread, r, seed) {
+  const rng = mulberry32(seed >>> 0), nrm = makeNorm(rng);
+  const sg = h > 0 ? spread*Math.sqrt(h) : 0;
+  const se = h < 1 ? spread*Math.sqrt(1-h) : 0;
+  const seg = h > 0 ? spread*Math.sqrt(h/2) : 0;
+  let g = new Float64Array(N), e = new Float64Array(N);
+  for (let i=0;i<N;i++) { g[i] = sg ? sg*nrm() : 0; e[i] = se ? se*nrm() : 0; }
+  const her = new Float64Array(GENS), obs = new Float64Array(GENS);
+  const p = new Float64Array(N), cum = new Float64Array(N);
+  let ng = new Float64Array(N), ne = new Float64Array(N);
+  for (let t=0;t<GENS;t++) {
+    let sp = 0, sg2 = 0;
+    for (let i=0;i<N;i++) { p[i] = g[i]+e[i]; sp += p[i]; sg2 += g[i]; }
+    const mp = sp/N; her[t] = sg2/N; obs[t] = mp;
+    let sd = 0; for (let i=0;i<N;i++) sd += (p[i]-mp)*(p[i]-mp);
+    sd = Math.sqrt(sd/N);
+    let weighted = false;
+    if (r !== 0 && sd > 0) {
+      weighted = true;
+      let tot = 0;
+      for (let i=0;i<N;i++) { const w = Math.max(0.02, 1 + r*(p[i]-mp)/sd); cum[i] = w; tot += w; }
+      let c = 0; for (let i=0;i<N;i++) { c += cum[i]/tot; cum[i] = c; }
     }
+    const pick = weighted
+      ? () => { const u = rng(); let lo = 0, hi = N-1; while (lo < hi) { const mid = (lo+hi)>>1; if (cum[mid] < u) lo = mid+1; else hi = mid; } return lo; }
+      : () => Math.floor(rng()*N);
+    for (let j=0;j<N;j++) {
+      const a = pick(), b = pick();
+      ng[j] = (g[a]+g[b])/2 + (seg ? seg*nrm() : 0);
+      ne[j] = se ? se*nrm() : 0;
+    }
+    let tmp = g; g = ng; ng = tmp;
+    tmp = e; e = ne; ne = tmp;
+  }
+  return { her, obs };
+}
+function scoreRun(series) {
+  const start = series[0];
+  let ended = Math.abs(series[series.length-1] - start), strayed = 0;
+  for (let i=0;i<series.length;i++) { const d = Math.abs(series[i]-start); if (d > strayed) strayed = d; }
+  return { ended, strayed };
+}
+// A batch of ten, judged on its worst member. One flat run proves nothing --
+// the same point Lessons 4 and 5 make about a single sample.
+function runBatch(N, h, spread, r, seed0) {
+  const runs = [];
+  let ended = 0, strayed = 0;
+  for (let k=0;k<BATCH;k++) {
+    const rr = runPop(N, h, spread, r, (seed0 + k*7919) >>> 0);
+    const sc = scoreRun(rr.her);
+    if (sc.ended > ended) ended = sc.ended;
+    if (sc.strayed > strayed) strayed = sc.strayed;
+    runs.push(rr);
+  }
+  const mids = runs.map(rr => scoreRun(rr.her).strayed).sort((a,b) => a-b);
+  return { runs, ended, strayed, midStrayed: mids[Math.floor(mids.length/2)],
+           flat: ended <= PASS && strayed <= PASS };
+}
+function paintBatch(stage, b) {
+  document.getElementById(stage+"_ended").textContent = b ? b.ended.toFixed(3) : "—";
+  document.getElementById(stage+"_strayed").textContent = b ? b.strayed.toFixed(3) : "—";
+  const v = document.getElementById(stage+"_verdictline");
+  if (!b) { v.className = "verdictline"; v.textContent = "run a batch"; return; }
+  v.className = "verdictline " + (b.flat ? "flat" : "moving");
+  v.textContent = b.flat ? "flat — nothing is changing" : "still changing";
+}
+// Every stage draws the same picture: ten pale handed-on lines, the last one
+// solid, and the observed means of that last run as dots behind it.
+function drawTrace(cvId, b, opts) {
+  opts = opts || {};
+  const cv = document.getElementById(cvId);
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad = { l: 62, r: 16, t: 16, b: 46 };
+  let lim = opts.lim || 0;
+  if (!lim && b) for (const rr of b.runs) for (let i=0;i<rr.her.length;i++) { const d = Math.abs(rr.her[i]-rr.her[0]); if (d > lim) lim = d; }
+  lim = Math.max(0.25, lim*1.15);
+  const f = makeFrame(pad, W, H, 0, GENS, -lim, lim);
+  drawAxes(ctx, f, "generation", "handed on, from the start", 6, 4,
+           v => v.toFixed(0), v => v.toFixed(2));
+  drawHLine(ctx, f, 0, "#999", 1, [3,3]);
+  if (opts.band) { ctx.fillStyle = "rgba(111,138,74,0.13)"; ctx.fillRect(f.pad.l, f.y(PASS), f.W, f.y(-PASS)-f.y(PASS)); }
+  if (opts.real) {
+    ctx.fillStyle = "#1d1d1b";
+    for (const pt of opts.real) { const x = f.x(pt[0]), y = f.y(Math.max(-lim, Math.min(lim, pt[1]))); ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 6.2832); ctx.fill(); }
+    ctx.strokeStyle = "rgba(60,60,60,0.45)"; ctx.lineWidth = 1; ctx.beginPath();
+    opts.real.forEach((pt,i) => { const x=f.x(pt[0]), y=f.y(Math.max(-lim,Math.min(lim,pt[1]))); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); });
+    ctx.stroke();
+  }
+  if (!b) return;
+  const last = b.runs[b.runs.length-1];
+  ctx.fillStyle = "rgba(47,107,143,0.30)";
+  for (let i=0;i<last.obs.length;i++) { ctx.beginPath(); ctx.arc(f.x(i), f.y(Math.max(-lim, Math.min(lim, last.obs[i]-last.her[0]))), 1.9, 0, 6.2832); ctx.fill(); }
+  b.runs.forEach((rr, k) => {
+    const isLast = k === b.runs.length-1;
+    ctx.strokeStyle = isLast ? "#b23a48" : "rgba(178,58,72,0.22)";
+    ctx.lineWidth = isLast ? 2.2 : 1.2;
+    ctx.beginPath();
+    for (let i=0;i<rr.her.length;i++) { const x=f.x(i), y=f.y(Math.max(-lim, Math.min(lim, rr.her[i]-rr.her[0]))); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+    ctx.stroke();
   });
 }
 
-/* ====== STAGE A ===================================================== */
-const sA = { n: 200, seed: 42 };
-function simIndep(n, seed) {
-  const rng = mulberry32(seed), normal = makeNormal(rng);
-  const xs = new Array(n), ys = new Array(n);
-  for (let i=0;i<n;i++) { xs[i] = normal(); ys[i] = normal(); }
-  return { xs, ys };
+/* ====== Stage gates ================================================= */
+const Gates = { A:{}, B:{}, C:{}, D:{}, E:{} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+function unlockNext(stage) {
+  const nx = NEXT[stage];
+  if (!nx) return;
+  const sec = document.getElementById("stage"+nx);
+  if (sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc"+nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
 }
+function markTask(stage, key, cls) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add(cls || "done");
+}
+function showSolved(stage, text) {
+  const el = document.getElementById("solved"+stage);
+  if (!el) return;
+  if (text) el.innerHTML = text;
+  el.classList.add("shown");
+}
+function record(pos, ok) { if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok); }
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+const BIT = { A_solve:0, A_num:1, B_solve:2, B_num:3, C_solve:4, C_num:5, D_solve:6, D_num:7, E_solve:8, E_num:9 };
+const LADDER = [25, 50, 100, 200, 400, 800];
+
+function wireNumeric(id, opts) {
+  const box   = document.getElementById("numq"+id);
+  const input = document.getElementById(id+"_ans");
+  const btn   = document.getElementById(id+"_submit");
+  const out   = document.getElementById(id+"_verdict");
+  let scored = false;
+  btn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const ok = opts.check(v);
+    out.className = "verdict shown " + (ok ? "right" : "wrong");
+    out.textContent = ok ? opts.right : opts.wrong;
+    if (ok) { btn.disabled = true; input.disabled = true; }
+    if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
+  });
+  return { show: () => { box.classList.add("shown"); } };
+}
+
+/* Adult rams on Ram Mountain, 1975-1995: mean horn length that year as a
+   departure from the forty-year average, in units of its spread (8.2 cm).
+   data/clean/bighorn_horn.csv, ages 4+, years with at least five rams. */
+const RAMS = [[1975,0.53],[1977,0.14],[1981,0.96],[1982,0.90],[1984,0.64],[1985,0.27],
+              [1987,0.67],[1989,0.39],[1990,-0.59],[1991,0.08],[1992,0.09],[1993,0.00],
+              [1994,-1.59],[1995,-1.69]];
+
+/* ====== STAGE A — the advantage ===================================== */
+const sA = { r: 0.30, batch: null, seed: pageSeed("l7A"), up: false, down: false, zeroRan: false, zeroStrayed: null };
 function drawStageA() {
-  const cv = document.getElementById("plotA");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const { xs, ys } = simIndep(sA.n, sA.seed);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, -3.5, 3.5, -3.5, 3.5);
-  drawAxes(ctx, f, "trait x (z-scored)", "trait y (z-scored)", 7, 7, v=>v.toFixed(1), v=>v.toFixed(1));
-  ctx.fillStyle = "rgba(60,60,60,0.55)";
-  for (let i=0;i<xs.length;i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 2, 0, 2*Math.PI); ctx.fill(); }
-  document.getElementById("A_n").textContent = sA.n;
-  document.getElementById("A_cov").textContent = covar(xs, ys).toFixed(3);
-  document.getElementById("A_r").textContent = corr(xs, ys).toFixed(3);
-  document.getElementById("A_rho").textContent = spearman(xs, ys).toFixed(3);
+  drawTrace("plotA", sA.batch);
+  paintBatch("A", sA.batch);
+  document.getElementById("A_rOut").textContent = signed(sA.r, 2);
+  document.getElementById("cA_r").textContent = sA.r.toFixed(2);
+  document.getElementById("A1_now").textContent = sA.up ? "done" : "not yet";
+  document.getElementById("A2_now").textContent = sA.down ? "done" : "not yet";
+  document.getElementById("A3_now").textContent = sA.zeroRan ? "done — and it moved" : "not yet";
+  checkA();
 }
-["A_nIn","A_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="A_nIn") { sA.n=parseInt(e.target.value,10); document.getElementById("A_nOut").textContent=sA.n; document.getElementById("cA_n").textContent=sA.n; highlightByDataLine("codeA","n"); }
-    if (id==="A_seedIn") { sA.seed=parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent=sA.seed; document.getElementById("cA_seed").textContent=sA.seed; highlightByDataLine("codeA","seed"); }
-    drawStageA(); bumpExplore("A");
-  });
+function batchA() {
+  sA.seed = (sA.seed * 1664525 + 1013904223) >>> 0;
+  const b = runBatch(100, 0.5, 1.0, sA.r, sA.seed);
+  sA.batch = b;
+  const last = b.runs[b.runs.length-1].her;
+  const net = last[last.length-1] - last[0];
+  if (net > 5) sA.up = true;
+  if (net < -5) sA.down = true;
+  if (Math.abs(sA.r) < 1e-9 && !b.flat) { sA.zeroRan = true; sA.zeroStrayed = b.strayed; markTask("A","A3","fail"); }
+  bump("A"); drawStageA();
+}
+const numA = wireNumeric("A", {
+  bit: BIT.A_num,
+  check: v => sA.zeroStrayed !== null && Math.abs(v - sA.zeroStrayed) <= 0.25,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("A","A4"); Gates.A.done = true; }
 });
-document.getElementById("A_newSeed").addEventListener("click", () => {
-  const s = Math.floor(Math.random()*999)+1;
-  document.getElementById("A_seedIn").value = s;
-  document.getElementById("A_seedIn").dispatchEvent(new Event("input"));
+function checkA() {
+  if (Gates.A.solvedOnce) return;
+  if (!(sA.up && sA.down && sA.zeroRan)) return;
+  Gates.A.solvedOnce = true;
+  markTask("A","A1"); markTask("A","A2");
+  record(BIT.A_solve, true); numA.show(); unlockNext("A"); showSolved("A");
+}
+document.getElementById("A_r").addEventListener("input", e => {
+  sA.r = parseFloat(e.target.value); highlightByDataLine("codeA","r"); drawStageA();
 });
+document.getElementById("A_run").addEventListener("click", batchA);
 document.getElementById("A_download").addEventListener("click", () => {
-  downloadText(`lesson7_stageA.R`, `set.seed(${sA.seed}); n <- ${sA.n}
-x <- rnorm(n); y <- rnorm(n)
-cov(x, y); cor(x, y); cor(x, y, method="spearman")
+  downloadText("lesson7_stageA.R", `# Lesson 7, Stage A -- turning the advantage off.
+N <- 100; h <- 0.5; gens <- 60; adv <- ${sA.r.toFixed(2)}
+oneRun <- function(N, h, adv, spread = 1) {
+  g <- rnorm(N, 0, spread*sqrt(h)); e <- rnorm(N, 0, spread*sqrt(1-h))
+  handed <- numeric(gens)
+  for (t in 1:gens) {
+    p <- g + e; handed[t] <- mean(g)
+    w <- pmax(0.02, 1 + adv * as.numeric(scale(p)))
+    a <- sample(N, N, TRUE, w); b <- sample(N, N, TRUE, w)
+    g <- (g[a] + g[b])/2 + rnorm(N, 0, spread*sqrt(h/2))
+    e <- rnorm(N, 0, spread*sqrt(1-h))
+  }
+  c(ended = abs(handed[gens]-handed[1]), strayed = max(abs(handed-handed[1])))
+}
+batch <- replicate(10, oneRun(N, h, adv))
+apply(batch, 1, max)
 `);
 });
-wirePrediction("A", "predA", ["qA1","qA2"], ["close","zero"], "controlsA");
-drawStageA();
 
-/* ====== STAGE B ===================================================== */
-const sB = { h2: 0.5, n: 300, seed: 42 };
-function simParentOffspring(n, h2, seed) {
-  const rng = mulberry32(seed), normal = makeNormal(rng);
-  const mu = 68, sigma = 3;
-  const out = [];
-  for (let i=0;i<n;i++) {
-    const f = mu + sigma*normal(), m = mu + sigma*normal();
-    const mp = (f + m)/2;
-    const y = mu + h2*(mp - mu) + sigma*Math.sqrt(1 - h2)*normal();
-    out.push({ f, m, mp, y });
-  }
-  return out;
-}
+/* ====== STAGE B — how many there are ================================ */
+const B_NEED = 40;
+const sB = { r: 0, ni: 2, batch: null, seed: pageSeed("l7B"), rungs: {} };
+function rungDone(n) { return (sB.rungs[n] || []).length >= B_NEED; }
+function rungMid(n) { const a = (sB.rungs[n] || []).slice().sort((x,y)=>x-y); return a.length ? a[Math.floor(a.length/2)] : null; }
 function drawStageB() {
-  const cv = document.getElementById("plotB");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const data = simParentOffspring(sB.n, sB.h2, sB.seed);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, 58, 78, 58, 78);
-  drawAxes(ctx, f, "midparent height (in)", "offspring height (in)", 5, 5, v=>v.toFixed(0), v=>v.toFixed(0));
-  // 1:1 reference
-  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(58)); ctx.lineTo(f.x(78), f.y(78)); ctx.stroke(); ctx.setLineDash([]);
-  // Points
-  ctx.fillStyle = "rgba(47,107,143,0.55)";
-  data.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.mp), f.y(d.y), 2.5, 0, 2*Math.PI); ctx.fill(); });
-  const mps = data.map(d=>d.mp), ys = data.map(d=>d.y);
-  document.getElementById("B_h2").textContent = sB.h2.toFixed(2);
-  document.getElementById("B_cov").textContent = covar(mps, ys).toFixed(3);
-  document.getElementById("B_r").textContent = corr(mps, ys).toFixed(3);
+  drawTrace("plotB", sB.batch);
+  paintBatch("B", sB.batch);
+  document.getElementById("B_rOut").textContent = signed(sB.r, 2);
+  document.getElementById("B_NOut").textContent = String(LADDER[sB.ni]);
+  document.getElementById("cB_r").textContent = sB.r.toFixed(2);
+  document.getElementById("cB_N").textContent = String(LADDER[sB.ni]);
+  const done = LADDER.filter(rungDone).length;
+  document.getElementById("B1_now").textContent = done + " of " + LADDER.length + " rungs";
+  const list = document.getElementById("B_list");
+  const keys = LADDER.filter(n => sB.rungs[n] && sB.rungs[n].length);
+  list.innerHTML = keys.length
+    ? keys.map(n => {
+        const k = sB.rungs[n].length;
+        return `<div>${String(n).padStart(4," ")} individuals — typical strayed ${rungMid(n).toFixed(3)}` +
+               `<span style="color:var(--muted);"> &nbsp;(${k} run${k===1?"":"s"}${k<B_NEED?", needs "+B_NEED:""})</span></div>`;
+      }).join("")
+    : '<div style="color:var(--muted);">nothing yet</div>';
+  checkB();
 }
-["B_h2In","B_nIn","B_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="B_h2In") { sB.h2=parseFloat(e.target.value); document.getElementById("B_h2Out").textContent=sB.h2.toFixed(2); document.getElementById("cB_h2").textContent=sB.h2.toFixed(2); highlightByDataLine("codeB","h2"); bumpExplore("B"); }
-    if (id==="B_nIn") { sB.n=parseInt(e.target.value,10); document.getElementById("B_nOut").textContent=sB.n; document.getElementById("cB_n").textContent=sB.n; highlightByDataLine("codeB","n"); }
-    if (id==="B_seedIn") { sB.seed=parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent=sB.seed; document.getElementById("cB_seed").textContent=sB.seed; highlightByDataLine("codeB","seed"); }
-    drawStageB();
-  });
+function batchB(times) {
+  const N = LADDER[sB.ni];
+  for (let i = 0; i < times; i++) {
+    sB.seed = (sB.seed * 1664525 + 1013904223) >>> 0;
+    const b = runBatch(N, 0.5, 1.0, sB.r, sB.seed);
+    sB.batch = b;
+    if (Math.abs(sB.r) < 1e-9) {
+      if (!sB.rungs[N]) sB.rungs[N] = [];
+      for (const rr of b.runs) sB.rungs[N].push(scoreRun(rr.her).strayed);
+    }
+  }
+  bump("B"); drawStageB();
+}
+const numB = wireNumeric("B", {
+  bit: BIT.B_num,
+  check: v => v >= 2240 && v <= 4160,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("B","B2"); Gates.B.done = true; }
 });
-document.getElementById("B_newSeed").addEventListener("click", () => {
-  const s = Math.floor(Math.random()*999)+1;
-  document.getElementById("B_seedIn").value = s;
-  document.getElementById("B_seedIn").dispatchEvent(new Event("input"));
+function checkB() {
+  if (Gates.B.solvedOnce) return;
+  if (!LADDER.every(rungDone)) return;
+  Gates.B.solvedOnce = true;
+  markTask("B","B1"); record(BIT.B_solve, true); numB.show(); unlockNext("B"); showSolved("B");
+}
+document.getElementById("B_r").addEventListener("input", e => {
+  sB.r = parseFloat(e.target.value); highlightByDataLine("codeB","r"); drawStageB();
 });
+document.getElementById("B_N").addEventListener("input", e => {
+  sB.ni = parseInt(e.target.value, 10); highlightByDataLine("codeB","N"); drawStageB();
+});
+document.getElementById("B_run").addEventListener("click", () => batchB(1));
+document.getElementById("B_forty").addEventListener("click", () => batchB(4));
 document.getElementById("B_download").addEventListener("click", () => {
-  downloadText(`lesson7_stageB.R`, `set.seed(${sB.seed}); n <- ${sB.n}; h2 <- ${sB.h2}; mu <- 68; sigma <- 3
-f <- rnorm(n, mu, sigma); m <- rnorm(n, mu, sigma)
-mp <- (f+m)/2
-y <- mu + h2*(mp - mu) + rnorm(n, 0, sigma*sqrt(1-h2))
-cov(mp, y); cor(mp, y)
+  downloadText("lesson7_stageB.R", `# Lesson 7, Stage B -- the ladder.
+for (N in c(25, 50, 100, 200, 400, 800)) {
+  batch <- replicate(10, oneRun(N, h = 0.5, adv = ${sB.r.toFixed(2)}))
+  cat(N, max(batch["strayed", ]), "\\n")
+}
+# four times as many halves it: the same exchange rate as Lesson 4.
 `);
 });
-wirePrediction("B", "predB", ["qB1","qB2"], ["grow","line"], "controlsB");
-drawStageB();
 
-/* ====== STAGE C ===================================================== */
-const sC = { h2: 0.5, n: 500, seed: 42 };
+/* ====== STAGE C — how much is handed on ============================= */
+const sC = { r: 0, ni: 2, h: 0.50, batch: null, seed: pageSeed("l7C"), floorStrayed: null };
 function drawStageC() {
-  const cv = document.getElementById("plotC");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const data = simParentOffspring(sC.n, sC.h2, sC.seed);
-  const mps = data.map(d=>d.mp), ys = data.map(d=>d.y);
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, 58, 78, 58, 78);
-  drawAxes(ctx, f, "midparent height (in)", "offspring height (in)", 5, 5, v=>v.toFixed(0), v=>v.toFixed(0));
-  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(58)); ctx.lineTo(f.x(78), f.y(78)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "rgba(47,107,143,0.45)";
-  data.forEach(d => { ctx.beginPath(); ctx.arc(f.x(d.mp), f.y(d.y), 2.5, 0, 2*Math.PI); ctx.fill(); });
-  const fit = ols(mps, ys);
-  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(f.x(58), f.y(fit.a + fit.b*58)); ctx.lineTo(f.x(78), f.y(fit.a + fit.b*78)); ctx.stroke();
-  document.getElementById("C_truth").textContent = sC.h2.toFixed(2);
-  document.getElementById("C_slope").textContent = fit.b.toFixed(3);
-  document.getElementById("C_gap").textContent = Math.abs(fit.b - sC.h2).toFixed(3);
-  document.getElementById("C_r2").textContent = fit.r2.toFixed(3);
-  document.getElementById("C_se").textContent = fit.seB.toFixed(3);
+  drawTrace("plotC1", sC.batch);
+  paintBatch("C", sC.batch);
+  // parents against offspring, one generation, at the current setting
+  const cv = document.getElementById("plotC2");
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad = { l: 62, r: 16, t: 16, b: 46 };
+  const f = makeFrame(pad, W, H, -2.6, 2.6, -2.6, 2.6);
+  drawAxes(ctx, f, "the parents, from the crowd", "the offspring", 4, 4, v=>v.toFixed(0), v=>v.toFixed(0));
+  const rng = mulberry32(pageSeed("l7Ccloud")), nrm = makeNorm(rng);
+  const h = sC.h, sg = Math.sqrt(h), se = Math.sqrt(1-h), seg = Math.sqrt(h/2);
+  ctx.fillStyle = "rgba(47,107,143,0.55)";
+  for (let i=0;i<220;i++) {
+    const g1 = sg*nrm(), g2 = sg*nrm();
+    const midp = (g1 + se*nrm() + g2 + se*nrm())/2;
+    const kid = (g1+g2)/2 + seg*nrm() + se*nrm();
+    ctx.beginPath(); ctx.arc(f.x(Math.max(-2.6,Math.min(2.6,midp))), f.y(Math.max(-2.6,Math.min(2.6,kid))), 2.4, 0, 6.2832); ctx.fill();
+  }
+  document.getElementById("C_rOut").textContent = signed(sC.r, 2);
+  document.getElementById("C_NOut").textContent = String(LADDER[sC.ni]);
+  document.getElementById("C_hOut").textContent = sC.h.toFixed(2);
+  document.getElementById("cC_r").textContent = sC.r.toFixed(2);
+  document.getElementById("cC_N").textContent = String(LADDER[sC.ni]);
+  document.getElementById("cC_h").textContent = sC.h.toFixed(2);
+  document.getElementById("C1_now").textContent = sC.floorStrayed !== null ? "done — and it moved" : "not yet";
+  checkC();
 }
-["C_h2In","C_nIn","C_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="C_h2In") { sC.h2=parseFloat(e.target.value); document.getElementById("C_h2Out").textContent=sC.h2.toFixed(2); document.getElementById("cC_h2").textContent=sC.h2.toFixed(2); highlightByDataLine("codeC","h2"); bumpExplore("C"); }
-    if (id==="C_nIn") { sC.n=parseInt(e.target.value,10); document.getElementById("C_nOut").textContent=sC.n; document.getElementById("cC_n").textContent=sC.n; highlightByDataLine("codeC","n"); }
-    if (id==="C_seedIn") { sC.seed=parseInt(e.target.value,10); document.getElementById("C_seedOut").textContent=sC.seed; document.getElementById("cC_seed").textContent=sC.seed; highlightByDataLine("codeC","seed"); }
-    drawStageC();
+function batchC() {
+  sC.seed = (sC.seed * 1664525 + 1013904223) >>> 0;
+  const N = LADDER[sC.ni];
+  const b = runBatch(N, sC.h, 1.0, sC.r, sC.seed);
+  sC.batch = b;
+  if (N === 800 && Math.abs(sC.h - 0.20) < 1e-9 && Math.abs(sC.r) < 1e-9 && !b.flat) {
+    sC.floorStrayed = b.strayed; markTask("C","C1","fail");
+  }
+  bump("C"); drawStageC();
+}
+const numC = wireNumeric("C", {
+  bit: BIT.C_num,
+  check: v => sC.floorStrayed !== null && Math.abs(v - sC.floorStrayed) <= 0.08,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("C","C2"); Gates.C.done = true; }
+});
+function checkC() {
+  if (Gates.C.solvedOnce || sC.floorStrayed === null) return;
+  Gates.C.solvedOnce = true;
+  record(BIT.C_solve, true); numC.show(); unlockNext("C"); showSolved("C");
+}
+[["C_r","r"],["C_h","h"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sC[k] = parseFloat(e.target.value); highlightByDataLine("codeC", k); drawStageC();
   });
 });
+document.getElementById("C_N").addEventListener("input", e => {
+  sC.ni = parseInt(e.target.value, 10); highlightByDataLine("codeC","N"); drawStageC();
+});
+document.getElementById("C_run").addEventListener("click", batchC);
 document.getElementById("C_download").addEventListener("click", () => {
-  downloadText(`lesson7_stageC.R`, `set.seed(${sC.seed}); n <- ${sC.n}; h2 <- ${sC.h2}; mu <- 68; sigma <- 3
-f <- rnorm(n, mu, sigma); m <- rnorm(n, mu, sigma)
-mp <- (f+m)/2; y <- mu + h2*(mp - mu) + rnorm(n, 0, sigma*sqrt(1-h2))
-fit <- lm(y ~ mp); coef(fit)[2]; summary(fit)$coefficients[2, 2]
+  downloadText("lesson7_stageC.R", `# Lesson 7, Stage C -- turning down what gets handed on.
+batch <- replicate(10, oneRun(N = ${LADDER[sC.ni]}, h = ${sC.h.toFixed(2)}, adv = ${sC.r.toFixed(2)}))
+apply(batch, 1, max)
 `);
 });
-wirePrediction("C", "predC", ["qC1","qC2"], ["h2","h2"], "controlsC");
-drawStageC();
 
-/* ====== STAGE D — Galton ============================================ */
-const sD = { galton: null, splitSex: false, reps: 200, seed: 42, bootSlopes: [] };
-async function loadGalton() {
-  try {
-    const r = await fetch("../../data/clean/galton_families.json");
-    sD.galton = await r.json();
-  } catch (e) {
-    console.warn("galton fallback", e); sD.galton = [];
-  }
-  drawStageD();
-}
+/* ====== STAGE D — the two that work ================================= */
+const sD = { r: 0, ni: 5, h: 0.50, sd: 1.00, batch: null, seed: pageSeed("l7D"), viaH: false, viaSpread: false };
 function drawStageD() {
-  if (!sD.galton) return;
-  const cv = document.getElementById("plotD");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const rows = sD.galton.map(r => ({
-    f: +r.father, m: +r.mother, mp: (+r.father + 1.08*(+r.mother))/2,
-    y: +r.childHeight, sex: r.gender, family: r.family
-  })).filter(r => isFinite(r.mp) && isFinite(r.y));
-  const pad = { l: 50, r: 12, t: 18, b: 50 };
-  const f = makeFrame(pad, W, H, 64, 76, 56, 80);
-  drawAxes(ctx, f, "midparent height (in)", "child height (in)", 6, 6, v=>v.toFixed(0), v=>v.toFixed(0));
-  ctx.strokeStyle = "rgba(120,120,120,0.5)"; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
-  ctx.beginPath(); ctx.moveTo(f.x(64), f.y(64)); ctx.lineTo(f.x(76), f.y(76)); ctx.stroke(); ctx.setLineDash([]);
-  rows.forEach(d => {
-    ctx.fillStyle = sD.splitSex
-      ? (d.sex === "male" ? "rgba(47,107,143,0.55)" : "rgba(178,58,72,0.45)")
-      : "rgba(60,60,60,0.5)";
-    // jitter for overplotting
-    const jx = (Math.random()-0.5)*0.2, jy = (Math.random()-0.5)*0.2;
-    ctx.beginPath(); ctx.arc(f.x(d.mp+jx), f.y(d.y+jy), 2.5, 0, 2*Math.PI); ctx.fill();
+  drawTrace("plotD", sD.batch, { band: true, lim: sD.batch ? 0 : 0.5 });
+  paintBatch("D", sD.batch);
+  document.getElementById("D_rOut").textContent = signed(sD.r, 2);
+  document.getElementById("D_NOut").textContent = String(LADDER[sD.ni]);
+  document.getElementById("D_hOut").textContent = sD.h.toFixed(2);
+  document.getElementById("D_sdOut").textContent = sD.sd.toFixed(2);
+  document.getElementById("cD_r").textContent = sD.r.toFixed(2);
+  document.getElementById("cD_N").textContent = String(LADDER[sD.ni]);
+  document.getElementById("cD_h").textContent = sD.h.toFixed(2);
+  document.getElementById("cD_sd").textContent = sD.sd.toFixed(2);
+  document.getElementById("D1_now").textContent = sD.viaH ? "done" : "not yet";
+  document.getElementById("D2_now").textContent = sD.viaSpread ? "done" : "not yet";
+  checkD();
+}
+function batchD() {
+  sD.seed = (sD.seed * 1664525 + 1013904223) >>> 0;
+  const b = runBatch(LADDER[sD.ni], sD.h, sD.sd, sD.r, sD.seed);
+  sD.batch = b;
+  if (b.flat) {
+    if (sD.h <= 1e-9 && sD.sd > 0.001) { sD.viaH = true; markTask("D","D1"); }
+    if (sD.sd <= 1e-9) { sD.viaSpread = true; markTask("D","D2"); }
+  }
+  bump("D"); drawStageD();
+}
+const numD = wireNumeric("D", {
+  bit: BIT.D_num,
+  check: v => v <= 0.02,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("D","D3"); Gates.D.done = true; }
+});
+function checkD() {
+  if (Gates.D.solvedOnce) return;
+  if (!(sD.viaH && sD.viaSpread)) return;
+  Gates.D.solvedOnce = true;
+  record(BIT.D_solve, true); numD.show(); unlockNext("D"); showSolved("D");
+}
+[["D_r","r"],["D_h","h"],["D_sd","sd"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sD[k] = parseFloat(e.target.value);
+    highlightByDataLine("codeD", k === "sd" ? "sd" : k); drawStageD();
   });
-  const mps = rows.map(d=>d.mp), ys = rows.map(d=>d.y);
-  const fit = ols(mps, ys);
-  ctx.strokeStyle = "#000"; ctx.lineWidth = 2.5;
-  ctx.beginPath(); ctx.moveTo(f.x(64), f.y(fit.a + fit.b*64)); ctx.lineTo(f.x(76), f.y(fit.a + fit.b*76)); ctx.stroke();
-  document.getElementById("D_N").textContent = rows.length;
-  const families = new Set(rows.map(d => d.family)).size;
-  document.getElementById("D_F").textContent = families;
-  document.getElementById("D_b").textContent = fit.b.toFixed(3);
-  document.getElementById("D_a").textContent = fit.a.toFixed(2);
-  document.getElementById("D_r2").textContent = fit.r2.toFixed(3);
-  // Hand this slope forward: Lesson 15 opens its carry-over control on the
-  // number the student fitted here rather than on an anonymous default.
-  if (window.Score && Score.carry) Score.carry("parentChildSlope", +fit.b.toFixed(3));
-  if (sD.bootSlopes.length) {
-    const lo = quantile(sD.bootSlopes, 0.025), hi = quantile(sD.bootSlopes, 0.975);
-    document.getElementById("D_qi").textContent = `(${lo.toFixed(3)}, ${hi.toFixed(3)})`;
-  }
-}
-function runBootD() {
-  if (!sD.galton) return;
-  const rows = sD.galton.map(r => ({ mp: (+r.father + 1.08*(+r.mother))/2, y: +r.childHeight }))
-                       .filter(r => isFinite(r.mp) && isFinite(r.y));
-  const rng = mulberry32(sD.seed);
-  sD.bootSlopes = [];
-  for (let r=0;r<sD.reps;r++) {
-    const mps = new Array(rows.length), ys = new Array(rows.length);
-    for (let i=0;i<rows.length;i++) { const k = Math.floor(rng()*rows.length); mps[i] = rows[k].mp; ys[i] = rows[k].y; }
-    const fit = ols(mps, ys);
-    sD.bootSlopes.push(fit.b);
-  }
-  drawStageD(); bumpExplore("D");
-}
-
-document.getElementById("D_split").addEventListener("change", (e) => { sD.splitSex = e.target.checked; drawStageD(); bumpExplore("D"); });
-document.getElementById("D_reps").addEventListener("input", (e) => { sD.reps = parseInt(e.target.value,10); document.getElementById("D_repsOut").textContent = sD.reps; document.getElementById("cD_reps").textContent = sD.reps; highlightByDataLine("codeD","reps"); });
-document.getElementById("D_seedIn").addEventListener("input", (e) => { sD.seed = parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent = sD.seed; });
-document.getElementById("D_boot").addEventListener("click", runBootD);
+});
+document.getElementById("D_N").addEventListener("input", e => {
+  sD.ni = parseInt(e.target.value, 10); highlightByDataLine("codeD","N"); drawStageD();
+});
+document.getElementById("D_run").addEventListener("click", batchD);
 document.getElementById("D_download").addEventListener("click", () => {
-  downloadText(`lesson7_stageD.R`, `g <- read.csv("data/clean/galton_families.csv")
-g$midparent <- (g$father + 1.08 * g$mother) / 2
-fit <- lm(childHeight ~ midparent, data = g)
-coef(fit)[2]   # h-hat-squared
-B <- ${sD.reps}
-boot <- replicate(B, { k <- sample(nrow(g), nrow(g), replace = TRUE); coef(lm(childHeight ~ midparent, data = g[k, ]))[2] })
-quantile(boot, c(.025, .975))
+  downloadText("lesson7_stageD.R", `# Lesson 7, Stage D -- the two that work.
+batch <- replicate(10, oneRun(N = ${LADDER[sD.ni]}, h = ${sD.h.toFixed(2)},
+                              adv = ${sD.r.toFixed(2)}, spread = ${sD.sd.toFixed(2)}))
+w <- apply(batch, 1, max)
+w[["ended"]] <= 0.05 && w[["strayed"]] <= 0.05
 `);
 });
-wirePrediction("D", "predD", ["qD1","qD2"], ["below","same"], "controlsD");
-loadGalton();
 
-/* ====== Pretest / Posttest / Score ================================== */
+/* ====== STAGE E — the sheep ========================================= */
+const E_N = 86, E_H = 0.40, E_R = 0.27;
+const sE = { r: 0, N: 100, h: 0.50, sd: 1.00, batch: null, seed: pageSeed("l7E"), asMeasured: false, noAdv: false, noAdvStrayed: null };
+function measuredE() { return sE.N === E_N && Math.abs(sE.h - E_H) < 1e-9 && Math.abs(sE.sd - 1) < 1e-9; }
+function drawStageE() {
+  const real = RAMS.map(p => [(p[0]-1975)/(1995-1975)*GENS, p[1]-RAMS[0][1]]);
+  drawTrace("plotE", sE.batch, { real, lim: sE.batch ? 0 : 2.6 });
+  paintBatch("E", sE.batch);
+  document.getElementById("E_rOut").textContent = signed(sE.r, 2);
+  document.getElementById("E_NOut").textContent = String(sE.N);
+  document.getElementById("E_hOut").textContent = sE.h.toFixed(2);
+  document.getElementById("E_sdOut").textContent = sE.sd.toFixed(2);
+  document.getElementById("cE_r").textContent = sE.r.toFixed(2);
+  document.getElementById("cE_N").textContent = String(sE.N);
+  document.getElementById("cE_h").textContent = sE.h.toFixed(2);
+  document.getElementById("cE_sd").textContent = sE.sd.toFixed(2);
+  document.getElementById("E1_now").textContent = sE.asMeasured ? "done" : "not yet";
+  document.getElementById("E2_now").textContent = sE.noAdv ? "done — and it still moved" : "not yet";
+  checkE();
+}
+function batchE() {
+  sE.seed = (sE.seed * 1664525 + 1013904223) >>> 0;
+  const b = runBatch(sE.N, sE.h, sE.sd, sE.r, sE.seed);
+  sE.batch = b;
+  if (measuredE() && Math.abs(sE.r - E_R) < 1e-9) { sE.asMeasured = true; markTask("E","E1"); }
+  if (measuredE() && Math.abs(sE.r) < 1e-9 && !b.flat) {
+    sE.noAdv = true; sE.noAdvStrayed = b.strayed; markTask("E","E2","fail");
+  }
+  bump("E"); drawStageE();
+}
+const numE = wireNumeric("E", {
+  bit: BIT.E_num,
+  check: v => sE.noAdvStrayed !== null && Math.abs(v - sE.noAdvStrayed) <= 0.30,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => {
+    markTask("E","E3");
+    Gates.E.done = true;
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  }
+});
+function checkE() {
+  if (Gates.E.solvedOnce) return;
+  if (!(sE.asMeasured && sE.noAdv)) return;
+  Gates.E.solvedOnce = true;
+  record(BIT.E_solve, true); numE.show();
+  showSolved("E", "<!-- TEXT FOR JM: stage E solved banner. -->Both runs are in.");
+}
+[["E_r","r"],["E_h","h"],["E_sd","sd"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sE[k] = parseFloat(e.target.value);
+    highlightByDataLine("codeE", k === "sd" ? "sd" : k); drawStageE();
+  });
+});
+document.getElementById("E_N").addEventListener("input", e => {
+  sE.N = parseInt(e.target.value, 10); highlightByDataLine("codeE","N"); drawStageE();
+});
+document.getElementById("E_run").addEventListener("click", batchE);
+document.getElementById("E_download").addEventListener("click", () => {
+  downloadText("lesson7_stageE.R", `# Lesson 7, Stage E -- four numbers off Ram Mountain.
+h <- read.csv("data/clean/bighorn_horn.csv")
+r <- h[!is.na(h$hlM) & h$age >= 4, ]
+z <- (r$hlM - mean(r$hlM)) / sd(r$hlM)
+tapply(z, r$yr, mean)          # what the rams actually did
+
+batch <- replicate(10, oneRun(N = ${sE.N}, h = ${sE.h.toFixed(2)},
+                              adv = ${sE.r.toFixed(2)}, spread = ${sE.sd.toFixed(2)}))
+apply(batch, 1, max)
+`);
+});
+
+/* ====== Boot + Score ================================================
+   Scaffold layout (10 bits):
+     0  A drove it up, drove it down, then failed to stop it at zero
+     1  A the worst strayed with no advantage at all
+     2  B ran the whole ladder
+     3  B how many it would take to halve it again
+     4  C the floor of the handing-on knob, and it still moved
+     5  C the worst strayed there
+     6  D passed the test by both routes
+     7  D the largest handing-on that still passes
+     8  E the sheep as measured, then with the advantage taken away
+     9  E the worst strayed with the advantage gone
+   ================================================================== */
+// Instructor bypass (score.js): open the gates that live inside a stage.
+document.addEventListener("score:bypass", () => {
+  numA.show(); numB.show(); numC.show(); numD.show(); numE.show();
+  drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
+});
+
+drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
+
 Score.init({
-  moduleId: "lesson7", version: 3, scaffold: 8,
-  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-  onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
+  moduleId: "lesson7",
+  version: 4,
+  scaffold: 10,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+    drawStageA();
+  }
 });
 </script>
 </body>

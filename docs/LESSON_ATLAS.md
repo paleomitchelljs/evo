@@ -527,39 +527,107 @@ effect, and the movie-attendance-versus-crime showcase — is archived at
 points about reading a test's verdict, and the sequence no longer makes them anywhere.
 Fold them into Lesson 7, or into a drill, or drop them deliberately.
 
-### Lesson 7 — Tracing how much of a parent ends up in their child
-`lesson7.html` · v3 · 8 checkpoints · **Built**
+### Lesson 7 — Trying to stop evolution, and finding out what that costs
+`lesson7.html` · v4 · 10 checkpoints · **Skeleton built, text still owed**
 
-*The move:* a resemblance is a slope, and the slope has a ceiling you can see.
+*Rebuilt 2026-09-03 to JM's spec: the capstone for Arc 1, the last allele-free lesson,
+and the one that has to carry the whole pre-genetic generalisation before Arc 2 starts
+counting ratios.* **Interactives, gates and answer keys are finished and measured off
+the shipped code; five `.voice` blocks and five solved-banners are placeholders marked
+`TEXT FOR JM`, one of which is flagged NEEDS A SENTENCE FROM YOU.**
 
-- **A — Two traits that have nothing to do with each other**
-  - *Interactive* — Two genuinely independent simulated traits. Sliders for n and seed;
-    readouts for how-they-move-together, the link, and rank agreement. Reseed repeatedly.
-  - *Goal* — Independent traits do not measure as exactly zero. The wobble around zero
-    shrinks with n; it never vanishes at any finite n.
-  - *Hands to* — Stage B introduces a real, dialled-in resemblance.
+*The task, all five stages:* **stop the population changing.** They cannot, until they
+switch off the thing that makes it a living population at all.
 
-- **B — Let the child inherit part of the parent**
-  - *Interactive* — Pairs of (parents' average, child). One slider sets how much of a
-    parent's departure from the crowd is handed on. At one extreme the cloud is round; at
-    the other it is a tight line.
-  - *Goal* — Watch a resemblance appear as a tilt, continuously dialled.
-  - *Hands to* — Stage C puts a number on the tilt.
+**What the ratchet does for this lesson.** Lesson 7 is unit L8, seq 12. `heritability`
+unlocks exactly here; `hardy-weinberg` (seq 15), `drift` (seq 16) and
+`effective population size` (seq 17) are all still locked, and `null hypothesis` is
+never-named. So the equilibrium conditions and the finite-population wander both have
+to be built and neither can be labelled — which is what JM asked for independently.
+Per his ruling of the same day, heritability is *played with* here as a knob and
+*defined* later as a parent–offspring correlation; the prose never names it.
 
-- **C — Draw the line from the parents to the child**
-  - *Interactive* — Same simulator, now with the fitted line drawn and its slope displayed
-    next to the dial you set. Readouts for how far the slope sits from the dial, and how
-    much it wobbles. Gate: 8 different settings. Includes an unscored free-text reflection.
-  - *Goal* — The slope recovers the dial. A child of extreme parents is predicted above
-    average but by *less* — regression toward the mean falls out of a slope below one.
-  - *Hands to* — Stage D does it on real families with no dial to check against.
+**The four knobs**, and nothing else: how many there are, how much of the trait is
+handed on, how different they are to begin with, and how strongly the trait goes with
+number of offspring. There is no fifth knob — a separate "effective" population size
+would be ledger-banned here and is not distinguishable from headcount pre-genetics.
 
-- **D — Galton's 1885 data: 934 children, 197 families**
-  - *Interactive* — Real Victorian family records. Fit the line, resample it, split by
-    child sex.
-  - *Goal* — The number (~0.65) is discovered here, not handed over earlier.
-  - *Hands to* — Closes with a caution kept in the footer: anything a child gets from a
-    parent — first language, diet, money, neighbourhood — bends that line just as steeply.
+**The ruler, built in stage A and used unchanged to the end.** Two numbers on the line
+the model hands to the next generation: **ended** (how far it finished from where it
+began) and **strayed** (the furthest it ever got, at any point). Both count, because a
+population that comes back to where it started has still been somewhere. The pass mark
+is **both under 0.05, on the worst of a batch of ten** — one flat run proves nothing,
+the same point Lessons 4 and 5 make about a single sample.
+
+**What the graph plots, and why it matters.** The scored line is the mean of the part
+that gets handed on, not the mean of the trait. Measured: with nothing handed on, the
+observed mean still wanders 0.35 while the handed-on line is flat at exactly 0.000. If
+the lesson scored the observed mean, the cleanest success in it would read as a failure.
+The observed means are drawn as pale dots beside the line, so that Stage D shows both at
+once — dots bouncing, line dead flat.
+
+- **A — the advantage** *(one knob; the failure that starts it)*
+  - *Interactive* — N = 100, half handed on, sixty generations. One knob: how strongly
+    the trait goes with number of offspring. Drive the population up more than 5, drive
+    it down more than 5, then set the knob to zero and run a batch. Measured: advantage
+    +0.30 moves it 9.3; advantage 0.00 still strays about 1.2, which is 24× the pass
+    mark. Then a numeric question, graded against the student's own batch.
+  - *Goal* — Taking away the advantage takes away the direction, not the change.
+
+- **B — how many there are** *(the four-for-one, arriving again)*
+  - *Interactive* — A ladder: 25, 50, 100, 200, 400, 800, with a `Run forty` button
+    because forty runs a rung is what it takes to read the pattern off six numbers
+    (measured: at ten a rung the ladder is non-monotone about a third of the time).
+    Each rung records the middle of everything run there. Measured ladder: 1.10, 0.81,
+    0.53, 0.40, 0.31, 0.18 — **four times as many halves it**, the same exchange rate as
+    Lesson 4 stage B, in a setting with nothing to do with sampling adults off a street.
+    Then a numeric question: how many to halve it once more (3,200, ±30%).
+  - *Goal* — More individuals buys less change at a punishing rate, and the slider runs
+    out before the change does.
+
+- **C — how much is handed on** *(the knob they have not met)*
+  - *Interactive* — The third knob, floored at 0.20 so it cannot be zeroed yet. A lower
+    panel shows one generation of parents against their offspring, so the knob's meaning
+    is visible as a cloud tightening into a line. Push everything as far as it goes —
+    biggest population, lowest handing-on, no advantage — and it still fails. Measured:
+    0.26, five times the pass mark. Numeric graded against their own batch.
+  - *Goal* — Handing on less is a weak lever: it scales with the square root, so halving
+    it buys about 30%.
+
+- **D — the two that work** *(and the discontinuity)*
+  - *Interactive* — The handing-on knob now reaches zero, and the fourth knob appears:
+    how different they are to begin with. Both routes flatten it. Gate: pass the test
+    once by each. Then the numeric that carries the lesson's thesis — **the largest
+    handing-on that still passes**. Measured on the shipped grid at the biggest
+    population with no advantage at all: 0.05 fails (0.13), 0.01 fails (0.06),
+    **only exactly zero passes.**
+  - *Goal* — There is no small-but-nonzero setting that holds still. The only settings
+    that work are the ones that describe a population which cannot evolve at all.
+
+- **E — the sheep** *(four numbers nobody chose)*
+  - *Interactive* — Ram Mountain bighorn, all four knobs measured off one real
+    population rather than picked: **86** seen per year (median 1973–2013), **0.40**
+    handed on (430 mother–offspring and 181 father–offspring pairs, standardised within
+    sex — the dimorphism is 51.9 cm against 21.3 cm, so the raw slope is meaningless),
+    **+0.27** for horn length against number of offspring (213 ewes), and a spread of
+    1.00 by definition. Set them: the model moves 7.3. The real rams, on the same ruler,
+    moved **2.21** — 44× the pass mark. Then take the whole advantage away, the one
+    number of the four anyone has ever changed on purpose, and it still strays about 1.0.
+  - *Goal* — Not one of the four numbers is anywhere near a stopping value, in the
+    population you would have picked if you wanted a quiet one.
+  - *Watch out* — The measured advantage is positive, so the model climbs while the real
+    rams fell; hunters were removing the big-horned rams. Flagged in the source as
+    needing a sentence, or the stage reads as a broken model.
+  - *Hands to* — Arc 2, which starts counting.
+
+**Displaced content.** The old Lesson 7 — four stages of Galton, independent traits,
+dialling in a resemblance, the slope, then 934 real children, with regression to the
+mean falling out of a slope below one — is archived at
+`_reference/retired/lessons/lesson7_galton_heritability_2026-09-03.html`. Per JM's
+ruling it becomes Lesson 8's definition of heritability as a parent–offspring
+correlation. **The ledger still pins the `heritability` unlock to L8 (= lesson7.html);
+if the definition really lands in lesson8.html (unit L9, seq 14) the unlock should move
+with it.** Using it at either seat passes the gate, so nothing is broken either way.
 
 ---
 
