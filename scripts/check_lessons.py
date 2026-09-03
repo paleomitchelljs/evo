@@ -161,7 +161,7 @@ SCORE_EXPORTS = {
     "Score","init","recordPretest","recordCheckpoint","recordPosttest","finish","isAnswered",
     "allAnswered","getBit","carry","recall","recallInfo","clearCarry","bumpManipulation",
     "getManipulations","manipulationCount","scoring","nameToken","elapsedSeconds","activeSeconds",
-    "decodeCode","hashName","parseCode",
+    "decodeCode","hashName","parseCode","isBypass",
 }
 # app/assets/lock.js, included by every student-facing page.
 LOCK_EXPORTS = {"Lock", "load", "parse", "pageKey", "isPreview"}

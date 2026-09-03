@@ -32,13 +32,24 @@ consumption.
   1973–2012. Plus rainfall, seed abundance by size class, individual-level
   morphology at select time points, and selection / survival / pedigree
   files. See `data/guide_to_grant_data.txt` for the full per-figure index.
-- **Used in.** Lesson 3 (empirical Step D), and the target time series for
-  the IBM parameterization work.
+- **Used in.** Lesson 3 (empirical Step D); **Lesson 5 throughout** (the two
+  species compared as individuals in one season, then as forty annual means,
+  then against the seed crop); and the target time series for the IBM
+  parameterization work.
 - **Clean derivative.**
   - `data/clean/finch_beak.csv` / `.json` — annual beak means for fortis
     and scandens (from Fig. 01-06 and Fig. 01-07).
   - `data/clean/finch_pop.csv` / `.json` — annual population counts for
     both species (from Fig. 14-03).
+  - `data/clean/finch_individuals.csv` / `.json` — 2,215 individually banded
+    birds measured in four field seasons (1975, 1987, 1991, 2012), columns:
+    year, species, band, beak_length, beak_depth (from the four
+    `Fig. 10-03 data, NN.csv` files, whose headers differ between seasons).
+    Lesson 5 stage A uses the 1987 season alone: 787 fortis, 156 scandens.
+  - `data/clean/finch_seeds.csv` / `.json` — 16 annual seed counts, 1976–1991,
+    columns: year, small_seeds, large_seeds, large_share (from Fig. 04-13).
+    `large_share` is the derived big-and-hard fraction of the year's crop and
+    is what Lesson 5 stage D puts on the bottom axis, lagged one year.
 - **Redistribution.** Raw CSVs ship with the book and are **not**
   redistributed in this repo — only the cleaned derivatives above. See
   `data/clean/CITATION.txt`.

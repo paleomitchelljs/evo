@@ -134,6 +134,7 @@
     manipulations: {},
     studentName: null,
     passcode: null,
+    bypass: false,
     // Epoch ms when the student confirmed their name (the clock start for
     // "how fast they worked"). Persisted so a reload measures from the true
     // first start, not the reload.
@@ -328,6 +329,27 @@
     renderNamePrompt(opts.mountNamePrompt);
   }
 
+  // ---- Instructor bypass -------------------------------------------------
+  // Confirming as JSMitchell opens every stage at once. Students arrive with
+  // questions about part D having lost their progress, and walking the whole
+  // lesson again just to reach the interactive is the wrong way to spend the
+  // meeting. There is nothing to protect here: the submission code is built
+  // from whatever name was entered, so a bypassed run emits a code in the
+  // instructor's name and is worthless to hand in.
+  const BYPASS_TOKENS = ["jsmitchell", "js_mitchell"];
+  function isBypassName(name) { return BYPASS_TOKENS.indexOf(nameToken(name)) !== -1; }
+  function openEverything() {
+    document.querySelectorAll("section.stage.stage-locked")
+      .forEach(function (sec) { sec.classList.remove("stage-locked"); });
+    document.querySelectorAll("nav.toc a.locked")
+      .forEach(function (a) { a.classList.remove("locked"); });
+    // Stages that open panels of their own partway through listen for this and
+    // undo their internal gate; a lesson that does not listen still has every
+    // section open, which is what the bypass is for.
+    document.dispatchEvent(new CustomEvent("score:bypass"));
+  }
+  function isBypass() { return state.bypass === true; }
+
   function renderNamePrompt(selector) {
     let mount;
     if (selector) {
@@ -374,8 +396,10 @@
         if (!state.startTime) { state.startTime = Date.now(); save(); }
         state.lastTick = Date.now();
         bindActivity();
-        stat.textContent = "Confirmed.";
+        state.bypass = isBypassName(name);
+        stat.textContent = state.bypass ? "Confirmed — every stage open." : "Confirmed.";
         if (state.onReady) state.onReady(state.passcode);
+        if (state.bypass) openEverything();
       } catch (e) {
         btn.disabled = false; input.disabled = false;
         stat.textContent = "Error generating passcode: " + (e && e.message || e);
@@ -726,6 +750,7 @@
     carry, recall, recallInfo, clearCarry,   // cross-lesson carryover
     bumpManipulation, getManipulations, manipulationCount,
     scoring, nameToken, elapsedSeconds, activeSeconds,
+    isBypass,              // instructor bypass: every stage open, code in JM's name
     decodeCode,            // v3 verifier entry point
     DEFAULT_SALT,          // so instructor tools can prefill the salt field
     hashName, parseCode,   // legacy dash-format only

@@ -4,15 +4,15 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 5: Shuffling the predictor to see what chance can do</title>
+<title>BIO 202 — Lesson 5</title>
 <link rel="stylesheet" href="../assets/score.css">
-<link rel="stylesheet" href="../assets/dag.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
-  * { box-sizing: border-box; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
   nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
   nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
   nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
@@ -23,354 +23,407 @@
   section.stage.stage-locked .lock-banner { display:block; }
   section.stage.stage-locked .stage-body { pointer-events:none; }
   .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
-  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
-  .explore-tracker.shown { display:block; }
-  .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
   .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
   .col { display:flex; flex-direction:column; gap:16px; }
   .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
-  .scenario .formula { font-family:ui-monospace,Menlo,monospace; font-size:13px; background:#f2f1ec; padding:8px 10px; border-radius:4px; display:inline-block; }
-  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
-  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
-  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
-  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
-  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
-  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
-  .prediction-done.correct { background:#e6f0dd; border-color:#6f8a4a; color:#3d5728; }
-  .prediction-done.wrong { background:#fbe4c6; border-color:#a86a1a; color:#5c3802; }
-  .controls.locked { opacity:0.4; pointer-events:none; }
-  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
-  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  /* Lecture voice — JM's own words. The framing text spans the page, so the first
+     row of the two-column body is always graph | controls, at the same height. */
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } blockquote.voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:220px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls .row.muted label { color:#a9a69c; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
+  .controls input[type=range]:disabled { opacity:0.4; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
-  .controls button.secondary { background:#888; } .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
-  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
+  .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
+  .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
+  .key .sw:first-child { margin-left:0; }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
-  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
-  .teaching-note { background:#f5efe0; border-left:3px solid #caa04a; padding:8px 12px; border-radius:0 4px 4px 0; font-size:13px; color:#4a3a14; } .teaching-note strong { color:#2e230a; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
-  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
-  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .outcomes p { margin:0 0 8px; }
-  .outcomes ul { margin:0 0 10px; padding-left:20px; columns:2; column-gap:28px; font-size:14px; }
-  .outcomes li { margin-bottom:4px; break-inside:avoid; }
-  .stage-outcome { font-size:12.5px; color:var(--muted); margin:4px 0 14px; padding:8px 12px; background:#f3f1ea; border-left:3px solid var(--accent2); border-radius:0 4px 4px 0; }
-  .stage-outcome strong { color:var(--ink); }
-  .drill-tally { display:flex; gap:6px; margin:8px 0 10px; flex-wrap:wrap; }
-  .drill-tally .dot { width:18px; height:18px; border-radius:3px; background:#ddd; border:1px solid #ccc; font-size:11px; line-height:18px; text-align:center; color:#666; }
-  .drill-tally .dot.correct { background:#6f8a4a; border-color:#3d5728; color:#fff; }
-  .drill-tally .dot.wrong   { background:#a86a1a; border-color:#5c3802; color:#fff; }
-  .drill-tally .dot.now     { border-color:#000; box-shadow:0 0 0 2px var(--accent); }
-  .drill-reveal { padding:10px 12px; border-radius:4px; margin-top:8px; display:none; font-size:13px; }
-  .drill-reveal.shown { display:block; }
-  .drill-reveal.correct { background:#e6f0dd; border:1px solid #6f8a4a; color:#3d5728; }
-  .drill-reveal.wrong { background:#fbe4c6; border:1px solid #a86a1a; color:#5c3802; }
-  .drill-options { display:flex; gap:8px; align-items:center; margin-top:6px; flex-wrap:wrap; }
-  .drill-options input[type=number] { width: 80px; padding:6px 8px; font:14px ui-monospace; border:1px solid var(--rule); border-radius:4px; }
-  .pvalue-readout { font:18px ui-monospace; padding:6px 10px; background:#1e1f22; color:#c3e88d; display:inline-block; border-radius:4px; }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 5 — Shuffling the predictor to see what chance can do</h1>
-  <p>Darwin could see that different islands had differently-shaped tortoises. He had no way to ask whether a pattern that clear could still be pure chance. You will.</p>
+  <h1>Lesson 5</h1>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. A small gap, a lot of people</a>
-  <a href="#stageB" id="tocB" class="locked">B. A big gap, hardly anyone</a>
-  <a href="#stageC" id="tocC" class="locked">C. Five real records, year by year</a>
-  <a href="#stageD" id="tocD" class="locked">D. Three knobs, one pile</a>
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
 </nav>
 
-<!-- ====== STAGE A — small effect, huge n =========================== -->
+<!-- ========== STAGE A — one number, and one more for the other species = -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Two groups, and one number for the gap between them</h2>
+  <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage A voice block. The move being repeated is Lesson 3
+           stage B — one number for everybody, plus one extra that applies only to
+           the second group — now with the group label being the species. What is
+           new is the lower panel: the pile of extras you get by pretending the
+           labels mean nothing. -->
+      <div class="voice">
+        <p>Every ground finch on Daphne Major in 1987 was caught, banded and measured. Nine hundred and forty-three of them are on this graph, and each one belongs to one of two species.</p>
+        <p>Predict the beak depth of a bird with one number, the way you predicted body mass with one number. Then allow yourself one more: an extra that gets added only when the bird is a <em>scandens</em>.</p>
+        <p>Underneath is what happens when the species labels are torn off, shuffled, and stuck back on at random — one thousand times over. Each shuffle produces its own extra. That is the pile of extras the labels can produce when they say nothing at all.</p>
+      </div>
+      <ul class="setup">
+        <li>943 birds measured in one field season: 787 <em>fortis</em>, 156 <em>scandens</em>.</li>
+        <li>Across: how far each bird's beak is from what you predicted for it.</li>
+        <li><em>fortis</em> above the line, <em>scandens</em> below it. The tick on each is that species' average miss.</li>
+        <li>Two knobs: a depth for a <em>fortis</em>, and an extra added only for a <em>scandens</em>.</li>
+        <li>Lower panel: the same extra, recomputed on 1,000 shuffles of the labels.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Two groups: A (g = 0) and B (g = 1, shifted up by a fixed gap). Both with the same within-group spread, and n points each. Stack them and fit a line that reads the gap between them.</p>
-        <p>To ask "is that gap clearly above zero?", shuffle <code>g</code>, refit 1000 times, build the bottom histogram. The empirical P is the tail.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Two groups (top) and the shuffled-label spread of the fake gaps (bottom)</h3>
-        <canvas id="plotA1" width="560" height="220"></canvas>
-        <canvas id="plotA2" width="560" height="180"></canvas>
+        <canvas id="plotA1" width="560" height="250"></canvas>
+        <canvas id="plotA2" width="560" height="200"></canvas>
         <div class="fit-stats" id="statsA">
-          <span class="label">n / group:</span> <span id="A_n">1000</span>
+          <span class="label">average miss —</span>
+          <span class="label">fortis:</span> <span id="A_missF">—</span>
+          &nbsp; <span class="label">scandens:</span> <span id="A_missS">—</span>
           &nbsp;|&nbsp;
-          <span class="label">spread (pooled):</span> <span id="A_sig">0.2</span>
-          &nbsp;|&nbsp;
-          <span class="label">true gap:</span> <span id="A_dm">0.01</span> (≈ one-twentieth of a spread)
+          <span class="label">shuffles reaching your extra:</span> <span id="A_beat">—</span> of 1,000
         </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">observed gap:</span> <span id="A_dHat">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">empirical P (1000 shuffles):</span> <span id="A_p" class="pvalue-readout">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">gap ÷ spread:</span> <span id="A_d">—</span>
+        <div class="key">
+          <span class="sw" style="background:#b23a48"></span>fortis
+          <span class="sw" style="background:#2f6b8f"></span>scandens
         </div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predA">
-        <h3>Prediction (required before sliders unlock)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. With a true gap of one-twentieth of a spread and n = 1000 per group, the histogram of shuffled gaps will be:</div>
-            <label><input type="radio" name="qA1" value="wide" /> wide</label>
-            <label><input type="radio" name="qA1" value="narrow" /> narrow and tightly clustered near zero</label>
-            <label><input type="radio" name="qA1" value="far" /> centered well away from zero</label>
-          </li>
-          <li>
-            <div class="q">Q2. The observed gap at this n will land:</div>
-            <label><input type="radio" name="qA2" value="inside" /> well inside the shuffle histogram</label>
-            <label><input type="radio" name="qA2" value="outside" /> just outside the tightly clustered shuffle histogram</label>
-            <label><input type="radio" name="qA2" value="random" /> randomly inside or outside</label>
-          </li>
-        </ol>
-        <button id="submitA" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreA">Move sliders through 5 combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsA">
-          <div class="row" data-line="n"><label for="A_nIn">n / group</label><input type="range" id="A_nIn" min="20" max="5000" step="20" value="1000" /><output id="A_nOut">1000</output></div>
-          <div class="row" data-line="sigma"><label for="A_sigIn">within spread</label><input type="range" id="A_sigIn" min="0.05" max="3" step="0.05" value="0.2" /><output id="A_sigOut">0.20</output></div>
-          <div class="row" data-line="dmu"><label for="A_dmIn">true gap</label><input type="range" id="A_dmIn" min="0" max="2" step="0.005" value="0.01" /><output id="A_dmOut">0.010</output></div>
-          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
-          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div>
+        <div class="controls" id="controlsA">
+          <div class="row" data-line="base"><label for="A_base">beak depth of a fortis (mm)</label><input type="range" id="A_base" min="8.50" max="10.20" step="0.01" value="9.00" /><output id="A_baseOut">9.00</output></div>
+          <div class="row" data-line="extra"><label for="A_extra">extra for a scandens (mm)</label><input type="range" id="A_extra" min="-0.80" max="0.80" step="0.01" value="0.00" /><output id="A_extraOut">0.00</output></div>
+          <div class="buttons">
+            <button id="A_reshuffle" class="secondary">Shuffle the labels again</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — one regression and a shuffle loop</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cA_n">1000</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cA_sig">0.2</span></span><span class="line" data-line="dmu">delta &lt;- <span class="num" id="cA_dm">0.01</span></span><span class="line">y &lt;- <span class="fn">c</span>(<span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma), <span class="fn">rnorm</span>(n, delta, sigma))</span><span class="line">g &lt;- <span class="fn">c</span>(<span class="fn">rep</span>(<span class="num">0</span>, n), <span class="fn">rep</span>(<span class="num">1</span>, n))</span><span class="line"></span><span class="line"><span class="com"># the model: y ~ N(alpha + delta*g, sigma). delta_hat = group difference.</span></span><span class="line">d_obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ g))[<span class="num">2</span>]</span><span class="line"></span><span class="line"><span class="com"># shuffle g to break the relationship; refit; collect null delta_hat's</span></span><span class="line">d_null &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ <span class="fn">sample</span>(g)))[<span class="num">2</span>])</span><span class="line"></span><span class="line"><span class="com"># empirical two-sided P -- fraction at least as extreme as observed</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(d_null) &gt;= <span class="fn">abs</span>(d_obs))</span></pre>
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Bring both species' average miss to within 0.03 mm of zero.
+            <span class="hint"><span id="A1_now">neither is there yet</span></span></li>
+          <li data-task="A2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Stage B is open.</div>
+      </div>
+      <div class="panel numq" id="numqA">
+        <div class="q">Walk the extra back toward zero until it re-enters the pile of shuffled extras. What value does it re-enter at?</div>
+        <div class="row">
+          <input type="number" id="A_ans" min="-0.80" max="0.80" step="0.01" placeholder="mm" />
+          <span class="unit">mm</span>
+          <button id="A_submit">Submit</button>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line">b &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_individuals.csv"</span>)</span><span class="line">b &lt;- b[b$year == <span class="num">1987</span>, ]</span><span class="line"></span><span class="line" data-line="base">base  &lt;- <span class="num" id="cA_base">9.00</span></span><span class="line" data-line="extra">extra &lt;- <span class="num" id="cA_extra">0.00</span></span><span class="line">guess &lt;- base + extra * (b$species == <span class="str">"scandens"</span>)</span><span class="line"><span class="fn">tapply</span>(b$beak_depth - guess, b$species, mean)</span><span class="line"></span><span class="line"><span class="com"># the extra you get when the labels mean nothing</span></span><span class="line">gap &lt;- <span class="kw">function</span>(sp) <span class="fn">mean</span>(b$beak_depth[sp == <span class="str">"scandens"</span>]) -</span><span class="line">                  <span class="fn">mean</span>(b$beak_depth[sp == <span class="str">"fortis"</span>])</span><span class="line">shuffled &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">gap</span>(<span class="fn">sample</span>(b$species)))</span><span class="line"><span class="fn">quantile</span>(shuffled, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span><span class="line"><span class="fn">mean</span>(shuffled &lt;= <span class="fn">gap</span>(b$species))</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== STAGE B — large effect, small n ========================== -->
+<!-- ========== STAGE B — the same two numbers, once a decade ============ -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Eight per group, and far more scatter</h2>
-  <div class="lock-banner">Complete Stage A (submit prediction, try 5 combos) to unlock this section.</div>
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage B voice block. Two phases, deliberately: fortis is
+           fitted alone with two knobs, and only then do the scandens points
+           appear with their own two. The parameterisation is the Lesson 3 ladder
+           one rung further on — a starting depth, a rate, then an extra on the
+           starting depth and an extra on the rate. -->
+      <div class="voice">
+        <p>The Grants went back to Daphne Major every year for forty years and measured the birds again. That gives one average beak depth per species per year, from 1973 to 2012.</p>
+        <p>Fit <em>fortis</em> first: a depth to start from in 1973, and an amount the depth changes each decade after that. Only two knobs, the same two you used for the pace of a film.</p>
+        <p>Then <em>scandens</em> arrives with two knobs of its own — not a fresh starting depth and a fresh rate, but an extra on each of yours.</p>
+      </div>
+      <ul class="setup">
+        <li>Across: year. Up: the average beak depth measured that year.</li>
+        <li>Lower panel: what is left over after your lines, and the average leftover for each species in the first half of the record and the second.</li>
+        <li>Four bars flat, and nothing systematic is left for a straight line to pick up.</li>
+        <li>The <em>scandens</em> knobs stay dark until <em>fortis</em> is fitted.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Same regression. Same shuffle. New inputs: n = 8 per group, a large spread, a moderate gap (half a spread).</p>
-        <p>Watch the shuffle histogram in the bottom panel and decide for yourself whether the observed gap sits inside or outside it.</p>
-      </div>
       <div class="panel graph-wrap">
-        <h3>Two groups (top) and the shuffled-label spread of the fake gaps (bottom)</h3>
-        <canvas id="plotB1" width="560" height="220"></canvas>
-        <canvas id="plotB2" width="560" height="180"></canvas>
+        <canvas id="plotB1" width="560" height="270"></canvas>
+        <canvas id="plotB2" width="560" height="200"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">n / group:</span> <span id="B_n">8</span>
-          &nbsp;|&nbsp;
-          <span class="label">spread:</span> <span id="B_sig">2.0</span>
-          &nbsp;|&nbsp;
-          <span class="label">true gap:</span> <span id="B_dm">1.0</span> (= half a spread)
+          <span class="label">fortis leftovers —</span> <span class="label">to 1992:</span> <span id="B_fEarly">—</span>
+          <span class="label">after:</span> <span id="B_fLate">—</span>
+          <br>
+          <span class="label">scandens leftovers —</span> <span class="label">to 1992:</span> <span id="B_sEarly">—</span>
+          <span class="label">after:</span> <span id="B_sLate">—</span>
         </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">observed gap:</span> <span id="B_dHat">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">empirical P:</span> <span id="B_p" class="pvalue-readout">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">gap ÷ spread:</span> <span id="B_d">—</span>
+        <div class="key">
+          <span class="sw" style="background:#b23a48"></span>fortis
+          <span class="sw" style="background:#2f6b8f"></span>scandens
         </div>
       </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predB">
-        <h3>Prediction (required before sliders unlock)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. With a gap of about half a spread and n = 8 per group, the shuffle histogram of shuffled gaps will:</div>
-            <label><input type="radio" name="qB1" value="wide" /> be wide</label>
-            <label><input type="radio" name="qB1" value="narrow" /> be narrow</label>
-            <label><input type="radio" name="qB1" value="bimodal" /> be bimodal</label>
-          </li>
-          <li>
-            <div class="q">Q2. The most direct lever for shrinking the empirical P here is:</div>
-            <label><input type="radio" name="qB2" value="n" /> collect more data (raise n)</label>
-            <label><input type="radio" name="qB2" value="rerun" /> rerun the same experiment many times until P comes out small</label>
-            <label><input type="radio" name="qB2" value="nothing" /> nothing — P can't be changed</label>
-          </li>
-        </ol>
-        <button id="submitB" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreB">Move sliders through 5 combinations to unlock Stage C. <span class="count">0/5 combos</span></div>
-      </div>
-      <div class="panel">
+      <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls locked" id="controlsB">
-          <div class="row" data-line="n"><label for="B_nIn">n / group</label><input type="range" id="B_nIn" min="3" max="200" step="1" value="8" /><output id="B_nOut">8</output></div>
-          <div class="row" data-line="sigma"><label for="B_sigIn">within spread</label><input type="range" id="B_sigIn" min="0.3" max="6" step="0.1" value="2.0" /><output id="B_sigOut">2.0</output></div>
-          <div class="row" data-line="dmu"><label for="B_dmIn">true gap</label><input type="range" id="B_dmIn" min="0" max="6" step="0.1" value="1.0" /><output id="B_dmOut">1.0</output></div>
-          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
-          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
+        <div class="controls" id="controlsB">
+          <div class="row" data-line="fbase"><label for="B_fbase">fortis depth in 1973 (mm)</label><input type="range" id="B_fbase" min="9.20" max="10.30" step="0.01" value="9.20" /><output id="B_fbaseOut">9.20</output></div>
+          <div class="row" data-line="frate"><label for="B_frate">fortis change per decade (mm)</label><input type="range" id="B_frate" min="-0.60" max="0.20" step="0.005" value="0.000" /><output id="B_frateOut">0.000</output></div>
+          <div class="row muted" id="rowSbase" data-line="sbase"><label for="B_sbase">extra for a scandens in 1973 (mm)</label><input type="range" id="B_sbase" min="-1.00" max="0.00" step="0.01" value="0.00" disabled /><output id="B_sbaseOut">0.00</output></div>
+          <div class="row muted" id="rowSrate" data-line="srate"><label for="B_srate">extra for a scandens per decade (mm)</label><input type="range" id="B_srate" min="-0.10" max="0.50" step="0.005" value="0.000" disabled /><output id="B_srateOut">0.000</output></div>
+          <div class="buttons">
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
         </div>
       </div>
       <div class="panel">
-        <h3>R code — same model, much wider null</h3>
-<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cB_n">8</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cB_sig">2.0</span></span><span class="line" data-line="dmu">delta &lt;- <span class="num" id="cB_dm">1.0</span></span><span class="line">y &lt;- <span class="fn">c</span>(<span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma), <span class="fn">rnorm</span>(n, delta, sigma))</span><span class="line">g &lt;- <span class="fn">c</span>(<span class="fn">rep</span>(<span class="num">0</span>, n), <span class="fn">rep</span>(<span class="num">1</span>, n))</span><span class="line">d_obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ g))[<span class="num">2</span>]</span><span class="line">d_null &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ <span class="fn">sample</span>(g)))[<span class="num">2</span>])</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(d_null) &gt;= <span class="fn">abs</span>(d_obs))</span></pre>
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Flatten all four bars — each average leftover inside 0.05 mm of zero.
+            <span class="hint"><span id="B1_now">fortis first</span></span></li>
+          <li data-task="B2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Stage C is open.</div>
+      </div>
+      <div class="panel numq" id="numqB">
+        <div class="q">Your two lines are not parallel, so they meet somewhere. Using your own four numbers, in what year do they cross?</div>
+        <div class="row">
+          <input type="number" id="B_ans" min="1900" max="2400" step="1" placeholder="year" />
+          <span class="unit">year</span>
+          <button id="B_submit">Submit</button>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_beak.csv"</span>)</span><span class="line">dec &lt;- (d$year - <span class="num">1973</span>) / <span class="num">10</span></span><span class="line">sc  &lt;- d$species == <span class="str">"scandens"</span></span><span class="line"></span><span class="line" data-line="fbase">fbase &lt;- <span class="num" id="cB_fbase">9.20</span></span><span class="line" data-line="frate">frate &lt;- <span class="num" id="cB_frate">0.000</span></span><span class="line" data-line="sbase">sbase &lt;- <span class="num" id="cB_sbase">0.00</span></span><span class="line" data-line="srate">srate &lt;- <span class="num" id="cB_srate">0.000</span></span><span class="line">guess &lt;- fbase + frate*dec + sc*(sbase + srate*dec)</span><span class="line"><span class="fn">tapply</span>(d$beak_depth - guess, <span class="fn">list</span>(d$species, d$year &gt; <span class="num">1992</span>), mean)</span><span class="line"></span><span class="line"><span class="com"># the same four numbers, found for you</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(beak_depth ~ dec * species, data = d))</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ====== STAGE C — real time series (continuous predictor) ========= -->
+<!-- ========== STAGE C — the cloud of lines for each species ============ -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — The same move, with year along the bottom</h2>
-  <div class="lock-banner">Complete Stage B (submit prediction, try 5 combos) to unlock this section.</div>
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Each round: a short real time series. Fit <code>y ~ α + β·x</code>. Shuffle the y values to build the shuffle histogram of shuffled β̂'s.</p>
-        <p>Guess where the middle 95% of that shuffled pile lands first. Then reveal.</p>
-        <p style="margin-top:6px; font-size:12.5px; color:var(--muted);">Rounds 1–2 are the Grant lab's Galápagos <em>Geospiza fortis</em> — Darwin's same archipelago, beaks measured in actual millimeters across the 1977 drought. The shuffled pile is the test Darwin's argument never had.</p>
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage C voice block. This is Lesson 4 stage C's move on the
+           finches: a cloud of rates per species, and the question of whether the
+           two clouds touch. The knob is how many field seasons you got, so the
+           width of the cloud is bought with years on the island. -->
+      <div class="voice">
+        <p>Forty years is what the Grants got. Almost nobody gets forty years. So the question worth asking is how many years it takes before the two species' rates come apart at all.</p>
+        <p>Pick a number of field seasons. Each record draws that many years at random from the forty — some twice, some not at all — and fits a fresh rate to each species. Every record adds one dot to each species' cloud.</p>
+        <p>The bar on each cloud holds its middle 95%. While the two bars overlap, a record of that length can land either species' rate on top of the other's.</p>
       </div>
-      <div class="panel graph-wrap">
-        <h3 id="C_title">Round 1 of 5 — Darwin's archipelago — Geospiza fortis beak depth, 1973–1976 (pre-drought)</h3>
-        <canvas id="plotC1" width="560" height="220"></canvas>
-        <h3 style="margin-top:8px;">Null histogram of shuffled slopes</h3>
-        <canvas id="plotC2" width="560" height="200"></canvas>
-        <div class="fit-stats" id="statsC">
-          <span class="label">observed slope:</span> <span id="C_obs">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">empirical P (two-sided):</span> <span id="C_p" class="pvalue-readout">—</span>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predC">
-        <h3>Prediction (required before the drill starts)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. The "shuffle the predictor" recipe (or its mirror, "shuffle the response") produces a shuffled spread that is:</div>
-            <label><input type="radio" name="qC1" value="wide" /> wider for short windows / small n</label>
-            <label><input type="radio" name="qC1" value="narrow" /> narrower for short windows</label>
-            <label><input type="radio" name="qC1" value="zero" /> a single spike at zero regardless of window</label>
-          </li>
-          <li>
-            <div class="q">Q2. You see "empirical P = 0.02" next to an observed slope. Translate that to plain language for a colleague:</div>
-            <label><input type="radio" name="qC2" value="prob" /> There is a 2% chance the real relationship is zero</label>
-            <label><input type="radio" name="qC2" value="tail" /> 2% of shuffled slopes are at least this far from zero</label>
-            <label><input type="radio" name="qC2" value="r2" /> There is a 98% chance the relationship is real</label>
-          </li>
-        </ol>
-        <button id="submitC" disabled>Submit prediction → start the drill</button>
-        <div class="explore-tracker" id="exploreC">Complete all 5 rounds to unlock Stage D. <span class="count">0/5 rounds</span></div>
-      </div>
-      <div class="panel" id="drillPanel" style="display:none;">
-        <h3>Guess the 95% shuffle envelope, then reveal</h3>
-        <div class="drill-tally" id="C_tally"></div>
-        <div class="drill-options">
-          <label>2.5%: <input type="number" id="C_lo" step="0.001" /></label>
-          <label>97.5%: <input type="number" id="C_hi" step="0.001" /></label>
-          <button id="C_check">Check my interval</button>
-          <button id="C_next" style="display:none;">Next round →</button>
-        </div>
-        <div class="drill-reveal" id="C_reveal"></div>
-      </div>
-      <div class="panel">
-        <h3>R code — one regression and a shuffle loop, continuous predictor</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># Per-round: x = year (or generation), y = trait mean / fitness.</span></span><span class="line">b_obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ x))[<span class="num">2</span>]</span><span class="line"></span><span class="line">b_null &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, {</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">sample</span>(y) ~ x))[<span class="num">2</span>]</span><span class="line">})</span><span class="line"><span class="fn">quantile</span>(b_null, <span class="fn">c</span>(<span class="num">0.025</span>, <span class="num">0.975</span>))   <span class="com"># 95% null envelope</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(b_null) &gt;= <span class="fn">abs</span>(b_obs))   <span class="com"># empirical two-sided P</span></span></pre>
-      </div>
+      <ul class="setup">
+        <li>Upper panel: the forty years again, with the rate from each recent record drawn pale.</li>
+        <li>Lower panel: one row per species. Each dot is one record's rate.</li>
+        <li>Changing the number of seasons starts the record over.</li>
+        <li>Both bars turn green when they stop overlapping.</li>
+      </ul>
     </div>
   </div>
 
-  <!-- DAG sub-panel: what causal story is the slope evidence for? -->
-  <div class="stage-body" style="margin-top:24px; border-top:1px dashed #c9c4b3; padding-top:20px;">
-    <div class="panel scenario" style="max-width:1100px; margin:0 auto 14px;">
-      <h3>What is that slope evidence for?</h3>
-      <p>You just got an empirical P. The slope <code>β̂(beak depth ~ year)</code> for the 1973–1977 Grant fortis is far outside the shuffled pile. The test says "year predicts beak depth." But "year" doesn't <em>do</em> anything to a finch — it's a label on the x-axis.</p>
-      <p>Build a model below. Add arrows, watch the data on the right change, and find one that could have produced the slope you just measured. Then find a second one that could have produced it too.</p>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotC1" width="560" height="240"></canvas>
+        <canvas id="plotC2" width="560" height="210"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">seasons per record:</span> <span id="C_kShow">10</span>
+          &nbsp; <span class="label">records taken:</span> <span id="C_taken">0</span>
+          &nbsp;|&nbsp;
+          <span class="label">clouds:</span> <span id="C_sep">—</span>
+        </div>
+        <div class="fit-stats" id="statsC2" style="margin-top:2px;"></div>
+      </div>
     </div>
-    <div id="dag-l5-mount" style="max-width:1180px; margin:0 auto;"></div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsC">
+          <div class="row" data-line="k"><label for="C_k">field seasons in each record</label><input type="range" id="C_k" min="4" max="40" step="2" value="10" /><output id="C_kOut">10</output></div>
+          <div class="buttons">
+            <button id="C_one" class="accent">Take a record</button>
+            <button id="C_twenty" class="secondary">Take 20 records</button>
+            <button id="C_clear" class="ghost">Start over</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Get the two clouds apart, on at least 150 records at one setting.
+            <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->Stage D is open.</div>
+      </div>
+      <div class="panel numq" id="numqC">
+        <div class="q">Work back down the seasons slider. What is the shortest record that still brings the two clouds apart?</div>
+        <div class="row">
+          <input type="number" id="C_ans" min="4" max="40" step="2" placeholder="seasons" />
+          <span class="unit">field seasons</span>
+          <button id="C_submit">Submit</button>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_beak.csv"</span>)</span><span class="line"></span><span class="line" data-line="k">k &lt;- <span class="num" id="cC_k">10</span>   <span class="com"># field seasons in each record</span></span><span class="line">rate &lt;- <span class="kw">function</span>(sp) {</span><span class="line">  y &lt;- <span class="fn">sample</span>(<span class="fn">unique</span>(d$year), k, replace = <span class="kw">TRUE</span>)</span><span class="line">  s &lt;- d[d$species == sp, ]</span><span class="line">  s &lt;- s[<span class="fn">match</span>(y, s$year), ]</span><span class="line">  <span class="fn">coef</span>(<span class="fn">lm</span>(beak_depth ~ <span class="fn">I</span>((year - <span class="num">1973</span>)/<span class="num">10</span>), data = s))[<span class="num">2</span>]</span><span class="line">}</span><span class="line">cloud &lt;- <span class="fn">sapply</span>(<span class="fn">c</span>(<span class="str">"fortis"</span>, <span class="str">"scandens"</span>),</span><span class="line">                 <span class="kw">function</span>(sp) <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">rate</span>(sp)))</span><span class="line"><span class="fn">apply</span>(cloud, <span class="num">2</span>, <span class="fn">quantile</span>, <span class="fn">c</span>(<span class="num">.025</span>, <span class="num">.975</span>))</span></pre>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ====== STAGE D — three sliders, one null ======================== -->
+<!-- ========== STAGE D — put the seed crop underneath it ================ -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Three knobs, one pile of shuffled gaps</h2>
-  <div class="lock-banner">Complete Stage C (finish 5 drill rounds) to unlock this section.</div>
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel scenario">
-        <h3>Scenario</h3>
-        <p>Three challenges, in order:</p>
-        <ol>
-          <li><strong>Tiny δ, empirical P &lt; 0.05.</strong> δ ≤ 0.1·σ.</li>
-          <li><strong>Huge δ, empirical P &gt; 0.05.</strong> δ ≥ 1.5·σ.</li>
-          <li><strong>Moderate δ, honest n.</strong> δ = half a spread, n = 30 per group.</li>
-        </ol>
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage D voice block. The predictor changes from "year" to
+           something that can actually push on a bird. The readout under the graph
+           carries the finding: with the seed crop in the fit, what is left of the
+           change per decade is close to nothing for both species. -->
+      <div class="voice">
+        <p>A year does nothing to a finch. Whatever made those beaks change between 1973 and 2012, it was not the passing of time; time was standing in for something that varied year to year and could push on a bird.</p>
+        <p>The Grants counted the seed crop as well. In some years almost everything on the ground was small and soft; in drought years what was left was big and hard. Put that on the bottom axis in place of the year, and give each species one knob: how far its beak moves when the crop shifts.</p>
+        <p>The height of each line is set for you — each one is pinned through its own species' averages — so the only thing you are choosing is the tilt.</p>
       </div>
-      <div class="panel graph-wrap">
-        <h3>Two groups (top) and shuffled-label spread of the fake gaps (bottom)</h3>
-        <canvas id="plotD1" width="560" height="220"></canvas>
-        <canvas id="plotD2" width="560" height="180"></canvas>
-        <div class="fit-stats" id="statsD">
-          <span class="label">empirical P:</span> <span id="D_p" class="pvalue-readout">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">observed gap:</span> <span id="D_dHat">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">gap ÷ spread:</span> <span id="D_d">—</span>
-        </div>
-        <div class="fit-stats" style="margin-top:2px;">
-          <span class="label">Challenge progress:</span>
-          <span id="D_ch1">①</span>
-          <span id="D_ch2">②</span>
-          <span id="D_ch3">③</span>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predD">
-        <h3>Prediction (required before sliders unlock)</h3>
-        <ol>
-          <li>
-            <div class="q">Q1. The width of the shuffled-label spread depends most directly on:</div>
-            <label><input type="radio" name="qD1" value="n_sigma" /> n and σ</label>
-            <label><input type="radio" name="qD1" value="delta" /> the true δ</label>
-            <label><input type="radio" name="qD1" value="seed" /> the random seed only</label>
-          </li>
-          <li>
-            <div class="q">Q2. The phrase "clearly different" applied to a small empirical P tells you about:</div>
-            <label><input type="radio" name="qD2" value="clarity" /> the clarity of the difference relative to the shuffled-label spread</label>
-            <label><input type="radio" name="qD2" value="size" /> the absolute size of the difference</label>
-            <label><input type="radio" name="qD2" value="both" /> both at once</label>
-          </li>
-        </ol>
-        <button id="submitD" disabled>Submit prediction → unlock sliders</button>
-        <div class="explore-tracker" id="exploreD">Complete all 3 challenges to wrap up. <span class="count">0/3 challenges</span></div>
-      </div>
-      <div class="panel">
-        <h3>Controls</h3>
-        <div class="controls locked" id="controlsD">
-          <div class="row" data-line="n"><label for="D_nIn">n / group</label><input type="range" id="D_nIn" min="3" max="5000" step="1" value="30" /><output id="D_nOut">30</output></div>
-          <div class="row" data-line="sigma"><label for="D_sigIn">within spread</label><input type="range" id="D_sigIn" min="0.1" max="5" step="0.05" value="1.0" /><output id="D_sigOut">1.0</output></div>
-          <div class="row" data-line="dmu"><label for="D_dmIn">true gap</label><input type="range" id="D_dmIn" min="0" max="5" step="0.05" value="0.5" /><output id="D_dmOut">0.50</output></div>
-          <div class="row" data-line="seed"><label for="D_seedIn">seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
-          <div class="buttons"><button id="D_download" class="ghost">Download .R</button></div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>R code — three sliders, one shuffle spread</h3>
-<pre class="code" id="codeD"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cD_seed">42</span>)</span><span class="line" data-line="n">n &lt;- <span class="num" id="cD_n">30</span></span><span class="line" data-line="sigma">sigma &lt;- <span class="num" id="cD_sig">1.0</span></span><span class="line" data-line="dmu">delta &lt;- <span class="num" id="cD_dm">0.5</span></span><span class="line">y &lt;- <span class="fn">c</span>(<span class="fn">rnorm</span>(n, <span class="num">0</span>, sigma), <span class="fn">rnorm</span>(n, delta, sigma))</span><span class="line">g &lt;- <span class="fn">c</span>(<span class="fn">rep</span>(<span class="num">0</span>, n), <span class="fn">rep</span>(<span class="num">1</span>, n))</span><span class="line">d_obs &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ g))[<span class="num">2</span>]</span><span class="line">d_null &lt;- <span class="fn">replicate</span>(<span class="num">1000</span>, <span class="fn">coef</span>(<span class="fn">lm</span>(y ~ <span class="fn">sample</span>(g)))[<span class="num">2</span>])</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(d_null) &gt;= <span class="fn">abs</span>(d_obs))</span></pre>
-      </div>
+      <ul class="setup">
+        <li>Across: the share of the seed crop that was big and hard, counted the year before.</li>
+        <li>Up: the average beak depth measured the following year. Sixteen years of overlap, 1976 to 1991.</li>
+        <li>Each knob is the whole move: what the beak does between a crop with none of it big and hard and a crop with all of it.</li>
+        <li>Lower panel: the same clouds as before, now for the response to the crop.</li>
+        <li>Under the graph: what is left of each species' change per decade once the crop is in the fit.</li>
+      </ul>
     </div>
   </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotD1" width="560" height="270"></canvas>
+        <canvas id="plotD2" width="560" height="200"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">leftovers, lean crops / rich crops —</span>
+          <span class="label">fortis:</span> <span id="D_fLo">—</span> / <span id="D_fHi">—</span>
+          &nbsp; <span class="label">scandens:</span> <span id="D_sLo">—</span> / <span id="D_sHi">—</span>
+        </div>
+        <div class="fit-stats" id="statsD2" style="margin-top:2px;">
+          <span class="label">change per decade over these 16 years — with the crop left out:</span>
+          <span id="D_decOut">—</span>
+          &nbsp;|&nbsp; <span class="label">with it in:</span> <span id="D_decIn">—</span>
+        </div>
+        <div class="key">
+          <span class="sw" style="background:#b23a48"></span>fortis
+          <span class="sw" style="background:#2f6b8f"></span>scandens
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsD">
+          <div class="row" data-line="fresp"><label for="D_fresp">how far a fortis beak moves (mm)</label><input type="range" id="D_fresp" min="-0.20" max="1.20" step="0.01" value="0.00" /><output id="D_frespOut">0.00</output></div>
+          <div class="row" data-line="sresp"><label for="D_sresp">how far a scandens beak moves (mm)</label><input type="range" id="D_sresp" min="-0.20" max="1.20" step="0.01" value="0.00" /><output id="D_srespOut">0.00</output></div>
+          <div class="buttons">
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish the lesson</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Flatten all four leftovers — each inside 0.03 mm of zero.
+            <span class="hint"><span id="D1_now">none of the four yet</span></span></li>
+          <li data-task="D2">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. --></div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">For the same shift in the seed crop, how much further does a <em>fortis</em> beak move than a <em>scandens</em> beak? Use your own two numbers.</div>
+        <div class="row">
+          <input type="number" id="D_ans" min="-2" max="2" step="0.01" placeholder="mm" />
+          <span class="unit">mm</span>
+          <button id="D_submit">Submit</button>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_beak.csv"</span>)</span><span class="line">s &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_seeds.csv"</span>)</span><span class="line">s$year &lt;- s$year + <span class="num">1</span>          <span class="com"># last year's crop, this year's birds</span></span><span class="line">d &lt;- <span class="fn">merge</span>(d, s, by = <span class="str">"year"</span>)</span><span class="line"></span><span class="line" data-line="fresp">fresp &lt;- <span class="num" id="cD_fresp">0.00</span></span><span class="line" data-line="sresp">sresp &lt;- <span class="num" id="cD_sresp">0.00</span></span><span class="line"></span><span class="line"><span class="com"># each tilt pinned through its own species' averages</span></span><span class="line"><span class="kw">for</span> (sp <span class="kw">in</span> <span class="fn">c</span>(<span class="str">"fortis"</span>, <span class="str">"scandens"</span>)) {</span><span class="line">  k &lt;- d$species == sp; r &lt;- <span class="fn">if</span> (sp == <span class="str">"fortis"</span>) fresp <span class="kw">else</span> sresp</span><span class="line">  base &lt;- <span class="fn">mean</span>(d$beak_depth[k]) - r * <span class="fn">mean</span>(d$large_share[k])</span><span class="line">  <span class="fn">print</span>(<span class="fn">mean</span>(d$beak_depth[k] - (base + r * d$large_share[k])))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># year, before and after the crop is allowed in</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(beak_depth ~ <span class="fn">I</span>(year/<span class="num">10</span>), data = d[d$species == <span class="str">"fortis"</span>, ]))</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(beak_depth ~ <span class="fn">I</span>(year/<span class="num">10</span>) + large_share, data = d[d$species == <span class="str">"fortis"</span>, ]))</span></pre>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -379,10 +432,9 @@
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
-<script src="../assets/dag.js"></script>
 <script>
+/* ====== Shared helpers ============================================== */
 function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function makeNormal(rng) { let spare = null; return function () { if (spare !== null) { const s = spare; spare = null; return s; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare = v*m; return u*m; }; }
 function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
 function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
 function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
@@ -394,482 +446,812 @@ function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   ctx.textAlign="right"; ctx.textBaseline="middle";
   for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
   ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
-  ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
-  ctx.save(); ctx.translate(f.pad.l-36, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore();
+  if (xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
+  if (yLabel) { ctx.save(); ctx.translate(f.pad.l-40, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore(); }
 }
+function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.pad.l,f.y(yv)); ctx.lineTo(f.pad.l+f.W,f.y(yv)); ctx.stroke(); ctx.setLineDash([]); }
 function drawVLine(ctx, f, xv, color, width, dash) { ctx.strokeStyle=color; ctx.lineWidth=width||1; ctx.setLineDash(dash||[]); ctx.beginPath(); ctx.moveTo(f.x(xv),f.pad.t); ctx.lineTo(f.x(xv),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]); }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
-function mean(arr) { return arr.reduce((a,b)=>a+b,0)/arr.length; }
-function std(arr) { const m=mean(arr); const v=arr.reduce((s,x)=>s+(x-m)*(x-m),0)/(arr.length-1); return Math.sqrt(v); }
+function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
 function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
-function olsSlope(xs, ys) {
+function olsFit(xs, ys) {
   const mx = mean(xs), my = mean(ys);
   let sxy = 0, sxx = 0;
   for (let i=0;i<xs.length;i++) { sxy += (xs[i]-mx)*(ys[i]-my); sxx += (xs[i]-mx)*(xs[i]-mx); }
-  return sxy/sxx;
+  if (sxx === 0) return null;
+  const b = sxy/sxx;
+  return { b, a: my - b*mx };
+}
+// Two predictors, solved off the 3x3 normal equations. Used only to say what is
+// left of the year term once the seed crop is allowed into the same fit.
+function olsFit2(x1, x2, ys) {
+  const n = ys.length;
+  const S = [[n,0,0,0],[0,0,0,0],[0,0,0,0]];
+  for (let i=0;i<n;i++) {
+    const a=x1[i], b=x2[i], y=ys[i];
+    S[0][1]+=a; S[0][2]+=b; S[0][3]+=y;
+    S[1][1]+=a*a; S[1][2]+=a*b; S[1][3]+=a*y;
+    S[2][2]+=b*b; S[2][3]+=b*y;
+  }
+  S[1][0]=S[0][1]; S[2][0]=S[0][2]; S[2][1]=S[1][2];
+  for (let c=0;c<3;c++) {
+    let piv=c; for (let r=c;r<3;r++) if (Math.abs(S[r][c])>Math.abs(S[piv][c])) piv=r;
+    const t=S[c]; S[c]=S[piv]; S[piv]=t;
+    if (Math.abs(S[c][c]) < 1e-12) return null;
+    for (let r=0;r<3;r++) { if (r===c) continue; const fq=S[r][c]/S[c][c]; for (let k=c;k<4;k++) S[r][k]-=fq*S[c][k]; }
+  }
+  return { a:S[0][3]/S[0][0], b1:S[1][3]/S[1][1], b2:S[2][3]/S[2][2] };
+}
+function signed(v, n) { const s = v.toFixed(n); return v > 0 ? "+" + s : s; }
+function paintMiss(id, v, tol, n) {
+  const el = document.getElementById(id);
+  el.textContent = signed(v, n);
+  el.className = Math.abs(v) <= tol ? "ok" : "off";
 }
 
-const EXPLORE_THRESHOLD = { A: 5, B: 5, C: 5, D: 3 };
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-function bumpExplore(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); 
-  const g = Gates[stage]; if (!g.predicted || g.done) return;
-  g.explores += 1;
-  const tracker = document.getElementById("explore"+stage);
-  const c = tracker.querySelector(".count");
-  const noun = stage==="C"?"rounds":(stage==="D"?"challenges":"combos");
-  c.textContent = g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun;
-  if (g.explores >= EXPLORE_THRESHOLD[stage]) {
-    g.done = true; tracker.classList.add("complete");
-    c.textContent = `${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`);
-    unlockNext(stage);
-  }
-}
-function nextStageLabel(s) { return {A:"B",B:"C",C:"D",D:null}[s]; }
+/* ====== Stage gates =================================================
+   A stage opens the next one by being solved. The written questions are
+   recorded on their first attempt and say so on the spot; getting one wrong
+   never shuts a door.
+   ================================================================== */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false}, D:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:null };
 function unlockNext(stage) {
-  const next = {A:"stageB",B:"stageC",C:"stageD",D:null}[stage];
-  if (next) { document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc)toc.classList.remove("locked"); }
-  else if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  const nx = NEXT[stage];
+  if (!nx) return;
+  const sec = document.getElementById("stage"+nx);
+  if (sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc"+nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
 }
-function wirePrediction(stage, predId, names, answers, controlsId, afterUnlock) {
-  const root=document.getElementById(predId); const btn=root.querySelector("button");
-  function check() { btn.disabled = !names.every(n=>root.querySelector(`input[name="${n}"]:checked`)); }
-  names.forEach(n => root.querySelectorAll(`input[name="${n}"]`).forEach(r => r.addEventListener("change", check)));
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function showSolved(stage, text) {
+  const el = document.getElementById("solved"+stage);
+  if (!el) return;
+  if (text) el.innerHTML = text;
+  el.classList.add("shown");
+}
+function record(pos, ok) { if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok); }
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+const BIT = { A_solve:0, A_num:1, B_solve:2, B_num:3, C_solve:4, C_num:5, D_solve:6, D_num:7 };
+
+function wireNumeric(id, opts) {
+  const box   = document.getElementById("numq"+id);
+  const input = document.getElementById(id+"_ans");
+  const btn   = document.getElementById(id+"_submit");
+  const out   = document.getElementById(id+"_verdict");
+  let scored = false;
   btn.addEventListener("click", () => {
-    const results = names.map((n,i) => { const v=root.querySelector(`input[name="${n}"]:checked`).value; return {value:v, correct:v===answers[i]}; });
-    const nc = results.filter(r=>r.correct).length;
-    const ol = root.querySelector("ol");
-    const msg = document.createElement("div");
-    msg.className = "prediction-done";
-    msg.innerHTML = `Submitted. Controls unlocked — see what happens.`;
-    root.insertBefore(msg, ol);
-    btn.style.display = "none";
-    Gates[stage].predicted = true;
-    document.getElementById("explore"+stage).classList.add("shown");
-    if (controlsId) document.getElementById(controlsId).classList.remove("locked");
-    if (afterUnlock) afterUnlock();
-    const stageIdx = { A:0, B:1, C:2, D:3 }[stage];
-    if (typeof Score !== "undefined" && Score.recordCheckpoint) {
-      Score.recordCheckpoint(stageIdx*2,     results[0].correct);
-      Score.recordCheckpoint(stageIdx*2 + 1, results[1].correct);
-    }
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const ok = opts.check(v);
+    out.className = "verdict shown " + (ok ? "right" : "wrong");
+    out.textContent = ok ? opts.right : opts.wrong;
+    if (ok) { btn.disabled = true; input.disabled = true; }
+    if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
   });
+  return { show: () => { box.classList.add("shown"); } };
 }
 
-/* ====== Permutation-on-binary-slope (shared A/B/D) =================== */
-function simTwoGroups(n, sigma, delta, seed) {
-  const rng = mulberry32(seed), normal = makeNormal(rng);
-  const a = new Array(n), b = new Array(n);
-  for (let i=0;i<n;i++) { a[i] = sigma * normal(); b[i] = delta + sigma * normal(); }
-  return { a, b };
-}
-function pooledSD(a, b) {
-  const m1 = mean(a), m2 = mean(b), n1 = a.length, n2 = b.length;
-  let v1 = 0, v2 = 0;
-  for (const x of a) v1 += (x-m1)*(x-m1);
-  for (const x of b) v2 += (x-m2)*(x-m2);
-  return Math.sqrt((v1+v2) / (n1+n2-2));
-}
-// Permutation null on slope of y ~ g where g is 0/1.
-// Returns { dObs, dNull, p, sigmaHat }.
-function permutationOnBinary(a, b, REPS, seed) {
-  const rng = mulberry32(seed + 7);
-  const y = a.concat(b);
-  const n = a.length + b.length;
-  const dObs = mean(b) - mean(a);
-  // Build a shuffleable g pattern. For the shuffles, we re-permute the y array
-  // and split it at index n1, then take mean(second half) - mean(first half).
-  // This is identical to permuting g.
-  const n1 = a.length;
-  const dNull = new Array(REPS);
-  for (let r=0;r<REPS;r++) {
-    // Fisher-Yates partial shuffle of y to randomize labels
-    const yp = y.slice();
-    for (let i=n-1;i>0;i--) {
-      const j = Math.floor(rng()*(i+1));
-      [yp[i], yp[j]] = [yp[j], yp[i]];
-    }
-    let s1 = 0, s2 = 0;
-    for (let i=0;i<n1;i++) s1 += yp[i];
-    for (let i=n1;i<n;i++) s2 += yp[i];
-    dNull[r] = (s2/(n-n1)) - (s1/n1);
+/* ====== Data ========================================================
+   Embedded rather than fetched: the pages are opened straight off disk as
+   often as off a server, and fetch() dies on file://. The R panels point at
+   the CSVs these were cut from.
+   ================================================================== */
+/* 1987 field season on Daphne Major, one row per bird measured: beak depth in mm.
+   data/clean/finch_individuals.csv (Grant & Grant 2014, Fig. 10-03). */
+const A_FORTIS = [
+  7,7.12,7.21,7.3,7.32,7.41,7.42,7.43,7.45,7.5,7.5,7.51,7.51,7.64,7.65,7.68,7.7,7.8,7.81,7.81,7.86,7.9,7.9,7.92,7.92,
+  7.92,7.93,7.95,7.95,7.96,7.97,8,8,8,8.02,8.02,8.03,8.03,8.06,8.09,8.1,8.1,8.1,8.1,8.1,8.1,8.11,8.11,8.11,8.2,
+  8.2,8.21,8.21,8.21,8.22,8.23,8.24,8.25,8.25,8.27,8.28,8.3,8.3,8.3,8.3,8.31,8.31,8.31,8.31,8.31,8.31,8.31,8.32,8.33,8.33,
+  8.34,8.35,8.35,8.36,8.36,8.4,8.4,8.4,8.4,8.4,8.4,8.4,8.4,8.4,8.41,8.41,8.41,8.41,8.42,8.42,8.43,8.43,8.45,8.45,8.47,
+  8.47,8.5,8.5,8.5,8.5,8.5,8.5,8.5,8.5,8.5,8.51,8.51,8.51,8.52,8.53,8.55,8.56,8.6,8.6,8.6,8.6,8.6,8.6,8.6,8.6,
+  8.61,8.61,8.61,8.61,8.61,8.61,8.61,8.61,8.61,8.61,8.61,8.62,8.62,8.62,8.62,8.63,8.64,8.65,8.66,8.66,8.7,8.7,8.7,8.7,8.7,
+  8.7,8.7,8.7,8.7,8.7,8.7,8.7,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.71,8.72,8.72,8.73,8.73,8.73,8.73,
+  8.74,8.76,8.76,8.77,8.77,8.77,8.77,8.79,8.8,8.8,8.8,8.8,8.8,8.8,8.8,8.8,8.8,8.81,8.81,8.81,8.81,8.81,8.81,8.81,8.81,
+  8.81,8.81,8.82,8.82,8.82,8.86,8.87,8.87,8.87,8.87,8.88,8.89,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,
+  8.9,8.9,8.9,8.91,8.91,8.91,8.91,8.91,8.91,8.91,8.91,8.91,8.91,8.92,8.92,8.92,8.93,8.93,8.93,8.93,8.95,8.95,8.96,8.96,8.96,
+  8.97,8.97,8.97,8.98,8.98,9,9,9,9,9,9,9,9.01,9.01,9.01,9.01,9.01,9.01,9.01,9.01,9.01,9.02,9.02,9.03,9.03,
+  9.04,9.04,9.04,9.05,9.05,9.06,9.07,9.07,9.07,9.07,9.07,9.07,9.07,9.07,9.08,9.08,9.09,9.09,9.1,9.1,9.1,9.1,9.1,9.1,9.1,
+  9.1,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.11,9.12,9.12,9.12,9.12,9.12,9.12,9.12,9.12,9.13,9.13,9.14,
+  9.14,9.14,9.15,9.15,9.15,9.15,9.15,9.17,9.17,9.19,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,9.2,
+  9.2,9.2,9.2,9.2,9.21,9.21,9.21,9.21,9.21,9.21,9.21,9.21,9.21,9.21,9.22,9.22,9.22,9.23,9.23,9.24,9.24,9.24,9.25,9.25,9.25,
+  9.27,9.27,9.27,9.27,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.3,9.31,9.31,9.31,9.31,9.31,9.31,9.31,9.31,
+  9.31,9.31,9.31,9.31,9.32,9.33,9.33,9.33,9.33,9.35,9.35,9.35,9.35,9.37,9.37,9.4,9.4,9.4,9.4,9.4,9.4,9.4,9.4,9.4,9.41,
+  9.41,9.41,9.41,9.41,9.42,9.42,9.42,9.42,9.43,9.43,9.43,9.43,9.43,9.43,9.43,9.44,9.44,9.44,9.45,9.45,9.45,9.45,9.47,9.47,9.47,
+  9.47,9.47,9.47,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.5,9.51,9.51,9.51,9.51,
+  9.51,9.51,9.51,9.51,9.52,9.52,9.52,9.53,9.53,9.53,9.55,9.55,9.56,9.57,9.57,9.57,9.59,9.6,9.6,9.6,9.6,9.6,9.6,9.6,9.6,
+  9.6,9.6,9.6,9.6,9.6,9.6,9.6,9.6,9.6,9.6,9.61,9.61,9.61,9.61,9.61,9.61,9.61,9.61,9.61,9.61,9.62,9.63,9.63,9.63,9.63,
+  9.63,9.63,9.63,9.65,9.65,9.66,9.67,9.67,9.69,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.7,9.71,9.71,9.71,9.71,
+  9.71,9.71,9.72,9.72,9.72,9.72,9.72,9.73,9.73,9.73,9.74,9.74,9.74,9.76,9.77,9.77,9.78,9.78,9.8,9.8,9.8,9.8,9.8,9.8,9.8,
+  9.8,9.8,9.8,9.8,9.8,9.8,9.8,9.8,9.8,9.81,9.81,9.81,9.81,9.81,9.81,9.81,9.82,9.82,9.82,9.82,9.83,9.83,9.83,9.83,9.85,
+  9.85,9.86,9.86,9.86,9.87,9.87,9.87,9.87,9.88,9.9,9.9,9.9,9.9,9.9,9.9,9.9,9.9,9.9,9.9,9.9,9.91,9.91,9.91,9.91,9.92,
+  9.92,9.92,9.92,9.92,9.92,9.93,9.93,9.93,9.93,9.95,9.95,9.96,9.96,10,10,10,10,10,10,10,10,10,10,10,10,
+  10,10,10,10,10,10.01,10.01,10.02,10.02,10.03,10.05,10.06,10.07,10.08,10.09,10.1,10.1,10.1,10.1,10.11,10.11,10.11,10.11,10.12,10.12,
+  10.12,10.12,10.13,10.13,10.13,10.13,10.15,10.15,10.16,10.17,10.17,10.17,10.2,10.2,10.2,10.2,10.21,10.21,10.21,10.21,10.23,10.23,10.27,10.27,10.29,
+  10.3,10.3,10.3,10.3,10.3,10.3,10.3,10.32,10.32,10.33,10.33,10.33,10.33,10.34,10.34,10.35,10.35,10.35,10.35,10.37,10.4,10.4,10.4,10.4,10.4,
+  10.4,10.41,10.42,10.43,10.43,10.45,10.5,10.5,10.5,10.5,10.5,10.5,10.51,10.51,10.51,10.51,10.52,10.52,10.52,10.53,10.53,10.53,10.55,10.56,10.57,
+  10.59,10.6,10.6,10.61,10.62,10.67,10.68,10.7,10.72,10.72,10.72,10.73,10.75,10.8,10.8,10.8,10.84,10.85,10.85,10.88,10.9,10.9,11,11,11,
+  11.02,11.07,11.1,11.17,11.2,11.21,11.38,11.38,11.49,11.53,12.37,12.7
+];
+const A_SCANDENS = [
+  7.77,7.94,7.96,8,8.01,8.23,8.3,8.36,8.37,8.4,8.4,8.4,8.41,8.5,8.5,8.6,8.6,8.6,8.61,8.67,8.7,8.7,8.7,8.7,8.7,
+  8.72,8.72,8.77,8.8,8.8,8.8,8.8,8.81,8.81,8.87,8.88,8.89,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.9,8.91,8.91,8.92,8.93,
+  8.93,8.95,8.95,8.96,8.97,8.97,8.99,9,9,9,9,9,9.01,9.02,9.02,9.02,9.03,9.04,9.05,9.05,9.06,9.1,9.1,9.1,9.1,
+  9.1,9.1,9.13,9.13,9.14,9.18,9.2,9.2,9.2,9.2,9.21,9.21,9.22,9.24,9.24,9.25,9.25,9.25,9.25,9.26,9.26,9.28,9.28,9.28,9.3,
+  9.3,9.3,9.3,9.3,9.3,9.3,9.32,9.33,9.34,9.34,9.34,9.35,9.37,9.37,9.37,9.37,9.38,9.4,9.4,9.4,9.4,9.42,9.43,9.45,9.5,
+  9.5,9.51,9.51,9.52,9.54,9.55,9.6,9.6,9.6,9.62,9.64,9.65,9.7,9.7,9.73,9.73,9.74,9.8,9.8,9.82,9.85,9.85,9.9,9.9,9.94,
+  10,10.1,10.11,10.27,10.34,11.33
+];
+/* Annual means, 1973-2012. data/clean/finch_beak.csv (Grant & Grant 2014, Figs. 01-06, 01-07). */
+const YEARS = [1973,1974,1975,1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012];
+const DEPTH_FORTIS = [
+  9.48,9.42,9.19,9.23,9.35,9.74,9.78,9.81,9.75,9.8,9.71,9.66,9.62,9.48,9.31,9.31,9.28,9.26,9.21,9.19,
+  9.18,9.2,9.1,9.15,9.12,9.11,9.14,9.18,9.02,9.07,9.12,9.19,8.68,8.63,8.62,8.57,8.51,8.52,8.57,8.65
+];
+const DEPTH_SCANDENS = [
+  9.28,9.21,8.94,9.06,9.14,9.35,9.26,9.31,9.23,9.25,9.16,9.1,9.07,9.22,9.14,9.14,9.14,9.14,9.07,9.01,
+  9.09,9.1,9.12,9.15,9.19,9.07,9.02,9.08,8.91,9.01,9.01,9.09,9.02,9.03,9.13,9.08,9.08,9.07,9.1,9.19
+];
+/* Seed crop counted each year, 1976-1991. data/clean/finch_seeds.csv (Grant & Grant 2014, Fig. 04-13).
+   large_share = big-hard seeds as a fraction of all seeds counted. */
+const SEED_YEARS = [1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991];
+const SEED_SHARE = [0.5484,0.9,0.6667,0.7823,0.963,0.8571,0.6667,0.25,0.1429,0.12,0.1351,0.1644,0.0504,0.0638,0.0385,0.0068];
+
+/* ====== STAGE A — one number, and one more for the other species ==== */
+const A_TOL = 0.03, A_SHUFFLES = 1000;
+const sA = { base: 9.00, extra: 0.00, pile: [], loEdge: 0, hiEdge: 0, seed: pageSeed("l5A") };
+
+// The pile of extras the labels can produce when they mean nothing: tear the
+// species labels off all 943 birds, deal them back out at random keeping the
+// same 787/156 split, and refit. A thousand times.
+function buildPileA(seed) {
+  const work = A_FORTIS.concat(A_SCANDENS);
+  const n = work.length, nS = A_SCANDENS.length;
+  const rng = mulberry32(seed);
+  const pile = [];
+  for (let r = 0; r < A_SHUFFLES; r++) {
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = work[i]; work[i] = work[j]; work[j] = t; }
+    let sSum = 0; for (let i = 0; i < nS; i++) sSum += work[i];
+    let fSum = 0; for (let i = nS; i < n; i++) fSum += work[i];
+    pile.push(sSum / nS - fSum / (n - nS));
   }
-  let extreme = 0;
-  for (const v of dNull) if (Math.abs(v) >= Math.abs(dObs)) extreme++;
-  return { dObs, dNull, p: extreme/REPS, sigmaHat: pooledSD(a, b) };
+  sA.pile = pile;
+  sA.loEdge = quantile(pile, 0.025);
+  sA.hiEdge = quantile(pile, 0.975);
 }
 
-function drawTwoGroupAndNull(prefix, n, sigma, delta, seed) {
-  const { a, b } = simTwoGroups(n, sigma, delta, seed);
-  const REPS = n > 1500 ? 500 : 1000;
-  const { dObs, dNull, p, sigmaHat } = permutationOnBinary(a, b, REPS, seed);
-
-  // Top: two histograms (groups)
-  const cv1 = document.getElementById("plot"+prefix+"1");
-  const { ctx, W, H } = setupCanvas(cv1);
-  ctx.clearRect(0,0,W,H);
-  const range = Math.max(Math.abs(Math.min(...a, ...b)), Math.abs(Math.max(...a, ...b))) * 1.1 + 0.5;
-  const pad1 = { l: 56, r: 12, t: 14, b: 38 };
-  const f = makeFrame(pad1, W, H, -range, range, 0, 0.55);
-  drawAxes(ctx, f, "value", "density", 6, 4, v=>v.toFixed(2), v=>v.toFixed(2));
-  function dHist(values, color) {
-    const bins = 32, minX = -range, maxX = range, binW = (maxX-minX)/bins;
-    const counts = new Array(bins).fill(0);
-    for (const v of values) { if (v<minX||v>=maxX) continue; counts[Math.min(bins-1,Math.floor((v-minX)/binW))]++; }
-    const N = values.length;
-    ctx.fillStyle = color;
-    for (let i=0;i<bins;i++) { const d = counts[i]/(N*binW); if(d===0)continue; ctx.fillRect(f.x(minX+i*binW)+0.5, f.y(d), f.x(minX+(i+1)*binW)-f.x(minX+i*binW)-1, f.y(0)-f.y(d)); }
-  }
-  dHist(a, "rgba(120,120,120,0.6)");
-  dHist(b, "rgba(178,58,72,0.6)");
-  drawVLine(ctx, f, mean(a), "#444", 1.5, []);
-  drawVLine(ctx, f, mean(b), "#b23a48", 1.5, []);
-
-  // Bottom: null histogram of shuffled δ̂'s with observed δ̂ marked
-  const cv2 = document.getElementById("plot"+prefix+"2");
-  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
-  ctx2.clearRect(0,0,W2,H2);
-  const allD = dNull.concat([dObs]);
-  let xmin = Math.min(...allD), xmax = Math.max(...allD);
-  const padScale = (xmax - xmin) * 0.1 || 0.01;
-  xmin -= padScale; xmax += padScale;
-  const pad2 = { l: 56, r: 12, t: 10, b: 36 };
-  const fN = makeFrame(pad2, W2, H2, xmin, xmax, 0, 1);
-  drawAxes(ctx2, fN, "shuffled δ̂ (group difference under permuted labels)", "count", 5, 3, v=>v.toFixed(3), v=>"");
-  // histogram
-  const bins = 40, binW = (xmax-xmin)/bins;
-  const counts = new Array(bins).fill(0);
-  for (const v of dNull) { const idx = Math.min(bins-1, Math.max(0, Math.floor((v - xmin)/binW))); counts[idx]++; }
-  const maxC = Math.max(...counts, 1);
-  for (let i=0;i<bins;i++) {
-    if (counts[i] === 0) continue;
-    const x0 = fN.x(xmin + i*binW), x1 = fN.x(xmin + (i+1)*binW);
-    const h = (counts[i]/maxC) * (fN.H * 0.9);
-    ctx2.fillStyle = "rgba(120,120,120,0.65)";
-    ctx2.fillRect(x0+1, fN.pad.t + fN.H - h, x1-x0-2, h);
-  }
-  // 95% envelope shading
-  const lo = quantile(dNull, 0.025), hi = quantile(dNull, 0.975);
-  ctx2.fillStyle = "rgba(47,107,143,0.15)";
-  ctx2.fillRect(fN.x(lo), fN.pad.t, fN.x(hi)-fN.x(lo), fN.H);
-  // observed
-  drawVLine(ctx2, fN, dObs, "#b23a48", 2.5, []);
-  // zero ref
-  drawVLine(ctx2, fN, 0, "#000", 1, [3,3]);
-
-  return { dObs, p, sigmaHat };
+function missesA() {
+  const mf = mean(A_FORTIS) - sA.base;
+  const ms = mean(A_SCANDENS) - (sA.base + sA.extra);
+  return { mf, ms };
+}
+function histOf(vals, lo, hi, bins) {
+  const h = new Array(bins).fill(0), w = (hi - lo) / bins;
+  for (const v of vals) { let k = Math.floor((v - lo) / w); if (k < 0) k = 0; if (k >= bins) k = bins - 1; h[k]++; }
+  return { h, w, lo, bins };
 }
 
-/* ====== STAGE A ===================================================== */
-const sA = { n: 1000, sigma: 0.2, delta: 0.01, seed: 42 };
 function drawStageA() {
-  const { dObs, p, sigmaHat } = drawTwoGroupAndNull("A", sA.n, sA.sigma, sA.delta, sA.seed);
-  document.getElementById("A_n").textContent = sA.n;
-  document.getElementById("A_sig").textContent = sA.sigma.toFixed(2);
-  document.getElementById("A_dm").textContent = sA.delta.toFixed(3);
-  document.getElementById("A_dHat").textContent = dObs.toFixed(4);
-  document.getElementById("A_p").textContent = p < 0.001 ? "<0.001" : p.toFixed(3);
-  document.getElementById("A_d").textContent = (sA.delta/sA.sigma).toFixed(3);
+  // Upper: the two clouds of misses, fortis above the line and scandens below,
+  // with each species' average miss ticked on the line itself.
+  const cv = document.getElementById("plotA1");
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+  const pad = { l: 52, r: 16, t: 14, b: 44 };
+  const f = makeFrame(pad, W, H, -3, 3, -1, 1);
+  drawAxes(ctx, f, "miss (mm) — the bird, minus what you predicted for it", "", 6, 2, v => v.toFixed(1), () => "");
+  drawHLine(ctx, f, 0, "#333", 1);
+  drawVLine(ctx, f, 0, "#999", 1, [3, 3]);
+  const { mf, ms } = missesA();
+  const fh = histOf(A_FORTIS.map(v => v - sA.base), -3, 3, 60);
+  const sh = histOf(A_SCANDENS.map(v => v - (sA.base + sA.extra)), -3, 3, 60);
+  function bars(hh, color, up) {
+    const top = Math.max.apply(null, hh.h) || 1;
+    ctx.fillStyle = color;
+    for (let k = 0; k < hh.bins; k++) {
+      if (!hh.h[k]) continue;
+      const x0 = f.x(hh.lo + k * hh.w), x1 = f.x(hh.lo + (k + 1) * hh.w);
+      const frac = 0.93 * hh.h[k] / top;
+      const y0 = f.y(0), y1 = f.y(up ? frac : -frac);
+      ctx.fillRect(x0, Math.min(y0, y1), Math.max(1, x1 - x0 - 0.5), Math.abs(y1 - y0));
+    }
+  }
+  bars(fh, "rgba(178,58,72,0.72)", true);
+  bars(sh, "rgba(47,107,143,0.72)", false);
+  function tick(v, color, up) {
+    ctx.fillStyle = color; ctx.beginPath();
+    const x = f.x(Math.max(-3, Math.min(3, v))), y = f.y(0), d = up ? -1 : 1;
+    ctx.moveTo(x, y); ctx.lineTo(x - 5, y + d * 9); ctx.lineTo(x + 5, y + d * 9); ctx.closePath(); ctx.fill();
+  }
+  tick(mf, "#7c1f2b", true);
+  tick(ms, "#1d4a68", false);
+
+  // Lower: the pile, with your extra standing on it.
+  const cv2 = document.getElementById("plotA2");
+  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
+  const pad2 = { l: 52, r: 16, t: 14, b: 46 };
+  const f2 = makeFrame(pad2, c2.W, c2.H, -0.4, 0.4, 0, 1);
+  drawAxes(ctx2, f2, "extra for a scandens (mm), on shuffled labels", "", 8, 2, v => v.toFixed(2), () => "");
+  const ph = histOf(sA.pile, -0.4, 0.4, 64);
+  const top = Math.max.apply(null, ph.h) || 1;
+  ctx2.fillStyle = "rgba(120,120,116,0.55)";
+  for (let k = 0; k < ph.bins; k++) {
+    if (!ph.h[k]) continue;
+    const x0 = f2.x(ph.lo + k * ph.w), x1 = f2.x(ph.lo + (k + 1) * ph.w);
+    const y1 = f2.y(0.92 * ph.h[k] / top), y0 = f2.y(0);
+    ctx2.fillRect(x0, y1, Math.max(1, x1 - x0 - 0.5), y0 - y1);
+  }
+  drawVLine(ctx2, f2, sA.loEdge, "#8a867a", 1, [4, 3]);
+  drawVLine(ctx2, f2, sA.hiEdge, "#8a867a", 1, [4, 3]);
+  const inside = sA.extra >= sA.loEdge && sA.extra <= sA.hiEdge;
+  drawVLine(ctx2, f2, Math.max(-0.4, Math.min(0.4, sA.extra)), inside ? "#b23a48" : "#2e6b2a", 2.5);
+
+  document.getElementById("A_baseOut").textContent = sA.base.toFixed(2);
+  document.getElementById("A_extraOut").textContent = sA.extra.toFixed(2);
+  document.getElementById("cA_base").textContent = sA.base.toFixed(2);
+  document.getElementById("cA_extra").textContent = sA.extra.toFixed(2);
+  paintMiss("A_missF", mf, A_TOL, 3);
+  paintMiss("A_missS", ms, A_TOL, 3);
+  let beat = 0;
+  for (const v of sA.pile) if (sA.extra < 0 ? v <= sA.extra : v >= sA.extra) beat++;
+  document.getElementById("A_beat").textContent = String(beat);
+  const hit = (Math.abs(mf) <= A_TOL ? 1 : 0) + (Math.abs(ms) <= A_TOL ? 1 : 0);
+  document.getElementById("A1_now").textContent =
+    hit === 2 ? "both there" : hit === 1 ? "one of the two there" : "neither is there yet";
+  checkA();
 }
-["A_nIn","A_sigIn","A_dmIn","A_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="A_nIn") { sA.n=parseInt(e.target.value,10); document.getElementById("A_nOut").textContent=sA.n; document.getElementById("cA_n").textContent=sA.n; highlightByDataLine("codeA","n"); bumpExplore("A"); }
-    if (id==="A_sigIn") { sA.sigma=parseFloat(e.target.value); document.getElementById("A_sigOut").textContent=sA.sigma.toFixed(2); document.getElementById("cA_sig").textContent=sA.sigma.toFixed(2); highlightByDataLine("codeA","sigma"); bumpExplore("A"); }
-    if (id==="A_dmIn") { sA.delta=parseFloat(e.target.value); document.getElementById("A_dmOut").textContent=sA.delta.toFixed(3); document.getElementById("cA_dm").textContent=sA.delta.toFixed(3); highlightByDataLine("codeA","dmu"); bumpExplore("A"); }
-    if (id==="A_seedIn") { sA.seed=parseInt(e.target.value,10); document.getElementById("A_seedOut").textContent=sA.seed; document.getElementById("cA_seed").textContent=sA.seed; highlightByDataLine("codeA","seed"); }
-    drawStageA();
-  });
+
+const numA = wireNumeric("A", {
+  bit: BIT.A_num,
+  check: v => Math.abs(v - sA.loEdge) <= 0.03,
+  right: "Recorded — right.",
+  wrong: "Recorded — not right.",
+  after: () => { Gates.A.done = true; }
+});
+
+function checkA() {
+  if (Gates.A.solvedOnce) return;
+  const { mf, ms } = missesA();
+  if (Math.abs(mf) > A_TOL || Math.abs(ms) > A_TOL) return;
+  Gates.A.solvedOnce = true;
+  markTask("A", "A1");
+  record(BIT.A_solve, true);
+  numA.show();
+  unlockNext("A");
+  showSolved("A");
+}
+
+document.getElementById("A_base").addEventListener("input", e => {
+  sA.base = parseFloat(e.target.value); highlightByDataLine("codeA", "base"); bump("A"); drawStageA();
+});
+document.getElementById("A_extra").addEventListener("input", e => {
+  sA.extra = parseFloat(e.target.value); highlightByDataLine("codeA", "extra"); bump("A"); drawStageA();
+});
+document.getElementById("A_reshuffle").addEventListener("click", () => {
+  sA.seed = (sA.seed * 1664525 + 1013904223) >>> 0; buildPileA(sA.seed); drawStageA();
 });
 document.getElementById("A_download").addEventListener("click", () => {
-  downloadText(`lesson5_stageA.R`, `# Lesson 5, Stage A -- regression with a 0/1 predictor; shuffle for null.
-set.seed(${sA.seed}); n <- ${sA.n}; sigma <- ${sA.sigma}; delta <- ${sA.delta}
-y <- c(rnorm(n, 0, sigma), rnorm(n, delta, sigma))
-g <- c(rep(0, n), rep(1, n))
-d_obs  <- coef(lm(y ~ g))[2]
-d_null <- replicate(1000, coef(lm(y ~ sample(g)))[2])
-mean(abs(d_null) >= abs(d_obs))   # empirical two-sided P
+  downloadText("lesson5_stageA.R", `# Lesson 5, Stage A -- one number for a fortis, one extra for a scandens.
+b <- read.csv("data/clean/finch_individuals.csv")
+b <- b[b$year == 1987, ]
+
+base  <- ${sA.base.toFixed(2)}
+extra <- ${sA.extra.toFixed(2)}
+guess <- base + extra * (b$species == "scandens")
+tapply(b$beak_depth - guess, b$species, mean)
+
+gap <- function(sp) mean(b$beak_depth[sp == "scandens"]) -
+                    mean(b$beak_depth[sp == "fortis"])
+shuffled <- replicate(1000, gap(sample(b$species)))
+quantile(shuffled, c(.025, .975))
+mean(shuffled <= gap(b$species))
 `);
 });
-wirePrediction("A", "predA", ["qA1","qA2"], ["narrow","outside"], "controlsA");
-drawStageA();
 
-/* ====== STAGE B ===================================================== */
-const sB = { n: 8, sigma: 2.0, delta: 1.0, seed: 42 };
-function drawStageB() {
-  const { dObs, p, sigmaHat } = drawTwoGroupAndNull("B", sB.n, sB.sigma, sB.delta, sB.seed);
-  document.getElementById("B_n").textContent = sB.n;
-  document.getElementById("B_sig").textContent = sB.sigma.toFixed(2);
-  document.getElementById("B_dm").textContent = sB.delta.toFixed(2);
-  document.getElementById("B_dHat").textContent = dObs.toFixed(3);
-  document.getElementById("B_p").textContent = p < 0.001 ? "<0.001" : p.toFixed(3);
-  document.getElementById("B_d").textContent = (sB.delta/sB.sigma).toFixed(3);
+/* ====== STAGE B — the same two numbers, once a decade =============== */
+const B_TOL = 0.05, B_SPLIT = 1992;
+const sB = { fbase: 9.20, frate: 0.000, sbase: 0.00, srate: 0.000, phase2: false };
+const DEC = YEARS.map(y => (y - 1973) / 10);
+
+function leftoversB() {
+  const fE = [], fL = [], sE = [], sL = [];
+  for (let i = 0; i < YEARS.length; i++) {
+    const gf = sB.fbase + sB.frate * DEC[i];
+    const gs = gf + sB.sbase + sB.srate * DEC[i];
+    (YEARS[i] <= B_SPLIT ? fE : fL).push(DEPTH_FORTIS[i] - gf);
+    (YEARS[i] <= B_SPLIT ? sE : sL).push(DEPTH_SCANDENS[i] - gs);
+  }
+  return { fE, fL, sE, sL, fEm: mean(fE), fLm: mean(fL), sEm: mean(sE), sLm: mean(sL) };
 }
-["B_nIn","B_sigIn","B_dmIn","B_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="B_nIn") { sB.n=parseInt(e.target.value,10); document.getElementById("B_nOut").textContent=sB.n; document.getElementById("cB_n").textContent=sB.n; highlightByDataLine("codeB","n"); bumpExplore("B"); }
-    if (id==="B_sigIn") { sB.sigma=parseFloat(e.target.value); document.getElementById("B_sigOut").textContent=sB.sigma.toFixed(1); document.getElementById("cB_sig").textContent=sB.sigma.toFixed(1); highlightByDataLine("codeB","sigma"); bumpExplore("B"); }
-    if (id==="B_dmIn") { sB.delta=parseFloat(e.target.value); document.getElementById("B_dmOut").textContent=sB.delta.toFixed(1); document.getElementById("cB_dm").textContent=sB.delta.toFixed(1); highlightByDataLine("codeB","dmu"); bumpExplore("B"); }
-    if (id==="B_seedIn") { sB.seed=parseInt(e.target.value,10); document.getElementById("B_seedOut").textContent=sB.seed; document.getElementById("cB_seed").textContent=sB.seed; highlightByDataLine("codeB","seed"); }
+function fortisLandedB(L) { return Math.abs(L.fEm) <= B_TOL && Math.abs(L.fLm) <= B_TOL; }
+
+function drawStageB() {
+  const L = leftoversB();
+  const cv = document.getElementById("plotB1");
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+  const pad = { l: 56, r: 16, t: 14, b: 44 };
+  const f = makeFrame(pad, W, H, 1972, 2013, 8.4, 10.1);
+  drawAxes(ctx, f, "year", "average beak depth (mm)", 41 / 5, 4, v => v.toFixed(0), v => v.toFixed(1));
+  function lineOf(off, rate, color) {
+    ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(f.x(1972), f.y(off + rate * ((1972 - 1973) / 10)));
+    ctx.lineTo(f.x(2013), f.y(off + rate * ((2013 - 1973) / 10)));
+    ctx.stroke();
+  }
+  for (let i = 0; i < YEARS.length; i++) {
+    ctx.fillStyle = "rgba(178,58,72,0.8)";
+    ctx.beginPath(); ctx.arc(f.x(YEARS[i]), f.y(DEPTH_FORTIS[i]), 3, 0, 6.2832); ctx.fill();
+    if (sB.phase2) {
+      ctx.fillStyle = "rgba(47,107,143,0.8)";
+      ctx.beginPath(); ctx.arc(f.x(YEARS[i]), f.y(DEPTH_SCANDENS[i]), 3, 0, 6.2832); ctx.fill();
+    }
+  }
+  lineOf(sB.fbase, sB.frate, "#b23a48");
+  if (sB.phase2) lineOf(sB.fbase + sB.sbase, sB.frate + sB.srate, "#2f6b8f");
+
+  const cv2 = document.getElementById("plotB2");
+  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
+  const pad2 = { l: 56, r: 16, t: 14, b: 44 };
+  const f2 = makeFrame(pad2, c2.W, c2.H, 1972, 2013, -0.6, 0.6);
+  drawAxes(ctx2, f2, "year", "left over (mm)", 41 / 5, 4, v => v.toFixed(0), v => v.toFixed(1));
+  drawHLine(ctx2, f2, 0, "#999", 1, [3, 3]);
+  for (let i = 0; i < YEARS.length; i++) {
+    const gf = sB.fbase + sB.frate * DEC[i];
+    ctx2.fillStyle = "rgba(178,58,72,0.55)";
+    ctx2.beginPath(); ctx2.arc(f2.x(YEARS[i]), f2.y(Math.max(-0.6, Math.min(0.6, DEPTH_FORTIS[i] - gf))), 2.5, 0, 6.2832); ctx2.fill();
+    if (sB.phase2) {
+      const gs = gf + sB.sbase + sB.srate * DEC[i];
+      ctx2.fillStyle = "rgba(47,107,143,0.55)";
+      ctx2.beginPath(); ctx2.arc(f2.x(YEARS[i]), f2.y(Math.max(-0.6, Math.min(0.6, DEPTH_SCANDENS[i] - gs))), 2.5, 0, 6.2832); ctx2.fill();
+    }
+  }
+  // one bar per species per half of the record
+  function bar(x0, x1, v, color, nudge) {
+    ctx2.fillStyle = Math.abs(v) <= B_TOL ? "#6f8a4a" : color;
+    const y = f2.y(Math.max(-0.6, Math.min(0.6, v))) + nudge;
+    ctx2.fillRect(f2.x(x0), y - 2, f2.x(x1) - f2.x(x0), 4);
+  }
+  bar(1973, B_SPLIT, L.fEm, "#b23a48", -3); bar(B_SPLIT, 2012, L.fLm, "#b23a48", -3);
+  if (sB.phase2) { bar(1973, B_SPLIT, L.sEm, "#2f6b8f", 3); bar(B_SPLIT, 2012, L.sLm, "#2f6b8f", 3); }
+
+  document.getElementById("B_fbaseOut").textContent = sB.fbase.toFixed(2);
+  document.getElementById("B_frateOut").textContent = sB.frate.toFixed(3);
+  document.getElementById("B_sbaseOut").textContent = sB.sbase.toFixed(2);
+  document.getElementById("B_srateOut").textContent = sB.srate.toFixed(3);
+  document.getElementById("cB_fbase").textContent = sB.fbase.toFixed(2);
+  document.getElementById("cB_frate").textContent = sB.frate.toFixed(3);
+  document.getElementById("cB_sbase").textContent = sB.sbase.toFixed(2);
+  document.getElementById("cB_srate").textContent = sB.srate.toFixed(3);
+  paintMiss("B_fEarly", L.fEm, B_TOL, 3);
+  paintMiss("B_fLate", L.fLm, B_TOL, 3);
+  if (sB.phase2) { paintMiss("B_sEarly", L.sEm, B_TOL, 3); paintMiss("B_sLate", L.sLm, B_TOL, 3); }
+  else { document.getElementById("B_sEarly").textContent = "—"; document.getElementById("B_sLate").textContent = "—"; }
+
+  if (!sB.phase2 && fortisLandedB(L)) {
+    sB.phase2 = true;
+    document.getElementById("B_sbase").disabled = false;
+    document.getElementById("B_srate").disabled = false;
+    document.getElementById("rowSbase").classList.remove("muted");
+    document.getElementById("rowSrate").classList.remove("muted");
     drawStageB();
+    return;
+  }
+  const flat = [L.fEm, L.fLm].concat(sB.phase2 ? [L.sEm, L.sLm] : []).filter(v => Math.abs(v) <= B_TOL).length;
+  document.getElementById("B1_now").textContent = sB.phase2 ? (flat + " of 4 flat") : "fortis first";
+  checkB();
+}
+
+function crossYearB() {
+  if (Math.abs(sB.srate) < 1e-9) return null;
+  return 1973 + 10 * (-sB.sbase / sB.srate);
+}
+const numB = wireNumeric("B", {
+  bit: BIT.B_num,
+  check: v => { const t = crossYearB(); return t !== null && Math.abs(v - t) <= 3; },
+  right: "Recorded — right.",
+  wrong: "Recorded — not right.",
+  after: () => { Gates.B.done = true; }
+});
+
+function checkB() {
+  if (Gates.B.solvedOnce || !sB.phase2) return;
+  const L = leftoversB();
+  if (Math.abs(L.fEm) > B_TOL || Math.abs(L.fLm) > B_TOL) return;
+  if (Math.abs(L.sEm) > B_TOL || Math.abs(L.sLm) > B_TOL) return;
+  Gates.B.solvedOnce = true;
+  markTask("B", "B1");
+  record(BIT.B_solve, true);
+  numB.show();
+  unlockNext("B");
+  showSolved("B");
+}
+
+[["B_fbase", "fbase"], ["B_frate", "frate"], ["B_sbase", "sbase"], ["B_srate", "srate"]].forEach(([id, key]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sB[key] = parseFloat(e.target.value);
+    highlightByDataLine("codeB", key); bump("B"); drawStageB();
   });
 });
 document.getElementById("B_download").addEventListener("click", () => {
-  downloadText(`lesson5_stageB.R`, `# Lesson 5, Stage B -- same regression, much wider null.
-set.seed(${sB.seed}); n <- ${sB.n}; sigma <- ${sB.sigma}; delta <- ${sB.delta}
-y <- c(rnorm(n, 0, sigma), rnorm(n, delta, sigma))
-g <- c(rep(0, n), rep(1, n))
-d_obs  <- coef(lm(y ~ g))[2]
-d_null <- replicate(1000, coef(lm(y ~ sample(g)))[2])
-mean(abs(d_null) >= abs(d_obs))
+  downloadText("lesson5_stageB.R", `# Lesson 5, Stage B -- forty years, two species, four numbers.
+d <- read.csv("data/clean/finch_beak.csv")
+dec <- (d$year - 1973) / 10
+sc  <- d$species == "scandens"
+
+fbase <- ${sB.fbase.toFixed(2)}
+frate <- ${sB.frate.toFixed(3)}
+sbase <- ${sB.sbase.toFixed(2)}
+srate <- ${sB.srate.toFixed(3)}
+guess <- fbase + frate*dec + sc*(sbase + srate*dec)
+tapply(d$beak_depth - guess, list(d$species, d$year > 1992), mean)
+
+coef(lm(beak_depth ~ dec * species, data = d))
 `);
 });
-wirePrediction("B", "predB", ["qB1","qB2"], ["wide","n"], "controlsB");
-drawStageB();
 
-/* ====== Data load (for Stage C) ===================================== */
-const Data = { finch: null, ltee: null, pets: null };
-async function fetchJSON(p, fb) { try { const r=await fetch(p); return await r.json(); } catch(e) { console.warn("fb "+p,e); return fb; } }
-async function loadData() {
-  Data.finch = await fetchJSON("../../data/clean/finch_beak.json", null);
-  Data.ltee  = await fetchJSON("../../data/clean/ltee_fitness_summary.json", null);
-  Data.pets  = await fetchJSON("../../data/clean/pets_timeseries.json", null);
+/* ====== STAGE C — the cloud of rates for each species =============== */
+const C_NEED = 150, C_MIN_RECORDS = 30;
+const sC = { k: 10, rec: [], fortis: [], scandens: [], rng: mulberry32(pageSeed("l5C")), key: null };
+
+// One record: draw k of the forty seasons, some twice and some not at all, and
+// fit a rate to each species off exactly those seasons.
+function takeRecordC() {
+  const idx = [];
+  for (let i = 0; i < sC.k; i++) idx.push(Math.floor(sC.rng() * YEARS.length));
+  const xs = idx.map(i => DEC[i]);
+  const ff = olsFit(xs, idx.map(i => DEPTH_FORTIS[i]));
+  const sf = olsFit(xs, idx.map(i => DEPTH_SCANDENS[i]));
+  if (!ff || !sf) return;
+  sC.fortis.push(ff.b); sC.scandens.push(sf.b);
+  sC.rec.push({ f: ff, s: sf });
+  if (sC.rec.length > 14) sC.rec.shift();
+}
+function bandsC() {
+  if (sC.fortis.length < 8) return null;
+  return {
+    f: [quantile(sC.fortis, 0.025), quantile(sC.fortis, 0.975)],
+    s: [quantile(sC.scandens, 0.025), quantile(sC.scandens, 0.975)]
+  };
+}
+function apartC() {
+  const b = bandsC();
+  if (!b || sC.fortis.length < C_MIN_RECORDS) return false;
+  return b.f[1] < b.s[0] || b.s[1] < b.f[0];
 }
 
-/* ====== STAGE C — drill =========================================== */
-const sC = { round: 0, picks: [], correct: 0 };
-const sC_rounds = [
-  { title: "Darwin's archipelago — Geospiza fortis beak depth, 1973–1976 (pre-drought)", expectedExtreme: false,
-    build: () => {
-      const yrs = Data.finch.years.slice(0, 4);
-      const ys  = Data.finch.fortis.beak_depth.slice(0, 4);
-      return { xs: yrs.map(y => y - yrs[0]), ys, xlab:"year (offset)", ylab:"fortis beak depth (mm)" };
-    } },
-  { title: "Darwin's archipelago — Geospiza fortis beak depth, 1973–1980 (straddles 1977 drought)", expectedExtreme: true,
-    build: () => {
-      const yrs = Data.finch.years.slice(0, 8);
-      const ys  = Data.finch.fortis.beak_depth.slice(0, 8);
-      return { xs: yrs.map(y => y - yrs[0]), ys, xlab:"year (offset)", ylab:"fortis beak depth (mm)" };
-    } },
-  { title: "LTEE Ara+1 fitness, generations 0–5000", expectedExtreme: true,
-    build: () => {
-      const rows = Data.ltee.filter(r => r.population === "Ara + 1" && r.generation >= 0 && r.generation <= 5000);
-      return { xs: rows.map(r => +r.generation), ys: rows.map(r => +r.mean_fitness), xlab:"generation", ylab:"mean fitness" };
-    } },
-  { title: "LTEE Ara+1 fitness, generations 40,000–50,000", expectedExtreme: false,
-    build: () => {
-      const rows = Data.ltee.filter(r => r.population === "Ara + 1" && r.generation >= 40000 && r.generation <= 50000);
-      return { xs: rows.map(r => +r.generation), ys: rows.map(r => +r.mean_fitness), xlab:"generation", ylab:"mean fitness" };
-    } },
-  { title: "PETS — random ~20-step mammal body-size series", expectedExtreme: false,
-    build: () => {
-      const groups = {};
-      Data.pets.forEach(r => { (groups[r.tsID] = groups[r.tsID] || []).push(r); });
-      const rng = mulberry32(pageSeed("l5pets"));
-      const keys = Object.keys(groups).filter(k => groups[k].length >= 10).sort(() => rng()-0.5);
-      const key = keys[0] || Object.keys(groups)[0];
-      const rows = (groups[key] || []).sort((a,b) => +a.age_MY - +b.age_MY).slice(0, 20);
-      return { xs: rows.map(r => +r.age_MY), ys: rows.map(r => +r.trait_mean), xlab:"age (MY)", ylab:"trait mean (PETS units)" };
-    } },
-];
-
-let sC_currentData = null, sC_obs = 0, sC_null = [];
-
-function startDrill() {
-  if (!Data.finch || !Data.ltee || !Data.pets) { alert("Data still loading — try again in a moment."); return; }
-  document.getElementById("drillPanel").style.display = "block";
-  sC.round = 0; sC.picks = []; sC.correct = 0;
-  drawDrillRound();
+// The shortest record that still comes apart, measured on this page's own draws
+// rather than asserted. One sweep at boot; the answer key is whatever it finds.
+function sweepC() {
+  const rng = mulberry32(pageSeed("l5Csweep"));
+  for (let k = 4; k <= 40; k += 2) {
+    const fo = [], sc = [];
+    for (let r = 0; r < 1200; r++) {
+      const idx = [];
+      for (let i = 0; i < k; i++) idx.push(Math.floor(rng() * YEARS.length));
+      const xs = idx.map(i => DEC[i]);
+      const ff = olsFit(xs, idx.map(i => DEPTH_FORTIS[i]));
+      const sf = olsFit(xs, idx.map(i => DEPTH_SCANDENS[i]));
+      if (ff && sf) { fo.push(ff.b); sc.push(sf.b); }
+    }
+    if (fo.length < 300) continue;
+    if (quantile(fo, 0.975) < quantile(sc, 0.025) || quantile(sc, 0.975) < quantile(fo, 0.025)) return k;
+  }
+  return 40;
 }
 
-function drawDrillRound() {
-  const i = sC.round;
-  if (i >= sC_rounds.length) {
-    document.getElementById("C_title").textContent = `Done — ${sC.correct}/5 intervals covered the observed slope.`;
-    document.getElementById("drillPanel").style.display = "none";
-    return;
-  }
-  const round = sC_rounds[i];
-  const data = round.build();
-  sC_currentData = data;
-  document.getElementById("C_title").textContent = `Round ${i+1} of 5 — ${round.title}`;
-  const cv1 = document.getElementById("plotC1");
-  const { ctx, W, H } = setupCanvas(cv1);
-  ctx.clearRect(0,0,W,H);
-  if (!data.xs.length) { ctx.fillStyle="#888"; ctx.fillText("(no data for this round)", 20, 30); return; }
-  const xmin = Math.min(...data.xs), xmax = Math.max(...data.xs);
-  const ymin = Math.min(...data.ys), ymax = Math.max(...data.ys);
-  const dx = xmax-xmin, dy = ymax-ymin || 1;
-  const pad = { l: 56, r: 12, t: 14, b: 38 };
-  const f = makeFrame(pad, W, H, xmin - 0.05*dx, xmax + 0.05*dx, ymin - 0.1*dy, ymax + 0.1*dy);
-  drawAxes(ctx, f, data.xlab, data.ylab, 5, 4, v=>v.toFixed(1), v=>v.toFixed(2));
-  ctx.fillStyle = "rgba(60,60,60,0.7)";
-  for (let k=0;k<data.xs.length;k++) { ctx.beginPath(); ctx.arc(f.x(data.xs[k]), f.y(data.ys[k]), 3, 0, 2*Math.PI); ctx.fill(); }
-  const slope = olsSlope(data.xs, data.ys);
-  sC_obs = slope;
-  ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2;
-  const a = mean(data.ys) - slope*mean(data.xs);
-  ctx.beginPath(); ctx.moveTo(f.x(f.xMin), f.y(a + slope*f.xMin)); ctx.lineTo(f.x(f.xMax), f.y(a + slope*f.xMax)); ctx.stroke();
-  const rng = mulberry32(pageSeed("l5panel" + i));
-  const N_PERM = 800;
-  sC_null = new Array(N_PERM);
-  for (let r=0;r<N_PERM;r++) {
-    const ys_shuf = data.ys.slice();
-    for (let j=ys_shuf.length-1;j>0;j--) { const k = Math.floor(rng()*(j+1)); [ys_shuf[j], ys_shuf[k]] = [ys_shuf[k], ys_shuf[j]]; }
-    sC_null[r] = olsSlope(data.xs, ys_shuf);
-  }
-  const cv2 = document.getElementById("plotC2");
-  const { ctx: ctx2, W: W2, H: H2 } = setupCanvas(cv2);
-  ctx2.clearRect(0,0,W2,H2);
-  ctx2.fillStyle = "#888"; ctx2.font = "13px -apple-system"; ctx2.fillText("Enter your interval guess on the right; null histogram reveals on check.", 20, 30);
-  document.getElementById("C_lo").value = ""; document.getElementById("C_hi").value = "";
-  document.getElementById("C_check").style.display = "inline-block";
-  document.getElementById("C_next").style.display = "none";
-  document.getElementById("C_reveal").className = "drill-reveal";
-  document.getElementById("C_reveal").textContent = "";
-  document.getElementById("C_obs").textContent = "—";
-  document.getElementById("C_p").textContent = "—";
-  const tally = document.getElementById("C_tally");
-  tally.innerHTML = "";
-  for (let k=0;k<5;k++) {
-    const d = document.createElement("div"); d.className = "dot";
-    if (k < sC.picks.length) d.classList.add(sC.picks[k] ? "correct" : "wrong");
-    else if (k === sC.round) d.classList.add("now");
-    d.textContent = k+1;
-    tally.appendChild(d);
-  }
-}
-
-document.getElementById("C_check").addEventListener("click", () => {
-  if (!sC_currentData) return;
-  const lo = parseFloat(document.getElementById("C_lo").value);
-  const hi = parseFloat(document.getElementById("C_hi").value);
-  if (isNaN(lo) || isNaN(hi) || hi <= lo) { alert("Enter a valid lower and upper bound (lower < upper)."); return; }
-  const trueLo = quantile(sC_null, 0.025);
-  const trueHi = quantile(sC_null, 0.975);
-  const empP = sC_null.filter(s => Math.abs(s) >= Math.abs(sC_obs)).length / sC_null.length;
-  document.getElementById("C_obs").textContent = sC_obs.toExponential(2);
-  document.getElementById("C_p").textContent = empP.toFixed(3);
-  const cv2 = document.getElementById("plotC2");
-  const { ctx, W, H } = setupCanvas(cv2);
-  ctx.clearRect(0,0,W,H);
-  const allVals = sC_null.concat([sC_obs, lo, hi]);
-  const xmin = Math.min(...allVals), xmax = Math.max(...allVals);
-  const dx = xmax - xmin || 1;
-  const pad = { l: 56, r: 12, t: 14, b: 38 };
-  const f = makeFrame(pad, W, H, xmin - 0.05*dx, xmax + 0.05*dx, 0, 1);
-  drawAxes(ctx, f, "shuffled slope (y-values permuted)", "count", 5, 4, v=>v.toExponential(1), v=>"");
-  const bins = 30, binW = (f.xMax - f.xMin)/bins;
-  const counts = new Array(bins).fill(0);
-  sC_null.forEach(v => { const b = Math.min(bins-1, Math.floor((v - f.xMin)/binW)); counts[b]++; });
-  const maxC = Math.max(...counts, 1);
-  for (let i=0;i<bins;i++) {
-    if (counts[i]===0) continue;
-    const x0=f.x(f.xMin + i*binW), x1=f.x(f.xMin + (i+1)*binW);
-    const h = (counts[i]/maxC) * (f.H * 0.9);
-    ctx.fillStyle = "rgba(120,120,120,0.65)";
-    ctx.fillRect(x0+1, f.pad.t + f.H - h, x1-x0-2, h);
-  }
-  ctx.fillStyle = "rgba(47,107,143,0.18)";
-  ctx.fillRect(f.x(trueLo), f.pad.t, f.x(trueHi)-f.x(trueLo), f.H);
-  drawVLine(ctx, f, lo, "#6f8a4a", 2, [4,3]);
-  drawVLine(ctx, f, hi, "#6f8a4a", 2, [4,3]);
-  drawVLine(ctx, f, sC_obs, "#b23a48", 2.5, []);
-  const covered = sC_obs >= lo && sC_obs <= hi;
-  const expectedExtreme = sC_rounds[sC.round].expectedExtreme;
-  const correct = covered !== expectedExtreme;
-  sC.picks.push(correct);
-  if (correct) sC.correct++;
-  const rev = document.getElementById("C_reveal");
-  rev.className = "drill-reveal shown " + (correct ? "correct" : "wrong");
-  rev.innerHTML = `<strong>${correct ? "Good" : "Off"}.</strong> True null 95% envelope: [${trueLo.toExponential(2)}, ${trueHi.toExponential(2)}]. Observed slope ${sC_obs.toExponential(2)}. Empirical two-sided P = ${empP.toFixed(3)}. ${expectedExtreme ? "The signal was real — observed slope is outside the null." : "Slope is consistent with no trend — observed sits inside the null envelope."}`;
-  document.getElementById("C_check").style.display = "none";
-  document.getElementById("C_next").style.display = "inline-block";
-});
-
-document.getElementById("C_next").addEventListener("click", () => { sC.round++; bumpExplore("C"); drawDrillRound(); });
-wirePrediction("C", "predC", ["qC1","qC2"], ["wide","tail"], null, startDrill);
-
-/* ====== STAGE D ===================================================== */
-const sD = { n: 30, sigma: 1.0, delta: 0.5, seed: 42, ch: [false,false,false] };
-function updateChallengesD(p) {
-  const ratio = sD.delta / sD.sigma;
-  if (ratio <= 0.1 && p < 0.05) sD.ch[0] = true;
-  if (ratio >= 1.5 && p > 0.05) sD.ch[1] = true;
-  if (Math.abs(ratio - 0.5) < 0.05 && Math.abs(sD.n - 30) <= 1) sD.ch[2] = true;
-  document.getElementById("D_ch1").style.color = sD.ch[0] ? "#3d5728" : "#888";
-  document.getElementById("D_ch1").textContent = sD.ch[0] ? "①✓ tiny δ with small P" : "① tiny δ → P<0.05";
-  document.getElementById("D_ch2").style.color = sD.ch[1] ? "#3d5728" : "#888";
-  document.getElementById("D_ch2").textContent = sD.ch[1] ? "②✓ huge δ with large P" : "② huge δ → P>0.05";
-  document.getElementById("D_ch3").style.color = sD.ch[2] ? "#3d5728" : "#888";
-  document.getElementById("D_ch3").textContent = sD.ch[2] ? "③✓ honest n at δ=0.5σ" : "③ δ=0.5σ, n=30 — read P";
-  const total = sD.ch.filter(x => x).length;
-  Gates.D.explores = total;
-  const tracker = document.getElementById("exploreD");
-  if (tracker) {
-    const c = tracker.querySelector(".count"); if (c) c.textContent = total + "/3 challenges";
-    if (total >= 3 && !Gates.D.done) {
-      Gates.D.done = true; tracker.classList.add("complete");
-      c.textContent = "3/3 done — wrap-up unlocked.";
-      if (typeof Score !== "undefined" && Score.finish) Score.finish();
+function drawStageC() {
+  const cv = document.getElementById("plotC1");
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+  const pad = { l: 56, r: 16, t: 14, b: 42 };
+  const f = makeFrame(pad, W, H, 1972, 2013, 8.4, 10.1);
+  drawAxes(ctx, f, "year", "average beak depth (mm)", 41 / 5, 4, v => v.toFixed(0), v => v.toFixed(1));
+  for (const r of sC.rec) {
+    for (const [fit, col] of [[r.f, "rgba(178,58,72,0.20)"], [r.s, "rgba(47,107,143,0.20)"]]) {
+      ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.moveTo(f.x(1972), f.y(fit.a + fit.b * ((1972 - 1973) / 10)));
+      ctx.lineTo(f.x(2013), f.y(fit.a + fit.b * ((2013 - 1973) / 10)));
+      ctx.stroke();
     }
   }
+  for (let i = 0; i < YEARS.length; i++) {
+    ctx.fillStyle = "rgba(178,58,72,0.75)";
+    ctx.beginPath(); ctx.arc(f.x(YEARS[i]), f.y(DEPTH_FORTIS[i]), 2.6, 0, 6.2832); ctx.fill();
+    ctx.fillStyle = "rgba(47,107,143,0.75)";
+    ctx.beginPath(); ctx.arc(f.x(YEARS[i]), f.y(DEPTH_SCANDENS[i]), 2.6, 0, 6.2832); ctx.fill();
+  }
+
+  const cv2 = document.getElementById("plotC2");
+  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
+  const pad2 = { l: 90, r: 16, t: 16, b: 46 };
+  const f2 = makeFrame(pad2, c2.W, c2.H, -0.9, 0.5, 0, 1);
+  drawAxes(ctx2, f2, "change in beak depth per decade (mm)", "", 7, 1, v => v.toFixed(1), () => "");
+  drawVLine(ctx2, f2, 0, "#bbb", 1, [3, 3]);
+  const b = bandsC(), apart = apartC();
+  const rows = [{ v: sC.fortis, y: 0.68, col: "rgba(178,58,72,0.5)", bar: "#b23a48", lab: "fortis", band: b && b.f },
+                { v: sC.scandens, y: 0.30, col: "rgba(47,107,143,0.5)", bar: "#2f6b8f", lab: "scandens", band: b && b.s }];
+  ctx2.font = "12px -apple-system, sans-serif"; ctx2.textAlign = "right"; ctx2.textBaseline = "middle";
+  for (const r of rows) {
+    ctx2.fillStyle = "#555"; ctx2.fillText(r.lab, f2.pad.l - 8, f2.y(r.y));
+    ctx2.fillStyle = r.col;
+    for (const v of r.v) {
+      const x = f2.x(Math.max(-0.9, Math.min(0.5, v)));
+      ctx2.beginPath(); ctx2.arc(x, f2.y(r.y) + 12, 1.7, 0, 6.2832); ctx2.fill();
+    }
+    if (r.band) {
+      ctx2.fillStyle = apart ? "#6f8a4a" : r.bar;
+      const x0 = f2.x(Math.max(-0.9, r.band[0])), x1 = f2.x(Math.min(0.5, r.band[1]));
+      ctx2.fillRect(x0, f2.y(r.y) - 5, Math.max(2, x1 - x0), 5);
+    }
+  }
+
+  document.getElementById("C_kOut").textContent = String(sC.k);
+  document.getElementById("cC_k").textContent = String(sC.k);
+  document.getElementById("C_kShow").textContent = String(sC.k);
+  document.getElementById("C_taken").textContent = String(sC.fortis.length);
+  document.getElementById("C_sep").textContent =
+    sC.fortis.length < C_MIN_RECORDS ? "too few records to say" : (apart ? "apart" : "overlapping");
+  document.getElementById("statsC2").innerHTML = b
+    ? `<span class="label">middle 95% — fortis:</span> ${b.f[0].toFixed(3)} to ${b.f[1].toFixed(3)}` +
+      ` &nbsp;<span class="label">scandens:</span> ${b.s[0].toFixed(3)} to ${b.s[1].toFixed(3)}`
+    : "";
+  document.getElementById("C1_now").textContent =
+    apart && sC.fortis.length >= C_NEED ? "done" : `${sC.fortis.length} of ${C_NEED} records at ${sC.k} seasons`;
+  checkC();
 }
+
+const numC = wireNumeric("C", {
+  bit: BIT.C_num,
+  check: v => sC.key !== null && Math.abs(v - sC.key) <= 2,
+  right: "Recorded — right.",
+  wrong: "Recorded — not right.",
+  after: () => { Gates.C.done = true; }
+});
+
+function checkC() {
+  if (Gates.C.solvedOnce) return;
+  if (sC.fortis.length < C_NEED || !apartC()) return;
+  Gates.C.solvedOnce = true;
+  markTask("C", "C1");
+  record(BIT.C_solve, true);
+  numC.show();
+  unlockNext("C");
+  showSolved("C");
+}
+
+function clearC() { sC.fortis = []; sC.scandens = []; sC.rec = []; }
+document.getElementById("C_k").addEventListener("input", e => {
+  sC.k = parseInt(e.target.value, 10); clearC();
+  highlightByDataLine("codeC", "k"); bump("C"); drawStageC();
+});
+document.getElementById("C_one").addEventListener("click", () => { takeRecordC(); bump("C"); drawStageC(); });
+document.getElementById("C_twenty").addEventListener("click", () => { for (let i = 0; i < 20; i++) takeRecordC(); bump("C"); drawStageC(); });
+document.getElementById("C_clear").addEventListener("click", () => { clearC(); drawStageC(); });
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText("lesson5_stageC.R", `# Lesson 5, Stage C -- how many seasons before the two rates come apart.
+d <- read.csv("data/clean/finch_beak.csv")
+k <- ${sC.k}
+rate <- function(sp) {
+  y <- sample(unique(d$year), k, replace = TRUE)
+  s <- d[d$species == sp, ]
+  s <- s[match(y, s$year), ]
+  coef(lm(beak_depth ~ I((year - 1973)/10), data = s))[2]
+}
+cloud <- sapply(c("fortis", "scandens"), function(sp) replicate(500, rate(sp)))
+apply(cloud, 2, quantile, c(.025, .975))
+`);
+});
+
+/* ====== STAGE D — put the seed crop underneath it =================== */
+const D_TOL = 0.03;
+const sD = { fresp: 0.00, sresp: 0.00, fCloud: [], sCloud: [] };
+
+// Last year's crop against this year's birds: the birds measured in a season
+// are the ones that got through the season before it.
+const CROP = (function () {
+  const share = [], dec = [], fd = [], sd = [];
+  for (let i = 0; i < SEED_YEARS.length; i++) {
+    const j = YEARS.indexOf(SEED_YEARS[i] + 1);
+    if (j < 0) continue;
+    share.push(SEED_SHARE[i]);
+    dec.push((SEED_YEARS[i] + 1 - 1977) / 10);
+    fd.push(DEPTH_FORTIS[j]); sd.push(DEPTH_SCANDENS[j]);
+  }
+  const cut = quantile(share, 0.5);
+  return { share, dec, fd, sd, cut, mx: mean(share) };
+})();
+function baseD(depths, resp) { return mean(depths) - resp * CROP.mx; }
+function halvesD(depths, resp) {
+  const base = baseD(depths, resp), lo = [], hi = [];
+  for (let i = 0; i < CROP.share.length; i++) {
+    const left = depths[i] - (base + resp * CROP.share[i]);
+    (CROP.share[i] <= CROP.cut ? lo : hi).push(left);
+  }
+  return { lo: mean(lo), hi: mean(hi) };
+}
+function buildCloudsD() {
+  const rng = mulberry32(pageSeed("l5D"));
+  const n = CROP.share.length;
+  for (let r = 0; r < 800; r++) {
+    const idx = [];
+    for (let i = 0; i < n; i++) idx.push(Math.floor(rng() * n));
+    const xs = idx.map(i => CROP.share[i]);
+    const ff = olsFit(xs, idx.map(i => CROP.fd[i]));
+    const sf = olsFit(xs, idx.map(i => CROP.sd[i]));
+    if (ff && sf) { sD.fCloud.push(ff.b); sD.sCloud.push(sf.b); }
+  }
+}
+// What the year term is worth on these sixteen seasons, on its own and then
+// with the crop sitting beside it in the same fit.
+function decadeTermsD() {
+  const out = {};
+  for (const [k, d] of [["fortis", CROP.fd], ["scandens", CROP.sd]]) {
+    const alone = olsFit(CROP.dec, d);
+    const both = olsFit2(CROP.dec, CROP.share, d);
+    out[k] = { alone: alone ? alone.b : 0, with: both ? both.b1 : 0 };
+  }
+  return out;
+}
+
 function drawStageD() {
-  const { dObs, p, sigmaHat } = drawTwoGroupAndNull("D", sD.n, sD.sigma, sD.delta, sD.seed);
-  document.getElementById("D_p").textContent = p < 0.001 ? "<0.001" : p.toFixed(3);
-  document.getElementById("D_dHat").textContent = dObs.toFixed(3);
-  document.getElementById("D_d").textContent = (sD.delta/sD.sigma).toFixed(3);
-  updateChallengesD(p);
+  const cv = document.getElementById("plotD1");
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
+  const pad = { l: 56, r: 16, t: 14, b: 44 };
+  const f = makeFrame(pad, W, H, 0, 1, 8.9, 10.0);
+  drawAxes(ctx, f, "share of last year's seed crop that was big and hard", "average beak depth (mm)", 5, 4,
+           v => v.toFixed(1), v => v.toFixed(1));
+  function series(depths, resp, dot, line) {
+    const base = baseD(depths, resp);
+    ctx.strokeStyle = line; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(f.x(0), f.y(base)); ctx.lineTo(f.x(1), f.y(base + resp)); ctx.stroke();
+    ctx.fillStyle = dot;
+    for (let i = 0; i < CROP.share.length; i++) {
+      ctx.beginPath(); ctx.arc(f.x(CROP.share[i]), f.y(depths[i]), 3.2, 0, 6.2832); ctx.fill();
+    }
+  }
+  series(CROP.fd, sD.fresp, "rgba(178,58,72,0.8)", "#b23a48");
+  series(CROP.sd, sD.sresp, "rgba(47,107,143,0.8)", "#2f6b8f");
+
+  const cv2 = document.getElementById("plotD2");
+  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
+  const pad2 = { l: 90, r: 16, t: 16, b: 46 };
+  const f2 = makeFrame(pad2, c2.W, c2.H, -0.3, 1.3, 0, 1);
+  drawAxes(ctx2, f2, "how far the beak moves across the crop (mm)", "", 8, 1, v => v.toFixed(1), () => "");
+  drawVLine(ctx2, f2, 0, "#bbb", 1, [3, 3]);
+  const bands = {
+    f: [quantile(sD.fCloud, 0.025), quantile(sD.fCloud, 0.975)],
+    s: [quantile(sD.sCloud, 0.025), quantile(sD.sCloud, 0.975)]
+  };
+  const apart = bands.f[0] > bands.s[1] || bands.s[0] > bands.f[1];
+  const rows = [{ v: sD.fCloud, band: bands.f, y: 0.68, col: "rgba(178,58,72,0.45)", bar: "#b23a48", lab: "fortis", knob: sD.fresp },
+                { v: sD.sCloud, band: bands.s, y: 0.30, col: "rgba(47,107,143,0.45)", bar: "#2f6b8f", lab: "scandens", knob: sD.sresp }];
+  ctx2.font = "12px -apple-system, sans-serif"; ctx2.textAlign = "right"; ctx2.textBaseline = "middle";
+  for (const r of rows) {
+    ctx2.fillStyle = "#555"; ctx2.fillText(r.lab, f2.pad.l - 8, f2.y(r.y));
+    ctx2.fillStyle = r.col;
+    for (const v of r.v) { ctx2.beginPath(); ctx2.arc(f2.x(Math.max(-0.3, Math.min(1.3, v))), f2.y(r.y) + 12, 1.6, 0, 6.2832); ctx2.fill(); }
+    ctx2.fillStyle = apart ? "#6f8a4a" : r.bar;
+    const x0 = f2.x(Math.max(-0.3, r.band[0])), x1 = f2.x(Math.min(1.3, r.band[1]));
+    ctx2.fillRect(x0, f2.y(r.y) - 5, Math.max(2, x1 - x0), 5);
+    ctx2.strokeStyle = "#333"; ctx2.lineWidth = 1.5; ctx2.beginPath();
+    const xk = f2.x(Math.max(-0.3, Math.min(1.3, r.knob)));
+    ctx2.moveTo(xk, f2.y(r.y) - 11); ctx2.lineTo(xk, f2.y(r.y) + 3); ctx2.stroke();
+  }
+
+  const hf = halvesD(CROP.fd, sD.fresp), hs = halvesD(CROP.sd, sD.sresp);
+  document.getElementById("D_frespOut").textContent = sD.fresp.toFixed(2);
+  document.getElementById("D_srespOut").textContent = sD.sresp.toFixed(2);
+  document.getElementById("cD_fresp").textContent = sD.fresp.toFixed(2);
+  document.getElementById("cD_sresp").textContent = sD.sresp.toFixed(2);
+  paintMiss("D_fLo", hf.lo, D_TOL, 3); paintMiss("D_fHi", hf.hi, D_TOL, 3);
+  paintMiss("D_sLo", hs.lo, D_TOL, 3); paintMiss("D_sHi", hs.hi, D_TOL, 3);
+  const dt = decadeTermsD();
+  document.getElementById("D_decOut").textContent =
+    `fortis ${signed(dt.fortis.alone, 2)}, scandens ${signed(dt.scandens.alone, 2)}`;
+  document.getElementById("D_decIn").textContent =
+    `fortis ${signed(dt.fortis.with, 2)}, scandens ${signed(dt.scandens.with, 2)}`;
+  const flat = [hf.lo, hf.hi, hs.lo, hs.hi].filter(v => Math.abs(v) <= D_TOL).length;
+  document.getElementById("D1_now").textContent = flat === 0 ? "none of the four yet" : `${flat} of 4 flat`;
+  checkD();
 }
-["D_nIn","D_sigIn","D_dmIn","D_seedIn"].forEach(id => {
-  document.getElementById(id).addEventListener("input", (e) => {
-    if (id==="D_nIn") { sD.n=parseInt(e.target.value,10); document.getElementById("D_nOut").textContent=sD.n; document.getElementById("cD_n").textContent=sD.n; highlightByDataLine("codeD","n"); }
-    if (id==="D_sigIn") { sD.sigma=parseFloat(e.target.value); document.getElementById("D_sigOut").textContent=sD.sigma.toFixed(2); document.getElementById("cD_sig").textContent=sD.sigma.toFixed(2); highlightByDataLine("codeD","sigma"); }
-    if (id==="D_dmIn") { sD.delta=parseFloat(e.target.value); document.getElementById("D_dmOut").textContent=sD.delta.toFixed(2); document.getElementById("cD_dm").textContent=sD.delta.toFixed(2); highlightByDataLine("codeD","dmu"); }
-    if (id==="D_seedIn") { sD.seed=parseInt(e.target.value,10); document.getElementById("D_seedOut").textContent=sD.seed; document.getElementById("cD_seed").textContent=sD.seed; highlightByDataLine("codeD","seed"); }
-    drawStageD();
+
+const numD = wireNumeric("D", {
+  bit: BIT.D_num,
+  check: v => Math.abs(v - (sD.fresp - sD.sresp)) <= 0.06,
+  right: "Recorded — right.",
+  wrong: "Recorded — not right.",
+  after: () => {
+    Gates.D.done = true;
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  }
+});
+
+function checkD() {
+  if (Gates.D.solvedOnce) return;
+  const hf = halvesD(CROP.fd, sD.fresp), hs = halvesD(CROP.sd, sD.sresp);
+  if (Math.abs(hf.lo) > D_TOL || Math.abs(hf.hi) > D_TOL) return;
+  if (Math.abs(hs.lo) > D_TOL || Math.abs(hs.hi) > D_TOL) return;
+  Gates.D.solvedOnce = true;
+  markTask("D", "D1");
+  record(BIT.D_solve, true);
+  numD.show();
+  showSolved("D", "<!-- TEXT FOR JM: stage D solved banner. -->Both tilts are landed.");
+}
+
+[["D_fresp", "fresp"], ["D_sresp", "sresp"]].forEach(([id, key]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sD[key] = parseFloat(e.target.value);
+    highlightByDataLine("codeD", key); bump("D"); drawStageD();
   });
 });
 document.getElementById("D_download").addEventListener("click", () => {
-  downloadText(`lesson5_stageD.R`, `# Lesson 5, Stage D
-set.seed(${sD.seed}); n <- ${sD.n}; sigma <- ${sD.sigma}; delta <- ${sD.delta}
-y <- c(rnorm(n, 0, sigma), rnorm(n, delta, sigma))
-g <- c(rep(0, n), rep(1, n))
-d_obs  <- coef(lm(y ~ g))[2]
-d_null <- replicate(1000, coef(lm(y ~ sample(g)))[2])
-mean(abs(d_null) >= abs(d_obs))
+  downloadText("lesson5_stageD.R", `# Lesson 5, Stage D -- the seed crop in place of the year.
+d <- read.csv("data/clean/finch_beak.csv")
+s <- read.csv("data/clean/finch_seeds.csv")
+s$year <- s$year + 1
+d <- merge(d, s, by = "year")
+
+fresp <- ${sD.fresp.toFixed(2)}
+sresp <- ${sD.sresp.toFixed(2)}
+for (sp in c("fortis", "scandens")) {
+  k <- d$species == sp; r <- if (sp == "fortis") fresp else sresp
+  base <- mean(d$beak_depth[k]) - r * mean(d$large_share[k])
+  print(mean(d$beak_depth[k] - (base + r * d$large_share[k])))
+}
+
+f <- d[d$species == "fortis", ]
+coef(lm(beak_depth ~ I(year/10), data = f))
+coef(lm(beak_depth ~ I(year/10) + large_share, data = f))
 `);
 });
-wirePrediction("D", "predD", ["qD1","qD2"], ["n_sigma","clarity"], "controlsD", drawStageD);
 
-/* ====== DAG widget — Stage C addendum ================================ */
-// Three nodes: drought (cat), year (cont), beak depth (cont). The student
-// can draw any subset of arrows and see the simulated data shift. The widget
-// records arrow create / strength / conditioning manipulations as "C" bumps.
-(function mountDAGc(){
-  if (typeof DAG === "undefined") return;
-  const dag = DAG.init({
-    mount: "#dag-l5-mount",
-    nodes: [
-      { id: "drought", label: "Drought",     x: 90,  y: 60,  type: "categorical", levels: 2 },
-      { id: "year",    label: "Year",        x: 90,  y: 200 },
-      { id: "beak",    label: "Beak depth",  x: 460, y: 130 }
-    ],
-    arrows: [],
-    initialAxes: { x: "year", y: "beak" },
-    n: 250,
-    seed: pageSeed("l5dag"),
-    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("C"); }
-  });
-})();
-
-/* ====== Score ================================== */
-Score.init({
-  moduleId: "lesson5", version: 5, scaffold: 8,
-  mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-  onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }
+/* ====== Boot + Score ================================================
+   Scaffold layout (8 bits):
+     0  A both species' average miss brought to zero
+     1  A where the extra re-enters the shuffled pile
+     2  B all four halves of the record flattened
+     3  B the year the two lines cross, on the student's own numbers
+     4  C the two rate clouds pulled apart on 150 records
+     5  C the shortest record that still separates them
+     6  D both responses to the seed crop landed
+     7  D how much further a fortis beak moves, on the student's own numbers
+   ================================================================== */
+// Instructor bypass (score.js): every section is already open, so undo the one
+// gate that lives inside a stage rather than between them.
+document.addEventListener("score:bypass", () => {
+  sB.phase2 = true;
+  document.getElementById("B_sbase").disabled = false;
+  document.getElementById("B_srate").disabled = false;
+  document.getElementById("rowSbase").classList.remove("muted");
+  document.getElementById("rowSrate").classList.remove("muted");
+  numA.show(); numB.show(); numC.show(); numD.show();
+  drawStageA(); drawStageB(); drawStageC(); drawStageD();
 });
-loadData();
+
+buildPileA(sA.seed);
+buildCloudsD();
+sC.key = sweepC();
+drawStageA(); drawStageB(); drawStageC(); drawStageD();
+
+Score.init({
+  moduleId: "lesson5",
+  version: 6,
+  scaffold: 8,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+    drawStageA();
+  }
+});
 </script>
 </body>
 </html>

@@ -353,44 +353,87 @@ showcase and the stretch challenge were removed to
 
 ---
 
-### Lesson 5 — Shuffling the predictor to see what chance can do
-`lesson5.html` · v5 · 8 checkpoints · **Built**
+### Lesson 5 — Two species, and whether their lines come apart
+`lesson5.html` · v6 · 8 checkpoints · **Skeleton built, text still owed**
 
-*The move:* build the pile of results chance alone could produce, then see whether yours
-sits in it.
+*Rebuilt 2026-09-03 onto the Grants' finches, to JM's spec: a t-test written the way
+Lessons 1–3 write everything (an average for one group plus an offset for the other),
+then a line per species down the years, then the clouds of equally good lines, then the
+seed crop added underneath. Every stage is the ladder one rung further on, and every
+stage carries real Daphne Major data.*
 
-- **A — Two groups, and one number for the gap between them**
-  - *Interactive* — Four sliders (n per group, within-group spread, true gap, seed). Top
-    panel: the two groups. Bottom: 1,000 refits with the group labels shuffled, as a
-    histogram, with the observed gap marked. Gate: 5 slider combinations.
-  - *Goal* — A tiny real gap becomes unmistakable at large n, because the shuffled pile
-    collapses toward zero.
-  - *Hands to* — Stage B runs the same machine with the inputs inverted.
+**The interactives, gates and answer keys are finished and measured; the `.voice` blocks
+and solved-banners are placeholders marked `TEXT FOR JM` in the source, waiting on the
+voice notes.**
 
-- **B — Eight per group, and far more scatter**
-  - *Interactive* — Identical controls, new defaults: n = 8, large spread, a gap of half a
-    spread. The shuffled pile is now wide and the observed gap sits inside it.
-  - *Goal* — A moderate real effect can be invisible. Nothing about the effect changed —
-    only how much was measured.
-  - *Hands to* — Stage C moves off two groups onto a continuous predictor.
+Same shape as Lessons 3 and 4: bare-letter stage headings, no prediction gate, controls
+live from the start, each stage opened by solving its own puzzle and closed by one
+numeric question scored on the first attempt only. The datasets are **embedded in the
+page** rather than fetched, because `fetch()` dies on `file://` and these pages get
+opened straight off disk; the R panels still point at the CSVs they were cut from.
 
-- **C — The same move, with year along the bottom**
-  - *Interactive* — Five real short time series, two of them the Grant lab's Galápagos
-    finches through the 1977 drought. Per round, you first mark where you think the middle
-    95% of the shuffled slopes will land, then reveal. Five rounds. A causal-model builder
-    sits underneath: add arrows, watch the simulated data change, and find *two* different
-    models that could have produced the slope you measured.
-  - *Goal* — The shuffle test says the slope is not reshuffling noise. It does not say
-    what caused it — "year" does nothing to a finch.
-  - *Hands to* — Stage D turns the three inputs into a challenge.
+- **A — one number for a fortis, one more for a scandens** *(the t-test, as an offset)*
+  - *Interactive* — All 943 birds measured in the 1987 season (787 *fortis*, 156
+    *scandens*), individually banded. Two knobs: a beak depth for a *fortis*, and an
+    extra added only for a *scandens*. Upper panel is the mirrored pair of miss
+    distributions from Lesson 3 stage B, fortis above the line and scandens below, with
+    each species' average miss ticked on the line. Lower panel is the pile of extras
+    1,000 shuffles of the species labels produce. Gate: both average misses inside
+    ±0.03 mm (lands at 9.33 and −0.19). Then a numeric question: walk the extra back
+    toward zero until it re-enters the pile — where does it re-enter? (the pile's lower
+    edge, ≈ −0.125, ±0.03, graded against the pile the page actually built).
+  - *Goal* — The offset is a quarter of a within-species spread and looks like nothing
+    against the birds; against the shuffled pile it is three deep. Measured: 0–2 shuffles
+    in 1,000 reach it.
+  - *Hands to* — Stage B, which asks the same two-number question forty times over.
 
-- **D — Three knobs, one pile of shuffled gaps**
-  - *Interactive* — Same simulator, three targets to hit in order: a tiny gap that still
-    clears the pile; a huge gap that does not; an honest middle case.
-  - *Goal* — Separate "big" from "clearly distinguishable" as two independent things.
+- **B — the same two numbers, once a decade** *(a line per species)*
+  - *Interactive* — Annual means, 1973–2012, both species. Two phases: *fortis* is fitted
+    alone on a starting depth and a change per decade, and only when both its half-means
+    land do the *scandens* points and its two knobs appear — an extra on the start and an
+    extra on the rate. Lower panel: leftovers against year, one bar per species per half
+    of the record. Gate: all four half-means inside ±0.05 mm (96 of 19,481 fortis
+    settings; ~103 scandens settings once fortis is down). Lands near 9.74 / −0.276 /
+    −0.54 / +0.237. Then a numeric question: the year the two lines cross, graded against
+    the student's own four numbers (±3 years; the true fit crosses at 1996).
+  - *Goal* — *fortis* falls about seven times as fast as *scandens*, so "how much does a
+    beak change" has no answer that is not per-species.
+  - *Hands to* — Stage C, which asks whether that difference in rate survives having less
+    data.
+
+- **C — the cloud of rates for each species** *(Lesson 4's move, two clouds)*
+  - *Interactive* — A knob for how many field seasons are in each record (4–40). Each
+    record draws that many of the forty at random, some twice and some not at all, and
+    fits a fresh rate to each species off exactly those seasons. Upper panel: the recent
+    records drawn pale over the forty years. Lower panel: one row of dots per species with
+    a middle-95% bar that turns green when the two stop overlapping. Changing the knob
+    starts the record over. Gate: clouds apart on at least 150 records at one setting.
+    Then a numeric question: the shortest record that still separates them, graded against
+    a sweep the page runs on its own draws at boot (±2; the sweep lands on 10).
+  - *Goal* — Ten seasons is roughly the price of being able to say the two species differ
+    at all. Measured: k=6 overlaps, k=8 is marginal, k=10 and up separate.
+  - *Hands to* — Stage D, which changes what is on the bottom axis.
+
+- **D — put the seed crop underneath it** *(the predictor that can push on a bird)*
+  - *Interactive* — Sixteen years of overlap, 1976–1991. Across: the share of last year's
+    seed crop that was big and hard. Up: the average beak depth measured the following
+    year. One knob per species — how far its beak moves across the whole crop axis — with
+    each line's height pinned through its own species' averages, so the only choice is the
+    tilt. Lower panel: the same two clouds, now on the response to the crop. Gate: all
+    four half-means inside ±0.03 mm; the two acceptable windows do not overlap (fortis
+    0.51–0.69, scandens 0.08–0.27). Then a numeric question: how much further a *fortis*
+    beak moves than a *scandens* beak, on the student's own two numbers (±0.06).
+  - *Goal* — A year does nothing to a finch. The readout under the graph carries the
+    finding: over these sixteen seasons the change per decade is −0.38 for *fortis* and
+    −0.14 for *scandens* on its own, and −0.10 and −0.03 once the crop sits beside it in
+    the same fit. Year was standing in for the seeds. The two responses to the crop
+    separate cleanly (0.556 vs 0.204), so what looked like two different trends is one
+    resource shift pushing 2.7× harder on one species than the other.
   - *Hands to* — Lesson 6, which shows the same machine giving four different verdicts.
 
----
+**Still owed on this lesson.** The four `.voice` blocks and the four solved-banners are
+placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings are the bare
+"Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
 
 ### Lesson 6 — Watching the same biology give four different verdicts
 `lesson6.html` · v4 · 4 checkpoints · **Built**
