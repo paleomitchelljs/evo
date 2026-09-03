@@ -548,26 +548,26 @@ Per his ruling of the same day, heritability is *played with* here as a knob and
 *defined* later as a parent–offspring correlation; the prose never names it.
 
 **The four knobs**, and nothing else: how many there are, how much of the trait is
-handed on, how different they are to begin with, and how strongly the trait goes with
+inherited, how different they are to begin with, and how strongly the trait goes with
 number of offspring. There is no fifth knob — a separate "effective" population size
 would be ledger-banned here and is not distinguishable from headcount pre-genetics.
 
-**The ruler, built in stage A and used unchanged to the end.** Two numbers on the line
-the model hands to the next generation: **ended** (how far it finished from where it
+**The ruler, built in stage A and used unchanged to the end.** Two numbers on the
+inherited line the model passes to the next generation: **ended** (how far it finished from where it
 began) and **strayed** (the furthest it ever got, at any point). Both count, because a
 population that comes back to where it started has still been somewhere. The pass mark
 is **both under 0.05, on the worst of a batch of ten** — one flat run proves nothing,
 the same point Lessons 4 and 5 make about a single sample.
 
-**What the graph plots, and why it matters.** The scored line is the mean of the part
-that gets handed on, not the mean of the trait. Measured: with nothing handed on, the
-observed mean still wanders 0.35 while the handed-on line is flat at exactly 0.000. If
+**What the graph plots, and why it matters.** The scored line is the mean of the
+inherited part, not the mean of the trait. Measured: with nothing inherited, the
+observed mean still wanders 0.35 while the inherited line is flat at exactly 0.000. If
 the lesson scored the observed mean, the cleanest success in it would read as a failure.
 The observed means are drawn as pale dots beside the line, so that Stage D shows both at
 once — dots bouncing, line dead flat.
 
 - **A — the advantage** *(one knob; the failure that starts it)*
-  - *Interactive* — N = 100, half handed on, sixty generations. One knob: how strongly
+  - *Interactive* — N = 100, half inherited, sixty generations. One knob: how strongly
     the trait goes with number of offspring. Drive the population up more than 5, drive
     it down more than 5, then set the knob to zero and run a batch. Measured: advantage
     +0.30 moves it 9.3; advantage 0.00 still strays about 1.2, which is 24× the pass
@@ -585,20 +585,20 @@ once — dots bouncing, line dead flat.
   - *Goal* — More individuals buys less change at a punishing rate, and the slider runs
     out before the change does.
 
-- **C — how much is handed on** *(the knob they have not met)*
+- **C — how much is inherited** *(the knob they have not met)*
   - *Interactive* — The third knob, floored at 0.20 so it cannot be zeroed yet. A lower
     panel shows one generation of parents against their offspring, so the knob's meaning
     is visible as a cloud tightening into a line. Push everything as far as it goes —
-    biggest population, lowest handing-on, no advantage — and it still fails. Measured:
+    biggest population, lowest inherited fraction, no advantage — and it still fails. Measured:
     0.26, five times the pass mark. Numeric graded against their own batch.
-  - *Goal* — Handing on less is a weak lever: it scales with the square root, so halving
+  - *Goal* — Inheriting less is a weak lever: it scales with the square root, so halving
     it buys about 30%.
 
 - **D — the two that work** *(and the discontinuity)*
-  - *Interactive* — The handing-on knob now reaches zero, and the fourth knob appears:
+  - *Interactive* — The inherited knob now reaches zero, and the fourth knob appears:
     how different they are to begin with. Both routes flatten it. Gate: pass the test
     once by each. Then the numeric that carries the lesson's thesis — **the largest
-    handing-on that still passes**. Measured on the shipped grid at the biggest
+    inherited fraction that still passes**. Measured on the shipped grid at the biggest
     population with no advantage at all: 0.05 fails (0.13), 0.01 fails (0.06),
     **only exactly zero passes.**
   - *Goal* — There is no small-but-nonzero setting that holds still. The only settings
@@ -607,7 +607,7 @@ once — dots bouncing, line dead flat.
 - **E — the sheep** *(four numbers nobody chose)*
   - *Interactive* — Ram Mountain bighorn, all four knobs measured off one real
     population rather than picked: **86** seen per year (median 1973–2013), **0.40**
-    handed on (430 mother–offspring and 181 father–offspring pairs, standardised within
+    inherited (430 mother–offspring and 181 father–offspring pairs, standardised within
     sex — the dimorphism is 51.9 cm against 21.3 cm, so the raw slope is meaningless),
     **+0.27** for horn length against number of offspring (213 ewes), and a spread of
     1.00 by definition. Set them: the model moves 7.3. The real rams, on the same ruler,
