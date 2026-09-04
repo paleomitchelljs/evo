@@ -134,6 +134,7 @@
         <li>Top knob: what share of the left column have it. Start it at 72%.</li>
         <li>Bottom knob: what share of the right column have it — the number the questions never gave you.</li>
         <li>The switch relabels the trait. It changes no number on this page.</li>
+        <li>A pair of rates only counts once you lock it in. Sliding past an answer is not choosing it.</li>
         <li>The last line is what the correlation buys you about one person, which is a good deal less than the correlation itself.</li>
       </ul>
     </div>
@@ -165,9 +166,14 @@
           <div class="row" data-line="p2"><label for="A_p2">of those whose parents do not</label><input type="range" id="A_p2" min="0" max="100" step="1" value="72" /><output id="A_p2Out">72%</output></div>
           <div class="toggle"><input type="checkbox" id="A_song" /><label for="A_song">call it liking a song instead of having a disease</label></div>
           <div class="buttons">
+            <button id="A_lock" class="accent">Lock in this pair</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
         </div>
+      </div>
+      <div class="panel">
+        <h3>Pairs you have locked in</h3>
+        <div class="rungs" id="A_list"><div style="color:var(--muted);">none yet</div></div>
       </div>
       <div class="panel">
         <h3>To open Stage B</h3>
@@ -861,7 +867,7 @@ const G_FAMILY = [
    is the same number stage B fits a line to, shown as squares instead.
    ================================================================== */
 const A_N = 100;                     // people per column, so 200 in the picture
-const sA = { p1: 0.72, p2: 0.72, song: false, gotNothing: false, gotMost: false };
+const sA = { p1: 0.72, p2: 0.72, song: false, gotNothing: false, gotMost: false, locked: [] };
 function statsForA() {
   const gap = sA.p1 - sA.p2;
   // Pearson r on two 0/1 columns of equal size, straight from the definition.
@@ -919,12 +925,31 @@ function drawStageA() {
   const shEl = document.getElementById("A_shrink");
   shEl.textContent = shrink.toFixed(0) + "%";
   shEl.className = shrink >= 10 ? "ok" : "off";
-  if (Math.abs(sA.p1 - 0.72) < 1e-9 && Math.abs(gap) < 0.02) { sA.gotNothing = true; markTask("A", "A1"); }
-  if (Math.abs(sA.p1 - 0.72) < 1e-9 && sA.p2 <= 0.02) { sA.gotMost = true; markTask("A", "A2"); }
   document.getElementById("A1_now").textContent = sA.gotNothing ? "done" : Math.round(Math.abs(gap) * 100) + " points apart";
   document.getElementById("A2_now").textContent = sA.gotMost ? "done" : "correlation " + corr.toFixed(2);
+  renderListA();
   checkA();
 }
+// Sliding past an answer is not choosing it: one sweep of the second knob passes
+// through both targets, so a pair only counts when it is committed.
+function renderListA() {
+  const box = document.getElementById("A_list");
+  if (!sA.locked.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
+  box.innerHTML = sA.locked.map(l =>
+    `<div><span class="lab">${(l.p1*100).toFixed(0)}% against ${(l.p2*100).toFixed(0)}%</span>` +
+    `<span class="val">${l.won ? l.won : "r = " + l.corr.toFixed(2)}</span></div>`).join("");
+}
+function lockInA() {
+  const { gap, corr } = statsForA();
+  let won = null;
+  const at72 = Math.abs(sA.p1 - 0.72) < 1e-9;
+  if (at72 && Math.abs(gap) < 0.02 && !sA.gotNothing) { sA.gotNothing = true; markTask("A", "A1"); won = "worth nothing"; }
+  else if (at72 && sA.p2 <= 0.02 && !sA.gotMost) { sA.gotMost = true; markTask("A", "A2"); won = "worth the most"; }
+  sA.locked.push({ p1: sA.p1, p2: sA.p2, corr, won });
+  bump("A"); drawStageA();
+}
+document.getElementById("A_lock").addEventListener("click", lockInA);
+
 const numA = wireNumeric("A", {
   bit: BIT.A_num,
   check: v => Math.abs(v - 72) <= 2,
@@ -1431,7 +1456,7 @@ drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE(); drawStageF
 
 Score.init({
   moduleId: "lesson8",
-  version: 3,
+  version: 4,
   scaffold: 12,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

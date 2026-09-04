@@ -446,7 +446,7 @@ placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings ar
 "Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
-`lesson6.html` · v5 · 10 checkpoints · **Skeleton built, text still owed**
+`lesson6.html` · v6 · 10 checkpoints · **Skeleton built, text still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
 that two scalar rates cannot hold, then arrows from causes to rates, then the same move
@@ -476,7 +476,9 @@ the numbers in the model, so parameter cost is on screen rather than asserted.
 
 - **A — births, deaths, a hundred generations** *(the sandbox, no data)*
   - *Interactive* — 100 individuals, 100 years, two sliders. Three targets: finish above
-    1,000, finish below 10, finish between 90 and 110. The third is the point — holding
+    1,000, finish below 10, finish between 90 and 110, **each claimed with a Lock in
+    button** — checked on redraw they could all be swept in one drag of a slider
+    (fixed 2026-09-04). The third is the point — holding
     steady is not a setting but an exact tie. Then a numeric question: births 0.30 against
     deaths 0.28, two in a hundred, gives 724 of the original 100 at year 100 (±80).
   - *Hands to* — B, which asks the same two numbers to hold a real record.
@@ -648,7 +650,7 @@ Lessons 8–13. Build the population where nothing changes, then break it one ru
 ---
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
-`lesson8.html` · v3 · 12 checkpoints · **Skeleton built, text still owed**
+`lesson8.html` · v4 · 12 checkpoints · **Skeleton built, text still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: heritability defined here off the parent–offspring
 correlation, and drilled until the student stops expecting it to mean "genetic".*

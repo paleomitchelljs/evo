@@ -300,6 +300,15 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **A target is claimed by committing, not by passing through it (2026-09-04).** Any
+  stage whose tasks are checked inside the redraw can be beaten by sweeping a slider:
+  the handler fires at every step, so one drag across the range trips every target on
+  the way. Lesson 6 stage A and Lesson 8 stage A both had this — a single sweep of one
+  knob opened the next stage. Both now have a **Lock in this pair** button and a panel
+  recording what was locked and what it won, which is the rule Lessons 3 and 4 already
+  used. Verified by sweeping the full range and claiming nothing.
+  **Check this whenever a stage's gate reads state rather than an event.**
+
 - **The information through-line, added 2026-09-03.** Lessons 1–4 were already
   measuring one idea in four currencies — L1's average error in cm, L2's calls right
   against expected right, L3's average miss in kg, L4's R² — without anything saying

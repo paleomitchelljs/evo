@@ -147,6 +147,7 @@
         <li>Each year: what is there, plus the births, minus the deaths.</li>
         <li>Across: year. Up: how many are alive.</li>
         <li>The axis rescales itself, so watch the number beside the plot as well as its shape.</li>
+        <li>A pair of numbers only counts once you lock it in. Sliding past a target is not choosing it.</li>
       </ul>
     </div>
   </div>
@@ -169,9 +170,14 @@
           <div class="row" data-line="b"><label for="A_b">births per individual per year</label><input type="range" id="A_b" min="0" max="0.60" step="0.01" value="0.20" /><output id="A_bOut">0.20</output></div>
           <div class="row" data-line="d"><label for="A_d">deaths per individual per year</label><input type="range" id="A_d" min="0" max="0.60" step="0.01" value="0.20" /><output id="A_dOut">0.20</output></div>
           <div class="buttons">
+            <button id="A_lock" class="accent">Lock in this pair</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
         </div>
+      </div>
+      <div class="panel">
+        <h3>Pairs you have locked in</h3>
+        <div class="locked-lines" id="A_list"><div style="color:var(--muted);">none yet</div></div>
       </div>
       <div class="panel">
         <h3>To open Stage B</h3>
@@ -216,7 +222,7 @@
       </div>
       <ul class="setup">
         <li>37 counts, 1976 to 2012. The model starts on the first one and runs.</li>
-        <li>Filled dots are birds counted. The line is the model.</li>
+        <li>Filled dots are birds counted. The line is the model. The axis stops at 5,000 birds — a model that runs away leaves the top of the plot rather than flattening against it.</li>
         <li>Typical miss: the factor the model is usually out by. 2.0 means it is typically double or half the real count.</li>
       </ul>
     </div>
@@ -683,7 +689,7 @@ const F_LOGRAIN = FRAIN.map(v => Math.log10(v + 1));
 const F_MLR = 1.88, F_MLN = 2.24;
 
 /* ====== STAGE A — births, deaths, a hundred generations ============= */
-const sA = { b: 0.20, d: 0.20, hitBig: false, hitSmall: false, hitFlat: false };
+const sA = { b: 0.20, d: 0.20, hitBig: false, hitSmall: false, hitFlat: false, locked: [] };
 function runA(b, d) {
   const out = [100];
   for (let t = 0; t < 100; t++) out.push(Math.max(0, out[t] * (1 + b - d)));
@@ -711,9 +717,10 @@ function drawStageA() {
   document.getElementById("cA_d").textContent = sA.d.toFixed(2);
   document.getElementById("A_diff").textContent = signed(sA.b - sA.d, 2);
   document.getElementById("A_final").textContent = fin >= 10000 ? fin.toExponential(2) : fin.toFixed(fin < 10 ? 2 : 0);
-  if (fin > 1000) { sA.hitBig = true; markTask("A","A1"); document.getElementById("A1_now").textContent = "done"; }
-  if (fin < 10)   { sA.hitSmall = true; markTask("A","A2"); document.getElementById("A2_now").textContent = "done"; }
-  if (fin >= 90 && fin <= 110) { sA.hitFlat = true; markTask("A","A3"); document.getElementById("A3_now").textContent = "done"; }
+  document.getElementById("A1_now").textContent = sA.hitBig   ? "done" : "not yet";
+  document.getElementById("A2_now").textContent = sA.hitSmall ? "done" : "not yet";
+  document.getElementById("A3_now").textContent = sA.hitFlat  ? "done" : "not yet";
+  renderListA();
   checkA();
 }
 const numA = wireNumeric("A", {
@@ -728,6 +735,28 @@ function checkA() {
   Gates.A.solvedOnce = true;
   record(BIT.A_solve, true); numA.show(); unlockNext("A"); showSolved("A");
 }
+// Sliding past a target is not choosing it. A pair only counts when it is
+// committed, which is the same rule Lessons 3 and 4 use, and it stops one
+// sweep of the sliders from claiming all three targets at once.
+function renderListA() {
+  const box = document.getElementById("A_list");
+  if (!sA.locked.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
+  box.innerHTML = sA.locked.map(l =>
+    `<div>births ${l.b.toFixed(2)}, deaths ${l.d.toFixed(2)} &nbsp;→&nbsp; ${l.fin} at year 100` +
+    (l.won ? ` <span style="color:#2e4410;">— ${l.won}</span>` : ' <span style="color:var(--muted);">— no target</span>') +
+    `</div>`).join("");
+}
+function lockInA() {
+  const fin = runA(sA.b, sA.d)[100];
+  let won = null;
+  if (fin > 1000 && !sA.hitBig)  { sA.hitBig = true;  markTask("A","A1"); won = "above 1,000"; }
+  else if (fin < 10 && !sA.hitSmall) { sA.hitSmall = true; markTask("A","A2"); won = "below 10"; }
+  else if (fin >= 90 && fin <= 110 && !sA.hitFlat) { sA.hitFlat = true; markTask("A","A3"); won = "held steady"; }
+  sA.locked.push({ b: sA.b, d: sA.d, fin: fin >= 10000 ? fin.toExponential(2) : fin.toFixed(fin < 10 ? 2 : 0), won });
+  bump("A"); drawStageA();
+}
+document.getElementById("A_lock").addEventListener("click", lockInA);
+
 [["A_b","b"],["A_d","d"]].forEach(([id,k]) => {
   document.getElementById(id).addEventListener("input", e => {
     sA[k] = parseFloat(e.target.value); highlightByDataLine("codeA", k); bump("A"); drawStageA();
@@ -756,12 +785,23 @@ function drawFinchPlot(cvId, series) {
   const cv = document.getElementById(cvId);
   const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
   const pad = { l: 66, r: 16, t: 16, b: 46 };
-  const top = niceTop(Math.max(700, Math.max.apply(null, series.filter(v => v < 5000))));
+  // The axis follows the model up to 5,000 birds and no further. Past that the
+  // line is NOT pinned to the top -- a model doubling every year should visibly
+  // leave the plot, because a line flattening along the ceiling reads as the
+  // model settling down, which is the opposite of what it is doing.
+  const top = Math.min(5000, niceTop(Math.max(700, Math.max.apply(null, series.filter(v => v < 5000)))));
   const f = makeFrame(pad, W, H, 1975, 2013, 0, top);
   drawAxes(ctx, f, "year", "cactus finches counted", 38/6, 4, v => v.toFixed(0), v => v.toFixed(0));
+  ctx.save();
+  ctx.beginPath(); ctx.rect(f.pad.l, f.pad.t - 2, f.W, f.H + 2); ctx.clip();
   ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2.5; ctx.beginPath();
-  for (let i = 0; i < FYEARS.length; i++) { const x=f.x(FYEARS[i]), y=f.y(Math.max(0,Math.min(series[i], top))); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  for (let i = 0; i < FYEARS.length; i++) {
+    const v = Math.min(series[i], top * 40);      // keep the coordinate finite
+    const x = f.x(FYEARS[i]), y = f.y(Math.max(0, v));
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
   ctx.stroke();
+  ctx.restore();
   ctx.strokeStyle = "rgba(120,120,116,0.55)"; ctx.lineWidth = 1; ctx.beginPath();
   for (let i = 0; i < FYEARS.length; i++) { const x=f.x(FYEARS[i]), y=f.y(FCOUNT[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
   ctx.stroke();
@@ -931,12 +971,21 @@ function drawMoosePlot(cvId, series, height) {
   const cv = document.getElementById(cvId);
   const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
   const pad = { l: 66, r: 16, t: 16, b: 46 };
-  const top = niceTop(Math.max(2600, Math.max.apply(null, series.filter(v => v < 20000))));
+  // Same rule as the finch plot: the axis stops at 5,000 moose and a runaway
+  // model leaves the picture rather than flattening against the ceiling.
+  const top = Math.min(5000, niceTop(Math.max(2600, Math.max.apply(null, series.filter(v => v < 20000)))));
   const f = makeFrame(pad, W, H, 1958, 2001, 0, top);
   drawAxes(ctx, f, "year", "moose counted", 43/7, 4, v => v.toFixed(0), v => v.toFixed(0));
+  ctx.save();
+  ctx.beginPath(); ctx.rect(f.pad.l, f.pad.t - 2, f.W, f.H + 2); ctx.clip();
   ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 2.5; ctx.beginPath();
-  for (let i = 0; i < IYEARS.length; i++) { const x=f.x(IYEARS[i]), y=f.y(Math.max(0,Math.min(series[i],top))); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  for (let i = 0; i < IYEARS.length; i++) {
+    const v = Math.min(series[i], top * 40);
+    const x = f.x(IYEARS[i]), y = f.y(Math.max(0, v));
+    if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
   ctx.stroke();
+  ctx.restore();
   ctx.strokeStyle = "rgba(120,120,116,0.5)"; ctx.lineWidth = 1; ctx.beginPath();
   for (let i = 0; i < IYEARS.length; i++) { const x=f.x(IYEARS[i]), y=f.y(IMOOSE[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y); }
   ctx.stroke();
@@ -1189,7 +1238,7 @@ drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 
 Score.init({
   moduleId: "lesson6",
-  version: 5,
+  version: 6,
   scaffold: 10,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
