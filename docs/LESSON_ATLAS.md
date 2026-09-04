@@ -640,8 +640,16 @@ Lessons 8–13. Build the population where nothing changes, then break it one ru
 ### Lesson 8 — A resemblance is a number, whatever is causing it
 `lesson8.html` · v2 · 10 checkpoints · **Skeleton built, text still owed**
 
-*Rebuilt 2026-09-03 to JM's spec: heritability defined here as the parent–offspring
+*Rebuilt 2026-09-03 to JM's spec: heritability defined here off the parent–offspring
 correlation, and drilled until the student stops expecting it to mean "genetic".*
+
+**Corrected the same day: heritability is TWICE the single-parent correlation, not the
+correlation itself.** A child gets half its inheritance from the parent on the axis. Two
+routes on Galton's own families agree — 2 × 0.362 = 0.724, and the midparent–offspring
+regression slope is 0.713 (his famous ~0.65 number). The lesson had both halves and named
+neither: stage A landed 0.36 and stage D's knob landed 0.72. Stage A now prints both, and
+stage D's knob is labelled *heritability* and shows what half of it predicts for the first
+rung.
 **Interactives, gates and answer keys are finished and measured off the shipped code;
 five `.voice` blocks and five solved-banners are placeholders marked `TEXT FOR JM`.**
 
@@ -651,11 +659,10 @@ reported for a parent and a child, for two nestmates, for two cousins, and for t
 populations built by different means. `tiltOf()` in the source; nothing else is measured
 anywhere in the lesson.
 
-**What the ratchet allows.** Lesson 8 is unit L9, seq 14. `heritability` unlocked at
-seq 12, so it is nameable — but the prose does not lean on it, per JM's ruling that this
-lesson defines the thing and Lesson 7 only played with it. `relatedness coefficient`
-(an alias of `inclusive fitness`) is locked until seq 26, so Stage D's ladder uses plain
-words — full siblings, half siblings, first cousins — and never names the coefficient.
+**Terminology.** The vocabulary ratchet was retired on 2026-09-03, and lessons 5–8 were
+swept the same day to use the real words: this lesson names *heritability* and
+*parent–offspring correlation* throughout, where it previously said only "the tilt". "Tilt"
+survives in Stage A for the line being fitted, which is what it is.
 
 - **A — the line from parent to child** *(Galton, real)*
   - *Interactive* — 934 grown children from 205 families, each paired with both parents
