@@ -506,15 +506,15 @@ been rebuilt — it needs the same treatment for two species.
     1977 (needs b−d ≈ −0.21), and at or above 500 in 2012 (needs b−d ≥ +0.03). Then a
     numeric question: the b−d that makes the typical miss smallest.
   - *Goal* — **The answer is zero.** The best two-number model of a wild population is a
-    flat line at 185 birds, typical miss 1.52×. Measured on the shipped grid.
+    flat line at 185 birds, typically 80 birds out. Measured on the shipped grid.
   - *Hands to* — C, which lets the rates move.
 
 - **C — one arrow at a time** *(rain, and the birds themselves)*
   - *Interactive* — Two arrows on offer: rain → birth rate, and finches → death rate. Each
     drawn arrow switches on one slider. Gate: typical miss under 1.32. Then a numeric
     question: the smallest miss the rain arrow reaches on its own (1.35, ±0.04).
-  - *Goal* — Measured, on the shipped grid: no arrows 1.52×, crowding alone 1.50×, rain
-    alone 1.35×, both 1.29×. **The crowding arrow alone buys almost nothing** — an extra
+  - *Goal* — Measured, on the shipped grid: no arrows 80 birds, crowding alone 78, rain
+    alone 58, both 44, against a usual count of about 170. **The crowding arrow alone buys almost nothing** — an extra
     number that is not a cause of much. The bar at 50 birds sits below what one arrow can do,
     so it takes both.
   - *Hands to* — D, where no cause is on offer at all.
