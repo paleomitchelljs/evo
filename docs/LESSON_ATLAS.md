@@ -446,7 +446,7 @@ placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings ar
 "Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
-`lesson6.html` · v6 · 10 checkpoints · **Skeleton built, text still owed**
+`lesson6.html` · v7 · 10 checkpoints · **Skeleton built, text still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
 that two scalar rates cannot hold, then arrows from causes to rates, then the same move
@@ -458,9 +458,15 @@ code; the five `.voice` blocks and five solved-banners are placeholders marked
 *The model, all five stages:* `N(t+1) = N(t) · (1 + b − d)`, run forward from the first
 real count. Nothing in the lesson ever changes that line — what changes is whether `b`
 and `d` are numbers or functions of something. **The score is one number throughout: the
-"typical miss", `10^mean(|log10(model/counted)|)`, the factor the model is usually out
-by.** 2.0 means it is typically double or half the real count. Every gate is a threshold
-on it, so the five stages are directly comparable.
+"typical miss", `mean(|model − counted|)` — how far the model sits from the count in an
+average year, in birds, moose or wolves.**
+
+*It was a scale-free factor until 2026-09-04, `10^mean(|log10(model/counted)|)`, shown
+as "1.52×". Changed on JM's call: "out by 44 birds when there are usually 170" is a
+sentence a student can picture and "1.52×" is not. Every bar was re-derived by brute
+force on the shipped grids and the pedagogy is unchanged — the models rank in the same
+order. Median absolute error was tried first and rejected: it is non-monotonic here,
+ranking crowding-only **worse** than drawing no arrow at all.*
 
 **Data.** Cactus finch counts and Daphne Major rainfall for A–C; Isle Royale moose and
 wolves for D–E, **cut at 2000** — the wolf population collapsed genetically after that
@@ -473,6 +479,17 @@ node-and-arrow diagram, built in-page (`buildArrows`) rather than with `app/asse
 that turns a rate into a function and switches on the one slider it pays for. Grey solid
 arrows are structure and are not clickable; dashed ones are offers. The readout counts
 the numbers in the model, so parameter cost is on screen rather than asserted.
+
+*Stage C's diagram was rebuilt 2026-09-04 on JM's correction.* Its nodes are now
+**Rain that year → _Seeds_ → Birth rate**, **Finches alive now → Death rate**, and
+**Finches next year** — with all three of births, deaths and *this year's count* running
+into next year's, because `N(t+1) = N(t)(1 + b − d)` makes the current count a term in
+its own right and not merely a route through the two rates. **Seeds is drawn dashed and
+italic as an unobserved variable**: nobody counted seeds in these years, so the one
+number the student fits for "rain" covers the whole path from rain through seeds to
+nestlings. One arrow id can now span several segments, so that path lights and pays as a
+single decision. Stage E's diagram has the same "Next year" ambiguity and has **not**
+been rebuilt — it needs the same treatment for two species.
 
 - **A — births, deaths, a hundred generations** *(the sandbox, no data)*
   - *Interactive* — 100 individuals, 100 years, two sliders. Three targets: finish above
@@ -498,31 +515,31 @@ the numbers in the model, so parameter cost is on screen rather than asserted.
     question: the smallest miss the rain arrow reaches on its own (1.35, ±0.04).
   - *Goal* — Measured, on the shipped grid: no arrows 1.52×, crowding alone 1.50×, rain
     alone 1.35×, both 1.29×. **The crowding arrow alone buys almost nothing** — an extra
-    number that is not a cause of much. The bar at 1.32 sits below what one arrow can do,
+    number that is not a cause of much. The bar at 50 birds sits below what one arrow can do,
     so it takes both.
   - *Hands to* — D, where no cause is on offer at all.
 
 - **D — the moose, and the years that went wrong** *(event-finding, not fitting)*
   - *Interactive* — 42 winter counts, 1959–2000, and a strip of clickable years below the
     plot. One birth rate, one death rate, and one "extra deaths in a bad year" that applies
-    to every year marked. Gate: typical miss under 1.13. Then a numeric question: the
+    to every year marked. Gate: typical miss under 130 moose. Then a numeric question: the
     fewest marked years that get there — **two**.
-  - *Goal* — Measured: nothing marked 1.24×, one year 1.18×, **1977 + 1996 → 1.10×**, which
-    are the severe-winter die-off years. Marking a third makes it *worse* (1.15×), because
+  - *Goal* — Measured: nothing marked 250 moose, one year 187, **1977 + 1996 → 113**, which
+    are the severe-winter die-off years. Marking a third makes it *worse* (161), because
     every marked year shares one extra-death number — so picking the right years matters,
     not picking many.
   - *Hands to* — E, which offers a reason for those years.
 
 - **E — the wolves** *(two phases: the arrow that works, and the one that does not)*
   - *Interactive* — The wolf counts appear. The marked years are gone; in their place is
-    one arrow, wolves → moose deaths, reading the counted wolves. Gate 1: moose under 1.22.
+    one arrow, wolves → moose deaths, reading the counted wolves. Gate 1: moose under 235.
     That opens the wolf panel and the second arrow, moose → wolf births. Gate 2: wolves
-    under 1.45. Then a numeric question: the setting of the second arrow that makes the
+    under 7.5, out of a usual 22. Then a numeric question: the setting of the second arrow that makes the
     wolves' miss smallest — **graded against the student's own two wolf rates**, because
     the arrow and the birth rate pull on the same thing.
-  - *Goal* — Measured: the moose go from 1.24× to **1.17×** on two numbers plus one arrow,
-    against 1.10× for three numbers plus two hand-picked years. Fewer numbers, nearly as
-    good, and now pointing at something. The wolves go from 1.35× to **1.345×** — the
+  - *Goal* — Measured: the moose go from 250 to **220** on two numbers plus one arrow,
+    against 113 for three numbers plus two hand-picked years. Fewer numbers, nearly as
+    good, and now pointing at something. The wolves go from 7.0 to **6.8** — the
     arrow back the other way is worth nothing, and its best setting is about zero. **The
     honest finding: the moose can be explained partly by the wolves, and the wolves cannot
     be explained by the moose.** Their crashes (parvovirus in 1981, inbreeding later) come
