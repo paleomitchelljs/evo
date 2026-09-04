@@ -81,12 +81,8 @@
   .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
   .controls button.accent { background:var(--accent); }
   .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
-  .split-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-  .split-row button { flex:1 1 220px; text-align:left; padding:9px 12px; border:1px solid var(--rule); border-radius:5px; background:#f6f5ef; color:var(--ink); cursor:pointer; font-size:13px; }
-  .split-row button.on { background:var(--accent2-soft); border-color:var(--accent2); color:#1b465e; font-weight:600; }
-  .split-row button .state { display:block; font-size:12px; font-weight:400; color:var(--muted); }
-  .split-row button.on .state { color:#2f6b8f; }
-  .controls.pacemode { margin:6px 0 10px; }
+  .controls.pacemode { margin:6px 0 12px; }
+  .controls.pacemode .row { margin-bottom:2px; }
   .pacemode-note { font-size:12.5px; color:var(--muted); margin:2px 0 0 210px; }
   .filmhead { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
@@ -412,7 +408,7 @@
           <li>32 quotes across the three films.</li>
           <li>Across: minute of the film. Up: page of that film's own book.</li>
           <li>Six knobs — an opening page and a pace for each film.</li>
-          <li>A button for the opening page, and a slider for how many paces the three films are allowed between them.</li>
+          <li>Two sliders: how many opening pages the three films are allowed between them, and how many paces.</li>
         </ul>
       
         </div>
@@ -434,11 +430,9 @@
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="split-row">
-          <button id="E_splitStart" type="button">Opening page
-            <span class="state">one for all three</span></button>
-        </div>
         <div class="controls pacemode">
+          <div class="row"><label for="E_startMode">how many opening pages</label><input type="range" id="E_startMode" min="1" max="3" step="1" value="1" /><output id="E_startModeOut">1</output></div>
+          <div class="pacemode-note" id="E_startModeNote">one opening page for all three films</div>
           <div class="row"><label for="E_paceMode">how many paces</label><input type="range" id="E_paceMode" min="1" max="3" step="1" value="1" /><output id="E_paceModeOut">1</output></div>
           <div class="pacemode-note" id="E_paceModeNote">one pace for all three films</div>
         </div>
@@ -1247,35 +1241,45 @@ const E_MAX_PAGE = 430;
 const E_TARGET = 15;
 
 const sE = {
-  splitStart: false, paceMode: 1,   // 1 = one pace, 2 = Fellowship apart, 3 = one each
+  startMode: 1, paceMode: 1,   // 1 = one for all, 2 = Fellowship apart, 3 = one each
   start: { fotr: 40, ttt: 40, rotk: 40 },
   pace:  { fotr: 2.0, ttt: 2.0, rotk: 2.0 },
   best: {}
 };
 
-function comboKey() { return (sE.splitStart ? "S" : "s") + sE.paceMode; }
-const PACE_WORD = { 1: "one pace", 2: "two paces", 3: "three paces" };
-// Two paces means Fellowship on its own with the other two sharing -- which is
-// the split Lesson 4 goes on to show is the one the data actually supports.
+function comboKey() { return String(sE.startMode) + String(sE.paceMode); }
+const START_WORD = { 1: "one opening page", 2: "two opening pages", 3: "three opening pages" };
+const PACE_WORD  = { 1: "one pace", 2: "two paces", 3: "three paces" };
+// Two of anything means Fellowship on its own with the other two sharing --
+// which is the split Lesson 4 goes on to show is the one the data supports.
+const START_NOTE = {
+  1: "one opening page for all three films",
+  2: "Fellowship its own; Two Towers and Return share one",
+  3: "an opening page of its own for each film"
+};
 const PACE_NOTE = {
   1: "one pace for all three films",
   2: "Fellowship its own; Two Towers and Return share one",
   3: "a pace of its own for each film"
 };
 const COMBO_LABEL = {};
-for (const st of ["s","S"]) for (const pm of [1,2,3])
-  COMBO_LABEL[st+pm] = (st === "S" ? "three opening pages, " : "one opening page, ") + PACE_WORD[pm];
-// Which film's slider drives which, per mode. rotk follows ttt at two paces.
-function paceGroup(id) {
-  if (sE.paceMode === 1) return ["fotr","ttt","rotk"];
-  if (sE.paceMode === 3) return [id];
+for (const sm of [1,2,3]) for (const pm of [1,2,3])
+  COMBO_LABEL[String(sm)+String(pm)] = START_WORD[sm] + ", " + PACE_WORD[pm];
+// Which films a knob drags, per mode. Return follows Two Towers at two.
+function groupFor(mode, id) {
+  if (mode === 1) return ["fotr","ttt","rotk"];
+  if (mode === 3) return [id];
   return id === "fotr" ? ["fotr"] : ["ttt","rotk"];
 }
-function paceLocked(id) {
-  if (sE.paceMode === 1) return id !== "fotr";
-  if (sE.paceMode === 3) return false;
+function lockedIn(mode, id) {
+  if (mode === 1) return id !== "fotr";
+  if (mode === 3) return false;
   return id === "rotk";
 }
+function paceGroup(id)  { return groupFor(sE.paceMode, id); }
+function paceLocked(id) { return lockedIn(sE.paceMode, id); }
+function startGroup(id)  { return groupFor(sE.startMode, id); }
+function startLocked(id) { return lockedIn(sE.startMode, id); }
 
 function fitOf(q) {
   return sE.start[q.f] + sE.pace[q.f] * q.m;
@@ -1316,8 +1320,7 @@ function buildRowsE() {
 // go dim: that is what "one for all three" means.
 function setE(kind, id, v) {
   if (kind === "pace") paceGroup(id).forEach(fid => { sE.pace[fid] = v; });
-  else if (sE.splitStart) sE.start[id] = v;
-  else FILMS.forEach(f => { sE.start[f.id] = v; });
+  else startGroup(id).forEach(fid => { sE.start[fid] = v; });
   bump("E");
   syncRowsE();
   drawStageE();
@@ -1328,14 +1331,14 @@ function syncRowsE() {
     st.value = String(sE.start[f.id]); pc.value = String(sE.pace[f.id]);
     document.getElementById("E_startOut_"+f.id).textContent = sE.start[f.id].toFixed(0);
     document.getElementById("E_paceOut_"+f.id).textContent  = sE.pace[f.id].toFixed(2);
-    const tiedStart = !sE.splitStart && i > 0, tiedPace = paceLocked(f.id);
+    const tiedStart = startLocked(f.id), tiedPace = paceLocked(f.id);
     st.disabled = tiedStart; pc.disabled = tiedPace;
     st.closest(".row").classList.toggle("tied", tiedStart);
     pc.closest(".row").classList.toggle("tied", tiedPace);
   });
-  const sb = document.getElementById("E_splitStart");
-  sb.classList.toggle("on", sE.splitStart);
-  sb.querySelector(".state").textContent = sE.splitStart ? "one for each film" : "one for all three";
+  document.getElementById("E_startMode").value = String(sE.startMode);
+  document.getElementById("E_startModeOut").textContent = String(sE.startMode);
+  document.getElementById("E_startModeNote").textContent = START_NOTE[sE.startMode];
   document.getElementById("E_paceMode").value = String(sE.paceMode);
   document.getElementById("E_paceModeOut").textContent = String(sE.paceMode);
   document.getElementById("E_paceModeNote").textContent = PACE_NOTE[sE.paceMode];
@@ -1415,9 +1418,10 @@ function drawStageE() {
   }
 }
 
-document.getElementById("E_splitStart").addEventListener("click", () => {
-  sE.splitStart = !sE.splitStart;
-  if (!sE.splitStart) FILMS.forEach(f => { sE.start[f.id] = sE.start.fotr; });
+document.getElementById("E_startMode").addEventListener("input", (ev) => {
+  sE.startMode = parseInt(ev.target.value, 10);
+  if (sE.startMode === 1) FILMS.forEach(f => { sE.start[f.id] = sE.start.fotr; });
+  else if (sE.startMode === 2) sE.start.rotk = sE.start.ttt;
   bump("E"); syncRowsE(); drawStageE();
 });
 document.getElementById("E_paceMode").addEventListener("input", (ev) => {
@@ -1441,9 +1445,10 @@ mean(abs(residuals(lm(page_total ~ minute + film, data = q))))
 # one of each, for each film
 mean(abs(residuals(lm(page_total ~ minute * film, data = q))))
 
-# two paces: Fellowship on its own, the other two sharing
+# Fellowship on its own, the other two sharing
 q$grp <- ifelse(q$film == "fotr", "fotr", "rest")
-mean(abs(residuals(lm(page_total ~ minute * grp, data = q))))
+mean(abs(residuals(lm(page_total ~ minute + grp,  data = q))))   # two openings, one pace
+mean(abs(residuals(lm(page_total ~ minute * grp,  data = q))))   # two openings, two paces
 `);
 });
 
