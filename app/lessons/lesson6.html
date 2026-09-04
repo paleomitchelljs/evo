@@ -100,12 +100,6 @@
   .arrows .ar.fixed polygon { fill:#c9c5b6; }
   .arrows .hint { font-size:12.5px; color:var(--muted); margin-top:6px; }
   /* One clickable box per year of the record. */
-  .yearstrip { display:flex; gap:1px; margin-top:8px; flex-wrap:nowrap; }
-  .yearstrip .yr { flex:1 1 0; min-width:0; height:26px; border:1px solid var(--rule); border-radius:2px;
-    background:#fff; cursor:pointer; font:9px ui-monospace,Menlo,monospace; color:#9a978c;
-    display:flex; align-items:flex-end; justify-content:center; padding:0 0 1px; overflow:hidden; }
-  .yearstrip .yr:hover { border-color:var(--accent); }
-  .yearstrip .yr.on { background:var(--accent); border-color:var(--accent); color:#fff; }
   .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
   .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
   .key .sw:first-child { margin-left:0; }
@@ -374,7 +368,7 @@
       </div>
       <ul class="setup">
         <li>42 winter counts, 1959 to 2000. The model starts on the 1959 count.</li>
-        <li>Click any year on the strip below the plot to mark it as a bad year, and click again to unmark it.</li>
+        <li>Click the plot at a year to mark it as a bad one. A dashed line drops onto that year; click it again to take it away.</li>
         <li>Every marked year gets the same extra death rate — you are choosing which years, not how bad each one was. Each year you mark is another parameter.</li>
         <li>The bar is 130 moose. There are usually about a thousand of them.</li>
       </ul>
@@ -385,7 +379,6 @@
     <div class="col">
       <div class="panel graph-wrap">
         <canvas id="plotD" width="560" height="330"></canvas>
-        <div id="stripD" class="yearstrip"></div>
         <div class="fit-stats" id="statsD">
           <span class="label">typical miss:</span> <span id="D_miss">—</span>
           &nbsp;|&nbsp;
@@ -960,7 +953,7 @@ mean(abs(N - p$scandens))
 
 /* ====== STAGE D — the moose, and the years that went wrong ========== */
 const D_BAR = 130;   // moose. one marked year reaches 187, two reach 113
-const sD = { b: 0.20, d: 0.20, h: 0, hard: {}, minHardAtBar: null };
+const sD = { b: 0.20, d: 0.20, h: 0, hard: {}, minHardAtBar: null, frame: null };
 function runD(b, d, h, hard) {
   const out = [IMOOSE[0]];
   for (let i = 1; i < IYEARS.length; i++) {
@@ -969,20 +962,27 @@ function runD(b, d, h, hard) {
   }
   return out;
 }
-function buildStripD() {
-  const strip = document.getElementById("stripD");
-  strip.innerHTML = IYEARS.slice(0, -1).map(y =>
-    `<div class="yr" data-year="${y}" title="${y}">${String(y).slice(2)}</div>`).join("");
-  strip.querySelectorAll(".yr").forEach(el => {
-    el.addEventListener("click", () => {
-      const y = +el.dataset.year;
-      if (sD.hard[y]) delete sD.hard[y]; else sD.hard[y] = true;
-      el.classList.toggle("on", !!sD.hard[y]);
-      bump("D"); drawStageD();
-    });
-  });
+// Click the plot at a year to mark it. The canvas is drawn in a fixed 560-wide
+// coordinate system and displayed at whatever width the column gives it, so the
+// pointer has to be scaled back through the bounding box before the frame can
+// turn it into a year.
+function markYearAt(ev) {
+  const f = sD.frame; if (!f) return;
+  const cv = ev.currentTarget, rect = cv.getBoundingClientRect();
+  if (!rect.width) return;
+  const x = (ev.clientX - rect.left) * (+cv.dataset.cssW / rect.width);
+  if (x < f.pad.l - 8 || x > f.pad.l + f.W + 8) return;
+  const v = f.xMin + (x - f.pad.l) / f.W * (f.xMax - f.xMin);
+  let best = null, bestD = Infinity;
+  for (const y of IYEARS.slice(0, -1)) {
+    const dd = Math.abs(y - v);
+    if (dd < bestD) { bestD = dd; best = y; }
+  }
+  if (best === null || bestD > 1.2) return;
+  if (sD.hard[best]) delete sD.hard[best]; else sD.hard[best] = true;
+  bump("D"); drawStageD();
 }
-function drawMoosePlot(cvId, series, height) {
+function drawMoosePlot(cvId, series, marks) {
   const cv = document.getElementById(cvId);
   const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
   const pad = { l: 66, r: 16, t: 16, b: 46 };
@@ -1006,10 +1006,25 @@ function drawMoosePlot(cvId, series, height) {
   ctx.stroke();
   ctx.fillStyle = "#1d1d1b";
   for (let i = 0; i < IYEARS.length; i++) { ctx.beginPath(); ctx.arc(f.x(IYEARS[i]), f.y(IMOOSE[i]), 2.6, 0, 6.2832); ctx.fill(); }
+  // Bad years are marked on the axis itself, so a mark cannot sit anywhere a
+  // year does not. Clicking the plot is what puts them there.
+  if (marks && marks.length) {
+    ctx.font = "10px ui-monospace, monospace"; ctx.textAlign = "center";
+    for (const y of marks) {
+      const x = f.x(y);
+      ctx.strokeStyle = "rgba(178,58,72,0.85)"; ctx.lineWidth = 2; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(x, f.pad.t + 12); ctx.lineTo(x, f.pad.t + f.H); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#b23a48";
+      ctx.beginPath(); ctx.moveTo(x, f.pad.t + f.H); ctx.lineTo(x - 5, f.pad.t + f.H + 8); ctx.lineTo(x + 5, f.pad.t + f.H + 8); ctx.closePath(); ctx.fill();
+      ctx.textBaseline = "top"; ctx.fillText(String(y), x, f.pad.t + 1);
+    }
+  }
+  return f;
 }
 function drawStageD() {
   const series = runD(sD.b, sD.d, sD.h, sD.hard);
-  drawMoosePlot("plotD", series);
+  sD.frame = drawMoosePlot("plotD", series, Object.keys(sD.hard).map(Number).sort((a,b)=>a-b));
   const miss = missIn(series, IMOOSE);
   const n = Object.keys(sD.hard).length;
   document.getElementById("D_bOut").textContent = sD.b.toFixed(3);
@@ -1044,9 +1059,10 @@ function checkD() {
     sD[k] = parseFloat(e.target.value); highlightByDataLine("codeD", k); bump("D"); drawStageD();
   });
 });
+document.getElementById("plotD").addEventListener("click", markYearAt);
+document.getElementById("plotD").style.cursor = "crosshair";
 document.getElementById("D_clear").addEventListener("click", () => {
   sD.hard = {};
-  document.querySelectorAll("#stripD .yr").forEach(el => el.classList.remove("on"));
   drawStageD();
 });
 document.getElementById("D_download").addEventListener("click", () => {
@@ -1251,12 +1267,11 @@ document.addEventListener("score:bypass", () => {
   drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 });
 
-buildStripD();
 drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 
 Score.init({
   moduleId: "lesson6",
-  version: 7,
+  version: 8,
   scaffold: 10,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

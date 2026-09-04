@@ -446,7 +446,7 @@ placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings ar
 "Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
-`lesson6.html` · v7 · 10 checkpoints · **Skeleton built, text still owed**
+`lesson6.html` · v8 · 10 checkpoints · **Skeleton built, text still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
 that two scalar rates cannot hold, then arrows from causes to rates, then the same move
@@ -520,8 +520,11 @@ been rebuilt — it needs the same treatment for two species.
   - *Hands to* — D, where no cause is on offer at all.
 
 - **D — the moose, and the years that went wrong** *(event-finding, not fitting)*
-  - *Interactive* — 42 winter counts, 1959–2000, and a strip of clickable years below the
-    plot. One birth rate, one death rate, and one "extra deaths in a bad year" that applies
+  - *Interactive* — 42 winter counts, 1959–2000, and the plot itself as the control: **click a
+    year on it to drop a dashed line on that year, click again to take it away**.
+    (It was a strip of small rectangles under the axis until 2026-09-04 — they could
+    not be made to line up with the ticks, so the marks now live on the axis they
+    refer to and cannot land anywhere a year does not.) One birth rate, one death rate, and one "extra deaths in a bad year" that applies
     to every year marked. Gate: typical miss under 130 moose. Then a numeric question: the
     fewest marked years that get there — **two**.
   - *Goal* — Measured: nothing marked 250 moose, one year 187, **1977 + 1996 → 113**, which
