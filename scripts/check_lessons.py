@@ -231,6 +231,74 @@ def undefined_calls(raw_html):
     return sorted(c for c in called - known if not c.startswith("_"))
 
 
+def bit_map_faults(raw):
+    """Every declared scoring slot must be reachable through the BIT map.
+
+    THE FAILURE THIS CATCHES. A lesson declares `scaffold: 8` and a `const BIT`
+    map with only seven names in it. `BIT.B_num1` is then `undefined`,
+    `recordCheckpoint(undefined, ok)` writes nowhere, and the bit stays 0. A
+    student who answers everything correctly scores 6/8. Nothing shows: no
+    console error, the verdict on screen still says "right", and the emitted
+    code decodes with a valid checksum -- so in the gradebook it is
+    indistinguishable from a class that genuinely missed two questions. The
+    coarse check above does not see it, because recordCheckpoint IS being
+    called, just not for every slot. Caught by hand on lesson5 v8, 2026-09-04.
+
+    SCOPE. Only pages carrying a `const BIT = {...}` map are examined. Lessons
+    that index their checkpoints some other way -- a computed `start + i`, or a
+    bare literal -- cannot be resolved without running the page, and are skipped
+    silently rather than warned about. They pick this check up for free if they
+    are ever rewritten onto the BIT pattern.
+    """
+    out = []
+    mm = re.search(r"const\s+BIT\s*=\s*\{([^}]*)\}", raw)
+    mi = re.search(r"scaffold:\s*(\d+)", raw)
+    if not mm or not mi:
+        return out
+    n = int(mi.group(1))
+    idx = {}
+    for k, v in re.findall(r"(\w+)\s*:\s*(\d+)", mm.group(1)):
+        idx[k] = int(v)
+
+    # Names used as a checkpoint slot: `bit: BIT.x` in an options object, or
+    # passed straight to a record()/recordCheckpoint() call.
+    refs = set(re.findall(r"bit\s*:\s*BIT\.(\w+)", raw))
+    refs |= set(re.findall(r"record(?:Checkpoint)?\(\s*BIT\.(\w+)", raw))
+    # `BIT[stage]` and friends: a computed lookup reaches names this cannot
+    # name, so slot coverage is not decidable and only the hard faults stand.
+    computed = bool(re.search(r"BIT\s*\[", raw))
+
+    undefined = sorted(r for r in refs if r not in idx)
+    if undefined:
+        out.append("scoring: " + ", ".join("BIT." + u for u in undefined) +
+                   " referenced but missing from the BIT map -- records nowhere, "
+                   "and that answer ships as zero however the student answers")
+
+    dupes = sorted(k for k in idx if list(idx.values()).count(idx[k]) > 1)
+    if dupes:
+        out.append("scoring: " + ", ".join("BIT." + d for d in dupes) +
+                   " share a slot -- one answer overwrites the other")
+
+    over = sorted(k for k in idx if idx[k] >= n)
+    if over:
+        out.append(f"scoring: " + ", ".join("BIT." + o for o in over) +
+                   f" sit past the declared scaffold:{n} -- written and then dropped")
+
+    if len(idx) != n and not computed:
+        out.append(f"scoring: BIT map has {len(idx)} names but scaffold:{n} slots "
+                   f"are declared")
+
+    if not computed:
+        reached = set(idx[r] for r in refs if r in idx)
+        missing = sorted(set(range(n)) - reached)
+        if missing:
+            names = {v: k for k, v in idx.items()}
+            shown = ", ".join(f"{s} ({names.get(s, 'unnamed')})" for s in missing)
+            out.append(f"scoring: slot(s) {shown} are declared but nothing ever "
+                       f"writes them -- they ship as zero for every student")
+    return out
+
+
 def check_file(path, ledger, rows, style=False):
     """Structural checks. These run on every lesson page, whether or not it has
     a position in LESSON_UNIT -- a new lesson is exactly when they matter most."""
@@ -265,6 +333,11 @@ def check_file(path, ledger, rows, style=False):
     if mi and int(mi.group(1)) > 0 and "recordCheckpoint" not in raw:
         fails.append(f"scoring: declares scaffold:{mi.group(1)} but never calls "
                      f"recordCheckpoint -- every answer bit ships as zero")
+
+    # ... and the finer version of the same failure, for pages that route their
+    # checkpoints through a `const BIT = {...}` map.
+    for msg in bit_map_faults(raw):
+        fails.append(msg)
 
     # --style: advisory prose notes for whoever is drafting. Never a failure.
     if style:

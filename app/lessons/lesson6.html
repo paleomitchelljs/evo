@@ -97,6 +97,8 @@
   .arrows .nd.unobs rect { fill:#fbfaf6; stroke:#b8b3a0; stroke-dasharray:4 3; }
   .arrows .nd.unobs text { fill:var(--muted); font-style:italic; }
   .arrows .nd text { font:12px -apple-system,sans-serif; fill:var(--ink); text-anchor:middle; }
+  /* Where births, deaths and this year's count fuse into one flow. */
+  .arrows .nd.jn circle { fill:#c9c5b6; stroke:none; }
   .arrows .ar { cursor:pointer; }
   .arrows .ar path { fill:none; stroke:#b8b3a0; stroke-width:1.5; stroke-dasharray:5 4; }
   .arrows .ar polygon { fill:#b8b3a0; }
@@ -555,7 +557,7 @@ function missIn(model, counted) {
    ================================================================== */
 function buildArrows(mountId, spec, onToggle) {
   const mount = document.getElementById(mountId);
-  const W = 520, H = spec.height || 150;
+  const W = spec.width || 520, H = spec.height || 150;
   const parts = [];
   parts.push(`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`);
   const hidden = {};
@@ -565,16 +567,25 @@ function buildArrows(mountId, spec, onToggle) {
     const x1 = f.x + f.w/2, y1 = f.y + f.h/2, x2 = t.x + t.w/2, y2 = t.y + t.h/2;
     const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy) || 1;
     const ux = dx/len, uy = dy/len;
+    // A line feeding a junction carries no arrowhead and runs right up to the
+    // dot: the three of them are one flow, and the single arrow leaving the
+    // junction is what points at the answer.
+    const head = !a.nohead;
     const sx = x1 + ux*(f.w/2+4), sy = y1 + uy*(f.h/2+4);
-    const ex = x2 - ux*(t.w/2+12), ey = y2 - uy*(t.h/2+12);
+    const pad = head ? t.w/2 + 12 : t.w/2 + 1;
+    const ex = x2 - ux*pad, ey = y2 - uy*pad;
     const px = -uy, py = ux;
     parts.push(`<g class="ar${a.id ? "" : " fixed on"}${a.id && hidden[a.id] ? " hid" : ""}"${a.id ? ` data-arrow="${a.id}"` : ""}>` +
       `<path d="M ${sx} ${sy} L ${ex} ${ey}" />` +
-      `<polygon points="${ex+ux*11},${ey+uy*11} ${ex+px*5},${ey+py*5} ${ex-px*5},${ey-py*5}" />` +
+      (head ? `<polygon points="${ex+ux*11},${ey+uy*11} ${ex+px*5},${ey+py*5} ${ex-px*5},${ey-py*5}" />` : "") +
       `<rect x="${(sx+ex)/2-40}" y="${(sy+ey)/2-14}" width="80" height="28" fill="transparent" /></g>`);
   }
   for (const id in spec.nodes) {
     const n = spec.nodes[id];
+    if (n.junction) {
+      parts.push(`<g class="nd jn"><circle cx="${n.x+n.w/2}" cy="${n.y+n.h/2}" r="${n.w/2}" /></g>`);
+      continue;
+    }
     parts.push(`<g class="nd ${n.rate ? "rate" : ""}${n.unobserved ? " unobs" : ""}"><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="5" />` +
       `<text x="${n.x+n.w/2}" y="${n.y+n.h/2+4}">${n.label}</text></g>`);
   }
@@ -968,14 +979,15 @@ function runC(b, d, rain, crowd) {
   return out;
 }
 const arrowsC = buildArrows("arrowsC", {
-  height: 162,
+  width: 560, height: 162,
   nodes: {
-    rain:   { x: 2,   y: 10,  w: 96,  h: 32, label: "Rain that year" },
-    seeds:  { x: 118, y: 10,  w: 76,  h: 32, label: "Seeds", unobserved: true },
-    births: { x: 222, y: 10,  w: 96,  h: 32, label: "Birth rate", rate: true },
+    rain:   { x: 2,   y: 10,  w: 92,  h: 32, label: "Rain that year" },
+    seeds:  { x: 108, y: 10,  w: 70,  h: 32, label: "Seeds", unobserved: true },
+    births: { x: 210, y: 10,  w: 92,  h: 32, label: "Birth rate", rate: true },
     now:    { x: 2,   y: 64,  w: 168, h: 32, label: "Number of finches this year" },
-    deaths: { x: 222, y: 112, w: 96,  h: 32, label: "Death rate", rate: true },
-    next:   { x: 346, y: 64,  w: 170, h: 32, label: "Number of finches next year" }
+    deaths: { x: 210, y: 112, w: 92,  h: 32, label: "Death rate", rate: true },
+    merge:  { x: 355, y: 75,  w: 10,  h: 10, junction: true },
+    next:   { x: 396, y: 64,  w: 160, h: 32, label: "Number of finches next year" }
   },
   // The rain arrow is one decision drawn as two segments: rain grows seeds and
   // seeds feed nestlings. Nobody counted the seeds in these years, so the knob
@@ -987,10 +999,13 @@ const arrowsC = buildArrows("arrowsC", {
     // greyed-out cause still tells the student a cause is coming.
     { id: "crowd", from: "now",   to: "deaths", hidden: true }
   ],
-  // N(t+1) = N(t) * (1 + b - d), so this year's count is not only working
-  // through the two rates -- it is a term in next year's count on its own.
-  fixed: [ { from: "births", to: "next" }, { from: "deaths", to: "next" },
-           { from: "now",    to: "next" } ],
+  // N(t+1) = N(t) * (1 + b - d). All three terms are one sum, so they fuse at a
+  // junction and a single arrow leaves it -- three arrows arriving separately
+  // read as three competing causes rather than one addition.
+  fixed: [ { from: "births", to: "merge", nohead: true },
+           { from: "deaths", to: "merge", nohead: true },
+           { from: "now",    to: "merge", nohead: true },
+           { from: "merge",  to: "next" } ],
   hint: "Click a dashed arrow to draw it. Seeds are dashed because nobody counted them: the rain arrow is really rain to seeds to nestlings, and the one number you fit covers the whole path."
 }, (id, on) => {
   if (id === "rain")  { sC.rainOn = on;  if (!on) { sC.rain = 0; document.getElementById("C_rain").value = "0"; } }

@@ -567,9 +567,10 @@ clean-slate run decodes as `lesson5 v8`, `11111111`, 8/8.
 aborted after replacing the `BIT` map but before writing the file, so the page shipped a
 7-entry map against `scaffold: 8`. `BIT.B_num1` was `undefined`, `recordCheckpoint` wrote
 nowhere, and two bits stayed 0 through a run in which every answer was right — with no
-error in the console and nothing wrong on screen. **This is exactly the failure
-`check_lessons.py` exists for and does not catch**: it verifies that `recordCheckpoint`
-is called at all, not that every declared slot is reachable. Worth adding.
+error in the console and nothing wrong on screen. **This was exactly the failure `check_lessons.py`
+exists for and did not catch**: it verified that `recordCheckpoint` is called at all, not
+that every declared slot is reachable. **Added the same day** as `bit_map_faults()` —
+see the note at the head of this file.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
 `lesson6.html` · v9 · 9 checkpoints · **A–C written to JM's voice notes 2026-09-04; D and E still owed**
@@ -659,6 +660,15 @@ node-and-arrow diagram, built in-page (`buildArrows`) rather than with `app/asse
 that turns a rate into a function and switches on the one slider it pays for. Grey solid
 arrows are structure and are not clickable; dashed ones are offers. The readout counts
 the numbers in the model, so parameter cost is on screen rather than asserted.
+
+*Stage C's diagram fuses its three fixed arrows, 2026-09-04.* Births, deaths and this
+year's count no longer arrive at "Number of finches next year" as three separate
+arrowheads — they run without heads into a small junction dot, and **one** arrow leaves it
+for the next-year box. `N(t+1) = N(t)(1 + b − d)` is a single sum, and three arrowheads
+landing separately read as three competing causes rather than one addition. The widget
+gained a `junction: true` node type (drawn as a dot, not a box) and a `nohead` flag on
+fixed arrows; the diagram widened to a 560 viewBox to leave room for the junction. Stage
+E's diagram has two fixed arrows converging rather than three and was left alone.
 
 *Stage C's diagram was rebuilt 2026-09-04 on JM's correction.* Its nodes are now
 **Rain that year → _Seeds_ → Birth rate**, **Finches alive now → Death rate**, and
