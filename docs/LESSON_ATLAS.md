@@ -504,14 +504,32 @@ decodes as `lesson5 v7`, `1101111`, 6/7 — the 0 being a deliberately wrong fir
 at B's crossing year.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
-`lesson6.html` · v8 · 10 checkpoints · **Skeleton built, text still owed**
+`lesson6.html` · v9 · 9 checkpoints · **A–C written to JM's voice notes 2026-09-04; D and E still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
 that two scalar rates cannot hold, then arrows from causes to rates, then the same move
 on Isle Royale — first finding the bad winters by hand, then replacing them with the
-wolves.* **Interactives, gates and answer keys are finished and measured off the shipped
-code; the five `.voice` blocks and five solved-banners are placeholders marked
-`TEXT FOR JM` in the source.**
+wolves.*
+
+**Reworked 2026-09-04 to JM's voice notes, which cover A, B and C and then stop
+mid-sentence in D.** Five changes of substance beyond the prose:
+
+1. **Stage A is bunnies, not "something",** and its sliders move in **thousandths**. The
+   coarser grid could not reach the new third target at all — see below.
+2. **A gained a fourth target that cannot be met:** finish at exactly 200. It resolves
+   itself after 30 seconds of real attempts and says why. JM's own design.
+3. **Stage B's written question is gone** and both its targets are now **locked in**, the
+   same rule A already used.
+4. **Stage C's written question is gone too** — its content, what the rain arrow is worth
+   on its own, became the *first half of the interactive* instead of a question asked
+   afterwards. **The crowding arrow does not exist on the page until the rain is landed:**
+   not dashed, not greyed, absent. JM: a greyed-out cause still tells them a cause is
+   coming.
+5. **Stage C's diagram nodes are renamed** to "Number of finches this year" and "Number of
+   finches next year".
+
+**Scaffold 10 → 9, version 8 → 9.** Verified in the browser end to end 2026-09-04: all
+five stages solve in order and the code decodes as `lesson6 v9`, `111111111`, 9/9.
 
 *The model, all five stages:* `N(t+1) = N(t) · (1 + b − d)`, run forward from the first
 real count. Nothing in the lesson ever changes that line — what changes is whether `b`
@@ -549,32 +567,68 @@ nestlings. One arrow id can now span several segments, so that path lights and p
 single decision. Stage E's diagram has the same "Next year" ambiguity and has **not**
 been rebuilt — it needs the same treatment for two species.
 
-- **A — births, deaths, a hundred generations** *(the sandbox, no data)*
-  - *Interactive* — 100 individuals, 100 years, two sliders. Three targets: finish above
-    1,000, finish below 10, finish between 90 and 110, **each claimed with a Lock in
-    button** — checked on redraw they could all be swept in one drag of a slider
-    (fixed 2026-09-04). The third is the point — holding
-    steady is not a setting but an exact tie. Then a numeric question: births 0.30 against
-    deaths 0.28, two in a hundred, gives 724 of the original 100 at year 100 (±80).
+- **A — births, deaths, a hundred generations** *(the sandbox, no data — bunnies)*
+  - *Interactive* — 100 bunnies, 100 years, two sliders **stepping in thousandths**. Four
+    targets, **each claimed with a Lock in button** — checked on redraw they could all be
+    swept in one drag of a slider (fixed 2026-09-04). Finish above 1,000; finish below 10;
+    finish **between 45 and 55**; finish **at exactly 200**.
+  - *Why thousandths* — the old third target was "between 90 and 110", and JM's objection
+    was that 100 is what you get for free when the two numbers are equal, so it teaches
+    nothing. He asked for something narrower and set apart. **At the old step of 0.01 that
+    is unreachable:** the only finishes anywhere near 100 are 36.6 (b−d = −0.01), 100
+    (b−d = 0) and 270.5 (b−d = +0.01) — nothing in between exists. At 0.001 the window
+    45–55 admits exactly two differences, −0.007 → 49.5 and −0.006 → 54.8, with many
+    (b, d) pairs on each. *The 90–110 target it replaces was only ever satisfiable at the
+    exact tie, which is why it read as a default.*
+  - *The impossible target* — **200 cannot be reached, and that is the lesson.** Verified
+    by exhaustive sweep of the slider grid: 0 of the 1,201 reachable differences round to
+    200. The closest is +0.007 → 200.88, which the readout shows as **201**; the next step
+    down is 181.9. The task goes live once the first three are locked in, and closes itself
+    after **30 seconds and at least one real attempt**, replacing its own hint with why:
+    two numbers fix the whole curve, so you do not get to choose where it ends as well as
+    how it gets there.
+  - Then a numeric question, reworded on JM's correction: the old text asked "how many of
+    the original hundred are alive at year 100?", which **has no true answer of 724** —
+    none of the original hundred bunnies would be. It now asks the student to read the
+    plot for the population at year 100 (724.5, **±150**, widened because it is read off
+    a graph).
   - *Hands to* — B, which asks the same two numbers to hold a real record.
 
 - **B — a real population, and two numbers that cannot hold it** *(cactus finches)*
   - *Interactive* — 37 counts, 1976–2012, model started on the 1976 count. Two tasks that
     are individually easy and jointly impossible: put the model at or below 150 birds in
-    1977 (needs b−d ≈ −0.21), and at or above 500 in 2012 (needs b−d ≥ +0.03). Then a
-    numeric question: the b−d that makes the typical miss smallest.
-  - *Goal* — **The answer is zero.** The best two-number model of a wild population is a
-    flat line at 185 birds, typically 80 birds out. Measured on the shipped grid.
+    1977 (needs b−d ≈ −0.19), and at or above 500 in 2012 (needs b−d ≥ +0.03). **Both are
+    now locked in**, with a running list of the pairs tried, exactly as in A — the hint
+    reads "there — lock it in" when a target is reached but not yet claimed. **No written
+    question:** JM cut it, and the two lock-ins carry the stage.
+  - *Goal* — unchanged and still the point: no single pair does both. The best two-number
+    model of a wild population is a near-flat line, typically 80 birds out. Measured on
+    the shipped grid.
   - *Hands to* — C, which lets the rates move.
 
-- **C — one arrow at a time** *(rain, and the birds themselves)*
-  - *Interactive* — Two arrows on offer: rain → birth rate, and finches → death rate. Each
-    drawn arrow switches on one slider. Gate: typical miss under 1.32. Then a numeric
-    question: the smallest miss the rain arrow reaches on its own (1.35, ±0.04).
-  - *Goal* — Measured, on the shipped grid: no arrows 80 birds, crowding alone 78, rain
-    alone 58, both 44, against a usual count of about 170. **The crowding arrow alone buys almost nothing** — an extra
-    number that is not a cause of much. The bar at 50 birds sits below what one arrow can do,
-    so it takes both.
+- **C — one arrow at a time** *(rain, and then the birds themselves)*
+  - *Interactive, in two phases since 2026-09-04.* **Phase 1: only the rain arrow exists.**
+    Rain → *Seeds* → birth rate; the crowding arrow is not rendered and not clickable, and
+    its slider row is `display:none`. Bar: typical miss **under 65 birds**. **Phase 2:**
+    landing phase 1 reveals the crowding arrow (finches → death rate) with a hint naming
+    density dependence. Bar: **under 50**. **No written question** — it *became* phase 1.
+  - *Why the phases* — JM: the old stage put both arrows on the table at once and then
+    asked, in writing, what the rain was worth alone. Doing it in that order means the
+    student has already seen the answer before being asked. Now they have to get as far as
+    they can on three numbers before the fourth is offered, and the two bars measure the
+    two things separately.
+  - *Where the bars come from* — brute force on the shipped slider grids, re-run 2026-09-04:
+    two numbers alone bottom out at **79.8** birds; rain added reaches **57.9** (1,154 of
+    453,871 settings clear 65); both arrows reach **44.3** (120,195 of 22.7 M settings
+    clear 50). Neither bar needs a lucky landing, and each sits clearly inside what its own
+    arrow buys. *Crowding alone is not offered any more, but for the record it reaches only
+    78 — an extra number that is not a cause of much.*
+  - *The 1.32 / 1.33 note in JM's audio is about a metric that no longer exists.* It refers
+    to the scale-free factor (`1.52×`) retired earlier the same day in favour of birds. On
+    the bird scale the bar already has slack — 50 against a floor of 44.3 — so it is left
+    where it is. **Worth confirming with him.**
+  - *Diagram* — nodes renamed on JM's instruction to **"Number of finches this year"** and
+    **"Number of finches next year"**; the boxes were widened and the row shifted to fit.
   - *Hands to* — D, where no cause is on offer at all.
 
 - **D — the moose, and the years that went wrong** *(event-finding, not fitting)*
@@ -590,6 +644,13 @@ been rebuilt — it needs the same treatment for two species.
     every marked year shares one extra-death number — so picking the right years matters,
     not picking many.
   - *Hands to* — E, which offers a reason for those years.
+
+**Still owed on this lesson.** JM's voice notes stop in the first two sentences of Stage D
+("In Lake Superior, one of our least visited national parks, Isle Royale…") and then the
+recording is interrupted. **D and E are untouched** — their `.voice` blocks and
+solved-banners are still the 2026-09-03 placeholders marked `TEXT FOR JM`, and their
+interactives, bars and answer keys are unchanged and re-verified. Their scaffold bits
+moved (D is now 5–6 and E 7–8), which is why the version bumped.
 
 - **E — the wolves** *(two phases: the arrow that works, and the one that does not)*
   - *Interactive* — The wolf counts appear. The marked years are gone; in their place is
