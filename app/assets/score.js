@@ -343,6 +343,19 @@
       .forEach(function (sec) { sec.classList.remove("stage-locked"); });
     document.querySelectorAll("nav.toc a.locked")
       .forEach(function (a) { a.classList.remove("locked"); });
+    // A visible section is not the same as an open gate. Lessons keep their own
+    // per-stage flags, and lessons 3 and 4 refuse to score a stage whose flag is
+    // still shut -- so with the sections merely un-greyed, the instructor could
+    // reach stage E and not be able to solve it. Flip whatever is reachable.
+    // `typeof` on an undeclared name is safe; the try guards a lesson that keeps
+    // something else under that name.
+    try {
+      if (typeof Gates === "object" && Gates) {
+        for (const k in Gates) {
+          if (Gates[k] && typeof Gates[k] === "object") Gates[k].open = true;
+        }
+      }
+    } catch (e) { /* no Gates object on this page */ }
     // Stages that open panels of their own partway through listen for this and
     // undo their internal gate; a lesson that does not listen still has every
     // section open, which is what the bypass is for.

@@ -272,8 +272,15 @@ The vagus showcase and the stretch challenge were removed to
   - *Interactive* — Every quoted moment from the three Jackson films: minute **within its
     own film** on the bottom, page of the whole 1,061-page story up the side, so the three
     films sit at three heights as well as three tilts. Six sliders (an opening page and a
-    pace per film) and two buttons that **split** them: with a knob unsplit, the other two
-    films' sliders dim and follow the first. A running table records the best average miss
+    pace per film), a button that splits the opening page, and a **three-stop slider for
+    how many paces** the films are allowed between them — one for all three, Fellowship on
+    its own with the other two sharing, or one each. (That middle option is the split
+    Lesson 4 stage C goes on to show is the one the data actually supports: Fellowship
+    separates from Return, Two Towers never does.) With a knob unsplit, the films that now
+    share it dim and follow. *Replaced the old two-state pace button 2026-09-03 — it was
+    hard to read. Pure UI: `version: 8` and `scaffold: 8` untouched, both stage-E bits fire
+    on the same conditions, so codes already issued still decode.* A running table now
+    records the best average miss across six combinations rather than four
     reached under each of the four combinations. Gate: average miss ≤ 15 pages. Then a
     numeric question: how many minutes 311 pages would take at the pace they gave
     Fellowship (≈135; the film runs 201).

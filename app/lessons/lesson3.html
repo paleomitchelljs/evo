@@ -86,6 +86,8 @@
   .split-row button.on { background:var(--accent2-soft); border-color:var(--accent2); color:#1b465e; font-weight:600; }
   .split-row button .state { display:block; font-size:12px; font-weight:400; color:var(--muted); }
   .split-row button.on .state { color:#2f6b8f; }
+  .controls.pacemode { margin:6px 0 10px; }
+  .pacemode-note { font-size:12.5px; color:var(--muted); margin:2px 0 0 210px; }
   .filmhead { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
@@ -410,7 +412,7 @@
           <li>32 quotes across the three films.</li>
           <li>Across: minute of the film. Up: page of that film's own book.</li>
           <li>Six knobs — an opening page and a pace for each film.</li>
-          <li>Two buttons, which start them tied together and let you split them.</li>
+          <li>A button for the opening page, and a slider for how many paces the three films are allowed between them.</li>
         </ul>
       
         </div>
@@ -435,8 +437,10 @@
         <div class="split-row">
           <button id="E_splitStart" type="button">Opening page
             <span class="state">one for all three</span></button>
-          <button id="E_splitPace" type="button">Pace
-            <span class="state">one for all three</span></button>
+        </div>
+        <div class="controls pacemode">
+          <div class="row"><label for="E_paceMode">how many paces</label><input type="range" id="E_paceMode" min="1" max="3" step="1" value="1" /><output id="E_paceModeOut">1</output></div>
+          <div class="pacemode-note" id="E_paceModeNote">one pace for all three films</div>
         </div>
         <div class="controls" id="controlsE">
           <div id="E_rows"></div>
@@ -1243,19 +1247,35 @@ const E_MAX_PAGE = 430;
 const E_TARGET = 15;
 
 const sE = {
-  splitStart: false, splitPace: false,
+  splitStart: false, paceMode: 1,   // 1 = one pace, 2 = Fellowship apart, 3 = one each
   start: { fotr: 40, ttt: 40, rotk: 40 },
   pace:  { fotr: 2.0, ttt: 2.0, rotk: 2.0 },
   best: {}
 };
 
-function comboKey() { return (sE.splitStart ? "S" : "s") + (sE.splitPace ? "P" : "p"); }
-const COMBO_LABEL = {
-  sp: "one opening page, one pace",
-  Sp: "three opening pages, one pace",
-  sP: "one opening page, three paces",
-  SP: "three opening pages, three paces"
+function comboKey() { return (sE.splitStart ? "S" : "s") + sE.paceMode; }
+const PACE_WORD = { 1: "one pace", 2: "two paces", 3: "three paces" };
+// Two paces means Fellowship on its own with the other two sharing -- which is
+// the split Lesson 4 goes on to show is the one the data actually supports.
+const PACE_NOTE = {
+  1: "one pace for all three films",
+  2: "Fellowship its own; Two Towers and Return share one",
+  3: "a pace of its own for each film"
 };
+const COMBO_LABEL = {};
+for (const st of ["s","S"]) for (const pm of [1,2,3])
+  COMBO_LABEL[st+pm] = (st === "S" ? "three opening pages, " : "one opening page, ") + PACE_WORD[pm];
+// Which film's slider drives which, per mode. rotk follows ttt at two paces.
+function paceGroup(id) {
+  if (sE.paceMode === 1) return ["fotr","ttt","rotk"];
+  if (sE.paceMode === 3) return [id];
+  return id === "fotr" ? ["fotr"] : ["ttt","rotk"];
+}
+function paceLocked(id) {
+  if (sE.paceMode === 1) return id !== "fotr";
+  if (sE.paceMode === 3) return false;
+  return id === "rotk";
+}
 
 function fitOf(q) {
   return sE.start[q.f] + sE.pace[q.f] * q.m;
@@ -1295,9 +1315,9 @@ function buildRowsE() {
 // A knob that is not split drags the other two films with it, and their sliders
 // go dim: that is what "one for all three" means.
 function setE(kind, id, v) {
-  const split = kind === "start" ? sE.splitStart : sE.splitPace;
-  if (split) sE[kind][id] = v;
-  else FILMS.forEach(f => { sE[kind][f.id] = v; });
+  if (kind === "pace") paceGroup(id).forEach(fid => { sE.pace[fid] = v; });
+  else if (sE.splitStart) sE.start[id] = v;
+  else FILMS.forEach(f => { sE.start[f.id] = v; });
   bump("E");
   syncRowsE();
   drawStageE();
@@ -1308,21 +1328,22 @@ function syncRowsE() {
     st.value = String(sE.start[f.id]); pc.value = String(sE.pace[f.id]);
     document.getElementById("E_startOut_"+f.id).textContent = sE.start[f.id].toFixed(0);
     document.getElementById("E_paceOut_"+f.id).textContent  = sE.pace[f.id].toFixed(2);
-    const tiedStart = !sE.splitStart && i > 0, tiedPace = !sE.splitPace && i > 0;
+    const tiedStart = !sE.splitStart && i > 0, tiedPace = paceLocked(f.id);
     st.disabled = tiedStart; pc.disabled = tiedPace;
     st.closest(".row").classList.toggle("tied", tiedStart);
     pc.closest(".row").classList.toggle("tied", tiedPace);
   });
-  const sb = document.getElementById("E_splitStart"), pb = document.getElementById("E_splitPace");
+  const sb = document.getElementById("E_splitStart");
   sb.classList.toggle("on", sE.splitStart);
-  pb.classList.toggle("on", sE.splitPace);
   sb.querySelector(".state").textContent = sE.splitStart ? "one for each film" : "one for all three";
-  pb.querySelector(".state").textContent = sE.splitPace  ? "one for each film" : "one for all three";
+  document.getElementById("E_paceMode").value = String(sE.paceMode);
+  document.getElementById("E_paceModeOut").textContent = String(sE.paceMode);
+  document.getElementById("E_paceModeNote").textContent = PACE_NOTE[sE.paceMode];
 }
 
 function renderLedgerE() {
   const box = document.getElementById("E_ledger");
-  box.innerHTML = ["sp","Sp","sP","SP"].map(k => {
+  box.innerHTML = Object.keys(COMBO_LABEL).map(k => {
     const v = sE.best[k];
     return `<div><span>${COMBO_LABEL[k]}</span><span class="${k===comboKey()?"best":""}">${
       v === undefined ? "—" : v.toFixed(1) + " pages"}</span></div>`;
@@ -1399,9 +1420,12 @@ document.getElementById("E_splitStart").addEventListener("click", () => {
   if (!sE.splitStart) FILMS.forEach(f => { sE.start[f.id] = sE.start.fotr; });
   bump("E"); syncRowsE(); drawStageE();
 });
-document.getElementById("E_splitPace").addEventListener("click", () => {
-  sE.splitPace = !sE.splitPace;
-  if (!sE.splitPace) FILMS.forEach(f => { sE.pace[f.id] = sE.pace.fotr; });
+document.getElementById("E_paceMode").addEventListener("input", (ev) => {
+  sE.paceMode = parseInt(ev.target.value, 10);
+  // Collapsing pulls the films that now share a pace onto one value, so the
+  // picture never shows a split the sliders no longer offer.
+  if (sE.paceMode === 1) FILMS.forEach(f => { sE.pace[f.id] = sE.pace.fotr; });
+  else if (sE.paceMode === 2) sE.pace.rotk = sE.pace.ttt;
   bump("E"); syncRowsE(); drawStageE();
 });
 document.getElementById("E_download").addEventListener("click", () => {
@@ -1416,6 +1440,10 @@ mean(abs(residuals(lm(page_total ~ minute + film, data = q))))
 
 # one of each, for each film
 mean(abs(residuals(lm(page_total ~ minute * film, data = q))))
+
+# two paces: Fellowship on its own, the other two sharing
+q$grp <- ifelse(q$film == "fotr", "fotr", "rest")
+mean(abs(residuals(lm(page_total ~ minute * grp, data = q))))
 `);
 });
 

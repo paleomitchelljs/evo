@@ -308,7 +308,10 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   also undo the gates that live *inside* a stage — L5 stage B's second pair of
   sliders, L6 stage E's wolf panel — plus reveal every closing question; a lesson
   that does not listen still gets all its sections open, which is the point.
-  `Score.isBypass()` reports it. **Why it needs no protection:** the submission code
+  `Score.isBypass()` reports it. It also flips every `.open` flag it can find on a
+  page-level `Gates` object, because a visible section is not the same as an open gate:
+  lessons 3 and 4 refuse to score a stage whose flag is shut, so before that fix the
+  instructor could reach lesson 3 stage E and be unable to solve it. **Why it needs no protection:** the submission code
   is built from whatever name was typed, so a bypassed run emits a code whose token
   decodes as `jsmitchell`. Verified. A student who learns the name gains a code they
   cannot hand in. The status line under the box says "Confirmed — every stage open."
