@@ -66,6 +66,16 @@
   .controls label { font-size:13px; }
   .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
+  /* A slider that has to land on an exact value is not a mouse-friendly control:
+     at a step of 0.001 the drag is hopeless. Every range gets a pair of nudge
+     buttons that move it exactly one step. */
+  .controls .stepper { display:flex; align-items:center; gap:6px; }
+  .controls .stepper input[type=range] { flex:1; min-width:0; }
+  .controls .stepper button { flex:none; width:24px; height:24px; padding:0; font:15px/1 -apple-system,sans-serif;
+    background:#eceade; color:#333; border:1px solid var(--rule); border-radius:4px; cursor:pointer; }
+  .controls .stepper button:hover:not(:disabled) { background:#e0dcc9; }
+  .controls .stepper button:disabled,
+  .controls .row.muted .stepper button { opacity:0.35; cursor:not-allowed; }
   .controls input[type=range]:disabled { opacity:0.4; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
@@ -211,7 +221,7 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>Returning to the Grants and their study of finches on Daphne Major. Because they captured every single one, they know how many birds are alive on their small island each year.</p>
+        <p>Returning to the Grants and their study of finches on Daphne Major: because they captured every single one, they know how many birds are alive on their small island each year.</p>
         <p>Instead of measuring their beak size, the way we did in Lesson 5, this is the number of birds on the island in each year of their study. What we are going to do is fit the birth rate and the death rate to try to match their data.</p>
         <p>In 1977 there was a drought and a lot of birds died. So first we are going to try to get the number of birds down to the size of the crash. Then we are going to try to predict the number of birds alive in 2012.</p>
       </div>
@@ -233,8 +243,8 @@
           &nbsp;|&nbsp;
           <span class="label">typical miss:</span> <span id="B_miss">—</span>
           &nbsp;|&nbsp;
-          <span class="label">model in 1977:</span> <span id="B_y77">—</span>
-          &nbsp; <span class="label">in 2012:</span> <span id="B_y12">—</span>
+          <span class="label">model in 1977:</span> <span id="B_y77">—</span> <span class="label">of 146 counted</span>
+          &nbsp; <span class="label">in 2012:</span> <span id="B_y12">—</span> <span class="label">of 573 counted</span>
         </div>
       </div>
     </div>
@@ -257,8 +267,8 @@
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Get the model at or below 150 birds in 1977, and lock it in. <span class="hint"><span id="B1_now">not yet</span></span></li>
-          <li data-task="B2">Get the model at or above 500 birds in 2012, and lock it in. <span class="hint"><span id="B2_now">not yet</span></span></li>
+          <li data-task="B1">Match the 1977 population size to within ±25 birds, and lock it in. <span class="hint"><span id="B1_now">not yet</span></span></li>
+          <li data-task="B2">Match the 2012 population to within ±50 birds, and lock it in. <span class="hint"><span id="B2_now">not yet</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedB">Two pairs of numbers, and no single pair does both. Stage C is open.</div>
       </div>
@@ -278,19 +288,22 @@
     <div class="intro-grid">
       <div class="voice">
         <p>Only two things, births and deaths, can change the population. Yet there was no combination of births and deaths that matched the whole trajectory across time in the Grants' finch data.</p>
-        <p>This does not mean there is something other than births and deaths that can affect the finch population. It does mean that using a single static number for the birth rate and the death rate, across the full arc of the population's history, is incorrect. What we need is for the birth rate and the death rate to change.</p>
-        <p>We could arbitrarily set a birth rate and a death rate for every single year. But if you do that, we have gained no general information. If you want to know what <em>controls</em> the birth rate and the death rate in these finches, what we want is to find how a factor may influence the underlying rates, such that they are not static over time.</p>
-        <p>Below the graph is what is called a directed acyclic graph: what causes what. By default it is the same model as before — births in an average year, deaths in an average year. You can turn things on and off. The birth rate, for instance, may be driven by rain. Later, the death rate may be driven by competition with the other finches.</p>
-        <p>Your goal is to play with the model and get the error better than it was before. Move the sliders slowly and carefully, watching your typical miss as you go. See at what point making a number larger makes the fit worse, and at what point making it smaller makes it worse. Do that for each number and you will be able to get the miss down.</p>
-        <p>What you are doing is trying to do, with four numbers, as good a job as you could with seventy-two. That is what fitting a separate birth rate and death rate to every step of the record would cost you — and it would tell you nothing about the island.</p>
+        <p>Obviously the birds are going to have a different birth rate and death rate every single year. You could find the 40 different birth rates and 40 different death rates to perfectly fit the data.</p>
+        <p>But if you do that: what's the death rate for year 41? The birth rate?</p>
+        <p>Having 80 parameters (40 death rates + 40 birth rates) gets you zero error… but if you're finding them by just setting them to the data, you've gained no information. You haven't learned how to predict how many birds there will be <strong>next year</strong>.</p>
+        <p>What we'd like is to use the data we have — changes in population size over time — to predict <strong>the future</strong>.</p>
+        <p>Your goal isn't to get zero error; that's trivial to do by just throwing parameters that teach you nothing at the data. Your goal is to make better predictions about the future.</p>
+        <p>So instead of trying to predict 40 years of data with 80 parameters that are each made up to fit what we've already seen, we're going to try to predict 40 years of what we've seen using three or four parameters, and see how far we're off. Using fewer parameters means we can test how reliable each one is. We won't fit the data as well, but we'll be on firmer footing when we try to predict <strong>the next</strong> piece of data in advance.</p>
       </div>
       <ul class="setup">
-        <li>The same 37 counts, the same start, the same run.</li>
+        <li>The same 37 counts, the same start, the same run. One rate per year would be 72 numbers here; you get three, and then four.</li>
+        <li>Below the graph is your model: what causes what. Click a dashed arrow to add it, and the slider it pays for switches on.</li>
         <li>Rain is the island's total for that year, from 1 mm to 1,359 mm.</li>
-        <li>A drawn arrow adds one <strong>parameter</strong> to the model — one more number you had to go and find. An arrow you have not drawn costs nothing and does nothing.</li>
+        <li>A drawn arrow adds one <strong>parameter</strong> — one more number you had to go and find. An arrow you have not drawn costs nothing and does nothing.</li>
         <li>The solid grey arrows are not choices. Next year's count is this year's count plus the births and minus the deaths, so all three run into it whatever you draw.</li>
+        <li>Move the sliders slowly, watching the typical miss. Find where making a number larger makes the fit worse, and where making it smaller does, for each number in turn.</li>
         <li>Rain first, on its own: the bar is 65 birds. Two numbers alone cannot get below 80.</li>
-        <li>The second arrow only appears once the rain is down. Then the bar is 50 birds. There are usually about 170 of them.</li>
+        <li>The second arrow only appears once the rain is down. Then the bar is 50 birds. There are usually about 170 birds.</li>
       </ul>
     </div>
   </div>
@@ -306,7 +319,7 @@
         </div>
       </div>
       <div class="panel">
-        <h3>The model you have drawn</h3>
+        <h3>Your birth-death model</h3>
         <div id="arrowsC" class="arrows"></div>
       </div>
     </div>
@@ -394,7 +407,7 @@
           <li data-task="D1">Bring the typical miss under 130 moose. <span class="hint"><span id="D1_now">not yet</span></span></li>
           <li data-task="D2">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Stage E is open.</div>
+        <div class="solved-banner" id="solvedD">Two marked winters and one extra death rate get you there. Stage E is open.</div>
       </div>
       <div class="panel numq" id="numqD">
         <div class="q">How many bad years does it take? Give the smallest number of marked years that will get you under 130.</div>
@@ -419,20 +432,19 @@
   <div class="lock-banner">Solve Stage D to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage E voice block. Two phases. First the wolf arrow
-           replaces the marked years: three numbers and a list of years become three
-           numbers and a cause. Then the same move in the other direction, on the
-           wolves themselves, where it does not work. -->
       <div class="voice">
-        <p>The moose were never the only thing being counted on Isle Royale. Here are the wolves, over exactly the same forty-two winters.</p>
-        <p>Your marked years are gone. In their place is an arrow from the wolves to the moose death rate, and one number: how much a wolf on the island adds to a moose's chance of dying. Nothing else about the model changes.</p>
-        <p>Then do the wolves. Same two rates, and an arrow the other way — from how many moose there are to how many wolves are born.</p>
+        <p>Choosing the bad years leaves us with a problem: we can fit the data better, but <strong>why</strong> were those years bad? If we don't know the reason, then we're just guessing about whether next year will be good or bad. We haven't learned any information really — we haven't improved our ability to predict the future.</p>
+        <p>Instead of manually choosing the bad years, it would be better if we had a way to predict the bad years.</p>
+        <p>Fortunately, moose aren't the only thing they've been counting on Isle Royale! They've also counted the wolves.</p>
+        <p>Below are the population counts for moose and wolves on the island over the same 42 winters. Now what we can do is tie our moose birth and death rates to the wolf population numbers. Below the graphs is your model. Build it piece by piece.</p>
+        <p>You want the best fit possible… but the more parameters you have, the harder it is to predict the future with confidence. So as before, we're trying to balance how right we can be about the data in front of us with how confident we are about future, unseen data.</p>
       </div>
       <ul class="setup">
-        <li>Upper plot: the moose. Lower plot: the wolves, from 17 in 1959 to a peak of 50 in 1980.</li>
+        <li>Upper plot: the moose. Lower plot: the wolves — 20 in 1959, a peak of 50 in 1980, a usual year around 22.</li>
+        <li>Your marked years from Stage D are gone. In their place is an arrow from the wolves to the moose death rate, and one number: how much a wolf on the island adds to a moose's chance of dying.</li>
         <li>The wolf arrow reads the counted wolves, not modelled ones.</li>
-        <li>The wolf panel stays dark until the moose are under 235.</li>
-        <li>Bars: 235 moose, and 7.5 wolves out of a usual 22.</li>
+        <li>The wolf sliders stay dark until the moose are under 235.</li>
+        <li>Bars: 235 moose, and 7.5 wolves.</li>
       </ul>
     </div>
   </div>
@@ -449,7 +461,7 @@
         </div>
       </div>
       <div class="panel">
-        <h3>The model you have drawn</h3>
+        <h3>Your birth-death model</h3>
         <div id="arrowsE" class="arrows"></div>
       </div>
     </div>
@@ -475,7 +487,7 @@
           <li data-task="E2">Wolves: under 7.5. <span class="hint"><span id="E2_now">the wolves are still dark</span></span></li>
           <li data-task="E3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. --></div>
+        <div class="solved-banner" id="solvedE">Both populations fitted, and the wolves are a reason rather than a marked year.</div>
       </div>
       <div class="panel numq" id="numqE">
         <div class="q">Draw the second arrow, from the moose to the wolves' birth rate, then sweep its slider all the way across while you watch the wolves' typical miss. What setting makes it smallest?</div>
@@ -589,9 +601,38 @@ function buildArrows(mountId, spec, onToggle) {
     },
     lock: (id, on) => { mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("locked", on)); },
     reveal: id => { mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.remove("hid")); },
-    setHint: text => { const h = mount.querySelector(".hint"); if (h) h.textContent = text; },
     count: () => { let n = 0; for (const k in state) if (state[k]) n++; return n; }
   };
+}
+
+/* Nudge buttons beside every slider. Wired in JS rather than written into each
+   row, so a slider added later gets them for free. The value is stepped in whole
+   units of `step` counted from `min`, and rounded to the step's own precision --
+   adding 0.001 in floating point otherwise walks the value off the grid. */
+function addSteppers(root) {
+  root.querySelectorAll('input[type=range]').forEach(inp => {
+    if (inp.parentElement && inp.parentElement.classList.contains("stepper")) return;
+    const step = parseFloat(inp.step) || 1;
+    const lo = parseFloat(inp.min), hi = parseFloat(inp.max);
+    const dec = (String(inp.step).split(".")[1] || "").length;
+    const wrap = document.createElement("span");
+    wrap.className = "stepper";
+    inp.parentElement.insertBefore(wrap, inp);
+    const mk = (label, dir) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = label; b.tabIndex = -1;
+      b.setAttribute("aria-label", (dir < 0 ? "decrease" : "increase") + " " + (inp.id || "value"));
+      b.addEventListener("click", () => {
+        if (inp.disabled) return;
+        const n = Math.round((parseFloat(inp.value) - lo) / step) + dir;
+        const v = Math.min(hi, Math.max(lo, +(lo + n * step).toFixed(dec)));
+        inp.value = String(v);
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      return b;
+    };
+    wrap.appendChild(mk("\u2212", -1)); wrap.appendChild(inp); wrap.appendChild(mk("+", 1));
+  });
 }
 
 /* ====== Stage gates ================================================= */
@@ -800,6 +841,10 @@ N[101]
 });
 
 /* ====== STAGE B — a real population, two numbers ==================== */
+// Match the count, rather than clear a threshold, on JM's 2026-09-04 note. The
+// two targets stay jointly impossible, which is the whole stage: 1977 needs
+// b-d between -0.35 and -0.08, and 2012 only clears at b-d = +0.03.
+const B_TOL77 = 25, B_TOL12 = 50;
 const sB = { b: 0.20, d: 0.20, hitCrash: false, hitEnd: false, locked: [] };
 function runB(b, d) {
   const out = [FCOUNT[0]];
@@ -843,15 +888,23 @@ function drawStageB() {
   document.getElementById("B_diff").textContent = signed(sB.b - sB.d, 2);
   document.getElementById("B_miss").textContent = missIn(series, FCOUNT).toFixed(0) + " birds";
   const i77 = FYEARS.indexOf(1977), i12 = FYEARS.indexOf(2012);
-  document.getElementById("B_y77").textContent = series[i77].toFixed(0);
-  document.getElementById("B_y12").textContent = series[i12].toFixed(0);
+  // The readout shows the model's count and goes green when it is close enough
+  // to the one that was actually made that year.
+  const near = (id, model, counted, tol) => {
+    const el = document.getElementById(id);
+    el.textContent = model.toFixed(0);
+    el.className = Math.abs(model - counted) <= tol ? "ok" : "off";
+  };
+  near("B_y77", series[i77], FCOUNT[i77], B_TOL77);
+  near("B_y12", series[i12], FCOUNT[i12], B_TOL12);
   // Reaching a target is not claiming it. Same rule as Stage A: the student has
   // to see the number and commit to it, which is also what stops one sweep of
   // the sliders from collecting both targets on its way past.
+  const off77 = Math.abs(series[i77] - FCOUNT[i77]), off12 = Math.abs(series[i12] - FCOUNT[i12]);
   document.getElementById("B1_now").textContent =
-    sB.hitCrash ? "done" : series[i77] <= 150 ? "there — lock it in" : "not yet";
+    sB.hitCrash ? "done" : off77 <= B_TOL77 ? "there — lock it in" : "out by " + off77.toFixed(0) + " birds";
   document.getElementById("B2_now").textContent =
-    sB.hitEnd ? "done" : series[i12] >= 500 ? "there — lock it in" : "not yet";
+    sB.hitEnd ? "done" : off12 <= B_TOL12 ? "there — lock it in" : "out by " + off12.toFixed(0) + " birds";
   renderListB();
   checkB();
 }
@@ -867,8 +920,8 @@ function lockInB() {
   const series = runB(sB.b, sB.d);
   const i77 = FYEARS.indexOf(1977), i12 = FYEARS.indexOf(2012);
   let won = null;
-  if (series[i77] <= 150 && !sB.hitCrash) { sB.hitCrash = true; markTask("B","B1"); won = "matched the crash"; }
-  else if (series[i12] >= 500 && !sB.hitEnd) { sB.hitEnd = true; markTask("B","B2"); won = "matched the recovery"; }
+  if (Math.abs(series[i77] - FCOUNT[i77]) <= B_TOL77 && !sB.hitCrash) { sB.hitCrash = true; markTask("B","B1"); won = "matched the crash"; }
+  else if (Math.abs(series[i12] - FCOUNT[i12]) <= B_TOL12 && !sB.hitEnd) { sB.hitEnd = true; markTask("B","B2"); won = "matched the recovery"; }
   sB.locked.push({ b: sB.b, d: sB.d, y77: series[i77].toFixed(0), y12: series[i12].toFixed(0), won });
   bump("B"); drawStageB();
 }
@@ -954,7 +1007,6 @@ function openCrowdC() {
   sC.phase2 = true;
   arrowsC.reveal("crowd");
   document.getElementById("rowCcrowd").style.display = "";
-  arrowsC.setHint("The island itself is now on offer: an arrow from this year's finches to the death rate. That is a cause coming from inside the population rather than from the weather, and it is called density dependence.");
 }
 function drawStageC() {
   const series = runC(sC.b, sC.d, sC.rain, sC.crowd);
@@ -1339,6 +1391,7 @@ document.addEventListener("score:bypass", () => {
   drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 });
 
+addSteppers(document);
 drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 
 Score.init({

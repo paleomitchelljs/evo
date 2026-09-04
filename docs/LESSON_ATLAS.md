@@ -412,8 +412,9 @@ every stage carries real Daphne Major data.*
 and one plot per stage rather than a picture stacked under a picture.
 
 - **Every stage is down to a single plot.** A loses the miss histograms and keeps the box
-  plots. C loses the cloud panel. D loses the cloud panel. The same cut was made in
-  Lesson 3 stages B, C and D.
+  plots; B, C and D lose their lower panels. The same cut was made in Lesson 3 stages B,
+  C and D. Nothing left a gate: every number those panels drew is printed under the plot
+  and still is. B's four average errors, in particular, are still what opens Stage C.
 - **B's crossing-year question is replaced by two yes/no questions** — can you give
   *fortis* a rising trend with the error low, and can you give *scandens* one — which is
   the lesson's through-line asked directly. Scaffold 7 → 8.
@@ -510,7 +511,10 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     Changing the slider, and "Start over", each seed one record so the panel is never
     blank. **Under the plot since v8, in place of the cloud panel: a 2×2 of how often a
     record of this length gets the *direction* of the trend backwards.** Both species
-    genuinely fall over the forty years, so every rising estimate is an error. Measured on
+    genuinely fall over the forty years, so every rising estimate is an error. The column
+    headings say only "trend estimated falling" and "trend estimated rising" — the
+    (right)/(wrong) parentheticals went on JM's note; the rising column stays red.
+    Measured on
     4,000 records per length: at k=4, *fortis* comes out backwards 2.2% of the time and
     *scandens* **20.4%**; at k=10, 0.0% and 8.6%; at k=40, 0.0% and 0.2%. The two cells in
     a row are rounded once and complemented so they always sum to 100, and a non-zero
@@ -594,6 +598,42 @@ mid-sentence in D.** Five changes of substance beyond the prose:
 
 **Scaffold 10 → 9, version 8 → 9.** Verified in the browser end to end 2026-09-04: all
 five stages solve in order and the code decodes as `lesson6 v9`, `111111111`, 9/9.
+
+**Third pass, same day, from JM's remaining notes.** No version change — nothing scored
+moved.
+
+1. **Every slider has −/+ nudge buttons.** JM: dragging to exactly 0.300 with a mouse is
+   annoying. Wired generically in `addSteppers()` over every `input[type=range]`, so a
+   slider added later gets them free. The value steps in whole units of `step` counted
+   from `min` and is rounded to the step's own precision — adding 0.001 in floating point
+   otherwise walks the value off the grid. Verified: single steps, no drift, clamped at
+   both ends. Stage A's thousandths are the reason it was asked for; all 17 sliders got
+   them.
+2. **Stage B's targets became matches, not thresholds** — within ±25 birds of the 1977
+   count (146) and ±50 of the 2012 count (573), on JM's note that they should be closer.
+   Swept on the shipped grid: **1,080 settings clear 1977** across 27 different b−d
+   values, **58 clear 2012 at exactly one**, b−d = +0.03, and **0 settings do both**, so
+   the stage's point survives intact. *The 2012 window being one notch wide is inherent —
+   over 36 compounding steps b−d = 0.02 lands on 377 and 0.04 on 759, either side of a
+   ±50 window around 573, and a finer slider step does not widen it. The readout names the
+   counted value and goes green, and the nudge buttons make the notch reachable; flagged
+   for JM in case ±100 would be kinder.*
+3. **Stage C carries JM's parameter-counting text** — 80 made-up rates get zero error and
+   teach nothing; three or four get you a prediction. His "40 and 40" is round figures for
+   forty years; the setup bullet gives the exact number for this record, 72, so the page
+   does not assert something false alongside his framing.
+4. **The density-dependence hint on revealing the crowding arrow is cut**, and with it the
+   widget's now-unused `setHint`. The arrow appearing is the signal.
+5. **"The model you have drawn" → "Your birth-death model"** on both stage C's and stage
+   E's arrow panel.
+6. **Stage E carries JM's text**: choosing bad years by hand fits better but explains
+   nothing, so tie the rates to something that was counted. **Stage D was reviewed and
+   left alone.** Both stages' solved-banners are now written, so no `TEXT FOR JM`
+   placeholder remains in the lesson.
+
+*One correction while writing E's setup: it said the wolves ran "from 17 in 1959". The
+1959 count is 20; 17 is the 1969 value. The record is 42 winters, 20 in 1959, a peak of
+50 in 1980, median 22.*
 
 *The model, all five stages:* `N(t+1) = N(t) · (1 + b − d)`, run forward from the first
 real count. Nothing in the lesson ever changes that line — what changes is whether `b`
@@ -709,12 +749,11 @@ been rebuilt — it needs the same treatment for two species.
     not picking many.
   - *Hands to* — E, which offers a reason for those years.
 
-**Still owed on this lesson.** JM's voice notes stop in the first two sentences of Stage D
-("In Lake Superior, one of our least visited national parks, Isle Royale…") and then the
-recording is interrupted. **D and E are untouched** — their `.voice` blocks and
-solved-banners are still the 2026-09-03 placeholders marked `TEXT FOR JM`, and their
-interactives, bars and answer keys are unchanged and re-verified. Their scaffold bits
-moved (D is now 5–6 and E 7–8), which is why the version bumped.
+**Text status.** A, B, C and E are JM's words. **Stage D's `.voice` block is still the
+2026-09-03 draft** — his notes broke off in its first two sentences ("In Lake Superior,
+one of our least visited national parks, Isle Royale…") and he later reviewed the stage
+as "solid, no changes", which settles the interactive but not the prose. Every stage's
+interactive, bar and answer key is unchanged from the second pass and re-verified.
 
 - **E — the wolves** *(two phases: the arrow that works, and the one that does not)*
   - *Interactive* — The wolf counts appear. The marked years are gone; in their place is

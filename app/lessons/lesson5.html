@@ -101,7 +101,6 @@
   table.signtab tbody th { background:var(--stage-bar); text-align:right; font-weight:600; width:110px; }
   table.signtab td { font:20px/1.2 ui-monospace,Menlo,monospace; }
   table.signtab td .n { display:block; font-size:11.5px; color:var(--muted); font-family:-apple-system,sans-serif; margin-top:2px; }
-  table.signtab .tick { color:var(--good); } table.signtab .cross { color:var(--bad); }
   table.signtab td.wrongcell { color:var(--bad); }
   table.signtab td.wrongcell.none { color:var(--muted); }
 </style>
@@ -202,8 +201,7 @@
       <ul class="setup">
         <li>Across: year. Up: the average beak depth measured that year, 1973 to 2012.</li>
         <li>Every dot is an average of hundreds of birds, not a bird. The bar through it is the Grants' published 95% interval on that year's average.</li>
-        <li>Lower panel: how far each year's average sits from your line, and the average error for each species in the first half of the record and the second.</li>
-        <li>All four bars on zero, and there is nothing systematic left for a straight line to pick up.</li>
+        <li>Under the plot: the average error for each species in the first half of the record and the second. All four on zero, and there is nothing systematic left for a straight line to pick up.</li>
         <li>Under the plot: each species' trend per decade, and how far its line sits from the averages in a typical year.</li>
         <li>The <em>scandens</em> sliders stay dark until <em>fortis</em> is fitted.</li>
       </ul>
@@ -213,8 +211,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotB1" width="560" height="270"></canvas>
-        <canvas id="plotB2" width="560" height="200"></canvas>
+        <canvas id="plotB1" width="560" height="340"></canvas>
         <div class="fit-stats" id="statsB">
           <span class="label">fortis average error —</span> <span class="label">to 1992:</span> <span id="B_fEarly">—</span>
           <span class="label">after:</span> <span id="B_fLate">—</span>
@@ -313,7 +310,7 @@
       <div class="panel graph-wrap">
         <canvas id="plotC1" width="560" height="260"></canvas>
         <table class="signtab" id="C_signs">
-          <thead><tr><th></th><th>trend estimated<br>falling <span class="tick">(right)</span></th><th>trend estimated<br>rising <span class="cross">(wrong)</span></th></tr></thead>
+          <thead><tr><th></th><th>trend estimated<br>falling</th><th>trend estimated<br>rising</th></tr></thead>
           <tbody>
             <tr><th><em>fortis</em></th><td id="C_fDown">—</td><td id="C_fUp" class="wrongcell">—</td></tr>
             <tr><th><em>scandens</em></th><td id="C_sDown">—</td><td id="C_sUp" class="wrongcell">—</td></tr>
@@ -850,31 +847,9 @@ function drawStageB() {
   lineOf(sB.fbase, sB.frate, "#b23a48");
   if (sB.phase2) lineOf(sB.fbase + sB.sbase, sB.frate + sB.srate, "#2f6b8f");
 
-  const cv2 = document.getElementById("plotB2");
-  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
-  const pad2 = { l: 56, r: 16, t: 14, b: 44 };
-  const f2 = makeFrame(pad2, c2.W, c2.H, 1970, 2015, -0.6, 0.6);
-  drawAxes(ctx2, f2, "year", "error — the year's average, minus your line (mm)", 9, 4, v => v.toFixed(0), v => v.toFixed(1));
-  drawHLine(ctx2, f2, 0, "#999", 1, [3, 3]);
-  for (let i = 0; i < YEARS.length; i++) {
-    const gf = sB.fbase + sB.frate * DEC[i];
-    ctx2.fillStyle = "rgba(178,58,72,0.55)";
-    ctx2.beginPath(); ctx2.arc(f2.x(YEARS[i]), f2.y(Math.max(-0.6, Math.min(0.6, DEPTH_FORTIS[i] - gf))), 2.5, 0, 6.2832); ctx2.fill();
-    if (sB.phase2) {
-      const gs = gf + sB.sbase + sB.srate * DEC[i];
-      ctx2.fillStyle = "rgba(47,107,143,0.55)";
-      ctx2.beginPath(); ctx2.arc(f2.x(YEARS[i]), f2.y(Math.max(-0.6, Math.min(0.6, DEPTH_SCANDENS[i] - gs))), 2.5, 0, 6.2832); ctx2.fill();
-    }
-  }
-  // one bar per species per half of the record
-  function bar(x0, x1, v, color, nudge) {
-    ctx2.fillStyle = Math.abs(v) <= B_TOL ? "#6f8a4a" : color;
-    const y = f2.y(Math.max(-0.6, Math.min(0.6, v))) + nudge;
-    ctx2.fillRect(f2.x(x0), y - 2, f2.x(x1) - f2.x(x0), 4);
-  }
-  bar(1973, B_SPLIT, L.fEm, "#b23a48", -3); bar(B_SPLIT, 2012, L.fLm, "#b23a48", -3);
-  if (sB.phase2) { bar(1973, B_SPLIT, L.sEm, "#2f6b8f", 3); bar(B_SPLIT, 2012, L.sLm, "#2f6b8f", 3); }
-
+  // The panel that drew the errors year by year went 2026-09-04 on JM's call --
+  // one plot per stage. The four numbers it was there to show are the gate, and
+  // they are still printed under the graph.
   document.getElementById("B_fbaseOut").textContent = sB.fbase.toFixed(2);
   document.getElementById("B_frateOut").textContent = sB.frate.toFixed(3);
   document.getElementById("B_sbaseOut").textContent = sB.sbase.toFixed(2);
