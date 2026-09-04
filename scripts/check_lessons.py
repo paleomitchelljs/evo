@@ -1,30 +1,37 @@
 #!/usr/bin/env python3
 """
-check_lessons.py -- the philosophy's mechanical gates, applied to the actual
-lesson HTML instead of a JSON spec.
+check_lessons.py -- structural integrity checks for the shipped lesson pages.
 
-THIS IS THE GATE. A lesson that fails it does not ship.
+WHAT THIS IS FOR. Every check in here catches something you cannot see by
+opening the page. The lesson looks fine in the browser and the damage turns up
+in the gradebook, or in a page being live before you meant it to be:
 
-structurephilosophy.md describes the 47-unit sequence. An earlier design had each
-unit as a JSON spec under units/, checked by validate.py; those specs were never
-written and both files are retired to _reference/retired/. The shipped course is
-the HTML in app/lessons/, and this script is what holds it to the philosophy: the
-vocabulary ratchet, the giveaway-phrase ban, the title-names-no-term rule, plus the
-front/back-matter and no-jargon rules from the July voice-notes overhaul.
+  - a lesson declaring scaffold:N but never calling recordCheckpoint, so every
+    student's code decodes as having got every question wrong
+  - a call to a helper nothing defines, so the page throws on load: no name box,
+    no submission code, and nothing on screen says so (this took out lesson12
+    and lesson18 in an earlier round)
+  - no score.js, or score.js without Score.init, so the lesson emits no code
+  - an empty <h1>, which hard-fails lock.js's release curtain
+  - a page with no LOCKS.txt row, which looks released and stays released
 
-The judgment-level checks a regex cannot run -- the four adversarial passes -- live
-in docs/PROJECT_NOTES.md section 4.
+WHAT THIS IS NOT FOR. It used to also enforce a vocabulary ratchet, a
+giveaway-phrase ban and front/back-matter rules as hard failures, keyed to a
+47-unit sequence. Those were an agent's guardrails on itself, they outranked the
+author, and they went blind on any lesson number not in a hand-maintained map --
+which is to say they switched off exactly when the sequence was being edited.
+Removed 2026-09-03 on JM's call. Writing decisions belong to the author.
 
-Scope: the student-facing PROSE and UI (headings, paragraphs, labels, buttons,
-options). The R code panel (<pre>) and <script>/<style> are excluded -- technical
-names are allowed to live in the code, per structurephilosophy.md goal 3.
+Two things survive as opt-in reporting, neither of which blocks anything:
+  --style   flags giveaway phrases and jargon in prose. Useful to whoever is
+            drafting; advisory, never a failure.
+  --terms   says where each ledger term first appears, computed from the shipped
+            lessons rather than from a map that has to be kept in sync. This is
+            the thing worth having when you reorder the course.
 
-Usage:  python3 scripts/check_lessons.py [app/lessons/lessonN.html ...]
-        (no args -> every app/lessons/lesson*.html, in sequence order)
+Usage:  python3 scripts/check_lessons.py [--style] [--terms] [lesson paths...]
 
-Exit 0 iff no lesson has a hard FAIL. WARNs never fail the run; they flag prose
-jargon that is technically unlocked but that show-don't-tell would rather keep in
-the code panel, plus style smells.
+Exit 0 iff no page has a hard failure.
 """
 
 import json, sys, re, glob, os, html
@@ -32,7 +39,9 @@ import json, sys, re, glob, os, html
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-# --- lesson file -> (new unit id, new seq). The authoritative old->new map. ----
+# --- lesson file -> (unit id, seq). Consulted ONLY by --terms, and only to
+# order the report. It no longer decides whether a lesson gets checked: a file
+# missing from here used to be skipped entirely, structural checks and all.
 # structurephilosophy.md inserts new L3 (the flat-guess rung) and several drills/
 # checkpoints; the 34 HTML lessons carry every "L" unit's content with an offset.
 LESSON_UNIT = {
@@ -222,68 +231,19 @@ def undefined_calls(raw_html):
     return sorted(c for c in called - known if not c.startswith("_"))
 
 
-def check_file(path, ledger, rows):
+def check_file(path, ledger, rows, style=False):
+    """Structural checks. These run on every lesson page, whether or not it has
+    a position in LESSON_UNIT -- a new lesson is exactly when they matter most."""
     fails, warns = [], []
-    fname = os.path.basename(path)
-    m = re.match(r"lesson(\d+)\.html", fname)
-    if not m:
-        return fails, warns, None
-    n = int(m.group(1))
-    if n not in LESSON_UNIT:
-        return fails, warns, None
-    uid, seq = LESSON_UNIT[n]
     raw = open(path, encoding="utf-8").read()
     prose, title = extract(raw)
-    prose_norm = " " + norm(prose) + " "
-    title_norm = " " + norm(title) + " "
-    prose_low = prose.lower()
 
-    # G8 ratchet: a term used in prose before its unlock, or a never-named term.
-    for surface, canon, useq in rows:
-        # Bare single-letter aliases (gene flow's "m") collide with units and
-        # variables in prose (e.g. "100 m of chalk"); too noisy to flag. The
-        # longer alias of the same term still catches genuine uses.
-        if len(surface.strip()) <= 1:
-            continue
-        if not word_hit(surface, prose_norm):
-            continue
-        if useq is None:
-            fails.append(f"G8 ratchet: prose uses '{surface}' -- a term the course never names")
-        elif useq == -1:
-            warns.append(f"G8: '{surface}' unlock unit not found in seq table")
-        elif seq < useq:
-            fails.append(f"G8 ratchet: prose uses '{surface}' (unlocks at seq {useq}) at seq {seq}")
-        else:
-            # Unlocked, but show-don't-tell keeps jargon in the code panel.
-            warns.append(f"jargon: prose uses unlocked term '{surface}' (prefer code panel)")
-
-    # G9 title contains a ledger term.
-    for surface, canon, useq in rows:
-        if word_hit(surface, title_norm):
-            fails.append(f"G9 title: title contains ledger term '{surface}'")
-
-    # G12 giveaway phrases.
-    for g in GIVEAWAY:
-        if g in prose_norm:
-            fails.append(f"G12 giveaway: prose says '{g}'")
-
-    # Voice-notes: back matter (hands the takeaway / clutter).
-    for b in BACK_MATTER:
-        if b in prose_low:
-            fails.append(f"back-matter: '{b}' -- delete the wrap-up")
-    for fr in FRONT_MATTER:
-        if fr in prose_low:
-            fails.append(f"front-matter: '{fr}' -- lesson opens on Stage A")
-
-    # Greek glyphs / prose jargon (style warnings).
-    for j in PROSE_JARGON:
-        if j and j in prose_low:
-            warns.append(f"prose jargon: '{j}' -- move to code panel or reword")
-
-    # Structural: empty h1, missing Score wiring, missing final code mount.
+    # An empty <h1> hard-fails lock.js's curtain.
     h1m = re.search(r"<h1[^>]*>(.*?)</h1>", raw, flags=re.S | re.I)
     if not h1m or not re.sub(r"<[^>]+>", "", h1m.group(1)).strip():
         fails.append("structure: <h1> is empty or missing")
+
+    # No score.js, or score.js that is never initialised: the lesson emits no code.
     if "score.js" not in raw:
         fails.append("submission: no score.js include -- lesson emits no code")
     else:
@@ -292,25 +252,69 @@ def check_file(path, ledger, rows):
         if "Score.finish" not in raw:
             warns.append("submission: Score.finish not called -- no final code panel?")
 
-    # Undefined helpers. A lesson that calls a function nothing defines throws at
-    # load, which means no name box and no submission code -- and nothing on the
-    # page says so. This is what took out lesson12 and lesson18 earlier, so it is
-    # a hard failure rather than a warning.
     if not re.search(r'<script[^>]*\bsrc="[^"]*sim\.js"', raw):
         fails.append("assets: sim.js not included -- no fallback for shared helpers")
+
+    # A helper nothing defines throws at load, and the page says nothing.
     for missing in undefined_calls(raw):
         fails.append(f"undefined helper: {missing}() is called but never defined "
                      f"(not in the lesson, sim.js or score.js)")
 
-    # Declared scaffold slots that nothing ever writes. Such a lesson emits a
-    # valid code whose answer bits are all zero, so every student decodes as
-    # having got every checkpoint wrong.
+    # Declared scoring slots that nothing ever writes ship as all-zero answers.
     mi = re.search(r"scaffold:\s*(\d+)", raw)
     if mi and int(mi.group(1)) > 0 and "recordCheckpoint" not in raw:
         fails.append(f"scoring: declares scaffold:{mi.group(1)} but never calls "
                      f"recordCheckpoint -- every answer bit ships as zero")
 
-    return fails, warns, (uid, seq)
+    # --style: advisory prose notes for whoever is drafting. Never a failure.
+    if style:
+        prose_norm = " " + norm(prose) + " "
+        prose_low = prose.lower()
+        for g in GIVEAWAY:
+            if g in prose_norm:
+                warns.append(f"style: prose says '{g}'")
+        for j_ in PROSE_JARGON:
+            if j_ and j_ in prose_low:
+                warns.append(f"style: prose jargon '{j_}'")
+        for surface, canon, useq in rows:
+            if len(surface.strip()) <= 1:
+                continue
+            if word_hit(surface, prose_norm):
+                warns.append(f"style: names '{surface}' in prose (fine -- noting it)")
+
+    m = re.match(r"lesson(\d+)\.html", os.path.basename(path))
+    n = int(m.group(1)) if m else None
+    meta = LESSON_UNIT.get(n) if n is not None else None
+    return fails, warns, meta
+
+
+def terms_report(rows):
+    """Where each ledger term first appears, read off the shipped lessons.
+    Nothing to keep in sync: if you reorder the course, rerun it."""
+    paths = sorted(
+        glob.glob(os.path.join(ROOT, "app", "lessons", "lesson*.html")),
+        key=lambda p: int(re.search(r"lesson(\d+)", p).group(1)),
+    )
+    seen = {}
+    for p in paths:
+        n = int(re.search(r"lesson(\d+)", p).group(1))
+        prose, _ = extract(open(p, encoding="utf-8").read())
+        hay = " " + norm(prose) + " "
+        for surface, canon, _u in rows:
+            if len(surface.strip()) <= 1 or canon in seen:
+                continue
+            if word_hit(surface, hay):
+                seen[canon] = (n, surface)
+    print("Where each term is first named in prose")
+    print("-" * 52)
+    named = sorted(seen.items(), key=lambda kv: kv[1][0])
+    for canon, (n, surface) in named:
+        print(f"  lesson {n:<3} {canon}" + (f"   (as '{surface}')" if surface != canon else ""))
+    never = sorted(c for c in {r[1] for r in rows} if c not in seen)
+    if never:
+        print(f"\n  never named in any lesson ({len(never)}):")
+        for c in never:
+            print(f"    {c}")
 
 
 def lock_key(path):
@@ -375,8 +379,18 @@ def check_locks():
 
 
 def main(argv):
+    style = "--style" in argv
+    want_terms = "--terms" in argv
+    argv = [a for a in argv if not a.startswith("--")]
     ledger = load_ledger()
     rows = term_rows(ledger)
+
+    if want_terms:
+        terms_report(rows)
+        if not argv:
+            return 0
+        print()
+
     if argv:
         paths = []
         for a in argv:
@@ -388,11 +402,10 @@ def main(argv):
         )
     total_fail = 0
     for p in paths:
-        fails, warns, meta = check_file(p, ledger, rows)
-        if meta is None:
-            continue
-        uid, seq = meta
-        tag = f"{os.path.basename(p)}  [{uid} seq {seq}]"
+        fails, warns, meta = check_file(p, ledger, rows, style=style)
+        tag = os.path.basename(p)
+        if meta:
+            tag += f"  [{meta[0]} seq {meta[1]}]"
         if not fails and not warns:
             print(f"OK   {tag}")
             continue
@@ -404,8 +417,6 @@ def main(argv):
             print(f"       warn  {w}")
         total_fail += len(fails)
 
-    # The release gate covers every page, not just the lessons named on the
-    # command line, so it runs once at the end rather than per file.
     lock_fails, lock_warns = check_locks()
     if lock_fails or lock_warns:
         print(f"\n{'FAIL' if lock_fails else 'warn'} release gate  "
@@ -418,7 +429,7 @@ def main(argv):
     else:
         print("\nOK   release gate  (LOCKS.txt covers every page)")
 
-    print(f"\n{len(paths)} lessons checked | {total_fail} hard failures")
+    print(f"\n{len(paths)} pages checked | {total_fail} hard failures")
     return 1 if total_fail else 0
 
 

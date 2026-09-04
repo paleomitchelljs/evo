@@ -75,7 +75,7 @@ app/assets/score.js            submission codes + cross-lesson carryover
 app/assets/lock.js             release gate: reads LOCKS.txt, hides a locked page
 LOCKS.txt                      one row per page, o = open / x = locked
 instructor/                    verify_code.html, aggregate.html
-scripts/check_lessons.py       THE LIVE GATE
+scripts/check_lessons.py       structural checks (+ --style, --terms reports)
 scripts/decode_codes.py        batch code decoder + class item analysis
 scripts/test_codec.py          pins the Python codec to the JavaScript one
 ```
@@ -126,9 +126,18 @@ survive a version bump. A receiving lesson must degrade silently when the value 
 absent, because students will skip things. Live hand-offs are listed in
 `docs/WORK_ORDER.md` P0-2.
 
-`python3 scripts/check_lessons.py` → **29 lessons, 0 hard failures.** Warnings
-(~110) are prose jargon for terms the ledger has already unlocked at that unit —
-stylistic, not violations.
+`python3 scripts/check_lessons.py` → **29 pages, 0 hard failures.** It now checks
+structure only: scoring slots that nothing writes, helpers nothing defines, missing
+`score.js`/`Score.init`/`sim.js`, an empty `<h1>`, and LOCKS.txt coverage — every
+one of them a failure you cannot see by opening the page. Add `--style` for
+advisory prose notes, `--terms` for the vocabulary report.
+
+**It no longer skips lessons it does not recognise.** Until 2026-09-03 a lesson
+whose number was absent from `LESSON_UNIT` returned before any check ran, so a new
+lesson got nothing — the checks switched off exactly when the sequence was being
+edited. Verified after the change: a deliberately broken `lesson77.html` now
+reports its empty `<h1>`, its missing `score.js` and its undefined helper, where
+before it reported none of them.
 
 Arc 4/5 are less empty than the atlas implies: six scaffolds (s14, s16, s17, s18,
 s19, s20) cover skeleton content outright. Real outstanding builds ≈ 8–9, not 15.
@@ -191,16 +200,22 @@ deliberate; do not relocate them to fill other gaps.
 Everything here is enforced, currently followed, and consistent with the goals in
 §1. Rules that are *not* on this list are not rules (see §8).
 
-**Vocabulary ratchet.** `ledger.json` is the single source of truth. A term with
-`unlock: null` is banned everywhere, forever. A term with an unlock id is banned in
-every unit before it and free afterward. Twenty names across the course, hard
-budget. A term may be named only after its move has run in ≥3 prior units.
+**The vocabulary ratchet is retired as a rule (2026-09-03, JM's call).** It used
+to be enforced: `ledger.json` gave every term an unlock unit, naming a term early
+was a hard failure, and `unlock: null` meant banned forever. Two problems killed
+it. It was keyed to a 47-unit sequence the course is no longer following, and it
+was a guardrail an agent had written on itself that outranked the author — if JM
+asked for a lesson using a term the file forbade, the honest move was to write the
+lesson, not to contort the prose around a linter.
 
-**Editing the ledger is a curricular decision, not a build decision.** An agent
-blocked by the ratchet has exactly two legal moves: rewrite the text to say the
-thing without the word, or escalate. Not: adding an unlock to a `null` term, moving
-an unlock earlier because the prose is awkward, adding a term so it stops being
-flagged, or raising `arc_budgets_minutes`.
+What survives is a **report, not a rule**: `check_lessons.py --terms` says where
+each term is first named, computed from the shipped lessons rather than from a map
+that has to be kept in sync. Run it when reordering. `ledger.json` stays as the
+term list that report reads; its `unlock` ids are now notes, not gates, and are
+stale until somebody re-keys them to the real sequence.
+
+**Show, don't tell is still the rule** — it is just JM's rule now, held by
+judgement and by `--style`, rather than by a blocking regex.
 
 **Show, don't tell.** The one-line version of each unit's point is the answer key,
 never on-screen text, in any paraphrase. No "what you'll do" front matter. No
