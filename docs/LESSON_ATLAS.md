@@ -364,17 +364,31 @@ showcase and the stretch challenge were removed to
 ---
 
 ### Lesson 5 — Two species, and whether their lines come apart
-`lesson5.html` · v6 · 8 checkpoints · **Skeleton built, text still owed**
+`lesson5.html` · v7 · 7 checkpoints · **Written to JM's voice notes 2026-09-04**
 
 *Rebuilt 2026-09-03 onto the Grants' finches, to JM's spec: a t-test written the way
-Lessons 1–3 write everything (an average for one group plus an offset for the other),
-then a line per species down the years, then the clouds of equally good lines, then the
-seed crop added underneath. Every stage is the ladder one rung further on, and every
-stage carries real Daphne Major data.*
+Lessons 1–3 write everything (an average for one group plus an adjustment for the
+other), then a line per species down the years, then the clouds of equally good lines,
+then the seed crop added underneath. Every stage is the ladder one rung further on, and
+every stage carries real Daphne Major data.*
 
-**The interactives, gates and answer keys are finished and measured; the `.voice` blocks
-and solved-banners are placeholders marked `TEXT FOR JM` in the source, waiting on the
-voice notes.**
+**Reworked 2026-09-04 to JM's voice notes.** Four changes of substance, beyond the prose:
+
+1. **Stage A's written question is gone,** and with it the permutation panel it was
+   asking about. JM: the question — walk the extra back until it re-enters the pile of
+   shuffled extras — was "extremely confusingly written", and Lessons 1–4 make the
+   student *manipulate* something and land it, rather than read a number off a
+   distribution. The lower panel is now the **raw box plots** for the two species, which
+   the same two knobs drive: the histograms up top are the misses, the boxes below are
+   the measurements, and landing one lands the other. **Scaffold 8 → 7, version 6 → 7.**
+2. **"extra" is "adjustment" throughout,** here and in Lesson 3's two group-offset slider
+   labels. JM: a negative *extra* reads as a contradiction. (Lesson 4's "extra per 5 cm"
+   is a slope, not a group offset, and is left alone.)
+3. **Every annual mean carries the Grants' published 95% interval,** in B and in C, so a
+   dot reads as a summary of hundreds of birds rather than as a bird. See the note under
+   Stage B on why these are not violins.
+4. **Stage C's upper panel shows only the seasons the record drew.** Four seasons is four
+   points per species, not forty with four highlighted.
 
 Same shape as Lessons 3 and 4: bare-letter stage headings, no prediction gate, controls
 live from the start, each stage opened by solving its own puzzle and closed by one
@@ -382,40 +396,73 @@ numeric question scored on the first attempt only. The datasets are **embedded i
 page** rather than fetched, because `fetch()` dies on `file://` and these pages get
 opened straight off disk; the R panels still point at the CSVs they were cut from.
 
-- **A — one number for a fortis, one more for a scandens** *(the t-test, as an offset)*
+- **A — one number for a fortis, one more for a scandens** *(the t-test, as an adjustment)*
   - *Interactive* — All 943 birds measured in the 1987 season (787 *fortis*, 156
     *scandens*), individually banded. Two knobs: a beak depth for a *fortis*, and an
-    extra added only for a *scandens*. Upper panel is the mirrored pair of miss
+    adjustment added only for a *scandens*. **Upper panel** is the mirrored pair of miss
     distributions from Lesson 3 stage B, fortis above the line and scandens below, with
-    each species' average miss ticked on the line. Lower panel is the pile of extras
-    1,000 shuffles of the species labels produce. Gate: both average misses inside
-    ±0.03 mm (lands at 9.33 and −0.19). Then a numeric question: walk the extra back
-    toward zero until it re-enters the pile — where does it re-enter? (the pile's lower
-    edge, ≈ −0.125, ±0.03, graded against the pile the page actually built).
-  - *Goal* — The offset is a quarter of a within-species spread and looks like nothing
-    against the birds; against the shuffled pile it is three deep. Measured: 0–2 shuffles
-    in 1,000 reach it.
+    each species' average miss ticked on the line. **Lower panel** is the same 943 birds
+    as raw measurements: one horizontal box per species (Q1–Q3, median, whiskers to the
+    5th/95th) with the mean marked as a diamond, the student's two numbers standing on
+    them as rules, and the *fortis* number carried down through the *scandens* box as a
+    pale dashed line so what it costs to use the wrong number is visible and not only
+    tabulated. **The mean is drawn as well as the median deliberately** — the gate is on
+    the mean, and a box plot alone would send you to the middle bird. Here they are close
+    enough that either route lands inside tolerance (fortis 9.326 vs 9.31, scandens 9.140
+    vs 9.13). Gate: both average misses inside ±0.03 mm (lands at 9.33 and −0.19). **No
+    written question** — the stage is one fit shown two ways.
+  - *Goal* — Two things at once. The adjustment is real and it is **small**: measured on
+    the shipped data, predicting a *scandens* with the *fortis* number costs 0.398 mm on
+    a typical bird and with the adjustment 0.367 mm, so **the species label is worth
+    0.031 mm** against a within-*fortis* SD of 0.77. In one field season the two birds
+    are nearly the same bird. That is the setup for B, where forty years pulls them
+    apart, and it is why the readout under the plot is in mm saved and not in stars.
   - *Hands to* — Stage B, which asks the same two-number question forty times over.
+  - *Note for JM* — the permutation panel that used to sit here is the only place the
+    course named **permutation test** and **p-value**. Removing it removes both terms
+    from Lesson 5. Nothing downstream depends on them; say the word if they should come
+    back somewhere.
 
 - **B — the same two numbers, once a decade** *(a line per species)*
   - *Interactive* — Annual means, 1973–2012, both species. Two phases: *fortis* is fitted
     alone on a starting depth and a change per decade, and only when both its half-means
     land do the *scandens* points and its two knobs appear — an extra on the start and an
     extra on the rate. Lower panel: leftovers against year, one bar per species per half
-    of the record. Gate: all four half-means inside ±0.05 mm (96 of 19,481 fortis
-    settings; ~103 scandens settings once fortis is down). Lands near 9.74 / −0.276 /
-    −0.54 / +0.237. Then a numeric question: the year the two lines cross, graded against
-    the student's own four numbers (±3 years; the true fit crosses at 1996).
+    of the record. **Every dot carries the Grants' published 95% interval on that year's
+    average** (Figs. 01-06 / 01-07, "CI Beak depth"), and the x-axis now ticks every five
+    years so a crossing can be read off it. Gate: all four half-means inside ±0.05 mm (96
+    of 19,481 fortis settings; ~103 scandens settings once fortis is down). Lands near
+    9.74 / −0.276 / −0.54 / +0.237. Then a numeric question: **read off your own graph**
+    the year the two lines cross. Graded in three tiers against the student's own lines —
+    dead on scores; **one year out scores, says "close", and names the year**, because the
+    crossing is genuinely hard to read; two or more out is recorded wrong, says "try
+    again", and lets them retry. Measured across all 9,842 passing slider combinations
+    the crossing runs 1992.1–1999.8, median 1995.8; the true fit crosses at 1995.8.
   - *Goal* — *fortis* falls about seven times as fast as *scandens*, so "how much does a
     beak change" has no answer that is not per-species.
   - *Hands to* — Stage C, which asks whether that difference in rate survives having less
     data.
+  - *Why intervals and not violins* — JM asked for violins or spindles showing the full
+    within-year range. **That is not derivable from the data we hold.** The published
+    tables give a mean and a 95% interval *on the mean* per species per year; individual
+    measurements exist for four seasons only (1975, 1987, 1991, 2012 — `finch_individuals
+    .csv`), and the per-year sample sizes for the other 36 are not in the package. A
+    violin across all forty years would be a normal curve we invented from a CI, drawn at
+    the width of a distribution nobody published. The interval is the honest form of the
+    same point, and it is the Grants' own number. *If violins matter more than that, the
+    route is to widen `finch_individuals.csv` — not to synthesise them.* One gap in the
+    source: `scandens` 2000 has a blank CI; it is interpolated from its neighbours and
+    flagged in `CI_SCANDENS_GAP`.
 
 - **C — the cloud of rates for each species** *(Lesson 4's move, two clouds)*
   - *Interactive* — A knob for how many field seasons are in each record (4–40). Each
     record draws that many of the forty at random, some twice and some not at all, and
-    fits a fresh rate to each species off exactly those seasons. Upper panel: the recent
-    records drawn pale over the forty years. Lower panel: one row of dots per species with
+    fits a fresh rate to each species off exactly those seasons. **Upper panel: only the
+    seasons the latest record actually drew**, with their intervals — four seasons draws
+    four points per species, which is what a four-season study would have had in front of
+    it. A season drawn twice is drawn larger. Pale lines: the last fourteen records' rates.
+    Changing the slider, and "Start over", each seed one record so the panel is never
+    blank. Lower panel: one row of dots per species with
     a middle-95% bar that turns green when the two stop overlapping. Changing the knob
     starts the record over. Gate: clouds apart on at least 150 records at one setting.
     Then a numeric question: the shortest record that still separates them, graded against
@@ -427,12 +474,18 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
 - **D — put the seed crop underneath it** *(the predictor that can push on a bird)*
   - *Interactive* — Sixteen years of overlap, 1976–1991. Across: the share of last year's
     seed crop that was big and hard. Up: the average beak depth measured the following
-    year. One knob per species — how far its beak moves across the whole crop axis — with
-    each line's height pinned through its own species' averages, so the only choice is the
-    tilt. Lower panel: the same two clouds, now on the response to the crop. Gate: all
-    four half-means inside ±0.03 mm; the two acceptable windows do not overlap (fortis
-    0.51–0.69, scandens 0.08–0.27). Then a numeric question: how much further a *fortis*
-    beak moves than a *scandens* beak, on the student's own two numbers (±0.06).
+    year. One knob per species — **how far its population average shifts** across the whole
+    crop axis — with each line's height pinned through its own species' averages, so the
+    only choice is the tilt. Lower panel: the same two clouds, now on the shift in the
+    average. Gate: all four half-means inside ±0.03 mm; the two acceptable windows do not
+    overlap (fortis 0.51–0.69, scandens 0.08–0.27). Then a numeric question: how much
+    further the *fortis* average shifts than the *scandens* average, on the student's own
+    two numbers (±0.06).
+  - *Wording, on JM's correction 2026-09-04* — **individual beaks do not move.** Sliders,
+    axis label, question and voice all say the population *average* shifts, and the voice
+    says why: no bird regrows its beak, what changes is which birds are still there to be
+    measured. The old phrasing ("how far a fortis beak moves") described Lamarckian
+    growth, which is the misconception this whole unit exists to prevent.
   - *Goal* — A year does nothing to a finch. The readout under the graph carries the
     finding: over these sixteen seasons the change per decade is −0.38 for *fortis* and
     −0.14 for *scandens* on its own, and −0.10 and −0.03 once the crop sits beside it in
@@ -441,9 +494,14 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     resource shift pushing 2.7× harder on one species than the other.
   - *Hands to* — Lesson 6, which shows the same machine giving four different verdicts.
 
-**Still owed on this lesson.** The four `.voice` blocks and the four solved-banners are
-placeholders (`<!-- TEXT FOR JM -->` in the source). The four verdict strings are the bare
-"Recorded — right/not right." The `setup` bullets are real and describe the mechanics.
+**Still owed on this lesson.** JM's voice notes ran out partway through Stage D — the
+transcript reaches the information framing ("in both cases, information gives you more")
+and then the recording is interrupted. **Stage D's opening paragraph is his; the rest of
+D's voice is the 2026-09-03 draft, carried forward with the beak/average wording fixed.**
+The seed-crop interactive was not commented on either way and is unchanged. Verified in
+the browser end to end 2026-09-04: all four stages solve, the gates chain, and the code
+decodes as `lesson5 v7`, `1101111`, 6/7 — the 0 being a deliberately wrong first attempt
+at B's crossing year.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
 `lesson6.html` · v8 · 10 checkpoints · **Skeleton built, text still owed**
