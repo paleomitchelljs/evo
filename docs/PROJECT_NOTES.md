@@ -300,6 +300,25 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **The information through-line, added 2026-09-03.** Lessons 1–4 were already
+  measuring one idea in four currencies — L1's average error in cm, L2's calls right
+  against expected right, L3's average miss in kg, L4's R² — without anything saying
+  they were the same quantity. They now say it. **Nothing scored changed**: lessons 1–4
+  are released, so every edit is a readout or a sentence, and no `version`, `scaffold`,
+  gate or answer key was touched.
+  - L3 is the spine, because it is already the ladder. Stage A prints the typical miss
+    (16.43 kg — what knowing nothing costs), stage B prints it again against that
+    baseline and says what the group label bought: **15.44 against 16.28, so 5%**. The
+    baseline is the best a single number can do, which for absolute error is the median.
+  - L8 stage A closes it with a live readout of what a correlation is worth on one
+    person: `1 − sqrt(1 − r²)`. Measured on the page: r = 0.00 → 0%, r = 0.61 → 21%,
+    r = 0.75 → 34%.
+- **The factor-of-five trap this exists to defuse.** Three numbers all get called "how
+  much it helps", and students will read the first as the third: the correlation
+  (0.36 for Galton parent–child), the variance explained (0.13), and the reduction in a
+  typical miss (**6.7%**). A strong heritability makes a guess about one person about
+  7% less wrong. Say that out loud wherever the frame is used.
+
 - **`JSMitchell` in the name box opens every stage.** Added 2026-09-03, in
   `app/assets/score.js`, so it works on all 29 lessons and every scaffold without
   touching them. Confirming as `JSMitchell` (or `JS Mitchell`) sets `state.bypass`,

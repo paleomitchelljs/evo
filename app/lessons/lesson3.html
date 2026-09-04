@@ -143,6 +143,9 @@
           <span class="label">lighter:</span> <span id="A_under">—</span>
           &nbsp;|&nbsp;
           <span class="label">average miss:</span> <span id="A_lean">—</span>
+          <br>
+          <span class="label">how far off you are on a typical person:</span> <span id="A_typ">—</span>
+          <span class="label">— this is what knowing nothing about them costs you</span>
         </div>
       </div>
     </div>
@@ -190,6 +193,7 @@
           <li>The same 7,414 adults, split by biological sex.</li>
           <li>One number for females, plus an adjustment added only for males.</li>
           <li>Above the axis, females. Below it, males. Land both at once.</li>
+          <li>Under the plot: how far off you are on a typical person now, against what knowing nothing cost you in Stage A. The difference is what the label was worth.</li>
         </ul>
       
         </div>
@@ -204,6 +208,12 @@
           <span class="label" style="color:#b23a48;">female:</span> <span id="B_leanW">—</span>
           &nbsp;|&nbsp;
           <span class="label" style="color:#2f6b8f;">male:</span> <span id="B_leanM">—</span>
+          <br>
+          <span class="label">typical miss now:</span> <span id="B_typ">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">knowing nothing cost you:</span> <span id="B_blind">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">so the label is worth:</span> <span id="B_worth">—</span>
         </div>
       </div>
     </div>
@@ -660,6 +670,11 @@ function drawStageA() {
   const lean = mean(Data.weights.map(w => sA.num - w));
   document.getElementById("A_over").textContent = over;
   document.getElementById("A_under").textContent = Data.weights.length - over;
+  // The signed lean is what the gate wants. The size of a typical miss is a
+  // different number, and it is the baseline every later stage is measured
+  // against: this is how wrong you are when you know nothing about the person.
+  document.getElementById("A_typ").textContent =
+    fmtKg(mean(Data.weights.map(w => Math.abs(w - sA.num)))).replace("+","");
   const el = document.getElementById("A_lean");
   el.textContent = fmtKg(lean);
   el.className = Math.abs(lean) <= A_TOL ? "ok" : "off";
@@ -709,6 +724,17 @@ sum(y > guess); sum(y < guess)
 });
 
 /* ====== STAGE B — one number plus a group ========================== */
+// The best a single number can manage on these adults. Absolute error is
+// smallest at the median, so that is the bar Stage B is beating.
+let BLIND_MISS = null;
+function bestBlindMiss() {
+  if (BLIND_MISS !== null) return BLIND_MISS;
+  const ws = Data.weights.slice().sort((a,b) => a-b);
+  if (!ws.length) return 0;
+  const med = ws[Math.floor(ws.length/2)];
+  BLIND_MISS = mean(ws.map(w => Math.abs(w - med)));
+  return BLIND_MISS;
+}
 const sB = { base: 60, extra: 0 };
 const B_TOL = 0.4;
 
@@ -773,6 +799,15 @@ function drawStageB() {
   ctx.fillStyle = "#2f6b8f";
   ctx.beginPath(); ctx.moveTo(xm, f.y(0)+7); ctx.lineTo(xm-6, f.y(0)+16); ctx.lineTo(xm+6, f.y(0)+16); ctx.closePath(); ctx.fill();
 
+  // What the group label bought you, in the currency Stage A left you in.
+  const typB = mean(Data.rows.map(r => Math.abs(r.w - (sB.base + (r.male ? sB.extra : 0)))));
+  const blind = bestBlindMiss();
+  document.getElementById("B_typ").textContent = typB.toFixed(2) + " kg";
+  document.getElementById("B_blind").textContent = blind.toFixed(2) + " kg";
+  const worthEl = document.getElementById("B_worth");
+  const pct = blind > 0 ? 100 * (1 - typB / blind) : 0;
+  worthEl.textContent = (pct > 0 ? pct.toFixed(0) : "0") + "% off your typical miss";
+  worthEl.className = pct > 0 ? "ok" : "off";
   const ew = document.getElementById("B_leanW"), em = document.getElementById("B_leanM");
   ew.textContent = fmtKg(lw); em.textContent = fmtKg(lm);
   ew.className = Math.abs(lw) <= B_TOL ? "ok" : "off";
