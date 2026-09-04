@@ -330,7 +330,12 @@ consumption.
 - **Citation.** Galton, F. (1886). Regression Towards Mediocrity in Hereditary Stature. *Journal of the Anthropological Institute* 15: 246–263. CSV via `HistData` R package (Friendly).
 - **URL / DOI.** <https://github.com/vincentarelbundock/Rdatasets> — `csv/HistData/Galton.csv` and `csv/HistData/GaltonFamilies.csv`. License: GPL-3 (R package).
 - **What it is.** Two cuts of Galton's 1885 inheritance data. `Galton.csv` is 928 parent/child height pairs (parent = midparent of mother+father). `GaltonFamilies.csv` is 934 rows × 197 families with mother, father, midparent, child gender, and child height. The midparent dataset is the cleanest for teaching: regress childHeight on midparentHeight; the slope is ~0.65 and is read directly as h².
-- **Used in.** Lesson 6 (Galton, regression-as-inheritance) as the empirical anchor. Modern parent-offspring height datasets work equally well — Galton is just convenient and historically anchored.
+- **Used in.** **Lesson 8 stages A and D** — the whole lesson's real anchor. Also Lesson 6 (Galton, regression-as-inheritance). Modern parent-offspring height datasets work equally well — Galton is just convenient and historically anchored.
+- **The numbers Lesson 8 reads off it**, recomputed from `galton_families.csv` and stated on that page. Every height is put on one scale by multiplying the women's by 1.08, as Galton did:
+  - *one parent and a child* — **r = 0.362**, from 1,868 points (each of the 934 children paired with each parent in turn). On standardised axes the fitted tilt equals this, which is what Stage A has the student land on.
+  - *two full siblings* — **r = 0.397**, from all 2,415 within-family pairs across 205 families, measured both ways round because a sibling pair has no natural order.
+  - Those two are what theory says should match — and they do, to 0.04. Stage D draws both as marks on its ladder and has the student find the setting that reproduces them.
+- **Careful with the other cuts.** Regressing on *midparent* gives r = 0.497 and a raw-unit slope of 0.713 (Galton's famous ~0.65), because averaging two parents removes noise from the predictor. Lesson 8 uses single parents throughout so that the number it teaches is comparable with the sibling, half-sibling and cousin rungs.
 - **Clean derivative.** `data/clean/galton_heights.csv`/`.json` (parent, child); `data/clean/galton_families.csv`/`.json` (full table).
 - **Redistribution.** Public-domain historical data; redistributed in cleaned form.
 

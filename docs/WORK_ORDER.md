@@ -26,6 +26,17 @@ curricular call.
 
 **Deferred, and waiting on you.**
 
+0c. **Arc 2's framing versus its new opener.** Lesson 8's rebuild of 2026-09-03 made it
+   the heritability lesson, which is where you asked heritability to be defined. That
+   displaced Mendel — the 3:1 and 9:3:3:1 ratios, the pile of 1,000 honest experimenters,
+   and Fisher's complaint — to
+   `_reference/retired/lessons/lesson8_mendel_ratios_2026-09-03.html`. Two consequences to
+   rule on: Arc 2 is still titled "Ratios, baselines, and the two forces that move them"
+   and now opens on a continuous-trait lesson with no ratios in it; and Lesson 9 builds
+   Hardy–Weinberg without the Mendelian ratios that used to set it up. Either the arc
+   boundary moves so Lesson 8 closes Arc 1 beside Lesson 7, or Mendel returns as its own
+   lesson ahead of 9.
+
 0b. **Lesson 8 inherits heritability's definition.** Lesson 7's rebuild of 2026-09-03
    plays with heritability as a knob and never defines it, per your ruling. The old
    Lesson 7 — the Galton parent–offspring build, four stages of it — is archived at

@@ -637,34 +637,85 @@ Lessons 8–13. Build the population where nothing changes, then break it one ru
 
 ---
 
-### Lesson 8 — Counting the ratios that breed true
-`lesson8.html` · v1 · 4 checkpoints · **Built**
+### Lesson 8 — A resemblance is a number, whatever is causing it
+`lesson8.html` · v2 · 10 checkpoints · **Skeleton built, text still owed**
 
-- **A — One gene, two alleles, a 3:1 ratio**
-  - *Interactive* — Simulate Aa × Aa crosses. Sliders for offspring count and seed; the
-    observed ratio is whatever you sample. Gate: 5 combinations.
-  - *Goal* — The expected ratio and the observed ratio are different objects.
-  - *Hands to* — Stage B adds categories so the same check gets harder.
+*Rebuilt 2026-09-03 to JM's spec: heritability defined here as the parent–offspring
+correlation, and drilled until the student stops expecting it to mean "genetic".*
+**Interactives, gates and answer keys are finished and measured off the shipped code;
+five `.voice` blocks and five solved-banners are placeholders marked `TEXT FOR JM`.**
 
-- **B — Two genes at once**
-  - *Interactive* — Two independent loci, four phenotype categories, expected 9:3:3:1.
-  - *Goal* — More categories at the same n means thinner counts and a fussier check.
-  - *Hands to* — Stage C builds the reference pile the check implicitly uses.
+*The one measurement, in every stage:* put both sides in spreads and read the tilt. On
+standardised axes that tilt **is** the correlation, which is why one number can be
+reported for a parent and a child, for two nestmates, for two cousins, and for three
+populations built by different means. `tiltOf()` in the source; nothing else is measured
+anywhere in the lesson.
 
-- **C — When a mismatch is real, and when it is just a small sample**
-  - *Interactive* — 1,000 simulated crosses, every one built to obey 3:1 exactly. Their
-    mismatches stack into a distribution; the worst 5% mark its far edge. Your single real
-    experiment is one draw from that pile.
-  - *Goal* — Same shuffled-pile move as Lesson 5, now on counts. Ties Arc 2 back to Arc 1.
-  - *Hands to* — Stage D turns the pile on Mendel himself.
+**What the ratchet allows.** Lesson 8 is unit L9, seq 14. `heritability` unlocked at
+seq 12, so it is nameable — but the prose does not lean on it, per JM's ruling that this
+lesson defines the thing and Lesson 7 only played with it. `relatedness coefficient`
+(an alias of `inclusive fitness`) is locked until seq 26, so Stage D's ladder uses plain
+words — full siblings, half siblings, first cousins — and never names the coefficient.
 
-- **D — Mendel's actual data — and Fisher's complaint**
-  - *Interactive* — Mendel's published F2 counts, combined mismatch computed, then placed
-    in the distribution of 1,000 simulated honest experimenters.
-  - *Goal* — Data can be *too* clean. A famous result becomes a live question.
-  - *Hands to* — Lesson 9 locks these ratios into a population.
+- **A — the line from parent to child** *(Galton, real)*
+  - *Interactive* — 934 grown children from 205 families, each paired with both parents
+    in turn for 1,868 points, women's heights ×1.08 exactly as Galton did. Both axes in
+    spreads, so the line has only a tilt. Gate: drive the **tilt left over in what the
+    line misses** to nothing — a signed target with a true zero, because an average miss
+    is flat for a long way around its floor and would accept anything from 0.30 to 0.51.
+    Lands at **0.362**. Then a numeric question: where the line puts the child of a parent
+    two spreads up.
+  - *Hands to* — B, which produces the same number with no genes in it at all.
 
----
+- **B — a song nobody is born with** *(learned, and still inherited)*
+  - *Interactive* — 60 broods, four nestlings each. Each father sings; each nestling
+    learns from whoever's nest it wakes up in. One knob (how carefully they copy) and one
+    switch (swap the eggs before they hatch). Gate: get nestmates sounding less than half
+    as different as strangers, then swap the eggs and accumulate **eight** swapped sets.
+  - *Goal* — Copying at 0.95 gives a tilt of 0.95 to the bird that raised it and, once the
+    eggs are swapped, **nothing** to the father it came from. Measured: single swapped
+    sets scatter with an SD of 0.12 — sixty fathers is not many — so the page averages
+    them, and eight sets land on −0.02 against a theory of −0.017. 58 of 60 simulated
+    students clear it on the eighth set, and the rest converge by pressing again.
+
+- **C — four limbs, and no resemblance** *(genetic, and not inherited)*
+  - *Interactive* — 400 parent-and-child pairs. Every gene says four; the variation is
+    accidents. Two knobs: how often an accident happens, and how much danger runs in
+    families. Gate: with danger spread evenly get a quarter of them missing a limb and the
+    tilt still under 0.10, then make danger familial and push the tilt past 0.30.
+  - *Goal* — The mirror of B. A trait every gene agrees about has a heritability of
+    **zero**; and putting the *environment* into families conjures one out of nothing.
+    Measured: clustering 0 → 0.01; 1.0 → 0.37; 1.6 → 0.53; reliably over 0.30 from 1.4 up.
+
+- **D — down the ladder of relatives** *(where the number comes from)*
+  - *Interactive* — One knob, 3,000 families of each kind, four rungs: one parent and a
+    child, two full siblings, two half siblings, two first cousins. Galton's two **real**
+    numbers are drawn on the same axis as dashed marks — one parent 0.36, full siblings
+    0.40, which theory says should match and do. Gate: put the first rung on 0.36 (lands
+    at h ≈ 0.72). Then a numeric question: the cousins rung.
+  - *Goal* — Measured at the solved setting: **0.38, 0.36, 0.20, 0.12**. It halves down
+    the ladder, which is what makes the tilt a measurement of something rather than a
+    description of one pairing.
+
+- **E — three roads to the same number** *(the drill)*
+  - *Interactive* — Three populations side by side, 2,500 pairs each: a child gets half of
+    what its parents were built with; a child copies whoever raises it; a parent and child
+    live under one roof. One knob each, plus a swap-the-babies switch. Gate: bring all
+    three tilts within 0.05 of each other near 0.36, then swap.
+  - *Goal* — Matched, the three scatters are indistinguishable — measured 0.34, 0.35, 0.37,
+    widest gap 0.031. Swap the babies and keep comparing each child to the parents it came
+    from, and it reads **0.34, 0.00, 0.00**. The number does not identify the cause; an
+    experiment does.
+  - *Hands to* — Lesson 9.
+
+**Displaced content, needs a ruling.** The old Lesson 8 — Mendel's 3:1 and 9:3:3:1,
+the reference pile of 1,000 honest experimenters, and Fisher's complaint about Mendel's
+data being too clean — is archived at
+`_reference/retired/lessons/lesson8_mendel_ratios_2026-09-03.html`. **Arc 2 is titled
+"Ratios, baselines, and the two forces that move them" and now opens on a
+continuous-trait lesson with no ratios in it**, and Lesson 9 builds Hardy–Weinberg
+without the Mendelian ratios that used to motivate it. Either the arc's framing moves,
+or Mendel comes back as a lesson before this one.
 
 ### Lesson 9 — Building the population where nothing changes
 `lesson9.html` · v2 · 4 checkpoints · **Built**
