@@ -628,7 +628,7 @@ once — dots bouncing, line dead flat.
   - *Watch out* — The measured advantage is positive, so the model climbs while the real
     rams fell; hunters were removing the big-horned rams. Flagged in the source as
     needing a sentence, or the stage reads as a broken model.
-  - *Hands to* — Arc 2, which starts counting.
+  - *Hands to* — Lesson 9.
 
 **Displaced content.** The old Lesson 7 — four stages of Galton, independent traits,
 dialling in a resemblance, the slope, then 934 real children, with regression to the
@@ -648,7 +648,7 @@ Lessons 8–13. Build the population where nothing changes, then break it one ru
 ---
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
-`lesson8.html` · v2 · 10 checkpoints · **Skeleton built, text still owed**
+`lesson8.html` · v3 · 12 checkpoints · **Skeleton built, text still owed**
 
 *Rebuilt 2026-09-03 to JM's spec: heritability defined here off the parent–offspring
 correlation, and drilled until the student stops expecting it to mean "genetic".*
@@ -669,12 +669,36 @@ reported for a parent and a child, for two nestmates, for two cousins, and for t
 populations built by different means. `tiltOf()` in the source; nothing else is measured
 anywhere in the lesson.
 
+**Six stages, A–F.** The opener was added 2026-09-03 and the original five shifted to
+B–F, identifiers and all. The lesson was still locked, so no submission codes existed to
+protect: `version` went 2 → 3 and `scaffold` 10 → 12.
+
 **Terminology.** The vocabulary ratchet was retired on 2026-09-03, and lessons 5–8 were
 swept the same day to use the real words: this lesson names *heritability* and
 *parent–offspring correlation* throughout, where it previously said only "the tilt". "Tilt"
 survives in Stage A for the line being fitted, which is what it is.
 
-- **A — the line from parent to child** *(Galton, real)*
+- **A — what knowing the parents buys you** *(JM's two questions, 2026-09-03)*
+  - *Interactive* — A binary trait as two columns of a hundred people: on the left,
+    everyone whose parents have it; on the right, everyone whose parents do not. Two
+    knobs set each column's share, and a switch relabels the trait from a disease to a
+    song **without changing a single number**. Gate: hold the top knob at 72% and make
+    knowing the parents worth nothing, then hold it at 72% and make it worth as much as
+    it can be. Then a numeric question: what the other rate would have to be for that
+    72% to tell you nothing — **72**, which is the point.
+  - *Goal* — JM's framing, verbatim in the voice block: *72% of people whose parents have
+    a particular genetic disease also have that disease — do you predict that they do
+    too?* and the same sentence about a song. Neither is answerable, and not because one
+    is genes and the other is culture: **72% on its own is not information about
+    anybody.** Measured on the page: at 72% against 72% the two columns are
+    indistinguishable, knowing the parents moves your answer by 0 points and the
+    correlation is 0.00; at 72% against 12% it moves it 60 points and the correlation is
+    0.61. The lesson's whole measure, in its plainest form — a correlation is how much
+    your best guess about somebody moves when you are told something else about them,
+    which on two 0/1 variables is exactly that gap rescaled.
+  - *Hands to* — B, which measures the same thing on a scatter.
+
+- **B — the line from parent to child** *(Galton, real)*
   - *Interactive* — 934 grown children from 205 families, each paired with both parents
     in turn for 1,868 points, women's heights ×1.08 exactly as Galton did. Both axes in
     spreads, so the line has only a tilt. Gate: drive the **tilt left over in what the
@@ -684,7 +708,7 @@ survives in Stage A for the line being fitted, which is what it is.
     two spreads up.
   - *Hands to* — B, which produces the same number with no genes in it at all.
 
-- **B — a song nobody is born with** *(learned, and still inherited)*
+- **C — a song nobody is born with** *(learned, and still inherited)*
   - *Interactive* — 60 broods, four nestlings each. Each father sings; each nestling
     learns from whoever's nest it wakes up in. One knob (how carefully they copy) and one
     switch (swap the eggs before they hatch). Gate: get nestmates sounding less than half
@@ -695,7 +719,7 @@ survives in Stage A for the line being fitted, which is what it is.
     them, and eight sets land on −0.02 against a theory of −0.017. 58 of 60 simulated
     students clear it on the eighth set, and the rest converge by pressing again.
 
-- **C — four limbs, and no resemblance** *(genetic, and not inherited)*
+- **D — four limbs, and no resemblance** *(genetic, and not inherited)*
   - *Interactive* — 400 parent-and-child pairs. Every gene says four; the variation is
     accidents. Two knobs: how often an accident happens, and how much danger runs in
     families. Gate: with danger spread evenly get a quarter of them missing a limb and the
@@ -704,7 +728,7 @@ survives in Stage A for the line being fitted, which is what it is.
     **zero**; and putting the *environment* into families conjures one out of nothing.
     Measured: clustering 0 → 0.01; 1.0 → 0.37; 1.6 → 0.53; reliably over 0.30 from 1.4 up.
 
-- **D — down the ladder of relatives** *(where the number comes from)*
+- **E — down the ladder of relatives** *(where the number comes from)*
   - *Interactive* — One knob, 3,000 families of each kind, four rungs: one parent and a
     child, two full siblings, two half siblings, two first cousins. Galton's two **real**
     numbers are drawn on the same axis as dashed marks — one parent 0.36, full siblings
@@ -714,7 +738,7 @@ survives in Stage A for the line being fitted, which is what it is.
     the ladder, which is what makes the tilt a measurement of something rather than a
     description of one pairing.
 
-- **E — three roads to the same number** *(the drill)*
+- **F — three roads to the same number** *(the drill)*
   - *Interactive* — Three populations side by side, 2,500 pairs each: a child gets half of
     what its parents were built with; a child copies whoever raises it; a parent and child
     live under one roof. One knob each, plus a swap-the-babies switch. Gate: bring all
