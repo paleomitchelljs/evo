@@ -194,6 +194,19 @@ passes the answer — the number has to be committed with a **Lock in** button, 
 lock-in that misses says by how much and hands the slider back. Stage B and Beren's half
 of stage D still open on landing.
 
+*Plot types, 2026-09-04.* JM: use the plot types the students can relate directly to what
+they already know, and stop stacking a second panel under every first one. **Stage B's
+mirrored miss distributions are now box plots** on the raw body masses — one box per
+group, middle half in the box, median inside it, mean as a diamond, whiskers to the 5th
+and 95th, and the two fitted numbers drawn as rules across their own boxes with the
+female number carried down through the male box as a pale dash. Axis 40–140 kg in tens.
+**Stage C and stage D lost their lower panels entirely.** Nothing was lost from the
+gates: C's adjustment, its reach and the whole-population value were already printed
+under the plot, and D's four half-averages are still the gate and still printed. Same
+change in Lesson 5, and the box-plot design is shared with Lesson 5 stage A. `quantile`
+was added to the shared helpers; `version` and `scaffold` are untouched, because nothing
+about what is scored moved.
+
 *The move:* the ladder from one number, to one number plus a group, to asking whether that
 group difference is bigger than the measuring, to one number plus a group plus a rate —
 which is a regression, built without ever saying so.
@@ -229,6 +242,11 @@ The vagus showcase and the stretch challenge were removed to
     reveal work.
 
 - **B — plus a group label** *(text: JM voice notes — one number is not enough, so split by biological sex; one number for females plus an adjustment for males)*
+  - *Plot* — box plots on the raw kilograms since 2026-09-04, replacing the mirrored miss
+    distributions. The mean is drawn as well as the median because the gate is on the
+    mean: here they are far enough apart (female 75.4 vs 71.3, male 88.9 vs 85.7) that
+    aiming at the middle person misses the ±0.4 kg window, so the diamond is the thing to
+    aim at and the readout under the plot is what confirms it.
   - *Interactive* — Two sliders: a starting number, and an extra added only for men. The
     plot is a mirrored pair of miss-distributions — women's above the axis in red, men's
     below in blue — with a marker on the zero line for each group's average miss. Gate:
@@ -364,7 +382,7 @@ showcase and the stretch challenge were removed to
 ---
 
 ### Lesson 5 — Two species, and whether their lines come apart
-`lesson5.html` · v7 · 7 checkpoints · **Written to JM's voice notes 2026-09-04**
+`lesson5.html` · v8 · 8 checkpoints · **Written to JM's voice notes 2026-09-04**
 
 *Rebuilt 2026-09-03 onto the Grants' finches, to JM's spec: a t-test written the way
 Lessons 1–3 write everything (an average for one group plus an adjustment for the
@@ -390,6 +408,22 @@ every stage carries real Daphne Major data.*
 4. **Stage C's upper panel shows only the seasons the record drew.** Four seasons is four
    points per species, not forty with four highlighted.
 
+**Second pass the same day, v7 → v8.** JM: use the plot types the students already read,
+and one plot per stage rather than a picture stacked under a picture.
+
+- **Every stage is down to a single plot.** A loses the miss histograms and keeps the box
+  plots. C loses the cloud panel. D loses the cloud panel. The same cut was made in
+  Lesson 3 stages B, C and D.
+- **B's crossing-year question is replaced by two yes/no questions** — can you give
+  *fortis* a rising trend with the error low, and can you give *scandens* one — which is
+  the lesson's through-line asked directly. Scaffold 7 → 8.
+- **C's cloud panel becomes a 2×2 table** of how often a record of that length gets the
+  *direction* of the trend backwards.
+- **"knob" is "slider" and "leftovers" is "average error"** throughout, on JM's note that
+  the widgets are sliders and that "leftovers" is clunky. `knob` still appears in
+  lessons 1, 2, 4, 6, 7, 8 and 21 — **61 occurrences, not swept**, because those lessons
+  are not under review.
+
 Same shape as Lessons 3 and 4: bare-letter stage headings, no prediction gate, controls
 live from the start, each stage opened by solving its own puzzle and closed by one
 numeric question scored on the first attempt only. The datasets are **embedded in the
@@ -397,6 +431,7 @@ page** rather than fetched, because `fetch()` dies on `file://` and these pages 
 opened straight off disk; the R panels still point at the CSVs they were cut from.
 
 - **A — one number for a fortis, one more for a scandens** *(the t-test, as an adjustment)*
+  - *One plot since v8:* the box plots. The miss histograms that sat above them are gone.
   - *Interactive* — All 943 birds measured in the 1987 season (787 *fortis*, 156
     *scandens*), individually banded. Two knobs: a beak depth for a *fortis*, and an
     adjustment added only for a *scandens*. **Upper panel** is the mirrored pair of miss
@@ -422,6 +457,10 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     course named **permutation test** and **p-value**. Removing it removes both terms
     from Lesson 5. Nothing downstream depends on them; say the word if they should come
     back somewhere.
+  - *Text* — JM's second-pass opening says the Grants watched the finches **1975 to 2012**.
+    The annual means in stages B and C run **1973–2012**, and B's text says forty years.
+    1975 is the first season with individual captures in `finch_individuals.csv`, so both
+    are defensible; flagged only because the two numbers now sit two stages apart.
 
 - **B — the same two numbers, once a decade** *(a line per species)*
   - *Interactive* — Annual means, 1973–2012, both species. Two phases: *fortis* is fitted
@@ -432,12 +471,19 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     average** (Figs. 01-06 / 01-07, "CI Beak depth"), and the x-axis now ticks every five
     years so a crossing can be read off it. Gate: all four half-means inside ±0.05 mm (96
     of 19,481 fortis settings; ~103 scandens settings once fortis is down). Lands near
-    9.74 / −0.276 / −0.54 / +0.237. Then a numeric question: **read off your own graph**
-    the year the two lines cross. Graded in three tiers against the student's own lines —
-    dead on scores; **one year out scores, says "close", and names the year**, because the
-    crossing is genuinely hard to read; two or more out is recorded wrong, says "try
-    again", and lets them retry. Measured across all 9,842 passing slider combinations
-    the crossing runs 1992.1–1999.8, median 1995.8; the true fit crosses at 1995.8.
+    9.74 / −0.276 / −0.54 / +0.237. Under the plot, since v8: **each species' trend per
+    decade, labelled rising / falling / flat**, and how far its line sits from the averages
+    in a typical year — so "a positive trend" and "the error low" are both things the
+    student reads rather than computes.
+  - *The two questions, and why those are the answers.* The crossing-year question was cut;
+    v8 asks whether a **rising** trend can be found for each species while the error stays
+    low. Swept over every setting that keeps all four average errors inside 0.05 mm:
+    **fortis's rate runs −0.330 to −0.240 and never reaches zero** (answer: no), while
+    **scandens's runs −0.085 to +0.005, and 96 of the 9,842 passing combinations put it
+    above zero** (answer: yes). Those 96 spread over **19 different fortis rates** — in
+    every one the *scandens* per-decade adjustment sits exactly one step past parallel — so
+    it is a notch on a slider, not one magic setting. That contrast is the whole stage:
+    the year tells you a great deal about a *fortis* and almost nothing about a *scandens*.
   - *Goal* — *fortis* falls about seven times as fast as *scandens*, so "how much does a
     beak change" has no answer that is not per-species.
   - *Hands to* — Stage C, which asks whether that difference in rate survives having less
@@ -462,11 +508,21 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     four points per species, which is what a four-season study would have had in front of
     it. A season drawn twice is drawn larger. Pale lines: the last fourteen records' rates.
     Changing the slider, and "Start over", each seed one record so the panel is never
-    blank. Lower panel: one row of dots per species with
-    a middle-95% bar that turns green when the two stop overlapping. Changing the knob
-    starts the record over. Gate: clouds apart on at least 150 records at one setting.
+    blank. **Under the plot since v8, in place of the cloud panel: a 2×2 of how often a
+    record of this length gets the *direction* of the trend backwards.** Both species
+    genuinely fall over the forty years, so every rising estimate is an error. Measured on
+    4,000 records per length: at k=4, *fortis* comes out backwards 2.2% of the time and
+    *scandens* **20.4%**; at k=10, 0.0% and 8.6%; at k=40, 0.0% and 0.2%. The two cells in
+    a row are rounded once and complemented so they always sum to 100, and a non-zero
+    count under half a percent prints "<1%" rather than rounding the finding away.
+    Gate: the two ranges of plausible rates apart on at least 150 records at one setting —
+    unchanged, and now read off the text line under the table rather than off a picture.
     Then a numeric question: the shortest record that still separates them, graded against
     a sweep the page runs on its own draws at boot (±2; the sweep lands on 10).
+  - *Open question for JM* — the gate and the numeric question still ask about the two
+    ranges of plausible rates, which are now text and not a plot, while the table is the
+    thing on screen. Re-aiming the gate at the table ("get the wrong-direction rate under
+    N%") would be a tighter stage; not done, because it was not asked for.
   - *Goal* — Ten seasons is roughly the price of being able to say the two species differ
     at all. Measured: k=6 overlaps, k=8 is marginal, k=10 and up separate.
   - *Hands to* — Stage D, which changes what is on the bottom axis.
@@ -477,10 +533,10 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     year. One knob per species — **how far its population average shifts** across the whole
     crop axis — with each line's height pinned through its own species' averages, so the
     only choice is the tilt. Lower panel: the same two clouds, now on the shift in the
-    average. Gate: all four half-means inside ±0.03 mm; the two acceptable windows do not
-    overlap (fortis 0.51–0.69, scandens 0.08–0.27). Then a numeric question: how much
-    further the *fortis* average shifts than the *scandens* average, on the student's own
-    two numbers (±0.06).
+    average. **The cloud panel under it went in v8; the stage is one plot.** Gate: all four
+    half-means inside ±0.03 mm; the two acceptable windows do not overlap (fortis
+    0.51–0.69, scandens 0.08–0.27). Then a numeric question: how much further the *fortis*
+    average shifts than the *scandens* average, on the student's own two numbers (±0.06).
   - *Wording, on JM's correction 2026-09-04* — **individual beaks do not move.** Sliders,
     axis label, question and voice all say the population *average* shifts, and the voice
     says why: no bird regrows its beak, what changes is which birds are still there to be
@@ -494,14 +550,22 @@ opened straight off disk; the R panels still point at the CSVs they were cut fro
     resource shift pushing 2.7× harder on one species than the other.
   - *Hands to* — Lesson 6, which shows the same machine giving four different verdicts.
 
-**Still owed on this lesson.** JM's voice notes ran out partway through Stage D — the
-transcript reaches the information framing ("in both cases, information gives you more")
-and then the recording is interrupted. **Stage D's opening paragraph is his; the rest of
-D's voice is the 2026-09-03 draft, carried forward with the beak/average wording fixed.**
-The seed-crop interactive was not commented on either way and is unchanged. Verified in
-the browser end to end 2026-09-04: all four stages solve, the gates chain, and the code
-decodes as `lesson5 v7`, `1101111`, 6/7 — the 0 being a deliberately wrong first attempt
-at B's crossing year.
+**Stage D's text is now entirely JM's**, from the second pass: the seed-size/hardness
+hypothesis in his own words — big beaks take big energy to grow, big seeds take big beaks
+to break — and the Grants' test of it against *last year's* crop. The interactive was
+never commented on and is unchanged apart from losing its lower panel.
+
+Verified in the browser end to end 2026-09-04, after the v8 pass: all four stages solve,
+the gates chain, the yes/no widget scores on first press and allows a retry, and a
+clean-slate run decodes as `lesson5 v8`, `11111111`, 8/8.
+
+*One bug caught in that verification and worth recording:* an earlier patch script
+aborted after replacing the `BIT` map but before writing the file, so the page shipped a
+7-entry map against `scaffold: 8`. `BIT.B_num1` was `undefined`, `recordCheckpoint` wrote
+nowhere, and two bits stayed 0 through a run in which every answer was right — with no
+error in the console and nothing wrong on screen. **This is exactly the failure
+`check_lessons.py` exists for and does not catch**: it verifies that `recordCheckpoint`
+is called at all, not that every declared slot is reachable. Worth adding.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
 `lesson6.html` · v9 · 9 checkpoints · **A–C written to JM's voice notes 2026-09-04; D and E still owed**

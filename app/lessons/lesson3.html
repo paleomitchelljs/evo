@@ -192,7 +192,8 @@
         <ul class="setup">
           <li>The same 7,414 adults, split by biological sex.</li>
           <li>One number for females, plus an adjustment added only for males.</li>
-          <li>Above the axis, females. Below it, males. Land both at once.</li>
+          <li>One box per group, on the body masses as they were measured. The box holds the middle half, the line inside it is the middle person, the diamond is the average, and the whiskers reach the 5th and 95th.</li>
+          <li>Your two numbers draw as rules across their own boxes. Bring both to the middle at once.</li>
           <li>Under the plot: how far off you are on a typical person now, against what knowing nothing cost you in Stage A. The difference is what the label was worth.</li>
         </ul>
       
@@ -268,7 +269,7 @@
     <div class="col">
       
       <div class="panel graph-wrap">
-        <canvas id="plotC1" width="560" height="270"></canvas>
+        <canvas id="plotC1" width="560" height="330"></canvas>
         <div class="fit-stats" id="statsC1">
           <span class="label" style="color:#b23a48;">female, off by:</span> <span id="C_leanW">—</span>
           &nbsp;|&nbsp;
@@ -276,7 +277,6 @@
         </div>
       </div>
       <div class="panel graph-wrap">
-        <canvas id="plotC2" width="560" height="210"></canvas>
         <div class="fit-stats" id="statsC2">
           <span class="label">your adjustment for males:</span> <span id="C_extraShow">—</span>
           &nbsp;|&nbsp;
@@ -348,10 +348,9 @@
     <div class="col">
       
       <div class="panel graph-wrap">
-        <canvas id="plotD1" width="560" height="290"></canvas>
+        <canvas id="plotD1" width="560" height="380"></canvas>
       </div>
       <div class="panel graph-wrap">
-        <canvas id="plotD2" width="560" height="220"></canvas>
         <div class="fit-stats" id="statsD">
           <span class="label" style="color:#2f6b8f;">Beren younger:</span> <span id="D_be">—</span>
           &nbsp;|&nbsp;
@@ -509,6 +508,7 @@ function drawHLine(ctx, f, yv, color, width, dash) { ctx.strokeStyle=color; ctx.
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
 function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
 function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+function quantile(arr, p) { const s=arr.slice().sort((a,b)=>a-b); const i=p*(s.length-1); const lo=Math.floor(i), hi=Math.ceil(i); return s[lo]+(s[hi]-s[lo])*(i-lo); }
 function sdOf(arr) { if (arr.length < 2) return 0; const m = mean(arr); return Math.sqrt(arr.reduce((s,v)=>s+(v-m)*(v-m),0)/arr.length); }
 function ols(xs, ys) {
   const n = xs.length; const mx = mean(xs), my = mean(ys);
@@ -748,56 +748,58 @@ function carryNumberForward(num) {
 }
 
 function drawStageB() {
+  // Box plots on the raw measurements. This was a pair of mirrored miss
+  // distributions until 2026-09-04; JM asked for the plot types the students
+  // already read, so the same fit is now shown on the scale the people were
+  // weighed on, the way Lesson 5 stage A shows the finches.
   const cv = document.getElementById("plotB");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0,0,W,H);
-  const pad = { l: 56, r: 14, t: 18, b: 46 };
-  const minX = -70, maxX = 70, bins = 56, binW = (maxX-minX)/bins;
-  function missOf(rows, forMan) {
-    const g = sB.base + (forMan ? sB.extra : 0);
-    return rows.map(r => g - r.w);
-  }
-  const mw = missOf(Data.female, false), mm = missOf(Data.male, true);
-  function binOf(vals) {
-    const c = new Array(bins).fill(0);
-    for (const v of vals) {
-      if (v < minX || v >= maxX) continue;
-      c[Math.min(bins-1, Math.floor((v-minX)/binW))]++;
-    }
-    const tot = vals.length || 1;
-    return c.map(x => x/tot);
-  }
-  const cw = binOf(mw), cm = binOf(mm);
-  const maxD = Math.max(...cw, ...cm, 0.01);
-  // Female misses grow upward from the middle, male downward — mirrored so a
-  // lean in opposite directions is impossible to miss.
-  const f = makeFrame(pad, W, H, minX, maxX, -maxD*1.2, maxD*1.2);
-  drawAxes(ctx, f, "how far off you are (kg)", "female above, male below", 7, 4,
-           v=>v.toFixed(0), v=>Math.abs(v).toFixed(2));
-  ctx.fillStyle = "rgba(178,58,72,0.55)";
-  for (let i=0;i<bins;i++) {
-    if (!cw[i]) continue;
-    const x0=f.x(minX+i*binW), x1=f.x(minX+(i+1)*binW);
-    ctx.fillRect(x0+0.5, f.y(cw[i]), x1-x0-1, f.y(0)-f.y(cw[i]));
-  }
-  ctx.fillStyle = "rgba(47,107,143,0.55)";
-  for (let i=0;i<bins;i++) {
-    if (!cm[i]) continue;
-    const x0=f.x(minX+i*binW), x1=f.x(minX+(i+1)*binW);
-    ctx.fillRect(x0+0.5, f.y(0), x1-x0-1, f.y(-cm[i])-f.y(0));
-  }
-  drawVLine(ctx, f, 0, "#1d1d1b", 1.5, []);
-  drawHLine(ctx, f, 0, "#999", 1, []);
-
   if (!Data.female.length) return;
-  const lw = mean(mw), lm = mean(mm);
-  // A marker on the zero line for each group's average miss.
-  const xw = f.x(Math.max(minX, Math.min(maxX, lw)));
-  ctx.fillStyle = "#b23a48";
-  ctx.beginPath(); ctx.moveTo(xw, f.y(0)-7); ctx.lineTo(xw-6, f.y(0)-16); ctx.lineTo(xw+6, f.y(0)-16); ctx.closePath(); ctx.fill();
-  const xm = f.x(Math.max(minX, Math.min(maxX, lm)));
-  ctx.fillStyle = "#2f6b8f";
-  ctx.beginPath(); ctx.moveTo(xm, f.y(0)+7); ctx.lineTo(xm-6, f.y(0)+16); ctx.lineTo(xm+6, f.y(0)+16); ctx.closePath(); ctx.fill();
+  const pad = { l: 84, r: 16, t: 20, b: 48 };
+  // 40-140 in tens. The whiskers reach the 5th and 95th (50.1-112.7 female,
+  // 62.2-123.9 male), so the boxes sit well inside it; the handful of adults
+  // beyond 140 kg are past the whisker and were never drawn.
+  const MINX = 40, MAXX = 140;
+  const f = makeFrame(pad, W, H, MINX, MAXX, 0, 1);
+  drawAxes(ctx, f, "body mass (kg) — as measured", "", 10, 1, v=>v.toFixed(0), ()=>"");
+  const clampX = v => f.x(Math.max(MINX, Math.min(MAXX, v)));
+  function boxOf(vals) {
+    return { lo: quantile(vals, 0.05), q1: quantile(vals, 0.25), md: quantile(vals, 0.50),
+             q3: quantile(vals, 0.75), hi: quantile(vals, 0.95), mn: mean(vals) };
+  }
+  const bw = boxOf(Data.female.map(r=>r.w)), bm = boxOf(Data.male.map(r=>r.w));
+  function boxRow(b, yv, fill, edge, pred, ok) {
+    const yc = f.y(yv), h = 40;
+    ctx.strokeStyle = edge; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(clampX(b.lo), yc); ctx.lineTo(clampX(b.q1), yc);
+    ctx.moveTo(clampX(b.q3), yc); ctx.lineTo(clampX(b.hi), yc);
+    ctx.moveTo(clampX(b.lo), yc-10); ctx.lineTo(clampX(b.lo), yc+10);
+    ctx.moveTo(clampX(b.hi), yc-10); ctx.lineTo(clampX(b.hi), yc+10);
+    ctx.stroke();
+    ctx.fillStyle = fill;
+    ctx.fillRect(clampX(b.q1), yc-h/2, clampX(b.q3)-clampX(b.q1), h);
+    ctx.strokeRect(clampX(b.q1), yc-h/2, clampX(b.q3)-clampX(b.q1), h);
+    ctx.beginPath();
+    ctx.moveTo(clampX(b.md), yc-h/2); ctx.lineTo(clampX(b.md), yc+h/2); ctx.stroke();
+    ctx.fillStyle = edge;
+    const xm = clampX(b.mn);
+    ctx.beginPath(); ctx.moveTo(xm, yc-7); ctx.lineTo(xm+7, yc); ctx.lineTo(xm, yc+7); ctx.lineTo(xm-7, yc); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = ok ? "#2e6b2a" : "#333"; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(clampX(pred), yc-h/2-8); ctx.lineTo(clampX(pred), yc+h/2+8); ctx.stroke();
+  }
+  ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#555";
+  ctx.fillText("female", f.pad.l-8, f.y(0.70));
+  ctx.fillText("male",   f.pad.l-8, f.y(0.28));
+  const lw = sB.base - mean(Data.female.map(r=>r.w));
+  const lm = sB.base + sB.extra - mean(Data.male.map(r=>r.w));
+  // The female number carried down through the male box, so what it costs to
+  // predict one group with the other's number is visible and not only tabulated.
+  drawVLine(ctx, f, Math.max(MINX, Math.min(MAXX, sB.base)), "rgba(178,58,72,0.45)", 1.5, [4,3]);
+  boxRow(bw, 0.70, "rgba(178,58,72,0.16)", "#b23a48", sB.base, Math.abs(lw) <= B_TOL);
+  boxRow(bm, 0.28, "rgba(47,107,143,0.16)", "#2f6b8f", sB.base + sB.extra, Math.abs(lm) <= B_TOL);
 
   // What the group label bought you, in the currency Stage A left you in.
   const typB = mean(Data.rows.map(r => Math.abs(r.w - (sB.base + (r.male ? sB.extra : 0)))));
@@ -919,40 +921,10 @@ function drawStageC() {
       ctx.beginPath(); ctx.moveTo(f.x(1.12), f.y(sC.base+sC.extra)); ctx.lineTo(f.x(1.88), f.y(sC.base+sC.extra)); ctx.stroke();
     }
   }
-  // --- bottom: your adjustment, and how far out it could be ---------------
+  // The lower panel that used to draw this went 2026-09-04 on JM's call. The
+  // numbers it carried -- the adjustment, its reach, and the whole-population
+  // value -- are all still on the page, in the readout under the plot.
   const reach = reachAt(sC.n);
-  {
-    const cv = document.getElementById("plotC2");
-    const { ctx, W, H } = setupCanvas(cv);
-    ctx.clearRect(0,0,W,H);
-    const pad = { l: 56, r: 14, t: 16, b: 44 };
-    const f = makeFrame(pad, W, H, -45, 45, 0, 1);
-    drawAxes(ctx, f, "adjustment for males (kg)", "", 6, 0, v=>v.toFixed(0));
-    const y = f.pad.t + f.H * 0.5;
-    // Every handful weighed so far, faint, so the scatter is visible.
-    sC.gaps.forEach((g,i) => {
-      const yy = f.pad.t + f.H * (0.16 + 0.30 * (((i*0.618)%1)));
-      ctx.fillStyle = g.gap < 0 ? "rgba(168,51,26,0.55)" : "rgba(60,60,60,0.30)";
-      ctx.beginPath(); ctx.arc(f.x(Math.max(-45, Math.min(45, g.gap))), yy, 2.6, 0, 2*Math.PI); ctx.fill();
-    });
-    // Where all 7,414 sit, and the line the adjustment has to cross.
-    drawVLine(ctx, f, POP.gapTrue, "#4a7a2a", 2, []);
-    ctx.fillStyle = "#4a7a2a"; ctx.font = "11px -apple-system, sans-serif";
-    ctx.textAlign = "left"; ctx.textBaseline = "top";
-    ctx.fillText("all 7,414", f.x(POP.gapTrue)+4, f.pad.t+2);
-    drawVLine(ctx, f, 0, "#1d1d1b", 1.5, []);
-    ctx.fillStyle = "#1d1d1b"; ctx.textAlign = "right";
-    ctx.fillText("no difference", f.x(0)-5, f.pad.t+2);
-    // The adjustment you have set, with the room a handful this size leaves.
-    const e = Math.max(-45, Math.min(45, sC.extra));
-    ctx.strokeStyle = sC.extra < 0 ? "#a8331a" : "#2f6b8f"; ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(f.x(Math.max(-45, sC.extra - reach)), y);
-    ctx.lineTo(f.x(Math.min(45, sC.extra + reach)), y);
-    ctx.stroke();
-    ctx.fillStyle = sC.extra < 0 ? "#a8331a" : "#2f6b8f";
-    ctx.beginPath(); ctx.arc(f.x(e), y, 6, 0, 2*Math.PI); ctx.fill();
-  }
   // --- readouts ------------------------------------------------------------
   if (sC.draw) {
     const lw = sC.base - mean(sC.draw.w);
@@ -1120,41 +1092,10 @@ function drawStageD() {
       ctx.fillStyle = "#555"; ctx.fillText("Cyrus", f.pad.l+86, f.pad.t+10);
     }
   }
-  // --- bottom: the leftovers, and the four halves ---------------------------
+  // The lower panel that drew the four half-averages went 2026-09-04 on JM's
+  // call. The four numbers themselves are still the gate and are still on the
+  // page, in the readout under the plot.
   const c = cellsD();
-  {
-    const cv = document.getElementById("plotD2");
-    const { ctx, W, H } = setupCanvas(cv);
-    ctx.clearRect(0,0,W,H);
-    const f = makeFrame({ l: 56, r: 14, t: 14, b: 42 }, W, H, D_MIN_AGE - 0.2, ageMax, -3, 3);
-    drawAxes(ctx, f, "age (years)", "actual − your line (kg)", 5, 4, v=>v.toFixed(1), v=>v.toFixed(0));
-    ctx.fillStyle = "rgba(111,138,74,0.14)";
-    ctx.fillRect(f.pad.l, f.y(D_TOL), f.W, f.y(-D_TOL)-f.y(D_TOL));
-    drawHLine(ctx, f, 0, "#1d1d1b", 1.5, []);
-    const plot = (pts, isC, col) => {
-      ctx.fillStyle = col;
-      for (const p of pts) {
-        const r = Math.max(-2.9, Math.min(2.9, p.kg - guessD(p.age, isC)));
-        ctx.beginPath(); ctx.arc(f.x(p.age), f.y(r), 3.2, 0, 2*Math.PI); ctx.fill();
-      }
-    };
-    plot(sD.beren, false, "rgba(47,107,143,0.55)");
-    if (showC) plot(sD.cyrus, true,  "rgba(168,97,26,0.55)");
-    // One bar per half, so the three knobs each have something to answer to.
-    const bars = [
-      { v: c.be, x0: D_MIN_AGE - 0.15, x1: sD.medB, col: "#2f6b8f" },
-      { v: c.bl, x0: sD.medB,          x1: ageMax - 0.1, col: "#2f6b8f" },
-      { v: c.ce, x0: D_MIN_AGE - 0.15, x1: sD.medC, col: "#a8611a" },
-      { v: c.cl, x0: sD.medC,          x1: Math.max(...sD.cyrus.map(p=>p.age)) + 0.1, col: "#a8611a" }
-    ];
-    (showC ? bars : bars.slice(0,2)).forEach(b => {
-      const v = Math.max(-2.9, Math.min(2.9, b.v));
-      ctx.strokeStyle = b.col; ctx.lineWidth = 3;
-      ctx.setLineDash(Math.abs(b.v) <= D_TOL ? [] : [5,3]);
-      ctx.beginPath(); ctx.moveTo(f.x(b.x0), f.y(v)); ctx.lineTo(f.x(b.x1), f.y(v)); ctx.stroke();
-      ctx.setLineDash([]);
-    });
-  }
   const set = (id, v, shown) => {
     const el = document.getElementById(id);
     el.textContent = shown ? fmtKg(v) : "—";

@@ -55,6 +55,12 @@
   .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
   .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
   .numq .unit { font-size:13px; color:var(--muted); }
+  .numq .yesno .qq { font-size:14px; margin-bottom:7px; }
+  .numq .yesno .row { gap:10px; }
+  .numq button.yn { min-width:66px; background:#fff; color:var(--ink); border:1px solid var(--rule); }
+  .numq button.yn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .numq button.yn.picked { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .numq button.yn:disabled { opacity:0.55; cursor:not-allowed; }
   .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
   .numq button:disabled { background:#bbb; cursor:not-allowed; }
   .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
@@ -88,6 +94,16 @@
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
   .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+  /* How often a record of this length gets the direction of the trend wrong. */
+  table.signtab { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+  table.signtab th, table.signtab td { border:1px solid var(--rule); padding:7px 10px; text-align:center; }
+  table.signtab thead th { background:var(--stage-bar); color:var(--muted); font-weight:600; font-size:12px; line-height:1.3; }
+  table.signtab tbody th { background:var(--stage-bar); text-align:right; font-weight:600; width:110px; }
+  table.signtab td { font:20px/1.2 ui-monospace,Menlo,monospace; }
+  table.signtab td .n { display:block; font-size:11.5px; color:var(--muted); font-family:-apple-system,sans-serif; margin-top:2px; }
+  table.signtab .tick { color:var(--good); } table.signtab .cross { color:var(--bad); }
+  table.signtab td.wrongcell { color:var(--bad); }
+  table.signtab td.wrongcell.none { color:var(--muted); }
 </style>
 </head>
 <body>
@@ -110,17 +126,17 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>Two researchers, Peter and Rosemary Grant, went to a small island in the Galápagos called Daphne Major. With their students and their fellow researchers, every year, from 1973 all the way to the late 2010s.</p>
-        <p>What they did there was catalogue every individual bird of several <em>Geospiza</em> finch species. They banded each one — gave it a unique ID — measured it, and worked out its parentage.</p>
+        <p>Two researchers, Peter and Rosemary Grant, went to a small island in the Galápagos called Daphne Major with their students. Every year from 1975 to 2012 they watched the small <em>Geospiza</em> "finches" on that small island, and captured every single one… every single year.</p>
         <p>In the plot below is one of those measurements, the depth of the beak, for 943 birds all measured in a single field season. 787 of them are <em>Geospiza fortis</em>; 156 of them are <em>Geospiza scandens</em>. We are going to examine the difference between these two birds the same way we did for male and female body mass.</p>
-        <p>Find a value of beak depth that minimises your error for <em>fortis</em>, using the red and blue histograms. Then find an adjustment between <em>fortis</em> and <em>scandens</em> that minimises the error for <em>scandens</em>.</p>
+        <p>Find a value of beak depth that minimises your error for <em>fortis</em>. Then find an adjustment between <em>fortis</em> and <em>scandens</em> that minimises the error for <em>scandens</em>.</p>
+        <p>Does knowing what species of bird you are going to catch clearly improve your prediction of its beak depth?</p>
       </div>
       <ul class="setup">
         <li>943 birds measured in one field season: 787 <em>fortis</em>, 156 <em>scandens</em>.</li>
-        <li>Upper panel, across: how far each bird's beak is from what you predicted for it. <em>fortis</em> above the line, <em>scandens</em> below it. The tick on each is that species' average miss.</li>
-        <li>Lower panel: the same birds again, but the raw measurements rather than the misses. The box holds the middle half of each species, the line inside it is the middle bird, and the whiskers reach the 5th and 95th.</li>
-        <li>Two knobs: a depth for a <em>fortis</em>, and an adjustment added only for a <em>scandens</em>. Both panels run off the same two knobs, so landing one lands the other.</li>
-        <li>Under the plot: what it costs to predict a <em>scandens</em> with the <em>fortis</em> number, against what it costs with your adjustment.</li>
+        <li>One box per species, on the beak depths as they were measured. The box holds the middle half of that species, the line inside it is the middle bird, the diamond is the average, and the whiskers reach the 5th and 95th.</li>
+        <li>Two sliders: a depth for a <em>fortis</em>, and an adjustment added only for a <em>scandens</em>. Each one draws as a rule across its own species' box.</li>
+        <li>The <em>fortis</em> number is carried down through the <em>scandens</em> box as a pale dashed line, so you can see what predicting one with the other's number costs.</li>
+        <li>Under the plot: that cost in millimetres, against what it costs with your adjustment.</li>
       </ul>
     </div>
   </div>
@@ -128,8 +144,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotA1" width="560" height="250"></canvas>
-        <canvas id="plotA2" width="560" height="200"></canvas>
+        <canvas id="plotA" width="560" height="300"></canvas>
         <div class="fit-stats" id="statsA">
           <span class="label">average miss —</span>
           <span class="label">fortis:</span> <span id="A_missF">—</span>
@@ -160,14 +175,14 @@
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="A1">Bring both species' average miss to within 0.03 mm of zero. Both panels land together.
+          <li data-task="A1">Bring both species' average miss to within 0.03 mm of zero.
             <span class="hint"><span id="A1_now">neither is there yet</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedA">Stage B is open.</div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line">b &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_individuals.csv"</span>)</span><span class="line">b &lt;- b[b$year == <span class="num">1987</span>, ]</span><span class="line"></span><span class="line" data-line="base">base &lt;- <span class="num" id="cA_base">9.00</span></span><span class="line" data-line="extra">adj  &lt;- <span class="num" id="cA_extra">0.00</span></span><span class="line">guess &lt;- base + adj * (b$species == <span class="str">"scandens"</span>)</span><span class="line"><span class="fn">tapply</span>(b$beak_depth - guess, b$species, mean)</span><span class="line"></span><span class="line"><span class="com"># the same two panels you are looking at</span></span><span class="line"><span class="fn">hist</span>(b$beak_depth - guess)</span><span class="line"><span class="fn">boxplot</span>(beak_depth ~ species, data = b, horizontal = <span class="kw">TRUE</span>)</span><span class="line"><span class="fn">abline</span>(v = <span class="fn">c</span>(base, base + adj))</span><span class="line"></span><span class="line"><span class="com"># what the label is worth on a typical bird</span></span><span class="line">sc &lt;- b$beak_depth[b$species == <span class="str">"scandens"</span>]</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(sc - base)); <span class="fn">mean</span>(<span class="fn">abs</span>(sc - (base + adj)))</span></pre>
+<pre class="code" id="codeA"><span class="line">b &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_individuals.csv"</span>)</span><span class="line">b &lt;- b[b$year == <span class="num">1987</span>, ]</span><span class="line"></span><span class="line" data-line="base">base &lt;- <span class="num" id="cA_base">9.00</span></span><span class="line" data-line="extra">adj  &lt;- <span class="num" id="cA_extra">0.00</span></span><span class="line">guess &lt;- base + adj * (b$species == <span class="str">"scandens"</span>)</span><span class="line"><span class="fn">tapply</span>(b$beak_depth - guess, b$species, mean)</span><span class="line"></span><span class="line"><span class="com"># the panel you are looking at</span></span><span class="line"><span class="fn">boxplot</span>(beak_depth ~ species, data = b, horizontal = <span class="kw">TRUE</span>)</span><span class="line"><span class="fn">abline</span>(v = <span class="fn">c</span>(base, base + adj))</span><span class="line"></span><span class="line"><span class="com"># what the label is worth on a typical bird</span></span><span class="line">sc &lt;- b$beak_depth[b$species == <span class="str">"scandens"</span>]</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(sc - base)); <span class="fn">mean</span>(<span class="fn">abs</span>(sc - (base + adj)))</span></pre>
       </div>
     </div>
   </div>
@@ -180,16 +195,17 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>Part A showed the beak depth for hundreds of birds measured in one year. But as above, the Grants went to Daphne Major every year for over forty years and measured every bird. So now we look at not the population average in one year, but the average beak depth in every year of their data set — and we try to see whether we can find a trend over time.</p>
-        <p>If you know what year a bird was measured in, can you predict its beak depth? For <em>fortis</em> first, and then for <em>scandens</em>.</p>
-        <p>And just as before, we are going to see whether you can do it with one line — meaning both birds have the same trend, and knowing the year tells you the same thing about either one — or whether you need different lines. If you need different lines, you need a different adjustment for the starting beak depth in 1973, and you need a different rate of change.</p>
+        <p>Part A showed the beak depth for hundreds of birds measured in one year, and we found clear evidence that knowing what species of bird it was improved our estimate of its beak depth. But the Grants didn't catch the birds in one year only! They caught every bird for their focal species on the island every year for 40 years!</p>
+        <p>So now we ask: does knowing what year a particular bird was caught <strong>clearly improve our prediction of beak depth</strong> if we also know its species?</p>
+        <p>We'll fit lines for both species over time separately, to see if the amount of beak-depth information knowing the year a bird was captured in is clearly different for the two species.</p>
       </div>
       <ul class="setup">
         <li>Across: year. Up: the average beak depth measured that year, 1973 to 2012.</li>
         <li>Every dot is an average of hundreds of birds, not a bird. The bar through it is the Grants' published 95% interval on that year's average.</li>
-        <li>Lower panel: what is left over after your lines, and the average leftover for each species in the first half of the record and the second.</li>
-        <li>Four bars flat, and nothing systematic is left for a straight line to pick up.</li>
-        <li>The <em>scandens</em> knobs stay dark until <em>fortis</em> is fitted.</li>
+        <li>Lower panel: how far each year's average sits from your line, and the average error for each species in the first half of the record and the second.</li>
+        <li>All four bars on zero, and there is nothing systematic left for a straight line to pick up.</li>
+        <li>Under the plot: each species' trend per decade, and how far its line sits from the averages in a typical year.</li>
+        <li>The <em>scandens</em> sliders stay dark until <em>fortis</em> is fitted.</li>
       </ul>
     </div>
   </div>
@@ -200,11 +216,20 @@
         <canvas id="plotB1" width="560" height="270"></canvas>
         <canvas id="plotB2" width="560" height="200"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">fortis leftovers —</span> <span class="label">to 1992:</span> <span id="B_fEarly">—</span>
+          <span class="label">fortis average error —</span> <span class="label">to 1992:</span> <span id="B_fEarly">—</span>
           <span class="label">after:</span> <span id="B_fLate">—</span>
           <br>
-          <span class="label">scandens leftovers —</span> <span class="label">to 1992:</span> <span id="B_sEarly">—</span>
+          <span class="label">scandens average error —</span> <span class="label">to 1992:</span> <span id="B_sEarly">—</span>
           <span class="label">after:</span> <span id="B_sLate">—</span>
+        </div>
+        <div class="fit-stats" id="statsB2" style="margin-top:4px;">
+          <span class="label">trend per decade —</span>
+          <span class="label">fortis:</span> <span id="B_fTrend">—</span>
+          &nbsp; <span class="label">scandens:</span> <span id="B_sTrend">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">typical miss —</span>
+          <span class="label">fortis:</span> <span id="B_fTyp">—</span>
+          &nbsp; <span class="label">scandens:</span> <span id="B_sTyp">—</span>
         </div>
         <div class="key">
           <span class="sw" style="background:#b23a48"></span>fortis
@@ -228,20 +253,30 @@
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Flatten all four bars — each average leftover inside 0.05 mm of zero.
+          <li data-task="B1">Get your average error below 0.05 mm for each species, in the first half of the record and the second.
             <span class="hint"><span id="B1_now">fortis first</span></span></li>
-          <li data-task="B2">Answer the question below.</li>
+          <li data-task="B2">Answer both questions below.</li>
         </ul>
-        <div class="solved-banner" id="solvedB">Both lines are down and all four leftovers are flat. Stage C is open.</div>
+        <div class="solved-banner" id="solvedB">Both lines are down and all four errors are on zero. Stage C is open.</div>
       </div>
       <div class="panel numq" id="numqB">
-        <div class="q">Your two lines are not parallel, so they meet somewhere. Look at your graph: in what year do they cross?</div>
-        <div class="row">
-          <input type="number" id="B_ans" min="1900" max="2400" step="1" placeholder="year" />
-          <span class="unit">year</span>
-          <button id="B_submit">Submit</button>
+        <div class="q">Keep all four average errors on zero, and try it on the sliders before you answer.</div>
+        <div class="yesno" id="B_q1">
+          <div class="qq">1. Can you find a <em>positive</em> trend in <em>fortis</em> beaks over time while keeping the error low?</div>
+          <div class="row">
+            <button class="yn" data-v="yes">Yes</button>
+            <button class="yn" data-v="no">No</button>
+          </div>
+          <div class="verdict" id="B_v1"></div>
         </div>
-        <div class="verdict" id="B_verdict"></div>
+        <div class="yesno" id="B_q2" style="margin-top:14px;">
+          <div class="qq">2. Can you find a <em>positive</em> trend in <em>scandens</em> beaks over time while keeping the error low?</div>
+          <div class="row">
+            <button class="yn" data-v="yes">Yes</button>
+            <button class="yn" data-v="no">No</button>
+          </div>
+          <div class="verdict" id="B_v2"></div>
+        </div>
       </div>
       <div class="panel">
         <h3>R code</h3>
@@ -266,9 +301,9 @@
         <li>Upper panel: only the seasons the current record actually drew. Four seasons means four points per species, not forty.</li>
         <li>Each point is still an average of hundreds of birds, and the bar through it is still the 95% interval on that average.</li>
         <li>Pale lines: the rate fitted to each of the last few records.</li>
-        <li>Lower panel: one row per species. Each dot is one record's rate, and the bar across them is the 95% interval.</li>
+        <li>Under the plot: of all the records you have taken at this length, how many put each species' trend the right way up and how many put it upside down. Both species really fall, so every rising estimate is an error.</li>
         <li>Changing the number of seasons starts the record over.</li>
-        <li>Both intervals turn green when they stop overlapping.</li>
+        <li>The two ranges of plausible rates turn green when they stop overlapping.</li>
       </ul>
     </div>
   </div>
@@ -276,13 +311,19 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotC1" width="560" height="240"></canvas>
-        <canvas id="plotC2" width="560" height="210"></canvas>
+        <canvas id="plotC1" width="560" height="260"></canvas>
+        <table class="signtab" id="C_signs">
+          <thead><tr><th></th><th>trend estimated<br>falling <span class="tick">(right)</span></th><th>trend estimated<br>rising <span class="cross">(wrong)</span></th></tr></thead>
+          <tbody>
+            <tr><th><em>fortis</em></th><td id="C_fDown">—</td><td id="C_fUp" class="wrongcell">—</td></tr>
+            <tr><th><em>scandens</em></th><td id="C_sDown">—</td><td id="C_sUp" class="wrongcell">—</td></tr>
+          </tbody>
+        </table>
         <div class="fit-stats" id="statsC">
           <span class="label">seasons per record:</span> <span id="C_kShow">10</span>
           &nbsp; <span class="label">records taken:</span> <span id="C_taken">0</span>
           &nbsp;|&nbsp;
-          <span class="label">clouds:</span> <span id="C_sep">—</span>
+          <span class="label">the two ranges of plausible rates:</span> <span id="C_sep">—</span>
         </div>
         <div class="fit-stats" id="statsC2" style="margin-top:2px;"></div>
       </div>
@@ -303,14 +344,14 @@
       <div class="panel">
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
-          <li data-task="C1">Get the two clouds apart, on at least 150 records at one setting.
+          <li data-task="C1">Get the two ranges of plausible rates apart, on at least 150 records at one setting.
             <span class="hint"><span id="C1_now">not yet</span></span></li>
           <li data-task="C2">Answer the question below.</li>
         </ul>
         <div class="solved-banner" id="solvedC">The two ranges of plausible rates no longer touch. Stage D is open.</div>
       </div>
       <div class="panel numq" id="numqC">
-        <div class="q">Work back down the seasons slider. What is the shortest record that still brings the two clouds apart?</div>
+        <div class="q">Work back down the seasons slider. What is the shortest record that still pulls the two ranges of plausible rates apart?</div>
         <div class="row">
           <input type="number" id="C_ans" min="4" max="40" step="2" placeholder="seasons" />
           <span class="unit">field seasons</span>
@@ -333,16 +374,17 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>In Parts B and C you observed that the finches changed clearly over time — in the sense that if you know what year a bird was collected, you will be less wrong about its beak depth than if you don't know what year it was collected. You also found that if you know what species a bird from Daphne Major is, you will be less wrong about its beak depth than if you don't know what species it is. In both cases, information gives you more.</p>
-        <p>But a year does nothing to a finch. Whatever made those averages change between 1973 and 2012, it was not the passing of time; time was standing in for something that varied year to year and could push on a bird.</p>
-        <p>No individual bird regrows its beak. What moves is the average of the population, because which birds are still there to be measured depends on what there was to eat.</p>
-        <p>The Grants counted the seed crop as well. In some years almost everything on the ground was small and soft; in drought years what was left was big and hard. Put that on the bottom axis in place of the year, and give each species one knob: how far its population average shifts when the crop shifts. The height of each line is set for you — each one is pinned through its own species' averages — so the only thing you are choosing is the tilt.</p>
+        <p>In Parts B and C you observed that the finches changed clearly over time — in the sense that if you know what year a bird was collected, you will be less wrong about its beak depth than if you don't know what year it was collected. You also found that if you know what species a bird from Daphne Major is, you will be less wrong about its beak depth than if you don't know what species it is.</p>
+        <p>Why does time, itself, improve our ability to predict beak depth? Time doesn't impact finch populations. <em>Geospiza fortis</em> captured in 2010 have smaller beaks than <em>Geospiza fortis</em> captured in 1985… but is that due to something, or just random change? Is there a driver of beak depth?</p>
+        <p>In addition to catching birds, the Grants also watched them and saw what the birds ate. They counted the types of seeds the birds ate, and classified them into categories based on seed size and hardness.</p>
+        <p>The Grants had an hypothesis: big beaks take big energy to grow, and big seeds take big beaks to break. So if there are lots of small seeds, every bird eats, but big-beaked birds burn more calories. If there are lots of big seeds, big-beaked birds eat, but small-beaked birds starve.</p>
+        <p>They tested that idea by looking at the beak depth of birds based on whether <strong>last year</strong> there were a lot of big, hard seeds or not. You can test that same idea now.</p>
       </div>
       <ul class="setup">
         <li>Across: the share of the seed crop that was big and hard, counted the year before.</li>
         <li>Up: the average beak depth measured the following year. Sixteen years of overlap, 1976 to 1991.</li>
-        <li>Each knob is the whole shift: what a species' <em>average</em> beak depth does between a crop with none of it big and hard and a crop with all of it.</li>
-        <li>Lower panel: the same 95% intervals as before, now on the shift in the average.</li>
+        <li>Each slider is the whole shift: what a species' <em>average</em> beak depth does between a crop with none of it big and hard and a crop with all of it.</li>
+        <li>The height of each line is set for you — each one is pinned through its own species' averages — so the only thing you are choosing is the tilt.</li>
         <li>Under the graph: what is left of each species' change per decade once the crop is in the fit.</li>
       </ul>
     </div>
@@ -351,10 +393,9 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotD1" width="560" height="270"></canvas>
-        <canvas id="plotD2" width="560" height="200"></canvas>
+        <canvas id="plotD1" width="560" height="330"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">leftovers, lean crops / rich crops —</span>
+          <span class="label">average error, lean crops / rich crops —</span>
           <span class="label">fortis:</span> <span id="D_fLo">—</span> / <span id="D_fHi">—</span>
           &nbsp; <span class="label">scandens:</span> <span id="D_sLo">—</span> / <span id="D_sHi">—</span>
         </div>
@@ -383,7 +424,7 @@
       <div class="panel">
         <h3>To finish the lesson</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Flatten all four leftovers — each inside 0.03 mm of zero.
+          <li data-task="D1">Get your average error below 0.03 mm for each species, in lean crops and in rich crops alike.
             <span class="hint"><span id="D1_now">none of the four yet</span></span></li>
           <li data-task="D2">Answer the question below.</li>
         </ul>
@@ -512,7 +553,7 @@ function showSolved(stage, text) {
 }
 function record(pos, ok) { if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok); }
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
-const BIT = { A_solve:0, B_solve:1, B_num:2, C_solve:3, C_num:4, D_solve:5, D_num:6 };
+const BIT = { A_solve:0, B_solve:1, B_num1:2, B_num2:3, C_solve:4, C_num:5, D_solve:6, D_num:7 };
 
 function wireNumeric(id, opts) {
   const box   = document.getElementById("numq"+id);
@@ -532,6 +573,25 @@ function wireNumeric(id, opts) {
     if (!scored) { scored = true; record(opts.bit, r.ok); if (opts.after) opts.after(r.ok); }
   });
   return { show: () => { box.classList.add("shown"); } };
+}
+
+// Two buttons rather than a box, for a question whose answer is a direction and
+// not a quantity. Scored on the first press, like every written question here.
+function wireYesNo(id, opts) {
+  const wrap = document.getElementById(id);
+  const out  = document.getElementById(opts.verdictId);
+  let scored = false;
+  wrap.querySelectorAll("button.yn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const ok = (btn.dataset.v === opts.answer);
+      wrap.querySelectorAll("button.yn").forEach(b => b.classList.toggle("picked", b === btn));
+      out.className = "verdict shown " + (ok ? "right" : "wrong");
+      out.textContent = ok ? opts.right : opts.wrong;
+      if (ok) wrap.querySelectorAll("button.yn").forEach(b => { b.disabled = true; });
+      if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
+    });
+  });
+  return { show: () => {} };
 }
 
 /* ====== Data ========================================================
@@ -620,7 +680,7 @@ const A_TOL = 0.03;
 const sA = { base: 9.00, extra: 0.00 };
 
 // Five numbers per species, straight off the raw measurements. The mean is
-// carried alongside the median because the knobs are landed on the mean, and a
+// carried alongside the median because the sliders are landed on the mean, and a
 // box plot on its own would send you to the middle bird instead.
 function boxOf(vals) {
   return { lo: quantile(vals, 0.05), q1: quantile(vals, 0.25), md: quantile(vals, 0.50),
@@ -640,62 +700,29 @@ function costA() {
   const two = mean(A_SCANDENS.map(v => Math.abs(v - (sA.base + sA.extra))));
   return { one, two };
 }
-function histOf(vals, lo, hi, bins) {
-  const h = new Array(bins).fill(0), w = (hi - lo) / bins;
-  for (const v of vals) { let k = Math.floor((v - lo) / w); if (k < 0) k = 0; if (k >= bins) k = bins - 1; h[k]++; }
-  return { h, w, lo, bins };
-}
-
 function drawStageA() {
-  // Upper: the two clouds of misses, fortis above the line and scandens below,
-  // with each species' average miss ticked on the line itself.
-  const cv = document.getElementById("plotA1");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
-  const pad = { l: 52, r: 16, t: 14, b: 44 };
-  const f = makeFrame(pad, W, H, -3, 3, -1, 1);
-  drawAxes(ctx, f, "miss (mm) — the bird, minus what you predicted for it", "", 6, 2, v => v.toFixed(1), () => "");
-  drawHLine(ctx, f, 0, "#333", 1);
-  drawVLine(ctx, f, 0, "#999", 1, [3, 3]);
+  // The 943 birds as they were measured, one box per species, with both of your
+  // numbers standing on the axis the birds were measured on. The miss
+  // distributions that used to sit above this went 2026-09-04 on JM's call: a
+  // box plot is a shape the students already read, and the stage says the same
+  // thing with one picture instead of two.
   const { mf, ms } = missesA();
-  const fh = histOf(A_FORTIS.map(v => v - sA.base), -3, 3, 60);
-  const sh = histOf(A_SCANDENS.map(v => v - (sA.base + sA.extra)), -3, 3, 60);
-  function bars(hh, color, up) {
-    const top = Math.max.apply(null, hh.h) || 1;
-    ctx.fillStyle = color;
-    for (let k = 0; k < hh.bins; k++) {
-      if (!hh.h[k]) continue;
-      const x0 = f.x(hh.lo + k * hh.w), x1 = f.x(hh.lo + (k + 1) * hh.w);
-      const frac = 0.93 * hh.h[k] / top;
-      const y0 = f.y(0), y1 = f.y(up ? frac : -frac);
-      ctx.fillRect(x0, Math.min(y0, y1), Math.max(1, x1 - x0 - 0.5), Math.abs(y1 - y0));
-    }
-  }
-  bars(fh, "rgba(178,58,72,0.72)", true);
-  bars(sh, "rgba(47,107,143,0.72)", false);
-  function tick(v, color, up) {
-    ctx.fillStyle = color; ctx.beginPath();
-    const x = f.x(Math.max(-3, Math.min(3, v))), y = f.y(0), d = up ? -1 : 1;
-    ctx.moveTo(x, y); ctx.lineTo(x - 5, y + d * 9); ctx.lineTo(x + 5, y + d * 9); ctx.closePath(); ctx.fill();
-  }
-  tick(mf, "#7c1f2b", true);
-  tick(ms, "#1d4a68", false);
-
   // Lower: the same 943 birds as raw measurements, one box per species, with
   // both of your numbers standing on the same axis they were measured on.
-  const cv2 = document.getElementById("plotA2");
+  const cv2 = document.getElementById("plotA");
   const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
-  const pad2 = { l: 84, r: 16, t: 16, b: 46 };
+  const pad2 = { l: 84, r: 16, t: 20, b: 48 };
   const f2 = makeFrame(pad2, c2.W, c2.H, 7.5, 11.5, 0, 1);
   drawAxes(ctx2, f2, "beak depth (mm) — the raw measurements", "", 8, 1, v => v.toFixed(1), () => "");
   const clampX = v => f2.x(Math.max(7.5, Math.min(11.5, v)));
   function boxRow(b, yv, fill, edge, pred) {
-    const yc = f2.y(yv), h = 26;
+    const yc = f2.y(yv), h = 40;
     ctx2.strokeStyle = edge; ctx2.lineWidth = 1.5;
     ctx2.beginPath();                                    // whiskers
     ctx2.moveTo(clampX(b.lo), yc); ctx2.lineTo(clampX(b.q1), yc);
     ctx2.moveTo(clampX(b.q3), yc); ctx2.lineTo(clampX(b.hi), yc);
-    ctx2.moveTo(clampX(b.lo), yc - 7); ctx2.lineTo(clampX(b.lo), yc + 7);
-    ctx2.moveTo(clampX(b.hi), yc - 7); ctx2.lineTo(clampX(b.hi), yc + 7);
+    ctx2.moveTo(clampX(b.lo), yc - 10); ctx2.lineTo(clampX(b.lo), yc + 10);
+    ctx2.moveTo(clampX(b.hi), yc - 10); ctx2.lineTo(clampX(b.hi), yc + 10);
     ctx2.stroke();
     ctx2.fillStyle = fill;                               // the middle half
     ctx2.fillRect(clampX(b.q1), yc - h / 2, clampX(b.q3) - clampX(b.q1), h);
@@ -704,7 +731,7 @@ function drawStageA() {
     ctx2.moveTo(clampX(b.md), yc - h / 2); ctx2.lineTo(clampX(b.md), yc + h / 2); ctx2.stroke();
     ctx2.fillStyle = edge;                               // the average
     const xm = clampX(b.mn);
-    ctx2.beginPath(); ctx2.moveTo(xm, yc - 5); ctx2.lineTo(xm + 5, yc); ctx2.lineTo(xm, yc + 5); ctx2.lineTo(xm - 5, yc); ctx2.closePath(); ctx2.fill();
+    ctx2.beginPath(); ctx2.moveTo(xm, yc - 7); ctx2.lineTo(xm + 7, yc); ctx2.lineTo(xm, yc + 7); ctx2.lineTo(xm - 7, yc); ctx2.closePath(); ctx2.fill();
     // your number for this species, laid over its own box
     ctx2.strokeStyle = pred.ok ? "#2e6b2a" : "#333"; ctx2.lineWidth = 2.5;
     ctx2.beginPath(); ctx2.moveTo(clampX(pred.v), yc - h / 2 - 8); ctx2.lineTo(clampX(pred.v), yc + h / 2 + 8); ctx2.stroke();
@@ -765,8 +792,7 @@ adj  <- ${sA.extra.toFixed(2)}
 guess <- base + adj * (b$species == "scandens")
 tapply(b$beak_depth - guess, b$species, mean)
 
-# the two panels
-hist(b$beak_depth - guess, breaks = 60)
+# the panel
 boxplot(beak_depth ~ species, data = b, horizontal = TRUE)
 abline(v = c(base, base + adj))
 
@@ -792,6 +818,17 @@ function leftoversB() {
   return { fE, fL, sE, sL, fEm: mean(fE), fLm: mean(fL), sEm: mean(sE), sLm: mean(sL) };
 }
 function fortisLandedB(L) { return Math.abs(L.fEm) <= B_TOL && Math.abs(L.fLm) <= B_TOL; }
+// How far each line sits from that species' averages in a typical year. This is
+// what "keeping the error low" means on the two questions below the plot.
+function typicalB() {
+  let tf = 0, ts = 0;
+  for (let i = 0; i < YEARS.length; i++) {
+    const gf = sB.fbase + sB.frate * DEC[i];
+    tf += Math.abs(DEPTH_FORTIS[i] - gf);
+    ts += Math.abs(DEPTH_SCANDENS[i] - (gf + sB.sbase + sB.srate * DEC[i]));
+  }
+  return { f: tf / YEARS.length, s: ts / YEARS.length };
+}
 
 function drawStageB() {
   const L = leftoversB();
@@ -817,7 +854,7 @@ function drawStageB() {
   const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
   const pad2 = { l: 56, r: 16, t: 14, b: 44 };
   const f2 = makeFrame(pad2, c2.W, c2.H, 1970, 2015, -0.6, 0.6);
-  drawAxes(ctx2, f2, "year", "left over (mm)", 9, 4, v => v.toFixed(0), v => v.toFixed(1));
+  drawAxes(ctx2, f2, "year", "error — the year's average, minus your line (mm)", 9, 4, v => v.toFixed(0), v => v.toFixed(1));
   drawHLine(ctx2, f2, 0, "#999", 1, [3, 3]);
   for (let i = 0; i < YEARS.length; i++) {
     const gf = sB.fbase + sB.frate * DEC[i];
@@ -850,6 +887,23 @@ function drawStageB() {
   paintMiss("B_fLate", L.fLm, B_TOL, 3);
   if (sB.phase2) { paintMiss("B_sEarly", L.sEm, B_TOL, 3); paintMiss("B_sLate", L.sLm, B_TOL, 3); }
   else { document.getElementById("B_sEarly").textContent = "—"; document.getElementById("B_sLate").textContent = "—"; }
+  // The sign of each trend, said out loud, so "positive" is something the
+  // student reads rather than something they have to add up.
+  const typ = typicalB();
+  const trend = (id, v) => {
+    const el = document.getElementById(id);
+    el.textContent = signed(v, 3) + " mm" + (v > 0 ? " (rising)" : v < 0 ? " (falling)" : " (flat)");
+    el.className = v > 0 ? "ok" : "";
+  };
+  trend("B_fTrend", sB.frate);
+  document.getElementById("B_fTyp").textContent = typ.f.toFixed(3) + " mm";
+  if (sB.phase2) {
+    trend("B_sTrend", sB.frate + sB.srate);
+    document.getElementById("B_sTyp").textContent = typ.s.toFixed(3) + " mm";
+  } else {
+    document.getElementById("B_sTrend").textContent = "—";
+    document.getElementById("B_sTyp").textContent = "—";
+  }
 
   if (!sB.phase2 && fortisLandedB(L)) {
     sB.phase2 = true;
@@ -861,29 +915,37 @@ function drawStageB() {
     return;
   }
   const flat = [L.fEm, L.fLm].concat(sB.phase2 ? [L.sEm, L.sLm] : []).filter(v => Math.abs(v) <= B_TOL).length;
-  document.getElementById("B1_now").textContent = sB.phase2 ? (flat + " of 4 flat") : "fortis first";
+  document.getElementById("B1_now").textContent = sB.phase2 ? (flat + " of 4 on zero") : "fortis first";
   checkB();
 }
 
-function crossYearB() {
-  if (Math.abs(sB.srate) < 1e-9) return null;
-  return 1973 + 10 * (-sB.sbase / sB.srate);
+// Both answers were measured against the shipped slider grids rather than
+// asserted. Sweeping every setting that keeps all four average errors inside
+// 0.05 mm: fortis's rate runs -0.330 to -0.240 and never once reaches zero,
+// while scandens's runs -0.085 to +0.005, and 96 of the 9,842 passing
+// combinations put it above zero -- spread over 19 different fortis rates, so it
+// is a notch on a slider and not one magic setting. In every one of them the
+// scandens per-decade adjustment sits exactly one step past parallel. So the
+// honest answers are no and yes, which is the whole point of the stage: knowing
+// the year tells you a great deal about a fortis and almost nothing about a
+// scandens.
+let bNumScored = 0;
+function bNumDone() {
+  bNumScored++;
+  if (bNumScored < 2) return;
+  markTask("B", "B2"); Gates.B.done = true;
 }
-// Read off the graph, so it is graded against the lines the student actually
-// drew. Dead on scores; one year out scores and says so, because the crossing
-// is genuinely hard to read to the year; two out or more does not.
-const numB = wireNumeric("B", {
-  bit: BIT.B_num,
-  check: v => { const t = crossYearB(); return t !== null && Math.abs(v - Math.round(t)) <= 1; },
-  verdict: v => {
-    const t = crossYearB();
-    if (t === null) return { ok: false, text: "Your two lines are still parallel — they do not cross anywhere." };
-    const yr = Math.round(t), off = Math.abs(v - yr);
-    if (off === 0) return { ok: true, text: "Recorded — right." };
-    if (off === 1) return { ok: true, text: "Close, and recorded as right — the crossing is hard to read to the year. Your two lines cross in " + yr + "." };
-    return { ok: false, text: "Not right — recorded. Look again at where your two lines meet, and try again." };
-  },
-  after: () => { markTask("B","B2"); Gates.B.done = true; }
+wireYesNo("B_q1", {
+  bit: BIT.B_num1, verdictId: "B_v1", answer: "no",
+  right: "Recorded — right. Push the fortis rate up and the four errors go red long before it reaches zero: every setting that keeps them on zero has fortis falling.",
+  wrong: "Recorded — not right. Try it: push the fortis rate up towards zero and watch the two red bars. They break well before the trend turns positive.",
+  after: bNumDone
+});
+wireYesNo("B_q2", {
+  bit: BIT.B_num2, verdictId: "B_v2", answer: "yes",
+  right: "Recorded — right. It only just gets there — the best you can do is about +0.005 mm per decade — but it gets there with all four errors still on zero. The scandens trend is not clearly different from no trend at all.",
+  wrong: "Recorded — not right. Push the scandens adjustment per decade up one notch past the setting that makes the two lines parallel, then re-flatten. The scandens trend does creep above zero with all four errors still on zero.",
+  after: bNumDone
 });
 
 function checkB() {
@@ -894,7 +956,7 @@ function checkB() {
   Gates.B.solvedOnce = true;
   markTask("B", "B1");
   record(BIT.B_solve, true);
-  numB.show();
+  document.getElementById("numqB").classList.add("shown");
   unlockNext("B");
   showSolved("B");
 }
@@ -1003,30 +1065,34 @@ function drawStageC() {
     ctx.fillText("take a record to draw its field seasons", f.pad.l + f.W / 2, f.pad.t + f.H / 2);
   }
 
-  const cv2 = document.getElementById("plotC2");
-  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
-  const pad2 = { l: 90, r: 16, t: 16, b: 46 };
-  const f2 = makeFrame(pad2, c2.W, c2.H, -0.9, 0.5, 0, 1);
-  drawAxes(ctx2, f2, "change in beak depth per decade (mm)", "", 7, 1, v => v.toFixed(1), () => "");
-  drawVLine(ctx2, f2, 0, "#bbb", 1, [3, 3]);
-  const b = bandsC(), apart = apartC();
-  const rows = [{ v: sC.fortis, y: 0.68, col: "rgba(178,58,72,0.5)", bar: "#b23a48", lab: "fortis", band: b && b.f },
-                { v: sC.scandens, y: 0.30, col: "rgba(47,107,143,0.5)", bar: "#2f6b8f", lab: "scandens", band: b && b.s }];
-  ctx2.font = "12px -apple-system, sans-serif"; ctx2.textAlign = "right"; ctx2.textBaseline = "middle";
-  for (const r of rows) {
-    ctx2.fillStyle = "#555"; ctx2.fillText(r.lab, f2.pad.l - 8, f2.y(r.y));
-    ctx2.fillStyle = r.col;
-    for (const v of r.v) {
-      const x = f2.x(Math.max(-0.9, Math.min(0.5, v)));
-      ctx2.beginPath(); ctx2.arc(x, f2.y(r.y) + 12, 1.7, 0, 6.2832); ctx2.fill();
-    }
-    if (r.band) {
-      ctx2.fillStyle = apart ? "#6f8a4a" : r.bar;
-      const x0 = f2.x(Math.max(-0.9, r.band[0])), x1 = f2.x(Math.min(0.5, r.band[1]));
-      ctx2.fillRect(x0, f2.y(r.y) - 5, Math.max(2, x1 - x0), 5);
-    }
+  // The 2x2 that replaced the cloud panel 2026-09-04 on JM's call: of the
+  // records taken at this length, how many put each species' trend the right way
+  // up and how many put it upside down. Both species genuinely fall over the
+  // forty years, so every rising estimate is a record that got the direction of
+  // evolution backwards.
+  function signCell(downId, upId, vals) {
+    const n = vals.length;
+    let up = 0; for (const v of vals) if (v > 0) up++;
+    const down = n - up;
+    // Round once and take the complement, so the two cells always sum to 100 --
+    // rounding each on its own printed "100% / 0%" on a row that was 200 and 1.
+    // A handful of wrong-direction records is the finding, so never round it away.
+    let upPct = Math.round(100 * up / n);
+    if (up > 0 && upPct === 0) upPct = null;         // real, but under half a percent
+    const upTxt = !n ? "—" : upPct === null ? "&lt;1%" : upPct + "%";
+    const downTxt = !n ? "—" : (100 - (upPct === null ? 0 : upPct)) + "%";
+    const sub = k => n ? `<span class="n">${k} of ${n}</span>` : "";
+    document.getElementById(downId).innerHTML = downTxt + sub(down);
+    const upEl = document.getElementById(upId);
+    upEl.innerHTML = upTxt + sub(up);
+    upEl.classList.toggle("none", up === 0);
   }
+  signCell("C_fDown", "C_fUp", sC.fortis);
+  signCell("C_sDown", "C_sUp", sC.scandens);
 
+  // The two ranges of plausible rates are still the gate; they read as text now
+  // that the panel that drew them is gone.
+  const b = bandsC(), apart = apartC();
   document.getElementById("C_kOut").textContent = String(sC.k);
   document.getElementById("cC_k").textContent = String(sC.k);
   document.getElementById("C_kShow").textContent = String(sC.k);
@@ -1086,7 +1152,7 @@ apply(cloud, 2, quantile, c(.025, .975))
 
 /* ====== STAGE D — put the seed crop underneath it =================== */
 const D_TOL = 0.03;
-const sD = { fresp: 0.00, sresp: 0.00, fCloud: [], sCloud: [] };
+const sD = { fresp: 0.00, sresp: 0.00 };
 
 // Last year's crop against this year's birds: the birds measured in a season
 // are the ones that got through the season before it.
@@ -1110,18 +1176,6 @@ function halvesD(depths, resp) {
     (CROP.share[i] <= CROP.cut ? lo : hi).push(left);
   }
   return { lo: mean(lo), hi: mean(hi) };
-}
-function buildCloudsD() {
-  const rng = mulberry32(pageSeed("l5D"));
-  const n = CROP.share.length;
-  for (let r = 0; r < 800; r++) {
-    const idx = [];
-    for (let i = 0; i < n; i++) idx.push(Math.floor(rng() * n));
-    const xs = idx.map(i => CROP.share[i]);
-    const ff = olsFit(xs, idx.map(i => CROP.fd[i]));
-    const sf = olsFit(xs, idx.map(i => CROP.sd[i]));
-    if (ff && sf) { sD.fCloud.push(ff.b); sD.sCloud.push(sf.b); }
-  }
 }
 // What the year term is worth on these sixteen seasons, on its own and then
 // with the crop sitting beside it in the same fit.
@@ -1154,32 +1208,6 @@ function drawStageD() {
   series(CROP.fd, sD.fresp, "rgba(178,58,72,0.8)", "#b23a48");
   series(CROP.sd, sD.sresp, "rgba(47,107,143,0.8)", "#2f6b8f");
 
-  const cv2 = document.getElementById("plotD2");
-  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0, 0, c2.W, c2.H);
-  const pad2 = { l: 90, r: 16, t: 16, b: 46 };
-  const f2 = makeFrame(pad2, c2.W, c2.H, -0.3, 1.3, 0, 1);
-  drawAxes(ctx2, f2, "shift in the population average across the crop (mm)", "", 8, 1, v => v.toFixed(1), () => "");
-  drawVLine(ctx2, f2, 0, "#bbb", 1, [3, 3]);
-  const bands = {
-    f: [quantile(sD.fCloud, 0.025), quantile(sD.fCloud, 0.975)],
-    s: [quantile(sD.sCloud, 0.025), quantile(sD.sCloud, 0.975)]
-  };
-  const apart = bands.f[0] > bands.s[1] || bands.s[0] > bands.f[1];
-  const rows = [{ v: sD.fCloud, band: bands.f, y: 0.68, col: "rgba(178,58,72,0.45)", bar: "#b23a48", lab: "fortis", knob: sD.fresp },
-                { v: sD.sCloud, band: bands.s, y: 0.30, col: "rgba(47,107,143,0.45)", bar: "#2f6b8f", lab: "scandens", knob: sD.sresp }];
-  ctx2.font = "12px -apple-system, sans-serif"; ctx2.textAlign = "right"; ctx2.textBaseline = "middle";
-  for (const r of rows) {
-    ctx2.fillStyle = "#555"; ctx2.fillText(r.lab, f2.pad.l - 8, f2.y(r.y));
-    ctx2.fillStyle = r.col;
-    for (const v of r.v) { ctx2.beginPath(); ctx2.arc(f2.x(Math.max(-0.3, Math.min(1.3, v))), f2.y(r.y) + 12, 1.6, 0, 6.2832); ctx2.fill(); }
-    ctx2.fillStyle = apart ? "#6f8a4a" : r.bar;
-    const x0 = f2.x(Math.max(-0.3, r.band[0])), x1 = f2.x(Math.min(1.3, r.band[1]));
-    ctx2.fillRect(x0, f2.y(r.y) - 5, Math.max(2, x1 - x0), 5);
-    ctx2.strokeStyle = "#333"; ctx2.lineWidth = 1.5; ctx2.beginPath();
-    const xk = f2.x(Math.max(-0.3, Math.min(1.3, r.knob)));
-    ctx2.moveTo(xk, f2.y(r.y) - 11); ctx2.lineTo(xk, f2.y(r.y) + 3); ctx2.stroke();
-  }
-
   const hf = halvesD(CROP.fd, sD.fresp), hs = halvesD(CROP.sd, sD.sresp);
   document.getElementById("D_frespOut").textContent = sD.fresp.toFixed(2);
   document.getElementById("D_srespOut").textContent = sD.sresp.toFixed(2);
@@ -1193,7 +1221,7 @@ function drawStageD() {
   document.getElementById("D_decIn").textContent =
     `fortis ${signed(dt.fortis.with, 2)}, scandens ${signed(dt.scandens.with, 2)}`;
   const flat = [hf.lo, hf.hi, hs.lo, hs.hi].filter(v => Math.abs(v) <= D_TOL).length;
-  document.getElementById("D1_now").textContent = flat === 0 ? "none of the four yet" : `${flat} of 4 flat`;
+  document.getElementById("D1_now").textContent = flat === 0 ? "none of the four yet" : `${flat} of 4 under 0.03 mm`;
   checkD();
 }
 
@@ -1249,19 +1277,22 @@ coef(lm(beak_depth ~ I(year/10) + large_share, data = f))
 });
 
 /* ====== Boot + Score ================================================
-   Scaffold layout (7 bits):
-     0  A both species' average miss brought to zero, on both panels at once
+   Scaffold layout (8 bits):
+     0  A both species' average miss brought to zero on the box plots
      1  B all four halves of the record flattened
-     2  B the year the two lines cross, read off the student's own graph
-     3  C the two rate clouds pulled apart on 150 records
-     4  C the shortest record that still separates them
-     5  D both shifts in the average landed against the seed crop
-     6  D how much further the fortis average shifts, on the student's own numbers
+     2  B can fortis be given a rising trend with the error low?   (no)
+     3  B can scandens be given a rising trend with the error low? (yes)
+     4  C the two ranges of plausible rates pulled apart on 150 records
+     5  C the shortest record that still separates them
+     6  D both shifts in the average landed against the seed crop
+     7  D how much further the fortis average shifts, on the student's own numbers
 
-   Stage A lost its written question in the 2026-09-04 rewrite -- it now carries
-   two views of one fit instead of a fit plus a permutation test -- so the
-   scaffold went 8 -> 7 and the version 6 -> 7. Codes issued against v6 no
-   longer decode; that is the point of the version stamp.
+   Version history. v6 -> v7 (2026-09-04): A's written question dropped and the
+   permutation panel replaced by box plots, scaffold 8 -> 7. v7 -> v8, later the
+   same day: every stage down to one plot on JM's call -- A loses the miss
+   histograms, C loses the cloud panel for a 2x2 of wrong-direction estimates,
+   D loses its cloud panel -- and B's crossing-year question becomes two yes/no
+   questions, taking the scaffold back to 8.
    ================================================================== */
 // Instructor bypass (score.js): every section is already open, so undo the one
 // gate that lives inside a stage rather than between them.
@@ -1271,19 +1302,19 @@ document.addEventListener("score:bypass", () => {
   document.getElementById("B_srate").disabled = false;
   document.getElementById("rowSbase").classList.remove("muted");
   document.getElementById("rowSrate").classList.remove("muted");
-  numB.show(); numC.show(); numD.show();
+  document.getElementById("numqB").classList.add("shown");
+  numC.show(); numD.show();
   drawStageA(); drawStageB(); drawStageC(); drawStageD();
 });
 
-buildCloudsD();
 sC.key = sweepC();
 takeRecordC();
 drawStageA(); drawStageB(); drawStageC(); drawStageD();
 
 Score.init({
   moduleId: "lesson5",
-  version: 7,
-  scaffold: 7,
+  version: 8,
+  scaffold: 8,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
