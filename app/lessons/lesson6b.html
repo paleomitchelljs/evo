@@ -1,0 +1,1298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 6b</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  /* Lecture voice — JM's own words. The framing text spans the page, so the first
+     row of the two-column body is always graph | controls, at the same height. */
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } blockquote.voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:220px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls .row.muted label { color:#a9a69c; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  /* A slider that has to land on an exact value is not a mouse-friendly control:
+     at a step of 0.001 the drag is hopeless. Every range gets a pair of nudge
+     buttons that move it exactly one step. */
+  .controls .stepper { display:flex; align-items:center; gap:6px; }
+  .controls .stepper input[type=range] { flex:1; min-width:0; }
+  .controls .stepper button { flex:none; width:24px; height:24px; padding:0; font:15px/1 -apple-system,sans-serif;
+    background:#eceade; color:#333; border:1px solid var(--rule); border-radius:4px; cursor:pointer; }
+  .controls .stepper button:hover:not(:disabled) { background:#e0dcc9; }
+  .controls .stepper button:disabled,
+  .controls .row.muted .stepper button { opacity:0.35; cursor:not-allowed; }
+  .controls input[type=range]:disabled { opacity:0.4; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
+  /* The arrow widget: fixed nodes, clickable arrows. A drawn arrow turns on the
+     one slider it pays for; an undrawn one is a dashed offer. */
+  .arrows svg { width:100%; height:auto; display:block; }
+  .arrows .nd rect { fill:#f6f5f0; stroke:#c9c5b6; stroke-width:1; }
+  .arrows .nd.rate rect { fill:#fdf2f3; stroke:var(--accent); }
+  .arrows .nd.unobs rect { fill:#fbfaf6; stroke:#b8b3a0; stroke-dasharray:4 3; }
+  .arrows .nd.unobs text { fill:var(--muted); font-style:italic; }
+  .arrows .nd text { font:12px -apple-system,sans-serif; fill:var(--ink); text-anchor:middle; }
+  /* Where births, deaths and this year's count fuse into one flow. */
+  .arrows .nd.jn circle { fill:#c9c5b6; stroke:none; }
+  .arrows .ar { cursor:pointer; }
+  .arrows .ar path { fill:none; stroke:#b8b3a0; stroke-width:1.5; stroke-dasharray:5 4; }
+  .arrows .ar polygon { fill:#b8b3a0; }
+  .arrows .ar.on path { stroke:var(--accent2); stroke-width:2.5; stroke-dasharray:none; }
+  .arrows .ar.on polygon { fill:var(--accent2); }
+  .arrows .ar:hover path { stroke:var(--accent); }
+  .arrows .ar:hover polygon { fill:var(--accent); }
+  .arrows .ar.locked { cursor:not-allowed; opacity:0.35; }
+  .arrows .ar.fixed { cursor:default; pointer-events:none; }
+  .arrows .ar.fixed path { stroke:#c9c5b6; stroke-width:1.5; stroke-dasharray:none; }
+  .arrows .ar.fixed polygon { fill:#c9c5b6; }
+  /* An arrow the student has not been offered yet is absent, not dimmed: a
+     greyed-out cause still tells them a cause is coming. */
+  .arrows .ar.hid, .arrows .nd.hid { display:none; }
+  .arrows .hint { font-size:12.5px; color:var(--muted); margin-top:6px; }
+  /* One clickable box per year of the record. */
+  .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
+  .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
+  .key .sw:first-child { margin-left:0; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+  /* Lesson 6b additions ------------------------------------------------
+     The ladder of per-year rates, the round-by-round prediction log, and
+     the closing table. Everything else is lesson 6's sheet unchanged. */
+  .ladder { font:12px ui-monospace,Menlo,monospace; max-height:170px; overflow-y:auto; }
+  .ladder div { padding:1px 0; border-bottom:1px solid #f4f2ea; }
+  .ladder div:last-child { border-bottom:0; }
+  .ladder .yr { color:var(--muted); display:inline-block; width:74px; }
+  .roundlog { font:12.5px ui-monospace,Menlo,monospace; }
+  .roundlog div { padding:2px 0; border-bottom:1px solid #f4f2ea; }
+  .roundlog div:last-child { border-bottom:0; }
+  .roundlog .yr { color:var(--muted); display:inline-block; width:46px; }
+  .roundlog .big { color:var(--bad); }
+  .roundlog .small { color:var(--good); }
+  /* A held-back readout stays on the page from the start, greyed, so the
+     student can see there is a second number coming and that it is not
+     available to them while they are still fitting. */
+  .pending { color:#b8b3a0; font-style:italic; }
+  table.tbl { border-collapse:collapse; width:100%; font-size:13px; }
+  table.tbl th, table.tbl td { padding:8px 12px; border-bottom:1px solid var(--rule); text-align:right; white-space:nowrap; }
+  table.tbl th:first-child, table.tbl td:first-child { white-space:normal; min-width:250px; }
+  table.tbl th:first-child, table.tbl td:first-child { text-align:left; }
+  table.tbl thead th { font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--muted); font-weight:600; border-bottom:1px solid #c9c5b6; }
+  table.tbl td.num { font-family:ui-monospace,Menlo,monospace; }
+  table.tbl tbody tr:last-child td { border-bottom:0; }
+  table.tbl td.na { color:#b8b3a0; font-style:italic; }
+  table.tbl .best { background:#e4efd4; }
+  .tbl-note { font-size:12.5px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 6b</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+</nav>
+
+<!-- ========== STAGE A — a rate for every year, and none for next year ===== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Obviously the birds are going to have a different birth rate and death rate every single year. You could find the 19 different birth rates and 19 different death rates to perfectly fit the first twenty years of the Grants' counts.</p>
+        <p>So do it. Fit one year by hand, then take the rest.</p>
+        <p>But if you do that: what's the death rate for 1996? The birth rate? I have never thrown this exact eraser at that table on this day in my life. If I throw it that direction, what's going to happen? Everybody knows. Why? The rules don't change.</p>
+        <p>Here the rule is one number per year, and it changes every year. So each year, before it is unveiled, you say how many birds there will be.</p>
+      </div>
+      <ul class="setup">
+        <li>Cactus finches on Daphne Major. 37 counts, 1976 to 2012. You are shown the first twenty, 1976 to 1995.</li>
+        <li>Each year the model takes the count that was actually made the year before and multiplies it by one plus births minus deaths. One step at a time, never running away from the data.</li>
+        <li>Filled dots are birds counted. The red line is the model. Where the two coincide, the model has been fitted to that year.</li>
+        <li>Hollow circles are your predictions, dropped onto the year before it was unveiled.</li>
+        <li>Typical miss: how far the model sits from the count in an average year, in birds.</li>
+        <li>Five unveiled years at minimum. If your typical miss is still over 55 birds after five, you get more — up to ten. One unlucky year is not evidence.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotA" width="560" height="380"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">on the years it was fitted to:</span> <span id="A_in">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">on the years it had not seen:</span> <span id="A_out" class="pending">not yet</span>
+          &nbsp;|&nbsp;
+          <span class="label">parameters:</span> <span id="A_np">0</span>
+        </div>
+        <div class="key"><span class="sw" style="background:#1d1d1b;"></span>counted<span class="sw" style="background:#b23a48;"></span>the model<span class="sw" style="background:#fff; border:2px solid #2f6b8f;"></span>your prediction</div>
+      </div>
+      <div class="panel">
+        <h3>Your predictions</h3>
+        <div class="roundlog" id="A_log"><div style="color:var(--muted);">none yet</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsA">
+          <div class="row" data-line="b"><label for="A_b" id="A_bLab">births per bird in 1977</label><input type="range" id="A_b" min="0" max="1.20" step="0.005" value="0.200" /><output id="A_bOut">0.200</output></div>
+          <div class="row" data-line="d"><label for="A_d" id="A_dLab">deaths per bird in 1977</label><input type="range" id="A_d" min="0" max="1.20" step="0.005" value="0.200" /><output id="A_dOut">0.200</output></div>
+          <div class="buttons">
+            <button id="A_lock" class="accent">Lock in 1977</button>
+            <button id="A_rest" class="secondary" disabled>Fit the remaining 18 years</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+        <div class="fit-stats" id="A_live">
+          <span class="label" id="A_liveLab">1977 —</span> <span class="label">model</span> <span id="A_liveModel">—</span>,
+          <span class="label">counted</span> <span id="A_liveTrue">146</span>,
+          <span class="label">out by</span> <span id="A_liveMiss">—</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>The numbers you have had to find</h3>
+        <div class="ladder" id="A_ladder"><div style="color:var(--muted);">none yet</div></div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Fit 1977 by hand, to within 3 birds, and lock it in. <span class="hint"><span id="A1_now">not yet</span></span></li>
+          <li data-task="A2">Take the other 18 years. <span class="hint"><span id="A2_now">1977 first</span></span></li>
+          <li data-task="A3">Predict each unveiled year before it is unveiled. <span class="hint"><span id="A3_now">the record first</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Zero error on every year you fitted. Your goal isn't to get zero error; that's trivial to do by just throwing parameters that teach you nothing at the data. Stage B is open.</div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line">p &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_pop.csv"</span>)</span><span class="line">N &lt;- p$scandens; fit &lt;- <span class="num">20</span></span><span class="line"></span><span class="line"><span class="com"># one pair of numbers for every year of the record</span></span><span class="line">b &lt;- <span class="fn">numeric</span>(fit); d &lt;- <span class="fn">numeric</span>(fit)</span><span class="line" data-line="b">b[<span class="num">2</span>] &lt;- <span class="num" id="cA_b">0.200</span></span><span class="line" data-line="d">d[<span class="num">2</span>] &lt;- <span class="num" id="cA_d">0.200</span></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">3</span>:fit) { d[t] &lt;- <span class="num">0.2</span>; b[t] &lt;- N[t]/N[t-<span class="num">1</span>] - <span class="num">1</span> + d[t] }</span><span class="line"></span><span class="line"><span class="com"># the model is the data. 38 numbers, no error left</span></span><span class="line">yhat &lt;- N[<span class="num">1</span>:(fit-<span class="num">1</span>)] * (<span class="num">1</span> + b[<span class="num">2</span>:fit] - d[<span class="num">2</span>:fit])</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(yhat - N[<span class="num">2</span>:fit]))</span><span class="line"></span><span class="line"><span class="com"># and for year 21 there is no b and no d to use</span></span><span class="line">b[fit+<span class="num">1</span>]</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE B — two numbers for the whole record ================== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Models are wrong. But they can be usefully wrong. A model is a simplification of the world in order to better understand it. Fitting a model means finding the parameters that best predict the response from the predictors. The fit is how well that prediction matches reality.</p>
+        <p>So instead of trying to predict twenty years of data with 38 parameters that are each made up to fit what we've already seen, we're going to try it with two, and see how far we're off.</p>
+        <p>Same twenty years. Two numbers, and functionally one — only births minus deaths does anything. Get the miss as low as it will go. Then unveil the rest of the record.</p>
+      </div>
+      <ul class="setup">
+        <li>The same counts, the same one-step-ahead rule: last year's count, times one plus births minus deaths.</li>
+        <li>1996 onward is not on the plot. The ten years you unveiled in Stage A are back off it; a year is only held out once, so treat the number you get at the end as the generous version.</li>
+        <li>The sliders move in hundredths, and only their difference matters.</li>
+        <li>Unveiling freezes the two numbers. You do not get to adjust a model after seeing what it had to predict.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotB" width="560" height="380"></canvas>
+        <div class="fit-stats" id="statsB">
+          <span class="label">births minus deaths:</span> <span id="B_diff">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">on the twenty years it was fitted to:</span> <span id="B_in">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">on the years it had not seen:</span> <span id="B_out" class="pending">unveil first</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsB">
+          <div class="row" data-line="b"><label for="B_b">births per bird per year</label><input type="range" id="B_b" min="0" max="0.60" step="0.01" value="0.20" /><output id="B_bOut">0.20</output></div>
+          <div class="row" data-line="d"><label for="B_d">deaths per bird per year</label><input type="range" id="B_d" min="0" max="0.60" step="0.01" value="0.20" /><output id="B_dOut">0.20</output></div>
+          <div class="buttons">
+            <button id="B_unveil" class="accent" disabled>Unveil 1996–2012</button>
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Bring the miss on the fitted years under 65 birds. <span class="hint"><span id="B1_now">not yet</span></span></li>
+          <li data-task="B2">Then unveil the rest of the record. <span class="hint"><span id="B2_now">get under the bar first</span></span></li>
+          <li data-task="B3">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+      <div class="panel numq" id="numqB">
+        <div class="q">There are usually about 216 birds on the island across the years you just unveiled. Take your two-number model's miss on those years and give it as a percentage of 216, to the nearest whole percent.</div>
+        <div class="row">
+          <input type="number" id="B_ans" min="0" max="500" step="1" placeholder="percent" />
+          <span class="unit">percent of 216</span>
+          <button id="B_submit">Submit</button>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line">p &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_pop.csv"</span>)</span><span class="line">N &lt;- p$scandens; fit &lt;- <span class="num">2</span>:<span class="num">20</span>; held &lt;- <span class="num">21</span>:<span class="num">37</span></span><span class="line"></span><span class="line" data-line="b">b &lt;- <span class="num" id="cB_b">0.20</span></span><span class="line" data-line="d">d &lt;- <span class="num" id="cB_d">0.20</span></span><span class="line">yhat &lt;- N[<span class="num">1</span>:<span class="num">36</span>] * (<span class="num">1</span> + b - d)</span><span class="line"></span><span class="line"><span class="com"># fitted on the first twenty, scored on the rest</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(yhat[fit-<span class="num">1</span>] - N[fit]))</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(yhat[held-<span class="num">1</span>] - N[held]))</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE C — four numbers, and one of them is the weather ====== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Two more numbers, but not two more years. Rain that year, and how crowded the island already was.</p>
+        <p>Neither of those is true. The rain does not make nestlings; it makes seeds, and nobody counted the seeds. Crowding is not a cause, it is a stand-in for every way an island runs out of room. Never true — but often close enough.</p>
+        <p>Using fewer parameters means we can test how reliable each one is. These two are worth testing because they say something about 1996 as well as about 1983, which is more than a birth rate for 1983 ever did.</p>
+        <p>Fit them on the same twenty years. Then unveil.</p>
+      </div>
+      <ul class="setup">
+        <li>Same twenty years, same one-step-ahead rule, same freeze on unveiling.</li>
+        <li>Below the graph is your model. Click a dashed arrow to add it, and the slider it pays for switches on. A drawn arrow is one more number you had to go and find.</li>
+        <li>Rain is the island's total for that year, from 1 mm to 1,359 mm, and it is on record for the held-out years too — the model can read it without being told the counts.</li>
+        <li>The bar is 36 birds. Neither arrow reaches it alone.</li>
+        <li>Once you unveil, the plot also shows what your model expects for 2013 — a year past the end of the record, that nobody counted.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotC" width="560" height="330"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">on the twenty years it was fitted to:</span> <span id="C_in">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">on the years it had not seen:</span> <span id="C_out" class="pending">unveil first</span>
+          &nbsp;|&nbsp;
+          <span class="label">parameters:</span> <span id="C_np">2</span>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Your birth-death model</h3>
+        <div id="arrowsC" class="arrows"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsC">
+          <div class="row" data-line="b"><label for="C_b">births in an average year</label><input type="range" id="C_b" min="0" max="1.20" step="0.01" value="0.30" /><output id="C_bOut">0.30</output></div>
+          <div class="row" data-line="d"><label for="C_d">deaths in an average year</label><input type="range" id="C_d" min="0" max="1.20" step="0.01" value="0.30" /><output id="C_dOut">0.30</output></div>
+          <div class="row muted" id="rowCrain" data-line="rain"><label for="C_rain">how much a wet year adds to births</label><input type="range" id="C_rain" min="0" max="1.50" step="0.05" value="0" disabled /><output id="C_rainOut">0.00</output></div>
+          <div class="row muted" id="rowCcrowd" data-line="crowd"><label for="C_crowd">how much a crowded island adds to deaths</label><input type="range" id="C_crowd" min="0" max="2.50" step="0.05" value="0" disabled /><output id="C_crowdOut">0.00</output></div>
+          <div class="buttons">
+            <button id="C_unveil" class="accent" disabled>Unveil 1996–2012</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Bring the miss on the fitted years under 36 birds. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Then unveil the rest of the record. <span class="hint"><span id="C2_now">get under the bar first</span></span></li>
+          <li data-task="C3">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedC">Four numbers, fitted on twenty years, and they hold on seventeen years they never saw. Stage D is open.</div>
+      </div>
+      <div class="panel numq" id="numqC">
+        <div class="q">The record stops in 2012. Read the 2013 point off the plot: how many cactus finches does your frozen model expect in the year after the last count?</div>
+        <div class="row">
+          <input type="number" id="C_ans" min="0" max="20000" step="1" placeholder="birds" />
+          <span class="unit">birds</span>
+          <button id="C_submit">Submit</button>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line">p &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/finch_pop.csv"</span>)</span><span class="line">r &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/grant_rainfall.csv"</span>)</span><span class="line">N &lt;- p$scandens</span><span class="line">wet &lt;- <span class="fn">log10</span>(r[<span class="fn">match</span>(p$year, r$Year), <span class="num">2</span>] + <span class="num">1</span>) - <span class="num">1.88</span></span><span class="line"></span><span class="line" data-line="b">b0 &lt;- <span class="num" id="cC_b">0.30</span></span><span class="line" data-line="d">d0 &lt;- <span class="num" id="cC_d">0.30</span></span><span class="line" data-line="rain">rainPull  &lt;- <span class="num" id="cC_rain">0.00</span></span><span class="line" data-line="crowd">crowdPull &lt;- <span class="num" id="cC_crowd">0.00</span></span><span class="line"></span><span class="line">b &lt;- b0 + rainPull  * wet[<span class="num">1</span>:<span class="num">36</span>]</span><span class="line">d &lt;- d0 + crowdPull * (<span class="fn">log10</span>(N[<span class="num">1</span>:<span class="num">36</span>]) - <span class="num">2.24</span>)</span><span class="line">yhat &lt;- N[<span class="num">1</span>:<span class="num">36</span>] * (<span class="num">1</span> + b - d)</span><span class="line"></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(yhat[<span class="num">1</span>:<span class="num">19</span>]  - N[<span class="num">2</span>:<span class="num">20</span>]))</span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(yhat[<span class="num">20</span>:<span class="num">36</span>] - N[<span class="num">21</span>:<span class="num">37</span>]))</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE D — the three of them side by side ==================== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Three models, the same twenty years to learn from, the same years held back.</p>
+        <p>Every extra parameter is one more opportunity to be wrong. Adding more isn't safer — it's more surface area for error. But the 38-parameter model and the 4-parameter model do not fail the same way, and the count is not what separates them.</p>
+        <p>Read the row you did the most work for. Then read the row that predicted best. It's a model — how good are the data that you buy that prediction.</p>
+      </div>
+      <ul class="setup">
+        <li>Fitted on: 1977 to 1995, nineteen predictions, every model.</li>
+        <li>Held back: 1996 to 2012, seventeen predictions, for the two models that have a rule to run.</li>
+        <li>The bespoke model has no row there, because it has no number for a year it was not fitted to. Its only score is the years you predicted by hand, one at a time.</li>
+        <li>Green marks the smallest miss in each column.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body">
+    <div class="panel" style="margin-bottom:16px;">
+      <div style="overflow-x:auto;">
+        <table class="tbl" id="tblD">
+          <thead>
+            <tr>
+              <th>What you fitted</th>
+              <th>Parameters</th>
+              <th>Miss on the fitted years</th>
+              <th id="thK">Miss on the years you predicted</th>
+              <th>Miss on all 17 held-back years</th>
+            </tr>
+          </thead>
+          <tbody id="tblDbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-note" id="tblDnote"></div>
+    </div>
+    <div class="grid">
+    <div class="col">
+      <div class="panel">
+        <h3>To finish the lesson</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedD">Doubling the parameters halved the miss — because the two you added say something about a year nobody has counted yet, and a birth rate for 1983 never will.</div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">Two of your models were fitted on exactly the same twenty years, one with two numbers and one with four. On the seventeen years neither of them had seen, how many birds a year better was the four-number model?</div>
+        <div class="row">
+          <input type="number" id="D_ans" min="-500" max="500" step="1" placeholder="birds" />
+          <span class="unit">birds a year</span>
+          <button id="D_submit">Submit</button>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line"><span class="com"># the whole lesson, as a table</span></span><span class="line">score &lt;- <span class="fn">function</span>(yhat, obs, idx) <span class="fn">mean</span>(<span class="fn">abs</span>(yhat[idx] - obs[idx]))</span><span class="line"></span><span class="line">fitted &lt;- <span class="num">2</span>:<span class="num">20</span></span><span class="line">held   &lt;- <span class="num">21</span>:<span class="num">37</span></span><span class="line"></span><span class="line"><span class="fn">data.frame</span>(</span><span class="line">  model = <span class="fn">c</span>(<span class="str">"one pair per year"</span>, <span class="str">"one pair, all years"</span>, <span class="str">"rain + crowding"</span>),</span><span class="line">  np    = <span class="fn">c</span>(<span class="num">38</span>, <span class="num">2</span>, <span class="num">4</span>),</span><span class="line">  <span class="kw">in</span>    = <span class="fn">c</span>(<span class="fn">score</span>(y1, N, fitted), <span class="fn">score</span>(y2, N, fitted), <span class="fn">score</span>(y3, N, fitted)),</span><span class="line">  out   = <span class="fn">c</span>(<span class="kw">NA</span>,            <span class="fn">score</span>(y2, N, held),   <span class="fn">score</span>(y3, N, held))</span><span class="line">)</span></pre>
+      </div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+/* ====== Shared helpers ==============================================
+   Lifted from lesson6.html unchanged, so the two pages draw and behave the
+   same way. Only drawFinch() below is new: this lesson's models predict one
+   year ahead from the count that was actually made, so the picture is a set
+   of whiskers hanging off the data rather than a free-running line.
+   ================================================================== */
+function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
+function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
+  xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
+  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke();
+  ctx.fillStyle="#333"; ctx.font="11px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for (let i=0;i<=xTicks;i++){ const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+6); }
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
+  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
+  if (xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
+  if (yLabel) { ctx.save(); ctx.translate(f.pad.l-44, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore(); }
+}
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
+function niceTop(v) { const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1)))); return Math.ceil(v/p)*p; }
+function signed(v, n) { const s = v.toFixed(n); return v > 0 ? "+" + s : s; }
+function paintGoal(id, v, target, digits, suffix) {
+  const el = document.getElementById(id);
+  el.textContent = v.toFixed(digits) + (suffix || "");
+  el.className = v <= target ? "ok" : "off";
+}
+
+/* Nudge buttons beside every slider. Wired in JS rather than written into each
+   row, so a slider added later gets them for free. */
+function addSteppers(root) {
+  root.querySelectorAll('input[type=range]').forEach(inp => {
+    if (inp.parentElement && inp.parentElement.classList.contains("stepper")) return;
+    const step = parseFloat(inp.step) || 1;
+    const lo = parseFloat(inp.min), hi = parseFloat(inp.max);
+    const dec = (String(inp.step).split(".")[1] || "").length;
+    const wrap = document.createElement("span");
+    wrap.className = "stepper";
+    inp.parentElement.insertBefore(wrap, inp);
+    const mk = (label, dir) => {
+      const b = document.createElement("button");
+      b.type = "button"; b.textContent = label; b.tabIndex = -1;
+      b.setAttribute("aria-label", (dir < 0 ? "decrease" : "increase") + " " + (inp.id || "value"));
+      b.addEventListener("click", () => {
+        if (inp.disabled) return;
+        const n = Math.round((parseFloat(inp.value) - lo) / step) + dir;
+        const v = Math.min(hi, Math.max(lo, +(lo + n * step).toFixed(dec)));
+        inp.value = String(v);
+        inp.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      return b;
+    };
+    wrap.appendChild(mk("−", -1)); wrap.appendChild(inp); wrap.appendChild(mk("+", 1));
+  });
+}
+
+/* ====== The arrow widget (lesson6.html, unchanged) =================== */
+function buildArrows(mountId, spec, onToggle) {
+  const mount = document.getElementById(mountId);
+  const W = spec.width || 520, H = spec.height || 150;
+  const parts = [];
+  parts.push(`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`);
+  const hidden = {};
+  for (const a of spec.arrows) if (a.hidden) hidden[a.id] = true;
+  for (const a of spec.arrows.concat(spec.fixed || [])) {
+    const f = spec.nodes[a.from], t = spec.nodes[a.to];
+    const x1 = f.x + f.w/2, y1 = f.y + f.h/2, x2 = t.x + t.w/2, y2 = t.y + t.h/2;
+    const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const ux = dx/len, uy = dy/len;
+    const head = !a.nohead;
+    const sx = x1 + ux*(f.w/2+4), sy = y1 + uy*(f.h/2+4);
+    const pad = head ? t.w/2 + 12 : t.w/2 + 1;
+    const ex = x2 - ux*pad, ey = y2 - uy*pad;
+    const px = -uy, py = ux;
+    parts.push(`<g class="ar${a.id ? "" : " fixed on"}${a.id && hidden[a.id] ? " hid" : ""}"${a.id ? ` data-arrow="${a.id}"` : ""}>` +
+      `<path d="M ${sx} ${sy} L ${ex} ${ey}" />` +
+      (head ? `<polygon points="${ex+ux*11},${ey+uy*11} ${ex+px*5},${ey+py*5} ${ex-px*5},${ey-py*5}" />` : "") +
+      `<rect x="${(sx+ex)/2-40}" y="${(sy+ey)/2-14}" width="80" height="28" fill="transparent" /></g>`);
+  }
+  for (const id in spec.nodes) {
+    const n = spec.nodes[id];
+    if (n.junction) {
+      parts.push(`<g class="nd jn"><circle cx="${n.x+n.w/2}" cy="${n.y+n.h/2}" r="${n.w/2}" /></g>`);
+      continue;
+    }
+    parts.push(`<g class="nd ${n.rate ? "rate" : ""}${n.unobserved ? " unobs" : ""}"><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="5" />` +
+      `<text x="${n.x+n.w/2}" y="${n.y+n.h/2+4}">${n.label}</text></g>`);
+  }
+  parts.push(`</svg><div class="hint">${spec.hint || ""}</div>`);
+  mount.innerHTML = parts.join("");
+  const state = {};
+  for (const a of spec.arrows) state[a.id] = false;
+  mount.querySelectorAll("[data-arrow]").forEach(g => {
+    g.addEventListener("click", () => {
+      if (g.classList.contains("locked")) return;
+      const id = g.dataset.arrow;
+      state[id] = !state[id];
+      mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("on", state[id]));
+      onToggle(id, state[id], state);
+    });
+  });
+  return {
+    state,
+    set: (id, on) => {
+      state[id] = on;
+      mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("on", on));
+    },
+    lock: (id, on) => { mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("locked", on)); },
+    reveal: id => { mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.remove("hid")); },
+    count: () => { let n = 0; for (const k in state) if (state[k]) n++; return n; }
+  };
+}
+
+/* ====== Stage gates ================================================= */
+const Gates = { A:{}, B:{}, C:{}, D:{} };
+const NEXT = { A:"B", B:"C", C:"D", D:null };
+function unlockNext(stage) {
+  const nx = NEXT[stage];
+  if (!nx) return;
+  const sec = document.getElementById("stage"+nx);
+  if (sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc"+nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
+}
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function showSolved(stage, text) {
+  const el = document.getElementById("solved"+stage);
+  if (!el) return;
+  if (text) el.innerHTML = text;
+  el.classList.add("shown");
+}
+function record(pos, ok) { if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok); }
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+const BIT = { A_fit:0, A_rounds:1, B_solve:2, B_num:3, C_solve:4, C_num:5, D_num:6 };
+
+function wireNumeric(id, opts) {
+  const box   = document.getElementById("numq"+id);
+  const input = document.getElementById(id+"_ans");
+  const btn   = document.getElementById(id+"_submit");
+  const out   = document.getElementById(id+"_verdict");
+  let scored = false;
+  btn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const ok = opts.check(v);
+    out.className = "verdict shown " + (ok ? "right" : "wrong");
+    out.textContent = ok ? opts.right : opts.wrong;
+    if (ok) { btn.disabled = true; input.disabled = true; }
+    if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
+  });
+  return { show: () => { box.classList.add("shown"); } };
+}
+
+/* ====== The record ==================================================
+   Cactus finch counts on Daphne Major and the island's annual rainfall,
+   1976-2012. data/clean/finch_pop.csv + data/clean/grant_rainfall.csv
+   (Grant & Grant 2014).
+   ================================================================== */
+const FYEARS = [
+  1976,1977,1978,1979,1980,1981,1982,1983,1984,1985,1986,1987,1988,1989,1990,1991,1992,1993,1994,1995,
+  1996,1997,1998,1999,2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012
+];
+const FCOUNT = [
+  185,146,132,190,197,180,241,234,476,295,101,83,158,117,97,73,137,227,248,154,
+  165,86,145,226,84,115,169,307,159,50,170,140,180,400,312,388,573
+];
+const FRAIN  = [
+  135,24,137,69,53,73,51,1359,53,4,49,622,1,4,48,195,209,234,51,66,
+  2,368,922,30,50,96,185,16,25,121,27,133,205,85,172,381,316
+];
+/* Centres, so a slider of zero means "the average year" rather than "no rain". */
+const F_LOGRAIN = FRAIN.map(v => Math.log10(v + 1));
+const F_MLR = 1.88, F_MLN = 2.24;
+
+/* THE SPLIT. Counts 0..19 -- 1976 to 1995 -- are the twenty years every model
+   on this page gets to learn from. Index i is a *prediction of year i made from
+   the count in year i-1*, so the fitted set is 1..19 (nineteen predictions,
+   1977 to 1995) and the held-back set is 20..36 (seventeen, 1996 to 2012).
+
+   EVERY MODEL HERE PREDICTS ONE YEAR AHEAD from the count that was actually
+   made. Lesson 6 lets its models run free from 1976 and compares the whole
+   trajectory; that is a different question, and comparing a per-year model
+   against a free-running one would not be a fair race. Here all three answer
+   the same question -- given this year's count, how many next year? -- so the
+   three rows of the closing table are the same measurement. */
+const SPLIT = 20;
+const IN_IDX  = []; for (let i = 1; i < SPLIT; i++) IN_IDX.push(i);
+const OUT_IDX = []; for (let i = SPLIT; i < FYEARS.length; i++) OUT_IDX.push(i);
+const OUT_MEAN = Math.round(OUT_IDX.reduce((a,i)=>a+FCOUNT[i],0) / OUT_IDX.length);  // 216
+
+// How far the model sits from the count in an average year, in the birds
+// themselves, over whichever years you name.
+function missOver(pred, idxs) {
+  let tot = 0, n = 0;
+  for (const i of idxs) { if (pred[i] == null) continue; tot += Math.abs(pred[i] - FCOUNT[i]); n++; }
+  return n ? tot / n : 0;
+}
+// One year ahead, from the count that was actually made.
+function stepAhead(prev, net) { return Math.max(0.5, Math.min(1e6, prev * Math.max(0.02, 1 + net))); }
+// A net rate has to be shown as a birth rate and a death rate, because that is
+// what the student turns. Deaths sit at a plausible 0.200 and births carry the
+// year, until the year is bad enough that births would have to go negative.
+function splitRate(net) { return (net + 0.200 >= 0) ? { b: net + 0.200, d: 0.200 } : { b: 0, d: -net }; }
+
+/* ====== The one plot this lesson draws ==============================
+   o.shown     indices whose counted value is visible
+   o.pred      array of one-step-ahead predictions, null where the model is silent
+   o.line      indices of o.pred to draw as whiskers off the previous count
+   o.guesses   [{idx, value}] the student's own predictions, as hollow circles
+   o.pending   {idx, value} the prediction the sliders are currently offering
+   o.forecast  {idx, value} a year past the end of the record
+   ================================================================== */
+function drawFinch(cvId, o) {
+  const cv = document.getElementById(cvId);
+  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad = { l: 66, r: 16, t: 16, b: 46 };
+  let hi = 600;
+  for (const i of o.shown) hi = Math.max(hi, FCOUNT[i]);
+  const consider = v => { if (v != null && v < 5000) hi = Math.max(hi, v); };
+  for (const i of (o.line || [])) consider(o.pred ? o.pred[i] : null);
+  for (const g of (o.guesses || [])) consider(g.value);
+  if (o.pending) consider(o.pending.value);
+  if (o.forecast) consider(o.forecast.value);
+  const top = Math.min(5000, niceTop(hi));
+  const f = makeFrame(pad, W, H, o.xMin, o.xMax, 0, top);
+  drawAxes(ctx, f, "year", "cactus finches counted", (o.xMax-o.xMin)/6, 4,
+           v => v.toFixed(0), v => v.toFixed(0));
+  ctx.save();
+  ctx.beginPath(); ctx.rect(f.pad.l, f.pad.t - 2, f.W, f.H + 4); ctx.clip();
+
+  // The model, as one whisker per year: it starts on the count that was made
+  // and ends where the model says the next one will be. Never a free-running
+  // line, because that is not what any of these models is doing.
+  if (o.pred && o.line) {
+    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2;
+    for (const i of o.line) {
+      const v = o.pred[i]; if (v == null) continue;
+      ctx.beginPath();
+      ctx.moveTo(f.x(FYEARS[i-1]), f.y(FCOUNT[i-1]));
+      ctx.lineTo(f.x(FYEARS[i]),   f.y(Math.min(v, top*40)));
+      ctx.stroke();
+    }
+    ctx.fillStyle = "#b23a48";
+    for (const i of o.line) {
+      const v = o.pred[i]; if (v == null) continue;
+      ctx.beginPath(); ctx.arc(f.x(FYEARS[i]), f.y(Math.min(v, top*40)), 2.2, 0, 6.2832); ctx.fill();
+    }
+  }
+
+  // The counts, joined thinly so the shape of the record is readable.
+  if (o.shown.length) {
+    ctx.strokeStyle = "rgba(120,120,116,0.55)"; ctx.lineWidth = 1; ctx.beginPath();
+    let started = false;
+    for (const i of o.shown) {
+      const x = f.x(FYEARS[i]), y = f.y(FCOUNT[i]);
+      if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = "#1d1d1b";
+    for (const i of o.shown) { ctx.beginPath(); ctx.arc(f.x(FYEARS[i]), f.y(FCOUNT[i]), 3, 0, 6.2832); ctx.fill(); }
+  }
+
+  // The student's own predictions: hollow, and tied to the truth by a dashed
+  // drop once the year has been unveiled.
+  const hollow = (x, y, colour, dash) => {
+    ctx.save();
+    if (dash) ctx.setLineDash(dash);
+    ctx.strokeStyle = colour; ctx.fillStyle = "#fff"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 6.2832); ctx.fill(); ctx.setLineDash([]); ctx.stroke();
+    ctx.restore();
+  };
+  for (const g of (o.guesses || [])) {
+    const x = f.x(FYEARS[g.idx]), yG = f.y(Math.min(g.value, top*40)), yT = f.y(FCOUNT[g.idx]);
+    ctx.save(); ctx.setLineDash([3,3]); ctx.strokeStyle = "rgba(47,107,143,0.8)"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, yG); ctx.lineTo(x, yT); ctx.stroke(); ctx.restore();
+    hollow(x, yG, "#2f6b8f");
+  }
+  if (o.pending) {
+    const x = f.x(FYEARS[o.pending.idx]), y = f.y(Math.min(o.pending.value, top*40));
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = "rgba(47,107,143,0.65)"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(f.x(FYEARS[o.pending.idx-1]), f.y(FCOUNT[o.pending.idx-1])); ctx.lineTo(x, y); ctx.stroke(); ctx.restore();
+    hollow(x, y, "#2f6b8f");
+  }
+  // A year past the end of the record, that nobody counted.
+  if (o.forecast) {
+    const x = f.x(o.forecast.year), y = f.y(Math.min(o.forecast.value, top*40));
+    ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(f.x(FYEARS[36]), f.y(FCOUNT[36])); ctx.lineTo(x, y); ctx.stroke(); ctx.restore();
+    hollow(x, y, "#b23a48");
+    // Below the marker, not above it: the dashed line drops in from the last
+    // count, which is usually the higher of the two, and the label lands on it.
+    ctx.fillStyle = "#b23a48"; ctx.font = "10px ui-monospace, monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(String(o.forecast.year), x, y + 9);
+  }
+  ctx.restore();
+  return f;
+}
+
+/* ====== STAGE A — a rate for every year, and none for next year =====
+   Phase 1: fit 1977 by hand, so the student finds out what "fit a year
+   exactly" costs in slider work. Phase 2: take the other eighteen in one
+   click -- the point is the size of the pile, not eighteen more searches.
+   Phase 3: the rounds. Set a rate for a year nobody has shown you, drop the
+   point, unveil, and watch the year join the perfectly-fitted stretch behind
+   you while the next one is just as blank as this one was.
+   ================================================================== */
+const A_FIT_TOL = 3;                 // birds, on the hand-fitted 1977
+const A_BAR = 55;                    // birds. "same as last year" averages 74 over five
+const A_MIN_ROUNDS = 5, A_MAX_ROUNDS = 10;
+const sA = { b: 0.200, d: 0.200, rates: {}, handDone: false, restDone: false,
+             rounds: [], done: false };
+
+function aNet() { return sA.b - sA.d; }
+function aTarget() { return sA.restDone ? SPLIT + sA.rounds.length : 1; }
+function aPred() {
+  const p = new Array(FYEARS.length).fill(null);
+  for (const k in sA.rates) { const i = +k; p[i] = stepAhead(FCOUNT[i-1], sA.rates[i]); }
+  return p;
+}
+function aFittedIdx() { return Object.keys(sA.rates).map(Number).sort((a,b)=>a-b); }
+function aOutMiss() {
+  if (!sA.rounds.length) return null;
+  return sA.rounds.reduce((s,r)=>s+r.miss,0) / sA.rounds.length;
+}
+function aRoundsFinished() {
+  const n = sA.rounds.length;
+  if (n >= A_MAX_ROUNDS) return true;
+  return n >= A_MIN_ROUNDS && aOutMiss() <= A_BAR;
+}
+
+function drawStageA() {
+  const t = aTarget();
+  const shown = [];
+  for (let i = 0; i < SPLIT; i++) shown.push(i);
+  for (let r = 0; r < sA.rounds.length; r++) shown.push(SPLIT + r);
+  const pred = aPred();
+  const live = (!sA.done && t < FYEARS.length) ? stepAhead(FCOUNT[t-1], aNet()) : null;
+  drawFinch("plotA", {
+    xMin: 1975, xMax: 2007, shown,
+    pred, line: aFittedIdx(),
+    guesses: sA.rounds.map(r => ({ idx: r.idx, value: r.predicted })),
+    pending: (!sA.done && live != null) ? { idx: t, value: live } : null
+  });
+
+  document.getElementById("A_bOut").textContent = sA.b.toFixed(3);
+  document.getElementById("A_dOut").textContent = sA.d.toFixed(3);
+  document.getElementById("cA_b").textContent = sA.b.toFixed(3);
+  document.getElementById("cA_d").textContent = sA.d.toFixed(3);
+
+  // The live line: what the sliders say about the year on the table right now.
+  // Once the rounds are over there is no next year on the table, so the labels
+  // stop naming one rather than dangling on a year nobody will predict.
+  const year = (!sA.done && t < FYEARS.length) ? FYEARS[t] : null;
+  document.getElementById("A_bLab").textContent = year ? "births per bird in " + year : "births per bird";
+  document.getElementById("A_dLab").textContent = year ? "deaths per bird in " + year : "deaths per bird";
+  document.getElementById("A_lock").textContent = year ? (sA.restDone ? "Lock in the prediction for " + year : "Lock in " + year) : "Done";
+  document.getElementById("A_liveLab").textContent = year ? year + " —" : "every year unveiled —";
+  document.getElementById("A_liveModel").textContent = live == null ? "—" : live.toFixed(0);
+  // Before the year is unveiled the count is not yours to see. After, it is.
+  // Before the rest of the record is taken, the sliders are fitting 1977 and
+  // its count is on the table. Once the rounds start, the year being predicted
+  // has not been unveiled and there is nothing to compare against yet.
+  const inRounds = sA.restDone;
+  const handMiss = live == null ? null : Math.abs(live - FCOUNT[1]);
+  document.getElementById("A_liveTrue").textContent = inRounds ? "not unveiled" : String(FCOUNT[1]);
+  document.getElementById("A_liveMiss").textContent =
+    (handMiss == null || inRounds) ? "—" : handMiss.toFixed(0) + " birds";
+
+  const fitted = aFittedIdx();
+  const inIdx = fitted.filter(i => i < SPLIT);
+  document.getElementById("A_in").textContent =
+    inIdx.length ? missOver(pred, inIdx).toFixed(1) + " birds, over " + inIdx.length + " of 19 years" : "—";
+  const om = aOutMiss();
+  const outEl = document.getElementById("A_out");
+  outEl.textContent = om == null ? "not yet" : om.toFixed(0) + " birds, over " + sA.rounds.length;
+  outEl.className = om == null ? "pending" : (om <= A_BAR ? "ok" : "off");
+  document.getElementById("A_np").textContent = String(2 * fitted.length);
+
+  document.getElementById("A1_now").textContent =
+    sA.handDone ? "done" : (handMiss == null ? "not yet" : "out by " + handMiss.toFixed(0) + " birds");
+  document.getElementById("A2_now").textContent = sA.restDone ? "done — 38 numbers" : (sA.handDone ? "ready" : "1977 first");
+  document.getElementById("A3_now").textContent =
+    !sA.restDone ? "the record first" :
+    sA.done ? "done" :
+    sA.rounds.length + " unveiled, " + (sA.rounds.length < A_MIN_ROUNDS ? A_MIN_ROUNDS - sA.rounds.length + " to go" : "still over the bar");
+
+  renderLadderA(); renderLogA();
+}
+
+function renderLadderA() {
+  const box = document.getElementById("A_ladder");
+  const idx = aFittedIdx();
+  if (!idx.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
+  box.innerHTML = idx.map(i => {
+    const s = splitRate(sA.rates[i]);
+    return `<div><span class="yr">${FYEARS[i]}</span>b ${s.b.toFixed(3)} &nbsp; d ${s.d.toFixed(3)}</div>`;
+  }).join("");
+}
+function renderLogA() {
+  const box = document.getElementById("A_log");
+  if (!sA.rounds.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
+  box.innerHTML = sA.rounds.map(r =>
+    `<div><span class="yr">${FYEARS[r.idx]}</span>you said ${r.predicted.toFixed(0)}, counted ${r.actual} — ` +
+    `<span class="${r.miss > A_BAR ? "big" : "small"}">out by ${r.miss.toFixed(0)}</span></div>`).join("");
+}
+
+function lockInA() {
+  if (sA.done) return;
+  const t = aTarget();
+  if (!sA.restDone) {
+    // Phase 1. The pair only counts once it is committed, and it has to land
+    // the year it was fitted to within three birds.
+    const model = stepAhead(FCOUNT[0], aNet());
+    if (Math.abs(model - FCOUNT[1]) <= A_FIT_TOL) {
+      sA.rates[1] = aNet();
+      if (!sA.handDone) { sA.handDone = true; markTask("A","A1"); record(BIT.A_fit, true); }
+      document.getElementById("A_rest").disabled = false;
+    }
+    bump("A"); drawStageA();
+    return;
+  }
+  // Phase 3. A prediction, then the unveiling, then the year joins the pile.
+  const prev = FCOUNT[t-1], predicted = stepAhead(prev, aNet());
+  sA.rounds.push({ idx: t, predicted, actual: FCOUNT[t], miss: Math.abs(predicted - FCOUNT[t]) });
+  sA.rates[t] = FCOUNT[t] / prev - 1;
+  bump("A");
+  if (aRoundsFinished()) {
+    sA.done = true;
+    markTask("A","A3");
+    record(BIT.A_rounds, true);
+    document.getElementById("A_lock").disabled = true;
+    ["A_b","A_d"].forEach(id => { document.getElementById(id).disabled = true; });
+    Gates.A.done = true;
+    unlockNext("A");
+    showSolved("A");
+  }
+  drawStageA();
+}
+document.getElementById("A_lock").addEventListener("click", lockInA);
+
+document.getElementById("A_rest").addEventListener("click", () => {
+  if (sA.restDone) return;
+  // Eighteen more searches would teach the student nothing the first one did
+  // not. What is worth seeing is how tall the pile gets.
+  for (let i = 2; i < SPLIT; i++) sA.rates[i] = FCOUNT[i] / FCOUNT[i-1] - 1;
+  sA.restDone = true;
+  markTask("A","A2");
+  document.getElementById("A_rest").disabled = true;
+  bump("A"); drawStageA();
+});
+
+[["A_b","b"],["A_d","d"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    sA[k] = parseFloat(e.target.value); highlightByDataLine("codeA", k); bump("A"); drawStageA();
+  });
+});
+document.getElementById("A_download").addEventListener("click", () => {
+  const idx = aFittedIdx();
+  downloadText("lesson6b_stageA.R", `# Lesson 6b, Stage A -- one pair of numbers for every year.
+p <- read.csv("data/clean/finch_pop.csv")
+N <- p$scandens
+
+# the ${2*idx.length} numbers you had to find
+b <- c(${idx.map(i => splitRate(sA.rates[i]).b.toFixed(3)).join(", ")})
+d <- c(${idx.map(i => splitRate(sA.rates[i]).d.toFixed(3)).join(", ")})
+yr <- c(${idx.map(i => FYEARS[i]).join(", ")})
+
+yhat <- N[match(yr, p$year) - 1] * (1 + b - d)
+mean(abs(yhat - N[match(yr, p$year)]))    # zero, by construction
+
+# and nothing in b or d says anything about the year after the last one
+`);
+});
+
+/* ====== STAGE B — two numbers for the whole record ==================
+   Measured by brute force on the shipped slider grid (b, d each 0 to 0.60 in
+   hundredths): the floor on the fitted years is 63.5 birds at a net of -0.10,
+   and 833 of the 3,721 pairs clear 65 -- seventeen distinct net rates, so the
+   bar is a real search and not a lucky landing. That best-fitting pair then
+   misses by 97 birds a year on the seventeen years it never saw, which is
+   almost exactly what "next year looks like this year" misses by (94.8).
+   ================================================================== */
+const B_BAR = 65;
+const sB = { b: 0.20, d: 0.20, frozen: false, inMiss: null, outMiss: null, outK: null };
+function runB(net) {
+  const p = new Array(FYEARS.length).fill(null);
+  for (let i = 1; i < FYEARS.length; i++) p[i] = stepAhead(FCOUNT[i-1], net);
+  return p;
+}
+// The years the student predicted by hand in Stage A, so the closing table can
+// score all three models over one window that all three actually answered.
+function kIdx() { return OUT_IDX.slice(0, Math.max(sA.rounds.length, 1)); }
+
+function drawStageB() {
+  const net = sB.b - sB.d;
+  const pred = runB(net);
+  const shown = sB.frozen ? IN_IDX.concat(OUT_IDX) : IN_IDX.slice();
+  shown.unshift(0);
+  drawFinch("plotB", {
+    xMin: 1975, xMax: 2013, shown,
+    pred, line: sB.frozen ? IN_IDX.concat(OUT_IDX) : IN_IDX
+  });
+  const inMiss = missOver(pred, IN_IDX);
+  sB.inMiss = inMiss;
+  if (!sB.frozen && inMiss <= B_BAR && !Gates.B.underBar) {
+    Gates.B.underBar = true;
+    markTask("B","B1");
+    document.getElementById("B_unveil").disabled = false;
+  }
+  document.getElementById("B_bOut").textContent = sB.b.toFixed(2);
+  document.getElementById("B_dOut").textContent = sB.d.toFixed(2);
+  document.getElementById("cB_b").textContent = sB.b.toFixed(2);
+  document.getElementById("cB_d").textContent = sB.d.toFixed(2);
+  document.getElementById("B_diff").textContent = signed(net, 2);
+  paintGoal("B_in", inMiss, B_BAR, 0, " birds");
+  const outEl = document.getElementById("B_out");
+  if (sB.frozen) { outEl.textContent = sB.outMiss.toFixed(0) + " birds, over 17"; outEl.className = "off"; }
+  document.getElementById("B1_now").textContent =
+    Gates.B.underBar ? "done" : inMiss.toFixed(0) + " birds so far, bar is " + B_BAR;
+  document.getElementById("B2_now").textContent =
+    sB.frozen ? "done" : (inMiss <= B_BAR ? "the button is live" : "get under the bar first");
+}
+document.getElementById("B_unveil").addEventListener("click", () => {
+  if (sB.frozen) return;
+  sB.frozen = true;
+  // You do not get to adjust a model after seeing what it had to predict.
+  ["B_b","B_d"].forEach(id => { document.getElementById(id).disabled = true; });
+  document.getElementById("B_unveil").disabled = true;
+  const pred = runB(sB.b - sB.d);
+  sB.outMiss = missOver(pred, OUT_IDX);
+  sB.outK    = missOver(pred, kIdx());
+  markTask("B","B2");
+  Gates.B.done = true;
+  record(BIT.B_solve, true);
+  numB.show(); unlockNext("B"); showSolved("B");
+  drawStageB();
+});
+const numB = wireNumeric("B", {
+  bit: BIT.B_num,
+  check: v => sB.outMiss != null && Math.abs(v - sB.outMiss / OUT_MEAN * 100) <= 4,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("B","B3"); }
+});
+[["B_b","b"],["B_d","d"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    if (sB.frozen) return;
+    sB[k] = parseFloat(e.target.value); highlightByDataLine("codeB", k); bump("B"); drawStageB();
+  });
+});
+document.getElementById("B_download").addEventListener("click", () => {
+  downloadText("lesson6b_stageB.R", `# Lesson 6b, Stage B -- two numbers, one step ahead.
+p <- read.csv("data/clean/finch_pop.csv")
+N <- p$scandens
+b <- ${sB.b.toFixed(2)}
+d <- ${sB.d.toFixed(2)}
+
+yhat <- N[1:36] * (1 + b - d)
+mean(abs(yhat[1:19]  - N[2:20]))     # the twenty years it was fitted to
+mean(abs(yhat[20:36] - N[21:37]))    # the seventeen it had not seen
+`);
+});
+
+/* ====== STAGE C — four numbers, and one of them is the weather ======
+   Same brute force over the shipped grids (net in hundredths, rain and
+   crowding in twentieths): the floor on the fitted years is 31.5 birds at
+   births 0.30 / deaths 0.20 / rain 0.45 / crowding 0.95, and 1,208 settings
+   clear 36. Neither arrow reaches the bar alone -- rain by itself bottoms out
+   at 45.0 and crowding by itself at 55.6 -- so the bar is what makes the
+   parameter counter read 4 rather than 3. The best-fitting four then miss by
+   50 birds a year on the seventeen years they never saw, against the two-number
+   model's 97. Twice the parameters, half the miss.
+   ================================================================== */
+const C_BAR = 36;
+const sC = { b: 0.30, d: 0.30, rain: 0, crowd: 0, rainOn: false, crowdOn: false,
+             frozen: false, inMiss: null, outMiss: null, outK: null, f2013: null };
+function runC(b0, d0, rain, crowd) {
+  const p = new Array(FYEARS.length).fill(null);
+  for (let i = 1; i < FYEARS.length; i++) {
+    const prev = FCOUNT[i-1];
+    const bt = b0 + rain  * (F_LOGRAIN[i-1] - F_MLR);
+    const dt = d0 + crowd * (Math.log10(Math.max(1, prev)) - F_MLN);
+    p[i] = stepAhead(prev, bt - dt);
+  }
+  return p;
+}
+// One year past the end of the record. 573 birds counted in 2012, 316 mm of
+// rain that year, and nobody went back to count 2013.
+function forecast2013(b0, d0, rain, crowd) {
+  const prev = FCOUNT[FCOUNT.length-1];
+  const bt = b0 + rain  * (F_LOGRAIN[F_LOGRAIN.length-1] - F_MLR);
+  const dt = d0 + crowd * (Math.log10(prev) - F_MLN);
+  return stepAhead(prev, bt - dt);
+}
+const arrowsC = buildArrows("arrowsC", {
+  width: 560, height: 162,
+  nodes: {
+    rain:   { x: 2,   y: 10,  w: 92,  h: 32, label: "Rain that year" },
+    seeds:  { x: 108, y: 10,  w: 70,  h: 32, label: "Seeds", unobserved: true },
+    births: { x: 210, y: 10,  w: 92,  h: 32, label: "Birth rate", rate: true },
+    now:    { x: 2,   y: 64,  w: 168, h: 32, label: "Number of finches this year" },
+    deaths: { x: 210, y: 112, w: 92,  h: 32, label: "Death rate", rate: true },
+    merge:  { x: 355, y: 75,  w: 10,  h: 10, junction: true },
+    next:   { x: 396, y: 64,  w: 160, h: 32, label: "Number of finches next year" }
+  },
+  // The rain arrow is one decision drawn as two segments: rain grows seeds and
+  // seeds feed nestlings. Nobody counted the seeds in these years, so the knob
+  // the student turns is the whole path, not either half of it.
+  arrows: [
+    { id: "rain",  from: "rain",  to: "seeds" },
+    { id: "rain",  from: "seeds", to: "births" },
+    { id: "crowd", from: "now",   to: "deaths" }
+  ],
+  fixed: [ { from: "births", to: "merge", nohead: true },
+           { from: "deaths", to: "merge", nohead: true },
+           { from: "now",    to: "merge", nohead: true },
+           { from: "merge",  to: "next" } ],
+  hint: "Click a dashed arrow to draw it. Both are on offer from the start — you drew them one at a time in Lesson 6."
+}, (id, on) => {
+  if (sC.frozen) return;
+  if (id === "rain")  { sC.rainOn = on;  if (!on) { sC.rain = 0;  document.getElementById("C_rain").value = "0"; } }
+  if (id === "crowd") { sC.crowdOn = on; if (!on) { sC.crowd = 0; document.getElementById("C_crowd").value = "0"; } }
+  document.getElementById("C_rain").disabled = !sC.rainOn;
+  document.getElementById("C_crowd").disabled = !sC.crowdOn;
+  document.getElementById("rowCrain").classList.toggle("muted", !sC.rainOn);
+  document.getElementById("rowCcrowd").classList.toggle("muted", !sC.crowdOn);
+  bump("C"); drawStageC();
+});
+
+function drawStageC() {
+  const pred = runC(sC.b, sC.d, sC.rain, sC.crowd);
+  const shown = sC.frozen ? IN_IDX.concat(OUT_IDX) : IN_IDX.slice();
+  shown.unshift(0);
+  drawFinch("plotC", {
+    xMin: 1975, xMax: 2015, shown,
+    pred, line: sC.frozen ? IN_IDX.concat(OUT_IDX) : IN_IDX,
+    forecast: sC.frozen ? { year: 2013, value: sC.f2013 } : null
+  });
+  const inMiss = missOver(pred, IN_IDX);
+  sC.inMiss = inMiss;
+  if (!sC.frozen && inMiss <= C_BAR && !Gates.C.underBar) {
+    Gates.C.underBar = true;
+    markTask("C","C1");
+    document.getElementById("C_unveil").disabled = false;
+  }
+  document.getElementById("C_bOut").textContent = sC.b.toFixed(2);
+  document.getElementById("C_dOut").textContent = sC.d.toFixed(2);
+  document.getElementById("C_rainOut").textContent = sC.rain.toFixed(2);
+  document.getElementById("C_crowdOut").textContent = sC.crowd.toFixed(2);
+  document.getElementById("cC_b").textContent = sC.b.toFixed(2);
+  document.getElementById("cC_d").textContent = sC.d.toFixed(2);
+  document.getElementById("cC_rain").textContent = sC.rain.toFixed(2);
+  document.getElementById("cC_crowd").textContent = sC.crowd.toFixed(2);
+  paintGoal("C_in", inMiss, C_BAR, 0, " birds");
+  const outEl = document.getElementById("C_out");
+  if (sC.frozen) { outEl.textContent = sC.outMiss.toFixed(0) + " birds, over 17"; outEl.className = "ok"; }
+  document.getElementById("C_np").textContent = String(2 + arrowsC.count());
+  document.getElementById("C1_now").textContent =
+    Gates.C.underBar ? "done" : inMiss.toFixed(0) + " birds so far, bar is " + C_BAR;
+  document.getElementById("C2_now").textContent =
+    sC.frozen ? "done" : (inMiss <= C_BAR ? "the button is live" : "get under the bar first");
+}
+document.getElementById("C_unveil").addEventListener("click", () => {
+  if (sC.frozen) return;
+  sC.frozen = true;
+  ["C_b","C_d","C_rain","C_crowd"].forEach(id => { document.getElementById(id).disabled = true; });
+  document.getElementById("C_unveil").disabled = true;
+  arrowsC.lock("rain", true); arrowsC.lock("crowd", true);
+  const pred = runC(sC.b, sC.d, sC.rain, sC.crowd);
+  sC.outMiss = missOver(pred, OUT_IDX);
+  sC.outK    = missOver(pred, kIdx());
+  sC.np      = 2 + arrowsC.count();
+  sC.f2013   = forecast2013(sC.b, sC.d, sC.rain, sC.crowd);
+  markTask("C","C2");
+  Gates.C.done = true;
+  record(BIT.C_solve, true);
+  numC.show(); unlockNext("C"); showSolved("C"); buildTableD();
+  drawStageC();
+});
+const numC = wireNumeric("C", {
+  bit: BIT.C_num,
+  check: v => sC.f2013 != null && Math.abs(v - sC.f2013) <= 25,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => { markTask("C","C3"); }
+});
+[["C_b","b"],["C_d","d"],["C_rain","rain"],["C_crowd","crowd"]].forEach(([id,k]) => {
+  document.getElementById(id).addEventListener("input", e => {
+    if (sC.frozen) return;
+    sC[k] = parseFloat(e.target.value);
+    highlightByDataLine("codeC", k);
+    bump("C"); drawStageC();
+  });
+});
+document.getElementById("C_download").addEventListener("click", () => {
+  downloadText("lesson6b_stageC.R", `# Lesson 6b, Stage C -- four numbers, one step ahead.
+p <- read.csv("data/clean/finch_pop.csv")
+r <- read.csv("data/clean/grant_rainfall.csv")
+N <- p$scandens
+wet <- log10(r[match(p$year, r$Year), 2] + 1) - 1.88
+
+b0 <- ${sC.b.toFixed(2)}; d0 <- ${sC.d.toFixed(2)}
+rainPull <- ${sC.rain.toFixed(2)}; crowdPull <- ${sC.crowd.toFixed(2)}
+
+b <- b0 + rainPull  * wet[1:36]
+d <- d0 + crowdPull * (log10(N[1:36]) - 2.24)
+yhat <- N[1:36] * (1 + b - d)
+
+mean(abs(yhat[1:19]  - N[2:20]))     # the twenty years it was fitted to
+mean(abs(yhat[20:36] - N[21:37]))    # the seventeen it had not seen
+
+# one more year, that nobody counted
+573 * (1 + b0 + rainPull * (log10(317) - 1.88) - d0 - crowdPull * (log10(573) - 2.24))
+`);
+});
+
+/* ====== STAGE D — the three of them side by side ====================
+   Built from what the student actually froze, not from the answer key. The
+   held-back column is blank for the bespoke model on purpose: it has a pair of
+   numbers for every year it was fitted to and none at all for a year it was
+   not, so there is no rule to run over the seventeen. That blank is the lesson.
+   ================================================================== */
+function fmtMiss(v) { return v == null ? null : v.toFixed(0) + " birds"; }
+function buildTableD() {
+  const K = sA.rounds.length;
+  document.getElementById("thK").textContent =
+    K ? "Miss on the " + K + " years you predicted" : "Miss on the years you predicted";
+  const aOut = aOutMiss();
+  const rows = [
+    { name: "One pair of numbers for every year",
+      sub:  "1977 to 1995, fitted one year at a time",
+      np:   2 * IN_IDX.length,
+      inM:  0,
+      kM:   aOut,
+      outM: null },
+    { name: "One pair for the whole record",
+      sub:  "functionally one number — only births minus deaths does anything",
+      np:   2,
+      inM:  sB.inMiss,
+      kM:   sB.outK,
+      outM: sB.outMiss },
+    { name: "Rain, and how crowded the island already was",
+      sub:  "two rates and two things that move them",
+      np:   sC.np != null ? sC.np : 2 + arrowsC.count(),
+      inM:  sC.inMiss,
+      kM:   sC.outK,
+      outM: sC.outMiss }
+  ];
+  // Green marks the smallest miss in each column, over the models that have one.
+  const bestOf = key => {
+    let b = null;
+    for (const r of rows) if (r[key] != null && (b === null || r[key] < b)) b = r[key];
+    return b;
+  };
+  const bIn = bestOf("inM"), bK = bestOf("kM"), bOut = bestOf("outM");
+  const cell = (v, best, na) => v == null
+    ? `<td class="na">${na}</td>`
+    : `<td class="num${v === best ? " best" : ""}">${fmtMiss(v)}</td>`;
+  document.getElementById("tblDbody").innerHTML = rows.map(r =>
+    `<tr><td>${r.name}<br><span style="color:var(--muted); font-size:12px;">${r.sub}</span></td>` +
+    `<td class="num">${r.np}</td>` +
+    cell(r.inM, bIn, "—") + cell(r.kM, bK, "—") +
+    cell(r.outM, bOut, "no rule to run") + `</tr>`).join("");
+  document.getElementById("tblDnote").innerHTML =
+    "Each year you unveiled in Stage A was fitted exactly once you had seen it, so the first row's pile " +
+    "finished at " + (2 * (IN_IDX.length + K)) + " numbers, not " + (2 * IN_IDX.length) + ". " +
+    "It still has nothing for 2013.";
+}
+const numD = wireNumeric("D", {
+  bit: BIT.D_num,
+  check: v => (sB.outMiss != null && sC.outMiss != null) && Math.abs(v - (sB.outMiss - sC.outMiss)) <= 6,
+  right: "Recorded — right.", wrong: "Recorded — not right.",
+  after: () => {
+    markTask("D","D1");
+    Gates.D.done = true;
+    showSolved("D");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  }
+});
+
+/* ====== Boot + Score ================================================
+   Scaffold layout (7 bits):
+     0  A fitted 1977 by hand, to within three birds, and locked it in
+     1  A predicted every unveiled year before it was unveiled
+     2  B got the two-number model under 65 birds on the fitted years, then unveiled
+     3  B what that model's miss is worth against the size of the population
+     4  C got the four-number model under 36, then unveiled
+     5  C what the frozen model expects for 2013
+     6  D what the two extra numbers bought on the years neither model had seen
+
+   New page, 2026-09-04. Lesson 6 builds the model; this one splits the record
+   and asks what each model was worth on the half it never saw.
+   ================================================================== */
+// Instructor bypass (score.js): every section is already open, so open the
+// gates that live inside a stage rather than between them.
+document.addEventListener("score:bypass", () => {
+  document.getElementById("A_rest").disabled = false;
+  numB.show(); numC.show(); numD.show();
+  buildTableD();
+  drawStageA(); drawStageB(); drawStageC();
+});
+
+addSteppers(document);
+drawStageA(); drawStageB(); drawStageC(); buildTableD();
+
+Score.init({
+  moduleId: "lesson6b",
+  version: 1,
+  scaffold: 7,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+    drawStageA();
+  }
+});
+</script>
+</body>
+</html>

@@ -791,115 +791,140 @@ effect, and the movie-attendance-versus-crime showcase — is archived at
 points about reading a test's verdict, and the sequence no longer makes them anywhere.
 Fold them into Lesson 7, or into a drill, or drop them deliberately.
 
-### Lesson 7 — Trying to stop evolution, and finding out what that costs
-`lesson7.html` · v4 · 10 checkpoints · **Skeleton built, text still owed**
+### Lesson 6b — Fitting on half the record and being scored on the other half
+`lesson6b.html` · v1 · 7 checkpoints · **New 2026-09-04, to JM's brief**
 
-*Rebuilt 2026-09-03 to JM's spec: the capstone for Arc 1, the last allele-free lesson,
-and the one that has to carry the whole pre-genetic generalisation before Arc 2 starts
-counting ratios.* **Interactives, gates and answer keys are finished and measured off
-the shipped code; five `.voice` blocks and five solved-banners are placeholders marked
-`TEXT FOR JM`, one of which is flagged NEEDS A SENTENCE FROM YOU.**
+*A supplement to Lesson 6, not a replacement: Lesson 6 builds a model one cause at a
+time and scores it on the record it was fitted to. This one splits the record and asks
+what each model was worth on the half it never saw.*
 
-*The task, all five stages:* **stop the population changing.** They cannot, until they
-switch off the thing that makes it a living population at all.
+**The split.** The 37 cactus-finch counts (1976–2012) are cut at 1995. Every model on the
+page learns from the same nineteen predictions (1977–1995) and is scored on the same
+seventeen it never saw (1996–2012).
 
-**What the ratchet does for this lesson.** Lesson 7 is unit L8, seq 12. `heritability`
-unlocks exactly here; `hardy-weinberg` (seq 15), `drift` (seq 16) and
-`effective population size` (seq 17) are all still locked, and `null hypothesis` is
-never-named. So the equilibrium conditions and the finite-population wander both have
-to be built and neither can be labelled — which is what JM asked for independently.
-Per his ruling of the same day, heritability is *played with* here as a knob and
-*defined* later as a parent–offspring correlation; the prose never names it.
+**Every model here predicts one year ahead from the count that was actually made** —
+`N̂(t+1) = N(t)·(1 + b − d)`. Lesson 6 lets its models run free from 1976 and compares the
+whole trajectory; that is a different question, and racing a per-year model against a
+free-running one would not be a fair comparison. Here all three answer the same question,
+so the three rows of the closing table are one measurement.
 
-**The four knobs**, and nothing else: how many there are, how much of the trait is
-inherited, how different they are to begin with, and how strongly the trait goes with
-number of offspring. There is no fifth knob — a separate "effective" population size
-would be ledger-banned here and is not distinguishable from headcount pre-genetics.
+- **Stage A — a rate for every year, and none for next year.** Fit 1977 by hand to within
+  3 birds (7 of 481 net values on the shipped grid clear it), then take the other eighteen
+  in one click: 38 numbers, and the model line lies exactly on every count. Then the
+  rounds — set a rate for a year nobody has shown you, drop the point, unveil, watch the
+  year join the perfect stretch behind you. Five rounds minimum, ten if the typical miss
+  stays over 55 birds; "same as last year" averages 74 over five and 85 over ten, so
+  nearly everyone runs all ten. **In-sample 0.0 birds, out-of-sample ~85.**
+- **Stage B — two numbers for the whole record.** Bar: 65 birds on the fitted years. The
+  floor is 63.5 at a net of −0.10 and 833 of 3,721 slider pairs clear the bar, so it is a
+  real search. Unveiling **freezes the parameters** — the same rule in C. **In 64, out 97**,
+  which is what "next year looks like this year" gets (94.8). Two parameters bought nothing.
+- **Stage C — four numbers, and one of them is the weather.** Rain and crowding, both
+  arrows on offer from the start (they were drawn one at a time in Lesson 6). Bar: 36
+  birds; 1,208 settings clear it and **neither arrow reaches it alone** (rain alone bottoms
+  out at 46.1, crowding alone at 55.6), so the bar is what makes the counter read 4.
+  **In 31, out 50.** The plot then shows a 2013 forecast — 508 birds at the best fit — for
+  a year past the end of the record that nobody counted.
+- **Stage D — the three of them side by side.** The table: 38 parameters → 0 in-sample and
+  the worst forecast; 2 → 64 and 97; 4 → 31 and 50. The held-back column is **blank for the
+  bespoke model on purpose** — it has no number for a year it was not fitted to. That blank
+  is the lesson.
 
-**The ruler, built in stage A and used unchanged to the end.** Two numbers on the
-inherited line the model passes to the next generation: **ended** (how far it finished from where it
-began) and **strayed** (the furthest it ever got, at any point). Both count, because a
-population that comes back to where it started has still been somewhere. The pass mark
-is **both under 0.05, on the worst of a batch of ten** — one flat run proves nothing,
-the same point Lessons 4 and 5 make about a single sample.
+**Quote sources.** A: `202_lec25_01`-adjacent framing plus Lesson 6 stage C's own approved
+voice block (the "40 birth rates and 40 death rates" passage, renumbered to 19), and
+`461_lec03_03` (the eraser, and "the rules don't change"). B: `461_lec35_05` ("Models are
+wrong. But they can be usefully wrong… fitting a model means finding the parameters that
+best predict the response") plus Lesson 6 stage C's "instead of… 80 parameters" sentence.
+C: `461_lec08_02` ("None of these can be true. But they're often close enough"). D:
+`336_lec07_01`, madlibbed from sentences to parameters ("every extra parameter is one more
+opportunity to be wrong… more surface area for error"), and `202_lec25_01` ("it's a model —
+how good are the data that you buy that prediction").
 
-**What the graph plots, and why it matters.** The scored line is the mean of the
-inherited part, not the mean of the trait. Measured: with nothing inherited, the
-observed mean still wanders 0.35 while the inherited line is flat at exactly 0.000. If
-the lesson scored the observed mean, the cleanest success in it would read as a failure.
-The observed means are drawn as pale dots beside the line, so that Stage D shows both at
-once — dots bouncing, line dead flat.
+Verified in the browser end to end 2026-09-04: both Stage A exit paths (five rounds and
+ten), the freeze on unveiling, the one-arrow-is-not-enough bar in C, zero console errors,
+and a clean-slate run decoding as `lesson6b v1`, `1111111`, 7/7.
 
-- **A — the advantage** *(one knob; the failure that starts it)*
-  - *Interactive* — N = 100, half inherited, sixty generations. One knob: how strongly
-    the trait goes with number of offspring. Drive the population up more than 5, drive
-    it down more than 5, then set the knob to zero and run a batch. Measured: advantage
-    +0.30 moves it 9.3; advantage 0.00 still strays about 1.2, which is 24× the pass
-    mark. Then a numeric question, graded against the student's own batch.
-  - *Goal* — Taking away the advantage takes away the direction, not the change.
+### Lesson 7 — Fitting a cause to a pattern, then asking it about next year
+`lesson7.html` · v5 · 8 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
 
-- **B — how many there are** *(the four-for-one, arriving again)*
-  - *Interactive* — A ladder: 25, 50, 100, 200, 400, 800, with a `Run forty` button
-    because forty runs a rung is what it takes to read the pattern off six numbers
-    (measured: at ten a rung the ladder is non-monotone about a third of the time).
-    Each rung records the middle of everything run there. Measured ladder: 1.10, 0.81,
-    0.53, 0.40, 0.31, 0.18 — **four times as many halves it**, the same exchange rate as
-    Lesson 4 stage B, in a setting with nothing to do with sampling adults off a street.
-    Then a numeric question: how many to halve it once more (3,200, ±30%).
-  - *Goal* — More individuals buys less change at a punishing rate, and the slider runs
-    out before the change does.
+*Replaces "Trying to stop evolution", archived at
+`_reference/retired/lessons/lesson7_stop_evolution_2026-09-05.html`. Unit 1's capstone:
+it uses the three conditions the lectures have already given (variation, heritability,
+differential reproduction) and puts them through the DAG-and-held-out-window machinery
+of Lessons 6 and 6b.*
 
-- **C — how much is inherited** *(the knob they have not met)*
-  - *Interactive* — The third knob, floored at 0.20 so it cannot be zeroed yet. A lower
-    panel shows one generation of parents against their offspring, so the knob's meaning
-    is visible as a cloud tightening into a line. Push everything as far as it goes —
-    biggest population, lowest inherited fraction, no advantage — and it still fails. Measured:
-    0.26, five times the pass mark. Numeric graded against their own batch.
-  - *Goal* — Inheriting less is a weak lever: it scales with the square root, so halving
-    it buys about 30%.
+**The framing is `202_lec01_03`** — evolution is not like gravity, it is like motion, the
+net change that results from many forces — and it closes on `202_lec01_04`, "evolution
+occurred" as a terrible explanation. Those are the only two quotes; the rest is bullets.
 
-- **D — the two that work** *(and the discontinuity)*
-  - *Interactive* — The inherited knob now reaches zero, and the fourth knob appears:
-    how different they are to begin with. Both routes flatten it. Gate: pass the test
-    once by each. Then the numeric that carries the lesson's thesis — **the largest
-    inherited fraction that still passes**. Measured on the shipped grid at the biggest
-    population with no advantage at all: 0.05 fails (0.13), 0.01 fails (0.06),
-    **only exactly zero passes.**
-  - *Goal* — There is no small-but-nonzero setting that holds still. The only settings
-    that work are the ones that describe a population which cannot evolve at all.
+**Nothing on the page is called selection and nothing is called drift.** Every slider is
+ecological. Selection emerges because a bird that cannot crack a hard seed starves in a
+year when the soft ones run out; the wobble emerges because births and deaths are
+individual coin flips and there are only so many birds. Both are consequences, never knobs.
 
-- **E — the sheep** *(four numbers nobody chose)*
-  - *Interactive* — Ram Mountain bighorn, all four knobs measured off one real
-    population rather than picked: **86** seen per year (median 1973–2013), **0.40**
-    inherited (430 mother–offspring and 181 father–offspring pairs, standardised within
-    sex — the dimorphism is 51.9 cm against 21.3 cm, so the raw slope is meaningless),
-    **+0.27** for horn length against number of offspring (213 ewes), and a spread of
-    1.00 by definition. Set them: the model moves 7.3. The real rams, on the same ruler,
-    moved **2.21** — 44× the pass mark. Then take the whole advantage away, the one
-    number of the four anyone has ever changed on purpose, and it still strays about 1.0.
-  - *Goal* — Not one of the four numbers is anywhere near a stopping value, in the
-    population you would have picked if you wanted a quiet one.
-  - *Watch out* — The measured advantage is positive, so the model climbs while the real
-    rams fell; hunters were removing the big-horned rams. Flagged in the source as
-    needing a sentence, or the stage reads as a broken model.
-  - *Hands to* — Lesson 9.
+**THE DATA IS SYNTHETIC, ON PURPOSE.** Forty-five generations generated once from the model
+below and frozen into the page. It is parameterised off Daphne Major so that it moves like
+a real population — population 221–1211 (cactus finches there: 71–2531), beak wobble 0.09 mm
+per generation (there: 0.13), hard-seed share 0.07–0.98 (there: 0.01–0.96) — but it measures
+nothing. The earlier all-real design failed a decisive test and was abandoned: the Grants'
+seed series stops in 1991, rain cannot stand in for it (r = +0.15, because the 1983 El Niño
+reset the vegetation), and an 8/8 split inside the seed window made the *no-arrow* model
+beat the arrow model out of sample (0.176 vs 0.244 mm). The synthetic island is clean where
+that was not.
 
-**Displaced content.** The old Lesson 7 — four stages of Galton, independent traits,
-dialling in a resemblance, the slope, then 934 real children, with regression to the
-mean falling out of a slope below one — is archived at
-`_reference/retired/lessons/lesson7_galton_heritability_2026-09-03.html`. Per JM's
-ruling it becomes Lesson 8's definition of heritability as a parent–offspring
-correlation. **The ledger still pins the `heritability` unlock to L8 (= lesson7.html);
-if the definition really lands in lesson8.html (unit L9, seq 14) the unlock should move
-with it.** Using it at either seat passes the gate, so nothing is broken either way.
+**The world**, every constant two significant figures:
 
----
+```
+soft seeds   S = 0.35·S₋₁ + sp·rain               eaten at 0.34 per finch
+hard seeds   H = 0.80·H₋₁ + hp·rain^0.35·10       eaten at 0.20 per finch that can crack
+reach(beak)  = (beak − crackAt)/1.9, clamped 0–1
+food_i       = soft/N + reach_i · hard/Σreach
+births_i     = 2.4·food/(0.62+food) − worth·(beak−9)
+deaths_i     = 0.12 + 0.98/(1+food/0.53) + worth·(beak−9)
+truth: sp 3.6, hp 2.5, worth 0.12, crackAt 8.0, heritability 0.75, beak spread 0.78
+newcomer: 20 pairs from generation 31, taking 20/28 of the hard seed off the top
+```
 
-## Arc 2 — Ratios, baselines, and the two forces that move them
+A deeper beak **always** costs — same food, fewer births and more deaths, monotonically.
+The benefit is conditional: net rate across beaks 8.2/9.0/9.8 is +1.00/+1.05/+1.03 in a
+soft year and −0.31/+0.38/+0.65 in a hard one. No runaway: over 85 generations under the
+newcomer, beaks bottom out near 8.1 and recover to 8.3–8.5, because as beaks shallow the
+remaining hard seed is shared among fewer birds.
 
-Lessons 8–13. Build the population where nothing changes, then break it one rule at a time.
+**Rainfall is designed, not rolled** — a dry opening stretch where hard seeds dominate and
+beaks climb, a middling stretch that turns it over, then fifteen generations of
+unremarkable weather so the reversal cannot be blamed on the rain.
 
----
+- **Stage A** — only the direct arrow is on offer: beak → births and deaths. Fit it on
+  generations 1–20. Bar 0.30 mm, and the arrow must be worth at least 0.03 — an arrow set
+  to nothing otherwise sneaks through and projects beautifully by explaining nothing.
+- **Stage B** — freeze, run forward into 21–30. **Every direct model that clears the fit
+  bar with a live arrow projects 1.40–1.91 mm out**, about ten times worse; a direct arrow
+  cannot reverse. Then the second arrow appears: the beak opens a *hard seed*. Refit,
+  and it holds, because its sign is supplied by the seed supply each generation. Bars:
+  0.20 mm on 1–20 and 0.30 mm on 21–30, both, so the fit cannot be abandoned for the ten
+  generations now on screen.
+- **Stage C** — the newcomer. Run the good model in blind and it fails; add one arrow and
+  one number and it holds. Scored against the student's own blind run, `max(0.45, blind/1.8)`,
+  because how much the newcomer can buy depends on the fit carried in — 95% of Stage B
+  passers clear it, against 5% for any fixed bar that the near-truth fits could reach.
+- **Stage D** — the table.
+
+A worked run (fit 2.0/1.5/−0.06/0.90, then 3.6/2.5/0.12/8.0/0.75, then take 0.70):
+
+| what you drew | params | 1–20 | 21–30 | 31–45 |
+|---|---|---|---|---|
+| a beak that simply pays | 4 | 0.283 | **1.889** | never ran |
+| a beak that opens a hard seed | 5 | 0.084 | 0.115 | 0.633 |
+| …and a newcomer that eats them | 6 | 0.084 | 0.115 | **0.065** |
+
+The floor is 0.09 mm: running the *true* numbers with a different seed still misses the
+record by that much, so no bar sits below it.
+
+Verified in the browser end to end 2026-09-05: zero console errors, every gate chains,
+the plot clips the model to the revealed window, Stage C keeps the best setting rather
+than the first passing one, and a clean run decodes as `lesson7 v5`, `11111111`, 8/8.
+
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
 `lesson8.html` · v4 · 12 checkpoints · **Skeleton built, text still owed**
