@@ -845,7 +845,7 @@ ten), the freeze on unveiling, the one-arrow-is-not-enough bar in C, zero consol
 and a clean-slate run decoding as `lesson6b v1`, `1111111`, 7/7.
 
 ### Lesson 7 — Fitting a cause to a pattern, then asking it about next year
-`lesson7.html` · v5 · 8 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
+`lesson7.html` · v6 · 12 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
 
 *Replaces "Trying to stop evolution", archived at
 `_reference/retired/lessons/lesson7_stop_evolution_2026-09-05.html`. Unit 1's capstone:
@@ -879,7 +879,7 @@ soft seeds   S = 0.35·S₋₁ + sp·rain               eaten at 0.34 per finch
 hard seeds   H = 0.80·H₋₁ + hp·rain^0.35·10       eaten at 0.20 per finch that can crack
 reach(beak)  = (beak − crackAt)/1.9, clamped 0–1
 food_i       = soft/N + reach_i · hard/Σreach
-births_i     = 2.4·food/(0.62+food) − worth·(beak−9)
+births_i     = min(bmax, 2.4·food/(0.62+food) − worth·(beak−9))   # a pair cannot make twenty
 deaths_i     = 0.12 + 0.98/(1+food/0.53) + worth·(beak−9)
 truth: sp 3.6, hp 2.5, worth 0.12, crackAt 8.0, heritability 0.75, beak spread 0.78
 newcomer: 20 pairs from generation 31, taking 20/28 of the hard seed off the top
@@ -895,7 +895,46 @@ remaining hard seed is shared among fewer birds.
 beaks climb, a middling stretch that turns it over, then fifteen generations of
 unremarkable weather so the reversal cannot be blamed on the rain.
 
-- **Stage A — built one piece at a time** (reworked 2026-09-05 on JM's note). Four models,
+- **Stage A — one bird, one year** (added 2026-09-05 on JM's note; the model build moved
+  to Stage B). No model and nothing fitted: this is the world the rest of the lesson is a
+  model *of*, and it goes first so the student knows what the arrows will mean. Two real
+  years lifted out of the record — generation 6 (5 soft seeds, 220 hard, 344 birds) and
+  generation 24 (779 soft, 270 hard, 836 birds) — and one bird living through them.
+
+  **The bird's bill is the population model's own arithmetic split open**, not a separate
+  toy: what the food buys is `bmax·f/(bHalf+f)` for eggs and the matching term for
+  survival, and what the beak charges is the same `0.12·(beak−9)` taken out of each. Its
+  score for the year is chicks plus its own chance of getting through. With the flock at
+  the depth it really had, the best beak is **9.9 in the hard year and 8.0 in the soft
+  one** — and in the soft year the deep bird eats *more* and still finishes behind, which
+  is the trade stated as a bill rather than asserted.
+
+  **The third slider is the point, and it is what answers "good of the species".** Hard
+  seeds are divided among the birds that can crack them, so a deep beak is worth something
+  *because the others lack one*. Setting the whole flock deep and reading the four corners
+  gives an exact prisoner's dilemma, straight off the model:
+
+  | | flock stays shallow | flock grows beaks |
+  |---|---|---|
+  | you stay shallow | 1.87 | 0.52 |
+  | you grow a beak | **2.77** | 1.48 |
+
+  Growing one is the better move in either column, and the flock that all plays it (1.48)
+  is worse off than the flock where nobody did (1.87). The squares report a standard 8.2
+  against a standard 9.8 rather than wherever the student happened to be standing, or two
+  students land on different points inside one square and the comparison stops meaning
+  anything. Bars: 1.50 in the hard year (needs beak ≥ 9.4), 2.18 in the soft (needs ≤ 8.6),
+  both with the flock left where it really was.
+
+  *Tried and rejected:* the restraint version of this — birds that eat less and breed less,
+  so the flock does better. It does not work in this model and the reason is real rather
+  than a bug. Holding back buys the flock almost nothing (mean population 577 against 556)
+  because the population is food-regulated: eat less and more birds survive until food is
+  limiting again. A genuine tragedy of the commons needs seeds to regrow from the standing
+  crop rather than from rain, which means a logistic resource and recalibrating every bar
+  in the lesson. The dilemma above gets the same lesson for nothing.
+
+- **Stage B — built one piece at a time** (reworked 2026-09-05 on JM's note). Four models,
   each the previous plus a box, an arrow and a slider. The first three have nothing that
   can move a beak, so they are scored on **how many finches there were**; only the fourth
   is scored in millimetres.
@@ -923,17 +962,17 @@ unremarkable weather so the reversal cannot be blamed on the rain.
 
   Stage A stays live after it is solved and Stage B follows it, until the student commits
   by running forward. The R code panel hides the lines for pieces that do not exist yet.
-- **Stage B** — freeze, run forward into 21–30. **Every direct model that clears the fit
+- **Stage C** — freeze, run forward into 21–30. **Every direct model that clears the fit
   bar with a live arrow projects 1.40–1.91 mm out**, about ten times worse; a direct arrow
   cannot reverse. Then the second arrow appears: the beak opens a *hard seed*. Refit,
   and it holds, because its sign is supplied by the seed supply each generation. Bars:
   0.20 mm on 1–20 and 0.30 mm on 21–30, both, so the fit cannot be abandoned for the ten
   generations now on screen.
-- **Stage C** — the newcomer. Run the good model in blind and it fails; add one arrow and
+- **Stage D** — the newcomer. Run the good model in blind and it fails; add one arrow and
   one number and it holds. Scored against the student's own blind run, `max(0.45, blind/1.8)`,
   because how much the newcomer can buy depends on the fit carried in — 95% of Stage B
   passers clear it, against 5% for any fixed bar that the near-truth fits could reach.
-- **Stage D** — the table.
+- **Stage E** — the table.
 
 A worked run (pieces at 1.6/0.05/5.8, then 2.0/0.10/3.6/1.7, then −0.04/0.75; Stage B at 3.6/2.5/0.12/8.0/0.75; Stage C take 0.70):
 
@@ -950,10 +989,16 @@ Also fixed while reworking Stage A: `buildArrows` computed an arrow's standoff f
 the target box's **width** whatever direction it pointed, which left vertical arrows
 visibly short of their box. It now walks the arrow's own direction out to the box edge.
 
+Births saturate at `bmax` (2.4 chicks a bird, about five a pair) however many seeds
+there are, and are hard-capped there so the beak's charge cannot lift a bird back over it;
+deaths bottom out at `dmin` with a further hard clamp to [0.03, 0.97]. Adding the strict
+cap changed the frozen dataset by exactly 0.0000 mm — food never gets abundant enough for
+it to bind — so it is correctness rather than calibration.
+
 Verified in the browser end to end 2026-09-05: zero console errors, every gate chains, all
-four pieces reveal their box/arrow/slider in turn, the plot clips the model to the revealed
+five stages solve, all four pieces of Stage B reveal their box/arrow/slider in turn, the plot clips the model to the revealed
 window, Stage C keeps the best setting rather than the first passing one, and a clean run
-decodes as `lesson7 v5`, `11111111`, 8/8.
+decodes as `lesson7 v6`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
