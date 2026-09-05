@@ -895,9 +895,34 @@ remaining hard seed is shared among fewer birds.
 beaks climb, a middling stretch that turns it over, then fifteen generations of
 unremarkable weather so the reversal cannot be blamed on the rain.
 
-- **Stage A** — only the direct arrow is on offer: beak → births and deaths. Fit it on
-  generations 1–20. Bar 0.30 mm, and the arrow must be worth at least 0.03 — an arrow set
-  to nothing otherwise sneaks through and projects beautifully by explaining nothing.
+- **Stage A — built one piece at a time** (reworked 2026-09-05 on JM's note). Four models,
+  each the previous plus a box, an arrow and a slider. The first three have nothing that
+  can move a beak, so they are scored on **how many finches there were**; only the fourth
+  is scored in millimetres.
+  1. *A birth rate and a death rate, and nothing else.* Two sliders, two boxes, no rain on
+     the diagram and no seed panel under the graph. **The bar is 60 finches and the floor
+     is 94 — it cannot be met.** It relents after 14 real attempts and says why: constant
+     rates multiply the population by the same factor every generation, so it fills the
+     island, empties it, or sits on a knife edge, and the record does none of those. This
+     is Lesson 6 stage A's unmeetable-target device, which is JM's own.
+  2. *Rain, one pile of seeds, food per bird.* Floor 52 finches, bar 120. The seed panel
+     appears showing the record's two kinds **added together**, because one pile is all
+     the model has.
+  3. *The pile splits into soft and hard.* Floor 23, bar 60. The seed panel splits too.
+  4. *The beak, direct to the rates.* Bar 0.30 mm, and the arrow must be worth at least
+     0.03 — an arrow set to nothing otherwise sneaks through and projects beautifully by
+     explaining nothing. From a realistic step-3 fit the floor is 0.11–0.14 mm and 7–9% of
+     the two-slider plane clears the bar.
+
+  **The pieces do not carry their numbers forward, and that is the point** — a level-2 fit
+  wants roughly (1.6, 0.05, 5.8) and a level-3 fit wants (2.0, 0.10, 3.6, 1.7). The setup
+  bullet says so: *a new piece usually means the old numbers were wrong.* The two rate
+  sliders are labelled as a ceiling and a floor from the start ("the most chicks a bird can
+  have", "the lowest a bird's chance of dying goes") so their meaning never changes; with
+  no seeds in the model nothing is ever short of food, so every bird gets both.
+
+  Stage A stays live after it is solved and Stage B follows it, until the student commits
+  by running forward. The R code panel hides the lines for pieces that do not exist yet.
 - **Stage B** — freeze, run forward into 21–30. **Every direct model that clears the fit
   bar with a live arrow projects 1.40–1.91 mm out**, about ten times worse; a direct arrow
   cannot reverse. Then the second arrow appears: the beak opens a *hard seed*. Refit,
@@ -910,20 +935,25 @@ unremarkable weather so the reversal cannot be blamed on the rain.
   passers clear it, against 5% for any fixed bar that the near-truth fits could reach.
 - **Stage D** — the table.
 
-A worked run (fit 2.0/1.5/−0.06/0.90, then 3.6/2.5/0.12/8.0/0.75, then take 0.70):
+A worked run (pieces at 1.6/0.05/5.8, then 2.0/0.10/3.6/1.7, then −0.04/0.75; Stage B at 3.6/2.5/0.12/8.0/0.75; Stage C take 0.70):
 
 | what you drew | params | 1–20 | 21–30 | 31–45 |
 |---|---|---|---|---|
-| a beak that simply pays | 4 | 0.283 | **1.889** | never ran |
-| a beak that opens a hard seed | 5 | 0.084 | 0.115 | 0.633 |
-| …and a newcomer that eats them | 6 | 0.084 | 0.115 | **0.065** |
+| a beak that simply pays | 6 | 0.204 | **0.897** | never ran |
+| a beak that opens a hard seed | 7 | 0.136 | 0.144 | 0.571 |
+| …and a newcomer that eats them | 8 | 0.136 | 0.144 | **0.093** |
 
 The floor is 0.09 mm: running the *true* numbers with a different seed still misses the
 record by that much, so no bar sits below it.
 
-Verified in the browser end to end 2026-09-05: zero console errors, every gate chains,
-the plot clips the model to the revealed window, Stage C keeps the best setting rather
-than the first passing one, and a clean run decodes as `lesson7 v5`, `11111111`, 8/8.
+Also fixed while reworking Stage A: `buildArrows` computed an arrow's standoff from half
+the target box's **width** whatever direction it pointed, which left vertical arrows
+visibly short of their box. It now walks the arrow's own direction out to the box edge.
+
+Verified in the browser end to end 2026-09-05: zero console errors, every gate chains, all
+four pieces reveal their box/arrow/slider in turn, the plot clips the model to the revealed
+window, Stage C keeps the best setting rather than the first passing one, and a clean run
+decodes as `lesson7 v5`, `11111111`, 8/8.
 
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
