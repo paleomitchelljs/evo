@@ -845,7 +845,7 @@ ten), the freeze on unveiling, the one-arrow-is-not-enough bar in C, zero consol
 and a clean-slate run decoding as `lesson6b v1`, `1111111`, 7/7.
 
 ### Lesson 7 — Fitting a cause to a pattern, then asking it about next year
-`lesson7.html` · v6 · 12 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
+`lesson7.html` · v7 · 12 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
 
 *Replaces "Trying to stop evolution", archived at
 `_reference/retired/lessons/lesson7_stop_evolution_2026-09-05.html`. Unit 1's capstone:
@@ -872,41 +872,83 @@ reset the vegetation), and an 8/8 split inside the seed window made the *no-arro
 beat the arrow model out of sample (0.176 vs 0.244 mm). The synthetic island is clean where
 that was not.
 
-**The world**, every constant two significant figures:
+**The world**, every constant two significant figures. **Remodelled 2026-09-05 on JM's
+note, and the change is the honest one:**
 
 ```
-soft seeds   S = 0.35·S₋₁ + sp·rain               eaten at 0.34 per finch
-hard seeds   H = 0.80·H₋₁ + hp·rain^0.35·10       eaten at 0.20 per finch that can crack
+hard seeds   H = 0.86·H₋₁ + 170            NO rain term. hard seeds are leftovers.
+soft seeds   S = 0.35·S₋₁ + sp·rain        the fresh crop, and only the fresh crop
+softEff(beak)= max(0.30, 1 − 0.30·(beak−8.0))   a big beak fumbles a small seed
 reach(beak)  = (beak − crackAt)/1.9, clamped 0–1
-food_i       = soft/N + reach_i · hard/Σreach
-births_i     = min(bmax, 2.4·food/(0.62+food) − worth·(beak−9))   # a pair cannot make twenty
+food_i       = softEff_i·S/ΣsoftEff + reach_i·H/Σreach
+births_i     = min(bmax, 2.4·food/(0.62+food) − worth·(beak−9))
 deaths_i     = 0.12 + 0.98/(1+food/0.53) + worth·(beak−9)
-truth: sp 3.6, hp 2.5, worth 0.12, crackAt 8.0, heritability 0.75, beak spread 0.78
-newcomer: 20 pairs from generation 31, taking 20/28 of the hard seed off the top
+truth: sp 2.8, hard leftover 170, worth 0.12, crackAt 8.0, heritability 0.75
+newcomer: 30 pairs from generation 31, taking 30/38 of the hard seed off the top
 ```
 
-A deeper beak **always** costs — same food, fewer births and more deaths, monotonically.
-The benefit is conditional: net rate across beaks 8.2/9.0/9.8 is +1.00/+1.05/+1.03 in a
-soft year and −0.31/+0.38/+0.65 in a hard one. No runaway: over 85 generations under the
-newcomer, beaks bottom out near 8.1 and recover to 8.3–8.5, because as beaks shallow the
-remaining hard seed is shared among fewer birds.
+**Two things changed and both were JM's.** First, *drought does not make hard seeds* —
+the previous model had `H = 0.80·H₋₁ + hardProd·rain^0.35·10`, so a wet year produced
+more than twice the hard seeds of a drought, and the share only rose in droughts because
+soft collapsed faster. Now hard seeds have no rain term at all: they are what is left
+lying about, and the drought signal is emergent. Hard-seed share runs **0.99 in the driest
+years against 0.38 in the wettest**.
 
-**Rainfall is designed, not rolled** — a dry opening stretch where hard seeds dominate and
-beaks climb, a middling stretch that turns it over, then fifteen generations of
-unremarkable weather so the reversal cannot be blamed on the rain.
+Second, *a deep beak is clumsy with small seeds*. Before, every bird got the same soft
+share whatever its beak, so the cost of a deep beak fell almost entirely on survival. Now
+in a soft-seed year:
+
+```
+beak   food   chicks  survive
+8.2    1.49    1.79    0.72
+9.8    1.47    1.59    0.52     the same food, and fewer chicks out of it
+```
+
+That is the trade JM asked for, paid in eggs rather than only in upkeep.
+
+*Three models were prototyped and rejected before this one, and the reasons are worth
+keeping.* **(a) Continuous hardness with a crack threshold**: a deep beak can eat
+everything a shallow one can plus more, so across a full sweep of turnover and production
+it ate its fill in *every* year — a deep beak becomes unconditionally good, which is the
+"beak that simply pays" model Stage C exists to refute. **(b) The same, checking whether
+drought skews the standing crop**: it does not — 0.722 hardness after dry years against
+0.739 after wet, because soft seeds are stripped the moment they arrive. **(c) Hardness
+matching** (a beak good at one hardness, clumsy either side): structurally right, the
+winner does alternate by year, but most years both birds saturate and the trend does not
+accumulate — beak 8.94 → 8.79 → 8.85 against a wanted +0.55/−0.54.
+
+**Rainfall is designed, not rolled** — twenty dry-dominated generations where the soft crop
+keeps failing and the larder is what is left, then ten middling ones carrying three wet
+years, then fifteen unremarkable ones for the newcomer to arrive into, so the reversal
+cannot be blamed on the weather.
+
+```
+gens  1–20   fit        the larder dominant         beak 9.02 → 9.52   (+0.50)
+gens 21–30   project    middling, three wet years   beak 9.52 → 9.10   (−0.42)
+gens 31–45   newcomer   rain unremarkable           beak 9.10 → 8.36   (−0.74)
+
+                    synthetic        real fortis
+population          251 – 1273       71 – 2531
+beak wobble, sd      0.120 mm        0.125 mm
+hard-seed share     0.30 – 0.99      0.007 – 0.963
+```
+
+The noise floor is about 0.05 mm: running the *true* numbers with a different seed still
+misses the record by that much, so no bar sits below it.
 
 - **Stage A — one bird, one year** (added 2026-09-05 on JM's note; the model build moved
   to Stage B). No model and nothing fitted: this is the world the rest of the lesson is a
   model *of*, and it goes first so the student knows what the arrows will mean. Two real
-  years lifted out of the record — generation 6 (5 soft seeds, 220 hard, 344 birds) and
-  generation 24 (779 soft, 270 hard, 836 birds) — and one bird living through them.
+  years lifted out of the record — generation 6 (5 soft seeds, 514 hard, 674 birds,
+  because nothing has replenished the soft crop) and generation 25 (355 mm of rain,
+  773 soft, 481 hard, 851 birds) — and one bird living through them.
 
   **The bird's bill is the population model's own arithmetic split open**, not a separate
   toy: what the food buys is `bmax·f/(bHalf+f)` for eggs and the matching term for
-  survival, and what the beak charges is the same `0.12·(beak−9)` taken out of each. Its
-  score for the year is chicks plus its own chance of getting through. With the flock at
-  the depth it really had, the best beak is **9.9 in the hard year and 8.0 in the soft
-  one** — and in the soft year the deep bird eats *more* and still finishes behind, which
+  survival, and what the beak charges is the same `0.12·(beak−9)` taken out of each, on
+  top of the soft-seed clumsiness. Its score for the year is chicks plus its own chance of
+  getting through. With the flock at the depth it really had, the best beak is **9.9 in the
+  hard year and 8.0 in the soft one** — and in the soft year the deep bird eats *more* and still finishes behind, which
   is the trade stated as a bill rather than asserted.
 
   **The third slider is the point, and it is what answers "good of the species".** Hard
@@ -916,14 +958,14 @@ unremarkable weather so the reversal cannot be blamed on the rain.
 
   | | flock stays shallow | flock grows beaks |
   |---|---|---|
-  | you stay shallow | 1.87 | 0.52 |
-  | you grow a beak | **2.77** | 1.48 |
+  | you stay shallow | 2.00 | 0.58 |
+  | you grow a beak | **2.82** | 1.62 |
 
-  Growing one is the better move in either column, and the flock that all plays it (1.48)
-  is worse off than the flock where nobody did (1.87). The squares report a standard 8.2
+  Growing one is the better move in either column, and the flock that all plays it (1.62)
+  is worse off than the flock where nobody did (2.00). The squares report a standard 8.2
   against a standard 9.8 rather than wherever the student happened to be standing, or two
   students land on different points inside one square and the comparison stops meaning
-  anything. Bars: 1.50 in the hard year (needs beak ≥ 9.4), 2.18 in the soft (needs ≤ 8.6),
+  anything. Bars: 1.50 in the hard year (needs beak ≥ 8.9), 2.45 in the soft (needs ≤ 8.4),
   both with the flock left where it really was.
 
   *Tried and rejected:* the restraint version of this — birds that eat less and breed less,
@@ -939,22 +981,24 @@ unremarkable weather so the reversal cannot be blamed on the rain.
   can move a beak, so they are scored on **how many finches there were**; only the fourth
   is scored in millimetres.
   1. *A birth rate and a death rate, and nothing else.* Two sliders, two boxes, no rain on
-     the diagram and no seed panel under the graph. **The bar is 60 finches and the floor
-     is 94 — it cannot be met.** It relents after 14 real attempts and says why: constant
+     the diagram and no seed panel under the graph. **The bar is 70 finches and the floor
+     is 96 — it cannot be met.** It relents after 14 real attempts and says why: constant
      rates multiply the population by the same factor every generation, so it fills the
      island, empties it, or sits on a knife edge, and the record does none of those. This
      is Lesson 6 stage A's unmeetable-target device, which is JM's own.
-  2. *Rain, one pile of seeds, food per bird.* Floor 52 finches, bar 120. The seed panel
-     appears showing the record's two kinds **added together**, because one pile is all
-     the model has.
-  3. *The pile splits into soft and hard.* Floor 23, bar 60. The seed panel splits too.
+  2. *The larder — the hard seeds left lying about from earlier years.* Floor 68 finches,
+     bar 150. **The larder comes before the rain-fed crop**, and that order matters: the
+     record's population is steadied by the persistent pile, so a rain-driven pool on its
+     own fits *worse* than flat rates (144 against 96). Ordered larder-first the pieces
+     improve monotonically, 96 → 68 → 41.
+  3. *The soft crop the rain brings on top of it.* Floor 41, bar 80.
   4. *The beak, direct to the rates.* Bar 0.30 mm, and the arrow must be worth at least
      0.03 — an arrow set to nothing otherwise sneaks through and projects beautifully by
-     explaining nothing. From a realistic step-3 fit the floor is 0.11–0.14 mm and 7–9% of
+     explaining nothing. From a realistic piece-3 fit the floor is 0.116 mm and about 5% of
      the two-slider plane clears the bar.
 
   **The pieces do not carry their numbers forward, and that is the point** — a level-2 fit
-  wants roughly (1.6, 0.05, 5.8) and a level-3 fit wants (2.0, 0.10, 3.6, 1.7). The setup
+  wants roughly (3.2, 0.05, larder 180) and a piece-3 fit wants (2.8, 0.05, 180, soft 2.2). The setup
   bullet says so: *a new piece usually means the old numbers were wrong.* The two rate
   sliders are labelled as a ceiling and a floor from the start ("the most chicks a bird can
   have", "the lowest a bird's chance of dying goes") so their meaning never changes; with
@@ -974,13 +1018,13 @@ unremarkable weather so the reversal cannot be blamed on the rain.
   passers clear it, against 5% for any fixed bar that the near-truth fits could reach.
 - **Stage E** — the table.
 
-A worked run (pieces at 1.6/0.05/5.8, then 2.0/0.10/3.6/1.7, then −0.04/0.75; Stage B at 3.6/2.5/0.12/8.0/0.75; Stage C take 0.70):
+A worked run (pieces at 3.2/0.05/larder 180, then soft 2.2, then −0.03/0.75; Stage C at 2.8/180/0.12/crack 8.0/0.75; Stage D take 0.85):
 
 | what you drew | params | 1–20 | 21–30 | 31–45 |
 |---|---|---|---|---|
-| a beak that simply pays | 6 | 0.204 | **0.897** | never ran |
-| a beak that opens a hard seed | 7 | 0.136 | 0.144 | 0.571 |
-| …and a newcomer that eats them | 8 | 0.136 | 0.144 | **0.093** |
+| a beak that simply pays | 6 | 0.121 | **0.807** | never ran |
+| a beak that opens a hard seed | 7 | 0.105 | 0.213 | 0.956 |
+| …and a newcomer that eats them | 8 | 0.105 | 0.213 | **0.106** |
 
 The floor is 0.09 mm: running the *true* numbers with a different seed still misses the
 record by that much, so no bar sits below it.
@@ -998,7 +1042,7 @@ it to bind — so it is correctness rather than calibration.
 Verified in the browser end to end 2026-09-05: zero console errors, every gate chains, all
 five stages solve, all four pieces of Stage B reveal their box/arrow/slider in turn, the plot clips the model to the revealed
 window, Stage C keeps the best setting rather than the first passing one, and a clean run
-decodes as `lesson7 v6`, `111111111111`, 12/12.
+decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — A resemblance is a number, whatever is causing it
