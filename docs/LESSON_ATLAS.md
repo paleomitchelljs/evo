@@ -845,7 +845,75 @@ ten), the freeze on unveiling, the one-arrow-is-not-enough bar in C, zero consol
 and a clean-slate run decoding as `lesson6b v1`, `1111111`, 7/7.
 
 ### Lesson 7 — Fitting a cause to a pattern, then asking it about next year
-`lesson7.html` · v7 · 12 checkpoints · **Rebuilt 2026-09-05 to JM's brief**
+`lesson7.html` · v8 · 12 checkpoints · **Rebuilt 2026-09-05; model corrected and record
+regenerated 2026-09-06**
+
+> **2026-09-06 — read this before the 2026-09-05 description below, most of which is now
+> wrong.** An adversarial pass found that several sliders did not do what the page said
+> they did. Fixing them changed the model, which meant regenerating the frozen record and
+> re-deriving every bar. `version` 7 → 8, so v7 codes no longer decode.
+>
+> **What was broken.**
+> 1. **Heritability was inert.** Chicks were centred on the *survivors'* mean, so the whole
+>    selection differential was handed on whatever the slider said. Measured: every value
+>    from 0.00 to 1.00 fitted the record equally well and cleared every bar. A student could
+>    say chicks get nothing from their parents and still watch the beaks evolve.
+> 2. **Generations overlapped**, so a selected cohort carried its own shifted mean forward
+>    with nothing inherited. Fixing (1) alone did not close this.
+> 3. **`worth` was signed against its own label.** Positive "what a deeper beak is worth"
+>    *penalised* the beak. 100% of the settings clearing Stage B step 4 came out negative.
+> 4. **An undrawn arrow was doing work.** The soft-seed clumsiness ran at every level-4
+>    evaluation whether or not any arrow existed, so the no-arrow model drifted 0.24 mm over
+>    twenty generations on its own and was not a null model.
+> 5. **The newcomers never ate.** `taken` fenced seeds off without removing them, so the
+>    pile *grew* all through the invasion.
+> 6. **Step 1's unmeetable target relented after one drag** — it counted `input` events, and
+>    16 nudges of one slider (verified in the browser) closed the step and printed the whole
+>    explanation.
+> 7. **Step 3's slider did nothing for two students in three**: with `sp` defaulting to 3.0
+>    against a truth of 3.6, 66% of the settings that cleared step 2 already cleared step 3.
+> 8. **Stage C froze on the first crossing, mid-drag**, disabling all five sliders. Verified:
+>    two of five deliberate slider moves were silently discarded.
+> 9. **Stage D's readout disagreed with its own table** — it tracked the live slider while
+>    the table and Stage E's answer key used the best setting reached.
+> 10. The Stage C R panel misstated four numbers and omitted a term; the Stage B panel showed
+>     the step-1 loop at every step, with a recurrence that was not the model's;
+>     `data/clean/island.csv` did not exist; the two download buttons swapped `sp`/`hp` and
+>     shared a filename.
+>
+> **The corrected truth**, all on the shipped slider grids: `bmax 3.0, dmin 0.20,
+> softFromRain 3.6, larder 210, worth −0.16` (i.e. the beak **costs** 0.16), `crackAt 8.4,
+> inherited 0.80, newcomers take 0.40`; generating seed 450. Generations 21–30 were made
+> decisively wetter, because at the old rainfall the beak fell only 0.42 mm there and a model
+> that had stopped evolving scored 0.20 mm across the window — inside any bar the stage could
+> set. It now falls 0.76 mm, and a model parked at its own generation-20 value scores 0.396.
+>
+> **Record shape:** +0.49 mm over 1–20, −0.76 over 21–30, −0.69 over 31–45. Population
+> 352–1553, hard-seed share 0.26–0.99, mean generation-to-generation beak move 0.071 mm.
+>
+> **Bars, all re-derived by exhaustive sweep:**
+>
+> | gate | floor | bar | clears |
+> |---|---|---|---|
+> | B step 1 | 79.9 finches | 70 | 0 of 434 — unmeetable by design |
+> | B step 2 | 65.0 finches | 150 | ~6% of 13,454 |
+> | B step 3 | 19.1 finches | 50 | 3,729 of 349,804 (1.07%) |
+> | B step 4 | ~0.05 mm | 0.20 | 12–14% of the worth/inherited plane |
+> | Stage C | 0.031 / 0.017 mm | 0.20 and 0.20 | both windows at once |
+> | Stage D | — | max(0.45, blind/1.8) | 3.9–10.2× headroom across six carries |
+>
+> **What the fixes bought.** Heritability now runs 0.227 mm at h=0 to 0.076 at h=0.8, so
+> setting inheritance to zero fails the stage. The sign story is legible: the direct model
+> fits `worth > 0` (86–98% of passers — the beak pays), the mediated model fits `worth < 0`
+> (99% — it costs, but it opens hard seeds). No step auto-completes: verified 0/434 and
+> 0/842 at each handover. The forward bar came down 0.30 → 0.20, and the direct model's leak
+> past it fell to 0–1%. Stage C gained a **Lock in this model** button, so the gate is an
+> event and not a redraw; a lock-in that misses names the miss and hands the sliders back.
+>
+> Verified end to end in the browser 2026-09-06: zero console errors, every gate chains, the
+> old give-up repro no longer works, all five Stage C slider moves survive to the lock-in,
+> Stage D's readout agrees with the table, and a clean run decodes as `lesson7 v8`,
+> `111111111111`, 12/12.
 
 *Replaces "Trying to stop evolution", archived at
 `_reference/retired/lessons/lesson7_stop_evolution_2026-09-05.html`. Unit 1's capstone:

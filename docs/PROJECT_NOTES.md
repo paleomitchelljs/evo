@@ -309,6 +309,35 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   used. Verified by sweeping the full range and claiming nothing.
   **Check this whenever a stage's gate reads state rather than an event.**
 
+- **A slider must be identifiable, not merely present (2026-09-06).** Lesson 7 shipped with
+  three separate versions of the same defect and none of them was visible by opening the
+  page. Its heritability slider — the lesson's declared focus — did nothing at all: every
+  value from 0.00 to 1.00 fitted the record equally well and cleared every bar, because
+  offspring were centred on the post-selection mean, so the response was complete whatever
+  the slider said. Its soft-crop slider did nothing for two students in three, because the
+  default sat close enough to the truth that the next bar was already cleared when the piece
+  arrived. And its `worth` slider was signed against its own label, so every model a student
+  fitted read with the wrong sign.
+
+  **The check, and it is cheap:** for each slider, sweep it across its whole range with
+  everything else at a plausible fit and print the scored quantity. Three failure shapes,
+  all of which lesson 7 had:
+  1. *flat* — the score does not move, so the control is decoration;
+  2. *already there* — the bar is cleared at the slider's opening value, so the step
+     completes itself and the student never touches it;
+  3. *inverted* — the score moves the right amount in the direction opposite to the label.
+
+  Do this before calibrating bars, because fixing any of the three changes the model and
+  every bar has to be re-derived afterwards anyway. `check_lessons.py` cannot see any of
+  it — it checks structure, and all three of these are structurally perfect.
+
+- **A model fix means regenerating synthetic data (2026-09-06).** Where a lesson's record
+  was generated from its own model, correcting the model invalidates the record: the truth
+  is no longer recoverable and the bars no longer mean what they measured. Lesson 7's
+  correction forced a full regeneration, a redesign of one stretch of the rainfall, and a
+  re-derivation of all six gates. Budget for that, or the fix ships as a lesson nobody can
+  solve. Bump `version` when it lands — the answer keys have moved.
+
 - **The information through-line, added 2026-09-03.** Lessons 1–4 were already
   measuring one idea in four currencies — L1's average error in cm, L2's calls right
   against expected right, L3's average miss in kg, L4's R² — without anything saying
