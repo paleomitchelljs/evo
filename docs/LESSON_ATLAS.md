@@ -573,7 +573,24 @@ that every declared slot is reachable. **Added the same day** as `bit_map_faults
 see the note at the head of this file.
 
 ### Lesson 6 — Building a model of a population, one cause at a time
-`lesson6.html` · v9 · 9 checkpoints · **A–C written to JM's voice notes 2026-09-04; D and E still owed**
+`lesson6.html` · v10 · 9 checkpoints · **A–C written to JM's voice notes 2026-09-04; D and E still owed**
+
+> **2026-09-06 — Stage A's fourth target reworked.** "Finish at exactly 200" (item 2 below)
+> is genuinely impossible on a slider that moves in thousandths (the closest reachable
+> value is 201, at births minus deaths of +0.007) and used to require an explicit Lock-in
+> on a pair the student already knows is wrong to resolve itself — not a thing a student
+> will ever choose to do, so in practice it had no win condition at all. JM's call: it now
+> resolves silently off the two sliders themselves. Every drag or nudge that lands the
+> finish on 201 counts (on the transition into 201, so one sweep across it counts once,
+> not once per redraw); ten such landings pop up a box explaining why 200 itself was never
+> reachable. Neither the running count nor the target of ten is shown anywhere on the page
+> — the task line reads "not yet" until the moment it resolves, so the win condition falls
+> out of ordinary exploration of the other three targets rather than something a student
+> aims at directly. The old 30-second-timer apparatus (`a4LiveAt`/`a4Tries`/`a4Done`) is
+> gone, replaced by `checkA4()`, called every redraw off the plot's own computed finish.
+> No other bar changed and no other stage was touched. Version 9 → 10 because lesson6 is
+> already released (`o` in `LOCKS.txt`) and a code already in a student's hands may have
+> earned this bit under the old, effectively-unwinnable rule.
 
 *Rebuilt 2026-09-03 to JM's spec: a birth-and-death sandbox, then a real population
 that two scalar rates cannot hold, then arrows from causes to rates, then the same move
@@ -845,8 +862,53 @@ ten), the freeze on unveiling, the one-arrow-is-not-enough bar in C, zero consol
 and a clean-slate run decoding as `lesson6b v1`, `1111111`, 7/7.
 
 ### Lesson 7 — Fitting a cause to a pattern, then asking it about next year
-`lesson7.html` · v8 · 12 checkpoints · **Rebuilt 2026-09-05; model corrected and record
-regenerated 2026-09-06**
+`lesson7.html` · v9 · 12 checkpoints · **Rebuilt 2026-09-05; model corrected and record
+regenerated 2026-09-06; Stage A replaced 2026-09-06**
+
+> **2026-09-06 — Stage A replaced.** The prisoner's-dilemma vignette described below (two
+> sliders, a hard/soft dropdown, a four-cell payoff table) is gone. On JM's request for
+> something simpler: the student is now one bird, five years running. Each year the flock
+> is *shown*, not set — a histogram of that year's actual beak-depth distribution, stacked
+> above two more panels of the same shape: expected chicks and chance of surviving winter,
+> both as a function of beak depth under that year's real, randomly-drawn seed conditions.
+> One slider picks a beak depth ("which bird you follow"); **Lock in this bird** draws a
+> real chick count and a real survival roll for it, not an average. Total chicks across all
+> five years must reach 11 to open Stage B; short of that, **Play again** restarts at the
+> same fixed year-1 flock with fresh weather. `BIT.A_*` (positions 0-3, `scaffold` still 12)
+> now mean: locked in a bird for the first time, played all five years, cleared the bar,
+> and the closing numeric question (how far the flock's own mean beak moved, start to end —
+> read directly off the "years so far" table). `version` 8 → 9.
+>
+> **Nothing invented for it.** Year 1's flock is 600 birds drawn the same way `runIsland`
+> seeds itself (fixed RNG, so every student's year 1 is identical); each subsequent year's
+> flock is that same population run one real generation forward under `runIsland`'s own
+> survive/reproduce/inherit step (`herit` 0.80, `worth` −0.16, `crackAt` 8.4 — the same
+> truth the frozen record was generated at), with a fresh weather draw bootstrapped from
+> the page's own `GRAIN` record rather than an invented distribution. A first attempt at
+> that (`300*rng()*rng()`, mean rainfall 75) was half the real record's mean (~148) and let
+> "always follow the deepest beak" win almost every run regardless of that year's
+> conditions — exactly the "beak that simply pays" model this lesson already rejects for
+> the main build. Bootstrapping real years fixed it.
+>
+> **Bar calibration** (`scratchpad/calibrate_l7a.mjs`, deleted after use; 3,000 five-year
+> Monte Carlo runs per policy): a policy that reads the expected-chicks panel and follows
+> its visible peak each year averages 12.18 chicks and clears 11 total 95.5% of the time.
+> The best naive heuristic that ignores the panels (always the shallowest beak on offer)
+> averages 11.09 and clears 11 only 69.3% of the time; always-the-mean, blind-random and
+> always-deepest all average under 10.5 and clear 11 at 33–41%. Bar set at 11.
+>
+> Two bugs caught before shipping: the per-year outcome message was being wiped by the
+> same click that set it (`enterYearA` cleared `#A_outcome` immediately after the Lock-in
+> handler wrote it, so years 1–4's result was never actually visible — only year 5's
+> survived, by accident, because a different function runs there), and the fourth
+> checkpoint's `markTask` call was missing, so a cleared bar never painted its done-bullet.
+> Both fixed and reverified. Verified end to end in the browser 2026-09-06: zero console
+> errors, the beak slider's effect on both curves is visibly non-flat across its full
+> range, five years play through with a persistent outcome message and a filling "years so
+> far" table, a short run correctly offers Play Again and resets to the identical year-1
+> flock, a passing run (13 chicks, table showing the flock actually favoring a shallow beak
+> in years 1–3 and a deep one in 4–5) unlocks Stage B and reveals the numeric question, and
+> a correct answer (−0.14, matching the table) records.
 
 > **2026-09-06 — read this before the 2026-09-05 description below, most of which is now
 > wrong.** An adversarial pass found that several sliders did not do what the page said

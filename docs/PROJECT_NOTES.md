@@ -300,6 +300,39 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **Lesson 7 Stage A rebuilt as a five-year "be a bird" lottery (2026-09-06).** Replaced the
+  prisoner's-dilemma vignette (two sliders, a hard/soft dropdown, a four-cell table) on JM's
+  request for something simpler: one slider picks a beak depth against three stacked panels
+  (that year's real flock, expected chicks, survival chance), **Lock in this bird** draws a
+  real outcome, and the flock evolves under its own selection each year rather than being
+  redrawn. Full detail in `docs/LESSON_ATLAS.md`'s Lesson 7 entry. Two points worth keeping
+  for the next similar build:
+  - **When a mini-game needs "random but realistic" input, bootstrap the real record rather
+    than inventing a distribution.** A first pass drew rain from `300*rng()*rng()` (mean 75)
+    instead of sampling from the page's own 45-year `GRAIN` record (mean ~148) — half as wet
+    as reality — and "always follow the deepest beak" won almost every run regardless of
+    that year's conditions, reproducing the exact "beak that simply pays" failure this
+    lesson already rejected once for its main model (see the Lesson 7 atlas entry, "Three
+    models were prototyped and rejected"). Swapping in a bootstrap from `GRAIN` fixed it.
+  - **Calibrate a threshold by simulating policies, not by picking a number.** Before
+    hardcoding the "11 chicks over five years" bar, a throwaway Monte Carlo
+    (`scratchpad/calibrate_l7a.mjs`, deleted after use) compared a policy that reads the
+    expected-chicks panel each year (95.5% clear rate, mean 12.18) against naive heuristics
+    that ignore it (best of them 69.3%, worst 33%) — the same exhaustive-sweep discipline
+    used for every other bar in this lesson (§4, "A slider must be identifiable").
+
+- **Lesson 6 Stage A's fourth target reworked twice in one sitting (2026-09-06).** "Finish at
+  exactly 200" (genuinely impossible on a thousandths slider — closest is 201) used to
+  require an explicit **Lock in** on a pair the student already knows is wrong, which is not
+  a thing a student will ever choose to do — in practice, no win condition at all. First pass
+  widened the target to a real window (195–205); JM's actual preference, on reflection, was
+  to keep the impossible-target framing but fix *how* it resolves: it now counts silently off
+  the two sliders themselves (a transition onto 201, so one sweep counts once, not once per
+  redraw) and pops up an explanatory box after ten such landings, with neither the count nor
+  the target of ten ever shown on the page. Worth remembering as a pattern: **a target the
+  student is meant to be surprised by cannot be gated behind an action that telegraphs it's
+  wrong before they take it** — the fix is to make the mechanic passive, not to lower the bar.
+
 - **A target is claimed by committing, not by passing through it (2026-09-04).** Any
   stage whose tasks are checked inside the redraw can be beaten by sweeping a slider:
   the handler fires at every step, so one drag across the range trips every target on

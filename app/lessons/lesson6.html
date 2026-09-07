@@ -48,6 +48,11 @@
   ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
   ul.tasks li.done .hint { color:#54703a; }
   .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .popup-overlay { display:none; position:fixed; inset:0; background:rgba(29,29,27,0.45); align-items:center; justify-content:center; z-index:50; }
+  .popup-overlay.shown { display:flex; }
+  .popup-box { background:#fff; border-radius:8px; padding:22px 26px; max-width:420px; box-shadow:0 10px 34px rgba(0,0,0,0.28); font-size:14px; line-height:1.5; text-align:left; }
+  .popup-box p { margin:0 0 14px; }
+  .popup-box button { background:var(--accent); color:#fff; border:0; border-radius:4px; padding:8px 16px; cursor:pointer; font-size:13px; }
   .solved-banner.shown { display:block; }
   .numq { display:none; }
   .numq.shown { display:block; }
@@ -127,6 +132,12 @@
 </style>
 </head>
 <body>
+<div class="popup-overlay" id="a4Popup">
+  <div class="popup-box">
+    <p>You got 201 ten times! There is no way to hit exactly 200 with this granularity of slider. The number of bunnies at year 100 is based on the difference between births &amp; deaths. So 0.356 births and 0.349 deaths (0.007 difference) gives you 201 bunnies — and 0.131 births and 0.124 deaths (also 0.007 difference) gives you 201 bunnies too.</p>
+    <button id="a4PopupClose">Continue</button>
+  </div>
+</div>
 <header>
   <h1>Lesson 6</h1>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
@@ -194,7 +205,7 @@
           <li data-task="A1">Finish above 1,000. <span class="hint"><span id="A1_now">not yet</span></span></li>
           <li data-task="A2">Finish below 10. <span class="hint"><span id="A2_now">not yet</span></span></li>
           <li data-task="A3">Finish between 45 and 55. <span class="hint"><span id="A3_now">not yet</span></span></li>
-          <li data-task="A4">Finish at exactly 200. <span class="hint"><span id="A4_now">opens once the first three are locked in</span></span></li>
+          <li data-task="A4">Finish at exactly 200. <span class="hint">not yet</span></li>
           <li data-task="A5">Answer the question below.</li>
         </ul>
         <div class="solved-banner" id="solvedA">Stage B is open.</div>
@@ -731,12 +742,20 @@ const F_LOGRAIN = FRAIN.map(v => Math.log10(v + 1));
 const F_MLR = 1.88, F_MLN = 2.24;
 
 /* ====== STAGE A — births, deaths, a hundred generations ============= */
-// A4 is deliberately impossible: on a slider that moves in thousandths the
-// closest finish to 200 is 201, at a difference of +0.007. It resolves itself
-// once the student has actually tried for a while, and says why.
-const A_IMPOSSIBLE_MS = 30000;
+// A4 targets "exactly 200", which is genuinely impossible on a slider that
+// moves in thousandths -- the closest any pair gets is 201, at births minus
+// deaths of +0.007 (the next step down lands on 182). It used to require an
+// explicit Lock-in on a pair the student already knows is wrong, which is not
+// a thing a student will ever choose to do -- so in practice it had no win
+// condition at all. Reworked 2026-09-06 on JM's call: landing on 201 is now
+// tracked silently off the two sliders themselves (no Lock-in needed), and
+// ten separate landings resolve it with a popup that explains why 200 itself
+// was never reachable. The count and the "ten" are not shown anywhere on the
+// page -- the point is that it resolves out of ordinary exploration of the
+// other three targets, not out of a bar the student is aiming at.
+const A4_HITS_NEEDED = 10;
 const sA = { b: 0.200, d: 0.200, hitBig: false, hitSmall: false, hitFlat: false,
-             locked: [], a4LiveAt: null, a4Tries: 0, a4Done: false, a4Timer: null };
+             a4Hits: 0, a4WasHit: false, a4Done: false, locked: [] };
 function runA(b, d) {
   const out = [100];
   for (let t = 0; t < 100; t++) out.push(Math.max(0, out[t] * (1 + b - d)));
@@ -767,11 +786,7 @@ function drawStageA() {
   document.getElementById("A1_now").textContent = sA.hitBig   ? "done" : "not yet";
   document.getElementById("A2_now").textContent = sA.hitSmall ? "done" : "not yet";
   document.getElementById("A3_now").textContent = sA.hitFlat  ? "done" : "not yet";
-  // Gone once A4 has resolved: resolving rewrites the whole list item, span and all.
-  const a4now = document.getElementById("A4_now");
-  if (a4now) a4now.textContent =
-    sA.a4LiveAt === null ? "opens once the first three are locked in" :
-    sA.a4Tries === 0 ? "lock in a pair to try it" : "keep trying";
+  checkA4(fin);
   renderListA();
   checkA();
 }
@@ -783,28 +798,32 @@ const numA = wireNumeric("A", {
   right: "Recorded — right.", wrong: "Recorded — not right.",
   after: () => { markTask("A","A5"); Gates.A.done = true; }
 });
-// The fourth target goes live only once the first three are locked in, and it
-// closes itself after the student has spent real time on it.
-function openA4() {
-  if (sA.a4LiveAt !== null || sA.a4Done) return;
-  sA.a4LiveAt = Date.now();
-  sA.a4Timer = setInterval(resolveA4, 1000);
-  document.getElementById("A4_now").textContent = "lock in a pair to try it";
+// Counts every time the sliders land on 201 (as opposed to sitting there
+// across several redraws, which fires this every frame for nothing new) --
+// so a single drag across the target counts once, and leaving and coming
+// back counts again. Nothing about the count or the target of ten is ever
+// shown; the task line only changes the moment it resolves.
+function checkA4(fin) {
+  if (sA.a4Done) return;
+  const isHit = Math.round(fin) === 201;
+  if (isHit && !sA.a4WasHit) {
+    sA.a4Hits++;
+    if (sA.a4Hits >= A4_HITS_NEEDED) {
+      sA.a4Done = true;
+      markTask("A", "A4");
+      const li = document.querySelector('#tasksA li[data-task="A4"]');
+      if (li) li.innerHTML = 'Finish at exactly 200. <span class="hint">Not possible with these two numbers.' +
+        ' The closest any pair gets is 201, at births minus deaths of +0.007 — the next step down lands on 182.' +
+        ' Two numbers fix the whole curve, so you do not get to choose where it ends as well as how it gets there.</span>';
+      showA4Popup();
+    }
+  }
+  sA.a4WasHit = isHit;
 }
-function resolveA4() {
-  if (sA.a4Done || sA.a4LiveAt === null) return;
-  if (Date.now() - sA.a4LiveAt < A_IMPOSSIBLE_MS || sA.a4Tries < 1) return;
-  sA.a4Done = true;
-  clearInterval(sA.a4Timer); sA.a4Timer = null;
-  markTask("A", "A4");
-  const li = document.querySelector('#tasksA li[data-task="A4"]');
-  if (li) li.innerHTML = 'Finish at exactly 200. <span class="hint">Not possible with these two numbers.' +
-    ' The closest any pair gets is 201, at births minus deaths of +0.007 — the next step down lands on 182.' +
-    ' Two numbers fix the whole curve, so you do not get to choose where it ends as well as how it gets there.</span>';
-  drawStageA();
+function showA4Popup() {
+  document.getElementById("a4Popup").classList.add("shown");
 }
 function checkA() {
-  if (sA.hitBig && sA.hitSmall && sA.hitFlat) openA4();
   if (Gates.A.solvedOnce) return;
   if (!(sA.hitBig && sA.hitSmall && sA.hitFlat && sA.a4Done)) return;
   Gates.A.solvedOnce = true;
@@ -827,8 +846,6 @@ function lockInA() {
   if (fin > 1000 && !sA.hitBig)  { sA.hitBig = true;  markTask("A","A1"); won = "above 1,000"; }
   else if (fin < 10 && !sA.hitSmall) { sA.hitSmall = true; markTask("A","A2"); won = "below 10"; }
   else if (fin >= 45 && fin <= 55 && !sA.hitFlat) { sA.hitFlat = true; markTask("A","A3"); won = "between 45 and 55"; }
-  else if (sA.a4LiveAt !== null && !sA.a4Done && Math.round(fin) === 200) { sA.a4Done = true; markTask("A","A4"); won = "exactly 200"; }
-  if (sA.a4LiveAt !== null && !sA.a4Done) { sA.a4Tries++; resolveA4(); }
   sA.locked.push({ b: sA.b, d: sA.d, fin: fin >= 10000 ? fin.toExponential(2) : fin.toFixed(fin < 10 ? 2 : 0), won });
   bump("A"); drawStageA();
 }
@@ -1378,8 +1395,8 @@ mean(abs(W - d0$wolves))
 
 /* ====== Boot + Score ================================================
    Scaffold layout (9 bits):
-     0  A built a population, wiped one out, held one near half, and met the
-        target that cannot be met
+     0  A built a population, wiped one out, held one near half, and landed
+        on 201 (the closest two numbers get to 200) ten separate times
      1  A a hundred years at two in a hundred, read off the plot
      2  B matched the crash and the recovery, one locked-in pair at a time
      3  C got under 65 birds on the rain arrow alone
@@ -1393,6 +1410,22 @@ mean(abs(W - d0$wolves))
    lock-ins carry the stage), and C's is gone because its content -- what the
    rain is worth on its own -- became the first half of the interactive instead
    of a question asked afterwards. Scaffold 10 -> 9, version 8 -> 9.
+
+   Stage A's fourth target reworked 2026-09-06 on JM's call. "Finish at exactly
+   200" is genuinely impossible on a slider that moves in thousandths (closest
+   reachable value is 201, at births minus deaths of +0.007), and it used to
+   require an explicit Lock-in on a pair the student already knows is wrong --
+   not a thing a student will ever choose to do, so in practice there was no
+   win condition at all. It is now tracked silently off the two sliders
+   themselves: every time a drag or a nudge lands the finish on 201 (counted
+   on the transition into 201, so one sweep across it counts once, not once
+   per redraw), and ten such landings resolve it with a popup explaining why
+   200 itself was never reachable -- see checkA4. Neither the count nor the
+   target of ten appears anywhere on the page; the task line reads "not yet"
+   throughout and is only rewritten at the moment it resolves. Lesson6 is
+   already released (`o` in LOCKS.txt), so any code already in a student's
+   hands may have earned this bit under the old (broken) rule -- version
+   9 -> 10.
    ================================================================== */
 // Instructor bypass (score.js): every section is already open, so undo the gates
 // that live inside a stage rather than between them.
@@ -1411,7 +1444,7 @@ drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE();
 
 Score.init({
   moduleId: "lesson6",
-  version: 9,
+  version: 10,
   scaffold: 9,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
@@ -1421,6 +1454,9 @@ Score.init({
     Gates.A.open = true;
     drawStageA();
   }
+});
+document.getElementById("a4PopupClose").addEventListener("click", () => {
+  document.getElementById("a4Popup").classList.remove("shown");
 });
 </script>
 </body>
