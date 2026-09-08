@@ -127,6 +127,15 @@
   /* Lesson 7 additions ------------------------------------------------- */
   .ladder { font:12px ui-monospace,Menlo,monospace; max-height:170px; overflow-y:auto; }
   .pending { color:#b8b3a0; font-style:italic; }
+  /* Stage A's offspring cards -- one per chick, hovering previews it on the
+     chart (the dashed marker follows), clicking commits to it for the year. */
+  .offspring-prompt { font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .controls .offspring-btn { display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+    background:#333; color:#fff; border:0; border-radius:4px; padding:8px 12px; cursor:pointer;
+    font-size:13px; text-align:left; }
+  .controls .offspring-btn:hover, .controls .offspring-btn:focus-visible { background:var(--accent); }
+  .offspring-btn .ob-beak { font-family:ui-monospace,Menlo,monospace; font-weight:600; }
+  .offspring-btn .ob-stats { font-size:11px; opacity:0.85; }
   table.tbl { border-collapse:collapse; width:100%; font-size:13px; }
   table.tbl th, table.tbl td { padding:8px 12px; border-bottom:1px solid var(--rule); text-align:right; white-space:nowrap; }
   table.tbl th:first-child, table.tbl td:first-child { text-align:left; white-space:normal; min-width:230px; }
@@ -174,12 +183,13 @@
       <div class="voice">
         <p>Before any of that: be one of the birds.</p>
         <p>Here is this year's flock, and here is what the seeds are doing. Some years the soft ones run out early and all that is left is what a hard-seed beak can crack; other years the soft crop holds and a deep beak is just extra weight to carry. You do not get told which kind of year it is — only what it does to a bird built one way or another.</p>
-        <p>Pick a beak. Follow it through the winter. Do that five times, while the flock itself goes through the same thing without you.</p>
+        <p>Pick a beak. Follow it through the winter. It has chicks, or it doesn't — and if it doesn't, that line is over and you start again. If it does, you do not get to pick a fresh beak next year: you pick which of its own chicks to be, and go again with whatever it handed you.</p>
       </div>
       <ul class="setup">
         <li>The flock is shown as it stands this year — you do not set it, you read it.</li>
         <li>The two panels below it show what a bird built at each beak depth can expect: how many chicks, and what chance of seeing spring.</li>
-        <li>Slide to a beak depth, <strong>lock in</strong>, and a real chick count and a real survival draw come back — not an average, an actual roll.</li>
+        <li>Year one only: slide to a beak depth and <strong>lock in</strong>. A real chick count comes back — not an average, an actual roll.</li>
+        <li>After that you are choosing among your own bird's actual chicks — their beaks land near yours, not wherever you would like. A year with zero chicks ends that line outright.</li>
         <li>The flock keeps changing underneath you, year to year, whether you do well or not. Five years, then your total chicks are checked against a bar.</li>
       </ul>
     </div>
@@ -207,11 +217,15 @@
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsV">
-          <div class="row"><label for="V_beak">which bird you follow</label><input type="range" id="V_beak" min="7.5" max="10.5" step="0.05" value="9.0" /><output id="V_beakOut">9.0</output></div>
-          <div class="buttons">
+          <div class="row" id="rowVstart"><label for="V_beak">which bird you follow</label><input type="range" id="V_beak" min="7.5" max="10.5" step="0.05" value="9.0" /><output id="V_beakOut">9.0</output></div>
+          <div class="buttons" id="startButtons">
             <button id="A_lock" class="accent">Lock in this bird</button>
-            <button id="A_again" class="ghost" style="display:none;">Play again</button>
           </div>
+          <div id="offspringRow" style="display:none;">
+            <div class="offspring-prompt">Which of its chicks do you follow into this year?</div>
+            <div class="buttons" id="offspringButtons"></div>
+          </div>
+          <div class="buttons"><button id="A_again" class="ghost" style="display:none;">Play again</button></div>
         </div>
         <div class="fit-stats" style="margin-top:10px;" id="A_outcome"></div>
       </div>
@@ -219,7 +233,7 @@
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
           <li data-task="A1">Lock in a bird for the first time. <span class="hint"><span id="A1_now">not yet</span></span></li>
-          <li data-task="A2">Play all five years. <span class="hint"><span id="A2_now">0 of 5</span></span></li>
+          <li data-task="A2">Play all five years without your line running out. <span class="hint"><span id="A2_now">0 of 5</span></span></li>
           <li data-task="A3">Get 11 or more chicks total across the five. <span class="hint"><span id="A3_now">not yet</span></span></li>
           <li data-task="A4">Answer the question below.</li>
         </ul>
@@ -1035,13 +1049,43 @@ const D_TAKE_TRUE = 0.40;
    and clears 11 only 69.3% of the time; always-mean, blind-random and
    always-deepest all average under 10.5 and clear 11 at 33-41%. Bar set at
    11 total chicks over five years.
+
+   LINEAGE REBUILD, 2026-09-08, JM's request. Freely re-picking any beak
+   each year -- the original design above -- let a student always evaluate
+   the single best depth for that year's conditions, which is not what
+   heritability actually allows a real lineage to do. Now you do not get to
+   re-pick: you choose your STARTING bird only in year 1; after that you are
+   choosing among that bird's own actual chicks, whose beaks land near their
+   parents' by inheritance, not wherever the panels say is best this year. A
+   year with zero chicks ends the line outright -- there is nothing to
+   follow into the next one, so the run resets. vReach/vSoftEff are also
+   steepened for this stage only (A_BEAK_SPAN/A_SOFT_PEN/A_SOFT_FLOOR below,
+   vs. the shared W.beakSpan/W.softPen the rest of the model uses) so a beak
+   on the wrong side of a year's conditions can plausibly hit zero, not just
+   fewer -- otherwise a lineage could almost never actually die out and the
+   new failure mode would be decorative. Recalibrated,
+   scratchpad/calibrate_l7a_lineage.mjs (deleted after use), 2000 five-year
+   attempts per policy, resetting internally on a zero-chick year exactly as
+   the page does: a policy that always picks whichever chick the expected-
+   chicks panel favors clears 11 total 71.3% of the time per attempt (versus
+   95.5% under the old free-pick rules -- lower on purpose, since the point
+   is that even a correct read can be foiled by what your own line actually
+   produced) and resets at least once in 4.3% of attempts. Always-shallow
+   clears 11 only 39.1% of the time and resets 13.9% of attempts; always-deep
+   clears 21.1% and resets 2.4%. Bar held at 11 total chicks over five years
+   -- an informed player still clears it in one or two tries on average.
    ================================================================== */
-const TRUTH_A = { bmax:3.0, dmin:0.20, sp:3.6, hp:210, worth:-0.16, herit:0.80 };
+const TRUTH_A = { bmax:3.0, dmin:0.20, sp:3.6, hp:210, worth:-0.18, herit:0.80 };
 const A_YEARS = 5, A_BAR = 11, A_BINS = 16, A_START_SEED = 20260906;
-function vReach(b){ return Math.max(0, Math.min(1, (b-W.crackTrue)/W.beakSpan)); }
-function vSoftEff(b){ return Math.max(0.30, 1 - W.softPen*(b-W.beakLo0)); }
+// Steeper than the shared W.beakSpan (1.9) / W.softPen (0.30, floor 0.30):
+// this vignette needs a beak that is wrong for the year to be able to
+// actually reach zero food, not merely less. See the comment above.
+const A_BEAK_SPAN = 0.8, A_SOFT_PEN = 0.60, A_SOFT_FLOOR = 0.05;
+function vReach(b){ return Math.max(0, Math.min(1, (b-W.crackTrue)/A_BEAK_SPAN)); }
+function vSoftEff(b){ return Math.max(A_SOFT_FLOOR, 1 - A_SOFT_PEN*(b-W.beakLo0)); }
 const sV = { year:1, birds:null, S:0, H:0, rng:null, nrm:null, env:null,
-             beakChoice:9.0, locked:false, done:false, total:0, history:[] };
+             beakChoice:9.0, mode:"start", offspring:null,
+             locked:false, done:false, failed:false, total:0, history:[] };
 
 /* One generation of the real island: this year's weather, this year's food
    environment (as functions of a hypothetical beak, for the panels AND for
@@ -1144,11 +1188,17 @@ function drawBandA(ctx, x0, y0, w, h, lo, hi, values, yMax, chosenBin, colLo, co
 function drawStageA() {
   const [lo,hi] = beakRangeFor(sV.birds);
   const slider = document.getElementById("V_beak");
-  slider.min = lo.toFixed(2); slider.max = hi.toFixed(2);
-  if (sV.beakChoice < lo) sV.beakChoice = lo;
-  if (sV.beakChoice > hi) sV.beakChoice = hi;
-  slider.value = String(sV.beakChoice);
-  document.getElementById("V_beakOut").textContent = sV.beakChoice.toFixed(2);
+  if (sV.mode === "start") {
+    slider.min = lo.toFixed(2); slider.max = hi.toFixed(2);
+    if (sV.beakChoice < lo) sV.beakChoice = lo;
+    if (sV.beakChoice > hi) sV.beakChoice = hi;
+    slider.value = String(sV.beakChoice);
+    document.getElementById("V_beakOut").textContent = sV.beakChoice.toFixed(2);
+  }
+  const showControls = !sV.done;
+  document.getElementById("rowVstart").style.display = (showControls && sV.mode==="start") ? "" : "none";
+  document.getElementById("startButtons").style.display = (showControls && sV.mode==="start") ? "" : "none";
+  document.getElementById("offspringRow").style.display = (showControls && sV.mode==="choose") ? "" : "none";
 
   const counts = histCountsA(sV.birds, lo, hi);
   const chicksCurve = binValuesA(sV.env.expChicks, lo, hi);
@@ -1171,6 +1221,34 @@ function drawStageA() {
     ' &nbsp; soft seeds: '+Math.round(sV.S)+' &nbsp; hard seeds: '+Math.round(sV.H);
   document.getElementById("A_lock").disabled = sV.locked || sV.done;
   if (!sV.done) document.getElementById("A2_now").textContent = Math.min(sV.year-1, A_YEARS)+" of 5";
+}
+/* The chicks a chosen bird actually had, one of which the student picks to
+   be next year. Same regression-to-the-mean inheritance runIsland's own
+   reproduction uses (its "four corrections" comment): centred on THIS
+   year's pre-selection mean, not on the parent's own value, so a choice
+   cannot simply hand its exact beak on to whichever chick is picked. */
+function spawnOffspringA(bYou, k, flockMean) {
+  const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-TRUTH_A.herit*TRUTH_A.herit/2));
+  const mate = sV.birds[(sV.rng()*sV.birds.length)|0];
+  const kids = [];
+  for (let j=0;j<k;j++) kids.push(flockMean + TRUTH_A.herit*((bYou+mate)/2-flockMean) + sdk*sV.nrm());
+  return kids.sort((a,b)=>a-b);
+}
+/* Built once per brood, not on every redraw -- hovering a card previews it
+   on the chart (via sV.beakChoice) without touching this DOM at all. */
+function renderOffspringChoicesA() {
+  const wrap = document.getElementById("offspringButtons");
+  wrap.innerHTML = sV.offspring.map((b,i) => {
+    const ec = sV.env.expChicks(b), sp = sV.env.survProb(b);
+    return `<button type="button" class="offspring-btn" data-idx="${i}">`+
+      `<span class="ob-beak">${b.toFixed(2)} mm</span>`+
+      `<span class="ob-stats">${ec.toFixed(2)} chicks expected · ${(sp*100).toFixed(0)}% survival</span></button>`;
+  }).join("");
+  wrap.querySelectorAll(".offspring-btn").forEach(btn=>{
+    const idx = +btn.dataset.idx;
+    btn.addEventListener("mouseenter", ()=>{ sV.beakChoice = sV.offspring[idx]; drawStageA(); });
+    btn.addEventListener("click", ()=>{ lockInBeak(sV.offspring[idx]); });
+  });
 }
 function renderHistoryA() {
   document.getElementById("tblAbody").innerHTML = sV.history.length===0
@@ -1200,8 +1278,8 @@ function resetRunA(seed) {
   for (let i=0;i<W.N0;i++) birds[i] = 9.0 + W.beakSD*initNrm();
   sV.birds = birds; sV.S = W.S0; sV.H = W.H0;
   sV.rng = mulberry32(seed); sV.nrm = makeNorm(sV.rng);
-  sV.year = 1; sV.total = 0; sV.history = []; sV.locked = false; sV.done = false;
-  sV.beakChoice = 9.0;
+  sV.year = 1; sV.total = 0; sV.history = []; sV.locked = false; sV.done = false; sV.failed = false;
+  sV.beakChoice = 9.0; sV.mode = "start"; sV.offspring = null;
   document.getElementById("A_again").style.display = "none";
   document.getElementById("A_outcome").textContent = "";
   renderHistoryA();
@@ -1221,15 +1299,24 @@ function finishRunA() {
   } else {
     document.getElementById("A3_now").textContent = sV.total+" of "+A_BAR+" — play again";
   }
+  document.getElementById("A_again").textContent = "Play again";
   document.getElementById("A_again").style.display = "";
 }
-document.getElementById("V_beak").addEventListener("input", e=>{
-  sV.beakChoice = parseFloat(e.target.value); bump("A"); drawStageA();
-});
-document.getElementById("A_lock").addEventListener("click", ()=>{
+// A zero-chick year is not a bad score to shrug off -- it is the end of the
+// line, since there is no chick to choose for next year. The run resets
+// rather than limping on with the total it had.
+function failRunA() {
+  sV.done = true; sV.failed = true;
+  document.getElementById("A2_now").textContent = "line ended, year "+sV.year+" of 5";
+  document.getElementById("A_again").textContent = "Start over";
+  document.getElementById("A_again").style.display = "";
+}
+/* The single path both controls commit through: the free slider in year 1,
+   an offspring card every year after. Whichever supplied bYou, the roll and
+   the bookkeeping are identical from here on. */
+function lockInBeak(bYou) {
   if (sV.locked || sV.done) return;
   bump("A");
-  const bYou = sV.beakChoice;
   const br = sV.env.expChicks(bYou);
   let k = Math.floor(br); if (sV.rng() < br-k) k++; k = Math.max(0,k);
   const survived = sV.rng() < sV.env.survProb(bYou);
@@ -1237,16 +1324,34 @@ document.getElementById("A_lock").addEventListener("click", ()=>{
   sV.history.push({ year:sV.year, flockMean:sV.env.mean, beak:bYou, chicks:k, survived });
   sV.locked = true;
   if (!Gates.A.everLocked) { Gates.A.everLocked = true; markTask("A","A1"); record(BIT.A_first, true); }
+  if (k === 0) {
+    document.getElementById("A_outcome").textContent =
+      "Year "+sV.year+": raised no chicks at all — nothing to follow into next year. The line ends here.";
+    renderHistoryA();
+    failRunA();
+    drawStageA();
+    return;
+  }
   document.getElementById("A_outcome").textContent =
     "Year "+sV.year+": raised "+k+" chick"+(k===1?"":"s")+
     (survived ? " — and made it through the winter."
               : " — but did not survive the winter. The chicks were already fledged, so they still count.");
   renderHistoryA();
+  const offspring = spawnOffspringA(bYou, Math.min(6,k), sV.env.mean);
   sV.birds = sV.env.nextBirds.length>=2 ? sV.env.nextBirds : sV.birds;
   sV.S = sV.env.S; sV.H = sV.env.H; sV.year++;
-  if (sV.year > A_YEARS) finishRunA(); else enterYearA();
+  if (sV.year > A_YEARS) { finishRunA(); }
+  else {
+    sV.mode = "choose"; sV.offspring = offspring; sV.beakChoice = offspring[0];
+    enterYearA();
+    renderOffspringChoicesA();
+  }
   drawStageA();
+}
+document.getElementById("V_beak").addEventListener("input", e=>{
+  sV.beakChoice = parseFloat(e.target.value); bump("A"); drawStageA();
 });
+document.getElementById("A_lock").addEventListener("click", ()=>{ lockInBeak(sV.beakChoice); });
 document.getElementById("A_again").addEventListener("click", ()=>{
   bump("A"); resetRunA(randomSeed(1, 2147483647)); drawStageA();
 });
