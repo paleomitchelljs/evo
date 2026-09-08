@@ -130,6 +130,11 @@
   table.tbl { border-collapse:collapse; width:100%; font-size:13px; }
   table.tbl th, table.tbl td { padding:8px 12px; border-bottom:1px solid var(--rule); text-align:right; white-space:nowrap; }
   table.tbl th:first-child, table.tbl td:first-child { text-align:left; white-space:normal; min-width:230px; }
+  /* tblA's first column is just a year number -- the 230px min-width above is
+     sized for Stage E's long row labels and, applied here too, was starving
+     the sibling Controls column of width until the beak slider's own track
+     collapsed to ~0px: only its +/- steppers still worked. */
+  #tblA th:first-child, #tblA td:first-child { min-width:0; }
   table.tbl thead th { font-size:11.5px; text-transform:uppercase; letter-spacing:.05em;
     color:var(--muted); font-weight:600; border-bottom:1px solid #c9c5b6; }
   table.tbl td.num { font-family:ui-monospace,Menlo,monospace; }
@@ -277,12 +282,13 @@
         <h3>Controls</h3>
         <div class="controls" id="controlsA">
           <div class="row" data-line="bm"><label for="B_bmax">the most chicks a bird can have</label><input type="range" id="B_bmax" min="0.2" max="3.2" step="0.1" value="1.0" /><output id="B_bmaxOut">1.0</output></div>
-          <div class="row" data-line="dm"><label for="B_dmin">the lowest a bird's chance of dying goes</label><input type="range" id="B_dmin" min="0.05" max="0.70" step="0.05" value="0.30" /><output id="B_dminOut">0.30</output></div>
+          <div class="row" data-line="dm"><label for="B_surv">the highest a bird's chance of seeing spring goes</label><input type="range" id="B_surv" min="0.30" max="0.95" step="0.05" value="0.70" /><output id="B_survOut">0.70</output></div>
           <div class="row" id="rowBsp" data-line="sp" style="display:none;"><label for="B_sp">how much rain makes the soft kind</label><input type="range" id="B_sp" min="1.0" max="6.0" step="0.2" value="1.0" /><output id="B_spOut">1.0</output></div>
           <div class="row" id="rowBhp" data-line="hp" style="display:none;"><label for="B_hp">how many hard seeds a year leaves behind</label><input type="range" id="B_hp" min="20" max="320" step="10" value="100" /><output id="B_hpOut">100</output></div>
           <div class="row muted" id="rowBworth" data-line="w" style="display:none;"><label for="B_worth">what a deeper beak is worth to a bird</label><input type="range" id="B_worth" min="-0.30" max="0.30" step="0.01" value="0" disabled /><output id="B_worthOut">0.00</output></div>
           <div class="row" id="rowBherit" data-line="h" style="display:none;"><label for="B_h">how much of the beak a chick gets from its parents</label><input type="range" id="B_h" min="0" max="1" step="0.05" value="0.50" /><output id="B_hOut">0.50</output></div>
           <div class="buttons">
+            <button id="B_lock" class="accent" style="display:none;" disabled>Lock in this model</button>
             <button id="B_download" class="ghost">Download .R</button>
           </div>
         </div>
@@ -309,7 +315,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/island.csv"</span>)</span><span class="line"></span><span class="line" data-line="bm">mostChicks &lt;- <span class="num" id="cB_bm">1.0</span></span><span class="line" data-line="dm">leastDying &lt;- <span class="num" id="cB_dm">0.30</span></span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cB_hp">100</span></span><span class="line" data-line="sp">softFromRain     &lt;- <span class="num" id="cB_sp">1.0</span></span><span class="line" data-line="w">beakWorth &lt;- <span class="num" id="cB_w">0.00</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cB_h">0.50</span></span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">20</span>) {</span><span class="line" data-step="2"><span class="com">  # the larder: what nobody ate last year is still there</span></span><span class="line" data-step="2">  hard &lt;- <span class="num">0.86</span>*hard + leftOverEachYear</span><span class="line" data-step="3"><span class="com">  # and this year's crop, which only the rain makes</span></span><span class="line" data-step="3">  soft &lt;- <span class="num">0.35</span>*soft + softFromRain*d$rain[t]</span><span class="line" data-step="1" data-until="2"><span class="com">  # with no seeds, nobody is ever short of food</span></span><span class="line" data-step="2" data-until="3">  food &lt;- (soft + hard)/n</span><span class="line" data-step="3">  food &lt;- soft/n + hard/n   <span class="com"># still shared out evenly: no beak in this line</span></span><span class="line" data-step="1" data-until="2">  born &lt;- mostChicks</span><span class="line" data-step="1" data-until="2">  died &lt;- leastDying</span><span class="line" data-step="2">  born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food))</span><span class="line" data-step="2">  died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>)</span><span class="line" data-step="4">  born &lt;- born + beakWorth*(beak-<span class="num">9</span>)</span><span class="line" data-step="4">  died &lt;- died - beakWorth*(beak-<span class="num">9</span>)</span><span class="line"></span><span class="line">  <span class="com"># the parents are done; next year is the chicks</span></span><span class="line">  n    &lt;- born * (n - died*n)</span><span class="line" data-step="4">  beak &lt;- <span class="fn">mean</span>(beak) + inherited*(midparent - <span class="fn">mean</span>(beak)) + noise</span><span class="line">}</span></pre>
+<pre class="code" id="codeB"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/island.csv"</span>)</span><span class="line"></span><span class="line" data-line="bm">mostChicks &lt;- <span class="num" id="cB_bm">1.0</span></span><span class="line" data-line="dm">bestSurvival &lt;- <span class="num" id="cB_dm">0.70</span></span><span class="line" data-line="dm">leastDying   &lt;- <span class="num">1</span> - bestSurvival</span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cB_hp">100</span></span><span class="line" data-line="sp">softFromRain     &lt;- <span class="num" id="cB_sp">1.0</span></span><span class="line" data-line="w">beakWorth &lt;- <span class="num" id="cB_w">0.00</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cB_h">0.50</span></span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">20</span>) {</span><span class="line" data-step="2"><span class="com">  # the larder: what nobody ate last year is still there</span></span><span class="line" data-step="2">  hard &lt;- <span class="num">0.86</span>*hard + leftOverEachYear</span><span class="line" data-step="3"><span class="com">  # and this year's crop, which only the rain makes</span></span><span class="line" data-step="3">  soft &lt;- <span class="num">0.35</span>*soft + softFromRain*d$rain[t]</span><span class="line" data-step="1" data-until="2"><span class="com">  # with no seeds, nobody is ever short of food</span></span><span class="line" data-step="2" data-until="3">  food &lt;- (soft + hard)/n</span><span class="line" data-step="3">  food &lt;- soft/n + hard/n   <span class="com"># still shared out evenly: no beak in this line</span></span><span class="line" data-step="1" data-until="2">  born &lt;- mostChicks</span><span class="line" data-step="1" data-until="2">  died &lt;- leastDying</span><span class="line" data-step="2">  born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food))</span><span class="line" data-step="2">  died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>)</span><span class="line" data-step="4">  born &lt;- born + beakWorth*(beak-<span class="num">9</span>)</span><span class="line" data-step="4">  died &lt;- died - beakWorth*(beak-<span class="num">9</span>)</span><span class="line"></span><span class="line">  <span class="com"># the parents are done; next year is the chicks</span></span><span class="line">  n    &lt;- born * (n - died*n)</span><span class="line" data-step="4">  beak &lt;- <span class="fn">mean</span>(beak) + inherited*(midparent - <span class="fn">mean</span>(beak)) + noise</span><span class="line">}</span></pre>
       </div>
     </div>
   </div>
@@ -331,7 +337,7 @@
         <li>Running it forward is the commitment. You do not get to adjust a model after seeing what it had to predict, so the run happens once.</li>
         <li>The second arrow appears once you have run the first one forward.</li>
         <li>Then refit, and <strong>lock in</strong> when you are ready. A lock-in that misses tells you by how much and hands the sliders back.</li>
-        <li>Bars: 0.20 mm across 1–20 and 0.20 mm across 21–30, both at once.</li>
+        <li>Bars, all four at once: 0.20 mm of beak and 90 finches across 1–20; 0.20 mm and 150 finches across 21–30.</li>
       </ul>
     </div>
   </div>
@@ -342,11 +348,16 @@
         <canvas id="plotC" width="560" height="300"></canvas>
         <canvas id="plotC2" width="560" height="190"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">fitted, 1–20:</span> <span id="C_in">—</span>
+          <span class="label">beak, fitted 1–20:</span> <span id="C_in">—</span>
           &nbsp;|&nbsp;
           <span class="label">run forward, 21–30:</span> <span id="C_out" class="pending">not yet</span>
           &nbsp;|&nbsp;
           <span class="label">parameters:</span> <span id="C_np">5</span>
+        </div>
+        <div class="fit-stats" id="statsBpop">
+          <span class="label">finches, fitted 1–20:</span> <span id="C_popIn">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">run forward, 21–30:</span> <span id="C_popOut" class="pending">not yet</span>
         </div>
         <div class="windowkey" id="C_key"><b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> not yet shown</div>
       </div>
@@ -375,13 +386,13 @@
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
           <li data-task="C1">Run the beak-pays model forward and see what it does. <span class="hint"><span id="C1_now">not yet</span></span></li>
-          <li data-task="C2">Draw the arrow that appears, get both windows under 0.20 mm, and lock it in. <span class="hint"><span id="C2_now">run the first one forward</span></span></li>
+          <li data-task="C2">Draw the arrow that appears, get the beak and the finch count both under bar in both windows, and lock it in. <span class="hint"><span id="C2_now">run the first one forward</span></span></li>
           <li data-task="C3">Answer the question below.</li>
         </ul>
         <div class="solved-banner" id="solvedC">A beak that pays cannot stop paying. A beak that opens a hard seed stops paying the moment the hard seeds run out — and that is a thing the rain decides. Stage D is open.</div>
       </div>
       <div class="panel numq" id="numqC">
-        <div class="q">Take the typical miss your first model made across generations 21–30, and divide it by the miss your second model made across the same ten. How many times better is the second one?</div>
+        <div class="q">Take the typical miss in average beak depth your first model made across generations 21–30, and divide it by the miss your second model made across the same ten. How many times better is the second one?</div>
         <div class="row">
           <input type="number" id="C_ans" min="0" max="200" step="0.1" placeholder="times" />
           <span class="unit">times better</span>
@@ -427,7 +438,7 @@
           &nbsp;|&nbsp;
           <span class="label">with it:</span> <span id="D_out" class="pending">draw the arrow</span>
         </div>
-        <div class="windowkey"><b>1–30</b> already seen &nbsp;·&nbsp; <b>31–45</b> the newcomer's generations</div>
+        <div class="windowkey" id="D_key"><b>1–30</b> already seen &nbsp;·&nbsp; <b>31–45</b> the newcomer's generations</div>
       </div>
       <div class="panel">
         <h3>Your model</h3>
@@ -698,8 +709,6 @@ function wireNumeric(id,opts){
    model parked at its own generation-20 value scores 0.396.
    ================================================================== */
 const GRAIN = [201,23,103,78,96,69,83,119,181,75,22,78,113,93,61,68,119,70,107,113,158,203,250,297,328,288,253,301,221,269,142,120,227,97,129,63,143,146,116,125,103,116,221,61,142];
-const GSOFT = [730,52,243,189,207,112,149,278,511,165,5,101,240,201,53,66,251,107,197,260,431,616,786,941,1061,899,727,876,574,727,311,256,699,306,363,137,443,492,319,342,255,291,686,129,421];
-const GHARD = [427,529,631,711,768,814,855,888,905,912,932,957,969,978,978,987,995,993,992,993,994,987,967,933,901,873,863,870,873,894,549,380,302,260,248,241,243,242,238,240,240,242,243,244,247];
 const GPOP  = [600,842,430,521,601,616,556,596,700,834,667,534,596,640,698,581,588,684,664,634,674,782,969,1187,1320,1497,1465,1360,1553,1301,1336,837,613,845,614,638,352,556,795,647,691,635,623,973,397];
 const GBEAK = [8.98,8.80,9.08,9.12,9.20,9.24,9.34,9.31,9.33,9.27,9.27,9.39,9.43,9.38,9.40,9.46,9.45,9.41,9.46,9.47,9.41,9.35,9.28,9.25,9.15,9.04,8.93,8.85,8.77,8.71,8.66,8.77,8.74,8.57,8.43,8.42,8.40,8.31,8.25,8.20,8.10,8.08,8.04,7.90,8.02];
 const GENS = GRAIN.length;                 // 45
@@ -863,8 +872,10 @@ function missPop(model, idxs) {
 }
 
 /* ====== Plots =======================================================
-   Two panels per stage. Above: the average beak, which is the thing that
-   evolved. Below: the two seed supplies, which are the reason it did.
+   Two panels per stage: population size and average beak depth, the two
+   things every stage from B on is actually being asked to get right, drawn
+   together so both are visible at once. (Not the seed supply -- soft and
+   hard seeds are inputs to the model, not one of the things it is fit to.)
    ================================================================== */
 const WIN_COL = ["rgba(47,107,143,0.055)","rgba(178,58,72,0.05)","rgba(111,138,74,0.07)"];
 function windowBands(ctx,f,shownTo){
@@ -875,12 +886,21 @@ function windowBands(ctx,f,shownTo){
     ctx.fillStyle=WIN_COL[i]; ctx.fillRect(x0,f.pad.t,Math.max(0,x1-x0),f.H);
   });
 }
-function drawBeak(cvId, model, shownTo) {
+/* recordTo/modelTo let the record (the black line -- the actual history) and
+   the model (the red line -- what your numbers predict) be shown to
+   different lengths. Stages C and D use this to let the projection reach
+   into a window before the record there is revealed: modelTo runs ahead the
+   moment you run forward, recordTo only catches up once you lock in (or, in
+   Stage D, once you clear the bar). Everywhere else the two are the same
+   length and this is just drawBeak(id, model, shownTo) as before. */
+function drawBeak(cvId, model, recordTo, modelTo) {
+  if (modelTo == null) modelTo = recordTo;
+  const shownTo = Math.max(recordTo, modelTo);
   const cv=document.getElementById(cvId); const {ctx,W:cw,H:ch}=setupCanvas(cv); ctx.clearRect(0,0,cw,ch);
   const pad={l:60,r:14,t:14,b:44};
   let lo=8.0, hi=9.9;
-  for (let i=0;i<shownTo;i++){ lo=Math.min(lo,GBEAK[i]); hi=Math.max(hi,GBEAK[i]); }
-  if (model) for (let i=0;i<shownTo;i++) if (model[i]!=null && model[i]>4 && model[i]<15){ lo=Math.min(lo,model[i]); hi=Math.max(hi,model[i]); }
+  for (let i=0;i<recordTo;i++){ lo=Math.min(lo,GBEAK[i]); hi=Math.max(hi,GBEAK[i]); }
+  if (model) for (let i=0;i<modelTo;i++) if (model[i]!=null && model[i]>4 && model[i]<15){ lo=Math.min(lo,model[i]); hi=Math.max(hi,model[i]); }
   lo=Math.floor(lo*2)/2-0.1; hi=Math.ceil(hi*2)/2+0.1;
   const f=makeFrame(pad,cw,ch,1,GENS,lo,hi);
   windowBands(ctx,f,shownTo);
@@ -888,16 +908,16 @@ function drawBeak(cvId, model, shownTo) {
   ctx.save(); ctx.beginPath(); ctx.rect(f.pad.l,f.pad.t-2,f.W,f.H+4); ctx.clip();
   if (model) {
     ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.4; ctx.beginPath(); let started=false;
-    for (let i=0;i<shownTo;i++){ const v=model[i]; if (v==null) break;
+    for (let i=0;i<modelTo;i++){ const v=model[i]; if (v==null) break;
       const x=f.x(i+1), y=f.y(Math.max(lo,Math.min(hi,v)));
       if(!started){ctx.moveTo(x,y); started=true;} else ctx.lineTo(x,y); }
     ctx.stroke();
   }
   ctx.strokeStyle="rgba(120,120,116,0.5)"; ctx.lineWidth=1; ctx.beginPath();
-  for (let i=0;i<shownTo;i++){ const x=f.x(i+1),y=f.y(GBEAK[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  for (let i=0;i<recordTo;i++){ const x=f.x(i+1),y=f.y(GBEAK[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
   ctx.stroke();
   ctx.fillStyle="#1d1d1b";
-  for (let i=0;i<shownTo;i++){ ctx.beginPath(); ctx.arc(f.x(i+1),f.y(GBEAK[i]),2.6,0,6.2832); ctx.fill(); }
+  for (let i=0;i<recordTo;i++){ ctx.beginPath(); ctx.arc(f.x(i+1),f.y(GBEAK[i]),2.6,0,6.2832); ctx.fill(); }
   ctx.restore();
   // the newcomer's arrival, once those generations are on the page
   if (shownTo > INVADE_AT) {
@@ -910,13 +930,16 @@ function drawBeak(cvId, model, shownTo) {
   return f;
 }
 /* The first three pieces have nothing that can move a beak, so they are drawn
-   and scored on the thing they can actually get wrong: how many birds there were. */
-function drawPop(cvId, model, shownTo) {
+   and scored on the thing they can actually get wrong: how many birds there
+   were. Same recordTo/modelTo split as drawBeak, for the same reason. */
+function drawPop(cvId, model, recordTo, modelTo) {
+  if (modelTo == null) modelTo = recordTo;
+  const shownTo = Math.max(recordTo, modelTo);
   const cv=document.getElementById(cvId); const {ctx,W:cw,H:ch}=setupCanvas(cv); ctx.clearRect(0,0,cw,ch);
   const pad={l:60,r:14,t:14,b:44};
   let hi=700;
-  for (let i=0;i<shownTo;i++) hi=Math.max(hi,GPOP[i]);
-  if (model) for (let i=0;i<shownTo;i++) if (model[i]!=null) hi=Math.max(hi,model[i]);
+  for (let i=0;i<recordTo;i++) hi=Math.max(hi,GPOP[i]);
+  if (model) for (let i=0;i<modelTo;i++) if (model[i]!=null) hi=Math.max(hi,model[i]);
   const f=makeFrame(pad,cw,ch,1,GENS,0,niceTop(hi));
   windowBands(ctx,f,shownTo);
   drawAxes(ctx,f,"generation","finches on the island",Math.round((GENS-1)/5),4,
@@ -924,46 +947,17 @@ function drawPop(cvId, model, shownTo) {
   ctx.save(); ctx.beginPath(); ctx.rect(f.pad.l,f.pad.t-2,f.W,f.H+4); ctx.clip();
   if (model) {
     ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.4; ctx.beginPath(); let st=false;
-    for (let i=0;i<shownTo;i++){ const v=model[i]; if(v==null) break;
+    for (let i=0;i<modelTo;i++){ const v=model[i]; if(v==null) break;
       const x=f.x(i+1), y=f.y(Math.max(0,Math.min(f.yMax,v)));
       if(!st){ctx.moveTo(x,y);st=true;} else ctx.lineTo(x,y); }
     ctx.stroke();
   }
   ctx.strokeStyle="rgba(120,120,116,0.5)"; ctx.lineWidth=1; ctx.beginPath();
-  for (let i=0;i<shownTo;i++){ const x=f.x(i+1),y=f.y(GPOP[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
+  for (let i=0;i<recordTo;i++){ const x=f.x(i+1),y=f.y(GPOP[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y); }
   ctx.stroke();
   ctx.fillStyle="#1d1d1b";
-  for (let i=0;i<shownTo;i++){ ctx.beginPath(); ctx.arc(f.x(i+1),f.y(GPOP[i]),2.6,0,6.2832); ctx.fill(); }
+  for (let i=0;i<recordTo;i++){ ctx.beginPath(); ctx.arc(f.x(i+1),f.y(GPOP[i]),2.6,0,6.2832); ctx.fill(); }
   ctx.restore();
-}
-function drawSeeds(cvId, model, shownTo, mode) {
-  mode = (mode == null) ? 2 : mode;
-  const cv=document.getElementById(cvId); const {ctx,W:cw,H:ch}=setupCanvas(cv); ctx.clearRect(0,0,cw,ch);
-  const pad={l:60,r:14,t:12,b:40};
-  let hi=400;
-  for (let i=0;i<shownTo;i++){ hi=Math.max(hi, mode===1 ? GSOFT[i]+GHARD[i] : Math.max(GSOFT[i],GHARD[i])); }
-  if (model) for (let i=0;i<shownTo;i++){ if(model.soft[i]!=null && model.soft[i]<6000) hi=Math.max(hi,model.soft[i]); }
-  const f=makeFrame(pad,cw,ch,1,GENS,0,niceTop(hi));
-  windowBands(ctx,f,shownTo);
-  drawAxes(ctx,f,"generation","seeds on the ground",Math.round((GENS-1)/5),3,v=>v.toFixed(0),v=>v.toFixed(0));
-  ctx.save(); ctx.beginPath(); ctx.rect(f.pad.l,f.pad.t-2,f.W,f.H+4); ctx.clip();
-  const line=(arr,col,dash,n)=>{ ctx.save(); if(dash) ctx.setLineDash(dash);
-    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.beginPath(); let st=false;
-    for (let i=0;i<n;i++){ const v=arr[i]; if(v==null) break;
-      const x=f.x(i+1), y=f.y(Math.max(0,Math.min(f.yMax,v)));
-      if(!st){ctx.moveTo(x,y);st=true;} else ctx.lineTo(x,y); }
-    ctx.stroke(); ctx.restore(); };
-  if (mode === 1) {
-    // one pile, because that is all the model has: the record's two kinds added up
-    line(GSOFT.map((v,i)=>v+GHARD[i]),"rgba(201,162,39,0.85)",null,shownTo);
-  } else {
-    line(GSOFT,"rgba(201,162,39,0.85)",null,shownTo);
-    line(GHARD,"rgba(47,107,143,0.85)",null,shownTo);
-  }
-  if (model){ line(model.soft,"rgba(201,162,39,0.5)",[4,3],shownTo);
-              if (mode === 2) line(model.hard,"rgba(47,107,143,0.5)",[4,3],shownTo); }
-  ctx.restore();
-  return f;
 }
 
 /* ====== The model diagram ===========================================
@@ -1016,6 +1010,21 @@ function islandSpec(extra) {
    which is the reveal the stage exists for.
    ================================================================== */
 const C_BAR_IN = 0.20, C_BAR_FWD = 0.20;
+// The beak bars alone let population size drift a long way: `sp` and `hp` are
+// still live sliders in Stage C, and a fit that only chases the beak curve can
+// wreck the finch count while doing it. Calibrated 2026-09-07,
+// scratchpad/calibrate_l7c_pop.mjs (deleted after use): 40,000 draws from the
+// shipped Stage C slider grid, restricted to the ones that already clear the
+// beak bars above. Among those, population miss varies enormously (median 185
+// finches fitted / 371 forward, worst case 524 / 1068) -- clearing the beak
+// bars does almost nothing to constrain it. At the literal generating truth,
+// carried over at the (bmax, dmin) pairs Stage B actually hands off, fitted/
+// forward population miss sits at 29-48 / 34-45; perturbing any one of sp, hp,
+// worth, herit or crackAt by a modest amount mostly stays under 90 / 150 and
+// only strays past it when the beak fit is ALSO drifting toward its own bar.
+// So 90 / 150 sits just outside the truth's own neighborhood but excludes most
+// of the "fits the beak by accident" settings the random sweep turned up.
+const C_POP_BAR_IN = 90, C_POP_BAR_FWD = 150;
 // An arrow set to nothing is not an arrow. Both stages require the beak to be
 // worth something, or a model that claims nothing sneaks through the gate and
 // projects beautifully -- by explaining beautifully nothing.
@@ -1307,7 +1316,7 @@ const B_BEAK_BAR = 0.20;                   // mm, step 4
 // rule for the same device.
 const B_GIVE_UP = 12;                      // distinct pairs tried
 const B_GIVE_UP_MS = 25000;                // and this long at it
-const sB = { step:1, bmax:1.0, dmin:0.30, sp:1.0, hp:100, worth:0, herit:0.50,
+const sB = { step:1, bmax:1.0, surv:0.70, dmin:0.30, sp:1.0, hp:100, worth:0, herit:0.50,
              on:false, tries:0, seen:new Set(), t0:Date.now(), model:null, told:false };
 const B_ROWS = { sp:"rowBsp", hp:"rowBhp", worth:"rowBworth", herit:"rowBherit" };
 
@@ -1380,6 +1389,7 @@ function advanceA(next) {
   if (next >= 3) document.getElementById("rowBsp").style.display = "";
   if (next >= 4) { document.getElementById("rowBworth").style.display = "";
                    document.getElementById("rowBherit").style.display = "";
+                   document.getElementById("B_lock").style.display = "";
                    document.getElementById("B_key").innerHTML =
                      '<span class="sw" style="background:#1d1d1b;"></span>the record' +
                      '<span class="sw" style="background:#b23a48;"></span>your model'; }
@@ -1388,26 +1398,37 @@ function advanceA(next) {
 function drawStageB() {
   const m = runIsland(optsB()); sB.model = m;
   const beakStep = sB.step >= 4;
-  if (beakStep) drawBeak("plotB", m.beak, FIT_END);
-  else          drawPop("plotB", m.pop, FIT_END);
-  const seedCv = document.getElementById("plotB2");
-  seedCv.style.display = sB.step >= 2 ? "" : "none";
-  if (sB.step >= 2) drawSeeds("plotB2", m, FIT_END, sB.step >= 3 ? 2 : 1);
-  [["B_bmaxOut","bmax",1],["B_dminOut","dmin",2],["B_spOut","sp",1],
+  // Population is the throughline metric, so it stays on screen at every
+  // piece. The beak has nothing to show until piece 4 introduces it -- no
+  // double graph before then, and no seeds-on-the-ground substitute once it
+  // arrives: the two things actually being optimised, side by side instead.
+  drawPop("plotB", m.pop, FIT_END);
+  const beakCv = document.getElementById("plotB2");
+  beakCv.style.display = beakStep ? "" : "none";
+  if (beakStep) drawBeak("plotB2", m.beak, FIT_END);
+  [["B_bmaxOut","bmax",1],["B_survOut","surv",2],["B_spOut","sp",1],
    ["B_hpOut","hp",0],["B_worthOut","worth",2],["B_hOut","herit",2]]
     .forEach(([id,k,d])=>{ document.getElementById(id).textContent = sB[k].toFixed(d); });
-  [["cB_bm","bmax",1],["cB_dm","dmin",2],["cB_sp","sp",1],
+  [["cB_bm","bmax",1],["cB_dm","surv",2],["cB_sp","sp",1],
    ["cB_hp","hp",0],["cB_w","worth",2],["cB_h","herit",2]]
     .forEach(([id,k,d])=>{ document.getElementById(id).textContent = sB[k].toFixed(d); });
   const np = sB.step===1?2 : sB.step===2?3 : sB.step===3?4 : 5 + arrowsB.count();
   document.getElementById("B_np").textContent = String(np);
   document.getElementById("B_missLab").textContent = beakStep
     ? "typical miss in the average beak, 1–20:" : "typical miss in the number of finches, 1–20:";
-  if (checkB()) return;   // a piece landed and redrew; do not repaint the old one
-  if (beakStep) {
-    paintGoal("B_in", missOver(m.beak, FIT_IDX), B_BEAK_BAR, 3, " mm");
-  } else {
+  if (sB.step <= 3) {
+    if (checkB()) return;   // a piece landed and redrew; do not repaint the old one
     paintGoal("B_in", missPop(m.pop, FIT_IDX), B_STEP_BAR[sB.step-1], 0, " finches");
+  } else {
+    // Piece 4 is the gate that opens Stage C, so it does not auto-advance on
+    // a passing drag -- the student locks it in deliberately, same as every
+    // other stage in this lesson. See the Lock in this model button below.
+    syncBfromA();
+    const bk = missOver(m.beak, FIT_IDX);
+    paintGoal("B_in", bk, B_BEAK_BAR, 3, " mm");
+    const lockBtn = document.getElementById("B_lock");
+    const ready = sB.on && Math.abs(sB.worth) >= WORTH_MIN && bk <= B_BEAK_BAR;
+    lockBtn.disabled = Gates.B.solvedOnce || !ready;
   }
   paintHintsA();
 }
@@ -1427,38 +1448,48 @@ function paintHintsA() {
     } else if (i < 4) {
       el.textContent = pop.toFixed(0) + " finches so far, bar is " + B_STEP_BAR[i-1];
     } else {
-      el.textContent = Math.abs(sB.worth) < WORTH_MIN
+      el.textContent = Gates.B.solvedOnce ? "done"
+        : Math.abs(sB.worth) < WORTH_MIN
         ? (sB.on ? "the arrow is set to nothing — give it a value" : "draw the arrow")
-        : bk.toFixed(3) + " mm so far, bar is " + B_BEAK_BAR.toFixed(2);
+        : bk.toFixed(3) + " mm so far, bar is " + B_BEAK_BAR.toFixed(2) +
+          (bk <= B_BEAK_BAR ? " — lock it in when you are ready" : "");
     }
   }
 }
+/* Pieces 1-3 still advance the moment their bar is cleared -- they only
+   reveal the next piece of the SAME stage. Piece 4 is different: clearing its
+   bar is what opens Stage C, and that used to fire off whichever slider
+   setting happened to be passing through the bar mid-drag, exactly the bug
+   Stage C's own Lock in button was built to avoid (see checkC's comment).
+   So piece 4 is handled by the B_lock click below, not here. */
 function checkB() {
-  if (Gates.B.solvedOnce) { syncBfromA(); return false; }
   const m = sB.model;
-  if (sB.step <= 3) {
-    const pop = missPop(m.pop, FIT_IDX);
-    if (sB.step === 1) {
-      // The bar is under the floor. It relents once the student has really tried,
-      // and says why -- the same move Lesson 6 stage A makes with its fourth target.
-      const tried = sB.seen.size >= B_GIVE_UP && (Date.now()-sB.t0) >= B_GIVE_UP_MS;
-      if (!tried && pop > B_STEP_BAR[0]) return false;
-      if (pop > B_STEP_BAR[0]) {
-        sB.told = true;
-        showSolved("B", "Two constant rates cannot do it, and no setting of them can. " +
-          "A fixed birth rate and a fixed death rate make a population that grows by the " +
-          "same factor every generation: it fills the island, or it empties, or — on a " +
-          "knife edge between the two — it sits still. The record does none of those. " +
-          "It goes up and down, and something has to be telling it when. Piece two is on.");
-      }
-    } else if (pop > B_STEP_BAR[sB.step-1]) return false;
-    markTask("B","B"+sB.step);
-    advanceA(sB.step+1);
-    drawStageB();
-    return true;
-  }
-  if (!sB.on || Math.abs(sB.worth) < WORTH_MIN) return false;
-  if (missOver(m.beak, FIT_IDX) > B_BEAK_BAR) return false;
+  const pop = missPop(m.pop, FIT_IDX);
+  if (sB.step === 1) {
+    // The bar is under the floor. It relents once the student has really tried,
+    // and says why -- the same move Lesson 6 stage A makes with its fourth target.
+    const tried = sB.seen.size >= B_GIVE_UP && (Date.now()-sB.t0) >= B_GIVE_UP_MS;
+    if (!tried && pop > B_STEP_BAR[0]) return false;
+    if (pop > B_STEP_BAR[0]) {
+      sB.told = true;
+      showSolved("B", "Two constant rates cannot do it, and no setting of them can. " +
+        "A fixed birth rate and a fixed death rate make a population that grows by the " +
+        "same factor every generation: it fills the island, or it empties, or — on a " +
+        "knife edge between the two — it sits still. The record does none of those. " +
+        "It goes up and down, and something has to be telling it when. Piece two is on.");
+    }
+  } else if (pop > B_STEP_BAR[sB.step-1]) return false;
+  markTask("B","B"+sB.step);
+  advanceA(sB.step+1);
+  drawStageB();
+  return true;
+}
+document.getElementById("B_lock").addEventListener("click", ()=>{
+  if (Gates.B.solvedOnce || sB.step <= 3) return;
+  const m = sB.model;
+  if (!sB.on || Math.abs(sB.worth) < WORTH_MIN) return;
+  if (missOver(m.beak, FIT_IDX) > B_BEAK_BAR) return;
+  bump("B");
   Gates.B.solvedOnce = true; Gates.B.done = true;
   markTask("B","B4");
   record(BIT.B_fit, true); unlockNext("B");
@@ -1467,9 +1498,8 @@ function checkB() {
   document.getElementById("C_worth").disabled = false;
   document.getElementById("rowCworth").classList.remove("muted");
   syncBfromA();
-  // false: solving does not redraw Stage B, so the caller must still paint it
-  return false;
-}
+  drawStageB(); drawStageC();
+});
 /* Stage B stays live after it is solved, so anything the student goes on to
    improve there follows into Stage B -- until they commit by running forward. */
 function syncBfromA() {
@@ -1480,7 +1510,7 @@ function syncBfromA() {
   });
   drawStageC();
 }
-[["B_bmax","bmax","bm"],["B_dmin","dmin","dm"],["B_sp","sp","sp"],
+[["B_bmax","bmax","bm"],["B_sp","sp","sp"],
  ["B_hp","hp","hp"],["B_worth","worth","w"],["B_h","herit","h"]].forEach(([id,k,line])=>{
   document.getElementById(id).addEventListener("input", e=>{
     sB[k] = parseFloat(e.target.value);
@@ -1490,6 +1520,17 @@ function syncBfromA() {
     bump("B"); drawStageB();
   });
 });
+// Framed to the student as survival, not death, so it reads the same
+// direction as every other slider on the page: more is better. The model
+// underneath still runs on dmin (a death-rate floor); this is a one-line
+// unit conversion, not a change to what the simulation does.
+document.getElementById("B_surv").addEventListener("input", e=>{
+  sB.surv = parseFloat(e.target.value);
+  sB.dmin = 1 - sB.surv;
+  sB.tries++; sB.seen.add(sB.bmax.toFixed(1)+"/"+sB.dmin.toFixed(2));
+  highlightByDataLine("codeB", "dm");
+  bump("B"); drawStageB();
+});
 document.getElementById("B_download").addEventListener("click", ()=>{
   // The two seed lines used to be swapped: `seedsFromRain` was gated on step 2
   // but printed sp, which does not exist until step 3, and `hardFromRain` was
@@ -1498,7 +1539,7 @@ document.getElementById("B_download").addEventListener("click", ()=>{
   downloadText("lesson7_stageB.R", `# Lesson 7, Stage B -- piece ${sB.step} of 4.
 d <- read.csv("data/clean/island.csv")
 
-mostChicks <- ${sB.bmax.toFixed(1)}; leastDying <- ${sB.dmin.toFixed(2)}
+mostChicks <- ${sB.bmax.toFixed(1)}; bestSurvival <- ${sB.surv.toFixed(2)}; leastDying <- 1 - bestSurvival
 ${sB.step>=2 ? `leftOverEachYear <- ${sB.hp.toFixed(0)}   # the larder; no rain term` : "# no seeds in the model yet"}
 ${sB.step>=3 ? `softFromRain     <- ${sB.sp.toFixed(1)}` : ""}
 ${sB.step>=4 ? `beakWorth <- ${sB.worth.toFixed(2)}; inherited <- ${sB.herit.toFixed(2)}` : ""}
@@ -1527,8 +1568,14 @@ function optsC(){ return { sp:sC.sp, hp:sC.hp, worth:sC.worth, herit:sC.herit,
                            mediated:sC.mediated, crackAt:sC.crackAt, taken:0, seed:SEED_C }; }
 function drawStageC() {
   const m = runIsland(optsC()); sC.model = m;
-  const shown = sC.ranBlind ? FWD_END : FIT_END;
-  drawBeak("plotC", m.beak, shown); drawSeeds("plotC2", m, shown);
+  // The projection is never shy: the moment you have run forward, the red
+  // line reaches into 21-30 and keeps reaching as you refit. The record for
+  // those ten generations stays off until you lock in -- so what moves the
+  // line while you are turning the sliders is only ever your own model.
+  const modelTo = sC.ranBlind ? FWD_END : FIT_END;
+  const recordTo = sC.locked ? FWD_END : FIT_END;
+  drawBeak("plotC", m.beak, recordTo, modelTo);
+  drawPop("plotC2", m.pop, recordTo, modelTo);
   document.getElementById("C_spOut").textContent = sC.sp.toFixed(1);
   document.getElementById("C_hpOut").textContent = sC.hp.toFixed(0);
   document.getElementById("C_worthOut").textContent = sC.worth.toFixed(2);
@@ -1543,6 +1590,7 @@ function drawStageC() {
   document.getElementById("cC_bm").textContent = sC.bmax.toFixed(1);
   document.getElementById("cC_dm").textContent = sC.dmin.toFixed(2);
   const inMiss = missOver(m.beak, FIT_IDX), fwd = missOver(m.beak, FWD_IDX);
+  const popIn = missPop(m.pop, FIT_IDX), popFwd = missPop(m.pop, FWD_IDX);
   // The gate is the Lock in button, not this redraw. It used to fire here, in
   // the middle of a drag: the first setting that happened to cross both bars
   // was frozen and every slider disabled, so a student sweeping one knob was
@@ -1552,12 +1600,18 @@ function drawStageC() {
   lockBtn.disabled = sC.locked || !sC.ranBlind || !sC.mediated
                      || Math.abs(sC.worth) < WORTH_MIN;
   paintGoal("C_in", inMiss, C_BAR_IN, 3, " mm");
+  paintGoal("C_popIn", popIn, C_POP_BAR_IN, 0, " finches");
   document.getElementById("C_np").textContent = String(5 + arrowsC.count());
-  const outEl = document.getElementById("C_out");
-  if (sC.ranBlind) { outEl.textContent = fwd.toFixed(3)+" mm"; outEl.className = fwd<=C_BAR_FWD ? "ok" : "off"; }
-  document.getElementById("C_key").innerHTML = sC.ranBlind
+  const outEl = document.getElementById("C_out"), popOutEl = document.getElementById("C_popOut");
+  if (sC.ranBlind) {
+    outEl.textContent = fwd.toFixed(3)+" mm"; outEl.className = fwd<=C_BAR_FWD ? "ok" : "off";
+    popOutEl.textContent = popFwd.toFixed(0)+" finches"; popOutEl.className = popFwd<=C_POP_BAR_FWD ? "ok" : "off";
+  }
+  document.getElementById("C_key").innerHTML = sC.locked
     ? "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> revealed — you have seen these now"
-    : "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> not yet shown";
+    : sC.ranBlind
+      ? "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> your model's forecast — the record stays off until you lock in"
+      : "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> not yet shown";
   document.getElementById("C1_now").textContent = sC.ranBlind
     ? "done — it missed by " + sC.blindFwd.toFixed(3) + " mm" : "not yet";
   if (!sC.lockMsg) document.getElementById("C2_now").textContent =
@@ -1565,8 +1619,10 @@ function drawStageC() {
     Gates.C.solvedOnce ? "done" :
     !sC.mediated ? "draw the second arrow" :
     Math.abs(sC.worth) < WORTH_MIN ? "the first arrow is set to nothing — give it a value" :
-    "21–30: " + fwd.toFixed(3) + " mm (bar " + C_BAR_FWD.toFixed(2) + "), 1–20: " +
-      inMiss.toFixed(3) + " (bar " + C_BAR_IN.toFixed(2) + ") — lock it in when you are ready";
+    "beak 21–30: " + fwd.toFixed(3) + " (bar " + C_BAR_FWD.toFixed(2) + "), 1–20: " + inMiss.toFixed(3) +
+      " (bar " + C_BAR_IN.toFixed(2) + ") — finches 21–30: " + popFwd.toFixed(0) +
+      " (bar " + C_POP_BAR_FWD + "), 1–20: " + popIn.toFixed(0) + " (bar " + C_POP_BAR_IN +
+      ") — lock it in when you are ready";
 }
 /* Called only by the Lock in button. A lock-in that misses says by how much
    and hands the sliders back, which is the rule Lessons 3, 4 and 6 use. */
@@ -1575,12 +1631,16 @@ function checkC() {
   const m = sC.model;
   if (Math.abs(sC.worth) < WORTH_MIN) return;
   // both windows, so the fit cannot simply be abandoned in favour of the ten
-  // generations that are now on screen
+  // generations that are now on screen -- and both the beak and the finch
+  // count, so a fit cannot chase one by wrecking the other.
   const fwd = missOver(m.beak, FWD_IDX), inM = missOver(m.beak, FIT_IDX);
-  if (fwd > C_BAR_FWD || inM > C_BAR_IN) {
+  const popFwd = missPop(m.pop, FWD_IDX), popIn = missPop(m.pop, FIT_IDX);
+  if (fwd > C_BAR_FWD || inM > C_BAR_IN || popFwd > C_POP_BAR_FWD || popIn > C_POP_BAR_IN) {
     const bad = [];
-    if (inM > C_BAR_IN)   bad.push("1–20 is " + inM.toFixed(3) + ", needs " + C_BAR_IN.toFixed(2));
-    if (fwd > C_BAR_FWD)  bad.push("21–30 is " + fwd.toFixed(3) + ", needs " + C_BAR_FWD.toFixed(2));
+    if (inM > C_BAR_IN)   bad.push("beak 1–20 is " + inM.toFixed(3) + ", needs " + C_BAR_IN.toFixed(2));
+    if (fwd > C_BAR_FWD)  bad.push("beak 21–30 is " + fwd.toFixed(3) + ", needs " + C_BAR_FWD.toFixed(2));
+    if (popIn > C_POP_BAR_IN)   bad.push("finches 1–20 is " + popIn.toFixed(0) + ", needs " + C_POP_BAR_IN);
+    if (popFwd > C_POP_BAR_FWD) bad.push("finches 21–30 is " + popFwd.toFixed(0) + ", needs " + C_POP_BAR_FWD);
     sC.lockMsg = true;
     document.getElementById("C2_now").textContent = "not locked — " + bad.join("; ");
     setTimeout(()=>{ sC.lockMsg = false; drawStageC(); }, 2600);
@@ -1670,12 +1730,22 @@ function optsD(taken){ return { sp:sD.sp, hp:sD.hp, worth:sD.worth, herit:sD.her
                                 mediated:true, crackAt:sD.crackAt, taken:taken, seed:SEED_D }; }
 function drawStageD() {
   const m = runIsland(optsD(sD.taken)); sD.model = m;
-  const shown = sD.ranBlind ? GENS : FWD_END;
-  drawBeak("plotD", m.beak, shown); drawSeeds("plotD2", m, shown);
+  // checkD before drawing: solving happens the instant the bar is cleared, so
+  // the same redraw that marks it done is the one that reveals the record --
+  // same reasoning as Stage C, just without a Lock in button of its own.
+  checkD();
+  const modelTo = sD.ranBlind ? GENS : FWD_END;
+  const recordTo = Gates.D.solvedOnce ? GENS : FWD_END;
+  drawBeak("plotD", m.beak, recordTo, modelTo);
+  drawPop("plotD2", m.pop, recordTo, modelTo);
   document.getElementById("D_takeOut").textContent = sD.taken.toFixed(2);
   document.getElementById("cD_take").textContent = sD.taken.toFixed(2);
   const nw = missOver(m.beak, NEW_IDX);
-  checkD();
+  document.getElementById("D_key").innerHTML = Gates.D.solvedOnce
+    ? "<b>1–30</b> already seen &nbsp;·&nbsp; <b>31–45</b> the newcomer's generations"
+    : sD.ranBlind
+      ? "<b>1–30</b> already seen &nbsp;·&nbsp; <b>31–45</b> your model's forecast — the record stays off until you clear the bar"
+      : "<b>1–30</b> already seen &nbsp;·&nbsp; <b>31–45</b> not yet shown";
   if (sD.ranBlind) {
     const bl=document.getElementById("D_blind");
     bl.textContent = sD.blindNew.toFixed(3)+" mm"; bl.className="off";
