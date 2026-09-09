@@ -55,6 +55,7 @@
   ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
   ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
   ul.tasks li.done .hint { color:#54703a; }
+  ul.tasks li .hint.wrong, ul.tasks li.done .hint.wrong { color:#b23a48; }
   .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
   .solved-banner.shown { display:block; }
   .drought-flag { margin:6px 0 10px; padding:8px 12px; background:#5a2a1f; color:#fce9d8; border-radius:4px; font-size:13px; font-weight:700; letter-spacing:0.04em; text-align:center; }
@@ -311,7 +312,7 @@
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsA">
-          <div class="row" data-line="bm"><label for="B_bmax">the most chicks a bird can have</label><input type="range" id="B_bmax" min="0.2" max="3.2" step="0.1" value="1.0" /><output id="B_bmaxOut">1.0</output></div>
+          <div class="row" data-line="bm"><label for="B_bmax">most chicks possible per bird</label><input type="range" id="B_bmax" min="0.2" max="3.2" step="0.1" value="1.0" /><output id="B_bmaxOut">1.0</output></div>
           <div class="row" data-line="dm"><label for="B_surv">chance of surviving a year</label><input type="range" id="B_surv" min="0.30" max="0.95" step="0.05" value="0.70" /><output id="B_survOut">0.70</output></div>
           <div class="row" id="rowBsp" data-line="sp" style="display:none;"><label for="B_sp">rain effect on soft seeds</label><input type="range" id="B_sp" min="1.0" max="6.0" step="0.2" value="1.0" /><output id="B_spOut">1.0</output></div>
           <div class="row" id="rowBhp" data-line="hp" style="display:none;"><label for="B_hp">hard seeds left uneaten</label><input type="range" id="B_hp" min="20" max="320" step="10" value="100" /><output id="B_hpOut">100</output></div>
@@ -419,23 +420,13 @@
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
           <li data-task="C1">Fit the direct-worth model on generations 1–20, then lock it in. <span class="hint"><span id="C1_now">not yet</span></span></li>
-          <li data-task="C2">Click the chart to answer the question below, about your first model's fit.</li>
+          <li data-task="C2">Click the generation where the model best hits &amp; the one it most misses. <span class="hint"><span id="C2_now">lock in the first model</span></span></li>
           <li data-task="C3">Draw the arrow that appears. <span class="hint"><span id="C3_now">lock in the first model</span></span></li>
-          <li data-task="C4">Click the chart to answer the question below, about what the arrow changed by default.</li>
+          <li data-task="C4">Click the generation the new arrow moved most — dashed is your first model, solid is now. <span class="hint"><span id="C4_now">draw the second arrow</span></span></li>
           <li data-task="C5">Refit on all thirty generations, get the beak and the finch count both under bar, and lock in. <span class="hint"><span id="C5_now">draw the second arrow</span></span></li>
           <li data-task="C6">Click the chart to answer the question below, about how much better your final model is.</li>
         </ul>
         <div class="solved-banner" id="solvedC">A direct bonus never turns off. A beak that opens a hard seed does — the day the hard seeds run out, and that's the rain's call. Stage D is open.</div>
-      </div>
-      <div class="panel numq" id="numqCq1">
-        <div class="q">21–30 is revealed now. Click the generation in that window where your locked-in model's line comes closest to the actual record — its best hit. Then click the generation where it's furthest off — its worst miss.</div>
-        <div class="unit" id="Cq1_status">Click the beak-depth chart above — best hit first, then worst miss.</div>
-        <div class="verdict" id="Cq1_verdict"></div>
-      </div>
-      <div class="panel numq" id="numqCq2">
-        <div class="q">Before you touch its own slider, just drawing the second arrow (at its starting value) changed the model. The dashed line above is your first, locked-in model; the solid line is now. Click the generation in 21–30 where that one arrow moved the forecast the most.</div>
-        <div class="unit" id="Cq2_status">Click the beak-depth chart above to pick a generation.</div>
-        <div class="verdict" id="Cq2_verdict"></div>
       </div>
       <div class="panel numq" id="numqCq3">
         <div class="q">The dashed line above is your first, locked-in model; the solid line is your final, refit one. Click the generation in 21–30 where the final model improved the most over the first.</div>
@@ -1908,7 +1899,7 @@ const arrowsC = buildArrows("arrowsC", islandSpec({
     sC.beakDefault = md.beak.slice();
     sC.activeQ = "q2";
     markTask("C","C3"); record(BIT.C_arrow, true);
-    document.getElementById("numqCq2").classList.add("shown");
+    document.getElementById("C4_now").textContent = "click the generation it moved most";
   }
   bump("C"); drawStageC();
 });
@@ -2033,7 +2024,7 @@ document.getElementById("C_lock1").addEventListener("click", ()=>{
   ["C_sp","C_hp","C_worth","C_h"].forEach(id=>{ document.getElementById(id).disabled = true; });
   document.getElementById("C_lock1").style.display = "none";
   document.getElementById("C_lock").style.display = "";
-  document.getElementById("numqCq1").classList.add("shown");
+  document.getElementById("C2_now").textContent = "click the best hit, then the one it most misses";
   drawStageC();
 });
 document.getElementById("C_lock").addEventListener("click", ()=>{
@@ -2053,12 +2044,11 @@ function evaluateQ1() {
   const worstErr = Math.abs(sC.beak1[sC.q1Worst-1] - GBEAK[sC.q1Worst-1]);
   const ok = bestErr <= minErr+tol && worstErr >= maxErr-tol;
   const bestGen = FWD_IDX[errs.indexOf(minErr)]+1, worstGen = FWD_IDX[errs.indexOf(maxErr)]+1;
-  const out = document.getElementById("Cq1_verdict");
-  out.className = "verdict shown "+(ok?"right":"wrong");
+  const out = document.getElementById("C2_now");
+  out.className = ok ? "" : "wrong";
   out.textContent = ok
     ? "Correct — generation "+bestGen+" was the best hit ("+minErr.toFixed(3)+" mm off), generation "+worstGen+" the worst miss ("+maxErr.toFixed(3)+" mm off)."
-    : "Not right — the best hit was generation "+bestGen+" ("+minErr.toFixed(3)+" mm off), the worst miss was generation "+worstGen+" ("+maxErr.toFixed(3)+" mm off). Compare the red line to the dots across 21–30.";
-  document.getElementById("Cq1_status").textContent = "Best hit: generation "+sC.q1Best+". Worst miss: generation "+sC.q1Worst+".";
+    : "Not right — you picked "+sC.q1Best+" and "+sC.q1Worst+". The best hit was generation "+bestGen+" ("+minErr.toFixed(3)+" mm off), the worst miss generation "+worstGen+" ("+maxErr.toFixed(3)+" mm off). Compare the red line to the dots across 21–30.";
   if (!sC.q1Scored) {
     sC.q1Scored = true; record(BIT.C_q1, ok); markTask("C","C2");
     document.getElementById("rowCcrack").style.display = "";
@@ -2072,7 +2062,7 @@ function handleQ1Click(ev) {
   if (g == null) return;
   if (sC.q1Phase === "best") {
     sC.q1Best = g; sC.q1Worst = null; sC.q1Phase = "worst";
-    document.getElementById("Cq1_status").textContent = "Best hit: generation "+g+". Now click the worst miss.";
+    document.getElementById("C2_now").textContent = "Best hit: generation "+g+". Now click the one it most misses.";
     drawStageC();
     return;
   }
@@ -2088,10 +2078,10 @@ function evaluateQ2() {
   const ok = Math.abs(pickDelta) >= maxAbs-tol;
   const trueGen = FWD_IDX[absd.indexOf(maxAbs)]+1, trueDelta = deltas[absd.indexOf(maxAbs)];
   const dir = trueDelta<0 ? "closer to the record — better" : "further from the record — worse";
-  const out = document.getElementById("Cq2_verdict");
-  out.className = "verdict shown "+(ok?"right":"wrong");
-  out.textContent = (ok?"Correct — ":"Not right — ")+"generation "+trueGen+" moved the most, "+(trueDelta>=0?"+":"")+trueDelta.toFixed(3)+" mm, "+dir+".";
-  document.getElementById("Cq2_status").textContent = "Picked: generation "+sC.q2Pick+".";
+  const out = document.getElementById("C4_now");
+  out.className = ok ? "" : "wrong";
+  out.textContent = (ok?"Correct — ":"Not right — you picked "+sC.q2Pick+". ")
+    +"Generation "+trueGen+" moved the most, "+(trueDelta>=0?"+":"")+trueDelta.toFixed(3)+" mm, "+dir+".";
   if (!sC.q2Scored) {
     sC.q2Scored = true; record(BIT.C_q2, ok); markTask("C","C4");
     sC.arrowQ2Answered = true;
@@ -2498,7 +2488,7 @@ document.addEventListener("score:bypass", ()=>{
   if (!sC.beakDefault) sC.beakDefault = sC.beak1;
   if (!sC.beakFinal) sC.beakFinal = sC.beak1;
   sC.model1Locked = true; sC.mediated = true; sC.arrowQ2Answered = true;
-  ["numqCq1","numqCq2","numqCq3"].forEach(id=>document.getElementById(id).classList.add("shown"));
+  document.getElementById("numqCq3").classList.add("shown");
   sD.numPhase = "g30";
   document.getElementById("numqD").classList.add("shown"); buildTableE();
   drawStageB(); drawStageC(); drawStageD();
