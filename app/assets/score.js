@@ -330,13 +330,17 @@
   }
 
   // ---- Instructor bypass -------------------------------------------------
-  // Confirming as JSMitchell opens every stage at once. Students arrive with
+  // Confirming as JMitchell (or JSMitchell) opens every stage at once. Both
+  // spellings are here because the token is normalised before the comparison:
+  // "J. Mitchell" and "J Mitchell" both collapse to j_mitchell, "JMitchell" to
+  // jmitchell, and only the js* pair used to be listed -- so the initials JM
+  // actually types failed silently and the bypass looked broken. Students arrive with
   // questions about part D having lost their progress, and walking the whole
   // lesson again just to reach the interactive is the wrong way to spend the
   // meeting. There is nothing to protect here: the submission code is built
   // from whatever name was entered, so a bypassed run emits a code in the
   // instructor's name and is worthless to hand in.
-  const BYPASS_TOKENS = ["jsmitchell", "js_mitchell"];
+  const BYPASS_TOKENS = ["jmitchell", "j_mitchell", "jsmitchell", "js_mitchell"];
   function isBypassName(name) { return BYPASS_TOKENS.indexOf(nameToken(name)) !== -1; }
   function openEverything() {
     document.querySelectorAll("section.stage.stage-locked")
