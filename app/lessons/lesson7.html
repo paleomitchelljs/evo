@@ -227,7 +227,7 @@
             <tbody id="tblAbody"><tr><td colspan="7" class="pending">no years played yet</td></tr></tbody>
           </table>
         </div>
-        <div class="tbl-note" id="A_totalNote">Total so far: 0 chicks surviving to spring. Need 11 or more over ten years to open Stage B.</div>
+        <div class="tbl-note" id="A_totalNote">Total so far: 0 chicks surviving to spring. Need 18 or more over ten years to open Stage B.</div>
       </div>
     </div>
     <div class="col">
@@ -251,7 +251,7 @@
         <ul class="tasks" id="tasksA">
           <li data-task="A1">Lock in a bird for the first time. <span class="hint"><span id="A1_now">not yet</span></span></li>
           <li data-task="A2">Play all ten years without your line running out. <span class="hint"><span id="A2_now">0 of 10</span></span></li>
-          <li data-task="A3">Get 11 or more chicks surviving to spring, total across the ten. <span class="hint"><span id="A3_now">not yet</span></span></li>
+          <li data-task="A3">Get 18 or more chicks surviving to spring, total across the ten. <span class="hint"><span id="A3_now">not yet</span></span></li>
           <li data-task="A4">Answer the question below.</li>
         </ul>
         <div class="solved-banner" id="solvedA">Some years favored a deep beak, some a shallow one. Picking well meant reading which year you were in — not committing to one kind of beak. Stage B is open.</div>
@@ -1126,16 +1126,29 @@ const SEED_B = 20250905, SEED_C = 20250906, SEED_D = 20250907;
 // island-record comment above runIsland).
 const D_TAKE_TRUE = 0.40;
 
-/* ====== STAGE A — be a bird, five winters =============================
-   No fitted model here: this is the world the next four stages are about to
-   be a model OF, felt one bird at a time. Every formula below is runIsland's
-   own per-individual arithmetic (vReach/vSoftEff for what a beak can reach,
-   the same births/deaths curves) with its own truth (TRUTH_A below) -- close
-   to what the frozen record was generated at, but not identical: worth and
-   hp are both pushed further than the record's own -0.16/210 (see DROUGHT
-   REDESIGN below), and A_BEAK_SPAN is steeper than the shared W.beakSpan, on
-   purpose, so what a beak reaches for and what it costs are both dramatized
-   for this vignette rather than held to the record's own numbers.
+/* ====== STAGE A — be a bird, ten winters ==============================
+   Not a small copy of Stages B-D. This one is a picture of a TRADE-OFF, and
+   it is built backwards from that: two curves, each an explicit hump, offset
+   from one another. A deeper beak makes fewer chicks and survives the winter
+   better; a shallower one makes more and survives worse. Neither is right.
+   Which one is better THIS year depends on the rain.
+
+   TWO HUMPS, 2026-09-12, JM's call. Until now Part A ran runIsland's own
+   per-individual seed arithmetic (vReach/vSoftEff, a soft crop and a hard
+   larder) and the two panels came out nearly flat across beak depth: "the
+   trade-offs are hidden by the flatness of the bars, and shifting optima are
+   hidden by deep beaks having no huge cost". All of that machinery is gone.
+   The chick curve is a Gaussian whose peak and height swing with the year's
+   rain -- shallow and tall in a wet year, deeper and shorter in a drought.
+   The survival curve is a Gaussian that does not move, peaked deep. The
+   student's payoff is the product, so the best beak to be sits between the
+   two humps and slides as the rain changes: about 8.8 mm in a wet year,
+   about 9.6 in a drought. Measured across the range a flock actually
+   occupies, a wet year offers 3.8 chicks at 8 mm against 0.6 at 10, while
+   survival runs 28% at 8 mm against 93% at 10.
+
+   Nothing here is shared with the island the later stages fit. Part A has
+   its own rain, its own curves and its own constants, and says so.
 
    Year 1's flock is a FIXED 600-bird draw (same shape runIsland starts from,
    same seed every load) -- everyone's first look at the island is identical.
@@ -1193,8 +1206,17 @@ const D_TAKE_TRUE = 0.40;
    every year clears 32%. Bar dropped from 11 (raw chicks) to 7 (surviving
    chicks) accordingly.
    ================================================================== */
-const TRUTH_A = { bmax:3.0, dmin:0.20, sp:3.6, hp:520, herit:0.80 };
-const A_YEARS = 10, A_BAR = 11, A_BINS = 16, A_START_SEED = 20260906;
+// Two humps, offset from each other. A deeper beak makes fewer chicks and
+// survives the winter better; a shallower one makes more and survives worse.
+// Where the chick hump sits, and how tall it is, swings with the year's rain
+// -- so the best beak to be swings with it too. That is the whole of Part A.
+const A_HERIT = 0.80, A_BEAK_LO = 7.0, A_BEAK_HI = 11.5;
+const A_CHICK_SD = 0.95, A_SURV_SD = 1.30;
+const A_CHICK_PEAK_DRY = 9.4, A_CHICK_PEAK_WET = 7.9;   // shallow beaks own a wet year
+const A_CHICK_MAX_DRY  = 3.0, A_CHICK_MAX_WET  = 4.0;
+const A_SURV_PEAK = 10.3, A_SURV_MAX = 0.95;
+const A_RAIN_LO = 45, A_RAIN_HI = 250;
+const A_YEARS = 10, A_BAR = 18, A_BINS = 16, A_START_SEED = 20260906;
 // Two scripted droughts, not weather drawn at random -- see the DROUGHT
 // REDESIGN comment above for why and how these were picked.
 const A_DROUGHT_YEARS = new Set([2,3,4,8,9,10]);
@@ -1204,67 +1226,42 @@ function rainForYearA(year, rng) {
   const pool = A_DROUGHT_YEARS.has(year) ? A_RAIN_DROUGHT : A_RAIN_NORMAL;
   return pool[(rng()*pool.length)|0];
 }
-// Steeper than the shared W.beakSpan (1.9) / W.softPen (0.30, floor 0.30):
-// this vignette needs a beak that is wrong for the year to be able to
-// actually reach zero food, not merely less. See the comment above.
-// A_CRACK is Stage A's own crack threshold, decoupled from the shared
-// W.crackTrue the way A_BEAK_SPAN is from W.beakSpan: this vignette's birds
-// run 7.5-10.5 mm and its drought is calibrated against a threshold of 8.4,
-// which is not where Stages B-D put theirs.
-const A_BEAK_SPAN = 0.4, A_SOFT_PEN = 0.60, A_SOFT_FLOOR = 0.05, A_CRACK = 8.4;
 // No beak depth is ever a certain death sentence: the survival curve bottoms
 // out here rather than at nothing, so the panel always shows a real, readable
 // chance instead of a bar of zero height. JM's call.
 const A_SURV_FLOOR = 0.10;
-function vReach(b){ return Math.max(0, Math.min(1, (b-A_CRACK)/A_BEAK_SPAN)); }
-function vSoftEff(b){ return Math.max(A_SOFT_FLOOR, Math.min(1, 1 - A_SOFT_PEN*(b-W.beakLo0))); }
-const sV = { year:1, birds:null, S:0, H:0, rng:null, nrm:null, env:null,
+const sV = { year:1, birds:null, rng:null, nrm:null, env:null,
              beakChoice:9.0, mode:"start", offspring:null,
              locked:false, done:false, failed:false, total:0, history:[] };
 
-/* One generation of the real island: this year's weather, this year's food
-   environment (as functions of a hypothetical beak, for the panels AND for
-   your own draw), and the background flock's own next generation -- drawn
-   independently of whatever you go on to pick. */
-function yearStepA(birds, S, H, rng, nrm, year) {
+/* One year of the toy island. No seed accounting here -- Part A is not a
+   small copy of Stages B-D, it is the picture of a trade-off. The rain sets
+   where the chick hump sits and how tall it is; the survival hump does not
+   move. Everything the student sees, and the background flock's own
+   selection, come from these same two curves. */
+function yearStepA(birds, rng, nrm, year) {
   const rain = rainForYearA(year, rng);
-  H = H*W.hardDecay + TRUTH_A.hp;
-  S = S*W.softDecay + TRUTH_A.sp*rain;
-  const n = birds.length;
-  const acc = new Array(n), sef = new Array(n);
-  let nAcc=0, sSum=0;
-  for (let i=0;i<n;i++){ acc[i]=vReach(birds[i]); nAcc+=acc[i]; sef[i]=vSoftEff(birds[i]); sSum+=sef[i]; }
-  H = Math.max(5, H - W.eatHard*nAcc);
-  S = Math.max(5, S - W.eatSoft*n);
-  const sPer = S/Math.max(1,sSum), hPer = H/Math.max(1,nAcc);
-  const dspan = Math.max(0.05, W.deathMax - TRUTH_A.dmin);
-  const foodOf = b => vSoftEff(b)*sPer + vReach(b)*hPer;
-  const expChicks = b => Math.max(0, Math.min(TRUTH_A.bmax,
-    TRUTH_A.bmax*foodOf(b)/(W.birthHalf+foodOf(b))));
-  const survProb  = b => Math.max(A_SURV_FLOOR, Math.min(0.97,
-    1 - (TRUTH_A.dmin + dspan/(1+foodOf(b)/W.deathHalf))));
+  const wet = Math.max(0, Math.min(1, (rain - A_RAIN_LO) / (A_RAIN_HI - A_RAIN_LO)));
+  const chickPeak = A_CHICK_PEAK_DRY + (A_CHICK_PEAK_WET - A_CHICK_PEAK_DRY) * wet;
+  const chickMax  = A_CHICK_MAX_DRY  + (A_CHICK_MAX_WET  - A_CHICK_MAX_DRY ) * wet;
+  const expChicks = b => chickMax * Math.exp(-((b-chickPeak)*(b-chickPeak))/(2*A_CHICK_SD*A_CHICK_SD));
+  const survProb  = b => A_SURV_FLOOR + (A_SURV_MAX - A_SURV_FLOOR) *
+                         Math.exp(-((b-A_SURV_PEAK)*(b-A_SURV_PEAK))/(2*A_SURV_SD*A_SURV_SD));
 
   const m0 = meanOf(birds);
-  const surv=[], sfood=[];
-  for (let i=0;i<n;i++){
-    const b=birds[i], f=sef[i]*sPer + acc[i]*hPer;
-    const d = TRUTH_A.dmin + dspan/(1+f/W.deathHalf);
-    if (rng() > Math.max(0.03, Math.min(0.97,d))) { surv.push(b); sfood.push(f); }
-  }
+  const surv = [];
+  for (let i=0;i<birds.length;i++) if (rng() < survProb(birds[i])) surv.push(birds[i]);
   let nextBirds;
   if (surv.length < 2) nextBirds = surv;
   else {
-    const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-TRUTH_A.herit*TRUTH_A.herit/2));
-    const kids=[];
-    for (let i=0;i<surv.length;i++){
-      const br = Math.min(TRUTH_A.bmax, TRUTH_A.bmax*sfood[i]/(W.birthHalf+sfood[i]));
-      let k=Math.floor(br); if (rng()<br-k) k++;
-      // Single-parent heritability, not mid-parent-diluted -- see the
-      // HERITABILITY REDRAWN comment above: a chick inherits `herit` of its
-      // OWN parent's deviation from the flock mean, not half of it.
-      for (let j=0;j<k;j++){
-        kids.push(m0 + TRUTH_A.herit*(surv[i]-m0) + sdk*nrm());
-      }
+    const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-A_HERIT*A_HERIT/2));
+    const kids = [];
+    for (let i=0;i<surv.length;i++) {
+      const br = expChicks(surv[i]);
+      let k = Math.floor(br); if (rng() < br-k) k++;
+      // Single-parent heritability, same as everywhere else in this lesson.
+      for (let j=0;j<k;j++)
+        kids.push(Math.max(A_BEAK_LO, Math.min(A_BEAK_HI, m0 + A_HERIT*(surv[i]-m0) + sdk*nrm())));
     }
     nextBirds = kids;
     if (nextBirds.length > W.CAP) {
@@ -1272,7 +1269,7 @@ function yearStepA(birds, S, H, rng, nrm, year) {
       nextBirds = keep;
     }
   }
-  return { S, H, nextBirds, expChicks, survProb, mean:m0 };
+  return { nextBirds, expChicks, survProb, mean:m0, rain, wet };
 }
 function beakRangeFor(birds) {
   let lo=birds[0], hi=birds[0];
@@ -1352,7 +1349,7 @@ function drawStageA() {
   const gap=8, bandH=Math.floor((ch-2*gap)/3);
   drawBandA(ctx, 0, 0,             cw, bandH, lo, hi, counts, Math.max(10,niceTop(Math.max.apply(null,counts))),
     chosenBin, "#e4e2d8", "#6f8a4a", "flock this year", v=>v+" birds", false);
-  drawBandA(ctx, 0, bandH+gap,     cw, bandH, lo, hi, chicksCurve, TRUTH_A.bmax,
+  drawBandA(ctx, 0, bandH+gap,     cw, bandH, lo, hi, chicksCurve, A_CHICK_MAX_WET,
     chosenBin, "#f0e6c8", "#c9a227", "expected chicks", v=>v.toFixed(2), false);
   drawBandA(ctx, 0, 2*(bandH+gap), cw, bandH, lo, hi, survCurve, 1.0,
     chosenBin, "#d3e3ee", "#2f6b8f", "chance of surviving winter", v=>(100*v).toFixed(0)+"%", true);
@@ -1362,7 +1359,9 @@ function drawStageA() {
     (!sV.done && A_DROUGHT_YEARS.has(sV.year)) ? "" : "none";
   document.getElementById("A_ledger").innerHTML =
     '<span class="label">this year on the island —</span> flock: '+sV.birds.length+
-    ' &nbsp; soft seeds: '+Math.round(sV.S)+' &nbsp; hard seeds: '+Math.round(sV.H);
+    ' &nbsp; rain: '+Math.round(sV.env.rain)+
+    ' &nbsp; '+(sV.env.wet >= 0.5 ? 'a wet year, soft seed everywhere'
+                                  : 'a dry year, the soft seed is gone');
   document.getElementById("A_lock").disabled = sV.locked || sV.done;
   if (!sV.done) document.getElementById("A2_now").textContent = Math.min(sV.year-1, A_YEARS)+" of "+A_YEARS;
 }
@@ -1376,9 +1375,10 @@ function drawStageA() {
 // (pickRandomSubsetA), and slicing a sorted array there would quietly always
 // keep the shallowest (or deepest) -- a bias with nothing behind it.
 function spawnOffspringA(bYou, k, flockMean) {
-  const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-TRUTH_A.herit*TRUTH_A.herit/2));
+  const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-A_HERIT*A_HERIT/2));
   const kids = [];
-  for (let j=0;j<k;j++) kids.push(flockMean + TRUTH_A.herit*(bYou-flockMean) + sdk*sV.nrm());
+  for (let j=0;j<k;j++) kids.push(Math.max(A_BEAK_LO, Math.min(A_BEAK_HI,
+    flockMean + A_HERIT*(bYou-flockMean) + sdk*sV.nrm())));
   return kids;
 }
 function pickRandomSubsetA(arr, n) {
@@ -1423,14 +1423,14 @@ function renderHistoryA() {
 // finishRunA() runs instead of this. Verified by logging #A_outcome.textContent
 // immediately after each lock-in click: years 1-4 read "" before the fix.
 function enterYearA() {
-  sV.env = yearStepA(sV.birds, sV.S, sV.H, sV.rng, sV.nrm, sV.year);
+  sV.env = yearStepA(sV.birds, sV.rng, sV.nrm, sV.year);
   sV.locked = false;
 }
 function resetRunA(seed) {
   const initRng = mulberry32(A_START_SEED), initNrm = makeNorm(initRng);
   const birds = new Array(W.N0);
   for (let i=0;i<W.N0;i++) birds[i] = 9.0 + W.beakSD*initNrm();
-  sV.birds = birds; sV.S = W.S0; sV.H = W.H0;
+  sV.birds = birds;
   sV.rng = mulberry32(seed); sV.nrm = makeNorm(sV.rng);
   sV.year = 1; sV.total = 0; sV.history = []; sV.locked = false; sV.done = false; sV.failed = false;
   sV.beakChoice = 9.0; sV.mode = "start"; sV.offspring = null;
@@ -1519,7 +1519,7 @@ function lockInBeak(bYou) {
   const justPlayed = sV.history[sV.history.length-1];
   if (justPlayed) justPlayed.flockMeanAfter = meanOf(sV.birds);
   renderHistoryA();
-  sV.S = sV.env.S; sV.H = sV.env.H; sV.year++;
+  sV.year++;
   if (sV.year > A_YEARS) { finishRunA(); }
   else {
     sV.mode = "choose"; sV.offspring = offspring; sV.beakChoice = offspring[0];
@@ -2216,7 +2216,7 @@ function buildTableE() {
    the build before Stage A was inserted, and is corrected here:
       0  A locked in a bird for the first time
       1  A played all ten years
-      2  A eleven chicks or more surviving to spring, total, over the ten
+      2  A eighteen chicks or more surviving to spring, total, over the ten
       3  A which way the flock's own average beak moved, and by how much
       4  B built the model to four pieces and fitted the beak
       5  C locked in the fit made on 1-20 alone
@@ -2345,6 +2345,21 @@ function buildTableE() {
        the same 0.20 bar). Full workings in the island-record comment.
 
    Record and every bar changed, so old codes mean nothing: version 12 -> 13.
+
+   PART A IS TWO HUMPS NOW, 2026-09-12. JM: the expected-chicks and
+   surviving-winter bars were too flat to show anything -- "trade-offs are
+   hidden by the flatness of the bars, and shifting optima are hidden by deep
+   beaks having no huge cost". Part A's seed accounting is deleted outright
+   and replaced with two explicit Gaussians, offset from each other: chicks
+   peak shallow, survival peaks deep, and the chick hump's position and
+   height swing with the rain. See the STAGE A comment for the shape.
+
+   The flip is now true by construction rather than by tuning: measured over
+   40 runs, 444/444 drought years favour the deeper bird and 342/342 normal
+   years favour the shallower. The optimum moves about 0.8 mm between the two
+   regimes. Bar re-derived and raised 11 -> 18: an informed lineage averages
+   18.6 surviving chicks with 1.8 resets, clearing 18 about 73% of the time
+   (14 at 98%, 20 at 43%).
 
    THE DIRECT ARROW IS GONE, 2026-09-12, JM's call. `worth` -- the flat
    beak -> births/deaths term -- is removed from both models outright, and
