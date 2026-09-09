@@ -93,7 +93,9 @@
   .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
   .controls button.accent { background:var(--accent); }
   .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
-  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  /* Every chart canvas, not just the ones in a .graph-wrap: Stage A's flock
+     plot sits in a bare .panel and was the one that overflowed. */
+  .panel canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
   .fit-stats .label { color:var(--muted); }
   .fit-stats .ok { color:var(--good); font-weight:600; }
@@ -566,7 +568,14 @@
 <script src="../assets/score.js"></script>
 <script>
 /* ====== Shared helpers (lesson6b, unchanged) ======================== */
-function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+// Sizes the backing store for the display, and leaves the DISPLAYED size to
+// CSS. It used to pin canvas.style.width/height to cssW/cssH inline, which
+// beat the stylesheet's width:100% and left every chart stuck at 560px --
+// so at any column narrower than that the plot ran out over the controls
+// beside it. Drawing still uses the cssW/cssH coordinate space; the browser
+// scales it, and the click-to-generation code already converts through
+// (dataset.cssW / rect.width), so hit-testing follows the rendered size.
+function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
 function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
 function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
   xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
