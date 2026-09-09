@@ -139,18 +139,6 @@
   /* Lesson 7 additions ------------------------------------------------- */
   .ladder { font:12px ui-monospace,Menlo,monospace; max-height:170px; overflow-y:auto; }
   .pending { color:#b8b3a0; font-style:italic; }
-  /* Stage A's offspring cards -- one per chick, hovering previews it on the
-     chart (the dashed marker follows), clicking commits to it for the year. */
-  .offspring-prompt { font-size:13px; color:var(--muted); margin-bottom:8px; }
-  /* Why a Lock in button is currently disabled, stated right next to it --
-     not left to a checklist hint elsewhere on the page. */
-  #C_lockHint { font-size:12.5px; color:var(--accent); }
-  .controls .offspring-btn { display:flex; flex-direction:column; align-items:flex-start; gap:3px;
-    background:#333; color:#fff; border:0; border-radius:4px; padding:8px 12px; cursor:pointer;
-    font-size:13px; text-align:left; }
-  .controls .offspring-btn:hover, .controls .offspring-btn:focus-visible { background:var(--accent); }
-  .offspring-btn .ob-beak { font-family:ui-monospace,Menlo,monospace; font-weight:600; }
-  .offspring-btn .ob-stats { font-size:11px; opacity:0.85; }
   table.tbl { border-collapse:collapse; width:100%; font-size:13px; }
   table.tbl th, table.tbl td { padding:8px 12px; border-bottom:1px solid var(--rule); text-align:right; white-space:nowrap; }
   table.tbl th:first-child, table.tbl td:first-child { text-align:left; white-space:normal; min-width:230px; }
@@ -196,17 +184,17 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>For this part, you are going to choose a bird to follow.</p>
+        <p>For this part, you are going to choose a bird, every year, out of the birds that are actually there.</p>
         <p>Three charts are shown below, all scaled on the x axis showing the beak depth. The top row shows the other birds on the island, and what beak depth each of them has. The middle chart shows the expected number of chicks a bird with a particular beak depth will produce, and the bottom chart shows the probability that a bird with a given beak depth will survive the winter.</p>
-        <p>You're going to choose one bird from the flock to start with. Once you've locked in that bird, you will randomly have chicks produced that inherit some beaks. You will follow those, and then you will follow the chicks' chicks, and their chicks' chicks, all the way down until you manage to go ten years. If after ten years you have successfully followed a lineage that has lasted, and has diversified to a sufficiently large number, you have won and can pass on to Part B. Otherwise, you'll have to play again.</p>
+        <p>Each year you pick one bird out of that year's flock — any beak depth the flock actually contains — and lock it in. It raises however many chicks its beak is worth that year, and some of those survive to spring. Those go in your tally. Then the year turns over, the flock changes, and you choose again from scratch: nothing carries over from your last pick except the count. Do that ten times, and if your tally is high enough you're through to Part B. Otherwise you play again.</p>
         <p>Pay attention to any shifts or changes you see in how beak depth is related to survival and number of offspring.</p>
       </div>
       <ul class="setup">
-        <li>Pick a bird at a beak depth of your choosing to start.</li>
-        <li>Lock in, and see whether it has chicks — and how many.</li>
-        <li>Choose one of its chicks to carry the line into next year.</li>
+        <li>Pick any beak depth the flock has this year, and lock it in.</li>
+        <li>See how many chicks it raises, and how many of those see spring.</li>
+        <li>Next year you choose again, freely — there is no line to keep alive.</li>
         <li>Two droughts are coming, flagged when they hit — watch the charts move.</li>
-        <li>Repeat for ten years. Enough chicks surviving to spring by the end, and you're through to Stage B.</li>
+        <li>Ten years. A high enough tally by the end, and you're through to Stage B.</li>
       </ul>
     </div>
   </div>
@@ -223,24 +211,20 @@
         <h3>Years so far</h3>
         <div style="overflow-x:auto;">
           <table class="tbl" id="tblA">
-            <thead><tr><th>year</th><th>drought?</th><th>flock's average beak (change)</th><th>beak you followed</th><th>chicks born</th><th>survived to spring</th><th>parent survived?</th></tr></thead>
+            <thead><tr><th>year</th><th>drought?</th><th>flock's average beak (change)</th><th>beak you picked</th><th>chicks born</th><th>survived to spring</th><th>bird survived?</th></tr></thead>
             <tbody id="tblAbody"><tr><td colspan="7" class="pending">no years played yet</td></tr></tbody>
           </table>
         </div>
-        <div class="tbl-note" id="A_totalNote">Total so far: 0 chicks surviving to spring. Need 18 or more over ten years to open Stage B.</div>
+        <div class="tbl-note" id="A_totalNote">Total so far: 0 chicks surviving to spring. Need 22 or more over ten years to open Stage B.</div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsV">
-          <div class="row" id="rowVstart"><label for="V_beak">which bird you follow</label><input type="range" id="V_beak" min="7.5" max="10.5" step="0.05" value="9.0" /><output id="V_beakOut">9.0</output></div>
+          <div class="row" id="rowVstart"><label for="V_beak">which bird you pick this year</label><input type="range" id="V_beak" min="7.5" max="10.5" step="0.05" value="9.0" /><output id="V_beakOut">9.0</output></div>
           <div class="buttons" id="startButtons">
             <button id="A_lock" class="accent">Lock in this bird</button>
-          </div>
-          <div id="offspringRow" style="display:none;">
-            <div class="offspring-prompt">Which of its chicks do you follow into this year?</div>
-            <div class="buttons" id="offspringButtons"></div>
           </div>
           <div class="buttons"><button id="A_again" class="ghost" style="display:none;">Play again</button></div>
         </div>
@@ -250,8 +234,8 @@
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
           <li data-task="A1">Lock in a bird for the first time. <span class="hint"><span id="A1_now">not yet</span></span></li>
-          <li data-task="A2">Play all ten years without your line running out. <span class="hint"><span id="A2_now">0 of 10</span></span></li>
-          <li data-task="A3">Get 18 or more chicks surviving to spring, total across the ten. <span class="hint"><span id="A3_now">not yet</span></span></li>
+          <li data-task="A2">Play all ten years. <span class="hint"><span id="A2_now">0 of 10</span></span></li>
+          <li data-task="A3">Get 22 or more chicks surviving to spring, total across the ten. <span class="hint"><span id="A3_now">not yet</span></span></li>
           <li data-task="A4">Answer the question below.</li>
         </ul>
         <div class="solved-banner" id="solvedA">Some years favored a deep beak, some a shallow one. Picking well meant reading which year you were in — not committing to one kind of beak. Stage B is open.</div>
@@ -1191,47 +1175,40 @@ const D_TAKE_TRUE = 380;   // a standing flock of newcomers, each eating its fil
    it is never resampled -- and your own ten picks are independent draws
    against that year's real curves, not against the flock's fate.
 
-   BAR CALIBRATION, 2026-09-06, scratchpad/calibrate_l7a.mjs (deleted after
-   use), 3000 five-year runs per policy: a policy that reads the expected-
-   chicks panel and follows its peak each year averages 12.18 chicks and
-   clears 11 total 95.5% of the time. The best naive heuristic that ignores
-   the panels ("always follow the shallowest bird available") averages 11.09
-   and clears 11 only 69.3% of the time; always-mean, blind-random and
-   always-deepest all average under 10.5 and clear 11 at 33-41%. Bar set at
-   11 total chicks over five years.
+   FULL SELECTION EVERY YEAR, 2026-09-09, JM's call, reversing the lineage
+   rebuild of 2026-09-08. You no longer follow one bird's descendants. Every
+   year you choose again, freely, from the beaks the flock ACTUALLY contains
+   that year -- the slider is rebuilt each year to the flock's own range, so
+   you cannot pick a bird that is not out there, but nothing carries over from
+   last year's pick except the tally. A zero-chick year is now just a zero:
+   there is no line left to end, so the run always plays its full ten years
+   and failRunA is gone with the offspring cards that fed it.
 
-   LINEAGE REBUILD, 2026-09-08, JM's request. Freely re-picking any beak
-   each year -- the original design above -- let a student always evaluate
-   the single best depth for that year's conditions, which is not what
-   heritability actually allows a real lineage to do. Now you do not get to
-   re-pick: you choose your STARTING bird only in year 1; after that you are
-   choosing among that bird's own actual chicks, whose beaks land near their
-   parents' by inheritance, not wherever the panels say is best this year. A
-   year with zero chicks ends the line outright -- there is nothing to
-   follow into the next one, so the run resets. vReach/vSoftEff are also
-   steepened for this stage only (A_BEAK_SPAN/A_SOFT_PEN/A_SOFT_FLOOR below,
-   vs. the shared W.beakSpan/W.softPen the rest of the model uses) so a beak
-   on the wrong side of a year's conditions can plausibly hit zero, not just
-   fewer -- otherwise a lineage could almost never actually die out and the
-   new failure mode would be decorative.
+   The lineage version's argument -- that free re-picking lets a student
+   evaluate the single best depth for the year, which is not what heritability
+   allows a real lineage to do -- still stands as biology. It is deliberately
+   not what this stage is for: Part A is the picture of a trade-off that moves
+   with the weather, and reading it every year is the skill being asked for.
+   Heritability's constraint on a real lineage is Stage B's piece four.
 
-   ONLY SURVIVORS COUNT, 2026-09-09, JM's request: clicking blindly wasn't
-   failing often enough. A chick's own arithmetic (expChicks) used to be the
-   whole story; now only chicks that themselves live to spring count toward
-   the total or get offered as next year's choice, so the survival panel --
-   already on screen, previously read-only flavour -- actually decides who's
-   left. It is round(k * this beak's own survProb), one stochastic-rounding
-   step, not an independent coin flip per chick: that turned out to be noise
-   stacked on noise (avg. resets before finishing a run reached 77 for
-   always-deepest, still only ~7 for reading the panel correctly -- all
-   punishment, no signal). Recalibrated,
-   scratchpad/calibrate_l7a_survival3.mjs (deleted after use), 2000 five-
-   year attempts per policy: reading the expected-chicks panel and following
-   its peak clears a bar of 7 surviving chicks 88% of the time per attempt
-   (0.6 resets on average); always-deepest clears it 16% of the time (3.3
-   resets on average) and always-shallowest 35% (1.1 resets); parking on 9.0
-   every year clears 32%. Bar dropped from 11 (raw chicks) to 7 (surviving
-   chicks) accordingly.
+   BAR, re-measured for that change, 5,000 ten-year runs per policy, replaying
+   lockInBeak's own arithmetic (the appended test is in the commit message):
+
+     policy            mean    bar 20   bar 22   bar 23
+     reads both panels  21.2     84%      44%      22%
+     chases chicks only 18.4     21%       2%       0%
+     parks on 9 mm      16.9      3%       0%       0%
+     clicks blind        9.6      0%       0%       0%
+     always deepest      2.1      0%       0%       0%
+     always shallowest   0.7      0%       0%       0%
+
+   Set at 22. Free selection makes the score distribution tight, so the bar
+   bites hard: a careful player clears it in about 2.3 attempts and NOTHING
+   else clears it at all -- not chasing the chick panel while ignoring
+   survival, not parking on a middling beak. 23 buys no extra discrimination
+   (chicks-only is already at 0% by 22) and costs 4.5 attempts, so 22 is where
+   selectivity per attempt peaks. Under the old lineage rules the equivalent
+   bar was 18.
    ================================================================== */
 // Two humps, offset from each other. A deeper beak makes fewer chicks and
 // survives the winter better; a shallower one makes more and survives worse.
@@ -1243,7 +1220,7 @@ const A_CHICK_PEAK_DRY = 9.4, A_CHICK_PEAK_WET = 7.9;   // shallow beaks own a w
 const A_CHICK_MAX_DRY  = 3.0, A_CHICK_MAX_WET  = 4.0;
 const A_SURV_PEAK = 10.3, A_SURV_MAX = 0.95;
 const A_RAIN_LO = 45, A_RAIN_HI = 250;
-const A_YEARS = 10, A_BAR = 18, A_BINS = 16, A_START_SEED = 20260906;
+const A_YEARS = 10, A_BAR = 22, A_BINS = 16, A_START_SEED = 20260906;
 // Two scripted droughts, not weather drawn at random -- see the DROUGHT
 // REDESIGN comment above for why and how these were picked.
 const A_DROUGHT_YEARS = new Set([2,3,4,8,9,10]);
@@ -1258,7 +1235,7 @@ function rainForYearA(year, rng) {
 // chance instead of a bar of zero height. JM's call.
 const A_SURV_FLOOR = 0.10;
 const sV = { year:1, birds:null, rng:null, nrm:null, env:null,
-             beakChoice:9.0, mode:"start", offspring:null,
+             beakChoice:9.0,
              locked:false, done:false, failed:false, total:0, history:[] };
 
 /* One year of the toy island. No seed accounting here -- Part A is not a
@@ -1353,18 +1330,18 @@ function drawBandA(ctx, x0, y0, w, h, lo, hi, values, yMax, chosenBin, colLo, co
 }
 function drawStageA() {
   const [lo,hi] = beakRangeFor(sV.birds);
+  // The slider spans the beaks the flock ACTUALLY contains this year, and is
+  // rebuilt every year because that range moves as the flock evolves. You
+  // cannot pick a bird that is not out there.
   const slider = document.getElementById("V_beak");
-  if (sV.mode === "start") {
-    slider.min = lo.toFixed(2); slider.max = hi.toFixed(2);
-    if (sV.beakChoice < lo) sV.beakChoice = lo;
-    if (sV.beakChoice > hi) sV.beakChoice = hi;
-    slider.value = String(sV.beakChoice);
-    document.getElementById("V_beakOut").textContent = sV.beakChoice.toFixed(2);
-  }
+  slider.min = lo.toFixed(2); slider.max = hi.toFixed(2);
+  if (sV.beakChoice < lo) sV.beakChoice = lo;
+  if (sV.beakChoice > hi) sV.beakChoice = hi;
+  slider.value = String(sV.beakChoice);
+  document.getElementById("V_beakOut").textContent = sV.beakChoice.toFixed(2);
   const showControls = !sV.done;
-  document.getElementById("rowVstart").style.display = (showControls && sV.mode==="start") ? "" : "none";
-  document.getElementById("startButtons").style.display = (showControls && sV.mode==="start") ? "" : "none";
-  document.getElementById("offspringRow").style.display = (showControls && sV.mode==="choose") ? "" : "none";
+  document.getElementById("rowVstart").style.display = showControls ? "" : "none";
+  document.getElementById("startButtons").style.display = showControls ? "" : "none";
 
   const counts = histCountsA(sV.birds, lo, hi);
   const chicksCurve = binValuesA(sV.env.expChicks, lo, hi);
@@ -1398,36 +1375,6 @@ function drawStageA() {
    OWN deviation from it, so a choice cannot simply hand its exact beak on
    to whichever chick is picked, but a deep or shallow parent's chicks lean
    the same way it did -- not diluted by half through an unseen mate. */
-// Deliberately NOT sorted: which of these later survive is picked at random
-// (pickRandomSubsetA), and slicing a sorted array there would quietly always
-// keep the shallowest (or deepest) -- a bias with nothing behind it.
-function spawnOffspringA(bYou, k, flockMean) {
-  const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-A_HERIT*A_HERIT/2));
-  const kids = [];
-  for (let j=0;j<k;j++) kids.push(Math.max(A_BEAK_LO, Math.min(A_BEAK_HI,
-    flockMean + A_HERIT*(bYou-flockMean) + sdk*sV.nrm())));
-  return kids;
-}
-function pickRandomSubsetA(arr, n) {
-  const pool = arr.slice(), out = [];
-  while (out.length < n && pool.length) out.push(pool.splice((sV.rng()*pool.length)|0, 1)[0]);
-  return out.sort((a,b)=>a-b);
-}
-/* Built once per brood, not on every redraw -- hovering a card previews it
-   on the chart (via sV.beakChoice) without touching this DOM at all. Beak
-   depth only: the two curves that would explain each card's odds are the
-   graph above, not a number here. */
-function renderOffspringChoicesA() {
-  const wrap = document.getElementById("offspringButtons");
-  wrap.innerHTML = sV.offspring.map((b,i) =>
-    `<button type="button" class="offspring-btn" data-idx="${i}">`+
-      `<span class="ob-beak">${b.toFixed(2)} mm</span></button>`).join("");
-  wrap.querySelectorAll(".offspring-btn").forEach(btn=>{
-    const idx = +btn.dataset.idx;
-    btn.addEventListener("mouseenter", ()=>{ sV.beakChoice = sV.offspring[idx]; drawStageA(); });
-    btn.addEventListener("click", ()=>{ lockInBeak(sV.offspring[idx]); });
-  });
-}
 function renderHistoryA() {
   document.getElementById("tblAbody").innerHTML = sV.history.length===0
     ? '<tr><td colspan="7" class="pending">no years played yet</td></tr>'
@@ -1460,7 +1407,7 @@ function resetRunA(seed) {
   sV.birds = birds;
   sV.rng = mulberry32(seed); sV.nrm = makeNorm(sV.rng);
   sV.year = 1; sV.total = 0; sV.history = []; sV.locked = false; sV.done = false; sV.failed = false;
-  sV.beakChoice = 9.0; sV.mode = "start"; sV.offspring = null;
+  sV.beakChoice = 9.0;
   document.getElementById("A_again").style.display = "none";
   document.getElementById("A_outcome").textContent = "";
   renderHistoryA();
@@ -1483,18 +1430,9 @@ function finishRunA() {
   document.getElementById("A_again").textContent = "Play again";
   document.getElementById("A_again").style.display = "";
 }
-// A zero-chick year is not a bad score to shrug off -- it is the end of the
-// line, since there is no chick to choose for next year. The run resets
-// rather than limping on with the total it had.
-function failRunA() {
-  sV.done = true; sV.failed = true;
-  document.getElementById("A2_now").textContent = "line ended, year "+sV.year+" of "+A_YEARS;
-  document.getElementById("A_again").textContent = "Start over";
-  document.getElementById("A_again").style.display = "";
-}
-/* The single path both controls commit through: the free slider in year 1,
-   an offspring card every year after. Whichever supplied bYou, the roll and
-   the bookkeeping are identical from here on. */
+/* Every year commits through here, and every year the choice is the same one:
+   any beak depth the flock actually contains. There is no lineage -- see
+   FULL SELECTION EVERY YEAR in the comment above yearStepA. */
 function lockInBeak(bYou) {
   if (sV.locked || sV.done) return;
   bump("A");
@@ -1503,40 +1441,24 @@ function lockInBeak(bYou) {
   const survived = sV.rng() < sV.env.survProb(bYou);
   sV.locked = true;
   if (!Gates.A.everLocked) { Gates.A.everLocked = true; markTask("A","A1"); record(BIT.A_first, true); }
-  if (k === 0) {
-    sV.history.push({ year:sV.year, drought:A_DROUGHT_YEARS.has(sV.year), flockMean:sV.env.mean, beak:bYou, chicks:0, chicksSurvived:0, survived });
-    document.getElementById("A_outcome").textContent =
-      "Year "+sV.year+": raised no chicks at all — nothing to follow into next year. The line ends here.";
-    renderHistoryA();
-    failRunA();
-    drawStageA();
-    return;
+  let nSurv = 0;
+  if (k > 0) {
+    // Expected value with one stochastic rounding step (round(k * this beak's
+    // own chance of seeing spring), the same curve the panel shows), not an
+    // independent coin flip per chick: that reads as noise on noise without
+    // separating a beak that fits the year from one that doesn't.
+    const sp = sV.env.survProb(bYou), exact = k*sp;
+    nSurv = Math.floor(exact); if (sV.rng() < exact-nSurv) nSurv++;
+    nSurv = Math.min(k, nSurv);
   }
-  // Only chicks that themselves survive to spring count or carry the line
-  // forward -- expected value with one stochastic rounding step (round(k *
-  // this beak's own chance of seeing spring), same curve the panel shows),
-  // not an independent coin flip per chick. That reads as noise on noise
-  // without separating a beak that fits the year from one that doesn't;
-  // this keeps the outcome legibly tied to the survival panel.
-  const sp = sV.env.survProb(bYou), exact = k*sp;
-  let nSurv = Math.floor(exact); if (sV.rng() < exact-nSurv) nSurv++;
-  nSurv = Math.min(k, nSurv);
   sV.total += nSurv;
-  sV.history.push({ year:sV.year, drought:A_DROUGHT_YEARS.has(sV.year), flockMean:sV.env.mean, beak:bYou, chicks:k, chicksSurvived:nSurv, survived });
-  if (nSurv === 0) {
-    document.getElementById("A_outcome").textContent =
-      "Year "+sV.year+": raised "+k+" chick"+(k===1?"":"s")+", but none survived to spring — " +
-      "nothing to follow into next year. The line ends here.";
-    renderHistoryA();
-    failRunA();
-    drawStageA();
-    return;
-  }
-  document.getElementById("A_outcome").textContent =
-    "Year "+sV.year+": raised "+k+" chick"+(k===1?"":"s")+"; "+nSurv+" of "+k+" survived to spring"+
-    (survived ? ". The parent made it through the winter too."
-              : ". The parent did not survive the winter.");
-  const offspring = pickRandomSubsetA(spawnOffspringA(bYou, Math.min(6,k), sV.env.mean), nSurv);
+  sV.history.push({ year:sV.year, drought:A_DROUGHT_YEARS.has(sV.year), flockMean:sV.env.mean,
+                    beak:bYou, chicks:k, chicksSurvived:nSurv, survived });
+  document.getElementById("A_outcome").textContent = k === 0
+    ? "Year "+sV.year+": that bird raised no chicks at all. Nothing to carry over — next year you pick again."
+    : "Year "+sV.year+": raised "+k+" chick"+(k===1?"":"s")+"; "+nSurv+" of "+k+" survived to spring"+
+      (survived ? ". The bird made it through the winter too."
+                : ". The bird did not survive the winter.");
   sV.birds = sV.env.nextBirds.length>=2 ? sV.env.nextBirds : sV.birds;
   // The mean stored above is the flock BEFORE this year's selection -- the one
   // the charts just showed. So the effect of a drought row only turned up in
@@ -1547,12 +1469,11 @@ function lockInBeak(bYou) {
   if (justPlayed) justPlayed.flockMeanAfter = meanOf(sV.birds);
   renderHistoryA();
   sV.year++;
+  // No lineage to carry: next year you choose again, freely, from whatever
+  // beaks the flock actually contains that year. A bad pick costs you that
+  // year's chicks and nothing more -- there is no line left to end.
   if (sV.year > A_YEARS) { finishRunA(); }
-  else {
-    sV.mode = "choose"; sV.offspring = offspring; sV.beakChoice = offspring[0];
-    enterYearA();
-    renderOffspringChoicesA();
-  }
+  else { enterYearA(); }
   drawStageA();
 }
 document.getElementById("V_beak").addEventListener("input", e=>{
