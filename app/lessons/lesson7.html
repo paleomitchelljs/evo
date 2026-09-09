@@ -222,7 +222,7 @@
         <h3>Years so far</h3>
         <div style="overflow-x:auto;">
           <table class="tbl" id="tblA">
-            <thead><tr><th>year</th><th>drought?</th><th>flock's average beak</th><th>beak you followed</th><th>chicks born</th><th>survived to spring</th><th>parent survived?</th></tr></thead>
+            <thead><tr><th>year</th><th>drought?</th><th>flock's average beak (change)</th><th>beak you followed</th><th>chicks born</th><th>survived to spring</th><th>parent survived?</th></tr></thead>
             <tbody id="tblAbody"><tr><td colspan="7" class="pending">no years played yet</td></tr></tbody>
           </table>
         </div>
@@ -1227,6 +1227,10 @@ function rainForYearA(year, rng) {
 // run 7.5-10.5 mm and its drought is calibrated against a threshold of 8.4,
 // which is not where Stages B-D put theirs.
 const A_BEAK_SPAN = 0.4, A_SOFT_PEN = 0.60, A_SOFT_FLOOR = 0.05, A_CRACK = 8.4;
+// No beak depth is ever a certain death sentence: the survival curve bottoms
+// out here rather than at nothing, so the panel always shows a real, readable
+// chance instead of a bar of zero height. JM's call.
+const A_SURV_FLOOR = 0.10;
 function vReach(b){ return Math.max(0, Math.min(1, (b-A_CRACK)/A_BEAK_SPAN)); }
 function vSoftEff(b){ return Math.max(A_SOFT_FLOOR, Math.min(1, 1 - A_SOFT_PEN*(b-W.beakLo0))); }
 const sV = { year:1, birds:null, S:0, H:0, rng:null, nrm:null, env:null,
@@ -1252,7 +1256,7 @@ function yearStepA(birds, S, H, rng, nrm, year) {
   const foodOf = b => vSoftEff(b)*sPer + vReach(b)*hPer;
   const expChicks = b => Math.max(0, Math.min(TRUTH_A.bmax,
     TRUTH_A.bmax*foodOf(b)/(W.birthHalf+foodOf(b)) + TRUTH_A.worth*(b-9)));
-  const survProb  = b => Math.max(0.03, Math.min(0.97,
+  const survProb  = b => Math.max(A_SURV_FLOOR, Math.min(0.97,
     1 - (TRUTH_A.dmin + dspan/(1+foodOf(b)/W.deathHalf) - TRUTH_A.worth*(b-9))));
 
   const m0 = meanOf(birds);
@@ -1328,8 +1332,13 @@ function drawBandA(ctx, x0, y0, w, h, lo, hi, values, yMax, chosenBin, colLo, co
   ctx.textAlign="left"; ctx.fillText(label, padL, 10);
   ctx.textAlign="right"; ctx.fillText(fmt(values[chosenBin]), padL+plotW, 10);
   if (showXAxis) {
-    ctx.font="10.5px ui-monospace, Menlo, monospace"; ctx.textAlign="center";
-    for (let i=0;i<=4;i++) ctx.fillText((lo+(hi-lo)*i/4).toFixed(1), padL+plotW*i/4, padT+plotH+14);
+    ctx.font="10.5px ui-monospace, Menlo, monospace";
+    // First and last labels hug the axis ends instead of centring on them:
+    // centred, the last one ran past the canvas edge and lost its final digit.
+    for (let i=0;i<=4;i++) {
+      ctx.textAlign = i===0 ? "left" : i===4 ? "right" : "center";
+      ctx.fillText((lo+(hi-lo)*i/4).toFixed(1), padL+plotW*i/4, padT+plotH+14);
+    }
   }
   ctx.restore();
 }
@@ -1412,7 +1421,8 @@ function renderHistoryA() {
     ? '<tr><td colspan="7" class="pending">no years played yet</td></tr>'
     : sV.history.map(h=>
         `<tr><td>${h.year}</td><td${h.drought?' class="off"':''}>${h.drought?"drought":"—"}</td>`+
-        `<td class="num">${h.flockMean.toFixed(2)}</td>`+
+        `<td class="num">${h.flockMean.toFixed(2)}${h.flockMeanAfter==null ? ""
+           : ` (${h.flockMeanAfter-h.flockMean>=0?"+":""}${(h.flockMeanAfter-h.flockMean).toFixed(2)})`}</td>`+
         `<td class="num">${h.beak.toFixed(2)}</td><td class="num">${h.chicks}</td>`+
         `<td class="num">${h.chicksSurvived}</td>`+
         `<td class="num">${h.survived?"yes":"no"}</td></tr>`).join("");
@@ -1514,9 +1524,16 @@ function lockInBeak(bYou) {
     "Year "+sV.year+": raised "+k+" chick"+(k===1?"":"s")+"; "+nSurv+" of "+k+" survived to spring"+
     (survived ? ". The parent made it through the winter too."
               : ". The parent did not survive the winter.");
-  renderHistoryA();
   const offspring = pickRandomSubsetA(spawnOffspringA(bYou, Math.min(6,k), sV.env.mean), nSurv);
   sV.birds = sV.env.nextBirds.length>=2 ? sV.env.nextBirds : sV.birds;
+  // The mean stored above is the flock BEFORE this year's selection -- the one
+  // the charts just showed. So the effect of a drought row only turned up in
+  // the NEXT row, and the table read as though normal years did nothing. Record
+  // what this year actually moved the flock to, and show the change. Recorded
+  // BEFORE the table is drawn, or the final year's row never gets its change.
+  const justPlayed = sV.history[sV.history.length-1];
+  if (justPlayed) justPlayed.flockMeanAfter = meanOf(sV.birds);
+  renderHistoryA();
   sV.S = sV.env.S; sV.H = sV.env.H; sV.year++;
   if (sV.year > A_YEARS) { finishRunA(); }
   else {
