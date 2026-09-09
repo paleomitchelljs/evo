@@ -316,7 +316,7 @@
           <div class="row" data-line="dm"><label for="B_surv">chance of surviving a year</label><input type="range" id="B_surv" min="0.30" max="0.95" step="0.05" value="0.70" /><output id="B_survOut">0.70</output></div>
           <div class="row" id="rowBsp" data-line="sp" style="display:none;"><label for="B_sp">rain effect on soft seeds</label><input type="range" id="B_sp" min="1.0" max="6.0" step="0.2" value="1.0" /><output id="B_spOut">1.0</output></div>
           <div class="row" id="rowBhp" data-line="hp" style="display:none;"><label for="B_hp">hard seeds left uneaten</label><input type="range" id="B_hp" min="20" max="320" step="10" value="100" /><output id="B_hpOut">100</output></div>
-          <div class="row muted" id="rowBworth" data-line="w" style="display:none;"><label for="B_worth">deeper beak advantage for hard seeds</label><input type="range" id="B_worth" min="-0.60" max="0.60" step="0.01" value="0" disabled /><output id="B_worthOut">0.00</output></div>
+          <div class="row muted" id="rowBcrack" data-line="lo" style="display:none;"><label for="B_crack">how deep a beak has to be to crack a hard seed</label><input type="range" id="B_crack" min="7.0" max="10.0" step="0.1" value="9.5" disabled /><output id="B_crackOut">9.5</output></div>
           <div class="row" id="rowBherit" data-line="h" style="display:none;"><label for="B_h">heritability of beak</label><input type="range" id="B_h" min="0" max="1" step="0.05" value="0.50" /><output id="B_hOut">0.50</output></div>
           <div class="buttons">
             <button id="B_lockStart" class="accent">Lock in this model</button>
@@ -341,13 +341,13 @@
           <li data-task="B1">A birth rate and a death rate, and nothing else. Get the minimum possible error. <span class="hint"><span id="B1_now">not yet</span></span></li>
           <li data-task="B2">Add the seeds lying about from earlier years. Under 95 finches. <span class="hint"><span id="B2_now">finish the first piece</span></span></li>
           <li data-task="B3">Now the soft crop the rain brings on top of them. Under 58 finches. <span class="hint"><span id="B3_now">finish the second piece</span></span></li>
-          <li data-task="B4">Add the beak, and make it worth something. Under 0.20 mm. <span class="hint"><span id="B4_now">finish the third piece</span></span></li>
+          <li data-task="B4">Add the beak: it decides who can get at the hard seed. Under 0.20 mm. <span class="hint"><span id="B4_now">finish the third piece</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedB">Four pieces, and the last one is the only one that can move a beak. Stage C is open.</div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/island.csv"</span>)</span><span class="line"></span><span class="line" data-line="bm">mostChicks &lt;- <span class="num" id="cB_bm">1.0</span></span><span class="line" data-line="dm">bestSurvival &lt;- <span class="num" id="cB_dm">0.70</span></span><span class="line" data-line="dm">leastDying   &lt;- <span class="num">1</span> - bestSurvival</span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cB_hp">100</span></span><span class="line" data-line="sp">softFromRain     &lt;- <span class="num" id="cB_sp">1.0</span></span><span class="line" data-line="w">beakWorth &lt;- <span class="num" id="cB_w">0.00</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cB_h">0.50</span></span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">20</span>) {</span><span class="line" data-step="2"><span class="com">  # the larder: what nobody ate last year is still there</span></span><span class="line" data-step="2">  hard &lt;- <span class="num">0.86</span>*hard + leftOverEachYear</span><span class="line" data-step="3"><span class="com">  # and this year's crop, which only the rain makes</span></span><span class="line" data-step="3">  soft &lt;- <span class="num">0.35</span>*soft + softFromRain*d$rain[t]</span><span class="line" data-step="1" data-until="2"><span class="com">  # with no seeds, nobody is ever short of food</span></span><span class="line" data-step="2" data-until="3">  food &lt;- (soft + hard)/n</span><span class="line" data-step="3">  food &lt;- soft/n + hard/n   <span class="com"># still shared out evenly: no beak in this line</span></span><span class="line" data-step="1" data-until="2">  born &lt;- mostChicks</span><span class="line" data-step="1" data-until="2">  died &lt;- leastDying</span><span class="line" data-step="2">  born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food))</span><span class="line" data-step="2">  died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>)</span><span class="line" data-step="4">  born &lt;- born + beakWorth*(beak-<span class="num">9</span>)</span><span class="line" data-step="4">  died &lt;- died - beakWorth*(beak-<span class="num">9</span>)</span><span class="line"></span><span class="line">  <span class="com"># the parents are done; next year is the chicks</span></span><span class="line">  n    &lt;- born * (n - died*n)</span><span class="line" data-step="4">  beak &lt;- <span class="fn">mean</span>(beak) + inherited*(midparent - <span class="fn">mean</span>(beak)) + noise</span><span class="line">}</span></pre>
+<pre class="code" id="codeB"><span class="line">d &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/island.csv"</span>)</span><span class="line"></span><span class="line" data-line="bm">mostChicks &lt;- <span class="num" id="cB_bm">1.0</span></span><span class="line" data-line="dm">bestSurvival &lt;- <span class="num" id="cB_dm">0.70</span></span><span class="line" data-line="dm">leastDying   &lt;- <span class="num">1</span> - bestSurvival</span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cB_hp">100</span></span><span class="line" data-line="sp">softFromRain     &lt;- <span class="num" id="cB_sp">1.0</span></span><span class="line" data-line="lo">crackAt &lt;- <span class="num" id="cB_lo">9.5</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cB_h">0.50</span></span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">20</span>) {</span><span class="line" data-step="2"><span class="com">  # the larder: what nobody ate last year is still there</span></span><span class="line" data-step="2">  hard &lt;- <span class="num">0.86</span>*hard + leftOverEachYear</span><span class="line" data-step="3"><span class="com">  # and this year's crop, which only the rain makes</span></span><span class="line" data-step="3">  soft &lt;- <span class="num">0.35</span>*soft + softFromRain*d$rain[t]</span><span class="line" data-step="1" data-until="2"><span class="com">  # with no seeds, nobody is ever short of food</span></span><span class="line" data-step="2" data-until="3">  food &lt;- (soft + hard)/n</span><span class="line" data-step="3">  food &lt;- soft/n + hard/n   <span class="com"># still shared out evenly: no beak in this line</span></span><span class="line" data-step="1" data-until="2">  born &lt;- mostChicks</span><span class="line" data-step="1" data-until="2">  died &lt;- leastDying</span><span class="line" data-step="2">  born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food))</span><span class="line" data-step="2">  died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>)</span><span class="line" data-step="4"><span class="com">  # now the beak decides who reaches the hard seed</span></span><span class="line" data-step="4">  reach &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (beak - crackAt)/<span class="num">1.2</span>))</span><span class="line" data-step="4">  grip  &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0.10</span>, <span class="num">1</span> - <span class="num">0.55</span>*(beak - <span class="num">8</span>)))</span><span class="line" data-step="4">  food  &lt;- grip*soft/<span class="fn">sum</span>(grip) + reach*hard/<span class="fn">sum</span>(reach)</span><span class="line"></span><span class="line">  <span class="com"># the parents are done; next year is the chicks</span></span><span class="line">  n    &lt;- born * (n - died*n)</span><span class="line" data-step="4">  beak &lt;- <span class="fn">mean</span>(beak) + inherited*(midparent - <span class="fn">mean</span>(beak)) + noise</span><span class="line">}</span></pre>
       </div>
     </div>
   </div>
@@ -368,8 +368,8 @@
         <li>Fit generations 1–20, then lock in — the forecast already reaches 21–30, hidden until then.</li>
         <li>No more adjusting once you've seen what it predicted.</li>
         <li>Answer by clicking the chart, not typing.</li>
-        <li>A second arrow then unlocks at a default value, before you touch its own slider.</li>
-        <li>Refit on all thirty generations and lock in for Stage D.</li>
+        <li>Nothing new gets added here. Same model, same five numbers — the only question is how it does on ten generations it was not fitted to.</li>
+        <li>Then refit with all thirty in view and lock that in for Stage D.</li>
         <li>Final bars: 0.13 mm beak, 60 finches, generations 1–30 combined.</li>
       </ul>
     </div>
@@ -405,8 +405,7 @@
         <div class="controls" id="controlsB">
           <div class="row" data-line="sp"><label for="C_sp">rain effect on soft seeds</label><input type="range" id="C_sp" min="1.0" max="6.0" step="0.2" value="2.0" /><output id="C_spOut">2.0</output></div>
           <div class="row" data-line="hp"><label for="C_hp">hard seeds left uneaten</label><input type="range" id="C_hp" min="20" max="320" step="10" value="100" /><output id="C_hpOut">100</output></div>
-          <div class="row muted" id="rowCworth" data-line="w"><label for="C_worth">deeper beak advantage for hard seeds</label><input type="range" id="C_worth" min="-0.60" max="0.60" step="0.01" value="0" disabled /><output id="C_worthOut">0.00</output></div>
-          <div class="row muted" id="rowCcrack" data-line="lo" style="display:none;"><label for="C_crack">how deep a beak has to be to crack a hard seed</label><input type="range" id="C_crack" min="7.0" max="10.0" step="0.1" value="9.5" disabled /><output id="C_crackOut">9.5</output></div>
+          <div class="row" data-line="lo"><label for="C_crack">how deep a beak has to be to crack a hard seed</label><input type="range" id="C_crack" min="7.0" max="10.0" step="0.1" value="9.5" /><output id="C_crackOut">9.5</output></div>
           <div class="row" data-line="h"><label for="C_h">heritability of beak</label><input type="range" id="C_h" min="0" max="1" step="0.05" value="0.50" /><output id="C_hOut">0.50</output></div>
           <div class="hint" id="C_lockHint" style="display:none; margin:-2px 0 8px;"></div>
           <div class="buttons">
@@ -419,12 +418,10 @@
       <div class="panel">
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
-          <li data-task="C1">Fit the direct-worth model on generations 1–20, then lock it in. <span class="hint"><span id="C1_now">not yet</span></span></li>
-          <li data-task="C2">Click the generation where the model best hits &amp; the one it most misses. <span class="hint"><span id="C2_now">lock in the first model</span></span></li>
-          <li data-task="C3">Draw the arrow that appears. <span class="hint"><span id="C3_now">lock in the first model</span></span></li>
-          <li data-task="C4">Click the generation the new arrow moved most — dashed is your first model, solid is now. <span class="hint"><span id="C4_now">draw the second arrow</span></span></li>
-          <li data-task="C5">Refit on all thirty generations, get the beak and the finch count both under bar, and lock in. <span class="hint"><span id="C5_now">draw the second arrow</span></span></li>
-          <li data-task="C6">Click the chart to answer the question below, about how much better your final model is.</li>
+          <li data-task="C1">Fit on generations 1–20 alone, then lock it in. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Click the generation where the model best hits &amp; the one it most misses. <span class="hint"><span id="C2_now">lock in the first fit</span></span></li>
+          <li data-task="C3">Refit with all thirty generations in view, get the beak and the finch count both under bar, and lock in. <span class="hint"><span id="C3_now">lock in the first fit</span></span></li>
+          <li data-task="C4">Click the chart to answer the question below, about how much the refit moved.</li>
         </ul>
         <div class="solved-banner" id="solvedC">A direct bonus never turns off. A beak that opens a hard seed does — the day the hard seeds run out, and that's the rain's call. Stage D is open.</div>
       </div>
@@ -435,7 +432,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line" data-line="sp">softFromRain &lt;- <span class="num" id="cC_sp">2.0</span></span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cC_hp">100</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cC_h">0.50</span></span><span class="line" data-line="lo">crackAt &lt;- <span class="num" id="cC_lo">9.5</span>   <span class="com"># a beak this deep opens a hard seed</span></span><span class="line">reach &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (beak - crackAt)/<span class="num">1.2</span>))</span><span class="line">grip  &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0.10</span>, <span class="num">1</span> - <span class="num">0.55</span>*(beak - <span class="num">8</span>)))  <span class="com"># a big beak fumbles a small seed</span></span><span class="line"></span><span class="line"><span class="com"># what a bird actually gets to eat now depends on its own beak</span></span><span class="line">food &lt;- grip*soft/<span class="fn">sum</span>(grip) + reach*hard/<span class="fn">sum</span>(reach)</span><span class="line"></span><span class="line" data-line="w">born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food) + <span class="num" id="cC_w">0.00</span>*(beak-<span class="num">9</span>))</span><span class="line" data-line="w">died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>) - <span class="num" id="cC_w2">0.00</span>*(beak-<span class="num">9</span>)</span><span class="line"></span><span class="line"><span class="com"># mostChicks and leastDying are the two you fitted in Stage B:</span></span><span class="line"><span class="com">#   mostChicks = <span class="num" id="cC_bm">1.0</span>   leastDying = <span class="num" id="cC_dm">0.30</span></span></span><span class="line"></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(model[<span class="num">21</span>:<span class="num">30</span>] - record[<span class="num">21</span>:<span class="num">30</span>]))</span></pre>
+<pre class="code" id="codeC"><span class="line" data-line="sp">softFromRain &lt;- <span class="num" id="cC_sp">2.0</span></span><span class="line" data-line="hp">leftOverEachYear &lt;- <span class="num" id="cC_hp">100</span></span><span class="line" data-line="h">inherited &lt;- <span class="num" id="cC_h">0.50</span></span><span class="line" data-line="lo">crackAt &lt;- <span class="num" id="cC_lo">9.5</span>   <span class="com"># a beak this deep opens a hard seed</span></span><span class="line">reach &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (beak - crackAt)/<span class="num">1.2</span>))</span><span class="line">grip  &lt;- <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0.10</span>, <span class="num">1</span> - <span class="num">0.55</span>*(beak - <span class="num">8</span>)))  <span class="com"># a big beak fumbles a small seed</span></span><span class="line"></span><span class="line"><span class="com"># what a bird actually gets to eat now depends on its own beak</span></span><span class="line">food &lt;- grip*soft/<span class="fn">sum</span>(grip) + reach*hard/<span class="fn">sum</span>(reach)</span><span class="line"></span><span class="line">born &lt;- <span class="fn">pmin</span>(mostChicks, mostChicks*food/(<span class="num">0.62</span>+food))</span><span class="line">died &lt;- leastDying + (<span class="num">1.10</span>-leastDying)/(<span class="num">1</span>+food/<span class="num">0.53</span>)</span><span class="line"></span><span class="line"><span class="com"># mostChicks and leastDying are the two you fitted in Stage B:</span></span><span class="line"><span class="com">#   mostChicks = <span class="num" id="cC_bm">1.0</span>   leastDying = <span class="num" id="cC_dm">0.30</span></span></span><span class="line"></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(model[<span class="num">21</span>:<span class="num">30</span>] - record[<span class="num">21</span>:<span class="num">30</span>]))</span></pre>
       </div>
     </div>
   </div>
@@ -448,8 +445,8 @@
   <div class="panel stage-intro">
     <div class="intro-grid">
       <div class="voice">
-        <p>So far, we fit the model to observed data, projected forward, and then observed more data to test it. However, in the second exercise the underlying conditions remained the same — that is, our model still worked. We had to add adjustments to it, but those adjustments made the prior fits better. The new data revealed gaps in our model, in other words.</p>
-        <p>However, that's not the only way we can be wrong. Circumstances can also change.</p>
+        <p>So far, we fit the model to observed data, projected forward, and then observed more data to test it. However, in the second exercise the underlying conditions remained the same.</p>
+        <p>However, circumstances can also change.</p>
         <p>For this period, we're going to look at the last fifteen or so generations on this island of the recorded information from the Grants. What they saw is that partway through their study, a new species of bird arrived on the island. That new species had a distinct beak shape, and its arrival didn't change the number of seeds and didn't change the way plants grew — but it did change the value of having a beak of a particular shape, by changing the structure of competition.</p>
         <p>So we're again going to run our model, projected forward, this time knowing that there was a massive change with the addition of a newcomer. See how our projections erred, and adjust our model to account for this.</p>
       </div>
@@ -494,7 +491,6 @@
           <span class="label">carried from Stage B —</span>
           <span class="label">soft:</span> <span id="D_sp">—</span>
           <span class="label">hard:</span> <span id="D_hp">—</span>
-          <span class="label">beak worth:</span> <span id="D_w">—</span>
           <span class="label">cracks at:</span> <span id="D_lo">—</span>
           <span class="label">inherited:</span> <span id="D_h">—</span>
           &nbsp;|&nbsp;
@@ -669,8 +665,8 @@ function record(pos,ok){ if (typeof Score!=="undefined" && Score.recordCheckpoin
 function bump(stage){ if (typeof Score!=="undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
 const BIT = { A_first:0, A_all10:1, A_bar:2, A_num:3,
               B_fit:4,
-              C_lock1:5, C_q1:6, C_arrow:7, C_q2:8, C_lockFinal:9, C_q3:10,
-              D_blind:11, D_fix:12, D_num:13 };
+              C_lock1:5, C_q1:6, C_lockFinal:7, C_q2:8,
+              D_blind:9, D_fix:10, D_num:11 };
 function wireNumeric(id,opts){
   const box=document.getElementById("numq"+id), input=document.getElementById(id+"_ans");
   const btn=document.getElementById(id+"_submit"), out=document.getElementById(id+"_verdict");
@@ -874,23 +870,22 @@ function runIsland(o) {
     outN[t]=n; outB[t]=m0; outS[t]=(lv>=3)?S:null; outH[t]=(lv>=2)?Hav:null;
     // With no seeds in the model nothing is ever short of food, so every bird
     // gets the most chicks and the least dying that the two sliders allow.
-    // worth is what a deeper beak is WORTH: positive lifts births and lowers deaths.
-    const worth = (lv >= 4) ? o.worth : 0;
+    // There is no direct beak term: everything a beak does here, it does by
+    // changing what its owner can eat. See THE DIRECT ARROW IS GONE, in the
+    // boot comment at the foot of the file.
     const surv=[], sfood=[];
     for (let i=0;i<n;i++) {
       const b = birds[i], f = sef[i]*sPer + acc[i]*hPer;
-      const d = (lv < 2) ? dmin - worth*(b-9.0)
-                         : dmin + dspan/(1+f/W.deathHalf) - worth*(b-9.0);
+      const d = (lv < 2) ? dmin : dmin + dspan/(1+f/W.deathHalf);
       if (rng() > Math.max(0.03, Math.min(0.97, d))) { surv.push(b); sfood.push(f); }
     }
     if (surv.length < 2) { birds = surv; continue; }
     const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1 - o.herit*o.herit/2));
     const kids=[];
     for (let i=0;i<surv.length;i++) {
-      // A pair cannot make twenty chicks however many seeds there are: births
-      // saturate at bmax, and what the beak is worth cannot lift a bird over it.
-      const br = Math.min(bmax,
-        ((lv < 2) ? bmax : bmax*sfood[i]/(W.birthHalf+sfood[i])) + worth*(surv[i]-9.0));
+      // A pair cannot make twenty chicks however many seeds there are:
+      // births saturate at bmax.
+      const br = (lv < 2) ? bmax : bmax*sfood[i]/(W.birthHalf+sfood[i]);
       let k = Math.floor(br); if (rng() < br-k) k++;
       for (let j=0;j<k;j++) {
         // Centred on m0, the mean before any of this generation died. At
@@ -1124,7 +1119,6 @@ const ALL30_IDX = FIT_IDX.concat(FWD_IDX);
 // An arrow set to nothing is not an arrow. Both stages require the beak to be
 // worth something, or a model that claims nothing sneaks through the gate and
 // projects beautifully -- by explaining beautifully nothing.
-const WORTH_MIN = 0.03;
 const SEED_B = 20250905, SEED_C = 20250906, SEED_D = 20250907;
 // The newcomers' share of the hard seed, in Stage D. Disclosed once the arrow
 // is drawn, not searched for -- the point of that stage is the flip in the
@@ -1199,7 +1193,7 @@ const D_TAKE_TRUE = 0.40;
    every year clears 32%. Bar dropped from 11 (raw chicks) to 7 (surviving
    chicks) accordingly.
    ================================================================== */
-const TRUTH_A = { bmax:3.0, dmin:0.20, sp:3.6, hp:520, worth:0, herit:0.80 };
+const TRUTH_A = { bmax:3.0, dmin:0.20, sp:3.6, hp:520, herit:0.80 };
 const A_YEARS = 10, A_BAR = 11, A_BINS = 16, A_START_SEED = 20260906;
 // Two scripted droughts, not weather drawn at random -- see the DROUGHT
 // REDESIGN comment above for why and how these were picked.
@@ -1246,15 +1240,15 @@ function yearStepA(birds, S, H, rng, nrm, year) {
   const dspan = Math.max(0.05, W.deathMax - TRUTH_A.dmin);
   const foodOf = b => vSoftEff(b)*sPer + vReach(b)*hPer;
   const expChicks = b => Math.max(0, Math.min(TRUTH_A.bmax,
-    TRUTH_A.bmax*foodOf(b)/(W.birthHalf+foodOf(b)) + TRUTH_A.worth*(b-9)));
+    TRUTH_A.bmax*foodOf(b)/(W.birthHalf+foodOf(b))));
   const survProb  = b => Math.max(A_SURV_FLOOR, Math.min(0.97,
-    1 - (TRUTH_A.dmin + dspan/(1+foodOf(b)/W.deathHalf) - TRUTH_A.worth*(b-9))));
+    1 - (TRUTH_A.dmin + dspan/(1+foodOf(b)/W.deathHalf))));
 
   const m0 = meanOf(birds);
   const surv=[], sfood=[];
   for (let i=0;i<n;i++){
     const b=birds[i], f=sef[i]*sPer + acc[i]*hPer;
-    const d = TRUTH_A.dmin + dspan/(1+f/W.deathHalf) - TRUTH_A.worth*(b-9);
+    const d = TRUTH_A.dmin + dspan/(1+f/W.deathHalf);
     if (rng() > Math.max(0.03, Math.min(0.97,d))) { surv.push(b); sfood.push(f); }
   }
   let nextBirds;
@@ -1263,7 +1257,7 @@ function yearStepA(birds, S, H, rng, nrm, year) {
     const sdk = W.beakSD*Math.sqrt(Math.max(0.05, 1-TRUTH_A.herit*TRUTH_A.herit/2));
     const kids=[];
     for (let i=0;i<surv.length;i++){
-      const br = Math.min(TRUTH_A.bmax, TRUTH_A.bmax*sfood[i]/(W.birthHalf+sfood[i]) + TRUTH_A.worth*(surv[i]-9));
+      const br = Math.min(TRUTH_A.bmax, TRUTH_A.bmax*sfood[i]/(W.birthHalf+sfood[i]));
       let k=Math.floor(br); if (rng()<br-k) k++;
       // Single-parent heritability, not mid-parent-diluted -- see the
       // HERITABILITY REDRAWN comment above: a chick inherits `herit` of its
@@ -1585,9 +1579,9 @@ const numA = wireNumeric("A", {
    ================================================================== */
 const B_STEP_BAR = [null, 95, 58];         // finches, steps 2-3; index 0 unused, see above
 const B_BEAK_BAR = 0.20;                   // mm, step 4
-const sB = { step:1, bmax:1.0, surv:0.70, dmin:0.30, sp:1.0, hp:100, worth:0, herit:0.50, bestPop:Infinity,
+const sB = { step:1, bmax:1.0, surv:0.70, dmin:0.30, sp:1.0, hp:100, crackAt:9.5, herit:0.50, bestPop:Infinity,
              on:false, model:null, step1Locked:false };
-const B_ROWS = { sp:"rowBsp", hp:"rowBhp", worth:"rowBworth", herit:"rowBherit" };
+const B_ROWS = { sp:"rowBsp", hp:"rowBhp", crackAt:"rowBcrack", herit:"rowBherit" };
 
 /* The diagram is rebuilt at each step rather than revealed, because the shape
    changes: at step 3 the one pile of seeds becomes two. */
@@ -1614,29 +1608,30 @@ function dagSpecA(step) {
   }
   if (step >= 4) {
     N.beak = { x:4, y:150, w:96, h:30, label:"Beak depth" };
-    arrows.push({ id:"worth", from:"beak", to:"rates" });
+    arrows.push({ id:"crack", from:"beak", to:"hard" });
   }
   return { width:560, height:196, nodes:N, arrows, fixed,
     hint: step < 4 ? "Every arrow here is already drawn. The pieces arrive one at a time."
-                   : "Click the dashed arrow to say that a bird's beak changes how well it does." };
+                   : "Click the dashed arrow to say that a bird's beak decides how much of the hard seed it can get at." };
 }
 let arrowsB = null;
 function renderDagA() {
   arrowsB = buildArrows("arrowsB", dagSpecA(sB.step), (id,on)=>{
     sB.on = on;
-    if (!on) { sB.worth = 0; document.getElementById("B_worth").value = "0"; }
-    document.getElementById("B_worth").disabled = !on;
-    document.getElementById("rowBworth").classList.toggle("muted", !on);
+    document.getElementById("B_crack").disabled = !on;
+    document.getElementById("rowBcrack").classList.toggle("muted", !on);
     bump("B"); drawStageB();
   });
-  if (sB.step >= 4 && sB.on) arrowsB.set("worth", true);
+  if (sB.step >= 4 && sB.on) arrowsB.set("crack", true);
 }
+// The beak only reaches the model at piece 4, and it reaches it through the
+// food: mediated turns on with the arrow, nothing else changes.
 function optsB(){ return { level:sB.step, bmax:sB.bmax, dmin:sB.dmin, sp:sB.sp, hp:sB.hp,
-                           worth:sB.worth, herit:sB.herit, mediated:false, crackAt:9.5,
+                           herit:sB.herit, mediated:(sB.step>=4 && sB.on), crackAt:sB.crackAt,
                            taken:0, seed:SEED_B }; }
 // Only the lines for pieces that exist. A model does not have a slider for
 // something it has never heard of, and neither should the code beside it.
-const B_CODE_AT = { hp:2, sp:3, w:4, h:4 };
+const B_CODE_AT = { hp:2, sp:3, lo:4, h:4 };
 function paintCodeA() {
   document.querySelectorAll("#codeB .line[data-line]").forEach(el=>{
     const need = B_CODE_AT[el.dataset.line] || 1;
@@ -1657,7 +1652,7 @@ function advanceA(next) {
   if (next >= 2) { document.getElementById("rowBhp").style.display = "";
                    document.getElementById("B_lockStart").style.display = "none"; }
   if (next >= 3) document.getElementById("rowBsp").style.display = "";
-  if (next >= 4) { document.getElementById("rowBworth").style.display = "";
+  if (next >= 4) { document.getElementById("rowBcrack").style.display = "";
                    document.getElementById("rowBherit").style.display = "";
                    document.getElementById("B_lock").style.display = "";
                    document.getElementById("B_key").innerHTML =
@@ -1677,10 +1672,10 @@ function drawStageB() {
   beakCv.style.display = beakStep ? "" : "none";
   if (beakStep) drawBeak("plotB2", m.beak, FIT_END);
   [["B_bmaxOut","bmax",1],["B_survOut","surv",2],["B_spOut","sp",1],
-   ["B_hpOut","hp",0],["B_worthOut","worth",2],["B_hOut","herit",2]]
+   ["B_hpOut","hp",0],["B_crackOut","crackAt",1],["B_hOut","herit",2]]
     .forEach(([id,k,d])=>{ document.getElementById(id).textContent = sB[k].toFixed(d); });
   [["cB_bm","bmax",1],["cB_dm","surv",2],["cB_sp","sp",1],
-   ["cB_hp","hp",0],["cB_w","worth",2],["cB_h","herit",2]]
+   ["cB_hp","hp",0],["cB_lo","crackAt",1],["cB_h","herit",2]]
     .forEach(([id,k,d])=>{ document.getElementById(id).textContent = sB[k].toFixed(d); });
   const np = sB.step===1?2 : sB.step===2?3 : sB.step===3?4 : 5 + arrowsB.count();
   document.getElementById("B_np").textContent = String(np);
@@ -1704,7 +1699,7 @@ function drawStageB() {
     const bk = missOver(m.beak, FIT_IDX);
     paintGoal("B_in", bk, B_BEAK_BAR, 3, " mm");
     const lockBtn = document.getElementById("B_lock");
-    const ready = sB.on && Math.abs(sB.worth) >= WORTH_MIN && bk <= B_BEAK_BAR;
+    const ready = sB.on && bk <= B_BEAK_BAR;
     lockBtn.disabled = Gates.B.solvedOnce || !ready;
   }
   paintHintsA();
@@ -1726,8 +1721,7 @@ function paintHintsA() {
       el.textContent = pop.toFixed(0) + " finches so far, bar is " + B_STEP_BAR[i-1];
     } else {
       el.textContent = Gates.B.solvedOnce ? "done"
-        : Math.abs(sB.worth) < WORTH_MIN
-        ? (sB.on ? "the arrow is set to nothing — give it a value" : "draw the arrow")
+        : !sB.on ? "draw the arrow"
         : bk.toFixed(3) + " mm so far, bar is " + B_BEAK_BAR.toFixed(2) +
           (bk <= B_BEAK_BAR ? " — lock it in when you are ready" : "");
     }
@@ -1775,16 +1769,13 @@ document.getElementById("B_lockStart").addEventListener("click", ()=>{
 document.getElementById("B_lock").addEventListener("click", ()=>{
   if (Gates.B.solvedOnce || sB.step <= 3) return;
   const m = sB.model;
-  if (!sB.on || Math.abs(sB.worth) < WORTH_MIN) return;
+  if (!sB.on) return;
   if (missOver(m.beak, FIT_IDX) > B_BEAK_BAR) return;
   bump("B");
   Gates.B.solvedOnce = true; Gates.B.done = true;
   markTask("B","B4");
   record(BIT.B_fit, true); unlockNext("B");
   showSolved("B", "Four pieces, and the last one is the only one that can move a beak. Stage C is open.");
-  sC.on = true; arrowsC.set("worth", true);
-  document.getElementById("C_worth").disabled = false;
-  document.getElementById("rowCworth").classList.remove("muted");
   syncBfromA();
   drawStageB(); drawStageC();
 });
@@ -1792,14 +1783,14 @@ document.getElementById("B_lock").addEventListener("click", ()=>{
    improve there follows into Stage B -- until they commit by running forward. */
 function syncBfromA() {
   if (!Gates.B.solvedOnce || sC.model1Locked || sC.locked) return;
-  ["sp","hp","worth","herit","bmax","dmin"].forEach(k => { sC[k] = sB[k]; });
-  [["C_sp","sp"],["C_hp","hp"],["C_worth","worth"],["C_h","herit"]].forEach(([id,k])=>{
+  ["sp","hp","crackAt","herit","bmax","dmin"].forEach(k => { sC[k] = sB[k]; });
+  [["C_sp","sp"],["C_hp","hp"],["C_crack","crackAt"],["C_h","herit"]].forEach(([id,k])=>{
     document.getElementById(id).value = String(sC[k]);
   });
   drawStageC();
 }
 [["B_bmax","bmax","bm"],["B_sp","sp","sp"],
- ["B_hp","hp","hp"],["B_worth","worth","w"],["B_h","herit","h"]].forEach(([id,k,line])=>{
+ ["B_hp","hp","hp"],["B_crack","crackAt","lo"],["B_h","herit","h"]].forEach(([id,k,line])=>{
   document.getElementById(id).addEventListener("input", e=>{
     sB[k] = parseFloat(e.target.value);
     highlightByDataLine("codeB", line);
@@ -1827,14 +1818,14 @@ d <- read.csv("data/clean/island.csv")
 mostChicks <- ${sB.bmax.toFixed(1)}; bestSurvival <- ${sB.surv.toFixed(2)}; leastDying <- 1 - bestSurvival
 ${sB.step>=2 ? `leftOverEachYear <- ${sB.hp.toFixed(0)}   # the larder; no rain term` : "# no seeds in the model yet"}
 ${sB.step>=3 ? `softFromRain     <- ${sB.sp.toFixed(1)}` : ""}
-${sB.step>=4 ? `beakWorth <- ${sB.worth.toFixed(2)}; inherited <- ${sB.herit.toFixed(2)}` : ""}
+${sB.step>=4 ? `crackAt <- ${sB.crackAt.toFixed(1)}; inherited <- ${sB.herit.toFixed(2)}` : ""}
 `);
 });
 
 /* ====== STAGE C — run it forward ====================================
    REBUILT 2026-09-09, JM's request, three phases instead of fit-then-
    validate-then-refit:
-     1. Fit the direct-worth model (sp/hp/worth/herit) on 1-20 alone. The
+     1. Fit the model (sp/hp/crackAt/herit) on 1-20 alone. The
         forecast line already reaches into 21-30 (unchanged from before) but
         neither the record nor the miss for that window exists on screen --
         not hidden behind a run, hidden behind LOCKING IN. Lock-in freezes
@@ -1849,13 +1840,11 @@ ${sB.step>=4 ? `beakWorth <- ${sB.worth.toFixed(2)}; inherited <- ${sB.herit.toF
         not 1-20 alone, since that is what Part D inherits. That refit's
         lock is the stage's real gate.
    ================================================================== */
-const sC = { sp:2.0, hp:100, worth:0, herit:0.50, crackAt:9.5, bmax:1.0, dmin:0.30,
-             on:false, mediated:false, model1Locked:false, locked:false, model:null,
-             blindIn:null, blindFwd:null, defaultFwd:null, arrowQ2Answered:false,
-             frame:null, activeQ:null,
+const sC = { sp:2.0, hp:100, herit:0.50, crackAt:9.5, bmax:1.0, dmin:0.30,
+             model1Locked:false, locked:false, model:null,
+             blindIn:null, blindFwd:null, frame:null, activeQ:null,
              beak1:null, q1Phase:null, q1Best:null, q1Worst:null, q1Scored:false,
-             beakDefault:null, q2Pick:null, q2Scored:false,
-             beakFinal:null, q3Pick:null, q3Scored:false };
+             beakFinal:null, q2Pick:null, q2Scored:false };
 /* Click-to-generation snapping for Stage C's graph-click questions, adapted
    from Lesson 6's markYearAt: pixel -> CSS space -> data space -> nearest
    valid generation, rejecting a click too far from any of them. */
@@ -1871,37 +1860,16 @@ function genAtClick(ev, frame, idxs) {
   if (best === null || bestD > 1.5) return null;
   return best;
 }
+// Nothing to draw here any more: the model arrives from Stage B finished,
+// and the whole of Stage C is what it does on generations it has not seen.
 const arrowsC = buildArrows("arrowsC", islandSpec({
-  arrows: [ { id:"worth", from:"beak", to:"rates" },
-            { id:"crack", from:"beak", to:"hard", hidden:true } ],
-  hint: "The second arrow says something narrower: not that a deep beak is better, but that it opens a hard seed."
-}), (id,on)=>{
-  if (id==="worth") {
-    if (sC.model1Locked) return;
-    sC.on=on; if(!on){ sC.worth=0; document.getElementById("C_worth").value="0"; }
-    document.getElementById("C_worth").disabled = !sC.on;
-    document.getElementById("rowCworth").classList.toggle("muted", !sC.on);
-  }
-  if (id==="crack") {
-    // One-way: drawing it IS the action piece 2 is built around. It arrives
-    // at a fixed default and stays there until the question about it is
-    // answered (see evaluateQ2, below), so the comparison is never muddied
-    // by a slider move made before the question is even read.
-    if (!on || sC.mediated || !sC.model1Locked) return;
-    sC.mediated = true;
-    arrowsC.lock("crack", true);
-    const md = runIsland(optsC());
-    sC.defaultFwd = missOver(md.beak, FWD_IDX);
-    sC.beakDefault = md.beak.slice();
-    sC.activeQ = "q2";
-    markTask("C","C3"); record(BIT.C_arrow, true);
-    document.getElementById("C4_now").textContent = "click the generation it moved most";
-  }
-  bump("C"); drawStageC();
-});
-function optsC(){ return { sp:sC.sp, hp:sC.hp, worth:sC.worth, herit:sC.herit,
+  arrows: [ { id:"crack", from:"beak", to:"hard" } ],
+  hint: "The model is the one you built. Stage C does not add to it."
+}), ()=>{});
+arrowsC.set("crack", true); arrowsC.lock("crack", true);
+function optsC(){ return { sp:sC.sp, hp:sC.hp, herit:sC.herit,
                            bmax:sC.bmax, dmin:sC.dmin,
-                           mediated:sC.mediated, crackAt:sC.crackAt, taken:0, seed:SEED_C }; }
+                           mediated:true, crackAt:sC.crackAt, taken:0, seed:SEED_C }; }
 function drawStageC() {
   const m = runIsland(optsC()); sC.model = m;
   // The projection is never shy: the red line reaches into 21-30 from the
@@ -1911,22 +1879,18 @@ function drawStageC() {
   // are turning the sliders is only ever your own model, never a peek.
   const modelTo = FWD_END;
   const recordTo = sC.model1Locked ? FWD_END : FIT_END;
-  const ghost = sC.mediated ? sC.beak1 : null;
+  const ghost = sC.locked ? sC.beak1 : null;
   const marks = [];
   if (sC.q1Best!=null)  marks.push({gen:sC.q1Best,  label:"hit?",  color:"#2f6b8f"});
   if (sC.q1Worst!=null) marks.push({gen:sC.q1Worst, label:"miss?", color:"#b23a48"});
   if (sC.q2Pick!=null)  marks.push({gen:sC.q2Pick,  label:"pick",  color:"#6f8a4a"});
-  if (sC.q3Pick!=null)  marks.push({gen:sC.q3Pick,  label:"pick",  color:"#6f8a4a"});
   sC.frame = drawBeak("plotC", m.beak, recordTo, modelTo, { ghost, marks });
   drawPop("plotC2", m.pop, recordTo, modelTo);
   document.getElementById("C_spOut").textContent = sC.sp.toFixed(1);
   document.getElementById("C_hpOut").textContent = sC.hp.toFixed(0);
-  document.getElementById("C_worthOut").textContent = sC.worth.toFixed(2);
   document.getElementById("C_crackOut").textContent = sC.crackAt.toFixed(1);
   document.getElementById("C_hOut").textContent = sC.herit.toFixed(2);
   document.getElementById("cC_lo").textContent = sC.crackAt.toFixed(1);
-  document.getElementById("cC_w").textContent  = sC.worth.toFixed(2);
-  document.getElementById("cC_w2").textContent = sC.worth.toFixed(2);
   document.getElementById("cC_sp").textContent = sC.sp.toFixed(1);
   document.getElementById("cC_hp").textContent = sC.hp.toFixed(0);
   document.getElementById("cC_h").textContent  = sC.herit.toFixed(2);
@@ -1935,7 +1899,7 @@ function drawStageC() {
   const inMiss = missOver(m.beak, FIT_IDX), fwd = missOver(m.beak, FWD_IDX);
   const popIn = missPop(m.pop, FIT_IDX), popFwd = missPop(m.pop, FWD_IDX);
   const allMiss = missOver(m.beak, ALL30_IDX), allPop = missPop(m.pop, ALL30_IDX);
-  document.getElementById("C_np").textContent = String(5 + arrowsC.count());
+  document.getElementById("C_np").textContent = "6";
   paintGoal("C_in", inMiss, C_BAR_BEAK, 3, " mm");
   paintGoal("C_popIn", popIn, C_BAR_POP, 0, " finches");
   const outEl = document.getElementById("C_out"), popOutEl = document.getElementById("C_popOut");
@@ -1947,37 +1911,25 @@ function drawStageC() {
     ? "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> revealed — you have seen these now"
     : "<b>1–20</b> fitted &nbsp;·&nbsp; <b>21–30</b> your model's forecast — the record and the miss both stay hidden until you lock in";
 
-  // Phase 1: lock in model 1 -- no bar, the student's own call, same as
-  // Stage B's piece 1. The only requirement is that the arrow mean SOMETHING.
-  const lock1Ready = sC.on && Math.abs(sC.worth) >= WORTH_MIN;
-  document.getElementById("C_lock1").disabled = sC.model1Locked || !lock1Ready;
-  const hintEl = document.getElementById("C_lockHint");
-  if (sC.model1Locked) { hintEl.style.display = "none"; }
-  else if (!sC.on) { hintEl.style.display=""; hintEl.textContent = "Draw the arrow above (beak → births & deaths) before locking in."; }
-  else if (Math.abs(sC.worth) < WORTH_MIN) { hintEl.style.display=""; hintEl.textContent = "Give it a real value — at least " + WORTH_MIN.toFixed(2) + " in size, either direction — before locking in."; }
-  else { hintEl.style.display = "none"; }
+  // Phase 1: fit on 1-20 and commit. No bar -- the student's own call,
+  // same as Stage B's piece 1.
+  document.getElementById("C_lock1").disabled = sC.model1Locked;
+  document.getElementById("C_lockHint").style.display = "none";
 
-  // Phase 3: the real gate, both windows combined into one 1-30 figure.
-  const finalReady = sC.model1Locked && sC.mediated && sC.arrowQ2Answered
-                     && allMiss <= C_BAR_BEAK && allPop <= C_BAR_POP;
+  // Phase 2: refit with all thirty in view, and lock that in for Stage D.
+  const finalReady = sC.model1Locked && allMiss <= C_BAR_BEAK && allPop <= C_BAR_POP;
   document.getElementById("C_lock").disabled = sC.locked || !finalReady;
 
   document.getElementById("C1_now").textContent = sC.model1Locked ? "done" : "not yet";
-  document.getElementById("C3_now").textContent = sC.mediated ? "done"
-    : !sC.model1Locked ? "lock in the first model"
-    : !sC.q1Scored ? "answer the question above first"
-    : "draw the second arrow";
-  if (!sC.lockMsg) document.getElementById("C5_now").textContent = Gates.C.solvedOnce ? "done" :
-    !sC.model1Locked ? "lock in the first model" :
-    !sC.mediated ? "draw the second arrow" :
-    !sC.arrowQ2Answered ? "answer the question above first" :
+  if (!sC.lockMsg) document.getElementById("C3_now").textContent = Gates.C.solvedOnce ? "done" :
+    !sC.model1Locked ? "lock in the first fit" :
     "beak, 1–30: " + allMiss.toFixed(3) + " (bar " + C_BAR_BEAK.toFixed(2) + ") — finches, 1–30: " +
       allPop.toFixed(0) + " (bar " + C_BAR_POP + ") — lock it in when you are ready";
 }
 /* Called only by the Lock in button. A lock-in that misses says by how much
    and hands the sliders back, which is the rule Lessons 3, 4 and 6 use. */
 function checkC() {
-  if (Gates.C.solvedOnce || !sC.model1Locked || !sC.mediated || !sC.arrowQ2Answered) return;
+  if (Gates.C.solvedOnce || !sC.model1Locked) return;
   const m = sC.model;
   const allMiss = missOver(m.beak, ALL30_IDX), allPop = missPop(m.pop, ALL30_IDX);
   if (allMiss > C_BAR_BEAK || allPop > C_BAR_POP) {
@@ -1985,31 +1937,29 @@ function checkC() {
     if (allMiss > C_BAR_BEAK) bad.push("beak, 1–30 is " + allMiss.toFixed(3) + ", needs " + C_BAR_BEAK.toFixed(2));
     if (allPop > C_BAR_POP)   bad.push("finches, 1–30 is " + allPop.toFixed(0) + ", needs " + C_BAR_POP);
     sC.lockMsg = true;
-    document.getElementById("C5_now").textContent = "not locked — " + bad.join("; ");
+    document.getElementById("C3_now").textContent = "not locked — " + bad.join("; ");
     setTimeout(()=>{ sC.lockMsg = false; drawStageC(); }, 2600);
     return;
   }
   Gates.C.solvedOnce = true; Gates.C.done = true;
   sC.fixedFwd = missOver(m.beak, FWD_IDX);
   sC.beakFinal = m.beak.slice();
-  sC.activeQ = "q3";
+  sC.activeQ = "q2";
   sC.locked = true;
-  ["C_sp","C_hp","C_worth","C_crack","C_h"].forEach(id=>{ document.getElementById(id).disabled = true; });
-  arrowsC.lock("worth", true);
+  ["C_sp","C_hp","C_crack","C_h"].forEach(id=>{ document.getElementById(id).disabled = true; });
   document.getElementById("C_lock").disabled = true;
-  markTask("C","C5"); record(BIT.C_lockFinal, true);
+  markTask("C","C3"); record(BIT.C_lockFinal, true);
   document.getElementById("numqCq3").classList.add("shown");
   unlockNext("C"); showSolved("C");
-  ["sp","hp","worth","herit","crackAt","bmax","dmin"].forEach(k=>{ sD[k]=sC[k]; });
+  ["sp","hp","herit","crackAt","bmax","dmin"].forEach(k=>{ sD[k]=sC[k]; });
   document.getElementById("D_sp").textContent = sC.sp.toFixed(1);
   document.getElementById("D_hp").textContent = sC.hp.toFixed(0);
-  document.getElementById("D_w").textContent  = sC.worth.toFixed(2);
   document.getElementById("D_lo").textContent = sC.crackAt.toFixed(1);
   document.getElementById("D_h").textContent  = sC.herit.toFixed(2);
   drawStageD();
 }
 document.getElementById("C_lock1").addEventListener("click", ()=>{
-  if (sC.model1Locked || !sC.on || Math.abs(sC.worth) < WORTH_MIN) return;
+  if (sC.model1Locked) return;
   bump("C");
   sC.model1Locked = true;
   sC.blindFwd = missOver(sC.model.beak, FWD_IDX);
@@ -2017,7 +1967,7 @@ document.getElementById("C_lock1").addEventListener("click", ()=>{
   sC.beak1 = sC.model.beak.slice();
   sC.activeQ = "q1"; sC.q1Phase = "best";
   markTask("C","C1"); record(BIT.C_lock1, true);
-  ["C_sp","C_hp","C_worth","C_h"].forEach(id=>{ document.getElementById(id).disabled = true; });
+  ["C_sp","C_hp","C_crack","C_h"].forEach(id=>{ document.getElementById(id).disabled = true; });
   document.getElementById("C_lock1").style.display = "none";
   document.getElementById("C_lock").style.display = "";
   document.getElementById("C2_now").textContent = "click the best hit, then the one it most misses";
@@ -2047,8 +1997,8 @@ function evaluateQ1() {
     : "Not right — you picked "+sC.q1Best+" and "+sC.q1Worst+". The best hit was generation "+bestGen+" ("+minErr.toFixed(3)+" mm off), the worst miss generation "+worstGen+" ("+maxErr.toFixed(3)+" mm off). Compare the red line to the dots across 21–30.";
   if (!sC.q1Scored) {
     sC.q1Scored = true; record(BIT.C_q1, ok); markTask("C","C2");
-    document.getElementById("rowCcrack").style.display = "";
-    arrowsC.reveal("crack");
+    // the sliders come back so the refit can happen
+    ["C_sp","C_hp","C_crack","C_h"].forEach(id=>{ document.getElementById(id).disabled = false; });
   }
   sC.q1Phase = ok ? "locked" : "best";
   if (ok) sC.activeQ = null;
@@ -2065,39 +2015,10 @@ function handleQ1Click(ev) {
   if (sC.q1Phase === "worst") { sC.q1Worst = g; evaluateQ1(); drawStageC(); }
 }
 function evaluateQ2() {
-  const deltas = FWD_IDX.map(i => Math.abs(sC.beakDefault[i]-GBEAK[i]) - Math.abs(sC.beak1[i]-GBEAK[i]));
-  const absd = deltas.map(Math.abs);
-  const maxAbs = Math.max(...absd);
-  const tol = Math.max(0.01, 0.2*maxAbs);
-  const pickI = sC.q2Pick-1;
-  const pickDelta = Math.abs(sC.beakDefault[pickI]-GBEAK[pickI]) - Math.abs(sC.beak1[pickI]-GBEAK[pickI]);
-  const ok = Math.abs(pickDelta) >= maxAbs-tol;
-  const trueGen = FWD_IDX[absd.indexOf(maxAbs)]+1, trueDelta = deltas[absd.indexOf(maxAbs)];
-  const dir = trueDelta<0 ? "closer to the record — better" : "further from the record — worse";
-  const out = document.getElementById("C4_now");
-  out.className = ok ? "" : "wrong";
-  out.textContent = ok ? "Correct."
-    : "Not right — you picked "+sC.q2Pick+". Generation "+trueGen+" moved the most, "
-      +(trueDelta>=0?"+":"")+trueDelta.toFixed(3)+" mm, "+dir+".";
-  if (!sC.q2Scored) {
-    sC.q2Scored = true; record(BIT.C_q2, ok); markTask("C","C4");
-    sC.arrowQ2Answered = true;
-    ["C_sp","C_hp","C_worth","C_crack","C_h"].forEach(id=>{ document.getElementById(id).disabled = false; });
-    document.getElementById("rowCworth").classList.remove("muted");
-    document.getElementById("rowCcrack").classList.remove("muted");
-  }
-  if (ok) sC.activeQ = null;
-}
-function handleQ2Click(ev) {
-  const g = genAtClick(ev, sC.frame, FWD_IDX);
-  if (g == null) return;
-  sC.q2Pick = g; evaluateQ2(); drawStageC();
-}
-function evaluateQ3() {
   const impr = FWD_IDX.map(i => Math.abs(sC.beak1[i]-GBEAK[i]) - Math.abs(sC.beakFinal[i]-GBEAK[i]));
   const maxImpr = Math.max(...impr);
   const tol = Math.max(0.01, 0.2*Math.abs(maxImpr));
-  const pickI = sC.q3Pick-1;
+  const pickI = sC.q2Pick-1;
   const pickImpr = Math.abs(sC.beak1[pickI]-GBEAK[pickI]) - Math.abs(sC.beakFinal[pickI]-GBEAK[pickI]);
   const ok = pickImpr >= maxImpr-tol;
   const trueGen = FWD_IDX[impr.indexOf(maxImpr)]+1;
@@ -2107,35 +2028,34 @@ function evaluateQ3() {
   out.textContent = ok ? "Correct."
     : "Not right — generation "+trueGen+" improved the most: the first model missed by "
       +b1.toFixed(3)+" mm there, the final model by "+bf.toFixed(3)+" mm.";
-  document.getElementById("Cq3_status").textContent = "Picked: generation "+sC.q3Pick+".";
-  if (!sC.q3Scored) { sC.q3Scored = true; record(BIT.C_q3, ok); markTask("C","C6"); }
+  document.getElementById("Cq3_status").textContent = "Picked: generation "+sC.q2Pick+".";
+  if (!sC.q2Scored) { sC.q2Scored = true; record(BIT.C_q2, ok); markTask("C","C4"); }
   if (ok) sC.activeQ = null;
 }
-function handleQ3Click(ev) {
+function handleQ2Click(ev) {
   const g = genAtClick(ev, sC.frame, FWD_IDX);
   if (g == null) return;
-  sC.q3Pick = g; evaluateQ3(); drawStageC();
+  sC.q2Pick = g; evaluateQ2(); drawStageC();
 }
 document.getElementById("plotC").addEventListener("click", ev=>{
   if (sC.activeQ==="q1") handleQ1Click(ev);
   else if (sC.activeQ==="q2") handleQ2Click(ev);
-  else if (sC.activeQ==="q3") handleQ3Click(ev);
 });
-[["C_sp","sp"],["C_hp","hp"],["C_worth","worth"],["C_crack","crackAt"],["C_h","herit"]].forEach(([id,k])=>{
+[["C_sp","sp"],["C_hp","hp"],["C_crack","crackAt"],["C_h","herit"]].forEach(([id,k])=>{
   document.getElementById(id).addEventListener("input", e=>{
     if (document.getElementById(id).disabled) return;
     sC[k] = parseFloat(e.target.value);
-    highlightByDataLine("codeC", {crackAt:"lo",worth:"w"}[k] || k);
+    highlightByDataLine("codeC", {crackAt:"lo"}[k] || k);
     bump("C"); drawStageC();
   });
 });
 document.getElementById("C_download").addEventListener("click", ()=>{
-  downloadText("lesson7_stageC.R", `# Lesson 7, Stage C -- the beak opens a seed, it isn't simply worth more.
+  downloadText("lesson7_stageC.R", `# Lesson 7, Stage C -- the same model, on ten generations it never saw.
 d <- read.csv("data/clean/island.csv")
 
 mostChicks <- ${sC.bmax.toFixed(1)}; leastDying <- ${sC.dmin.toFixed(2)}
 softFromRain <- ${sC.sp.toFixed(1)}; leftOverEachYear <- ${sC.hp.toFixed(0)}
-beakWorth <- ${sC.worth.toFixed(2)}; inherited <- ${sC.herit.toFixed(2)}
+inherited <- ${sC.herit.toFixed(2)}
 crackAt <- ${sC.crackAt.toFixed(1)}
 
 reach <- pmin(1, pmax(0, (beak - crackAt)/1.2))
@@ -2155,15 +2075,14 @@ died  <- leastDying + (1.10-leastDying)/(1+food/0.53) - beakWorth*(beak-9)
    drove 21-30 was never permanent in the model); drawing the arrow, at its
    one disclosed value, is what turns that forecast around to match a record
    that instead keeps getting shallower. */
-const sD = { sp:2.0, hp:100, worth:0, herit:0.50, crackAt:9.5, bmax:1.0, dmin:0.30,
+const sD = { sp:2.0, hp:100, herit:0.50, crackAt:9.5, bmax:1.0, dmin:0.30,
              taken:0, on:false, ranBlind:false, blindNew:null, model:null,
              frame:null, numPhase:null, pick30:null, pick45:null, numScored:false };
 const arrowsD = buildArrows("arrowsD", islandSpec({
   newcomer: true,
-  arrows: [ { id:"worth", from:"beak", to:"rates" },
-            { id:"crack", from:"beak", to:"hard" },
+  arrows: [ { id:"crack", from:"beak", to:"hard" },
             { id:"newc",  from:"newc", to:"hard", hidden:true } ],
-  hint: "Your two arrows are drawn and locked. The third is the only thing you get to add."
+  hint: "Your arrow is drawn and locked. The newcomer's is the only thing you get to add."
 }), (id,on)=>{
   if (id!=="newc") return;
   sD.on = on;
@@ -2179,9 +2098,8 @@ const arrowsD = buildArrows("arrowsD", islandSpec({
   }
   bump("D"); drawStageD();
 });
-arrowsD.set("worth", true); arrowsD.set("crack", true);
-arrowsD.lock("worth", true); arrowsD.lock("crack", true);
-function optsD(taken){ return { sp:sD.sp, hp:sD.hp, worth:sD.worth, herit:sD.herit,
+arrowsD.set("crack", true); arrowsD.lock("crack", true);
+function optsD(taken){ return { sp:sD.sp, hp:sD.hp, herit:sD.herit,
                                 bmax:sD.bmax, dmin:sD.dmin,
                                 mediated:true, crackAt:sD.crackAt, taken:taken, seed:SEED_D }; }
 function drawStageD() {
@@ -2294,22 +2212,20 @@ function buildTableE() {
     "Parts C and D are the same five numbers — the only difference is one arrow.";
 }
 /* ====== Boot + Score ================================================
-   Scaffold layout (14 bits) -- this listing said 8, with the stage letters of
+   Scaffold layout (12 bits) -- this listing said 8, with the stage letters of
    the build before Stage A was inserted, and is corrected here:
       0  A locked in a bird for the first time
       1  A played all ten years
       2  A eleven chicks or more surviving to spring, total, over the ten
       3  A which way the flock's own average beak moved, and by how much
       4  B built the model to four pieces and fitted the beak
-      5  C locked in the direct-worth model fitted on 1-20
-      6  C clicked that model's best-hit and worst-miss generation, 21-30
-      7  C drew the seed-mediated arrow
-      8  C clicked the generation the arrow's default value changed most
-      9  C refit on all thirty generations and locked in
-     10  C clicked the generation the final model improved most over the first
-     11  D ran the good model into the newcomer's generations blind
-     12  D drew the newcomer's arrow and watched the forecast correct itself
-     13  D which way the beaks went, and by how much
+      5  C locked in the fit made on 1-20 alone
+      6  C clicked that fit's best-hit and worst-miss generation, 21-30
+      7  C refit on all thirty generations and locked in
+      8  C clicked the generation the refit moved most
+      9  D ran the good model into the newcomer's generations blind
+     10  D drew the newcomer's arrow and watched the forecast correct itself
+     11  D which way the beaks went, and by how much
 
    New page 2026-09-05, replacing the "trying to stop evolution" lesson, which
    is at _reference/retired/lessons/lesson7_stop_evolution_2026-09-05.html.
@@ -2430,6 +2346,40 @@ function buildTableE() {
 
    Record and every bar changed, so old codes mean nothing: version 12 -> 13.
 
+   THE DIRECT ARROW IS GONE, 2026-09-12, JM's call. `worth` -- the flat
+   beak -> births/deaths term -- is removed from both models outright, and
+   Stage B's fourth piece now introduces the beak the way the truth actually
+   works: through what it can reach. The objection was simple and right. Its
+   fitted value was zero, so the page was asking students to tune a dial
+   whose answer was "leave it alone"; and a deep beak's advantage was already
+   fully expressed, conditionally, as better on hard seed (crackAt) and worse
+   on soft (softPen, disclosed as fixed). `worth` was a third, unconditional
+   copy of an effect the model already had twice.
+
+   Removing it is numerically free: the record was generated at worth 0, so
+   every term dropped was multiplied by zero. Verified -- the truth still
+   scores 0.059 over 1-20, 0.066/33 over 1-30, and Stage D still runs
+   0.675 blind -> 0.074 with the newcomer, all unchanged to three places.
+
+   What it cost, and why that turned out to be fine. Stage C used to be built
+   on `worth` being wrong: fit the direct model, lock it, watch it miss the
+   forward window by 6.9x, then add the crack arrow. With the crack arrow now
+   arriving in Stage B, Stage C has no structural gap left, and the forecast
+   barely degrades -- measured, the best fit on 1-20 scores 0.041 there and
+   0.067 forward, and the truth itself scores 0.068 in and 0.062 forward,
+   i.e. BETTER out of sample. That was reported as a reason not to do this.
+   JM's answer: no degradation is the right outcome, because Part D supplies
+   the failure. C now says "conditions held, and the model held up"; D says
+   "and here is what it looks like when they don't". The contrast is the
+   lesson, and it is a cleaner one than a rigged first model.
+
+   So Stage C keeps its lock-in and its two click questions but adds nothing:
+   fit on 1-20, commit, see 21-30, refit with all thirty in view, lock that
+   in for D. Bits C_arrow and C_q2 are gone outright; the rest shift down.
+   Scaffold 14 -> 12, version 14 -> 15. Stage B's piece-4 bar of 0.20 mm
+   still separates decisively: no arrow drawn cannot beat 0.93, and a real
+   fit reaches 0.042.
+
    THE WET/DRY FLIP, 2026-09-11. JM asked to confirm that a larger beak is a
    detriment in rainy years and a boon in dry ones, across all parts. It was
    not true, in either model, and the check is worth keeping: pit a 10.2 mm
@@ -2484,9 +2434,12 @@ function buildTableE() {
    ================================================================== */
 document.addEventListener("score:bypass", ()=>{
   if (!sC.beak1) sC.beak1 = sC.model ? sC.model.beak.slice() : null;
-  if (!sC.beakDefault) sC.beakDefault = sC.beak1;
   if (!sC.beakFinal) sC.beakFinal = sC.beak1;
-  sC.model1Locked = true; sC.mediated = true; sC.arrowQ2Answered = true;
+  if (sC.blindIn == null && sC.model) {
+    sC.blindIn  = missOver(sC.model.beak, FIT_IDX);
+    sC.blindFwd = missOver(sC.model.beak, FWD_IDX);
+  }
+  sC.model1Locked = true;
   document.getElementById("numqCq3").classList.add("shown");
   sD.numPhase = "g30";
   document.getElementById("numqD").classList.add("shown"); buildTableE();
@@ -2498,8 +2451,8 @@ renderDagA(); paintCodeA();
 drawStageB(); drawStageC(); drawStageD(); buildTableE();
 Score.init({
   moduleId: "lesson7",
-  version: 14,
-  scaffold: 14,
+  version: 15,
+  scaffold: 12,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: ()=>{
