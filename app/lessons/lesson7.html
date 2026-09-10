@@ -189,7 +189,7 @@
         <p>Based on how rainy it is, and on the beak size of the birds, you are going to have a different number of expected chicks that successfully fledge — and you and your chicks are going to have a different chance of surviving winter. The chance of surviving winter for your beak is shown. The chance for your chicks is not; they should be similar to you if heritability is high.</p>
         <p>Your goal is to play through ten years and produce 21 chicks by the end. So you need more than two chicks to survive each winter to win this round. As you go, look at the expected number of chicks and the chance of surviving winter, and use your number for your chosen bird as the baseline for your chicks. Try to get your expected number of survivors above two if at all possible.</p>
         <p>If your expected number of chicks is 3, and your chance of surviving the winter is 50%, that means you should expect 1.5 chicks to make it through the winter. 1.5 is less than 2 — so your expectation there should not be that you are going to get more than two. Some years you won't be able to. Some years are hard.</p>
-        <p>What beak size you choose is contingent on how much it rained, and how well you do is contingent on how much it rained. So you can do everything perfectly and still not quite win. It may take you a few tries, but if you are paying close attention you should be able to get it. Play through the ten years as many times as you can, and think carefully about what you are doing: try to work out, mentally or with a calculator, the best beak shape for each individual year as the conditions change.</p>
+        <p>What beak size you choose is up to you, but how well you do is contingent on how much it rained. So you can do everything perfectly and still not quite win. It may take you a few tries, but if you are paying close attention you should be able to get it. Play through the ten years as many times as you can, and think carefully about what you are doing: try to work out, mentally or with a calculator, the best beak shape for each individual year as the conditions change.</p>
       </div>
       <ul class="setup">
         <li>Pick a finch with a particular beak depth to follow that year.</li>
@@ -530,7 +530,7 @@
     </div>
     <div class="panel">
       <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line"><span class="com"># the whole lesson, as a table</span></span><span class="line">score &lt;- <span class="fn">function</span>(m, rec, i) <span class="fn">mean</span>(<span class="fn">abs</span>(m[i] - rec[i]))</span><span class="line"></span><span class="line">fitted &lt;- <span class="num">1</span>:<span class="num">20</span>; forward &lt;- <span class="num">21</span>:<span class="num">30</span>; newcomer &lt;- <span class="num">31</span>:<span class="num">45</span></span><span class="line"></span><span class="line"><span class="fn">data.frame</span>(</span><span class="line">  drew = <span class="fn">c</span>(<span class="str">"Part B: beak -&gt; births/deaths"</span>, <span class="str">"Part C: beak -&gt; seeds -&gt; births/deaths"</span>, <span class="str">"Part D: beak -&gt; seeds -&gt; births/deaths &amp; a newcomer"</span>),</span><span class="line">  np   = <span class="fn">c</span>(<span class="num">6</span>, <span class="num">7</span>, <span class="num">8</span>)</span><span class="line">)</span></pre>
+<pre class="code" id="codeE"><span class="line"><span class="com"># the whole lesson, as a table</span></span><span class="line">score &lt;- <span class="fn">function</span>(m, rec, i) <span class="fn">mean</span>(<span class="fn">abs</span>(m[i] - rec[i]))</span><span class="line"></span><span class="line">fitted &lt;- <span class="num">1</span>:<span class="num">20</span>; forward &lt;- <span class="num">21</span>:<span class="num">30</span>; newcomer &lt;- <span class="num">31</span>:<span class="num">45</span></span><span class="line"></span><span class="line"><span class="fn">data.frame</span>(</span><span class="line">  drew = <span class="fn">c</span>(<span class="str">"Part B: fitted on the drought years alone"</span>, <span class="str">"Part C: refitted with the wet years in view"</span>, <span class="str">"Part D: the same six numbers, and a newcomer"</span>),</span><span class="line">  np   = <span class="fn">c</span>(<span class="num">6</span>, <span class="num">6</span>, <span class="num">6</span>)   <span class="com"># six, all three times -- only the structure changed</span></span><span class="line">)</span></pre>
     </div>
   </div>
 </section>
@@ -1779,15 +1779,25 @@ document.getElementById("B_lockStart").addEventListener("click", ()=>{
   bump("B");
   sB.step1Locked = true;
   const m = sB.model;
-  const modelEnd = m.pop[FIT_END-1], recordEnd = GPOP[FIT_END-1];
-  const diff = modelEnd - recordEnd, dir = diff > 0 ? "overshoots" : "undershoots";
+  // pop[] carries null once the island has emptied, and Math.round(null) is 0
+  // -- which is how this used to report "0 finches modeled", reading like a
+  // broken readout rather than the extinction it actually was. An emptied
+  // island gets the sentence it earned: it is one of the three endings the
+  // paragraph above just named.
+  const recordEnd = GPOP[FIT_END-1], modelEnd = m.pop[FIT_END-1];
+  const emptied = modelEnd == null || Math.round(modelEnd) <= 0;
+  const ending = emptied
+    ? "Yours emptied it: by generation 20 there are no finches left at all, against the record's " +
+      Math.round(recordEnd) + "."
+    : "By generation 20 your model " + (modelEnd > recordEnd ? "overshoots" : "undershoots") +
+      " it: " + Math.round(modelEnd) + " finches modeled against the record's " +
+      Math.round(recordEnd) + ".";
   markTask("B","B1");
   showSolved("B", "Two constant rates cannot do it, and no setting of them can. " +
     "A fixed birth rate and a fixed death rate make a population that grows by the " +
     "same factor every generation: it fills the island, or it empties, or — on a " +
     "knife edge between the two — it sits still. The record does none of those. " +
-    "By generation 20 your model " + dir + " it: " + Math.round(modelEnd) + " finches modeled " +
-    "against the record's " + Math.round(recordEnd) + ". Piece two is on.");
+    ending + " Piece two is on.");
   advanceA(2);
   drawStageB();
 });
@@ -1871,7 +1881,8 @@ ${sB.step>=3 ? `inherited <- ${sB.herit.toFixed(2)}${sB.step<4 ? "   # pinned un
    ================================================================== */
 const sC = { sp:3.0, need:0.300, hs:0.20, herit:0.50, bmax:1.0, dmin:0.30, surv:0.70,
              model1Locked:false, locked:false, model:null,
-             blindIn:null, blindFwd:null, frame:null, activeQ:null,
+             blindIn:null, blindFwd:null, fixedIn:null, fixedFwd:null,
+             frame:null, activeQ:null,
              beak1:null, q1Phase:null, q1Best:null, q1Worst:null, q1Scored:false,
              q1HitLocked:false,
              beakFinal:null, q2Pick:null, q2Scored:false };
@@ -2029,6 +2040,10 @@ function checkC() {
     return;
   }
   Gates.C.solvedOnce = true; Gates.C.done = true;
+  // Frozen here, both of them. The table at the foot of the page reads these
+  // rather than the live model, so it cannot print a number for a fit that
+  // has not happened yet -- see buildTableE.
+  sC.fixedIn  = m.missBeak(FIT_IDX);
   sC.fixedFwd = m.missBeak(FWD_IDX);
   sC.beakFinal = m.beak.slice();
   sC.activeQ = "q2";
@@ -2036,6 +2051,7 @@ function checkC() {
   ["C_sp","C_need","C_hs","C_h","C_bmax","C_surv"].forEach(id=>{ document.getElementById(id).disabled = true; });
   document.getElementById("C_lock").disabled = true;
   markTask("C","C3"); record(BIT.C_lockFinal, true);
+  buildTableE();   // and the refit's two numbers here
   document.getElementById("numqCq3").classList.add("shown");
   unlockNext("C"); showSolved("C");
   ["sp","need","hs","herit","bmax","dmin"].forEach(k=>{ sD[k]=sC[k]; });
@@ -2054,6 +2070,7 @@ document.getElementById("C_lock1").addEventListener("click", ()=>{
   sC.beak1 = sC.model.beak.slice();
   sC.activeQ = "q1"; sC.q1Phase = "best";
   markTask("C","C1"); record(BIT.C_lock1, true);
+  buildTableE();   // the Part B row is earned here, so show it here
   ["C_sp","C_need","C_hs","C_h","C_bmax","C_surv"].forEach(id=>{ document.getElementById(id).disabled = true; });
   document.getElementById("C_lock1").style.display = "none";
   // The refit's own button waits until both picks are committed -- the two
@@ -2138,13 +2155,11 @@ function evaluateQ2() {
   const pickI = sC.q2Pick-1;
   const pickImpr = Math.abs(sC.beak1[pickI]-GBEAK[pickI]) - Math.abs(sC.beakFinal[pickI]-GBEAK[pickI]);
   const ok = pickImpr >= maxImpr-tol;
-  const trueGen = FWD_IDX[impr.indexOf(maxImpr)]+1;
-  const b1 = Math.abs(sC.beak1[trueGen-1]-GBEAK[trueGen-1]), bf = Math.abs(sC.beakFinal[trueGen-1]-GBEAK[trueGen-1]);
+  // Whether, not what -- the same rule as evaluateQ1 above. This used to name
+  // the true generation and both misses in millimetres, which is the answer.
   const out = document.getElementById("Cq3_verdict");
   out.className = "verdict shown "+(ok?"right":"wrong");
-  out.textContent = ok ? "Correct."
-    : "Not right — generation "+trueGen+" improved the most: the first model missed by "
-      +b1.toFixed(3)+" mm there, the final model by "+bf.toFixed(3)+" mm.";
+  out.textContent = ok ? "Correct." : "Not right.";
   document.getElementById("Cq3_status").textContent = "Picked: generation "+sC.q2Pick+".";
   if (!sC.q2Scored) { sC.q2Scored = true; record(BIT.C_q2, ok); markTask("C","C4"); }
   if (ok) sC.activeQ = null;
@@ -2326,6 +2341,7 @@ document.getElementById("D_run").addEventListener("click", ()=>{
   sD.ranBlind = true;
   sD.blindNew = runModel(optsD(0)).missBeak(NEW_IDX);
   markTask("D","D1"); record(BIT.D_blind, true);
+  buildTableE();   // and the blind run's newcomer number here
   arrowsD.reveal("newc");
   document.getElementById("D_run").disabled = true;
   bump("D"); drawStageD();
@@ -2339,12 +2355,12 @@ function revealD() {
   sD.revealed = true;
   sD.clickPhase = null;
   const ok = sD.p2.g45 < sD.p1.g45;
+  // Whether, not what -- as in both of Stage C's questions. The two forecasts
+  // and the record are already side by side in #D_status, and the chart is
+  // showing all three, so there is nothing for a paragraph here to add.
   const out = document.getElementById("D_verdict");
-  const a=sD.p1.g45.toFixed(2), b=sD.p2.g45.toFixed(2), r=GBEAK[GENS-1].toFixed(2);
   out.className = "verdict shown "+(ok?"right":"wrong");
-  out.textContent = ok
-    ? "Correct. The newcomers eat the hard seed before your finches reach it, so there is nothing left to pay for a deep beak — and you moved generation 45 down, "+a+" mm to "+b+" mm. The record: "+r+" mm."
-    : "Not quite. The newcomers eat the hard seed before your finches reach it, so the one thing that made a deep beak worth carrying is gone — generation 45 should have come down, and you went "+a+" mm to "+b+" mm. The record: "+r+" mm.";
+  out.textContent = ok ? "Correct." : "Not right.";
   if (!sD.numScored) {
     sD.numScored = true; record(BIT.D_num, ok); markTask("D","D3");
     Gates.D.solvedOnce = true; Gates.D.done = true;
@@ -2384,14 +2400,22 @@ hard <- pmax(2, hard - newcomers*1.0)    # off the larder, before the finches
 
 /* ====== STAGE E — three models, three stretches ===================== */
 function fmt(v){ return v==null ? null : v.toFixed(3)+" mm"; }
+/* Every number here is a FROZEN one -- blindIn/blindFwd from the first
+   lock-in, fixedIn/fixedFwd from the refit, blindNew/fixedNew from Stage D --
+   and every one of them is null until the student has actually done that
+   piece of work. Rows C and D used to read the LIVE model instead, which at
+   page load is the model the default sliders happen to describe: a student
+   who scrolled to the foot of the page during Stage A saw 1.522 mm sitting
+   under "Part C" and "Part D", green-flagged as the best fit on the page,
+   for work they had not started. Nothing on this table may be live. */
 function buildTableE() {
   const rows = [
     { name:"Part B: fitted on the drought years alone",
       np:6, inM:sC.blindIn, fwd:sC.blindFwd, nw:null },
     { name:"Part C: refitted with the wet years in view",
-      np:6, inM:sC.model?sC.model.missBeak(FIT_IDX):null, fwd:sC.fixedFwd, nw:sD.blindNew },
+      np:6, inM:sC.fixedIn, fwd:sC.fixedFwd, nw:sD.blindNew },
     { name:"Part D: the same six numbers, and a newcomer",
-      np:6, inM:sC.model?sC.model.missBeak(FIT_IDX):null, fwd:sC.fixedFwd, nw:sD.fixedNew }
+      np:6, inM:sC.fixedIn, fwd:sC.fixedFwd, nw:sD.fixedNew }
   ];
   const bestOf = k => { let b=null; for (const r of rows) if (r[k]!=null && (b===null||r[k]<b)) b=r[k]; return b; };
   const bI=bestOf("inM"), bF=bestOf("fwd"), bN=bestOf("nw");
