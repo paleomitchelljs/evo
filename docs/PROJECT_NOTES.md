@@ -338,6 +338,24 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
     wrong: the mark lands on an untouched chromatid and the crossing appears to skip a
     strand. Joining the inner two (1 and 2) puts the chiasma in the clear space between
     the pair it actually joined. JM caught this from the rendered letters alone.
+  - **Constraining a control can restore answer keys that freedom broke.** Letting one
+    mark go on either chromosome cost Stage C two fixed answers and forced the third to
+    compute its target from page state. JM's next ask — force a cut on *both* chromosomes,
+    with a slider for how many per chromosome — undid all of that: the long chromosome is
+    always cut, so the questions can name it again, and because every crossover on a
+    chromosome joins the same two chromatids, an intact ABCD survives on exactly one
+    chromatid in four however many marks go down. All three targets went back to constants
+    and the state-dependent target came out. Worth remembering that more mechanism is not
+    automatically more special-casing.
+  - **Hold the record, not the effect.** The rip was first applied by mutating the
+    chromatids and undone by re-applying the same swap. That works for one mark and cannot
+    survive lifting the second of three. The fix was to keep `st.xos` as the only truth and
+    rebuild the chromatids from it on every change.
+  - **An exploration control need not move a scored number.** The crossovers-per-chromosome
+    slider leaves all three Stage C answers and the AA/Aa/aa bars exactly where they were —
+    that invariance is the stage's point. §5's "a slider must be identifiable" test was
+    written for sliders a student *fits*, and does not apply; the effect is visible in the
+    products instead. Recorded so a later pass does not read it as a flat-slider defect.
   - **When a control gains a degree of freedom, re-audit every answer key it touches.**
     Letting the mark go on either chromosome broke two of Stage C's three questions: both
     named "the long version", and a rip on the short chromosome leaves the long one in the

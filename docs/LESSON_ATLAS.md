@@ -1333,50 +1333,68 @@ nothing says so — the buttons simply appear.
   - *Questions* — kinds of gamete possible (**4**); embryos per 100 carrying at least one
     `ABCD` (**75**, ±7).
   - The four spots on one chromosome never come apart; the two chromosomes combine freely.
-- **C — one rip, anywhere** (bits 11–16)
-  - After replication a mark is dragged into **any of six gaps — three on each
-    chromosome**. Nothing on the bench moves until it is placed. Step 1 opens only when
-    **five of the six spots** have been used; repeating one does not count, and the log
-    tags every round with the spot that made it (`long·2`, `short·1`).
-  - The crossover joins the two chromatids **facing each other across the paired copies —
-    the inner two, rows 1 and 2, never 0 and 2**. Both give the same counts; only this one
-    puts the crossing where the textbook picture puts it, and it leaves the mark sitting in
-    clear space between the two chromatids it actually joined. A rip in the long
-    chromosome's first gap reads, top to bottom, `ABCD` / `Abcd` / `aBCD` / `abcd`.
-  - Steps 2 and 3 run on the rip from the **last collected round**, named in the status
-    line ("rip in the short chromosome, gap 3"). Moving it clears both tallies.
-  - *Questions* — gametes in one round carrying a version the parent lacked (**2**); the
-    same per 100 (**50**, ±8). Both hold wherever the rip is: one rip always makes two of
-    the four chromatids new. The third does not, so **its target is computed from where
-    the mark actually sits** (`c3Target`): embryos per 100 carrying at least one `ABCD` is
-    **44** (±8) after a long-chromosome rip and **75** after a short-chromosome one, and
-    the verdict text says which. Both answers are worth getting — 44 says the rip reached
-    the chromosome the chart is drawn from, 75 says it did not.
+- **C — cut both chromosomes** (bits 11–16)
+  - Every round cuts **both**: at least one mark on the long chromosome and one on the
+    short. A **slider sets how many go on each, 1 to 3** — three gaps a chromosome, so
+    three is every gap. Marks are dragged from a tray that counts down, can be lifted back
+    out of a gap, and nothing on the bench moves until all of them are placed. The slider
+    locks once a chromatid has been dealt, and moving it clears that round's marks.
+  - Step 1 opens only when **five of the six spots** have been used across rounds;
+    repeating one does not count, and the log tags every round with what made it
+    (`long 1, 3 · short 2`).
+  - **Every crossover on a chromosome joins the same two chromatids** — the pair facing
+    each other across the paired copies, rows 1 and 2, never 0 and 2. Both give the same
+    counts; only this one puts the crossing where the textbook puts it, and it leaves the
+    mark in clear space between the two strands it actually joined. So two crossovers
+    trade the stretch *between* the cuts and hand back the ends — a two-strand double —
+    and the outer two chromatids stay whole however many marks go down. One rip in the
+    long chromosome's first gap reads `ABCD` / `Abcd` / `aBCD` / `abcd`; gaps 1 and 3 read
+    `ABCD` / `AbcD` / `aBCd` / `abcd`; all three gaps read `ABCD` / `AbCd` / `aBcD` /
+    `abcd`.
+  - Steps 2 and 3 run on the marks from the **last collected round**, named in the status
+    line ("cut at long 1, 3 · short 1, 3"). Moving them clears both tallies.
+  - *Questions* — gametes in one round carrying a long version the parent lacked (**2**);
+    the same per 100 (**50**, ±8); embryos per 100 carrying at least one `ABCD` (**44**,
+    ±8). **All three are fixed at every slider setting and every choice of gaps**, which
+    is what forcing a cut on both chromosomes bought: the long chromosome is now always
+    cut, so the wording can name it again, and an intact `ABCD` survives on exactly one
+    chromatid in four however much the student cuts. An earlier build let a single mark go
+    on either chromosome, which left two of these three questions without a single right
+    answer and forced the third to compute its target from where the mark sat.
+  - **The slider moves nothing that is scored, deliberately.** All three targets, and the
+    AA/Aa/aa bars, are identical at 1, 2 and 3 crossovers — that invariance *is* the
+    stage's point, and it is the reason no fourth question was added to chase it. What the
+    slider does move is plainly visible: which spots still travel together, and how many
+    versions of each chromosome the round produces. It is an exploration control, not a
+    parameter being fitted, so `PROJECT_NOTES` §5's "a slider must be identifiable" test
+    (written for sliders a student fits) does not apply to it.
   - *Goal* — the question that read **75** in Stage B reads **44** here, and the AA/Aa/aa
     bars did not move at all. What recombination changed is not in the chart.
   - *Hands to* — Lesson 9. The 1:2:1 the student just built by hand is the baseline
     Hardy–Weinberg then writes down.
 
-**Verified numerically before shipping** (400,000 draws per cell, `meiosis` and `oneGamete`
-pulled straight out of the page rather than reimplemented), across **all six rip positions
-and the no-rip case**: every meiosis yields exactly 2 big : 2 little at every spot, 0
-exceptions in 20,000 per cell; share carrying big A 49.9–50.0; gametes carrying a version
-the parent lacked 49.8–50.1 at every rip position; AA/Aa/aa 24.9–25.2 / 49.9–50.1 /
-24.9–25.1 **at every position, rip or no rip**; at-least-one-`ABCD` 75.0 with no rip,
-43.6–43.8 for a rip in long gap 1/2/3, and 75.0–75.1 for short gap 1/2/3 — so Stage C's
-third answer depends on which chromosome was cut and not on which gap. The harness was a
-throwaway (the model sliced out of the HTML into an ES module and driven from node),
-deleted after use as with Lesson 7's calibration — the numbers above are the record.
-Re-derive them if `meiosis` is touched.
+**Verified numerically before shipping** (`meiosis` and `oneGamete` pulled straight out of
+the page rather than reimplemented), across **all 19 combinations of slider setting and
+gap choice** plus the no-rip case, 200,000 draws each: every meiosis yields exactly 2 big :
+2 little at every spot **and** exactly 2 of its 4 gametes carrying a new long version, 0
+exceptions in 4,000 meioses per combination; worst deviation of novel-long-per-100 from
+**50** was 0.17; worst deviation of at-least-one-`ABCD`-per-100 from **43.75** was 0.21;
+worst deviation of AA/Aa/aa from **25/50/25** was 0.29. Stage B without a rip gives 75.0.
+The harness was a throwaway (the model sliced out of the HTML into an ES module and driven
+from node), deleted after use as with Lesson 7's calibration — the numbers above are the
+record. Re-derive them if `meiosis` is touched.
 
 **Simplifications on record.** Meiosis I and II are compressed into one dealing step, so a
 student can produce a set of four gametes that a single real meiosis could not (all four
-long/short combinations at once) — which is exactly what Stage B now requires, so the
-compression is load-bearing rather than incidental. Crossing over happens in every
-simulated meiosis at the placed gap, so loci on opposite sides of it are fully unlinked;
-the lesson shows *which* spots a rip separates, not a recombination fraction. Only one rip
-at a time. Moving it and collecting another round clears the step 2 and step 3 tallies,
-since a tally taken under the old position counts versions that no longer exist.
+long/short combinations at once) — which is exactly what Stage B requires, so the
+compression is load-bearing rather than incidental. Every crossover on a chromosome joins
+the *same* pair of chromatids, so only two-strand doubles occur; real three- and
+four-strand doubles, which would leave all four chromatids recombinant, are not modelled,
+and it is that choice that keeps Stage C's three answers fixed. Crossing over happens in
+every simulated meiosis at the placed gaps, so loci on opposite sides of a cut are fully
+unlinked; the lesson shows *which* spots a cut separates, not a recombination fraction.
+Moving the marks and collecting another round clears the step 2 and step 3 tallies, since
+a tally taken under the old positions counts versions that no longer exist.
 
 **Voice.** Every sentence traces to a quote: A intro `145_lec25_05`, `145_lec24_06`,
 `461_lec07_10`; A closer `202_lec11_02`; B intro `202_lec19_05`, `461_lec18_01` (first
