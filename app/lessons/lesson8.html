@@ -7,7 +7,8 @@
 <title>BIO 202 — Lesson 8</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a;
+           --deep:#1e4d68; --shallow:#8fb6cf; --life:#c07a2c; }
   * { box-sizing:border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
@@ -27,8 +28,6 @@
   .col { display:flex; flex-direction:column; gap:16px; }
   .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  /* Lecture voice — JM's own words. The framing text spans the page, so the first
-     row of the two-column body is always graph | controls, at the same height. */
   .stage-intro { margin-bottom:16px; }
   .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
   .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
@@ -95,11 +94,33 @@
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
   .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+
+  /* ---- Lesson 8: dragging on the plot itself ----------------------------
+     Every graph on this page is an input. The cursor has to say so, because
+     nothing else on the page does: the rules in Stage A and the band rules in
+     Stage A are dragged up and down, the line in Stage B is dragged to tilt it,
+     and the cut in Stage E is dragged across.                              */
+  canvas.drag-y { cursor:ns-resize; touch-action:none; }
+  canvas.drag-x { cursor:ew-resize; touch-action:none; }
+  canvas.drag-tilt { cursor:grab; touch-action:none; }
+  canvas.drag-tilt:active { cursor:grabbing; }
+  canvas.dead { cursor:default; }
+  .step { display:none; }
+  .step.shown { display:block; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:11px; font:12px ui-monospace,Menlo,monospace; background:#eceae2; color:var(--muted); margin-right:6px; }
+  .pill.on { background:var(--deep); color:#fff; }
+  .pickrow { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+  .pickrow button { flex:1 1 auto; background:#fff; color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:7px 9px; cursor:pointer; font-size:12.5px; text-align:left; }
+  .pickrow button.on { background:var(--deep); border-color:var(--deep); color:#fff; }
+  .ledger { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; }
+  .ledger div { display:flex; justify-content:space-between; padding:3px 0; }
+  .ledger .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:7px; vertical-align:baseline; }
 </style>
 </head>
 <body>
 <header>
   <h1>Lesson 8</h1>
+</header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
 
 <nav class="toc" id="toc">
@@ -108,34 +129,31 @@
   <a href="#stageC" id="tocC" class="locked">C</a>
   <a href="#stageD" id="tocD" class="locked">D</a>
   <a href="#stageE" id="tocE" class="locked">E</a>
-  <a href="#stageF" id="tocF" class="locked">F</a>
 </nav>
 
-<!-- ========== STAGE A — what knowing the parents buys you =========== -->
+<!-- ========== STAGE A — one family, then all of them ================== -->
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage A voice block. Your two questions, verbatim, and the
-           trap in both of them. 72% sounds decisive and is worth exactly nothing
-           until you know the other rate. The switch relabels the same population
-           from a disease to a song without changing a single number, which is the
-           whole lesson arriving in the first minute. -->
+      <!-- TEXT FOR JM: stage A voice block. The opener is your line about how
+           many things turn out to be linear regressions, because that is what
+           this whole lesson is; the second paragraph is the two-ways-to-get-a-
+           thing line with "a thing" swapped for "a height", because the split
+           it names is the split the rule on the plot is about to make. -->
       <div class="voice">
-        <p>Two questions to start with.</p>
-        <p><strong>72% of people whose parents have a particular genetic disease also have that disease.</strong> If you find out a person's parents have that disease, do you predict that they do too?</p>
-        <p><strong>72% of people whose parents like a certain song also like that song.</strong> If you find out a person's parents like that song, do you predict that they do too?</p>
-        <p>Neither question can be answered yet, and it is not because one is about genes and the other is about a song. It is because 72% on its own is not information about anybody. Find the number that is missing.</p>
+        <p>A lot of things, as it turns out, are just linear regressions. Way more things in the world are linear regressions than people realize. If you get good at them and understand them, so many things in so many classes become easier.</p>
+        <p>Three families are below, one at a time. There are two ways to get a height: you got it yourself, or you inherited it.</p>
+        <p>Drag the rule to the one height that comes closest to all the children in the family. Not the tallest, not the father's — the one number that misses them all by the least.</p>
       </div>
       <ul class="setup">
-        <li>200 people, a hundred in each column. On the left, everyone whose parents have it; on the right, everyone whose parents do not.</li>
-        <li>A filled square is a person who has it themselves.</li>
-        <li>Top knob: what share of the left column have it. Start it at 72%.</li>
-        <li>Bottom knob: what share of the right column have it — the number the questions never gave you.</li>
-        <li>The switch relabels the trait. It changes no number on this page.</li>
-        <li>A pair of rates only counts once you lock it in. Sliding past an answer is not choosing it.</li>
-        <li>The last line is what the correlation buys you about one person, which is a good deal less than the correlation itself.</li>
+        <li>Heights in inches, from families who wrote to Galton in 1885.</li>
+        <li>Every female height is multiplied by 1.08, exactly as Galton did, so a father, a mother and a daughter all sit on one scale.</li>
+        <li>Left of the plot: the two parents, and the mark halfway between them. Right of the plot: their grown children.</li>
+        <li>The dashed line across the whole plot is the average of all 934 children in the collection.</li>
+        <li>Under the plot: how far your rule is from a typical child in this family. Drive it down.</li>
+        <li>Three families, short parents to tall. Lock each one in before the next arrives.</li>
       </ul>
     </div>
   </div>
@@ -143,18 +161,22 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotA" width="560" height="330"></canvas>
-        <div class="fit-stats" id="statsA">
-          <span class="label">told the parents have it, you would say:</span> <span id="A_pYes">—</span>
+        <canvas id="plotA1" class="drag-y" width="560" height="372"></canvas>
+        <div class="fit-stats" id="statsA1">
+          <span class="label">the father</span> <span id="A_fa">—</span>
+          &nbsp; <span class="label">the mother × 1.08</span> <span id="A_mo">—</span>
+          &nbsp; <span class="label">halfway between them</span> <span id="A_mp">—</span>
           <br>
-          <span class="label">told they do not, you would say:</span> <span id="A_pNo">—</span>
+          <span class="label">your rule sits at</span> <span id="A_rule">—</span>
+          &nbsp; <span class="label">and misses a typical child in this family by</span> <span id="A_miss">—</span>
+        </div>
+      </div>
+      <div class="panel graph-wrap step" id="stepA2">
+        <canvas id="plotA2" class="drag-y" width="560" height="368"></canvas>
+        <div class="fit-stats" id="statsA2">
+          <span class="label">bands with a rule dropped into the middle of them:</span> <span id="A_bands">0</span> <span class="label">of 5</span>
           <br>
-          <span class="label">so knowing the parents moves your answer by:</span> <span id="A_gap">—</span>
-          <br>
-          <span class="label">and as a correlation, which is what the rest of this lesson measures:</span> <span id="A_corr">—</span>
-          <br>
-          <span class="label">which makes a guess about any one person</span> <span id="A_shrink">—</span>
-          <span class="label">less wrong than guessing blind</span>
+          <span class="label">tilt of the line through your five rules:</span> <span id="A_tilt">—</span>
         </div>
       </div>
     </div>
@@ -162,69 +184,65 @@
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsA">
-          <div class="row" data-line="p1"><label for="A_p1">of those whose parents have it</label><input type="range" id="A_p1" min="0" max="100" step="1" value="72" /><output id="A_p1Out">72%</output></div>
-          <div class="row" data-line="p2"><label for="A_p2">of those whose parents do not</label><input type="range" id="A_p2" min="0" max="100" step="1" value="72" /><output id="A_p2Out">72%</output></div>
-          <div class="toggle"><input type="checkbox" id="A_song" /><label for="A_song">call it liking a song instead of having a disease</label></div>
           <div class="buttons">
-            <button id="A_lock" class="accent">Lock in this pair</button>
+            <button id="A_lock" class="accent">Lock in this family</button>
             <button id="A_download" class="ghost">Download .R</button>
           </div>
+          <div class="fit-stats" id="A_lockmsg" style="min-height:16px;"></div>
         </div>
       </div>
       <div class="panel">
-        <h3>Pairs you have locked in</h3>
+        <h3>Families you have locked in</h3>
         <div class="rungs" id="A_list"><div style="color:var(--muted);">none yet</div></div>
       </div>
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="A1">Hold the top knob at 72% and make knowing the parents worth nothing. <span class="hint"><span id="A1_now">not yet</span></span></li>
-          <li data-task="A2">Hold it at 72% and make knowing the parents worth as much as it can be. <span class="hint"><span id="A2_now">not yet</span></span></li>
+          <li data-task="A1">Put a rule through the middle of each of the three families. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
+          <li data-task="A2">Now all 934 children at once, sorted into five bands by their parents. Drop a rule into the middle of each band. <span class="hint"><span id="A2_now">the three families first</span></span></li>
           <li data-task="A3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Stage B is open.</div>
+        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Your five rules are a line, and its tilt is one number. Stage B is open.</div>
       </div>
       <div class="panel numq" id="numqA">
-        <div class="q">You are told only that 72% of people whose parents have it have it themselves. What would the other rate have to be for that 72% to tell you nothing at all?</div>
+        <div class="q">Read the tilt of the line through your five rules: for every inch of parent, how many inches of child?</div>
         <div class="row">
-          <input type="number" id="A_ans" min="0" max="100" step="1" placeholder="%" />
-          <span class="unit">%</span>
+          <input type="number" id="A_ans" min="-2" max="3" step="0.01" placeholder="inches" />
+          <span class="unit">inches of child per inch of parent</span>
           <button id="A_submit">Submit</button>
         </div>
         <div class="verdict" id="A_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line" data-line="p1">p1 &lt;- <span class="num" id="cA_p1">0.72</span>   <span class="com"># parents have it</span></span><span class="line" data-line="p2">p2 &lt;- <span class="num" id="cA_p2">0.72</span>   <span class="com"># parents do not</span></span><span class="line">parent &lt;- <span class="fn">rep</span>(<span class="fn">c</span>(<span class="num">1</span>, <span class="num">0</span>), each = <span class="num">100</span>)</span><span class="line">child  &lt;- <span class="fn">rbinom</span>(<span class="num">200</span>, <span class="num">1</span>, <span class="fn">ifelse</span>(parent == <span class="num">1</span>, p1, p2))</span><span class="line"></span><span class="line"><span class="com"># what knowing the parent buys you</span></span><span class="line">p1 - p2</span><span class="line"></span><span class="line"><span class="com"># and the same thing as a correlation</span></span><span class="line"><span class="fn">cor</span>(parent, child)</span></pre>
+<pre class="code" id="codeA"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$kid &lt;- g$childHeight * <span class="fn">ifelse</span>(g$gender == <span class="str">"female"</span>, <span class="num">1.08</span>, <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># one family: the rule that misses its children by the least</span></span><span class="line">f &lt;- <span class="fn">subset</span>(g, family == <span class="str">"185"</span>)</span><span class="line"><span class="fn">mean</span>(f$kid)</span><span class="line"><span class="fn">sqrt</span>(<span class="fn">mean</span>((f$kid - <span class="fn">mean</span>(f$kid))^<span class="num">2</span>))</span><span class="line"></span><span class="line"><span class="com"># all of them, sorted into five bands by the parents</span></span><span class="line">band &lt;- <span class="fn">cut</span>(g$midparentHeight, <span class="fn">c</span>(<span class="num">62</span>,<span class="num">66.5</span>,<span class="num">68</span>,<span class="num">69.5</span>,<span class="num">71</span>,<span class="num">78</span>))</span><span class="line">m &lt;- <span class="fn">tapply</span>(g$kid, band, mean)</span><span class="line">x &lt;- <span class="fn">tapply</span>(g$midparentHeight, band, mean)</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(m ~ x))   <span class="com"># the tilt through your five rules</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE B — the line from parent to child ================ -->
+<!-- ========== STAGE B — the line, and what it does not reach ========== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Solve Stage A to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage A voice block. The definition arrives here and never
-           changes for the rest of the lesson: put parents and children on the same
-           scale, fit the line, read the tilt. Both axes are in spreads, so the tilt
-           and the correlation are the same number -- worth saying, because every
-           later stage reads that one number off a scatter. -->
+      <!-- TEXT FOR JM: stage B voice block. Galton's own reason for inventing
+           the tool, in your words, sitting on top of Galton's own data. The
+           third paragraph is the instruction: the bar is the whole point of the
+           stage and the tilt is the thing that moves it. -->
       <div class="voice">
-        <p>Galton wrote to 205 families in 1885 and asked for the heights of everybody in them. 934 grown children came back, with both their parents.</p>
-        <p>Every height here is measured as a departure from the average of its own kind, in spreads rather than inches, so that a father, a mother and a daughter can all go on one axis. Each point is one parent against one of their children.</p>
-        <p>Fit the line. Its tilt is the correlation between a parent and their child, and that number is the whole of what this lesson is about.</p>
+        <p>He literally invents linear regression to prove his idea of eugenics — that British people related to his cousin are better than British people who aren't related to his cousin. Which is the stupidest reason any statistical tool has ever been invented. Galton invents a whole branch of mathematics to try to say: if you know Darwin is smart, his cousin must also be smart. Which is not true.</p>
+        <p>These are his families. Every one of your five rules from Stage A is now one column of dots in here.</p>
+        <p>Grab the line and tilt it. The bar beside the plot is the children's whole variation, and the tilt decides how much of it the line reaches.</p>
       </div>
       <ul class="setup">
-        <li>1,868 points: every child paired with each of its parents in turn.</li>
-        <li>Women's heights are multiplied by 1.08, exactly as Galton did.</li>
-        <li>Across: the parent, in spreads from the average. Up: the child.</li>
-        <li>The line goes through the middle of the cloud, so there is only the tilt to set. On these axes the tilt is the correlation between a parent and their child.</li>
-        <li>Under the graph: whatever correlation is still left in the part your line misses. Drive it to nothing and your line has taken all of it.</li>
-        <li><strong>Heritability is twice this correlation</strong> — a child gets half its inheritance from the parent on the axis and half from the one not on it, so a single parent can only show you half the resemblance.</li>
-        <li>A correlation is the same thing Lesson 1 called an average error and Lesson 3 called a typical miss: how much less wrong you are about somebody once you are told something else about them. At 0.36 that is a guess about 7% better than blind.</li>
+        <li>934 grown children, each against their parents. One dot each.</li>
+        <li>The line always passes through the middle of the cloud, so there is only the tilt to set. Drag anywhere on the plot.</li>
+        <li>Every dot has a stalk running down to the line. That stalk is what the line did not reach on that child.</li>
+        <li>The bar: the whole block is the children's variation. The dark part is what the line accounts for, the pale part is what is left over.</li>
+        <li>The three buttons change what goes on the across axis — one parent, the other, or the two of them averaged.</li>
+        <li>Each of the three has its own best tilt. Find all three.</li>
       </ul>
     </div>
   </div>
@@ -232,72 +250,84 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotB" width="560" height="380"></canvas>
+        <canvas id="plotB" class="drag-tilt" width="560" height="362"></canvas>
+        <canvas id="barB" width="560" height="66" style="margin-top:6px;"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">parent–offspring correlation:</span> <span id="B_tilt">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">heritability, which is twice it:</span> <span id="B_h2">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">correlation left over in what your line misses:</span> <span id="B_miss">—</span>
+          <span class="label">tilt:</span> <span id="B_tilt">—</span>
+          &nbsp;|&nbsp; <span class="label">misses a typical child by:</span> <span id="B_miss">—</span>
+          &nbsp;|&nbsp; <span class="label">accounts for:</span> <span id="B_acc">—</span>
+          <span class="label">of the children's variation</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
+        <div class="pickrow" id="B_pick">
+          <button data-src="fa">the father alone</button>
+          <button data-src="mo">the mother alone</button>
+          <button data-src="mp" class="on">both, averaged</button>
+        </div>
         <div class="controls" id="controlsB">
-          <div class="row" data-line="tilt"><label for="B_tilt_s">tilt of the line</label><input type="range" id="B_tilt_s" min="-0.20" max="1.00" step="0.01" value="0.00" /><output id="B_tiltOut">0.00</output></div>
+          <div class="row" data-line="tilt"><label for="B_tilt_s">tilt of the line</label><input type="range" id="B_tilt_s" min="-0.30" max="1.40" step="0.01" value="0.00" /><output id="B_tiltOut">0.00</output></div>
           <div class="buttons">
             <button id="B_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
+        <h3>Best tilt found for</h3>
+        <div class="rungs" id="B_list"><div style="color:var(--muted);">none yet</div></div>
+      </div>
+      <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Set the tilt until there is no correlation left over — under 0.02 either way. <span class="hint"><span id="B1_now">not yet</span></span></li>
-          <li data-task="B2">Answer the question below.</li>
+          <li data-task="B1">With both parents on the across axis, tilt the line until the pale part of the bar is as small as it will go. <span class="hint"><span id="B1_now">not yet</span></span></li>
+          <li data-task="B2">Do it again for the father alone and for the mother alone. <span class="hint"><span id="B2_now">0</span> of 3 fitted</span></li>
+          <li data-task="B3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage A solved banner. -->Stage C is open.</div>
+        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Two parents beat either one of them, and the tilt on the two of them is not the tilt on one of them doubled. Stage C is open.</div>
       </div>
       <div class="panel numq" id="numqB">
-        <div class="q">Your line's tilt is the correlation between one parent and their child. A child has two parents, so the heritability of height is twice it. What is it?</div>
+        <div class="q">With both parents on the across axis and the line at its best tilt, what share of the children's variation does the line account for? Give it as a decimal.</div>
         <div class="row">
-          <input type="number" id="B_ans" min="-3" max="3" step="0.01" placeholder="heritability" />
-          <span class="unit">heritability</span>
+          <input type="number" id="B_ans" min="0" max="1" step="0.01" placeholder="0.00" />
+          <span class="unit">of the children's variation</span>
           <button id="B_submit">Submit</button>
         </div>
         <div class="verdict" id="B_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$kid &lt;- g$childHeight * <span class="fn">ifelse</span>(g$gender == <span class="str">"female"</span>, <span class="num">1.08</span>, <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># every child against each parent in turn</span></span><span class="line">par &lt;- <span class="fn">c</span>(g$father, g$mother * <span class="num">1.08</span>)</span><span class="line">kid &lt;- <span class="fn">c</span>(g$kid,    g$kid)</span><span class="line"></span><span class="line"><span class="com"># both in spreads, so the tilt is the correlation</span></span><span class="line">pz &lt;- <span class="fn">scale</span>(par); kz &lt;- <span class="fn">scale</span>(kid)</span><span class="line" data-line="tilt">tilt &lt;- <span class="num" id="cB_tilt">0.00</span></span><span class="line"><span class="fn">cor</span>(pz, kz - tilt * pz)   <span class="com"># the tilt left over</span></span><span class="line"></span><span class="line"><span class="fn">cor</span>(par, kid)</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kz ~ pz))</span></pre>
+<pre class="code" id="codeB"><span class="line">g$mp &lt;- g$midparentHeight</span><span class="line">g$fa &lt;- g$father</span><span class="line">g$mo &lt;- g$mother * <span class="num">1.08</span></span><span class="line"></span><span class="line" data-line="tilt">tilt &lt;- <span class="num" id="cB_tilt">0.00</span></span><span class="line">pred &lt;- <span class="fn">mean</span>(g$kid) + tilt * (g$mp - <span class="fn">mean</span>(g$mp))</span><span class="line">left &lt;- <span class="fn">mean</span>((g$kid - pred)^<span class="num">2</span>)</span><span class="line">whole &lt;- <span class="fn">mean</span>((g$kid - <span class="fn">mean</span>(g$kid))^<span class="num">2</span>)</span><span class="line"><span class="num">1</span> - left / whole      <span class="com"># the dark part of the bar</span></span><span class="line"></span><span class="line"><span class="com"># the tilt that makes the pale part smallest</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp, data = g))</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ fa, data = g))</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mo, data = g))</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE C — a song nobody is born with =================== -->
+<!-- ========== STAGE C — what is in the part the line misses =========== -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Solve Stage B to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage B voice block. Nothing about this trait is carried in
-           any gene, and it produces exactly the number Stage B measured. The swap
-           button is the point: move the eggs and the resemblance moves with the
-           tutor, not with the father. -->
+      <!-- TEXT FOR JM: stage C voice block. The 1,700-loci quote and the
+           thousand-little-things quote are here because the stage's whole move
+           depends on height being additive: a child gets half of each parent's
+           pile, and which half is a fresh draw. That fresh draw is the pale
+           blue block, and it is the thing students will insist is environment. -->
       <div class="voice">
-        <p>Sixty broods of nestlings, four to a nest. Each father sings, and each nestling learns the song from the bird in whose nest it wakes up. Nothing about the song is carried in any egg.</p>
-        <p>Turn up how carefully the nestlings copy, and watch two things at once: the nestmates in a brood start to sound like each other, and each nestling starts to sound like the bird that raised it.</p>
-        <p>Then swap the eggs between nests before any of them hatch, and ask both questions again.</p>
+        <p>Height isn't one gene. There are something like 1,700 individual loci associated with height, almost all of them very small effect — the largest single one we've ever found is associated with a 0.07-centimetre difference. Height is a thousand little things, and you add them up.</p>
+        <p>Below is a population built that way, and it can be taken apart, which Galton's families cannot. Two knobs: how big the pile a child is handed is, and how much a life adds on top of it.</p>
+        <p>Every stalk under the plot is now in two colours. Set the knobs so the tilt comes out where Galton's families put it, then start turning the life down.</p>
       </div>
       <ul class="setup">
-        <li>Upper panel: one column per brood, one dot per nestling.</li>
-        <li>Lower panel: the song of the bird that did the raising, against the nestling's song.</li>
-        <li>Two gaps are reported: how far apart two nestmates sound, and how far apart two birds from different broods sound.</li>
-        <li>Sixty fathers leaves about 0.12 of noise on a single set, so the swapped sets get averaged as you go. Eight of them settles it.</li>
-        <li>With the eggs swapped, the bird that raised a nestling is not the bird it came from.</li>
+        <li>3,000 families. Two parents each, one grown child each, heights in inches.</li>
+        <li>A child is handed half of each parent's pile. Which half is a fresh draw every time.</li>
+        <li>The line is fitted for you here — Stage B was the fitting. This stage is about what it misses.</li>
+        <li>Each stalk runs from the line to the child in two colours: the part of the miss that is in what the child was handed, and the part a life added.</li>
+        <li>The bar is the same bar as Stage B, with the pale part split by those two colours.</li>
+        <li>The whole spread of the children moves when you move the knobs. Watch it, and watch what the tilt does and does not do.</li>
       </ul>
     </div>
   </div>
@@ -305,28 +335,24 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotC1" width="560" height="210"></canvas>
-        <canvas id="plotC2" width="560" height="250"></canvas>
+        <canvas id="plotC" class="dead" width="560" height="352"></canvas>
+        <canvas id="barC" width="560" height="88" style="margin-top:6px;"></canvas>
         <div class="fit-stats" id="statsC">
-          <span class="label">nestmates differ by</span> <span id="C_within">—</span>
-          <span class="label">· strangers by</span> <span id="C_between">—</span>
-          <br>
-          <span class="label">resembles the bird that raised it:</span> <span id="C_rTutor">—</span>
-          &nbsp; <span class="label">resembles its own father:</span> <span id="C_rGen">—</span>
-          <br>
-          <span class="label">swapped sets so far:</span> <span id="C_nsets">0</span>
-          &nbsp; <span class="label">averaging:</span> <span id="C_avg">—</span>
+          <span class="label">tilt:</span> <span id="C_tilt">—</span>
+          &nbsp;|&nbsp; <span class="label">whole spread of the children:</span> <span id="C_sd">—</span>
+          &nbsp;|&nbsp; <span class="label">line misses a typical child by:</span> <span id="C_miss">—</span>
         </div>
+        <div class="ledger" id="C_ledger"></div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsC">
-          <div class="row" data-line="fid"><label for="C_fid">how carefully they copy</label><input type="range" id="C_fid" min="0" max="0.95" step="0.05" value="0.30" /><output id="C_fidOut">0.30</output></div>
-          <div class="toggle"><input type="checkbox" id="C_cross" /><label for="C_cross">swap the eggs between nests</label></div>
+          <div class="row" data-line="sda"><label for="C_sda">the pile a child is handed</label><input type="range" id="C_sda" min="0" max="2.60" step="0.05" value="1.40" /><output id="C_sdaOut">1.40</output></div>
+          <div class="row" data-line="sde"><label for="C_sde">what a life adds on top</label><input type="range" id="C_sde" min="0" max="2.60" step="0.05" value="2.00" /><output id="C_sdeOut">2.00</output></div>
           <div class="buttons">
-            <button id="C_reseed" class="secondary">New broods</button>
+            <button id="C_reseed" class="secondary">New families</button>
             <button id="C_download" class="ghost">Download .R</button>
           </div>
         </div>
@@ -334,49 +360,52 @@
       <div class="panel">
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
-          <li data-task="C1">Get nestmates sounding less than half as different as strangers. <span class="hint"><span id="C1_now">not yet</span></span></li>
-          <li data-task="C2">Swap the eggs, then press <em>New broods</em> until eight different swapped sets average out to nothing for the father — while the raiser stays where it was. <span class="hint"><span id="C2_now">not yet</span></span></li>
-          <li data-task="C3">Answer the question below.</li>
+          <li data-task="C1">Bring the tilt to where Galton's families put it, within 0.03. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Now take the life away entirely and read the pale part of the bar. <span class="hint"><span id="C2_now">not yet</span></span></li>
+          <li data-task="C3">Now split what the line misses evenly between its two colours. <span class="hint"><span id="C3_now">not yet</span></span></li>
+          <li data-task="C4">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage B solved banner. -->Stage D is open.</div>
+        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->The variance in your kids depends not just on each parent's height, but on how much you and your partner are heterozygous at the same loci. Stage D is open.</div>
       </div>
       <div class="panel numq" id="numqC">
-        <div class="q">Any one swapped set is noisy — sixty fathers is not many. Averaged over your eight swapped sets, how much does a nestling resemble the father it actually came from?</div>
+        <div class="q">With the life turned all the way off, what share of the children's variation does the line still fail to reach? Give it as a decimal.</div>
         <div class="row">
-          <input type="number" id="C_ans" min="-1" max="1" step="0.01" placeholder="correlation" />
-          <span class="unit">correlation</span>
+          <input type="number" id="C_ans" min="0" max="1" step="0.01" placeholder="0.00" />
+          <span class="unit">of the children's variation</span>
           <button id="C_submit">Submit</button>
         </div>
         <div class="verdict" id="C_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line" data-line="fid">fid &lt;- <span class="num" id="cC_fid">0.30</span>   <span class="com"># how carefully a nestling copies</span></span><span class="line">father &lt;- <span class="fn">rnorm</span>(<span class="num">40</span>)</span><span class="line">tutor  &lt;- <span class="fn">if</span> (swap) <span class="fn">sample</span>(father) <span class="kw">else</span> father</span><span class="line">brood  &lt;- <span class="fn">rep</span>(<span class="num">1</span>:<span class="num">40</span>, each = <span class="num">4</span>)</span><span class="line">song   &lt;- fid*tutor[brood] + <span class="fn">sqrt</span>(<span class="num">1</span>-fid^<span class="num">2</span>)*<span class="fn">rnorm</span>(<span class="num">160</span>)</span><span class="line"></span><span class="line"><span class="fn">cor</span>(tutor[brood],  song)   <span class="com"># the bird that raised it</span></span><span class="line"><span class="fn">cor</span>(father[brood], song)   <span class="com"># the bird it came from</span></span></pre>
+<pre class="code" id="codeC"><span class="line" data-line="sda">sdA &lt;- <span class="num" id="cC_sda">1.40</span>   <span class="com"># the pile a child is handed</span></span><span class="line" data-line="sde">sdE &lt;- <span class="num" id="cC_sde">2.00</span>   <span class="com"># what a life adds</span></span><span class="line">n &lt;- <span class="num">3000</span>; MU &lt;- <span class="num">69.2</span></span><span class="line">Af &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA); Am &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA)</span><span class="line">Pf &lt;- MU + Af + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">Pm &lt;- MU + Am + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">mp &lt;- (Pf + Pm) / <span class="num">2</span></span><span class="line"></span><span class="line"><span class="com"># half of each pile, and a fresh draw for which half</span></span><span class="line">Ao  &lt;- (Af + Am)/<span class="num">2</span> + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA/<span class="fn">sqrt</span>(<span class="num">2</span>))</span><span class="line">Eo  &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">kid &lt;- MU + Ao + Eo</span><span class="line"></span><span class="line">fit  &lt;- <span class="fn">lm</span>(kid ~ mp)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]                    <span class="com"># the tilt</span></span><span class="line"><span class="fn">var</span>(Eo) / <span class="fn">var</span>(kid)             <span class="com"># the ochre block</span></span><span class="line">(<span class="fn">var</span>(<span class="fn">resid</span>(fit)) - <span class="fn">var</span>(Eo)) / <span class="fn">var</span>(kid)  <span class="com"># the pale blue</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE D — four limbs, and no resemblance =============== -->
+<!-- ========== STAGE D — three things to put on the across axis ======== -->
 <section class="stage stage-locked" id="stageD">
   <h2 class="stage-h">D</h2>
   <div class="lock-banner">Solve Stage C to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage C voice block. The mirror of B. Every gene in the
-           population says four; all the variation is accidents. Then the second
-           knob puts the accidents into families and a resemblance appears out of
-           an environment, with the genes never having moved. -->
+      <!-- TEXT FOR JM: stage D voice block. The eye-number line is here because
+           it is the cleanest statement that the question is about the variation
+           and not about the trait, which is exactly what changing the across
+           axis changes. Nothing about the population moves in this stage. -->
       <div class="voice">
-        <p>Now a trait that every gene in the population agrees about. Four limbs, in every individual, specified as thoroughly as anything in the body is specified.</p>
-        <p>The variation comes from somewhere else entirely. Some of them lose a limb — a fall, a predator, a machine. Turn the accident rate up and there is plenty of variation to look at.</p>
-        <p>Then ask whether the accidents happen to fall in the same families, and watch what that does to the parent–offspring correlation.</p>
+        <p>The trait can vary, the trait can be genetic, but what matters is that the variation in the trait is genetic.</p>
+        <p>Same 3,000 families as Stage C, same two knobs, same children. The only thing that changes is what goes on the across axis.</p>
+        <p>Three things can go there. Two of them you could never measure on a real family. One of them accounts for exactly as much of the children's variation as the tilt you can measure. Find which.</p>
       </div>
       <ul class="setup">
-        <li>400 parent-and-child pairs. Everyone starts with four.</li>
-        <li>Across: the parent's count. Up: the child's. Points are jittered so you can see how many sit on top of each other.</li>
-        <li>The second knob decides whether some families are more dangerous places than others.</li>
-        <li>The genes never change. Only where the accidents land.</li>
+        <li>Nothing about the population changes when you change the axis. The same children are plotted every time.</li>
+        <li>The parents' measured heights: what you would have if you went and measured two people.</li>
+        <li>The parents' piles: what the two of them were actually carrying, averaged, with their own lives stripped off.</li>
+        <li>The child's pile: what that child was handed, with its own life stripped off.</li>
+        <li>Reported for every axis: the tilt of the line, and the share of the children's variation the line accounts for.</li>
+        <li>The tilt from the first axis stays on screen while you look at the other two.</li>
       </ul>
     </div>
   </div>
@@ -384,22 +413,27 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotD" width="560" height="360"></canvas>
+        <canvas id="plotD" class="dead" width="560" height="352"></canvas>
+        <canvas id="barD" width="560" height="66" style="margin-top:6px;"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">parent–offspring correlation:</span> <span id="D_tilt">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">missing a limb:</span> <span id="D_lost">—</span>
-          &nbsp;|&nbsp;
-          <span class="label">spread of the counts:</span> <span id="D_spread">—</span>
+          <span class="label">on this axis — tilt:</span> <span id="D_tilt">—</span>
+          &nbsp; <span class="label">accounts for:</span> <span id="D_acc">—</span>
+          <br>
+          <span class="label">the tilt on the parents' measured heights, which is the one you could get from a real family:</span> <span id="D_ref">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
+        <div class="pickrow" id="D_pick">
+          <button data-ax="mp" class="on">the parents' measured heights</button>
+          <button data-ax="amp">the parents' piles</button>
+          <button data-ax="ao">the child's pile</button>
+        </div>
         <div class="controls" id="controlsD">
-          <div class="row" data-line="rate"><label for="D_rate">how often an accident happens</label><input type="range" id="D_rate" min="0" max="0.60" step="0.05" value="0.25" /><output id="D_rateOut">0.25</output></div>
-          <div class="row" data-line="clus"><label for="D_clus">how much danger runs in families</label><input type="range" id="D_clus" min="0" max="2.00" step="0.10" value="0" /><output id="D_clusOut">0.00</output></div>
+          <div class="row" data-line="sda"><label for="D_sda">the pile a child is handed</label><input type="range" id="D_sda" min="0" max="2.60" step="0.05" value="2.15" /><output id="D_sdaOut">2.15</output></div>
+          <div class="row" data-line="sde"><label for="D_sde">what a life adds on top</label><input type="range" id="D_sde" min="0" max="2.60" step="0.05" value="1.35" /><output id="D_sdeOut">1.35</output></div>
           <div class="buttons">
             <button id="D_reseed" class="secondary">New families</button>
             <button id="D_download" class="ghost">Download .R</button>
@@ -409,50 +443,50 @@
       <div class="panel">
         <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">With danger spread evenly, get a quarter of them missing a limb and the correlation still under 0.10. <span class="hint"><span id="D1_now">not yet</span></span></li>
-          <li data-task="D2">Now make danger run in families, and get the correlation above 0.30. <span class="hint"><span id="D2_now">not yet</span></span></li>
+          <li data-task="D1">Put all three on the across axis, then leave it on the one that accounts for as much as the measurable tilt. <span class="hint"><span id="D1_now">0 of 3 looked at</span></span></li>
+          <li data-task="D2">Now set the knobs so the child's pile accounts for 0.80 of the children's variation. <span class="hint"><span id="D2_now">not yet</span></span></li>
           <li data-task="D3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage C solved banner. -->Stage E is open.</div>
+        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Heritability is genetic variation over phenotypic variation. Stage E is open.</div>
       </div>
       <div class="panel numq" id="numqD">
-        <div class="q">Put danger back to spread evenly and run a few sets of families. What parent–offspring correlation does a trait every gene agrees about produce?</div>
+        <div class="q">Push the knobs as far as they will go in any direction. What is the largest share of the children's variation the parents' measured heights can ever account for?</div>
         <div class="row">
-          <input type="number" id="D_ans" min="-1" max="1" step="0.01" placeholder="correlation" />
-          <span class="unit">correlation</span>
+          <input type="number" id="D_ans" min="0" max="1" step="0.01" placeholder="0.00" />
+          <span class="unit">of the children's variation</span>
           <button id="D_submit">Submit</button>
         </div>
         <div class="verdict" id="D_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># every individual is built with four</span></span><span class="line" data-line="rate">rate &lt;- <span class="num" id="cD_rate">0.25</span></span><span class="line" data-line="clus">clus &lt;- <span class="num" id="cD_clus">0.00</span></span><span class="line">danger &lt;- <span class="fn">rnorm</span>(<span class="num">400</span>)</span><span class="line">p &lt;- <span class="fn">pnorm</span>(<span class="fn">qnorm</span>(rate) + clus*danger)</span><span class="line">par &lt;- <span class="num">4</span> - <span class="fn">rbinom</span>(<span class="num">400</span>, <span class="num">1</span>, p)</span><span class="line">kid &lt;- <span class="num">4</span> - <span class="fn">rbinom</span>(<span class="num">400</span>, <span class="num">1</span>, p)</span><span class="line"><span class="fn">cor</span>(par, kid)</span></pre>
+<pre class="code" id="codeD"><span class="line"><span class="com"># same children, three different across axes</span></span><span class="line">amp &lt;- (Af + Am) / <span class="num">2</span>          <span class="com"># the parents' piles</span></span><span class="line"></span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ mp ))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ amp))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ Ao ))$r.squared</span><span class="line"></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp ))[<span class="num">2</span>]</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ amp))[<span class="num">2</span>]</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ Ao ))[<span class="num">2</span>]</span><span class="line"></span><span class="line"><span class="com"># stripping the parents' lives off the across axis does not</span></span><span class="line"><span class="com"># recover a bigger number -- it recovers 1</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE E — down the ladder of relatives ================= -->
+<!-- ========== STAGE E — the tilt is the exchange rate ================= -->
 <section class="stage stage-locked" id="stageE">
   <h2 class="stage-h">E</h2>
   <div class="lock-banner">Solve Stage D to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage D voice block. One knob, four kinds of relative, and
-           Galton's two real numbers sitting on the same axis to be matched. The
-           halving is the thing to notice, and it is what makes the tilt a
-           measurement of something rather than a description of one pairing. -->
+      <!-- TEXT FOR JM: stage E voice block. The puppy-tail quote, which is the
+           cleanest statement that choosing the parents and the trait coming
+           down are two separate steps -- and this stage is the second step
+           priced. Cut it if you would rather the selection lesson own this. -->
       <div class="voice">
-        <p>So far every correlation has been a parent against a child. There are other pairs of relatives, and each of them shares a different amount of what a parent hands down.</p>
-        <p>One knob here — the heritability — and four kinds of relative: a parent and a child, two full siblings, two half siblings, and two first cousins. Turn it and all four move together.</p>
-        <p>The two marks on the axis are Galton's, from the real families in Stage B: what one parent and a child actually measured, and what two siblings actually measured. Find the setting that puts your first two rungs on them.</p>
+        <p>Cut the tails off some puppies and only let the tailless puppies breed. That is selection — they make more of themselves, so puppies become more common. But taillessness doesn't become more common, because the trait isn't heritable. Selection is the differential reproduction step. Heritability is a separate step.</p>
+        <p>Here is the second step, priced. Drag the cut across the plot. Only the families to the right of it have children.</p>
+        <p>How far above the average you drag the parents is your choice. How far the children come is not.</p>
       </div>
       <ul class="setup">
-        <li>3,000 families of each kind, rebuilt every time you move the knob — enough that the rungs stop wobbling.</li>
-        <li>Each rung is the correlation between that pair of relatives, measured the same way as Stage B.</li>
-        <li>A parent and a child share half their inheritance, so their rung sits at half the heritability. Work out what the other three should be before you look.</li>
-        <li>Galton's real numbers: one parent and a child 0.36, two siblings 0.40.</li>
-        <li>Watch what happens to each rung as you go down the list.</li>
+        <li>3,000 families again. The whole spread of the children is held at 2.55 inches here, whatever the knob is doing.</li>
+        <li>Drag the cut left or right. Families to the right of it breed; the rest are greyed out.</li>
+        <li>The upright line is where the chosen parents average. The flat line is where their children average.</li>
+        <li>Reported: how far the chosen parents sit above the average of everybody, and how far their children do.</li>
+        <li>The tilt does not move when you move the cut.</li>
       </ul>
     </div>
   </div>
@@ -460,23 +494,24 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotE" width="560" height="330"></canvas>
+        <canvas id="plotE" class="drag-x" width="560" height="372"></canvas>
         <div class="fit-stats" id="statsE">
-          <span class="label">one parent and a child:</span> <span id="E_po">—</span>
-          &nbsp;|&nbsp; <span class="label">Galton measured</span> <span class="off">0.36</span>
-          &nbsp;|&nbsp; <span class="label">half your heritability would be</span> <span id="E_pred">—</span>
+          <span class="label">families breeding:</span> <span id="E_n">—</span>
+          &nbsp;|&nbsp; <span class="label">tilt:</span> <span id="E_tilt">—</span>
+          <br>
+          <span class="label">the chosen parents sit above the average by:</span> <span id="E_S">—</span>
+          <br>
+          <span class="label">the tilt prices their children at:</span> <span id="E_pred">—</span>
+          &nbsp;|&nbsp; <span class="label">the children came out:</span> <span id="E_obs">—</span>
         </div>
-      </div>
-      <div class="panel">
-        <h3>The four rungs</h3>
-        <div class="rungs" id="E_rungs"></div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsE">
-          <div class="row" data-line="h"><label for="E_h">heritability</label><input type="range" id="E_h" min="0" max="1.00" step="0.01" value="0.20" /><output id="E_hOut">0.20</output></div>
+          <div class="row" data-line="h"><label for="E_h">how much of the spread is handed down</label><input type="range" id="E_h" min="0.05" max="1.00" step="0.01" value="0.71" /><output id="E_hOut">0.71</output></div>
+          <div class="row" data-line="cut"><label for="E_cut">where the cut sits</label><input type="range" id="E_cut" min="63.0" max="76.0" step="0.05" value="63.00" /><output id="E_cutOut">63.00</output></div>
           <div class="buttons">
             <button id="E_reseed" class="secondary">New families</button>
             <button id="E_download" class="ghost">Download .R</button>
@@ -484,105 +519,26 @@
         </div>
       </div>
       <div class="panel">
-        <h3>To open Stage F</h3>
+        <h3>To finish the lesson</h3>
         <ul class="tasks" id="tasksE">
-          <li data-task="E1">Put the parent-and-child rung on Galton's 0.36. <span class="hint"><span id="E1_now">not yet</span></span></li>
-          <li data-task="E2">Answer the question below.</li>
+          <li data-task="E1">Choose parents whose children come out a full inch above the average of everybody. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E2">Now hand down 0.30 of the spread instead, and get that same inch back. <span class="hint"><span id="E2_now">not yet</span></span></li>
+          <li data-task="E3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage D solved banner. -->Stage F is open.</div>
+        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. -->Anything you're measuring with genes — all you're measuring is shared inheritance. If you're also inheriting non-genetic things, that plays a role too, and gets folded into the same number.</div>
       </div>
       <div class="panel numq" id="numqE">
-        <div class="q">At that setting, what is the correlation between two first cousins?</div>
+        <div class="q">A different population, not this one. You choose parents who sit 2.0 inches above the average, and the tilt there is 0.45. How far above the average do their children come out?</div>
         <div class="row">
-          <input type="number" id="E_ans" min="-1" max="1" step="0.01" placeholder="correlation" />
-          <span class="unit">correlation</span>
+          <input type="number" id="E_ans" min="-5" max="5" step="0.01" placeholder="inches" />
+          <span class="unit">inches above the average</span>
           <button id="E_submit">Submit</button>
         </div>
         <div class="verdict" id="E_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line" data-line="h">h &lt;- <span class="num" id="cE_h">0.20</span></span><span class="line">kid &lt;- <span class="kw">function</span>(a, b) (a+b)/<span class="num">2</span> + <span class="fn">sqrt</span>(h/<span class="num">2</span>)*<span class="fn">rnorm</span>(<span class="fn">length</span>(a))</span><span class="line">seen &lt;- <span class="kw">function</span>(g) g + <span class="fn">sqrt</span>(<span class="num">1</span>-h)*<span class="fn">rnorm</span>(<span class="fn">length</span>(g))</span><span class="line"></span><span class="line"><span class="com"># each rung is the same fit as Stage B, on a different pair</span></span><span class="line"><span class="fn">cor</span>(<span class="fn">seen</span>(father), <span class="fn">seen</span>(<span class="fn">kid</span>(father, mother)))</span><span class="line"></span><span class="line"><span class="com"># theory, for a check: h/2, h/2, h/4, h/8</span></span></pre>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== STAGE F — three roads to the same number =============== -->
-<section class="stage stage-locked" id="stageF">
-  <h2 class="stage-h">F</h2>
-  <div class="lock-banner">Solve Stage E to unlock this section.</div>
-  <div class="panel stage-intro">
-    <div class="intro-grid">
-      <!-- TEXT FOR JM: stage E voice block. The drill. Three populations, one knob
-           each, tuned until the three scatters are the same measurement, and the
-           student is asked to tell them apart and cannot. Then the swap separates
-           them in one move, which is the honest ending: the number does not
-           identify the cause, and an experiment does. -->
-      <div class="voice">
-        <p>Three populations, one knob each. In the first, a child gets half of what its parents were built with. In the second, a child copies whoever raises it. In the third, a parent and a child simply live under the same roof and it does the same thing to both.</p>
-        <p>Set all three knobs until the three correlations are the same number. Then look at the three scatters and decide which is which.</p>
-        <p>Then swap the babies between families at birth, keep comparing each child to the parents it came from, and look again.</p>
-      </div>
-      <ul class="setup">
-        <li>2,500 parent-and-child pairs in each population, measured exactly as in Stage B.</li>
-        <li>The three knobs are not on one scale — they are three different mechanisms. The correlation each produces is what is comparable, and that is what you are matching.</li>
-        <li>They count as matched when the three correlations are within 0.05 of each other and all near 0.36.</li>
-        <li>Swapping the babies moves a child's copying and a child's roof. It cannot move what the child was built with.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel graph-wrap">
-        <canvas id="plotF" width="560" height="240"></canvas>
-        <div class="fit-stats" id="statsF">
-          <span class="label">correlations —</span>
-          <span class="label">built in:</span> <span id="F_r1">—</span>
-          &nbsp; <span class="label">copied:</span> <span id="F_r2">—</span>
-          &nbsp; <span class="label">shared roof:</span> <span id="F_r3">—</span>
-        </div>
-        <div class="fit-stats" id="statsF2" style="margin-top:2px;">
-          <span class="label">widest gap between them:</span> <span id="F_gap">—</span>
-        </div>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel controls-panel">
-        <h3>Controls</h3>
-        <div class="controls" id="controlsF">
-          <div class="row" data-line="h1"><label for="F_h1">heritability — how much is built in</label><input type="range" id="F_h1" min="0" max="1.00" step="0.01" value="0.20" /><output id="F_h1Out">0.20</output></div>
-          <div class="row" data-line="h2"><label for="F_h2">copying — how faithfully a child copies its raiser</label><input type="range" id="F_h2" min="0" max="0.95" step="0.01" value="0.20" /><output id="F_h2Out">0.20</output></div>
-          <div class="row" data-line="h3"><label for="F_h3">shared roof — how strongly it marks both of them</label><input type="range" id="F_h3" min="0" max="0.95" step="0.01" value="0.20" /><output id="F_h3Out">0.20</output></div>
-          <div class="toggle"><input type="checkbox" id="F_cross" /><label for="F_cross">swap the babies at birth</label></div>
-          <div class="buttons">
-            <button id="F_reseed" class="secondary">New families</button>
-            <button id="F_download" class="ghost">Download .R</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>To finish the lesson</h3>
-        <ul class="tasks" id="tasksF">
-          <li data-task="F1">Bring all three correlations within 0.05 of each other, near 0.36. <span class="hint"><span id="F1_now">not yet</span></span></li>
-          <li data-task="F2">Swap the babies, and watch two of the three go. <span class="hint"><span id="F2_now">not yet</span></span></li>
-          <li data-task="F3">Answer the question below.</li>
-        </ul>
-        <div class="solved-banner" id="solvedF"><!-- TEXT FOR JM: stage E solved banner. --></div>
-      </div>
-      <div class="panel numq" id="numqF">
-        <div class="q">With the babies swapped, one of the three correlations is still standing. What is it?</div>
-        <div class="row">
-          <input type="number" id="F_ans" min="-1" max="1" step="0.01" placeholder="correlation" />
-          <span class="unit">correlation</span>
-          <button id="F_submit">Submit</button>
-        </div>
-        <div class="verdict" id="F_verdict"></div>
-      </div>
-      <div class="panel">
-        <h3>R code</h3>
-<pre class="code" id="codeF"><span class="line" data-line="h1">h1 &lt;- <span class="num" id="cF_h1">0.20</span>   <span class="com"># built in</span></span><span class="line" data-line="h2">h2 &lt;- <span class="num" id="cF_h2">0.20</span>   <span class="com"># copied from the raiser</span></span><span class="line" data-line="h3">h3 &lt;- <span class="num" id="cF_h3">0.20</span>   <span class="com"># shared roof</span></span><span class="line"></span><span class="line"><span class="com"># swapping cannot reach into the first one</span></span><span class="line">gk &lt;- gp/<span class="num">2</span> + <span class="fn">sqrt</span>(h1*<span class="num">0.75</span>)*<span class="fn">rnorm</span>(n)</span><span class="line">k2 &lt;- h2*<span class="fn">if</span>(swap) <span class="fn">sample</span>(p2) <span class="kw">else</span> p2</span><span class="line">k3 &lt;- h3*<span class="fn">if</span>(swap) <span class="fn">sample</span>(roof) <span class="kw">else</span> roof</span><span class="line"></span><span class="line"><span class="fn">c</span>(<span class="fn">cor</span>(P1,K1), <span class="fn">cor</span>(P2,K2), <span class="fn">cor</span>(P3,K3))</span></pre>
+<pre class="code" id="codeE"><span class="line" data-line="h">h &lt;- <span class="num" id="cE_h">0.71</span>   <span class="com"># share of the spread handed down</span></span><span class="line" data-line="cut">cut &lt;- <span class="num" id="cE_cut">63.00</span></span><span class="line">sdA &lt;- <span class="num">2.55</span> * <span class="fn">sqrt</span>(h); sdE &lt;- <span class="num">2.55</span> * <span class="fn">sqrt</span>(<span class="num">1</span> - h)</span><span class="line"></span><span class="line">chosen &lt;- mp &gt;= cut</span><span class="line">S &lt;- <span class="fn">mean</span>(mp[chosen]) - <span class="fn">mean</span>(mp)</span><span class="line">tilt &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp))[<span class="num">2</span>]</span><span class="line"></span><span class="line">tilt * S                          <span class="com"># what the tilt prices them at</span></span><span class="line"><span class="fn">mean</span>(kid[chosen]) - <span class="fn">mean</span>(kid)     <span class="com"># what the children did</span></span></pre>
       </div>
     </div>
   </div>
@@ -594,88 +550,124 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-/* ====== Shared helpers ============================================== */
-function mulberry32(seed) { let a = seed >>> 0; return function () { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-function makeNorm(rng) { let spare = null; return function () { if (spare !== null) { const v = spare; spare = null; return v; } let u=0,v=0,s=0; do { u=rng()*2-1; v=rng()*2-1; s=u*u+v*v; } while (s>=1||s===0); const f=Math.sqrt(-2*Math.log(s)/s); spare=v*f; return u*f; }; }
-function setupCanvas(canvas) { const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
-function makeFrame(pad, cssW, cssH, xMin, xMax, yMin, yMax) { const W=cssW-pad.l-pad.r,H=cssH-pad.t-pad.b; return {pad,W,H,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*W, y:v=>pad.t+H-(v-yMin)/(yMax-yMin)*H}; }
-function drawAxes(ctx, f, xLabel, yLabel, xTicks, yTicks, xFmt, yFmt) {
-  xFmt = xFmt || (v=>v.toString()); yFmt = yFmt || (v=>v.toString());
-  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke();
-  ctx.fillStyle="#333"; ctx.font="11px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
-  for (let i=0;i<=xTicks;i++){ const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+6); }
-  ctx.textAlign="right"; ctx.textBaseline="middle";
-  for (let i=0;i<=yTicks;i++){ const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y); }
-  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
-  if (xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+26);
-  if (yLabel) { ctx.save(); ctx.translate(f.pad.l-42, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel, 0, 0); ctx.restore(); }
+/* ====== Shared helpers ==============================================
+   mean() is required by sim.js's olsSlope and is not defined there; the
+   rest are the three moments this page reads off every plot it draws. */
+function mean(a) { let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+function vari(a) { const m = mean(a); let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - m; s += d * d; } return s / a.length; }
+function covar(a, b) { const ma = mean(a), mb = mean(b); let s = 0; for (let i = 0; i < a.length; i++) s += (a[i] - ma) * (b[i] - mb); return s / a.length; }
+function tiltOf(x, y) { return covar(x, y) / vari(x); }
+function f2(v) { return (Math.round(v * 100) / 100).toFixed(2); }
+function f3(v) { return (Math.round(v * 1000) / 1000).toFixed(3); }
+function yInv(f, py) { return f.yMin + (f.pad.t + f.H - py) / f.H * (f.yMax - f.yMin); }
+function xInv(f, px) { return f.xMin + (px - f.pad.l) / f.W * (f.xMax - f.xMin); }
+function canvasPt(cv, evt) {
+  const r = cv.getBoundingClientRect();
+  const w = +cv.dataset.cssW || cv.width, h = +cv.dataset.cssH || cv.height;
+  return { x: (evt.clientX - r.left) / r.width * w, y: (evt.clientY - r.top) / r.height * h };
 }
-function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
-function highlightByDataLine(codeId, key) { const pre=document.getElementById(codeId); if(!pre)return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi")); }
-function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
-function sdOf(arr) { if (arr.length < 2) return 0; const m = mean(arr); let s = 0; for (const v of arr) s += (v-m)*(v-m); return Math.sqrt(s/arr.length); }
-// The one measurement this lesson makes, over and over: put both sides in
-// spreads and read the tilt. On standardised axes that tilt IS the correlation,
-// which is why every stage can report the same number for a different pairing.
-function tiltOf(xs, ys) {
-  const mx = mean(xs), my = mean(ys), sx = sdOf(xs), sy = sdOf(ys);
-  if (sx === 0 || sy === 0) return 0;
-  let c = 0;
-  for (let i=0;i<xs.length;i++) c += ((xs[i]-mx)/sx) * ((ys[i]-my)/sy);
-  return c / xs.length;
-}
-// A pair of relatives has no natural order, so measure it both ways round.
-function tiltSym(xs, ys) { return tiltOf(xs.concat(ys), ys.concat(xs)); }
-function signed(v, n) { const s = v.toFixed(n); return v > 0 ? "+" + s : s; }
-function paintNum(id, v, digits, good) {
-  const el = document.getElementById(id);
-  el.textContent = signed(v, digits);
-  el.className = good === undefined ? "" : (good ? "ok" : "off");
-}
-function scatter(ctx, f, xs, ys, color, r, jitterRng) {
-  ctx.fillStyle = color;
-  for (let i=0;i<xs.length;i++) {
-    let x = xs[i], y = ys[i];
-    if (jitterRng) { x += (jitterRng()-0.5)*0.34; y += (jitterRng()-0.5)*0.34; }
-    if (x < f.xMin || x > f.xMax || y < f.yMin || y > f.yMax) continue;
-    ctx.beginPath(); ctx.arc(f.x(x), f.y(y), r, 0, 6.2832); ctx.fill();
-  }
-}
-function drawTilt(ctx, f, tilt, color) {
-  ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.beginPath();
-  ctx.moveTo(f.x(f.xMin), f.y(tilt*f.xMin));
-  ctx.lineTo(f.x(f.xMax), f.y(tilt*f.xMax));
-  ctx.stroke();
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function wireDownload(btnId, preId, fname) {
+  const b = document.getElementById(btnId); if (!b) return;
+  b.addEventListener("click", () => downloadText(fname, document.getElementById(preId).innerText + "\n"));
 }
 
-/* ====== Stage gates ================================================= */
-const Gates = { A:{}, B:{}, C:{}, D:{}, E:{}, F:{} };
-const NEXT = { A:"B", B:"C", C:"D", D:"E", E:"F", F:null };
+/* Palette. The two blues are one family on purpose: together they are
+   everything that came down from the parents, and the split between them is
+   only whether the parents' own measurements could show it. The ochre is the
+   one block that is not inheritance at all. */
+const DEEP = "#1e4d68", SHALLOW = "#8fb6cf", LIFE = "#c07a2c";
+const PALE = "#ded9cd", DOT = "#5c86a1", HOT = "#b23a48", MUTED = "#6b6b68", RULE = "#e2e0d9";
+
+/* One block of a stacked bar, drawn left to right across the full width. */
+function drawBar(ctx, W, H, blocks, caption) {
+  ctx.clearRect(0, 0, W, H);
+  const x0 = 14, x1 = W - 14, top = 16, hgt = 26;
+  let x = x0;
+  for (const b of blocks) {
+    const w = Math.max(0, b.share) * (x1 - x0);
+    ctx.fillStyle = b.color; ctx.fillRect(x, top, w, hgt);
+    x += w;
+  }
+  ctx.strokeStyle = "#9a978c"; ctx.lineWidth = 1;
+  ctx.strokeRect(x0 + 0.5, top + 0.5, x1 - x0 - 1, hgt - 1);
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "alphabetic";
+  ctx.textAlign = "left";  ctx.fillText("all of the children's variation", x0, top - 4);
+  if (caption) { ctx.textAlign = "left"; ctx.fillStyle = "#3d3d3a"; ctx.font = "11.5px -apple-system, sans-serif"; ctx.fillText(caption, x0, top + hgt + 15); }
+  return { x0: x0, x1: x1, top: top, hgt: hgt };
+}
+/* A tie-line under two adjacent blocks, used in Stage C to say out loud that
+   the two blues add to the tilt. */
+function drawBrace(ctx, geo, from, to, label) {
+  const a = geo.x0 + from * (geo.x1 - geo.x0), b = geo.x0 + to * (geo.x1 - geo.x0);
+  const y = geo.top + geo.hgt + 22;
+  ctx.strokeStyle = DEEP; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(a, y - 4); ctx.lineTo(a, y); ctx.lineTo(b, y); ctx.lineTo(b, y - 4); ctx.stroke();
+  ctx.fillStyle = DEEP; ctx.font = "600 11.5px -apple-system, sans-serif"; ctx.textAlign = "center";
+  ctx.fillText(label, (a + b) / 2, y + 13);
+}
+
+const G_MP = [
+75.43,75.43,75.43,75.43,73.66,73.66,73.66,73.66,72.06,72.06,72.06,72.06,72.06,72.06,72.06,69.09,69.09,69.09,69.09,69.09,69.09,73.72,73.72,73.72,73.72,73.72,73.72,73.72,72.91,72.91,72.91,72.89,72.37,70.48,70.48,70.48,70.48,70.48,70.48,70.48,70.48,69.94,72.68,72.68,72.68,72.68,72.41,72.41,72.41,71.6,71.6,71.6,71.6,71.6,71.6,71.6,71.6,71.6,71.33,71.33,71.33,71.33,71.33,71.33,71.06,71.06,71.06,70.62,73.61,73.61,73.61,73.61,73.61,73.61,73.61,73.61,72.72,72.72,72.72,72.18,72.18,72.18,71.1,71.1,71.1,71.1,71.1,71.1,71.1,71.37,70.56,70.56,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.02,70.54,70.54,70.54,69.48,69.73,69.73,69.73,69.73,69.73,69.73,69.48,69.48,69.48,69.48,69.48,69.48,69.48,69.48,69.48,69.48,68.94,72.76,72.76,72.76,72.76,72.76,71.68,71.68,71.68,71.68,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.14,71.22,70.87,70.87,70.87,70.87,70.87,70.87,71.12,71.12,70.85,70.85,70.6,70.6,70.6,70.06,70.06,70.06,70.06,70.06,70.06,70.06,70.06,70.68,70.68,70.68,70.68,70.06,70.06,70.06,70.58,70.58,70.58,70.58,70.58,70.58,70.58,70.33,70.33,69.62,69.62,69.79,69.79,69.79,69.79,69.79,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,69.52,68.98,68.98,68.98,68.98,68.98,68.98,68.98,68.98,68.98,68.98,69.25,69.25,69.25,69.25,69.25,68.98,68.98,68.98,68.98,68.98,68.98,68.98,68.44,66.82,66.82,72.26,72.26,72.26,72.26,72.26,72.26,72.26,72.26,72.26,72.26,71.72,71.18,71.18,71.18,71.18,71.18,71.18,70.91,70.91,70.91,70.91,70.91,70.91,70.91,70.91,70.91,70.91,70.91,70.35,70.35,70.35,70.35,70.35,70.35,70.35,70.35,70.35,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,70.1,69.94,69.94,69.94,69.94,69.94,69.94,69.94,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.67,69.67,69.67,69.67,69.67,69.81,69.81,69.81,69.81,69.81,69.81,69.81,69.81,70.08,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.56,69.4,69.4,69.4,69.4,69.4,69.4,69.4,69.4,69.27,69.27,69.27,69.27,69.27,69.27,69.27,69.27,69.27,69.29,69.29,69.29,69.29,69.02,69.02,69.02,69.02,69.02,69.02,69.02,69.02,68.73,68.73,68.73,68.73,68.73,68.73,68.73,68.73,69.01,69.01,69.01,69.01,69.01,69.01,69.01,68.73,68.73,68.73,67.94,67.94,67.4,67.4,67.4,67.4,67.4,67.4,66.59,66.59,66.59,66.32,66.32,66.32,66.32,66.32,71.49,71.49,71.49,71.49,71.49,71.49,71.49,71.49,71.49,71.49,70.68,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.52,70.52,70.52,70.52,70.14,70.14,70.14,70.14,70.14,70.14,70.41,70.41,70.41,70.41,70.41,70.41,70.41,70.66,70.66,70.66,70.66,70.41,70.41,70.41,70.41,70.41,70.41,70.39,70.39,70.39,70.39,70.39,70.39,70.39,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,70.14,69.6,69.6,69.6,69.6,69.6,69.6,69.6,69.58,69.58,69.58,69.58,69.58,69.58,69.58,69.16,69.16,69.16,69.16,68.79,68.52,68.52,68.52,68.52,68.52,68.52,68.52,68.52,68.52,68.52,68.79,68.79,68.79,68.79,68.79,68.79,68.79,68.79,68.79,68.79,68.33,68.23,68.23,68.23,67.98,67.98,67.98,67.98,67.98,68.23,68.23,68.23,68.23,68.23,68.23,68.23,68.23,68.23,68.23,68.23,68.25,68.25,68.25,68.25,68.25,68.25,68.25,68.25,67.98,67.98,67.98,67.98,67.69,67.69,67.69,67.69,67.69,67.44,67.44,67.44,67.44,67.44,67.44,67.44,67.44,67.44,66.9,66.9,66.9,66.9,66.9,66.9,66.9,67.17,72.42,72.42,70.43,70.43,70.43,70.16,70.16,70.16,70.16,70.16,70.16,70.16,70.16,70.16,70.16,70.16,69.1,69.1,69.37,69.37,69.37,69.37,69.37,69.37,69.37,69.37,69.37,69.1,69.1,69.1,69.1,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,69.35,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.83,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.56,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.54,68.54,68.54,68.54,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.02,68.54,68.02,68.39,68.39,68.39,68.39,68.39,67.75,67.83,67.83,67.75,66.94,66.94,66.94,66.94,66.94,66.51,66.4,66.4,66.4,66.4,66.4,66.4,66.4,66.4,66.4,66.4,66.4,66.11,65.86,65.86,65.86,65.86,65.86,65.86,65.86,65.86,65.86,65.86,69.25,69.25,69.25,69.25,69.25,69.41,69.14,69.14,69.14,69.14,69.14,69.14,69.14,69.14,68.6,68.6,68.6,68.6,68.6,68.6,68.87,68.87,68.87,68.87,68.87,68.87,68.87,68.87,68.87,68.6,68.6,68.6,68.85,68.85,68.85,68.85,68.85,68.85,68.85,68.85,68.85,68.85,68.85,68.06,68.06,68.06,68.06,67.79,67.79,67.79,67.79,67.79,67.79,67.79,67.79,67.52,67.52,67.52,67.23,67.23,67.23,67.23,67.23,66.44,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,69.18,68.64,68.64,68.64,68.64,68.64,68.64,68.64,68.64,68.64,68.64,68.64,68.35,68.35,68.35,68.35,68.35,68.35,68.35,68.35,68.37,68.37,68.37,68.37,68.37,67.02,67.29,67.29,67.27,67.27,67.27,67.27,67.27,67.27,67.0,67.0,67.0,67.0,67.0,67.0,67.0,66.21,65.4,65.4,65.4,65.4,65.4,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,64.86,68.68,68.68,68.68,68.68,68.68,68.14,68.14,68.14,68.14,68.14,68.14,68.14,68.14,68.14,67.6,67.6,67.6,67.6,67.6,67.6,67.6,67.6,67.6,67.87,67.87,67.6,67.6,67.6,67.6,67.6,67.6,67.06,67.06,67.06,67.06,67.06,67.06,66.52,66.52,66.52,66.52,66.52,66.77,66.77,66.77,66.77,65.15,65.15,65.15,65.15,65.15,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.56,66.02,64.4,64.4,65.79,65.79,66.64,66.64,66.64,65.27,65.27];
+const G_KID = [
+73.2,74.74,74.52,74.52,73.5,72.5,70.74,70.74,71.0,73.44,70.5,68.5,72.36,69.66,68.04,72.0,69.0,68.0,71.82,67.5,67.5,75.06,76.5,74.0,73.0,73.0,76.14,69.12,76.14,73.44,71.28,71.28,70.74,74.0,70.0,73.44,72.36,72.36,71.28,68.58,68.04,70.2,71.0,66.96,68.0,67.0,71.0,70.5,72.04,72.0,70.5,70.2,70.2,69.2,74.2,71.82,69.66,68.58,74.0,73.0,71.5,62.5,71.82,67.28,71.28,69.66,69.12,67.72,73.2,73.0,72.7,75.6,74.52,73.98,73.44,71.28,73.0,73.98,73.44,73.0,71.0,72.36,74.2,70.5,69.5,71.28,70.74,70.2,70.2,70.74,71.28,68.04,70.5,70.5,69.0,70.2,68.04,69.0,67.0,68.04,73.0,67.0,76.14,75.6,71.82,68.04,72.9,72.58,72.04,69.12,71.0,70.0,70.0,71.28,70.2,70.2,74.0,72.0,69.0,72.9,68.58,72.0,71.5,71.5,70.0,73.44,70.96,78.0,74.0,73.0,72.0,72.36,73.2,73.0,69.0,72.36,70.0,72.36,72.36,71.82,70.0,69.0,68.5,71.28,69.66,68.04,71.0,72.36,76.0,72.0,71.0,66.0,71.28,70.5,72.0,72.0,71.0,69.0,71.28,70.2,73.0,70.42,68.5,67.7,68.0,68.0,66.96,73.44,73.44,72.9,71.82,71.82,71.28,70.74,70.2,72.0,71.0,70.5,72.36,68.0,68.0,68.0,72.0,71.0,70.0,71.28,69.66,69.66,66.96,73.0,66.96,72.9,69.66,71.0,67.0,71.28,70.2,68.58,71.0,70.0,70.0,64.0,70.2,70.2,69.12,68.04,68.04,71.0,71.0,70.0,68.58,71.0,70.0,69.66,67.5,66.42,72.0,70.5,70.5,69.66,64.8,70.0,69.12,69.12,69.12,67.5,70.5,70.0,69.0,69.0,66.0,69.66,69.12,66.96,71.5,69.0,71.0,70.0,69.0,74.52,70.0,68.7,73.44,71.28,69.12,66.96,75.0,70.0,69.0,71.28,69.12,64.8,72.9,73.0,72.0,72.0,66.5,74.74,72.58,71.82,71.28,71.28,69.34,68.8,72.0,70.2,69.0,68.5,73.44,70.2,66.42,65.88,65.88,73.0,72.0,70.5,65.0,65.0,69.66,68.04,66.96,67.0,65.0,69.66,67.5,67.5,70.0,70.0,72.36,70.2,70.2,68.04,79.0,75.0,71.0,74.52,72.36,70.96,66.96,73.0,72.5,70.2,69.0,69.0,72.0,70.0,68.7,71.82,70.74,69.88,69.66,70.7,70.0,68.0,67.0,66.0,65.0,72.36,70.0,68.0,66.7,70.74,72.0,70.0,67.5,66.1,64.91,74.0,69.5,69.0,68.0,68.0,68.0,70.74,70.2,64.8,68.0,70.2,69.12,66.96,71.0,70.0,70.0,70.0,69.5,68.5,74.52,70.2,69.12,70.0,67.0,65.5,68.8,68.26,67.5,67.18,65.88,70.0,68.5,70.74,68.58,72.5,69.0,67.0,69.66,69.12,71.0,67.5,72.9,68.58,68.0,67.0,68.8,66.96,70.0,66.5,66.96,65.88,72.0,70.0,69.5,69.5,68.0,70.2,69.12,68.04,70.7,69.7,69.2,65.2,69.12,68.58,68.26,72.0,72.0,64.8,71.2,67.0,67.0,64.5,70.2,68.04,70.2,70.2,71.5,64.5,68.04,72.0,66.0,71.28,70.2,68.04,75.0,71.0,70.0,71.28,71.28,70.74,70.2,70.2,69.12,69.12,69.12,73.0,72.0,71.7,71.5,70.74,70.2,67.72,67.5,71.2,71.0,70.0,75.0,74.0,72.0,68.5,70.0,68.5,68.0,70.2,68.04,67.5,73.0,71.0,70.5,70.5,67.0,66.0,65.88,70.5,67.5,69.66,69.12,71.0,73.98,72.9,71.28,68.04,68.04,71.0,71.0,70.5,70.5,71.82,70.74,69.66,73.0,72.0,69.0,69.0,71.82,70.74,70.74,70.2,69.12,70.0,68.5,67.0,70.2,69.12,68.58,65.88,69.7,68.0,60.0,70.42,69.66,68.8,64.8,71.7,66.5,70.2,68.58,70.74,69.0,72.9,68.58,72.0,73.0,70.0,70.0,64.0,71.28,66.96,70.5,67.0,66.0,70.2,68.04,66.96,65.88,70.5,68.8,68.04,67.5,73.0,72.0,69.0,73.0,71.0,71.0,69.0,68.04,72.0,70.0,67.8,70.42,69.88,69.66,68.58,68.58,67.5,66.96,66.42,71.0,70.0,70.0,69.0,68.58,67.5,67.5,66.96,72.0,68.0,71.28,71.28,70.0,69.5,69.0,68.04,66.96,68.0,68.0,67.5,64.0,63.0,63.0,68.58,66.96,66.96,70.5,73.44,67.5,69.0,66.0,66.64,65.34,69.5,71.0,66.64,73.0,71.0,72.36,70.0,69.0,69.0,68.7,68.5,68.5,68.0,68.0,68.0,66.2,68.26,67.5,66.0,66.0,69.12,71.7,71.5,70.7,65.5,71.82,70.42,66.42,72.0,72.0,73.44,71.28,69.2,68.0,66.0,66.0,66.96,66.42,65.88,64.8,72.0,70.5,68.7,68.5,67.7,69.12,68.58,68.04,71.0,68.0,68.0,67.0,70.2,69.12,68.04,68.04,66.96,65.88,66.0,63.0,70.74,66.96,71.2,71.2,69.0,68.5,67.5,66.96,69.0,67.0,66.0,71.28,71.28,70.2,70.2,70.2,69.12,68.04,70.5,70.0,68.0,66.0,66.0,71.28,66.96,66.42,73.5,70.0,69.5,70.74,67.0,70.0,68.0,69.66,69.12,71.0,68.0,66.0,65.5,65.0,68.04,66.96,66.96,67.0,67.0,66.0,69.12,68.58,65.88,68.2,70.0,70.0,69.0,67.0,65.5,69.66,68.5,67.7,66.64,66.5,68.5,68.0,64.0,68.58,68.04,66.7,64.0,65.88,65.88,64.8,64.8,64.8,60.48,67.5,67.0,66.5,64.8,69.0,68.0,65.0,64.7,64.0,64.0,63.0,70.2,70.2,66.96,65.88,72.7,72.7,71.5,70.74,68.58,71.0,73.0,71.0,70.7,70.0,69.0,73.44,70.74,66.96,69.7,67.5,70.74,70.2,69.66,68.58,70.0,69.0,70.74,70.74,68.04,70.0,67.7,68.04,64.8,65.0,66.96,66.96,71.0,69.0,69.12,69.12,68.04,68.04,68.04,68.04,68.04,67.5,66.96,71.5,70.0,67.0,67.0,71.0,70.2,69.2,68.5,68.0,67.0,65.5,68.58,69.0,68.0,68.04,70.0,69.5,69.0,68.5,71.28,67.0,70.5,70.5,67.0,66.0,66.0,66.96,66.96,66.42,72.0,65.0,65.0,72.36,69.12,69.12,66.96,64.8,64.8,66.0,65.0,72.36,71.82,70.74,72.0,68.0,71.28,70.2,66.96,65.88,68.7,68.5,66.5,64.5,67.5,65.34,65.34,62.1,72.0,71.0,67.0,71.28,70.2,70.0,69.66,66.96,67.2,67.0,65.0,70.2,70.2,68.04,70.0,68.0,68.58,67.5,67.5,67.5,67.5,70.0,68.0,67.0,65.0,64.8,65.0,68.0,67.0,66.5,66.0,65.7,65.5,65.0,70.2,69.12,68.04,66.96,65.88,64.8,62.64,61.56,66.5,66.0,66.0,70.2,68.04,63.0,68.04,68.04,64.8,67.0,66.0,65.0,70.2,65.88,69.0,68.0,68.0,70.2,70.2,66.96,66.96,65.88,63.72,70.7,70.74,69.2,69.0,68.0,67.7,69.66,65.34,67.0,67.0,69.12,69.12,67.5,65.34,70.0,68.04,66.0,66.0,68.04,71.0,71.0,69.0,68.58,68.0,68.0,67.0,67.0,66.96,71.5,68.0,70.74,69.12,66.96,66.96,65.88,70.5,68.0,72.36,70.2,69.12,69.12,64.8,64.5,66.0,64.8,73.98,68.58,64.0,66.96,65.88,66.5,61.56];
+const G_FA = [
+78.5,78.5,78.5,78.5,75.5,75.5,75.5,75.5,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,75.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.5,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,74.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.0,73.2,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.5,72.5,72.5,72.0,72.5,72.5,72.5,72.5,72.5,72.5,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,72.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.7,71.0,71.0,71.0,71.0,71.0,71.0,71.5,71.5,71.5,71.5,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.7,71.7,71.7,71.7,71.0,71.0,71.0,71.5,71.5,71.5,71.5,71.5,71.5,71.5,71.0,71.0,71.2,71.2,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,71.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.3,70.3,70.3,70.3,70.3,70.3,70.3,70.5,70.5,70.5,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,70.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.5,69.5,69.5,69.5,69.0,69.0,69.0,69.0,69.0,69.0,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.2,69.2,69.2,69.2,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.7,69.5,69.5,69.5,69.0,69.0,69.0,69.0,69.0,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.5,69.5,69.5,69.5,69.5,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,69.0,68.7,68.7,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.5,68.5,68.5,68.5,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.5,68.0,68.2,68.2,68.2,68.2,68.2,68.0,68.7,68.7,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.5,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,68.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.0,67.5,67.5,67.5,67.5,67.5,67.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,66.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.0,65.5,65.5,65.5,65.5,65.5,65.5,65.5,65.5,65.5,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,64.0,63.0,63.0,62.0,62.0,62.0,62.5,62.5];
+const G_MO = [
+72.36,72.36,72.36,72.36,71.82,71.82,71.82,71.82,69.12,69.12,69.12,69.12,69.12,69.12,69.12,63.18,63.18,63.18,63.18,63.18,63.18,73.44,73.44,73.44,73.44,73.44,73.44,73.44,71.82,71.82,71.82,71.28,70.74,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,72.36,72.36,72.36,72.36,71.82,71.82,71.82,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.66,69.66,69.66,69.66,69.66,69.66,69.12,69.12,69.12,68.04,74.52,74.52,74.52,74.52,74.52,74.52,74.52,74.52,73.44,73.44,73.44,72.36,72.36,72.36,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.74,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,74.52,74.52,74.52,74.52,74.52,72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.66,69.66,69.66,69.66,69.12,69.12,69.12,69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.66,68.04,68.04,68.58,68.58,68.58,68.58,68.58,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,67.5,67.5,67.5,67.5,67.5,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,62.64,62.64,74.52,74.52,74.52,74.52,74.52,74.52,74.52,74.52,74.52,74.52,73.44,72.36,72.36,72.36,72.36,72.36,72.36,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.88,69.88,69.88,69.88,69.88,69.88,69.88,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.34,69.34,69.34,69.34,69.34,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.66,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,68.8,68.8,68.8,68.8,68.8,68.8,68.8,68.8,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,68.58,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,67.72,67.72,67.72,67.72,67.72,67.72,67.72,66.96,66.96,66.96,65.88,65.88,64.8,64.8,64.8,64.8,64.8,64.8,63.18,63.18,63.18,62.64,62.64,62.64,62.64,62.64,73.98,73.98,73.98,73.98,73.98,73.98,73.98,73.98,73.98,73.98,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,72.04,72.04,72.04,72.04,71.28,71.28,71.28,71.28,71.28,71.28,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.12,69.12,69.12,69.12,68.58,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,66.96,66.96,66.96,66.96,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,64.8,64.8,64.8,64.8,64.8,64.8,64.8,65.34,76.14,76.14,72.36,72.36,72.36,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,70.2,70.2,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.66,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,68.58,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.04,68.58,68.58,68.58,68.58,68.58,67.5,66.96,66.96,67.5,65.88,65.88,65.88,65.88,65.88,65.02,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,71.5,71.5,71.5,71.5,71.5,71.82,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,65.88,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.74,70.74,70.74,70.74,70.74,68.04,68.58,68.58,68.04,68.04,68.04,68.04,68.04,68.04,67.5,67.5,67.5,67.5,67.5,67.5,67.5,66.42,64.8,64.8,64.8,64.8,64.8,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,72.36,72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.74,70.74,70.2,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,64.8,64.8,64.8,64.8,64.8,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,68.04,64.8,64.8,68.58,68.58,71.28,71.28,71.28,68.04,68.04];
+const G_FAM = [
+0,0,0,0,1,1,1,1,2,2,3,3,3,3,3,4,4,4,4,4,4,5,6,6,6,6,6,6,7,7,7,8,9,10,10,10,10,10,10,10,10,11,12,12,13,13,14,14,14,15,15,15,15,15,15,15,15,15,16,16,16,16,16,16,17,17,17,18,19,19,19,19,19,19,19,19,20,20,20,21,21,21,22,22,22,22,22,22,22,23,24,24,25,25,25,25,25,26,26,26,27,27,27,27,27,27,28,28,28,29,30,30,30,30,30,30,31,31,31,31,31,32,32,32,32,32,33,34,34,34,34,34,35,35,35,35,36,36,36,36,37,37,37,37,37,37,38,38,39,39,39,39,39,40,41,41,41,41,41,41,42,42,43,43,44,44,44,45,45,45,45,45,45,45,45,46,46,46,46,47,47,47,48,48,48,48,48,48,48,49,49,50,50,51,51,51,51,51,52,52,52,52,52,52,52,52,52,53,53,53,53,54,54,54,54,54,55,55,55,55,55,56,56,56,56,56,57,57,57,57,57,57,57,58,59,59,60,60,60,60,61,61,61,61,61,61,62,63,63,63,63,63,64,65,65,65,65,65,65,65,65,65,65,65,66,66,66,66,67,67,67,67,67,68,68,68,68,68,68,68,68,69,69,69,69,69,70,70,70,70,70,70,71,71,71,71,71,71,71,72,72,72,73,73,74,74,74,74,74,74,74,75,75,75,75,75,75,75,76,76,76,76,77,77,77,77,77,78,78,78,78,78,78,78,78,79,80,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,82,82,82,83,83,83,83,84,84,84,84,84,85,85,85,85,86,86,86,86,87,87,87,87,88,88,88,88,88,88,88,88,89,89,89,89,89,89,89,90,90,90,91,91,92,92,92,92,93,93,94,94,94,95,95,95,95,95,96,96,96,96,96,96,96,96,96,96,97,98,98,98,98,98,98,98,98,99,99,99,100,100,100,100,101,101,101,101,101,101,102,102,102,102,102,102,102,103,103,103,103,104,104,104,104,104,104,105,105,105,105,105,105,105,106,106,106,106,106,106,106,106,106,107,107,107,107,107,107,107,108,108,108,108,108,108,108,109,109,109,109,110,111,111,111,112,113,113,113,113,113,113,114,114,114,114,114,114,114,115,115,115,116,117,117,117,118,118,118,118,118,119,119,119,119,119,119,119,119,119,119,119,120,120,120,120,120,120,120,120,121,121,121,121,122,122,122,122,122,123,123,123,123,123,123,123,123,123,124,124,124,125,125,125,125,126,127,127,128,128,128,129,129,129,129,129,129,129,129,129,129,129,130,130,131,131,132,132,132,132,132,132,132,133,133,133,133,134,134,134,134,134,134,134,134,136,136,136,136,136,136,136,136,135,135,135,135,135,135,135,135,135,135,137,137,137,137,138,138,138,138,138,139,140,140,140,140,140,140,140,140,140,140,141,141,141,141,141,141,141,141,142,142,142,142,143,144,144,144,144,145,145,145,145,145,145,145,145,146,146,146,146,146,146,147,148,149,149,149,149,149,150,151,151,152,153,153,153,153,153,154,155,155,155,155,155,155,155,156,156,156,156,157,158,158,158,158,158,158,158,158,158,158,159,159,159,159,159,160,161,161,161,161,161,161,161,161,162,162,162,162,162,162,163,163,163,163,163,164,164,164,164,165,165,165,166,166,166,166,166,166,166,166,166,166,166,167,167,167,167,168,168,168,168,168,168,168,168,169,169,169,170,170,170,170,170,171,172,172,172,172,172,172,172,172,173,173,173,173,173,173,173,173,173,174,174,174,174,174,175,175,175,175,175,175,176,176,176,176,176,176,176,176,177,177,177,177,177,178,179,179,180,180,180,180,180,180,181,181,181,181,181,181,181,182,183,183,183,183,184,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,186,186,186,186,187,188,188,188,188,189,189,189,189,189,190,190,190,190,190,190,190,190,190,191,191,192,192,192,192,192,192,193,193,193,193,193,193,194,194,195,195,195,196,196,196,196,197,197,197,197,197,198,198,198,198,198,198,198,199,199,199,199,199,199,199,200,201,201,202,202,203,203,203,204,204];
+/* ====== Stage gates =================================================
+   A stage opens the next by being solved. Written questions are recorded on
+   the first attempt only and getting one wrong never shuts a door. */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false},
+                D:{open:false,done:false}, E:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+const BIT = { A1:0, A2:1, Aq:2,  B1:3, B2:4, Bq:5,
+              C1:6, C2:7, C3:8, Cq:9,  D1:10, D2:11, Dq:12,
+              E1:13, E2:14, Eq:15 };
+
 function unlockNext(stage) {
   const nx = NEXT[stage]; if (!nx) return;
-  const sec = document.getElementById("stage"+nx);
-  if (sec.classList.contains("stage-locked")) {
+  const sec = document.getElementById("stage" + nx);
+  if (sec && sec.classList.contains("stage-locked")) {
     sec.classList.remove("stage-locked");
-    const toc = document.getElementById("toc"+nx); if (toc) toc.classList.remove("locked");
+    const toc = document.getElementById("toc" + nx);
+    if (toc) toc.classList.remove("locked");
   }
-  Gates[nx].open = true;
+  if (Gates[nx]) Gates[nx].open = true;
 }
-function markTask(stage, key) { const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`); if (li) li.classList.add("done"); }
-function showSolved(stage, text) { const el = document.getElementById("solved"+stage); if (!el) return; if (text) el.innerHTML = text; el.classList.add("shown"); }
-function record(pos, ok) { if (typeof Score !== "undefined" && Score.recordCheckpoint) Score.recordCheckpoint(pos, ok); }
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function showSolved(stage) {
+  const el = document.getElementById("solved" + stage);
+  if (el) el.classList.add("shown");
+}
+function record(pos, ok) {
+  if (pos == null) return;
+  if (typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+  // The last question on the page is answered after the last gate has already
+  // closed, so a code minted at that gate would hand in with the final bit
+  // still zero. Re-mint whenever the lesson is already complete.
+  if (Gates.E.done && Score.finish) Score.finish();
+}
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
-const BIT = { A_solve:0, A_num:1, B_solve:2, B_num:3, C_solve:4, C_num:5,
-              D_solve:6, D_num:7, E_solve:8, E_num:9, F_solve:10, F_num:11 };
-// Galton's two real numbers, recomputed off the embedded rows.
-const REAL_PO = 0.36, REAL_SIB = 0.40;
-
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true; showSolved(stage); unlockNext(stage);
+}
 function wireNumeric(id, opts) {
-  const box=document.getElementById("numq"+id), input=document.getElementById(id+"_ans");
-  const btn=document.getElementById(id+"_submit"), out=document.getElementById(id+"_verdict");
+  const box = document.getElementById("numq" + id);
+  const input = document.getElementById(id + "_ans");
+  const btn = document.getElementById(id + "_submit");
+  const out = document.getElementById(id + "_verdict");
   let scored = false;
   btn.addEventListener("click", () => {
-    const v = parseFloat(input.value); if (isNaN(v)) return;
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
     const ok = opts.check(v);
     out.className = "verdict shown " + (ok ? "right" : "wrong");
     out.textContent = ok ? opts.right : opts.wrong;
@@ -685,788 +677,684 @@ function wireNumeric(id, opts) {
   return { show: () => box.classList.add("shown") };
 }
 
-/* Galton's 1885 family records: 934 adult children from 205 families.
-   data/clean/galton_families.csv. Heights in inches, and the women's are
-   multiplied by 1.08 exactly as Galton did, so mothers, fathers, sons and
-   daughters all sit on one scale. */
-const G_FATHER = [
-  78.5,78.5,78.5,78.5,75.5,75.5,75.5,75.5,75,75,75,75,75,75,75,75,75,75,75,75,75,74,
-  74,74,74,74,74,74,74,74,74,74.5,74,74,74,74,74,74,74,74,74,74,73,73,
-  73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,73,
-  73,73.2,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72,72,72,72,72,72,72,72,72,72,72,72,
-  72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72,72.5,72.5,72.5,72,
-  72.5,72.5,72.5,72.5,72.5,72.5,72,72,72,72,72,72,72,72,72,72,72,71,71,71,71,71,
-  71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71.7,
-  71,71,71,71,71,71,71.5,71.5,71.5,71.5,71,71,71,71,71,71,71,71,71,71,71,71.7,
-  71.7,71.7,71.7,71,71,71,71.5,71.5,71.5,71.5,71.5,71.5,71.5,71,71,71.2,71.2,71,71,71,71,71,
-  71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,
-  71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,71,70,70,70,70,70,70,
-  70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,
-  70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70,70,70,70,70,70,70,70,70,70,70,70,70,
-  70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,
-  70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70.5,70.5,70.5,
-  70.5,70.5,70.5,70.5,70.5,70.5,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,
-  70,70,70,70,70,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70,70,70,70,70,70,70,70,
-  70,70,70,70,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.3,70.3,70.3,70.3,70.3,70.3,70.3,70.5,70.5,70.5,
-  70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,70,69,69,69,69,69,69,
-  69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,
-  69,69,69,69,69,69,69,69,69,69,69,69.5,69.5,69.5,69.5,69,69,69,69,69,69,69.5,
-  69.5,69.5,69.5,69.5,69.5,69.5,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,
-  69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.2,69.2,69.2,69.2,69,69,69,69,69,69,69,69,69,69,69,
-  69,69,69,69,69,69,69,69,69,69,69.7,69.5,69.5,69.5,69,69,69,69,69,69.5,69.5,69.5,
-  69.5,69.5,69.5,69.5,69.5,69.5,69.5,69.5,69,69,69,69,69,69,69,69,69,69,69,69,69.5,69.5,
-  69.5,69.5,69.5,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,69,68.7,68.7,
-  68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68,68,68,68,68,68,68,68,
-  68,68,68,68,68,68,68,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,68.5,
-  68.5,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,
-  68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68.5,68.5,68.5,68.5,68,
-  68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68.5,68,68.2,68.2,
-  68.2,68.2,68.2,68,68.7,68.7,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,68,
-  68,68,68.5,68,68,68,68,68,68,68,68,68,68,67,67,67,67,67,67,67,67,67,
-  67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,67,
-  67,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67,67,67,67,67,67,67,67,67,67,
-  67,67,67,67,67,67.5,67.5,67.5,67.5,67.5,67,66,66,66,66,66,66,66,66,66,66,66,
-  66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66.5,66.5,66.5,66.5,66.5,
-  66.5,66.5,66.5,66,66,66,66,66,66,66,66,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,66.5,
-  66.5,66.5,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,66,
-  66,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,
-  65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65,65.5,
-  65.5,65.5,65.5,65.5,65.5,65.5,65.5,65.5,64,64,64,64,64,64,64,64,64,64,64,64,64,64,
-  64,64,64,63,63,62,62,62,62.5,62.5
-];
-const G_MOTHER = [
-  72.36,72.36,72.36,72.36,71.82,71.82,71.82,71.82,69.12,69.12,69.12,69.12,69.12,69.12,69.12,63.18,63.18,63.18,63.18,63.18,63.18,73.44,
-  73.44,73.44,73.44,73.44,73.44,73.44,71.82,71.82,71.82,71.28,70.74,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,72.36,72.36,
-  72.36,72.36,71.82,71.82,71.82,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.66,69.66,69.66,69.66,69.66,69.66,69.12,69.12,
-  69.12,68.04,74.52,74.52,74.52,74.52,74.52,74.52,74.52,74.52,73.44,73.44,73.44,72.36,72.36,72.36,70.2,70.2,70.2,70.2,70.2,70.2,
-  70.2,70.74,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,66.96,
-  66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,74.52,74.52,74.52,74.52,74.52,
-  72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.74,
-  70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.66,
-  69.66,69.66,69.66,69.12,69.12,69.12,69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.66,68.04,68.04,68.58,68.58,68.58,68.58,68.58,
-  68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,
-  66.96,67.5,67.5,67.5,67.5,67.5,66.96,66.96,66.96,66.96,66.96,66.96,66.96,65.88,62.64,62.64,74.52,74.52,74.52,74.52,74.52,74.52,
-  74.52,74.52,74.52,74.52,73.44,72.36,72.36,72.36,72.36,72.36,72.36,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,
-  70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,
-  70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.88,69.88,69.88,69.88,
-  69.88,69.88,69.88,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.34,69.34,69.34,69.34,69.34,69.12,69.12,69.12,
-  69.12,69.12,69.12,69.12,69.12,69.66,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,68.8,68.8,68.8,
-  68.8,68.8,68.8,68.8,68.8,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,68.58,68.04,68.04,68.04,68.04,
-  68.04,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,67.72,67.72,67.72,67.72,67.72,67.72,67.72,66.96,66.96,66.96,
-  65.88,65.88,64.8,64.8,64.8,64.8,64.8,64.8,63.18,63.18,63.18,62.64,62.64,62.64,62.64,62.64,73.98,73.98,73.98,73.98,73.98,73.98,
-  73.98,73.98,73.98,73.98,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,72.04,72.04,72.04,72.04,71.28,71.28,
-  71.28,71.28,71.28,71.28,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.28,
-  71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.2,
-  69.66,69.66,69.66,69.66,69.66,69.66,69.66,69.12,69.12,69.12,69.12,68.58,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,
-  68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,68.58,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,
-  66.96,66.96,66.96,66.96,66.96,66.96,66.96,66.96,67.5,67.5,67.5,67.5,67.5,67.5,67.5,67.5,66.96,66.96,66.96,66.96,65.88,65.88,
-  65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,65.88,64.8,64.8,64.8,64.8,64.8,64.8,64.8,65.34,76.14,76.14,
-  72.36,72.36,72.36,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,71.82,70.2,70.2,70.74,70.74,70.74,70.74,70.74,70.74,
-  70.74,70.74,70.74,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,
-  70.2,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.66,69.12,
-  69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.58,68.58,68.58,68.04,
-  68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.04,68.58,68.04,68.58,68.58,
-  68.58,68.58,68.58,67.5,66.96,66.96,67.5,65.88,65.88,65.88,65.88,65.88,65.02,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,64.8,
-  64.8,64.8,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,71.5,71.5,71.5,71.5,71.5,71.82,71.28,71.28,71.28,
-  71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.74,70.2,70.2,
-  70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,68.58,68.58,68.58,68.58,68.58,68.58,
-  68.58,68.58,68.04,68.04,68.04,66.96,66.96,66.96,66.96,66.96,65.88,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,72.36,
-  72.36,72.36,72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,
-  70.2,70.2,70.2,70.74,70.74,70.74,70.74,70.74,68.04,68.58,68.58,68.04,68.04,68.04,68.04,68.04,68.04,67.5,67.5,67.5,67.5,67.5,
-  67.5,67.5,66.42,64.8,64.8,64.8,64.8,64.8,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,63.72,
-  63.72,72.36,72.36,72.36,72.36,72.36,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,71.28,70.2,70.2,70.2,70.2,70.2,70.2,70.2,
-  70.2,70.2,70.74,70.74,70.2,70.2,70.2,70.2,70.2,70.2,69.12,69.12,69.12,69.12,69.12,69.12,68.04,68.04,68.04,68.04,68.04,68.04,
-  68.04,68.04,68.04,64.8,64.8,64.8,64.8,64.8,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,69.12,
-  68.04,64.8,64.8,68.58,68.58,71.28,71.28,71.28,68.04,68.04
-];
-const G_CHILD  = [
-  73.2,74.74,74.52,74.52,73.5,72.5,70.74,70.74,71,73.44,70.5,68.5,72.36,69.66,68.04,72,69,68,71.82,67.5,67.5,75.06,
-  76.5,74,73,73,76.14,69.12,76.14,73.44,71.28,71.28,70.74,74,70,73.44,72.36,72.36,71.28,68.58,68.04,70.2,71,66.96,
-  68,67,71,70.5,72.04,72,70.5,70.2,70.2,69.2,74.2,71.82,69.66,68.58,74,73,71.5,62.5,71.82,67.28,71.28,69.66,
-  69.12,67.72,73.2,73,72.7,75.6,74.52,73.98,73.44,71.28,73,73.98,73.44,73,71,72.36,74.2,70.5,69.5,71.28,70.74,70.2,
-  70.2,70.74,71.28,68.04,70.5,70.5,69,70.2,68.04,69,67,68.04,73,67,76.14,75.6,71.82,68.04,72.9,72.58,72.04,69.12,
-  71,70,70,71.28,70.2,70.2,74,72,69,72.9,68.58,72,71.5,71.5,70,73.44,70.96,78,74,73,72,72.36,
-  73.2,73,69,72.36,70,72.36,72.36,71.82,70,69,68.5,71.28,69.66,68.04,71,72.36,76,72,71,66,71.28,70.5,
-  72,72,71,69,71.28,70.2,73,70.42,68.5,67.7,68,68,66.96,73.44,73.44,72.9,71.82,71.82,71.28,70.74,70.2,72,
-  71,70.5,72.36,68,68,68,72,71,70,71.28,69.66,69.66,66.96,73,66.96,72.9,69.66,71,67,71.28,70.2,68.58,
-  71,70,70,64,70.2,70.2,69.12,68.04,68.04,71,71,70,68.58,71,70,69.66,67.5,66.42,72,70.5,70.5,69.66,
-  64.8,70,69.12,69.12,69.12,67.5,70.5,70,69,69,66,69.66,69.12,66.96,71.5,69,71,70,69,74.52,70,68.7,
-  73.44,71.28,69.12,66.96,75,70,69,71.28,69.12,64.8,72.9,73,72,72,66.5,74.74,72.58,71.82,71.28,71.28,69.34,68.8,
-  72,70.2,69,68.5,73.44,70.2,66.42,65.88,65.88,73,72,70.5,65,65,69.66,68.04,66.96,67,65,69.66,67.5,67.5,
-  70,70,72.36,70.2,70.2,68.04,79,75,71,74.52,72.36,70.96,66.96,73,72.5,70.2,69,69,72,70,68.7,71.82,
-  70.74,69.88,69.66,70.7,70,68,67,66,65,72.36,70,68,66.7,70.74,72,70,67.5,66.1,64.91,74,69.5,69,
-  68,68,68,70.74,70.2,64.8,68,70.2,69.12,66.96,71,70,70,70,69.5,68.5,74.52,70.2,69.12,70,67,65.5,
-  68.8,68.26,67.5,67.18,65.88,70,68.5,70.74,68.58,72.5,69,67,69.66,69.12,71,67.5,72.9,68.58,68,67,68.8,66.96,
-  70,66.5,66.96,65.88,72,70,69.5,69.5,68,70.2,69.12,68.04,70.7,69.7,69.2,65.2,69.12,68.58,68.26,72,72,64.8,
-  71.2,67,67,64.5,70.2,68.04,70.2,70.2,71.5,64.5,68.04,72,66,71.28,70.2,68.04,75,71,70,71.28,71.28,70.74,
-  70.2,70.2,69.12,69.12,69.12,73,72,71.7,71.5,70.74,70.2,67.72,67.5,71.2,71,70,75,74,72,68.5,70,68.5,
-  68,70.2,68.04,67.5,73,71,70.5,70.5,67,66,65.88,70.5,67.5,69.66,69.12,71,73.98,72.9,71.28,68.04,68.04,71,
-  71,70.5,70.5,71.82,70.74,69.66,73,72,69,69,71.82,70.74,70.74,70.2,69.12,70,68.5,67,70.2,69.12,68.58,65.88,
-  69.7,68,60,70.42,69.66,68.8,64.8,71.7,66.5,70.2,68.58,70.74,69,72.9,68.58,72,73,70,70,64,71.28,66.96,
-  70.5,67,66,70.2,68.04,66.96,65.88,70.5,68.8,68.04,67.5,73,72,69,73,71,71,69,68.04,72,70,67.8,
-  70.42,69.88,69.66,68.58,68.58,67.5,66.96,66.42,71,70,70,69,68.58,67.5,67.5,66.96,72,68,71.28,71.28,70,69.5,
-  69,68.04,66.96,68,68,67.5,64,63,63,68.58,66.96,66.96,70.5,73.44,67.5,69,66,66.64,65.34,69.5,71,66.64,
-  73,71,72.36,70,69,69,68.7,68.5,68.5,68,68,68,66.2,68.26,67.5,66,66,69.12,71.7,71.5,70.7,65.5,
-  71.82,70.42,66.42,72,72,73.44,71.28,69.2,68,66,66,66.96,66.42,65.88,64.8,72,70.5,68.7,68.5,67.7,69.12,68.58,
-  68.04,71,68,68,67,70.2,69.12,68.04,68.04,66.96,65.88,66,63,70.74,66.96,71.2,71.2,69,68.5,67.5,66.96,69,
-  67,66,71.28,71.28,70.2,70.2,70.2,69.12,68.04,70.5,70,68,66,66,71.28,66.96,66.42,73.5,70,69.5,70.74,67,
-  70,68,69.66,69.12,71,68,66,65.5,65,68.04,66.96,66.96,67,67,66,69.12,68.58,65.88,68.2,70,70,69,
-  67,65.5,69.66,68.5,67.7,66.64,66.5,68.5,68,64,68.58,68.04,66.7,64,65.88,65.88,64.8,64.8,64.8,60.48,67.5,67,
-  66.5,64.8,69,68,65,64.7,64,64,63,70.2,70.2,66.96,65.88,72.7,72.7,71.5,70.74,68.58,71,73,71,70.7,
-  70,69,73.44,70.74,66.96,69.7,67.5,70.74,70.2,69.66,68.58,70,69,70.74,70.74,68.04,70,67.7,68.04,64.8,65,66.96,
-  66.96,71,69,69.12,69.12,68.04,68.04,68.04,68.04,68.04,67.5,66.96,71.5,70,67,67,71,70.2,69.2,68.5,68,67,
-  65.5,68.58,69,68,68.04,70,69.5,69,68.5,71.28,67,70.5,70.5,67,66,66,66.96,66.96,66.42,72,65,65,
-  72.36,69.12,69.12,66.96,64.8,64.8,66,65,72.36,71.82,70.74,72,68,71.28,70.2,66.96,65.88,68.7,68.5,66.5,64.5,67.5,
-  65.34,65.34,62.1,72,71,67,71.28,70.2,70,69.66,66.96,67.2,67,65,70.2,70.2,68.04,70,68,68.58,67.5,67.5,
-  67.5,67.5,70,68,67,65,64.8,65,68,67,66.5,66,65.7,65.5,65,70.2,69.12,68.04,66.96,65.88,64.8,62.64,
-  61.56,66.5,66,66,70.2,68.04,63,68.04,68.04,64.8,67,66,65,70.2,65.88,69,68,68,70.2,70.2,66.96,66.96,
-  65.88,63.72,70.7,70.74,69.2,69,68,67.7,69.66,65.34,67,67,69.12,69.12,67.5,65.34,70,68.04,66,66,68.04,71,
-  71,69,68.58,68,68,67,67,66.96,71.5,68,70.74,69.12,66.96,66.96,65.88,70.5,68,72.36,70.2,69.12,69.12,64.8,
-  64.5,66,64.8,73.98,68.58,64,66.96,65.88,66.5,61.56
-];
-const G_FAMILY = [
-  0,0,0,0,1,1,1,1,2,2,3,3,3,3,3,4,4,4,4,4,4,5,6,6,6,6,6,6,7,7,
-  7,8,9,10,10,10,10,10,10,10,10,11,12,12,13,13,14,14,14,15,15,15,15,15,15,15,15,15,16,16,
-  16,16,16,16,17,17,17,18,19,19,19,19,19,19,19,19,20,20,20,21,21,21,22,22,22,22,22,22,22,23,
-  24,24,25,25,25,25,25,26,26,26,27,27,27,27,27,27,28,28,28,29,30,30,30,30,30,30,31,31,31,31,
-  31,32,32,32,32,32,33,34,34,34,34,34,35,35,35,35,36,36,36,36,37,37,37,37,37,37,38,38,39,39,
-  39,39,39,40,41,41,41,41,41,41,42,42,43,43,44,44,44,45,45,45,45,45,45,45,45,46,46,46,46,47,
-  47,47,48,48,48,48,48,48,48,49,49,50,50,51,51,51,51,51,52,52,52,52,52,52,52,52,52,53,53,53,
-  53,54,54,54,54,54,55,55,55,55,55,56,56,56,56,56,57,57,57,57,57,57,57,58,59,59,60,60,60,60,
-  61,61,61,61,61,61,62,63,63,63,63,63,64,65,65,65,65,65,65,65,65,65,65,65,66,66,66,66,67,67,
-  67,67,67,68,68,68,68,68,68,68,68,69,69,69,69,69,70,70,70,70,70,70,71,71,71,71,71,71,71,72,
-  72,72,73,73,74,74,74,74,74,74,74,75,75,75,75,75,75,75,76,76,76,76,77,77,77,77,77,78,78,78,
-  78,78,78,78,78,79,80,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,82,82,82,83,83,83,
-  83,84,84,84,84,84,85,85,85,85,86,86,86,86,87,87,87,87,88,88,88,88,88,88,88,88,89,89,89,89,
-  89,89,89,90,90,90,91,91,92,92,92,92,93,93,94,94,94,95,95,95,95,95,96,96,96,96,96,96,96,96,
-  96,96,97,98,98,98,98,98,98,98,98,99,99,99,100,100,100,100,101,101,101,101,101,101,102,102,102,102,102,102,
-  102,103,103,103,103,104,104,104,104,104,104,105,105,105,105,105,105,105,106,106,106,106,106,106,106,106,106,107,107,107,
-  107,107,107,107,108,108,108,108,108,108,108,109,109,109,109,110,111,111,111,112,113,113,113,113,113,113,114,114,114,114,
-  114,114,114,115,115,115,116,117,117,117,118,118,118,118,118,119,119,119,119,119,119,119,119,119,119,119,120,120,120,120,
-  120,120,120,120,121,121,121,121,122,122,122,122,122,123,123,123,123,123,123,123,123,123,124,124,124,125,125,125,125,126,
-  127,127,128,128,128,129,129,129,129,129,129,129,129,129,129,129,130,130,131,131,132,132,132,132,132,132,132,133,133,133,
-  133,134,134,134,134,134,134,134,134,135,135,135,135,135,135,135,135,136,136,136,136,136,136,136,136,136,136,137,137,137,
-  137,138,138,138,138,138,139,140,140,140,140,140,140,140,140,140,140,141,141,141,141,141,141,141,141,142,142,142,142,143,
-  144,144,144,144,145,145,145,145,145,145,145,145,146,146,146,146,146,146,147,148,149,149,149,149,149,150,151,151,152,153,
-  153,153,153,153,154,155,155,155,155,155,155,155,156,156,156,156,157,158,158,158,158,158,158,158,158,158,158,159,159,159,
-  159,159,160,161,161,161,161,161,161,161,161,162,162,162,162,162,162,163,163,163,163,163,164,164,164,164,165,165,165,166,
-  166,166,166,166,166,166,166,166,166,166,167,167,167,167,168,168,168,168,168,168,168,168,169,169,169,170,170,170,170,170,
-  171,172,172,172,172,172,172,172,172,173,173,173,173,173,173,173,173,173,174,174,174,174,174,175,175,175,175,175,175,176,
-  176,176,176,176,176,176,176,177,177,177,177,177,178,179,179,180,180,180,180,180,180,181,181,181,181,181,181,181,182,183,
-  183,183,183,184,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,186,186,186,186,187,188,188,188,188,189,189,
-  189,189,189,190,190,190,190,190,190,190,190,190,191,191,192,192,192,192,192,192,193,193,193,193,193,193,194,194,195,195,
-  195,196,196,196,196,197,197,197,197,197,198,198,198,198,198,198,198,199,199,199,199,199,199,199,200,201,201,202,202,203,
-  203,203,204,204
-];
+/* ====== Galton, prepared once =======================================
+   934 grown children from 205 families. Female heights already carry
+   Galton's 1.08, so fathers, mothers, sons and daughters share one scale. */
+const KIDBAR = mean(G_KID), MPBAR = mean(G_MP);
+const G_SRC = { fa: G_FA, mo: G_MO, mp: G_MP };
+const G_LABEL = { fa: "the father's height (in)", mo: "the mother's height (in)", mp: "the two parents averaged (in)" };
+const G_NAME = { fa: "the father alone", mo: "the mother alone", mp: "both, averaged" };
+const G_BEST = { fa: tiltOf(G_FA, G_KID), mo: tiltOf(G_MO, G_KID), mp: tiltOf(G_MP, G_KID) };
 
-/* ====== STAGE A — what knowing the parents buys you ================= *
-   A binary trait, drawn as two columns of people. The lesson's whole measure
-   arrives here in its plainest form: a correlation is the amount your best
-   guess about somebody moves when you are told something else about them. On
-   two 0/1 variables the correlation is exactly that gap, rescaled -- so this
-   is the same number stage B fits a line to, shown as squares instead.
-   ================================================================== */
-const A_N = 100;                     // people per column, so 200 in the picture
-const sA = { p1: 0.72, p2: 0.72, song: false, gotNothing: false, gotMost: false, locked: [] };
-function statsForA() {
-  const gap = sA.p1 - sA.p2;
-  // Pearson r on two 0/1 columns of equal size, straight from the definition.
-  const pbar = (sA.p1 + sA.p2) / 2;
-  const denom = Math.sqrt(pbar * (1 - pbar));
-  const corr = denom === 0 ? 0 : gap * 0.5 / denom;
-  return { gap, corr };
-}
-function drawStageA() {
-  const cv = document.getElementById("plotA");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0, 0, W, H);
-  const rng = mulberry32(20260903);
-  const cols = [
-    { x0: 44,       label: "parents have it",  p: sA.p1 },
-    { x0: W/2 + 42, label: "parents do not",  p: sA.p2 }
-  ];
-  const perRow = 10, cell = 20, top = 52;
-  ctx.font = "12px -apple-system, sans-serif"; ctx.textBaseline = "alphabetic";
-  for (const c of cols) {
-    ctx.fillStyle = "#555"; ctx.textAlign = "left";
-    ctx.fillText(c.label, c.x0, 30);
-    // A fixed draw order per column, so nudging a knob fills squares in rather
-    // than reshuffling the whole picture under the student.
-    const order = [];
-    for (let i = 0; i < A_N; i++) order.push(i);
-    for (let i = A_N - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = order[i]; order[i] = order[j]; order[j] = t; }
-    const nOn = Math.round(c.p * A_N);
-    const on = new Set(order.slice(0, nOn));
-    for (let i = 0; i < A_N; i++) {
-      const r = Math.floor(i / perRow), q = i % perRow;
-      const x = c.x0 + q * cell, y = top + r * cell;
-      ctx.fillStyle = on.has(i) ? (sA.song ? "#2f6b8f" : "#b23a48") : "#e8e5dc";
-      ctx.fillRect(x, y, cell - 5, cell - 5);
-    }
-    ctx.fillStyle = "#1d1d1b"; ctx.textAlign = "left"; ctx.font = "13px ui-monospace, monospace";
-    ctx.fillText((c.p * 100).toFixed(0) + "%", c.x0, top + Math.ceil(A_N / perRow) * cell + 16);
-    ctx.font = "12px -apple-system, sans-serif";
+/* ====== Stage A =====================================================
+   A1: three real families, one at a time, and one rule dragged through the
+   middle of each. A2: the same 934 children sorted into five bands, one rule
+   per band -- which is the same act five times over, and the five answers are
+   a line. Nothing here is fitted for the student. */
+const A_FAMS = [185, 119, 96];       // Galton's families 185, 120, 097
+const sA = { fi: 0, rule: KIDBAR, locked: [], fams: [], bands: [], mode: 1 };
+
+(function prepA() {
+  for (const fid of A_FAMS) {
+    const kids = [], idx = [];
+    for (let i = 0; i < G_FAM.length; i++) if (G_FAM[i] === fid) { kids.push(G_KID[i]); idx.push(i); }
+    const i0 = idx[0];
+    sA.fams.push({ fa: G_FA[i0], mo: G_MO[i0], mp: G_MP[i0], kids: kids, mid: mean(kids) });
   }
-  const { gap, corr } = statsForA();
-  const noun = sA.song ? "like it" : "have it";
-  document.getElementById("A_p1Out").textContent = (sA.p1 * 100).toFixed(0) + "%";
-  document.getElementById("A_p2Out").textContent = (sA.p2 * 100).toFixed(0) + "%";
-  document.getElementById("cA_p1").textContent = sA.p1.toFixed(2);
-  document.getElementById("cA_p2").textContent = sA.p2.toFixed(2);
-  document.getElementById("A_pYes").textContent = (sA.p1 * 100).toFixed(0) + "% chance they " + noun;
-  document.getElementById("A_pNo").textContent  = (sA.p2 * 100).toFixed(0) + "% chance they " + noun;
-  const gapEl = document.getElementById("A_gap");
-  gapEl.textContent = (Math.abs(gap) * 100).toFixed(0) + " points";
-  gapEl.className = Math.abs(gap) < 0.02 ? "off" : "ok";
-  document.getElementById("A_corr").textContent = corr.toFixed(2);
-  // What that correlation is worth on one person: a fitted guess misses by a
-  // factor sqrt(1-r^2) of what a blind one does. The exchange rate is brutal
-  // and is the thing students get wrong -- r = 0.36 is a 7% better guess.
-  const shrink = 100 * (1 - Math.sqrt(Math.max(0, 1 - corr*corr)));
-  const shEl = document.getElementById("A_shrink");
-  shEl.textContent = shrink.toFixed(0) + "%";
-  shEl.className = shrink >= 10 ? "ok" : "off";
-  document.getElementById("A1_now").textContent = sA.gotNothing ? "done" : Math.round(Math.abs(gap) * 100) + " points apart";
-  document.getElementById("A2_now").textContent = sA.gotMost ? "done" : "correlation " + corr.toFixed(2);
-  renderListA();
-  checkA();
-}
-// Sliding past an answer is not choosing it: one sweep of the second knob passes
-// through both targets, so a pair only counts when it is committed.
-function renderListA() {
-  const box = document.getElementById("A_list");
-  if (!sA.locked.length) { box.innerHTML = '<div style="color:var(--muted);">none yet</div>'; return; }
-  box.innerHTML = sA.locked.map(l =>
-    `<div><span class="lab">${(l.p1*100).toFixed(0)}% against ${(l.p2*100).toFixed(0)}%</span>` +
-    `<span class="val">${l.won ? l.won : "r = " + l.corr.toFixed(2)}</span></div>`).join("");
-}
-function lockInA() {
-  const { gap, corr } = statsForA();
-  let won = null;
-  const at72 = Math.abs(sA.p1 - 0.72) < 1e-9;
-  if (at72 && Math.abs(gap) < 0.02 && !sA.gotNothing) { sA.gotNothing = true; markTask("A", "A1"); won = "worth nothing"; }
-  else if (at72 && sA.p2 <= 0.02 && !sA.gotMost) { sA.gotMost = true; markTask("A", "A2"); won = "worth the most"; }
-  sA.locked.push({ p1: sA.p1, p2: sA.p2, corr, won });
-  bump("A"); drawStageA();
-}
-document.getElementById("A_lock").addEventListener("click", lockInA);
-
-const numA = wireNumeric("A", {
-  bit: BIT.A_num,
-  check: v => Math.abs(v - 72) <= 2,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => { markTask("A", "A3"); Gates.A.done = true; }
-});
-function checkA() {
-  if (Gates.A.solvedOnce) return;
-  if (!(sA.gotNothing && sA.gotMost)) return;
-  Gates.A.solvedOnce = true;
-  record(BIT.A_solve, true); numA.show(); unlockNext("A"); showSolved("A");
-}
-[["A_p1", "p1"], ["A_p2", "p2"]].forEach(([id, k]) => {
-  document.getElementById(id).addEventListener("input", e => {
-    sA[k] = parseInt(e.target.value, 10) / 100;
-    highlightByDataLine("codeA", k); bump("A"); drawStageA();
-  });
-});
-document.getElementById("A_song").addEventListener("change", e => { sA.song = e.target.checked; bump("A"); drawStageA(); });
-document.getElementById("A_download").addEventListener("click", () => {
-  downloadText("lesson8_stageA.R", `# Lesson 8, Stage A -- what knowing the parents buys you.
-p1 <- ${sA.p1.toFixed(2)}   # parents have it
-p2 <- ${sA.p2.toFixed(2)}   # parents do not
-parent <- rep(c(1, 0), each = 100)
-child  <- rbinom(200, 1, ifelse(parent == 1, p1, p2))
-p1 - p2
-cor(parent, child)
-`);
-});
-
-/* ====== STAGE B — the line from parent to child ===================== */
-// Every child paired with each parent in turn, both sides in spreads.
-const GA = (function () {
-  const par = [], kid = [];
-  for (let i=0;i<G_CHILD.length;i++) { par.push(G_FATHER[i]); kid.push(G_CHILD[i]); par.push(G_MOTHER[i]); kid.push(G_CHILD[i]); }
-  const mp = mean(par), sp = sdOf(par), mk = mean(kid), sk = sdOf(kid);
-  return { pz: par.map(v => (v-mp)/sp), kz: kid.map(v => (v-mk)/sk), best: 0 };
+  const edges = [62.0, 66.5, 68.0, 69.5, 71.0, 78.0];
+  for (let b = 0; b < 5; b++) {
+    const xs = [], ys = [];
+    for (let i = 0; i < G_MP.length; i++) if (G_MP[i] >= edges[b] && G_MP[i] < edges[b + 1]) { xs.push(G_MP[i]); ys.push(G_KID[i]); }
+    sA.bands.push({ lo: edges[b], hi: edges[b + 1], xs: xs, ys: ys, xbar: mean(xs), mid: mean(ys), rule: KIDBAR });
+  }
 })();
-GA.best = tiltOf(GA.pz, GA.kz);
-const sB = { tilt: 0.00 };
-// Whatever tilt survives in what the line misses. It is exactly zero when the
-// tilt is right, and it changes sign either side, so it can actually be aimed at
-// -- unlike an average miss, which is flat for a long way around its floor.
-function leftoverA(t) {
-  const resid = GA.kz.map((v,i) => v - t*GA.pz[i]);
-  return tiltOf(GA.pz, resid);
+
+const A_TOL1 = 0.30, A_TOL2 = 0.20;
+
+function jitter(i, k) { const t = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return t - Math.floor(t); }
+
+function drawA1() {
+  const cv = document.getElementById("plotA1");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 50, r: 16, t: 14, b: 46 };
+  const f = makeFrame(pad, W, H, 0, 1, 55, 80);
+  const fam = sA.fams[sA.fi];
+  // y axis
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t + f.H); ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let v = 56; v <= 80; v += 4) { const y = f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l - 4, y); ctx.lineTo(f.pad.l, y); ctx.stroke(); ctx.fillText(String(v), f.pad.l - 6, y); }
+  ctx.save(); ctx.translate(f.pad.l - 32, f.pad.t + f.H / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = "#555";
+  ctx.fillText("height (in)", 0, 0); ctx.restore();
+  // everybody's average
+  ctx.strokeStyle = "#b9b5a6"; ctx.setLineDash([5, 4]); ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.y(KIDBAR)); ctx.lineTo(f.pad.l + f.W, f.y(KIDBAR)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = "#8d8a80"; ctx.font = "10px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("the average of all 934 children", f.pad.l + 3, f.y(KIDBAR) - 3);
+  // the two parents, and the mark halfway between them
+  const xF = f.x(0.11), xM = f.x(0.24), xMid = f.x(0.175);
+  ctx.strokeStyle = "#b9b5a6"; ctx.beginPath(); ctx.moveTo(xF, f.y(fam.fa)); ctx.lineTo(xM, f.y(fam.mo)); ctx.stroke();
+  ctx.fillStyle = DEEP;
+  for (const p of [[xF, fam.fa], [xM, fam.mo]]) { ctx.beginPath(); ctx.arc(p[0], f.y(p[1]), 6, 0, 6.2832); ctx.fill(); }
+  ctx.strokeStyle = DEEP; ctx.lineWidth = 1.5; ctx.beginPath();
+  ctx.moveTo(xMid, f.y(fam.mp) - 6); ctx.lineTo(xMid + 6, f.y(fam.mp)); ctx.lineTo(xMid, f.y(fam.mp) + 6); ctx.lineTo(xMid - 6, f.y(fam.mp)); ctx.closePath(); ctx.stroke();
+  // the children, with a stalk each to the rule
+  const yR = f.y(sA.rule);
+  const n = fam.kids.length;
+  for (let i = 0; i < n; i++) {
+    const x = f.x(0.50 + 0.44 * (n === 1 ? 0.5 : i / (n - 1))) + (jitter(i, sA.fi) - 0.5) * 6;
+    const y = f.y(fam.kids[i]);
+    ctx.strokeStyle = "#c9c5b8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, yR); ctx.stroke();
+    ctx.fillStyle = DOT; ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 6.2832); ctx.fill();
+  }
+  // the rule
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.pad.l, yR); ctx.lineTo(f.pad.l + f.W, yR); ctx.stroke();
+  ctx.fillStyle = HOT; ctx.fillRect(f.pad.l + f.W - 10, yR - 5, 10, 10);
+  // x labels
+  ctx.fillStyle = "#555"; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("the father", xF, f.pad.t + f.H + 8);
+  ctx.fillText("the mother × 1.08", xM, f.pad.t + f.H + 22);
+  ctx.fillText("their " + n + " grown children", f.x(0.72), f.pad.t + f.H + 8);
+  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
+  ctx.fillText("family " + (sA.fi + 1) + " of 3", f.x(0.72), f.pad.t + f.H + 22);
+  sA._f1 = f;
 }
-function drawStageB() {
+
+function drawA2() {
+  const cv = document.getElementById("plotA2");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 50, r: 16, t: 14, b: 44 };
+  const f = makeFrame(pad, W, H, 62, 78, 55, 80);
+  for (let b = 0; b < 5; b++) {
+    const bd = sA.bands[b];
+    ctx.fillStyle = (b % 2) ? "#f7f5ef" : "#fdfcf9";
+    ctx.fillRect(f.x(bd.lo), f.pad.t, f.x(bd.hi) - f.x(bd.lo), f.H);
+  }
+  drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  ctx.fillStyle = "rgba(92,134,161,0.5)";
+  for (let i = 0; i < G_MP.length; i++) {
+    const x = f.x(G_MP[i]) + (jitter(i, 3) - 0.5) * 3.5, y = f.y(G_KID[i]);
+    ctx.beginPath(); ctx.arc(x, y, 1.9, 0, 6.2832); ctx.fill();
+  }
+  // the five rules, joined so the shape they are making stays visible
+  ctx.strokeStyle = "#c9b0b5"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]); ctx.beginPath();
+  for (let b = 0; b < 5; b++) {
+    const bd = sA.bands[b], xm = f.x(bd.xbar);
+    if (b === 0) ctx.moveTo(xm, f.y(bd.rule)); else ctx.lineTo(xm, f.y(bd.rule));
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+  let centred = 0;
+  for (let b = 0; b < 5; b++) {
+    const bd = sA.bands[b], ok = Math.abs(bd.rule - bd.mid) <= A_TOL2;
+    if (ok) centred++;
+    ctx.strokeStyle = ok ? "#4a7a2a" : HOT; ctx.lineWidth = 3; ctx.beginPath();
+    ctx.moveTo(f.x(bd.lo) + 2, f.y(bd.rule)); ctx.lineTo(f.x(bd.hi) - 2, f.y(bd.rule)); ctx.stroke();
+    // the point the tilt is actually read from: this band's average parent
+    ctx.fillStyle = ok ? "#4a7a2a" : HOT; ctx.beginPath();
+    ctx.arc(f.x(bd.xbar), f.y(bd.rule), 4, 0, 6.2832); ctx.fill();
+  }
+  sA._f2 = f; sA._centred = centred;
+}
+
+function tiltA2() {
+  const xs = sA.bands.map(b => b.xbar), ys = sA.bands.map(b => b.rule);
+  return tiltOf(xs, ys);
+}
+
+function refreshA() {
+  const fam = sA.fams[sA.fi];
+  drawA1();
+  document.getElementById("A_fa").textContent = f2(fam.fa) + " in";
+  document.getElementById("A_mo").textContent = f2(fam.mo) + " in";
+  document.getElementById("A_mp").textContent = f2(fam.mp) + " in";
+  document.getElementById("A_rule").textContent = f2(sA.rule) + " in";
+  let s = 0; for (const k of fam.kids) s += (k - sA.rule) * (k - sA.rule);
+  document.getElementById("A_miss").textContent = f3(Math.sqrt(s / fam.kids.length)) + " in";
+  if (sA.mode === 2) {
+    drawA2();
+    document.getElementById("A_bands").textContent = String(sA._centred);
+    document.getElementById("A_tilt").textContent = sA._centred === 5 ? f2(tiltA2()) : "—";
+    document.getElementById("A2_now").textContent = sA._centred + " of 5 centred";
+  }
+}
+
+(function wireA() {
+  const c1 = document.getElementById("plotA1"), c2 = document.getElementById("plotA2");
+  let drag = null;
+  function down(cv, which, e) {
+    if (!Gates.A.open) return;
+    cv.setPointerCapture(e.pointerId); drag = { cv: cv, which: which }; move(e); bump("A");
+  }
+  function move(e) {
+    if (!drag) return;
+    const p = canvasPt(drag.cv, e);
+    if (drag.which === 1) {
+      sA.rule = clamp(yInv(sA._f1, p.y), 55, 80);
+    } else {
+      const xv = xInv(sA._f2, p.x);
+      let b = 0; while (b < 4 && xv >= sA.bands[b].hi) b++;
+      if (drag.band == null) drag.band = b;
+      sA.bands[drag.band].rule = clamp(yInv(sA._f2, p.y), 55, 80);
+    }
+    refreshA();
+    if (drag.which === 2) checkA2();
+  }
+  function up(e) { if (drag && drag.cv.releasePointerCapture) { try { drag.cv.releasePointerCapture(e.pointerId); } catch (x) {} } drag = null; }
+  c1.addEventListener("pointerdown", e => down(c1, 1, e));
+  c2.addEventListener("pointerdown", e => down(c2, 2, e));
+  for (const cv of [c1, c2]) { cv.addEventListener("pointermove", move); cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); }
+
+  document.getElementById("A_lock").addEventListener("click", () => {
+    if (sA.mode !== 1) return;
+    const fam = sA.fams[sA.fi], msg = document.getElementById("A_lockmsg");
+    if (Math.abs(sA.rule - fam.mid) > A_TOL1) { msg.innerHTML = '<span class="off">the miss can still go lower than that</span>'; return; }
+    sA.locked.push({ mp: fam.mp, rule: sA.rule });
+    msg.innerHTML = '<span class="ok">locked in</span>';
+    const list = document.getElementById("A_list");
+    if (sA.locked.length === 1) list.innerHTML = "";
+    const row = document.createElement("div");
+    row.innerHTML = '<span class="lab">parents averaging ' + f2(fam.mp) + ' in</span><span class="val">children ' + f2(sA.rule) + ' in</span>';
+    list.appendChild(row);
+    document.getElementById("A1_now").textContent = String(sA.locked.length);
+    if (sA.locked.length >= 3) {
+      markTask("A", "A1"); record(BIT.A1, true);
+      sA.mode = 2;
+      document.getElementById("stepA2").classList.add("shown");
+      document.getElementById("A_lock").disabled = true;
+      document.getElementById("A2_now").textContent = "0 of 5 centred";
+      refreshA();
+    } else { sA.fi++; sA.rule = KIDBAR; refreshA(); }
+  });
+  wireDownload("A_download", "codeA", "lesson8_stageA.R");
+})();
+
+const qA = wireNumeric("A", {
+  bit: BIT.Aq,
+  check: v => Math.abs(v - 0.71) <= 0.11,
+  right: "Around 0.7. Every inch of parent buys about two-thirds of an inch of child, and the third inch goes somewhere else.",
+  wrong: "Not that. Read it off the line under the plot.",
+  after: () => markTask("A", "A3")
+});
+
+function checkA2() {
+  if (sA.mode !== 2 || sA._centred !== 5) return;
+  if (!document.querySelector('#tasksA li[data-task="A2"]').classList.contains("done")) {
+    markTask("A", "A2"); record(BIT.A2, true); qA.show(); finishStage("A");
+  }
+}
+
+/* ====== Stage B =====================================================
+   The same children as Stage A, all at once, and the line is now an input.
+   The bar is the point of the stage: the block is fixed, and the tilt decides
+   only how it is divided. On Galton's families the leftover cannot be broken
+   open any further, which is what Stage C is for. */
+const XBAR = { fa: mean(G_FA), mo: mean(G_MO), mp: mean(G_MP) };
+const XLIM = { fa: [60, 80], mo: [60, 80], mp: [62, 78] };
+const sB = { src: "mp", tilt: { fa: 0, mo: 0, mp: 0 }, fitted: { fa: false, mo: false, mp: false } };
+const B_TOL = 0.04;
+
+function statsB() {
+  const xs = G_SRC[sB.src], xb = XBAR[sB.src], t = sB.tilt[sB.src];
+  let s = 0;
+  for (let i = 0; i < xs.length; i++) { const d = G_KID[i] - (KIDBAR + t * (xs[i] - xb)); s += d * d; }
+  const left = s / xs.length, total = vari(G_KID);
+  return { left: left, total: total, acc: 1 - left / total, miss: Math.sqrt(left), tilt: t };
+}
+
+function drawB() {
   const cv = document.getElementById("plotB");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad = { l: 60, r: 16, t: 16, b: 46 };
-  const f = makeFrame(pad, W, H, -3.2, 3.2, -3.2, 3.2);
-  drawAxes(ctx, f, "the parent, in spreads from the average", "the child", 4, 4, v=>v.toFixed(0), v=>v.toFixed(0));
-  const rng = mulberry32(20250903);
-  scatter(ctx, f, GA.pz, GA.kz, "rgba(47,107,143,0.30)", 2.3, rng);
-  drawTilt(ctx, f, sB.tilt, "#b23a48");
-  document.getElementById("B_tiltOut").textContent = sB.tilt.toFixed(2);
-  document.getElementById("cB_tilt").textContent = sB.tilt.toFixed(2);
-  document.getElementById("B_tilt").textContent = sB.tilt.toFixed(2);
-  const lo = leftoverA(sB.tilt);
-  const ok = Math.abs(sB.tilt - GA.best) <= 0.02;
-  document.getElementById("B_h2").textContent = (2*sB.tilt).toFixed(2);
-  paintNum("B_miss", lo, 3, ok);
-  document.getElementById("B1_now").textContent = ok ? "done" : signed(lo, 3) + " left over";
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const lim = XLIM[sB.src];
+  const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, lim[0], lim[1], 55, 80);
+  drawAxes(ctx, f, G_LABEL[sB.src], "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  const xs = G_SRC[sB.src], xb = XBAR[sB.src], t = sB.tilt[sB.src];
+  const yAt = xv => KIDBAR + t * (xv - xb);
+  ctx.strokeStyle = "rgba(190,186,175,0.75)"; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let i = 0; i < xs.length; i++) {
+    const x = f.x(xs[i]) + (jitter(i, 5) - 0.5) * 3;
+    ctx.moveTo(x, f.y(G_KID[i])); ctx.lineTo(x, f.y(clamp(yAt(xs[i]), 55, 80)));
+  }
+  ctx.stroke();
+  ctx.fillStyle = "rgba(92,134,161,0.55)";
+  for (let i = 0; i < xs.length; i++) {
+    const x = f.x(xs[i]) + (jitter(i, 5) - 0.5) * 3;
+    ctx.beginPath(); ctx.arc(x, f.y(G_KID[i]), 2.0, 0, 6.2832); ctx.fill();
+  }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.x(lim[0]), f.y(clamp(yAt(lim[0]), 55, 80)));
+  ctx.lineTo(f.x(lim[1]), f.y(clamp(yAt(lim[1]), 55, 80)));
+  ctx.stroke();
+  sB._f = f;
+}
+
+function refreshB() {
+  drawB();
+  const st = statsB();
+  document.getElementById("B_tilt").textContent = f2(st.tilt);
+  document.getElementById("B_miss").textContent = f3(st.miss) + " in";
+  document.getElementById("B_acc").textContent = f2(Math.max(0, st.acc));
+  const cv = document.getElementById("barB");
+  const { ctx, W, H } = setupCanvas(cv);
+  const a = clamp(st.acc, 0, 1);
+  drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: 1 - a, color: PALE }],
+          "dark: what the line accounts for   ·   pale: what it leaves over");
+  document.getElementById("B_tiltOut").value = f2(st.tilt);
+  document.getElementById("B_tilt_s").value = String(st.tilt);
+  const c = document.getElementById("cB_tilt"); if (c) c.textContent = f2(st.tilt);
   checkB();
 }
-const numB = wireNumeric("B", {
-  bit: BIT.B_num,
-  check: v => Math.abs(v - 2*sB.tilt) <= 0.12,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => { markTask("B", "B2"); Gates.B.done = true; }
-});
+
 function checkB() {
-  if (Gates.B.solvedOnce) return;
-  if (Math.abs(sB.tilt - GA.best) > 0.02) return;
-  Gates.B.solvedOnce = true;
-  markTask("B", "B1"); record(BIT.B_solve, true); numB.show(); unlockNext("B"); showSolved("B");
+  const st = statsB();
+  const at = Math.abs(st.tilt - G_BEST[sB.src]) <= B_TOL;
+  if (at && !sB.fitted[sB.src]) {
+    sB.fitted[sB.src] = true;
+    const list = document.getElementById("B_list");
+    if (list.querySelector("div[style]")) list.innerHTML = "";
+    const row = document.createElement("div");
+    row.innerHTML = '<span class="lab">' + G_NAME[sB.src] + '</span><span class="val">tilt ' + f2(G_BEST[sB.src]) + ' · accounts for ' + f2(Math.max(0, st.acc)) + '</span>';
+    list.appendChild(row);
+    const n = ["fa", "mo", "mp"].filter(k => sB.fitted[k]).length;
+    document.getElementById("B2_now").textContent = String(n);
+  }
+  if (sB.fitted.mp && !document.querySelector('#tasksB li[data-task="B1"]').classList.contains("done")) {
+    markTask("B", "B1"); record(BIT.B1, true);
+    document.getElementById("B1_now").textContent = "found";
+  }
+  const all = sB.fitted.fa && sB.fitted.mo && sB.fitted.mp;
+  if (all && !document.querySelector('#tasksB li[data-task="B2"]').classList.contains("done")) {
+    markTask("B", "B2"); record(BIT.B2, true); qB.show(); finishStage("B");
+  }
 }
-document.getElementById("B_tilt_s").addEventListener("input", e => {
-  sB.tilt = parseFloat(e.target.value); highlightByDataLine("codeB","tilt"); bump("B"); drawStageB();
-});
-document.getElementById("B_download").addEventListener("click", () => {
-  downloadText("lesson8_stageA.R", `# Lesson 8, Stage B -- the tilt from a parent to a child.
-g <- read.csv("data/clean/galton_families.csv")
-g$kid <- g$childHeight * ifelse(g$gender == "female", 1.08, 1)
-par <- c(g$father, g$mother * 1.08); kid <- c(g$kid, g$kid)
-pz <- as.numeric(scale(par)); kz <- as.numeric(scale(kid))
-tilt <- ${sB.tilt.toFixed(2)}
-cor(pz, kz - tilt * pz)   # the tilt left over
-cor(par, kid)
-`);
-});
 
-/* ====== STAGE C — a song nobody is born with ======================== */
-const C_BROODS = 60, C_K = 4;
-const sC = { fid: 0.30, cross: false, seed: pageSeed("l8B"), gotClump: false, gotSwap: false,
-             swapRuns: [], swapAvg: null };
-const C_SWAPS_NEEDED = 8;
-function songData() {
-  const rng = mulberry32(sC.seed), nrm = makeNorm(rng);
-  const fathers = []; for (let b=0;b<C_BROODS;b++) fathers.push(nrm());
-  const tutorOf = []; for (let b=0;b<C_BROODS;b++) tutorOf.push(b);
-  if (sC.cross) {
-    for (let i=C_BROODS-1;i>0;i--) { const j = Math.floor(rng()*(i+1)); const t=tutorOf[i]; tutorOf[i]=tutorOf[j]; tutorOf[j]=t; }
-    for (let i=0;i<C_BROODS;i++) if (tutorOf[i] === i) { const j = (i+1) % C_BROODS; const t=tutorOf[i]; tutorOf[i]=tutorOf[j]; tutorOf[j]=t; }
+(function wireB() {
+  const cv = document.getElementById("plotB");
+  let dragging = false;
+  function apply(e) {
+    const p = canvasPt(cv, e), f = sB._f;
+    const xv = xInv(f, p.x), yv = yInv(f, p.y);
+    if (Math.abs(xv - XBAR[sB.src]) < 0.5) return;
+    sB.tilt[sB.src] = clamp((yv - KIDBAR) / (xv - XBAR[sB.src]), -0.30, 1.40);
+    refreshB();
   }
-  const gen=[], tut=[], song=[], brood=[];
-  const k = Math.sqrt(Math.max(0, 1 - sC.fid*sC.fid));
-  for (let b=0;b<C_BROODS;b++) {
-    const T = fathers[tutorOf[b]];
-    for (let i=0;i<C_K;i++) { gen.push(fathers[b]); tut.push(T); song.push(sC.fid*T + k*nrm()); brood.push(b); }
-  }
-  return { gen, tut, song, brood };
-}
-function broodGaps(d) {
-  let wS=0,wN=0,bS=0,bN=0;
-  for (let i=0;i<d.song.length;i++) for (let j=i+1;j<d.song.length;j++) {
-    const g = Math.abs(d.song[i]-d.song[j]);
-    if (d.brood[i] === d.brood[j]) { wS+=g; wN++; } else { bS+=g; bN++; }
-  }
-  return { within: wN?wS/wN:0, between: bN?bS/bN:0 };
-}
-function drawStageC() {
-  const d = songData(), gaps = broodGaps(d);
-  const cv = document.getElementById("plotC1");
-  const c1 = setupCanvas(cv); const ctx = c1.ctx; ctx.clearRect(0,0,c1.W,c1.H);
-  const pad = { l: 60, r: 16, t: 14, b: 42 };
-  const f = makeFrame(pad, c1.W, c1.H, -0.5, C_BROODS-0.5, -3.0, 3.0);
-  drawAxes(ctx, f, "brood", "the song", 8, 4, v=>v.toFixed(0), v=>v.toFixed(0));
-  for (let i=0;i<d.song.length;i++) {
-    ctx.fillStyle = "rgba(47,107,143,0.75)";
-    ctx.beginPath(); ctx.arc(f.x(d.brood[i]), f.y(Math.max(-3,Math.min(3,d.song[i]))), 2.4, 0, 6.2832); ctx.fill();
-  }
-  ctx.strokeStyle = "rgba(178,58,72,0.75)"; ctx.lineWidth = 1.5;
-  for (let b=0;b<C_BROODS;b++) { const x=f.x(b), y=f.y(Math.max(-3,Math.min(3,d.tut[b*C_K]))); ctx.beginPath(); ctx.moveTo(x-4,y); ctx.lineTo(x+4,y); ctx.stroke(); }
+  cv.addEventListener("pointerdown", e => { if (!Gates.B.open) return; cv.setPointerCapture(e.pointerId); dragging = true; bump("B"); apply(e); });
+  cv.addEventListener("pointermove", e => { if (dragging) apply(e); });
+  cv.addEventListener("pointerup", e => { dragging = false; try { cv.releasePointerCapture(e.pointerId); } catch (x) {} });
+  cv.addEventListener("pointercancel", () => { dragging = false; });
 
-  const cv2 = document.getElementById("plotC2");
-  const c2 = setupCanvas(cv2); const ctx2 = c2.ctx; ctx2.clearRect(0,0,c2.W,c2.H);
-  const pad2 = { l: 60, r: 16, t: 14, b: 46 };
-  const f2 = makeFrame(pad2, c2.W, c2.H, -3, 3, -3, 3);
-  drawAxes(ctx2, f2, "the song of the bird that raised it", "the nestling's song", 4, 4, v=>v.toFixed(0), v=>v.toFixed(0));
-  scatter(ctx2, f2, d.tut, d.song, "rgba(47,107,143,0.55)", 2.6);
-  const rT = tiltOf(d.tut, d.song), rG = tiltOf(d.gen, d.song);
-  drawTilt(ctx2, f2, rT, "#b23a48");
-
-  document.getElementById("C_fidOut").textContent = sC.fid.toFixed(2);
-  document.getElementById("cC_fid").textContent = sC.fid.toFixed(2);
-  document.getElementById("C_within").textContent = gaps.within.toFixed(2);
-  document.getElementById("C_between").textContent = gaps.between.toFixed(2);
-  paintNum("C_rTutor", rT, 2);
-  paintNum("C_rGen", rG, 2);
-  if (gaps.between > 0 && gaps.within < 0.5*gaps.between) { sC.gotClump = true; markTask("C", "C1"); }
-  // Sixty fathers leaves about 0.13 of noise on this number, so one swapped set
-  // says nothing. Accumulate them and average, which is the Lesson 4 refrain.
-  if (sC.cross && rT > 0.60) {
-    if (!sC.swapRuns.some(x => x.seed === sC.seed)) sC.swapRuns.push({ seed: sC.seed, rG });
-    sC.swapAvg = mean(sC.swapRuns.map(x => x.rG));
-    if (sC.swapRuns.length >= C_SWAPS_NEEDED && Math.abs(sC.swapAvg) < 0.12) { sC.gotSwap = true; markTask("C", "C2"); }
-  }
-  document.getElementById("C_nsets").textContent = String(sC.swapRuns.length);
-  if (sC.swapAvg === null) document.getElementById("C_avg").textContent = "—";
-  else paintNum("C_avg", sC.swapAvg, 3, Math.abs(sC.swapAvg) < 0.12);
-  document.getElementById("C1_now").textContent = sC.gotClump ? "done" : gaps.within.toFixed(2) + " against " + gaps.between.toFixed(2);
-  document.getElementById("C2_now").textContent = sC.gotSwap ? "done"
-    : (sC.cross ? sC.swapRuns.length + " of " + C_SWAPS_NEEDED + " swapped sets, averaging "
-                  + (sC.swapAvg === null ? "—" : signed(sC.swapAvg,3))
-                : "eggs not swapped");
-  checkC();
-}
-const numC = wireNumeric("C", {
-  bit: BIT.C_num,
-  check: v => Math.abs(v) <= 0.12,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => { markTask("C", "C3"); Gates.C.done = true; }
-});
-function checkC() {
-  if (Gates.C.solvedOnce) return;
-  if (!(sC.gotClump && sC.gotSwap)) return;
-  Gates.C.solvedOnce = true;
-  record(BIT.C_solve, true); numC.show(); unlockNext("C"); showSolved("C");
-}
-document.getElementById("C_fid").addEventListener("input", e => {
-  sC.fid = parseFloat(e.target.value); highlightByDataLine("codeC","fid"); bump("C"); drawStageC();
-});
-document.getElementById("C_cross").addEventListener("change", e => { sC.cross = e.target.checked; bump("C"); drawStageC(); });
-document.getElementById("C_reseed").addEventListener("click", () => { sC.seed = (sC.seed*1664525+1013904223)>>>0; drawStageC(); });
-document.getElementById("C_download").addEventListener("click", () => {
-  downloadText("lesson8_stageB.R", `# Lesson 8, Stage C -- a song nobody is born with.
-fid <- ${sC.fid.toFixed(2)}; swap <- ${sC.cross ? "TRUE" : "FALSE"}
-father <- rnorm(40)
-tutor  <- if (swap) sample(father) else father
-brood  <- rep(1:40, each = 4)
-song   <- fid*tutor[brood] + sqrt(1-fid^2)*rnorm(160)
-c(raiser = cor(tutor[brood], song), father = cor(father[brood], song))
-`);
-});
-
-/* ====== STAGE D — four limbs, and no resemblance ==================== */
-const D_FAM = 400;
-const sD = { rate: 0.25, clus: 0.00, seed: pageSeed("l8C"), gotFlat: false, gotFamily: false };
-function invNorm(p) {
-  // Acklam's approximation, good to ~1e-9 -- only needed to place the accident
-  // threshold so the average rate is whatever the slider says.
-  if (p <= 0) return -6; if (p >= 1) return 6;
-  const a=[-39.69683028665376,220.9460984245205,-275.9285104469687,138.3577518672690,-30.66479806614716,2.506628277459239];
-  const b=[-54.47609879822406,161.5858368580409,-155.6989798598866,66.80131188771972,-13.28068155288572];
-  const c=[-0.007784894002430293,-0.3223964580411365,-2.400758277161838,-2.549732539343734,4.374664141464968,2.938163982698783];
-  const d=[0.007784695709041462,0.3224671290700398,2.445134137142996,3.754408661907416];
-  const pl=0.02425;
-  let q,r;
-  if (p < pl) { q=Math.sqrt(-2*Math.log(p)); return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
-  if (p > 1-pl) { q=Math.sqrt(-2*Math.log(1-p)); return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1); }
-  q=p-0.5; r=q*q;
-  return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
-}
-function normCdf(x) {
-  // Abramowitz & Stegun 7.1.26 on |x|/sqrt(2)
-  const t = 1/(1+0.3275911*Math.abs(x)/Math.SQRT2);
-  const y = 1 - (((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x/2);
-  return x >= 0 ? 0.5*(1+y) : 0.5*(1-y);
-}
-function limbData() {
-  const rng = mulberry32(sD.seed), nrm = makeNorm(rng);
-  // With danger clustered, the family risks fan out around the threshold; shifting
-  // the threshold by the usual sqrt(1+c^2) keeps the average rate on the slider.
-  const thr = invNorm(Math.min(0.999, Math.max(0.001, sD.rate))) * Math.sqrt(1 + sD.clus*sD.clus);
-  const par = [], kid = [];
-  for (let i=0;i<D_FAM;i++) {
-    const p = normCdf(thr + sD.clus*nrm());
-    par.push(4 - (rng() < p ? 1 : 0));
-    kid.push(4 - (rng() < p ? 1 : 0));
-  }
-  return { par, kid };
-}
-function drawStageD() {
-  const d = limbData();
-  const cv = document.getElementById("plotD");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad = { l: 60, r: 16, t: 16, b: 46 };
-  const f = makeFrame(pad, W, H, 2.4, 4.6, 2.4, 4.6);
-  drawAxes(ctx, f, "limbs on the parent", "limbs on the child", 4, 4, v=>v.toFixed(1), v=>v.toFixed(1));
-  scatter(ctx, f, d.par, d.kid, "rgba(47,107,143,0.40)", 3.0, mulberry32(7));
-  const t = tiltOf(d.par, d.kid);
-  drawTilt(ctx, f, 1, "rgba(0,0,0,0)");
-  // the fitted line lives in raw limb units here, so draw it about the means
-  const mx = mean(d.par), my = mean(d.kid), sx = sdOf(d.par), sy = sdOf(d.kid);
-  if (sx > 0 && sy > 0) {
-    const slope = t*sy/sx;
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2.2; ctx.beginPath();
-    ctx.moveTo(f.x(2.4), f.y(my + slope*(2.4-mx)));
-    ctx.lineTo(f.x(4.6), f.y(my + slope*(4.6-mx)));
-    ctx.stroke();
-  }
-  const lost = (d.par.concat(d.kid).filter(v => v < 4).length) / (2*D_FAM);
-  document.getElementById("D_rateOut").textContent = sD.rate.toFixed(2);
-  document.getElementById("D_clusOut").textContent = sD.clus.toFixed(2);
-  document.getElementById("cD_rate").textContent = sD.rate.toFixed(2);
-  document.getElementById("cD_clus").textContent = sD.clus.toFixed(2);
-  paintNum("D_tilt", t, 2);
-  document.getElementById("D_lost").textContent = (100*lost).toFixed(0) + "%";
-  document.getElementById("D_spread").textContent = sdOf(d.par.concat(d.kid)).toFixed(2);
-  if (sD.clus === 0 && lost >= 0.20 && Math.abs(t) < 0.10) { sD.gotFlat = true; markTask("D", "D1"); }
-  if (sD.clus > 0 && t > 0.30) { sD.gotFamily = true; markTask("D", "D2"); }
-  document.getElementById("D1_now").textContent = sD.gotFlat ? "done" : (100*lost).toFixed(0) + "% missing, tilt " + t.toFixed(2);
-  document.getElementById("D2_now").textContent = sD.gotFamily ? "done" : "tilt " + t.toFixed(2);
-  checkD();
-}
-const numD = wireNumeric("D", {
-  bit: BIT.D_num,
-  check: v => Math.abs(v) <= 0.10,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => { markTask("D", "D3"); Gates.D.done = true; }
-});
-function checkD() {
-  if (Gates.D.solvedOnce) return;
-  if (!(sD.gotFlat && sD.gotFamily)) return;
-  Gates.D.solvedOnce = true;
-  record(BIT.D_solve, true); numD.show(); unlockNext("D"); showSolved("D");
-}
-[["D_rate","rate"],["D_clus","clus"]].forEach(([id,k]) => {
-  document.getElementById(id).addEventListener("input", e => {
-    sD[k] = parseFloat(e.target.value); highlightByDataLine("codeD", k === "rate" ? "rate" : "clus"); bump("D"); drawStageD();
+  document.getElementById("B_tilt_s").addEventListener("input", e => {
+    sB.tilt[sB.src] = parseFloat(e.target.value); bump("B");
+    highlightByDataLine("codeB", "tilt"); refreshB();
   });
-});
-document.getElementById("D_reseed").addEventListener("click", () => { sD.seed = (sD.seed*1664525+1013904223)>>>0; drawStageD(); });
-document.getElementById("D_download").addEventListener("click", () => {
-  downloadText("lesson8_stageC.R", `# Lesson 8, Stage D -- a trait every gene agrees about.
-rate <- ${sD.rate.toFixed(2)}; clus <- ${sD.clus.toFixed(2)}
-danger <- rnorm(400)
-p   <- pnorm(qnorm(rate)*sqrt(1+clus^2) + clus*danger)
-par <- 4 - rbinom(400, 1, p)
-kid <- 4 - rbinom(400, 1, p)
-cor(par, kid)
-`);
+  document.querySelectorAll("#B_pick button").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#B_pick button").forEach(o => o.classList.remove("on"));
+      b.classList.add("on"); sB.src = b.dataset.src; bump("B"); refreshB();
+    });
+  });
+  wireDownload("B_download", "codeB", "lesson8_stageB.R");
+})();
+
+const qB = wireNumeric("B", {
+  bit: BIT.Bq,
+  check: v => Math.abs(v - 0.247) <= 0.045,
+  right: "About a quarter. The tilt is 0.71 and the share is 0.25, and those are two different measurements of the same line.",
+  wrong: "Not that. It is the dark part of the bar with both parents on the axis, read as a decimal.",
+  after: () => markTask("B", "B3")
 });
 
-/* ====== STAGE E — down the ladder of relatives ====================== */
-const E_FAM = 3000;
-const sE = { h: 0.20, seed: pageSeed("l8D"), rungs: null };
-function ladder() {
-  const rng = mulberry32(sE.seed), nrm = makeNorm(rng);
-  const h = sE.h, sg = Math.sqrt(h), se = Math.sqrt(1-h), seg = Math.sqrt(h/2);
-  const seen = g => g + se*nrm();
-  const childG = (a,b) => (a+b)/2 + seg*nrm();
-  const po=[[],[]], fs=[[],[]], hs=[[],[]], cz=[[],[]];
-  for (let i=0;i<E_FAM;i++) {
-    const g1 = sg*nrm(), g2 = sg*nrm();
-    const s1 = childG(g1,g2), s2 = childG(g1,g2);           // two full sibs...
-    const c1 = childG(s1, sg*nrm()), c2 = childG(s2, sg*nrm()); // ...whose children are cousins
-    cz[0].push(seen(c1)); cz[1].push(seen(c2));
-    const f = sg*nrm(), m = sg*nrm();
-    const k1 = childG(f,m), k2 = childG(f,m), k3 = childG(f, sg*nrm());
-    po[0].push(seen(f));  po[1].push(seen(k1));
-    fs[0].push(seen(k1)); fs[1].push(seen(k2));
-    hs[0].push(seen(k2)); hs[1].push(seen(k3));
-  }
-  return { po: tiltOf(po[0],po[1]), fs: tiltSym(fs[0],fs[1]), hs: tiltSym(hs[0],hs[1]), cz: tiltSym(cz[0],cz[1]) };
+/* ====== The model behind Stages C, D and E ==========================
+   Standard normal draws are made once per seed and the knobs only scale
+   them, so moving a knob morphs the same cloud instead of reshuffling it --
+   which is the difference between seeing what a knob does and watching a
+   slideshow. A child is handed half of each parent's pile plus a fresh draw
+   of the same size as half a pile, which is what keeps the spread of the
+   children equal to the spread of the parents generation after generation. */
+const MU = 69.2, NMOD = 4000;
+function makeZ(seed, n) {
+  const z = makeNormal(mulberry32(seed));
+  const o = { af: new Float64Array(n), am: new Float64Array(n), ef: new Float64Array(n),
+              em: new Float64Array(n), sh: new Float64Array(n), eo: new Float64Array(n) };
+  for (let i = 0; i < n; i++) { o.af[i] = z(); o.am[i] = z(); o.ef[i] = z(); o.em[i] = z(); o.sh[i] = z(); o.eo[i] = z(); }
+  return o;
 }
-function drawStageE() {
-  const r = ladder(); sE.rungs = r;
-  const cv = document.getElementById("plotE");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad = { l: 128, r: 20, t: 16, b: 46 };
-  const f = makeFrame(pad, W, H, 0, 0.55, 0, 1);
-  drawAxes(ctx, f, "the correlation between them", "", 5, 1, v=>v.toFixed(2), ()=>"");
-  const rows = [["one parent and a child", r.po, 0.84], ["two full siblings", r.fs, 0.62],
-                ["two half siblings", r.hs, 0.40], ["two first cousins", r.cz, 0.18]];
-  ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  for (const [lab, v, y] of rows) {
-    ctx.fillStyle = "#555"; ctx.fillText(lab, f.pad.l - 8, f.y(y));
-    ctx.fillStyle = "#2f6b8f";
-    ctx.fillRect(f.pad.l, f.y(y)-6, Math.max(1, f.x(Math.max(0,Math.min(0.55,v))) - f.pad.l), 12);
+function popFrom(Z, sdA, sdE) {
+  const n = Z.af.length, s2 = sdA / Math.SQRT2;
+  const mp = new Float64Array(n), amp = new Float64Array(n), ao = new Float64Array(n),
+        eo = new Float64Array(n), kid = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const Af = sdA * Z.af[i], Am = sdA * Z.am[i];
+    amp[i] = (Af + Am) / 2;
+    mp[i] = MU + amp[i] + sdE * (Z.ef[i] + Z.em[i]) / 2;
+    ao[i] = amp[i] + s2 * Z.sh[i];
+    eo[i] = sdE * Z.eo[i];
+    kid[i] = MU + ao[i] + eo[i];
   }
-  // Galton's two real numbers, to be matched
-  ctx.setLineDash([4,3]); ctx.lineWidth = 1.5;
-  for (const [v, y] of [[REAL_PO, 0.84], [REAL_SIB, 0.62]]) {
-    ctx.strokeStyle = "#b23a48"; ctx.beginPath();
-    ctx.moveTo(f.x(v), f.y(y)-11); ctx.lineTo(f.x(v), f.y(y)+11); ctx.stroke();
+  return { mp: mp, amp: amp, ao: ao, eo: eo, kid: kid, n: n };
+}
+function fitStats(x, y) {
+  const vx = vari(x), tot = vari(y), xb = mean(x), yb = mean(y);
+  if (vx < 1e-9 || tot < 1e-9) return { tilt: 0, total: tot, left: tot, acc: 0, miss: Math.sqrt(tot), xb: xb, yb: yb };
+  const t = covar(x, y) / vx;
+  let s = 0; for (let i = 0; i < x.length; i++) { const d = y[i] - (yb + t * (x[i] - xb)); s += d * d; }
+  const left = s / x.length;
+  return { tilt: t, total: tot, left: left, acc: 1 - left / tot, miss: Math.sqrt(left), xb: xb, yb: yb };
+}
+
+/* ====== Stage C =====================================================
+   The line is fitted for the student here; Stage B was the fitting. What is
+   new is that the leftover comes apart. Turning the life to nothing does not
+   empty it, because half of what a parent carries is re-dealt at conception
+   and no measurement of the parents can see which half. */
+const sC = { seed: pageSeed("l8C", 1, 99999), sdA: 1.40, sdE: 2.00, Z: null, P: null };
+sC.Z = makeZ(sC.seed, NMOD);
+
+function statsC() {
+  const P = sC.P, st = fitStats(P.mp, P.kid);
+  if (st.total < 1e-9) return { tilt: 0, acc: 0, leftG: 0, leftE: 0, sd: 0, miss: 0, xb: st.xb, yb: st.yb };
+  const leftAll = st.left / st.total, leftE = vari(P.eo) / st.total;
+  return { tilt: st.tilt, acc: 1 - leftAll, leftG: leftAll - leftE, leftE: leftE,
+           sd: Math.sqrt(st.total), miss: st.miss, xb: st.xb, yb: st.yb };
+}
+
+function drawC() {
+  const P = sC.P, st = statsC();
+  const cv = document.getElementById("plotC");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, 59, 79, 54, 84);
+  drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
+  // every 32nd child gets its miss drawn, in the two colours it is made of
+  for (let i = 0; i < P.n; i += 32) {
+    const x = f.x(P.mp[i]), pred = yAt(P.mp[i]), gEnd = P.kid[i] - P.eo[i];
+    ctx.strokeStyle = SHALLOW; ctx.lineWidth = 1.4; ctx.beginPath();
+    ctx.moveTo(x, f.y(clamp(pred, 54, 84))); ctx.lineTo(x, f.y(clamp(gEnd, 54, 84))); ctx.stroke();
+    ctx.strokeStyle = LIFE; ctx.beginPath();
+    ctx.moveTo(x, f.y(clamp(gEnd, 54, 84))); ctx.lineTo(x, f.y(clamp(P.kid[i], 54, 84))); ctx.stroke();
   }
-  ctx.setLineDash([]);
-  document.getElementById("E_hOut").textContent = sE.h.toFixed(2);
-  document.getElementById("E_pred").textContent = (sE.h/2).toFixed(3);
-  document.getElementById("cE_h").textContent = sE.h.toFixed(2);
-  paintNum("E_po", r.po, 3, Math.abs(r.po - REAL_PO) <= 0.04);
-  document.getElementById("E_rungs").innerHTML = rows.map(([lab,v]) =>
-    `<div><span class="lab">${lab}</span><span class="val">${v.toFixed(3)}</span></div>`).join("");
-  document.getElementById("E1_now").textContent =
-    Math.abs(r.po - REAL_PO) <= 0.04 ? "done" : r.po.toFixed(3) + " against 0.36";
-  checkE();
+  ctx.fillStyle = "rgba(92,134,161,0.22)";
+  for (let i = 0; i < P.n; i += 2) { ctx.beginPath(); ctx.arc(f.x(P.mp[i]), f.y(clamp(P.kid[i], 54, 84)), 1.6, 0, 6.2832); ctx.fill(); }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.x(59), f.y(clamp(yAt(59), 54, 84))); ctx.lineTo(f.x(79), f.y(clamp(yAt(79), 54, 84))); ctx.stroke();
 }
-const numE = wireNumeric("E", {
-  bit: BIT.E_num,
-  check: v => sE.rungs && Math.abs(v - sE.rungs.cz) <= 0.045,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => { markTask("E", "E2"); Gates.E.done = true; }
-});
-function checkE() {
-  if (Gates.E.solvedOnce || !sE.rungs) return;
-  if (Math.abs(sE.rungs.po - REAL_PO) > 0.04) return;
-  Gates.E.solvedOnce = true;
-  markTask("E", "E1"); record(BIT.E_solve, true); numE.show(); unlockNext("E"); showSolved("E");
+
+function refreshC() {
+  sC.P = popFrom(sC.Z, sC.sdA, sC.sdE);
+  drawC();
+  const st = statsC();
+  document.getElementById("C_tilt").textContent = f2(st.tilt);
+  document.getElementById("C_sd").textContent = f2(st.sd) + " in";
+  document.getElementById("C_miss").textContent = f2(st.miss) + " in";
+  const a = clamp(st.acc, 0, 1), g = clamp(st.leftG, 0, 1), e = clamp(st.leftE, 0, 1);
+  const cv = document.getElementById("barC");
+  const { ctx, W, H } = setupCanvas(cv);
+  const geo = drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: g, color: SHALLOW }, { share: e, color: LIFE }], null);
+  drawBrace(ctx, geo, 0, a + g, "handed down: " + f2(a + g));
+  document.getElementById("C_ledger").innerHTML =
+    '<div><span><span class="sw" style="background:' + DEEP + '"></span>what the line reaches</span><span>' + f2(a) + '</span></div>' +
+    '<div><span><span class="sw" style="background:' + SHALLOW + '"></span>missed, and handed down anyway</span><span>' + f2(g) + '</span></div>' +
+    '<div><span><span class="sw" style="background:' + LIFE + '"></span>missed, and added by a life</span><span>' + f2(e) + '</span></div>';
+  document.getElementById("C_sdaOut").value = f2(sC.sdA);
+  document.getElementById("C_sdeOut").value = f2(sC.sdE);
+  document.getElementById("cC_sda").textContent = f2(sC.sdA);
+  document.getElementById("cC_sde").textContent = f2(sC.sdE);
+  checkC(st);
 }
-document.getElementById("E_h").addEventListener("input", e => {
-  sE.h = parseFloat(e.target.value); highlightByDataLine("codeE","h"); bump("E"); drawStageE();
-});
-document.getElementById("E_reseed").addEventListener("click", () => { sE.seed = (sE.seed*1664525+1013904223)>>>0; drawStageE(); });
-document.getElementById("E_download").addEventListener("click", () => {
-  downloadText("lesson8_stageD.R", `# Lesson 8, Stage E -- four kinds of relative, one knob.
-h <- ${sE.h.toFixed(2)}
-kid  <- function(a,b) (a+b)/2 + sqrt(h/2)*rnorm(length(a))
-seen <- function(g)   g + sqrt(1-h)*rnorm(length(g))
-# theory for the four rungs: h/2, h/2, h/4, h/8
-`);
+
+function checkC(st) {
+  const done = k => document.querySelector('#tasksC li[data-task="' + k + '"]').classList.contains("done");
+  if (!done("C1") && Math.abs(st.tilt - 0.7126) <= 0.03) {
+    markTask("C", "C1"); record(BIT.C1, true);
+    document.getElementById("C1_now").textContent = "matched";
+  }
+  if (!done("C2") && sC.sdE === 0) {
+    markTask("C", "C2"); record(BIT.C2, true);
+    document.getElementById("C2_now").textContent = "the pale part did not go with it";
+    qC.show();
+  }
+  if (!done("C3") && sC.sdE > 0 && Math.abs(st.leftG - st.leftE) <= 0.04 && st.leftE > 0.05) {
+    markTask("C", "C3"); record(BIT.C3, true);
+    document.getElementById("C3_now").textContent = "split";
+  }
+  if (done("C1") && done("C2") && done("C3")) finishStage("C");
+}
+
+(function wireC() {
+  const a = document.getElementById("C_sda"), e = document.getElementById("C_sde");
+  a.addEventListener("input", ev => { sC.sdA = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "sda"); refreshC(); });
+  e.addEventListener("input", ev => { sC.sdE = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "sde"); refreshC(); });
+  document.getElementById("C_reseed").addEventListener("click", () => {
+    sC.seed = randomSeed(1, 99999); sC.Z = makeZ(sC.seed, NMOD); bump("C"); refreshC();
+  });
+  wireDownload("C_download", "codeC", "lesson8_stageC.R");
+})();
+
+const qC = wireNumeric("C", {
+  bit: BIT.Cq,
+  check: v => Math.abs(v - 0.50) <= 0.06,
+  right: "Half. Nothing in this population came from anywhere but the parents, and the line still cannot reach half of it.",
+  wrong: "Not that. Put the life knob on zero and read the pale part of the bar.",
+  after: () => markTask("C", "C4")
 });
 
-/* ====== STAGE F — three roads to the same number ==================== */
-const F_FAM = 2500, F_TARGET = 0.36;
-const sF = { h1: 0.20, h2: 0.20, h3: 0.20, cross: false, seed: pageSeed("l8E"),
-             matched: false, swapped: false, survivor: null };
-// Swapping moves who a child copies and whose roof it is under. It cannot move
-// what the child was built with, so the first population is untouched by it.
-function threeRoads() {
-  const rng = mulberry32(sF.seed), nrm = makeNorm(rng);
-  const out = [];
-  {
-    const sg = Math.sqrt(sF.h1), se = Math.sqrt(1-sF.h1), seg = Math.sqrt(sF.h1*0.75);
-    const P=[],K=[];
-    for (let i=0;i<F_FAM;i++) { const gp = sg*nrm(); P.push(gp + se*nrm()); K.push(gp/2 + seg*nrm() + se*nrm()); }
-    out.push({ P, K, r: tiltOf(P,K) });
-  }
-  {
-    const f = sF.h2, k = Math.sqrt(Math.max(0,1-f*f));
-    const P=[],K=[];
-    for (let i=0;i<F_FAM;i++) { const p = nrm(); const tutor = sF.cross ? nrm() : p; P.push(p); K.push(f*tutor + k*nrm()); }
-    out.push({ P, K, r: tiltOf(P,K) });
-  }
-  {
-    const c = sF.h3, k = Math.sqrt(Math.max(0,1-c*c));
-    const P=[],K=[];
-    for (let i=0;i<F_FAM;i++) { const roof = nrm(); const roofK = sF.cross ? nrm() : roof; P.push(c*roof + k*nrm()); K.push(c*roofK + k*nrm()); }
-    out.push({ P, K, r: tiltOf(P,K) });
-  }
+/* ====== Stage D =====================================================
+   Same children every time; only the across axis changes. Stripping the
+   parents' own lives off the axis is the correction people reach for, and it
+   returns 1 -- a fact about halves, not about the trait. The axis that
+   returns the tilt is the child's own pile. */
+const sD = { seed: pageSeed("l8D", 1, 99999), sdA: 2.15, sdE: 1.35, ax: "mp", seen: {}, Z: null, P: null };
+sD.Z = makeZ(sD.seed, NMOD);
+const D_AXLAB = { mp: "the two parents averaged (in)", amp: "the parents' piles, averaged (in)", ao: "the child's own pile (in)" };
+
+function axisOf(P, ax) {
+  if (ax === "mp") return P.mp;
+  const n = P.n, out = new Float64Array(n), src = (ax === "amp") ? P.amp : P.ao;
+  for (let i = 0; i < n; i++) out[i] = MU + src[i];
   return out;
 }
-function drawStageF() {
-  const pops = threeRoads();
-  const cv = document.getElementById("plotF");
-  const { ctx, W, H } = setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const labels = ["built in", "copied", "shared roof"];
-  const cols = ["rgba(178,58,72,0.45)", "rgba(47,107,143,0.45)", "rgba(90,110,60,0.45)"];
-  const lines = ["#b23a48", "#2f6b8f", "#5a6e3c"];
-  const panelW = W/3;
-  for (let i=0;i<3;i++) {
-    const pad = { l: 12 + i*panelW, r: W - (i+1)*panelW + 10, t: 24, b: 40 };
-    const f = makeFrame(pad, W, H, -3, 3, -3, 3);
-    ctx.strokeStyle="#ddd"; ctx.lineWidth=1;
-    ctx.strokeRect(f.pad.l, f.pad.t, f.W, f.H);
-    scatter(ctx, f, pops[i].P, pops[i].K, cols[i], 1.7);
-    drawTilt(ctx, f, pops[i].r, lines[i]);
-    ctx.fillStyle="#555"; ctx.font="12px -apple-system, sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top";
-    ctx.fillText(labels[i], f.pad.l + f.W/2, 6);
-    ctx.textBaseline="bottom"; ctx.font="11px ui-monospace, monospace";
-    ctx.fillText("r = " + pops[i].r.toFixed(2), f.pad.l + f.W/2, H - 10);
-  }
-  const rs = pops.map(p => p.r);
-  const gap = Math.max.apply(null, rs) - Math.min.apply(null, rs);
-  ["h1","h2","h3"].forEach(k => {
-    document.getElementById("F_"+k+"Out").textContent = sF[k].toFixed(2);
-    document.getElementById("cF_"+k).textContent = sF[k].toFixed(2);
-  });
-  paintNum("F_r1", rs[0], 2); paintNum("F_r2", rs[1], 2); paintNum("F_r3", rs[2], 2);
-  document.getElementById("F_gap").textContent = gap.toFixed(3);
-  const near = rs.every(v => Math.abs(v - F_TARGET) <= 0.06);
-  if (!sF.cross && gap <= 0.05 && near) { sF.matched = true; markTask("F", "F1"); }
-  if (sF.cross && sF.matched && rs[0] > 0.25 && Math.abs(rs[1]) < 0.12 && Math.abs(rs[2]) < 0.12) {
-    sF.swapped = true; sF.survivor = rs[0]; markTask("F", "F2");
-  }
-  document.getElementById("F1_now").textContent = sF.matched ? "done" : "widest gap " + gap.toFixed(3);
-  document.getElementById("F2_now").textContent = sF.swapped ? "done" : (sF.cross ? "still going" : "babies not swapped");
-  checkF();
+
+function drawD() {
+  const P = sD.P, x = axisOf(P, sD.ax), st = fitStats(x, P.kid);
+  const cv = document.getElementById("plotD");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, 59, 79, 54, 84);
+  drawAxes(ctx, f, D_AXLAB[sD.ax], "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  ctx.fillStyle = "rgba(92,134,161,0.32)";
+  for (let i = 0; i < P.n; i += 2) { ctx.beginPath(); ctx.arc(f.x(clamp(x[i], 59, 79)), f.y(clamp(P.kid[i], 54, 84)), 1.6, 0, 6.2832); ctx.fill(); }
+  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.x(59), f.y(clamp(yAt(59), 54, 84))); ctx.lineTo(f.x(79), f.y(clamp(yAt(79), 54, 84))); ctx.stroke();
+  return st;
 }
-const numF = wireNumeric("F", {
-  bit: BIT.F_num,
-  check: v => sF.survivor !== null && Math.abs(v - sF.survivor) <= 0.07,
-  right: "Recorded — right.", wrong: "Recorded — not right.",
-  after: () => {
-    markTask("F", "F3"); Gates.F.done = true;
-    if (typeof Score !== "undefined" && Score.finish) Score.finish();
-  }
-});
-function checkF() {
-  if (Gates.F.solvedOnce) return;
-  if (!(sF.matched && sF.swapped)) return;
-  Gates.F.solvedOnce = true;
-  record(BIT.F_solve, true); numF.show();
-  showSolved("F", "<!-- TEXT FOR JM: stage E solved banner. -->Two of the three are gone.");
+
+function refreshD() {
+  sD.P = popFrom(sD.Z, sD.sdA, sD.sdE);
+  const st = drawD();
+  const ref = fitStats(sD.P.mp, sD.P.kid);
+  const accAo = fitStats(axisOf(sD.P, "ao"), sD.P.kid).acc;
+  document.getElementById("D_tilt").textContent = f2(st.tilt);
+  document.getElementById("D_acc").textContent = f2(clamp(st.acc, 0, 1));
+  document.getElementById("D_ref").textContent = f2(ref.tilt);
+  const cv = document.getElementById("barD");
+  const { ctx, W, H } = setupCanvas(cv);
+  const a = clamp(st.acc, 0, 1);
+  drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: 1 - a, color: PALE }],
+          "dark: what this axis accounts for");
+  document.getElementById("D_sdaOut").value = f2(sD.sdA);
+  document.getElementById("D_sdeOut").value = f2(sD.sdE);
+  checkD(st, ref, accAo);
 }
-["h1","h2","h3"].forEach(k => {
-  document.getElementById("F_"+k).addEventListener("input", e => {
-    sF[k] = parseFloat(e.target.value); highlightByDataLine("codeF", k); bump("F"); drawStageF();
+
+function checkD(st, ref, accAo) {
+  const done = k => document.querySelector('#tasksD li[data-task="' + k + '"]').classList.contains("done");
+  const nSeen = Object.keys(sD.seen).length;
+  document.getElementById("D1_now").textContent = nSeen + " of 3 looked at";
+  if (!done("D1") && nSeen === 3 && sD.ax === "ao" && ref.tilt >= 0.20 && Math.abs(st.acc - ref.tilt) <= 0.06) {
+    markTask("D", "D1"); record(BIT.D1, true);
+    document.getElementById("D1_now").textContent = "the child's own pile";
+  }
+  if (!done("D2") && Math.abs(accAo - 0.80) <= 0.03) {
+    markTask("D", "D2"); record(BIT.D2, true);
+    document.getElementById("D2_now").textContent = "set";
+    qD.show();
+  }
+  if (done("D1") && done("D2")) finishStage("D");
+}
+
+(function wireD() {
+  sD.seen[sD.ax] = true;
+  document.getElementById("D_sda").addEventListener("input", ev => { sD.sdA = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "sda"); refreshD(); });
+  document.getElementById("D_sde").addEventListener("input", ev => { sD.sdE = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "sde"); refreshD(); });
+  document.querySelectorAll("#D_pick button").forEach(b => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll("#D_pick button").forEach(o => o.classList.remove("on"));
+      b.classList.add("on"); sD.ax = b.dataset.ax; sD.seen[sD.ax] = true; bump("D"); refreshD();
+    });
   });
-});
-document.getElementById("F_cross").addEventListener("change", e => { sF.cross = e.target.checked; bump("F"); drawStageF(); });
-document.getElementById("F_reseed").addEventListener("click", () => { sF.seed = (sF.seed*1664525+1013904223)>>>0; drawStageF(); });
-document.getElementById("F_download").addEventListener("click", () => {
-  downloadText("lesson8_stageE.R", `# Lesson 8, Stage F -- three roads to the same tilt.
-n <- 900; swap <- ${sF.cross ? "TRUE" : "FALSE"}
-h1 <- ${sF.h1.toFixed(2)}; h2 <- ${sF.h2.toFixed(2)}; h3 <- ${sF.h3.toFixed(2)}
+  document.getElementById("D_reseed").addEventListener("click", () => {
+    sD.seed = randomSeed(1, 99999); sD.Z = makeZ(sD.seed, NMOD); bump("D"); refreshD();
+  });
+  wireDownload("D_download", "codeD", "lesson8_stageD.R");
+})();
 
-gp <- rnorm(n, 0, sqrt(h1))                       # built in
-P1 <- gp + rnorm(n, 0, sqrt(1-h1))
-K1 <- gp/2 + rnorm(n, 0, sqrt(h1*0.75)) + rnorm(n, 0, sqrt(1-h1))
-
-P2 <- rnorm(n); tut <- if (swap) sample(P2) else P2   # copied
-K2 <- h2*tut + sqrt(1-h2^2)*rnorm(n)
-
-roof <- rnorm(n); roofK <- if (swap) sample(roof) else roof   # shared roof
-P3 <- h3*roof  + sqrt(1-h3^2)*rnorm(n)
-K3 <- h3*roofK + sqrt(1-h3^2)*rnorm(n)
-
-c(cor(P1,K1), cor(P2,K2), cor(P3,K3))
-`);
+const qD = wireNumeric("D", {
+  bit: BIT.Dq,
+  check: v => Math.abs(v - 0.50) <= 0.06,
+  right: "Half, and only when a life adds nothing at all. Half of what a parent carries is re-dealt to each child, and no measurement of the parents can reach it.",
+  wrong: "Not that. Run the life knob to zero and the pile knob up, and watch the dark part stop growing.",
+  after: () => markTask("D", "D3")
 });
 
-/* ====== Boot + Score ================================================
-   Scaffold layout (12 bits):
-     0  A landed the tilt on Galton's 934 children
-     1  A where the line puts the child of a parent 2 spreads up
-     2  B nestmates clumped, then the eggs swapped and the father dropped out
-     3  B what a nestling owes the father it came from
-     4  C variation with no resemblance, then danger put into families
-     5  C the tilt a trait every gene agrees about produces
-     6  D put the first rung on Galton's real number
-     7  D the cousins rung there
-     8  E three roads matched, then two of them cut by the swap
-     9  E the one left standing
-   ================================================================== */
-document.addEventListener("score:bypass", () => {
-  numA.show(); numB.show(); numC.show(); numD.show(); numE.show(); numF.show();
-  drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE(); drawStageF();
+/* ====== Stage E =====================================================
+   The whole spread is pinned at 2.55 inches here, so the cut is the only way
+   to buy a response and the knob is the only thing that prices it. The gate
+   reads what the tilt prices the chosen parents at, which is exact; the
+   children's realised average is shown beside it and is not. */
+const sE = { seed: pageSeed("l8E", 1, 99999), h: 0.71, cut: 63.00, Z: null, P: null };
+sE.Z = makeZ(sE.seed, NMOD);
+const E_SD = 2.55;
+
+function refreshE() {
+  sE.P = popFrom(sE.Z, E_SD * Math.sqrt(sE.h), E_SD * Math.sqrt(1 - sE.h));
+  const P = sE.P, st = fitStats(P.mp, P.kid);
+  const selMP = [], selKID = [];
+  for (let i = 0; i < P.n; i++) if (P.mp[i] >= sE.cut) { selMP.push(P.mp[i]); selKID.push(P.kid[i]); }
+  const has = selMP.length >= 8;
+  const S = has ? mean(selMP) - mean(P.mp) : 0;
+  const pred = st.tilt * S;
+  const obs = has ? mean(selKID) - mean(P.kid) : 0;
+
+  const cv = document.getElementById("plotE");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = makeFrame({ l: 50, r: 16, t: 14, b: 46 }, W, H, 62, 78, 57, 81);
+  drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 4, v => v.toFixed(0), v => v.toFixed(0));
+  for (let i = 0; i < P.n; i += 2) {
+    const on = P.mp[i] >= sE.cut;
+    ctx.fillStyle = on ? "rgba(30,77,104,0.45)" : "rgba(170,166,155,0.30)";
+    ctx.beginPath(); ctx.arc(f.x(clamp(P.mp[i], 62, 78)), f.y(clamp(P.kid[i], 57, 81)), on ? 1.9 : 1.5, 0, 6.2832); ctx.fill();
+  }
+  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.x(62), f.y(clamp(yAt(62), 57, 81))); ctx.lineTo(f.x(78), f.y(clamp(yAt(78), 57, 81))); ctx.stroke();
+  ctx.strokeStyle = "#b9b5a6"; ctx.setLineDash([5, 4]); ctx.beginPath();
+  ctx.moveTo(f.pad.l, f.y(MU)); ctx.lineTo(f.pad.l + f.W, f.y(MU)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = "#3d3d3a"; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(f.x(sE.cut), f.pad.t); ctx.lineTo(f.x(sE.cut), f.pad.t + f.H); ctx.stroke();
+  ctx.fillStyle = "#3d3d3a"; ctx.fillRect(f.x(sE.cut) - 5, f.pad.t, 10, 9);
+  if (has) {
+    ctx.strokeStyle = DEEP; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath();
+    ctx.moveTo(f.x(mean(selMP)), f.pad.t); ctx.lineTo(f.x(mean(selMP)), f.pad.t + f.H); ctx.stroke();
+    ctx.strokeStyle = "#4a7a2a"; ctx.setLineDash([]); ctx.lineWidth = 2.5; ctx.beginPath();
+    ctx.moveTo(f.pad.l, f.y(mean(selKID))); ctx.lineTo(f.pad.l + f.W, f.y(mean(selKID))); ctx.stroke();
+    ctx.fillStyle = "#4a7a2a"; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.fillText("their children average here", f.pad.l + 4, f.y(mean(selKID)) - 3);
+  }
+  sE._f = f;
+
+  document.getElementById("E_n").textContent = String(selMP.length);
+  document.getElementById("E_tilt").textContent = f2(st.tilt);
+  document.getElementById("E_S").textContent = has ? f2(S) + " in" : "—";
+  document.getElementById("E_pred").textContent = has ? f2(pred) + " in" : "—";
+  document.getElementById("E_obs").textContent = has ? f2(obs) + " in" : "—";
+  document.getElementById("E_hOut").value = f2(sE.h);
+  document.getElementById("E_cutOut").value = f2(sE.cut);
+  document.getElementById("E_cut").value = String(sE.cut);
+  document.getElementById("cE_h").textContent = f2(sE.h);
+  document.getElementById("cE_cut").textContent = f2(sE.cut);
+  checkE(has ? pred : null);
+}
+
+function checkE(pred) {
+  if (pred == null) return;
+  const done = k => document.querySelector('#tasksE li[data-task="' + k + '"]').classList.contains("done");
+  const onInch = Math.abs(pred - 1.00) <= 0.07;
+  if (!done("E1") && onInch) {
+    markTask("E", "E1"); record(BIT.E1, true);
+    document.getElementById("E1_now").textContent = "done";
+  }
+  if (!done("E2") && onInch && Math.abs(sE.h - 0.45) < 0.005) {
+    markTask("E", "E2"); record(BIT.E2, true);
+    document.getElementById("E2_now").textContent = "done, and the cut had to move a long way";
+    qE.show(); finishStage("E");
+  }
+}
+
+(function wireE() {
+  const cv = document.getElementById("plotE");
+  let dragging = false;
+  function apply(e) {
+    const p = canvasPt(cv, e);
+    sE.cut = clamp(Math.round(xInv(sE._f, p.x) * 20) / 20, 63.0, 76.0);
+    refreshE();
+  }
+  cv.addEventListener("pointerdown", e => { if (!Gates.E.open) return; cv.setPointerCapture(e.pointerId); dragging = true; bump("E"); apply(e); });
+  cv.addEventListener("pointermove", e => { if (dragging) apply(e); });
+  cv.addEventListener("pointerup", e => { dragging = false; try { cv.releasePointerCapture(e.pointerId); } catch (x) {} });
+  cv.addEventListener("pointercancel", () => { dragging = false; });
+  document.getElementById("E_h").addEventListener("input", ev => { sE.h = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "h"); refreshE(); });
+  document.getElementById("E_cut").addEventListener("input", ev => { sE.cut = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "cut"); refreshE(); });
+  document.getElementById("E_reseed").addEventListener("click", () => {
+    sE.seed = randomSeed(1, 99999); sE.Z = makeZ(sE.seed, NMOD); bump("E"); refreshE();
+  });
+  wireDownload("E_download", "codeE", "lesson8_stageE.R");
+})();
+
+const qE = wireNumeric("E", {
+  bit: BIT.Eq,
+  check: v => Math.abs(v - 0.90) <= 0.06,
+  right: "0.90 inches. The tilt is the exchange rate between how far you move the parents and how far the children come.",
+  wrong: "Not that. The tilt is inches of child per inch of parent, and you moved the parents two inches.",
+  after: () => markTask("E", "E3")
 });
 
-drawStageA(); drawStageB(); drawStageC(); drawStageD(); drawStageE(); drawStageF();
-
+/* ====== Boot ======================================================== */
 Score.init({
   moduleId: "lesson8",
-  version: 4,
-  scaffold: 12,
+  version: 7,
+  scaffold: 16,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
     document.getElementById("stageA").classList.remove("stage-locked");
     const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
     Gates.A.open = true;
-    drawStageA();
   }
 });
+refreshA();
+sB.tilt.mp = 0; refreshB();
+refreshC();
+refreshD();
+refreshE();
+window.addEventListener("resize", () => { refreshA(); refreshB(); refreshC(); refreshD(); refreshE(); });
 </script>
 </body>
 </html>

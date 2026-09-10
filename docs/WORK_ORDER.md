@@ -24,6 +24,32 @@ several are already covered by scaffolds (S14, S16, S17, S18, S19, S20), and
 deciding whether to fold the scaffold in or build a separate stage is a
 curricular call.
 
+**Lesson 8 rebuilt on the regression, 2026-09-10.** JM asked for the heritability
+lesson to be *about the nature of a linear regression*: the slope of the offspring-on-
+mid-parent line as the share of the children's variation that came down from the
+parents, and the residual as everything else — including the genetic part of
+everything else. Five stages: A one family at a time and then five bands (the
+regression built as a separate best guess per band, which turns out to be a line);
+B Galton's 934 children with the line as an input and the variance split as a bar;
+C a model whose leftover comes apart into a genetic block and a life block; D the
+same children against three different across axes; E a cut dragged across the
+parents, and the response priced by the tilt.
+
+Two things to rule on:
+
+- **The old Lesson 8 is displaced**, archived at
+  `_reference/retired/lessons/lesson8_resemblance_2026-09-10.html`. It carried
+  Thread C material that is now made nowhere: the 72% base-rate trap, the
+  cross-fostered song (culture transmits and produces the same number), the
+  four-limbs trait with no genetic variation, the ladder of relatives, and the
+  three-roads-plus-adoption-swap drill. Either fold one or two of those in as a
+  Stage F, or give them their own lesson. **The substrate-agnostic point JM wants
+  kept — inheritance is inheritance whatever the channel — currently survives only
+  as the Stage E solved banner.**
+- **Stage E previews selection** (choose the parents, the tilt prices the children).
+  JM said selection gets its own lesson later. Cut Stage E if that lesson should
+  own the move; the other four stages stand without it.
+
 **Deferred, and waiting on you.**
 
 0c. **Arc 2's framing versus its new opener.** Lesson 8's rebuild of 2026-09-03 made it
