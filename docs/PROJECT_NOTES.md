@@ -322,6 +322,30 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
     cell before any bar was calibrated. That is what confirmed Stage C's answer (44) is
     independent of which gap the student drops the rip into — had it not been, the question
     would have been unanswerable.
+  - **Gate on the doing, not on a question about the doing.** JM replaced Stage B's
+    written question ("how many versions have you seen?") with a harder unlock: step 2
+    opens only on a round where all four kinds of gamete come out at once. Dealing the
+    chromatids in the order they sit in yields two, so clearing it takes deliberately
+    crossing a long copy with each short one — the exact move the stage exists to teach,
+    and one the question could be answered without ever making. The stage now records
+    five bits instead of six, which is the right trade.
+  - **A control the student earns is better than a control you explain.** The bulk draw
+    buttons do not exist on the page until five have been drawn one at a time, in every
+    step that has them, and nothing says why. Same instinct as the gate above: make the
+    slow path the only path until it has been walked.
+  - **Draw the mechanism where the textbook draws it.** The rip first swapped chromatids
+    0 and 2 — the outer two as rendered — which is statistically identical and reads
+    wrong: the mark lands on an untouched chromatid and the crossing appears to skip a
+    strand. Joining the inner two (1 and 2) puts the chiasma in the clear space between
+    the pair it actually joined. JM caught this from the rendered letters alone.
+  - **When a control gains a degree of freedom, re-audit every answer key it touches.**
+    Letting the mark go on either chromosome broke two of Stage C's three questions: both
+    named "the long version", and a rip on the short chromosome leaves the long one in the
+    two versions it always had. Two were reworded to hold either way; the third has its
+    target computed from where the mark sits (44 after a long rip, 75 after a short one),
+    with the verdict naming which — both answers teach something. The novelty flag in the
+    gamete table had the same bug and reported a short-chromosome rip as having produced
+    nothing.
   - **Don't paint the discovery.** The round log first marked recombinant gametes in red;
     that is the observation Stage C's first question asks the student to make, so the
     colour was removed from the log and kept only in the summary tables, where the student

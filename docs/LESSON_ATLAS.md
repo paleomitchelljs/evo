@@ -1290,7 +1290,7 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 8b — Dragging chromosomes out of a cell to make gametes
-`lesson8b.html` · v1 · 18 checkpoints · **Built**
+`lesson8b.html` · v2 · 17 checkpoints · **Built**
 
 Three passes over one machine, built three times from a single `buildLab(K, cfg)` off
 `STAGES[K]`. Every pass is the same three steps — fill four gametes by hand, draw one
@@ -1303,50 +1303,80 @@ with four. Replication gives eight chromatids; each gamete takes one long and on
 The drag enforces only that rule, so the student's own filling is free — and every legal
 filling still comes out 2 big : 2 little, which is the point of Stage A.
 
+**Step 1 opens step 2 on a different condition in each pass**, which is where most of the
+lesson's difficulty lives (`cfg.step1`): `rounds` (A and C count collected rounds),
+`kinds` (B needs one round containing all four gamete types at once), `spots` (C needs
+five of the six rip positions used).
+
+**Step 2 will not open step 3 short of 500 gametes** (`DRAWS`), drawn from a bench that
+starts with only the one-at-a-time button. **Draw 20 / Draw 100 do not exist on the page
+until five have been drawn singly** (`BULK_AFTER`), in step 2 and step 3 alike, and
+nothing says so — the buttons simply appear.
+
 - **A — one labelled spot** (bits 0–5)
   - *Step 1* — Replicate, drag eight chromatids into four gametes, **Collect these four
     gametes**, three rounds. The log reads `A A a a` every round however they are dealt.
-  - *Step 2* — Draw one gamete at a time; a running-share line settles on 0.50.
-  - *Step 3* — Drag two gametes into an embryo by hand twice, then build 200. Bars:
-    25 / 50 / 25.
+  - *Step 2* — 500 gametes; a running-share line settles on 0.50.
+  - *Step 3* — Two embryos by hand, then 200. Bars: 25 / 50 / 25.
   - *Questions* — most gametes carrying big A in one round (**2**); big A per 100 gametes
     (**50**, ±6); Aa per 100 embryos (**50**, ±8). The 50 is the item worth watching: the
     common wrong answers are 33 (three outcomes, equal) and 25.
-- **B — every spot labelled** (bits 6–11)
-  - Long copies are `ABCD` / `abcd`, short are `EFGH` / `efgh`. Same three steps.
-  - *Questions* — different long versions seen (**2**); kinds of gamete possible (**4**);
-    embryos per 100 carrying at least one `ABCD` (**75**, ±7).
+- **B — every spot labelled** (bits 6–10, and **no first question**)
+  - Long copies are `ABCD` / `abcd`, short are `EFGH` / `efgh`.
+  - *Step 1 is the whole point of the stage.* It opens only on a round in which all four
+    kinds come out at once — `ABCD·EFGH`, `ABCD·efgh`, `abcd·EFGH`, `abcd·efgh`. Dealing
+    the chromatids in the order they sit in yields **two** kinds, not four, so clearing it
+    takes deliberately crossing a long copy with each short one. A written question
+    ("how many versions have you seen?") sat here until 2026-09-10 and was answerable
+    without ever doing it; the gate replaced it, which is why B records five bits, not six.
+    A round that misses shows `Only N of the four kinds that round.` and the log keeps it.
+  - *Questions* — kinds of gamete possible (**4**); embryos per 100 carrying at least one
+    `ABCD` (**75**, ±7).
   - The four spots on one chromosome never come apart; the two chromosomes combine freely.
-- **C — one rip** (bits 12–17)
-  - After replication a crossover mark is dragged into one of the three gaps on the long
-    chromosome. Everything past it trades between one chromatid of each copy — chromatids
-    0 and 2, matching the R panel — leaving two parental and two recombinant. Nothing on
-    the bench moves until the mark is placed.
+- **C — one rip, anywhere** (bits 11–16)
+  - After replication a mark is dragged into **any of six gaps — three on each
+    chromosome**. Nothing on the bench moves until it is placed. Step 1 opens only when
+    **five of the six spots** have been used; repeating one does not count, and the log
+    tags every round with the spot that made it (`long·2`, `short·1`).
+  - The crossover joins the two chromatids **facing each other across the paired copies —
+    the inner two, rows 1 and 2, never 0 and 2**. Both give the same counts; only this one
+    puts the crossing where the textbook picture puts it, and it leaves the mark sitting in
+    clear space between the two chromatids it actually joined. A rip in the long
+    chromosome's first gap reads, top to bottom, `ABCD` / `Abcd` / `aBCD` / `abcd`.
+  - Steps 2 and 3 run on the rip from the **last collected round**, named in the status
+    line ("rip in the short chromosome, gap 3"). Moving it clears both tallies.
   - *Questions* — gametes in one round carrying a version the parent lacked (**2**); the
-    same per 100 (**50**, ±8); embryos per 100 carrying at least one `ABCD` (**44**, ±8).
-  - *Goal* — the same question that read **75** in Stage B reads **44** here, and the
-    AA/Aa/aa bars did not move at all. What recombination changed is not in the chart.
+    same per 100 (**50**, ±8). Both hold wherever the rip is: one rip always makes two of
+    the four chromatids new. The third does not, so **its target is computed from where
+    the mark actually sits** (`c3Target`): embryos per 100 carrying at least one `ABCD` is
+    **44** (±8) after a long-chromosome rip and **75** after a short-chromosome one, and
+    the verdict text says which. Both answers are worth getting — 44 says the rip reached
+    the chromosome the chart is drawn from, 75 says it did not.
+  - *Goal* — the question that read **75** in Stage B reads **44** here, and the AA/Aa/aa
+    bars did not move at all. What recombination changed is not in the chart.
   - *Hands to* — Lesson 9. The 1:2:1 the student just built by hand is the baseline
     Hardy–Weinberg then writes down.
 
 **Verified numerically before shipping** (400,000 draws per cell, `meiosis` and `oneGamete`
-pulled straight out of the page rather than reimplemented): every meiosis yields exactly
-2 big : 2 little at every spot, with or without a rip (0 exceptions in 20,000); share
-carrying big A 0.500; genotypes 25.0 / 49.9 / 25.1; at-least-one-`ABCD` **74.9%** without a
-rip and **43.7 / 43.9 / 43.7%** with the rip in gap 1 / 2 / 3 — so Stage C's answer does not
-depend on where the student put it. The harness was a throwaway (the model sliced out of
-the HTML into an ES module and driven from node), deleted after use as with Lesson 7's
-calibration — the numbers above are the record. Re-derive them if `meiosis` is touched.
+pulled straight out of the page rather than reimplemented), across **all six rip positions
+and the no-rip case**: every meiosis yields exactly 2 big : 2 little at every spot, 0
+exceptions in 20,000 per cell; share carrying big A 49.9–50.0; gametes carrying a version
+the parent lacked 49.8–50.1 at every rip position; AA/Aa/aa 24.9–25.2 / 49.9–50.1 /
+24.9–25.1 **at every position, rip or no rip**; at-least-one-`ABCD` 75.0 with no rip,
+43.6–43.8 for a rip in long gap 1/2/3, and 75.0–75.1 for short gap 1/2/3 — so Stage C's
+third answer depends on which chromosome was cut and not on which gap. The harness was a
+throwaway (the model sliced out of the HTML into an ES module and driven from node),
+deleted after use as with Lesson 7's calibration — the numbers above are the record.
+Re-derive them if `meiosis` is touched.
 
 **Simplifications on record.** Meiosis I and II are compressed into one dealing step, so a
 student can produce a set of four gametes that a single real meiosis could not (all four
-long/short combinations at once). The segregation and linkage results the lesson measures
-are unaffected, and the random draws in steps 2 and 3 are per-gamete independent either
-way. Crossing over happens in every simulated meiosis at the placed gap, so loci on
-opposite sides of it are fully unlinked; the lesson shows *which* spots a rip separates,
-not a recombination fraction. Moving the rip and collecting another round clears the step 2
-and step 3 tallies, since a tally taken under the old position counts versions that no
-longer exist.
+long/short combinations at once) — which is exactly what Stage B now requires, so the
+compression is load-bearing rather than incidental. Crossing over happens in every
+simulated meiosis at the placed gap, so loci on opposite sides of it are fully unlinked;
+the lesson shows *which* spots a rip separates, not a recombination fraction. Only one rip
+at a time. Moving it and collecting another round clears the step 2 and step 3 tallies,
+since a tally taken under the old position counts versions that no longer exist.
 
 **Voice.** Every sentence traces to a quote: A intro `145_lec25_05`, `145_lec24_06`,
 `461_lec07_10`; A closer `202_lec11_02`; B intro `202_lec19_05`, `461_lec18_01` (first
