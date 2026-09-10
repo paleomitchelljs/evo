@@ -1286,6 +1286,74 @@ continuous-trait lesson with no ratios in it**, and Lesson 9 builds Hardy–Wein
 without the Mendelian ratios that used to motivate it. Either the arc's framing moves,
 or Mendel comes back as a lesson before this one.
 
+**Resolved 2026-09-10 by Lesson 8b**, below: the ratios come back, built rather than
+stated, immediately before Hardy–Weinberg. The arc framing needs no move.
+
+### Lesson 8b — Dragging chromosomes out of a cell to make gametes
+`lesson8b.html` · v1 · 18 checkpoints · **Built**
+
+Three passes over one machine, built three times from a single `buildLab(K, cfg)` off
+`STAGES[K]`. Every pass is the same three steps — fill four gametes by hand, draw one
+gamete over and over, fuse two gametes and build embryos — so a difference on screen can
+only have come from the config. Stage A labels one spot, Stage B labels all eight,
+Stage C adds a crossover the student places.
+
+The cell holds **two chromosome pairs**: a long chromosome with four spots and a short one
+with four. Replication gives eight chromatids; each gamete takes one long and one short.
+The drag enforces only that rule, so the student's own filling is free — and every legal
+filling still comes out 2 big : 2 little, which is the point of Stage A.
+
+- **A — one labelled spot** (bits 0–5)
+  - *Step 1* — Replicate, drag eight chromatids into four gametes, **Collect these four
+    gametes**, three rounds. The log reads `A A a a` every round however they are dealt.
+  - *Step 2* — Draw one gamete at a time; a running-share line settles on 0.50.
+  - *Step 3* — Drag two gametes into an embryo by hand twice, then build 200. Bars:
+    25 / 50 / 25.
+  - *Questions* — most gametes carrying big A in one round (**2**); big A per 100 gametes
+    (**50**, ±6); Aa per 100 embryos (**50**, ±8). The 50 is the item worth watching: the
+    common wrong answers are 33 (three outcomes, equal) and 25.
+- **B — every spot labelled** (bits 6–11)
+  - Long copies are `ABCD` / `abcd`, short are `EFGH` / `efgh`. Same three steps.
+  - *Questions* — different long versions seen (**2**); kinds of gamete possible (**4**);
+    embryos per 100 carrying at least one `ABCD` (**75**, ±7).
+  - The four spots on one chromosome never come apart; the two chromosomes combine freely.
+- **C — one rip** (bits 12–17)
+  - After replication a crossover mark is dragged into one of the three gaps on the long
+    chromosome. Everything past it trades between one chromatid of each copy — chromatids
+    0 and 2, matching the R panel — leaving two parental and two recombinant. Nothing on
+    the bench moves until the mark is placed.
+  - *Questions* — gametes in one round carrying a version the parent lacked (**2**); the
+    same per 100 (**50**, ±8); embryos per 100 carrying at least one `ABCD` (**44**, ±8).
+  - *Goal* — the same question that read **75** in Stage B reads **44** here, and the
+    AA/Aa/aa bars did not move at all. What recombination changed is not in the chart.
+  - *Hands to* — Lesson 9. The 1:2:1 the student just built by hand is the baseline
+    Hardy–Weinberg then writes down.
+
+**Verified numerically before shipping** (400,000 draws per cell, `meiosis` and `oneGamete`
+pulled straight out of the page rather than reimplemented): every meiosis yields exactly
+2 big : 2 little at every spot, with or without a rip (0 exceptions in 20,000); share
+carrying big A 0.500; genotypes 25.0 / 49.9 / 25.1; at-least-one-`ABCD` **74.9%** without a
+rip and **43.7 / 43.9 / 43.7%** with the rip in gap 1 / 2 / 3 — so Stage C's answer does not
+depend on where the student put it. The harness was a throwaway (the model sliced out of
+the HTML into an ES module and driven from node), deleted after use as with Lesson 7's
+calibration — the numbers above are the record. Re-derive them if `meiosis` is touched.
+
+**Simplifications on record.** Meiosis I and II are compressed into one dealing step, so a
+student can produce a set of four gametes that a single real meiosis could not (all four
+long/short combinations at once). The segregation and linkage results the lesson measures
+are unaffected, and the random draws in steps 2 and 3 are per-gamete independent either
+way. Crossing over happens in every simulated meiosis at the placed gap, so loci on
+opposite sides of it are fully unlinked; the lesson shows *which* spots a rip separates,
+not a recombination fraction. Moving the rip and collecting another round clears the step 2
+and step 3 tallies, since a tally taken under the old position counts versions that no
+longer exist.
+
+**Voice.** Every sentence traces to a quote: A intro `145_lec25_05`, `145_lec24_06`,
+`461_lec07_10`; A closer `202_lec11_02`; B intro `202_lec19_05`, `461_lec18_01` (first
+half); B closer `202_lec12_04`; C intro `461_lec18_01` (second half), `202_lec14_06`;
+C closer `202_lec19_05`, `202_lec14_05`, `461_lec14_02`. The dictionary metaphor is split
+deliberately — B gets "same words, different definitions", C gets the ripping.
+
 ### Lesson 9 — Building the population where nothing changes
 `lesson9.html` · v2 · 4 checkpoints · **Built**
 

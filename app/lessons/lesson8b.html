@@ -1,0 +1,1163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 8b</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .col { display:flex; flex-direction:column; gap:16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
+  /* Lecture voice — JM's own words, spliced from the lecture corpus. */
+  /* The framing text spans the page, so the first row of the two-column body is
+     always graph | controls, starting at the same height. Before this, a long
+     intro pushed the canvas hundreds of pixels below the knobs that drive it. */
+  .stage-intro { margin-bottom:16px; }
+  .stage-body > .panel { margin-bottom:16px; }
+  .step-body > div { min-width:0; }
+  .step-body .panel { margin-top:12px; }
+  .step-body .panel:first-child { margin-top:0; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } blockquote.voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:200px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
+  .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
+  .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+  footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+  .locked-lines { font:12.5px ui-monospace,Menlo,monospace; margin:0; max-height:190px; overflow-y:auto; }
+  .locked-lines div { padding:3px 0; border-bottom:1px solid #f0eee5; }
+
+  /* ---- Lesson 8b: the meiosis bench ------------------------------- */
+  /* Three passes over one machine. Everything below is shared by all
+     three; only the config object in the script differs.              */
+
+  .step { border:1px solid var(--rule); border-radius:6px; background:var(--panel); margin:0 0 16px 0; }
+  .step > h3 { margin:0; padding:10px 14px; font-size:14px; border-bottom:1px solid var(--rule); background:#f7f6f1; border-radius:6px 6px 0 0; }
+  .step > h3 .stepnum { display:inline-block; width:20px; height:20px; line-height:20px; text-align:center; border-radius:50%; background:var(--accent2); color:#fff; font:12px ui-monospace,Menlo,monospace; margin-right:8px; }
+  .step-body { padding:14px; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr); gap:16px; }
+  @media (max-width:1000px) { .step-body { grid-template-columns:minmax(0,1fr); } }
+  .step.step-locked { opacity:0.4; filter:grayscale(0.35); }
+  .step.step-locked .step-body { pointer-events:none; }
+  .step-note { display:none; margin:0; padding:8px 14px; font-size:12.5px; background:var(--lock-bg); color:var(--lock-ink); border-bottom:1px solid var(--lock-rule); }
+  .step.step-locked .step-note { display:block; }
+
+  .bench { width:100%; height:auto; display:block; background:#fff; border:1px solid var(--rule); border-radius:4px; touch-action:none; user-select:none; }
+  .bench text { user-select:none; }
+  .bench .grab { cursor:grab; }
+  .bench .grab.dragging { cursor:grabbing; }
+
+  .status-line { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; min-height:2.6em; color:var(--ink); }
+  .status-line .muted { color:var(--muted); }
+  .status-line .warn { color:var(--bad); }
+  .status-line .ok { color:var(--good); }
+
+  .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+  .btnrow button { background:#333; color:#fff; border:0; border-radius:4px; padding:7px 12px; cursor:pointer; font-size:13px; }
+  .btnrow button.accent { background:var(--accent); }
+  .btnrow button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .btnrow button:disabled { background:#bbb; color:#fff; border-color:#bbb; cursor:not-allowed; }
+
+  /* running tallies. These double as the table view for the bar chart, which
+     is what makes the lightest bar's sub-3:1 contrast legal. */
+  table.tally { border-collapse:collapse; font:12.5px ui-monospace,Menlo,monospace; width:100%; margin-top:4px; }
+  table.tally th { text-align:left; font-weight:600; color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em; padding:3px 6px 3px 0; border-bottom:1px solid var(--rule); }
+  table.tally td { padding:3px 6px 3px 0; border-bottom:1px solid #f0eee5; }
+  table.tally td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  table.tally tr.novel td.hap { color:var(--accent); font-weight:600; }
+  .hapcode { letter-spacing:0.14em; }
+
+  ul.tasks { list-style:none; padding:0; margin:0; font-size:13px; }
+  ul.tasks li { padding:4px 0 4px 22px; position:relative; color:var(--muted); }
+  ul.tasks li::before { content:"\25CB"; position:absolute; left:2px; top:4px; color:var(--muted); }
+  ul.tasks li.done { color:var(--ink); }
+  ul.tasks li.done::before { content:"\25CF"; color:var(--good); }
+  ul.tasks .hint { color:var(--accent2); font-family:ui-monospace,Menlo,monospace; font-size:12px; margin-left:4px; }
+
+  .roundlog { font:12px ui-monospace,Menlo,monospace; max-height:120px; overflow-y:auto; }
+  .roundlog div { padding:2px 0; border-bottom:1px solid #f0eee5; }
+  .roundlog .none { color:var(--muted); border:0; }
+
+  .intro-grid { display:grid; grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr); gap:20px; }
+  @media (max-width:900px) { .intro-grid { grid-template-columns:minmax(0,1fr); } }
+  .voice p { margin:0 0 10px 0; }
+  ul.setup { margin:0; padding-left:18px; font-size:13.5px; }
+  ul.setup li { margin-bottom:5px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 8b</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+</nav>
+
+<!-- ========== STAGE A — one labelled spot ============================= -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Mendel was a physicist who made a pea garden because his abbot told him to. He found consistent ratios. He did back-cross experiments. He realised that important patterns can only be explained by one underlying model. The model he built, very elegantly, out of flower-colour ratios in pea plants, figures out meiosis: you start with two copies of each gene, end with one in each gamete, and there is a randomization step between them.</p>
+        <p>He had no idea what a nucleus was. He didn't know what mitosis was, or meiosis. He'd never encountered the word chromosome. He didn't know there was a molecule in each cell that drove inheritance. When you learn his rules now, you smuggle in everything you know about cells and chromosomes, which can actively mislead you.</p>
+        <p>The spot marked on the long chromosome is not dominant, and it is not recessive. They are just big A and little a. Everyone wants to make everything dominant and recessive. A lot of the time there is no dominant and there is no recessive. They are just different.</p>
+      </div>
+      <ul class="setup">
+        <li>One cell. Two long chromosomes, two short ones.</li>
+        <li>Four spots on every chromosome. One is labelled: big A on one long copy, little a on the other.</li>
+        <li>Replicate the chromosomes, then fill all four gametes.</li>
+        <li>Every gamete takes one long chromosome and one short one.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body">
+    <div class="lab" id="labA"></div>
+    <div class="panel">
+      <h3>To open Stage B</h3>
+      <ul class="tasks" id="tasksA">
+        <li data-task="A1">Fill four gametes by hand, three times over. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
+        <li data-task="A2">Draw 40 gametes and watch the share carrying big A. <span class="hint"><span id="A2_now">0</span> of 40</span></li>
+        <li data-task="A3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="A3_now">0</span> of 200</span></li>
+      </ul>
+      <div class="solved-banner" id="solvedA">A heterozygote is an individual with two different genetic ancestors for that spot. To have one, there has to be more than one allele.</div>
+    </div>
+    <div class="panel">
+      <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line"><span class="com"># one cell: two long chromosomes, two short. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line"></span><span class="line" data-line="replicate"><span class="com"># replication: every chromosome becomes two identical chromatids</span></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign"><span class="com"># the randomization step: which chromatid lands in which gamete</span></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">dup</span>(long)[<span class="fn">sample</span>(<span class="num">4</span>), ]; S &lt;- <span class="fn">dup</span>(short)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># one gamete at random, over and over</span></span><span class="line" data-line="draw">g &lt;- <span class="fn">replicate</span>(<span class="num">40</span>, <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>, <span class="num">1</span>)]]$long[<span class="num">1</span>])</span><span class="line" data-line="draw"><span class="fn">cumsum</span>(g) / <span class="fn">seq_along</span>(g)      <span class="com"># running share carrying big A</span></span><span class="line"></span><span class="line" data-line="embryo"><span class="com"># two gametes fuse. 2 = AA, 1 = Aa, 0 = aa</span></span><span class="line" data-line="embryo">embryo &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>] + <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>]</span><span class="line" data-line="embryo"><span class="fn">table</span>(<span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">embryo</span>()))</span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE B — every spot labelled ========================== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Do your cells know what a gene is? No. As nice as it is to split things off into alleles and loci, what actually matters is the physical reality of the DNA strand.</p>
+        <p>Two dictionaries, different versions, same words. The words are the spots. The slightly different definitions are the alleles.</p>
+      </div>
+      <ul class="setup">
+        <li>The same cell. Every spot now carries a label.</li>
+        <li>Long chromosome: A B C D on one copy, a b c d on the other.</li>
+        <li>Short chromosome: E F G H on one copy, e f g h on the other.</li>
+        <li>The same three steps as Stage A.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body">
+    <div class="lab" id="labB"></div>
+    <div class="panel">
+      <h3>To open Stage C</h3>
+      <ul class="tasks" id="tasksB">
+        <li data-task="B1">Fill four gametes by hand, three times over. <span class="hint"><span id="B1_now">0</span> of 3</span></li>
+        <li data-task="B2">Draw 40 gametes and log every version that turns up. <span class="hint"><span id="B2_now">0</span> of 40</span></li>
+        <li data-task="B3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="B3_now">0</span> of 200</span></li>
+      </ul>
+      <div class="solved-banner" id="solvedB">They're stuck together. A whole bunch of things you cannot recombine — until and unless something breaks them apart.</div>
+    </div>
+    <div class="panel">
+      <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line"><span class="com"># same cell, every spot read out now. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># ABCD / abcd</span></span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># EFGH / efgh</span></span><span class="line"></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">dup</span>(long)[<span class="fn">sample</span>(<span class="num">4</span>), ]; S &lt;- <span class="fn">dup</span>(short)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># every long-chromosome version that turns up in 40 gametes</span></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">40</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)                       <span class="com"># 2 = AA, 1 = Aa, 0 = aa</span></span></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE C — one rip ====================================== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <div class="voice">
+        <p>Recombination is taking a dictionary, choosing a page at random, and ripping it. Then taking a different dictionary, ripping out the same page, and gluing the two together. The closer two spots are, the more likely they stay on the same fragment after a single rip.</p>
+        <p>It costs you. You are scrambling your genome with somebody else's. Your kid is not as closely related to you as they would be if you reproduced asexually. In the trade-off between inherit and invent, you are reducing the inherit for your own kids.</p>
+      </div>
+      <ul class="setup">
+        <li>The same cell, the same labels.</li>
+        <li>After replication, drop the mark into one of the three gaps on the long chromosome.</li>
+        <li>Everything past the mark swaps between one long copy and the other.</li>
+        <li>The same three steps again.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body">
+    <div class="lab" id="labC"></div>
+    <div class="panel">
+      <h3>Tasks</h3>
+      <ul class="tasks" id="tasksC">
+        <li data-task="C1">Drop the mark into a gap, then fill four gametes. Three times over. <span class="hint"><span id="C1_now">0</span> of 3</span></li>
+        <li data-task="C2">Draw 40 gametes and log every version that turns up. <span class="hint"><span id="C2_now">0</span> of 40</span></li>
+        <li data-task="C3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="C3_now">0</span> of 200</span></li>
+      </ul>
+      <div class="solved-banner" id="solvedC">A locus is just a chunk of DNA selection hasn't recombined apart yet. Functionally speaking, recombination is mutation — super-mutation, at random places, but not necessarily breaking. Selection sees stretches of DNA, not single alleles.</div>
+    </div>
+    <div class="panel">
+      <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="xover"><span class="com"># the rip: gap k, between spot k-1 and spot k. One chromatid from each</span></span><span class="line" data-line="xover"><span class="com"># copy trades everything from k onward. The other two are untouched.</span></span><span class="line" data-line="xover">k &lt;- <span class="num" id="cC_gap">2</span></span><span class="line" data-line="xover">rip &lt;- <span class="kw">function</span>(L, k) { s &lt;- k:<span class="num">4</span>; t &lt;- L[<span class="num">1</span>, s]; L[<span class="num">1</span>, s] &lt;- L[<span class="num">3</span>, s]; L[<span class="num">3</span>, s] &lt;- t; L }</span><span class="line"></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">rip</span>(<span class="fn">dup</span>(long), k)[<span class="fn">sample</span>(<span class="num">4</span>), ]; S &lt;- <span class="fn">dup</span>(short)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">40</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)</span></pre>
+    </div>
+  </div>
+</section>
+
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+/* =====================================================================
+   LESSON 8b — three passes over one machine.
+
+   Stage A labels one spot, Stage B labels all eight, Stage C adds a rip.
+   Nothing else differs, which is the whole construction: the same three
+   steps are built three times from `buildLab`, off the config in STAGES,
+   so a difference on screen can only come from the config.
+
+   Chromatid model: `hap` is four bits along one chromosome, 1 = the
+   big-letter copy, 0 = the little-letter copy. A gamete is one long
+   chromatid plus one short one. Identical encoding to the R panel.
+   ===================================================================== */
+
+const NL = 4;                                   // spots per chromosome
+const LONG = 0, SHORT = 1;
+const LETTER = [["A","B","C","D"], ["E","F","G","H"]];
+
+function hapText(t, hap) {
+  let s = "";
+  for (let i = 0; i < NL; i++) s += hap[i] ? LETTER[t][i] : LETTER[t][i].toLowerCase();
+  return s;
+}
+function shownText(cfg, t, hap) {          // only the spots this stage labels
+  const idx = cfg.labelled[t];
+  if (!idx.length) return "";
+  let s = "";
+  for (const i of idx) s += hap[i] ? LETTER[t][i] : LETTER[t][i].toLowerCase();
+  return s;
+}
+const PARENTAL = { 0: hapText(0,[1,1,1,1]), 1: hapText(0,[0,0,0,0]) };
+
+/* One meiosis. Four chromatids per chromosome, optionally ripped at `gap`
+   (1..3, meaning between spot gap-1 and spot gap), then shuffled
+   independently per chromosome and dealt one per gamete. Shuffling the two
+   chromosomes separately is what lets the long and the short one combine
+   freely -- the same freedom the hand-drag gives. */
+function meiosis(rng, gap) {
+  const out = [];
+  for (const t of [LONG, SHORT]) {
+    const cs = [[1,1,1,1],[1,1,1,1],[0,0,0,0],[0,0,0,0]];
+    if (t === LONG && gap) {
+      for (let i = gap; i < NL; i++) { const s = cs[0][i]; cs[0][i] = cs[2][i]; cs[2][i] = s; }
+    }
+    for (let i = 3; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const s = cs[i]; cs[i] = cs[j]; cs[j] = s; }
+    out.push(cs);
+  }
+  return [0,1,2,3].map(i => ({ long: out[0][i], short: out[1][i] }));
+}
+function oneGamete(rng, gap) { return meiosis(rng, gap)[Math.floor(rng() * 4)]; }
+
+/* ---- Stage configuration. The only thing that differs between passes. -- */
+const STAGES = {
+  A: {
+    labelled: { 0: [0], 1: [] }, recomb: false,
+    q1: { prompt: "Fill the four gametes so that as many of them as possible carry big A. How many is that?",
+          unit: "gametes out of 4", min: 0, max: 4, step: 1, ok: v => v === 2,
+          right: "Two. Every way of filling the cells gives the same split.",
+          wrong: "Not that. Fill the cells again and try to beat your own best." },
+    q2: { prompt: "Out of 100 gametes drawn this way, how many would carry big A?",
+          unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 50) <= 6,
+          right: "Yes — about half.",
+          wrong: "Not that. Read it off the line you just drew." },
+    q3: { prompt: "Out of 100 embryos built this way, how many are Aa?",
+          unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 50) <= 8,
+          right: "Yes — about half of them, twice either homozygote.",
+          wrong: "Not that. Read the middle bar off your own 200." }
+  },
+  B: {
+    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: false,
+    q1: { prompt: "Counting across all the gametes you have filled, how many different versions of the long chromosome have you seen?",
+          unit: "versions", min: 1, max: 16, step: 1, ok: v => v === 2,
+          right: "Two, and no amount of dealing produces a third.",
+          wrong: "Not that. The log lists every version you have made." },
+    q2: { prompt: "How many different gametes are possible — long version and short version counted together?",
+          unit: "kinds of gamete", min: 1, max: 64, step: 1, ok: v => v === 4,
+          right: "Four. Two long versions times two short ones.",
+          wrong: "Not that. Count the rows in the gamete table." },
+    q3: { prompt: "Out of 100 embryos, how many carry at least one copy of the long version ABCD?",
+          unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 75) <= 7,
+          right: "About 75 — everything except the embryos that drew abcd twice.",
+          wrong: "Not that. The table under the chart counts them." }
+  },
+  C: {
+    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: true,
+    q1: { prompt: "In one round with one rip, how many of your four gametes carry a long version that was not in the parent cell?",
+          unit: "gametes out of 4", min: 0, max: 4, step: 1, ok: v => v === 2,
+          right: "Two of the four. The other two chromatids were never touched.",
+          wrong: "Not that. The log marks the versions the parent did not have." },
+    q2: { prompt: "Out of 100 gametes drawn with the rip in place, how many carry a long version the parent cell did not have?",
+          unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 50) <= 8,
+          right: "About half.",
+          wrong: "Not that. The gamete table splits them out." },
+    q3: { prompt: "Out of 100 embryos, how many carry at least one copy of the long version ABCD?",
+          unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 44) <= 8,
+          right: "About 44, down from 75 in Stage B — and the three bars did not move.",
+          wrong: "Not that. The table under the chart counts them." }
+  }
+};
+
+/* ---- Bars: AA / Aa / aa is a dosage ramp, not three identities, so it is
+   one hue in three steps, light to dark, ordered by copies of the big
+   letter. The lightest step sits under 3:1 on white, which is legal only
+   with relief: every bar is directly labelled, carries its own count, and
+   is repeated in the table beneath. ------------------------------------ */
+const DOSE = ["#93b8d1", "#4a86ad", "#1e4d68"];   // 0, 1, 2 copies
+const INK = "#1d1d1b", MUTED = "#6b6b68", RULE = "#e2e0d9";
+const HUE2 = "#2f6b8f", HOT = "#b23a48";
+
+/* ====== Stage gates =================================================
+   A stage opens the next by being solved; inside a stage, a step opens
+   the next the same way. The written questions are recorded on their
+   first attempt and getting one wrong never shuts a door.
+   ================================================================== */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:null };
+const BIT = { A:[0,1,2,3,4,5], B:[6,7,8,9,10,11], C:[12,13,14,15,16,17] };
+
+function unlockNext(stage) {
+  const nx = NEXT[stage];
+  if (!nx) return;
+  const sec = document.getElementById("stage" + nx);
+  if (sec && sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc" + nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  if (Gates[nx]) Gates[nx].open = true;
+}
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function showSolved(stage) {
+  const el = document.getElementById("solved" + stage);
+  if (el) el.classList.add("shown");
+}
+function record(pos, ok) {
+  if (typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+  // Re-mint if the lesson is already complete. Stage C's written question is
+  // answered *after* the 200th embryo closes the last gate, so a code minted
+  // once at that gate is handed in with the final bit still zero -- the last
+  // question in the lesson would decode as wrong for every student.
+  if (Gates.C.done && Score.finish) Score.finish();
+}
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+
+function wireNumeric(id, opts) {
+  const box   = document.getElementById("numq" + id);
+  const input = document.getElementById(id + "_ans");
+  const btn   = document.getElementById(id + "_submit");
+  const out   = document.getElementById(id + "_verdict");
+  let scored = false;
+  btn.addEventListener("click", () => {
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const ok = opts.check(v);
+    out.className = "verdict shown " + (ok ? "right" : "wrong");
+    out.textContent = ok ? opts.right : opts.wrong;
+    if (ok) { btn.disabled = true; input.disabled = true; }
+    if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
+  });
+  return { show: () => box.classList.add("shown") };
+}
+
+/* ====== SVG primitives ==============================================
+   The bench is SVG rather than canvas because the chromosomes are
+   dragged, and hit-testing a shape you already have is cheaper and less
+   wrong than hit-testing a rectangle you re-derive every frame.
+   ================================================================== */
+const SVGNS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs, kids) {
+  const e = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (kids) for (const c of kids) e.appendChild(c);
+  return e;
+}
+function clientToSvg(svg, evt) {
+  const r = svg.getBoundingClientRect();
+  const vb = svg.viewBox.baseVal;
+  return { x: (evt.clientX - r.left) / r.width * vb.width,
+           y: (evt.clientY - r.top) / r.height * vb.height };
+}
+
+/* Chromosome geometry, in the local space of one chromatid group. */
+const ARM   = [112, 84];        // long, short
+const SPAN  = [28, 21];         // spot-to-spot
+const SPOT  = 16;               // spot rect, square
+function spotX(t, i) { return -ARM[t] / 2 + SPAN[t] * (i + 0.5); }
+function gapX(k) { return spotX(LONG, k) - SPAN[LONG] / 2; }   // k = 1..3
+
+/* One chromatid. `hap` is four bits; `cfg.labelled[t]` decides which spots
+   wear a letter. Unlabelled spots stay grey, which is the only difference
+   between Stage A's picture and Stage B's. */
+function chromatidNode(t, hap, cfg, opts) {
+  opts = opts || {};
+  const g = svgEl("g", { class: "chromatid" + (opts.grab ? " grab" : "") });
+  const w = ARM[t];
+  g.appendChild(svgEl("rect", { x: -w/2, y: -3, width: w, height: 6, rx: 3,
+                                fill: "#dedbd1", stroke: "#bdb9ac", "stroke-width": 1 }));
+  const shown = cfg.labelled[t];
+  for (let i = 0; i < NL; i++) {
+    const x = spotX(t, i), lab = shown.indexOf(i) >= 0;
+    g.appendChild(svgEl("rect", {
+      x: x - SPOT/2, y: -SPOT/2, width: SPOT, height: SPOT, rx: 2,
+      fill: lab ? (hap[i] ? HUE2 : "#d0e1ed") : "#c9c6bc",
+      stroke: lab ? (hap[i] ? "#1e4d68" : "#8fb0c6") : "#b0ada2", "stroke-width": 1
+    }));
+    if (lab) {
+      const tx = svgEl("text", { x: x, y: 0, "text-anchor": "middle", "dominant-baseline": "central",
+        "font-family": "ui-monospace, Menlo, monospace", "font-size": 11, "font-weight": 700,
+        fill: hap[i] ? "#fff" : "#194055" });
+      tx.textContent = hap[i] ? LETTER[t][i] : LETTER[t][i].toLowerCase();
+      g.appendChild(tx);
+    }
+  }
+  if (opts.notch != null) {
+    g.appendChild(svgEl("path", {
+      d: `M ${gapX(opts.notch) - 4} -11 L ${gapX(opts.notch) + 4} 11 M ${gapX(opts.notch) + 4} -11 L ${gapX(opts.notch) - 4} 11`,
+      stroke: HOT, "stroke-width": 2, "stroke-linecap": "round", fill: "none" }));
+  }
+  return g;
+}
+function place(node, x, y) { node.setAttribute("transform", `translate(${x},${y})`); return node; }
+
+function cellNode(cx, cy, r, opts) {
+  opts = opts || {};
+  return svgEl("circle", { cx, cy, r,
+    fill: opts.fill || "#fbfaf6",
+    stroke: opts.stroke || RULE, "stroke-width": opts.sw || 1.5,
+    "stroke-dasharray": opts.dash || "none" });
+}
+function labelNode(x, y, text, opts) {
+  opts = opts || {};
+  const t = svgEl("text", { x, y, "text-anchor": opts.anchor || "middle",
+    "font-family": "-apple-system, BlinkMacSystemFont, sans-serif",
+    "font-size": opts.size || 11, fill: opts.fill || MUTED });
+  t.textContent = text;
+  return t;
+}
+
+/* Gamete contents drawn inside a circle of radius r, long above short. */
+function gameteInto(parent, cx, cy, gam, cfg) {
+  parent.appendChild(place(chromatidNode(LONG,  gam.long,  cfg), cx, cy - 15));
+  parent.appendChild(place(chromatidNode(SHORT, gam.short, cfg), cx, cy + 16));
+}
+
+/* ====== The bench: layout constants ================================== */
+const PC = { x: 340, y: 193, r: 125 };                 // parent cell
+const SLOT_Y = [[96, 120, 148, 172], [214, 238, 266, 290]];  // 4 chromatids, per chromosome
+const MID_Y  = [[108, 160], [226, 278]];               // the two copies, before replication
+const GX = [104, 262, 420, 578], GY = 420, GR = 64;    // the four gametes
+const TRAY = { x: 66, y: 330 };                        // where the rip mark waits
+const MARK_Y = SLOT_Y[LONG][0] - 20;                   // where it pins once dropped
+
+/* ====== Per-stage state ============================================== */
+const S = {};
+function newState(K, cfg) {
+  return {
+    K, cfg,
+    rng: mulberry32(pageSeed("l8b_" + K)),
+    phase: "intact", xoGap: null, chrom: null, drag: null, hoverGap: null,
+    cells: [{}, {}, {}, {}],
+    rounds: [], roundsDone: 0,
+    gam: [], last: null,
+    pair: [null, null], placed: [false, false], drag3: null, byHand: 0, embryo: null,
+    emb: 0, counts: [0, 0, 0], carry: {}
+  };
+}
+function freshChromatids(st) {
+  const c = [[], []];
+  for (const t of [LONG, SHORT]) {
+    for (let k = 0; k < 4; k++) {
+      const big = k < 2;                       // k 0,1 = one copy; k 2,3 = the other
+      c[t].push({ t, k, hap: [big?1:0, big?1:0, big?1:0, big?1:0], cell: null, notch: null });
+    }
+  }
+  return c;
+}
+function applyRip(st, gap) {
+  const L = st.chrom[LONG];
+  for (let i = gap; i < NL; i++) { const s = L[0].hap[i]; L[0].hap[i] = L[2].hap[i]; L[2].hap[i] = s; }
+  L[0].notch = gap; L[2].notch = gap;
+  st.xoGap = gap;
+}
+
+/* ====== Step 1 — drag the chromatids out ============================= */
+function renderBench(st) {
+  const svg = document.getElementById(st.K + "_bench");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const cfg = st.cfg;
+
+  svg.appendChild(cellNode(PC.x, PC.y, PC.r, { fill: "#f7f5ee", stroke: "#cfccc0", sw: 2 }));
+  svg.appendChild(labelNode(PC.x, PC.y - PC.r - 8, "one cell"));
+
+  for (let i = 0; i < 4; i++) {
+    const filled = st.cells[i][LONG] && st.cells[i][SHORT];
+    svg.appendChild(cellNode(GX[i], GY, GR, {
+      fill: filled ? "#f2f7f1" : "#fbfaf6",
+      stroke: filled ? "#6f8a4a" : "#cfccc0", sw: 1.5, dash: filled ? "none" : "5 4" }));
+    svg.appendChild(labelNode(GX[i], GY + GR + 14, "gamete " + (i + 1)));
+  }
+
+  if (st.phase === "intact") {
+    for (const t of [LONG, SHORT]) for (let c = 0; c < 2; c++) {
+      const hap = c === 0 ? [1,1,1,1] : [0,0,0,0];
+      svg.appendChild(place(chromatidNode(t, hap, cfg), PC.x, MID_Y[t][c]));
+    }
+    return;
+  }
+
+  // sister chromatids still together in the parent keep their centromere link
+  for (const t of [LONG, SHORT]) for (const pair of [[0,1],[2,3]]) {
+    const a = st.chrom[t][pair[0]], b = st.chrom[t][pair[1]];
+    if (a.cell === null && b.cell === null && !(st.drag && (st.drag.ch === a || st.drag.ch === b))) {
+      svg.appendChild(svgEl("line", { x1: PC.x, y1: SLOT_Y[t][pair[0]], x2: PC.x, y2: SLOT_Y[t][pair[1]],
+                                      stroke: "#a8a49a", "stroke-width": 2 }));
+      svg.appendChild(svgEl("circle", { cx: PC.x, cy: (SLOT_Y[t][pair[0]] + SLOT_Y[t][pair[1]]) / 2,
+                                        r: 3.5, fill: "#8d8a80" }));
+    }
+  }
+
+  // the rip mark: in its tray until dropped, then pinned in the gap it chose
+  if (cfg.recomb) {
+    if (st.xoGap === null && !(st.drag && st.drag.mark)) {
+      svg.appendChild(markNode(TRAY.x, TRAY.y));
+      svg.appendChild(labelNode(TRAY.x, TRAY.y + 26, "drag into a gap"));
+    } else if (st.xoGap !== null) {
+      // The mark rides ABOVE the block, not between the two chromatids it
+      // joined: sitting at their midpoint puts an 11px disc squarely on the
+      // untouched chromatid between them, which reads as though that one
+      // traded too. The dashed column plus the two notches carry the claim.
+      svg.appendChild(svgEl("line", { x1: PC.x + gapX(st.xoGap), y1: MARK_Y + 10,
+                                      x2: PC.x + gapX(st.xoGap), y2: SLOT_Y[LONG][2] + 12,
+                                      stroke: HOT, "stroke-width": 1.5, "stroke-dasharray": "3 3" }));
+    }
+    if (st.hoverGap) {
+      svg.appendChild(svgEl("rect", { x: PC.x + gapX(st.hoverGap) - 5, y: SLOT_Y[LONG][0] - 12,
+        width: 10, height: SLOT_Y[LONG][2] - SLOT_Y[LONG][0] + 24, rx: 3,
+        fill: "none", stroke: HOT, "stroke-width": 1.5, "stroke-dasharray": "4 3" }));
+    }
+  }
+
+  const dragged = st.drag && st.drag.ch;
+  for (const t of [LONG, SHORT]) for (const ch of st.chrom[t]) {
+    if (ch === dragged) continue;
+    const p = chromatidPos(st, ch);
+    svg.appendChild(place(chromatidNode(t, ch.hap, cfg, { grab: true, notch: ch.notch }), p.x, p.y));
+  }
+  if (dragged) {
+    const n = chromatidNode(dragged.t, dragged.hap, cfg, { grab: true, notch: dragged.notch });
+    n.setAttribute("opacity", "0.92");
+    svg.appendChild(place(n, st.drag.x, st.drag.y));
+  }
+  if (cfg.recomb && st.xoGap !== null && !(st.drag && st.drag.mark))
+    svg.appendChild(markNode(PC.x + gapX(st.xoGap), MARK_Y, 9));
+  if (st.drag && st.drag.mark) svg.appendChild(markNode(st.drag.x, st.drag.y));
+}
+function markNode(x, y, r) {
+  r = r || 11;
+  const a = r * 0.42;
+  const g = svgEl("g", { class: "grab" });
+  g.appendChild(svgEl("circle", { cx: x, cy: y, r, fill: "#fff", stroke: HOT, "stroke-width": 2 }));
+  g.appendChild(svgEl("path", { d: `M ${x-a} ${y-a} L ${x+a} ${y+a} M ${x+a} ${y-a} L ${x-a} ${y+a}`,
+                                stroke: HOT, "stroke-width": 2.2, "stroke-linecap": "round" }));
+  return g;
+}
+function chromatidPos(st, ch) {
+  if (ch.cell === null) return { x: PC.x, y: SLOT_Y[ch.t][ch.k] };
+  return { x: GX[ch.cell], y: GY + (ch.t === LONG ? -15 : 16) };
+}
+
+function benchStatus(st) {
+  const el = document.getElementById(st.K + "_status");
+  const placed = st.chrom ? [LONG, SHORT].reduce((n, t) => n + st.chrom[t].filter(c => c.cell !== null).length, 0) : 0;
+  let msg;
+  if (st.phase === "intact") msg = `<span class="muted">Two long chromosomes and two short ones. Replicate them to begin.</span>`;
+  else if (st.cfg.recomb && st.xoGap === null) msg = `<span class="muted">Drag the mark into one of the three gaps on the long chromosome.</span>`;
+  else if (placed < 8) msg = `<span class="muted">${placed} of 8 chromatids moved. Every gamete takes one long chromosome and one short one.</span>`;
+  else msg = `<span class="ok">All four gametes are filled.</span>`;
+  if (st.warn) msg += `<br><span class="warn">${st.warn}</span>`;
+  el.innerHTML = msg;
+  document.getElementById(st.K + "_collect").disabled = placed < 8;
+  document.getElementById(st.K + "_rep").disabled = st.phase !== "intact";
+}
+function cellUnder(p) {
+  for (let i = 0; i < 4; i++) if (Math.hypot(p.x - GX[i], p.y - GY) < GR) return i;
+  return null;
+}
+function nearestGap(p) {
+  if (p.y < SLOT_Y[LONG][0] - 22 || p.y > SLOT_Y[LONG][3] + 22) return null;
+  let best = null, bd = 22;
+  for (let k = 1; k <= 3; k++) { const d = Math.abs(p.x - (PC.x + gapX(k))); if (d < bd) { bd = d; best = k; } }
+  return best;
+}
+function detach(st, ch) {
+  if (ch.cell !== null) { delete st.cells[ch.cell][ch.t]; ch.cell = null; }
+}
+function wireBench(st) {
+  const K = st.K, svg = document.getElementById(K + "_bench");
+
+  svg.addEventListener("pointerdown", (evt) => {
+    if (st.phase === "intact") return;
+    const p = clientToSvg(svg, evt);
+    st.warn = null;
+    const placedAny = [LONG, SHORT].some(t => st.chrom[t].some(c => c.cell !== null));
+
+    if (st.cfg.recomb && !placedAny) {                    // the rip mark
+      const mx = st.xoGap === null ? TRAY.x : PC.x + gapX(st.xoGap);
+      const my = st.xoGap === null ? TRAY.y : MARK_Y;
+      if (Math.hypot(p.x - mx, p.y - my) < 15) {
+        if (st.xoGap !== null) { applyRip(st, st.xoGap); st.chrom[LONG][0].notch = null; st.chrom[LONG][2].notch = null; st.xoGap = null; }
+        st.drag = { mark: true, x: p.x, y: p.y };
+        svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st); return;
+      }
+    }
+    if (st.cfg.recomb && st.xoGap === null) return;       // nothing moves until it is placed
+
+    for (const t of [SHORT, LONG]) for (let i = 3; i >= 0; i--) {
+      const ch = st.chrom[t][i], q = chromatidPos(st, ch);
+      if (Math.abs(p.x - q.x) <= ARM[t] / 2 + 4 && Math.abs(p.y - q.y) <= 11) {
+        detach(st, ch);
+        st.drag = { ch, x: p.x, y: p.y };
+        svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st); return;
+      }
+    }
+  });
+
+  svg.addEventListener("pointermove", (evt) => {
+    if (!st.drag) return;
+    const p = clientToSvg(svg, evt);
+    st.drag.x = p.x; st.drag.y = p.y;
+    st.hoverGap = st.drag.mark ? nearestGap(p) : null;
+    renderBench(st);
+  });
+
+  const finish = (evt) => {
+    if (!st.drag) return;
+    const p = clientToSvg(svg, evt), d = st.drag;
+    st.drag = null; st.hoverGap = null;
+    if (d.mark) {
+      const k = nearestGap(p);
+      if (k) { applyRip(st, k); bump(K); const c = document.getElementById("c" + K + "_gap"); if (c) c.textContent = String(k); highlightByDataLine("code" + K, "xover"); }
+      else st.warn = "The mark only goes in a gap between two spots on the long chromosome.";
+    } else {
+      const i = cellUnder(p);
+      if (i !== null) {
+        if (st.cells[i][d.ch.t]) st.warn = `Gamete ${i + 1} already has a ${d.ch.t === LONG ? "long" : "short"} chromosome.`;
+        else { d.ch.cell = i; st.cells[i][d.ch.t] = d.ch; bump(K); highlightByDataLine("code" + K, "assign"); }
+      }
+    }
+    renderBench(st); benchStatus(st);
+  };
+  svg.addEventListener("pointerup", finish);
+  svg.addEventListener("pointercancel", finish);
+
+  document.getElementById(K + "_rep").addEventListener("click", () => {
+    st.chrom = freshChromatids(st); st.phase = "replicated"; st.xoGap = null; st.warn = null;
+    st.cells = [{}, {}, {}, {}];
+    bump(K); highlightByDataLine("code" + K, "replicate");
+    renderBench(st); benchStatus(st);
+  });
+  document.getElementById(K + "_reset").addEventListener("click", () => {
+    st.phase = "intact"; st.chrom = null; st.xoGap = null; st.warn = null; st.cells = [{}, {}, {}, {}];
+    renderBench(st); benchStatus(st);
+  });
+  document.getElementById(K + "_collect").addEventListener("click", () => collectRound(st));
+}
+
+function collectRound(st) {
+  const K = st.K, cfg = st.cfg;
+  const gams = [0, 1, 2, 3].map(i => ({ long: st.cells[i][LONG].hap.slice(), short: st.cells[i][SHORT].hap.slice() }));
+  const prevGap = st.rounds.length ? st.rounds[st.rounds.length - 1].gap : st.xoGap;
+  st.rounds.push({ gap: st.xoGap, gams });
+  if (prevGap !== st.xoGap && !Gates[K].done) {
+    st.gam = []; st.last = null; st.tallyGap = st.xoGap;
+    st.emb = 0; st.counts = [0, 0, 0]; st.carry = {}; st.byHand = 0;
+    document.getElementById(K + "_draw1e").disabled = true;
+    document.getElementById(K + "_draw100").disabled = true;
+    newPair(st); renderStep2(st); refresh3(st);
+  }
+  st.roundsDone = st.rounds.length;
+  bump(K);
+
+  const log = document.getElementById(K + "_rounds");
+  if (st.rounds.length === 1) log.innerHTML = "";
+  const row = document.createElement("div");
+  row.innerHTML = `<span style="color:${MUTED}">${st.rounds.length}.</span> ` + gams.map(g => {
+    const L = shownText(cfg, LONG, g.long), Sh = shownText(cfg, SHORT, g.short);
+    return `<span class="hapcode">${L}${Sh ? "·" + Sh : ""}</span>`;
+  }).join("&nbsp; ");
+  log.insertBefore(row, log.firstChild);
+
+  document.getElementById(K + "1_now").textContent = String(Math.min(st.rounds.length, 3));
+  if (st.rounds.length >= 1) st.q1.show();
+  if (st.rounds.length >= 3) {
+    markTask(K, K + "1");
+    record(BIT[K][0], true);
+    openStep(K, 2);
+  }
+  st.phase = "intact"; st.chrom = null; st.xoGap = null; st.cells = [{}, {}, {}, {}]; st.warn = null;
+  renderBench(st); benchStatus(st);
+}
+
+function openStep(K, n) {
+  const el = document.getElementById(K + n);
+  if (el) el.classList.remove("step-locked");
+}
+
+/* ====== Step 2 — one gamete at a time ================================ */
+function gapNow(st) { return st.rounds.length ? st.rounds[st.rounds.length - 1].gap : null; }
+
+function drawGametes(st, n) {
+  const K = st.K, g = gapNow(st);
+  if (st.tallyGap !== undefined && st.tallyGap !== g) { st.gam = []; st.last = null; }
+  st.tallyGap = g;
+  for (let i = 0; i < n; i++) st.gam.push(oneGamete(st.rng, g));
+  st.last = st.gam[st.gam.length - 1];
+  bump(K); highlightByDataLine("code" + K, "draw");
+  document.getElementById(K + "2_now").textContent = String(Math.min(st.gam.length, 40));
+  if (st.gam.length >= 40) { markTask(K, K + "2"); record(BIT[K][2], true); openStep(K, 3); st.q2.show(); }
+  renderStep2(st);
+}
+function renderStep2(st) {
+  const K = st.K, cfg = st.cfg;
+  const svg = document.getElementById(K + "_lastg");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  if (st.last) {
+    svg.appendChild(cellNode(150, 70, GR, { fill: "#fbfaf6", stroke: "#cfccc0" }));
+    gameteInto(svg, 150, 70, st.last, cfg);
+    svg.appendChild(labelNode(150, 70 + GR + 16, "the one that just came out"));
+  }
+  const counts = new Map();
+  let big = 0;
+  for (const g of st.gam) {
+    const key = shownText(cfg, LONG, g.long) + "|" + shownText(cfg, SHORT, g.short);
+    counts.set(key, (counts.get(key) || 0) + 1);
+    if (g.long[0]) big++;
+  }
+  const rows = [...counts.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1);
+  const tab = document.getElementById(K + "_gtab");
+  tab.innerHTML = `<tr><th>gamete</th><th class="n">n</th><th class="n">share</th></tr>` +
+    rows.map(([k, n]) => {
+      const parts = k.split("|"), novel = cfg.recomb && parts[0] !== PARENTAL[0] && parts[0] !== PARENTAL[1];
+      return `<tr class="${novel ? "novel" : ""}"><td class="hap hapcode">${parts[0]}${parts[1] ? "·" + parts[1] : ""}</td>` +
+             `<td class="n">${n}</td><td class="n">${(100 * n / st.gam.length).toFixed(0)}%</td></tr>`;
+    }).join("") +
+    `<tr><td>carrying big A</td><td class="n">${big}</td><td class="n">${st.gam.length ? (100 * big / st.gam.length).toFixed(0) : 0}%</td></tr>`;
+  document.getElementById(K + "_status2").innerHTML = st.gam.length
+    ? `<span class="muted">${st.gam.length} gametes drawn${gapNow(st) ? `, rip in gap ${gapNow(st)}` : ""}. ${big} of them carry big A.</span>`
+    : `<span class="muted">Nothing drawn yet.</span>`;
+  drawRun(st);
+}
+function drawRun(st) {
+  const cv = document.getElementById(st.K + "_run");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const n = Math.max(40, Math.ceil(st.gam.length / 20) * 20);
+  const f = makeFrame({ l: 54, r: 46, t: 16, b: 40 }, W, H, 0, n, 0, 1);
+  ctx.strokeStyle = "#efedE6";
+  for (let i = 1; i <= 3; i++) { const y = f.y(i / 4); ctx.beginPath(); ctx.moveTo(f.pad.l, y); ctx.lineTo(f.pad.l + f.W, y); ctx.stroke(); }
+  drawAxes(ctx, f, "gametes drawn", "share carrying big A", 4, 4, v => String(Math.round(v)), v => v.toFixed(2));
+  if (!st.gam.length) return;
+  ctx.strokeStyle = HUE2; ctx.lineWidth = 2; ctx.lineJoin = "round"; ctx.beginPath();
+  let run = 0;
+  for (let i = 0; i < st.gam.length; i++) {
+    run += st.gam[i].long[0] ? 1 : 0;
+    const x = f.x(i + 1), y = f.y(run / (i + 1));
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  const share = run / st.gam.length, ex = f.x(st.gam.length), ey = f.y(share);
+  ctx.fillStyle = HUE2; ctx.beginPath(); ctx.arc(ex, ey, 4, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = INK; ctx.font = "12px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText(share.toFixed(2), Math.min(ex + 8, W - 40), ey);
+}
+
+/* ====== Step 3 — two gametes fuse ==================================== */
+const FG = [{ x: 150, y: 76 }, { x: 410, y: 76 }], EMB = { x: 280, y: 240, r: 90 };
+
+function newPair(st) {
+  const g = gapNow(st);
+  st.pair = [oneGamete(st.rng, g), oneGamete(st.rng, g)];
+  st.placed = [false, false]; st.embryo = null; st.warn3 = null;
+  renderFuse(st);
+}
+function renderFuse(st) {
+  const K = st.K, cfg = st.cfg, svg = document.getElementById(K + "_fuse");
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  svg.appendChild(cellNode(EMB.x, EMB.y, EMB.r, {
+    fill: st.embryo ? "#f2f7f1" : "#fbfaf6",
+    stroke: st.embryo ? "#6f8a4a" : "#cfccc0", sw: 2, dash: st.embryo ? "none" : "6 5" }));
+  svg.appendChild(labelNode(EMB.x, EMB.y - EMB.r - 8, "embryo"));
+
+  if (st.embryo) {
+    const a = st.embryo.a, b = st.embryo.b;
+    svg.appendChild(place(chromatidNode(LONG,  a.long,  cfg), EMB.x, EMB.y - 45));
+    svg.appendChild(place(chromatidNode(LONG,  b.long,  cfg), EMB.x, EMB.y - 15));
+    svg.appendChild(place(chromatidNode(SHORT, a.short, cfg), EMB.x, EMB.y + 18));
+    svg.appendChild(place(chromatidNode(SHORT, b.short, cfg), EMB.x, EMB.y + 48));
+    const dose = (a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0);
+    svg.appendChild(labelNode(EMB.x, EMB.y + EMB.r + 18, ["aa", "Aa", "AA"][dose],
+      { size: 15, fill: INK }));
+  }
+  for (let i = 0; i < 2; i++) {
+    if (st.placed[i] || (st.drag3 && st.drag3.i === i)) continue;
+    svg.appendChild(cellNode(FG[i].x, FG[i].y, GR, { fill: "#fbfaf6", stroke: "#cfccc0" }));
+    gameteInto(svg, FG[i].x, FG[i].y, st.pair[i], cfg);
+  }
+  if (st.drag3) {
+    const g = svgEl("g", { opacity: 0.92 });
+    g.appendChild(cellNode(st.drag3.x, st.drag3.y, GR, { fill: "#fff", stroke: HUE2, sw: 2 }));
+    gameteInto(g, st.drag3.x, st.drag3.y, st.pair[st.drag3.i], st.cfg);
+    svg.appendChild(g);
+  }
+  const el = document.getElementById(K + "_status3");
+  el.innerHTML = st.embryo
+    ? `<span class="ok">Fused. ${st.byHand} built by hand.</span>`
+    : `<span class="muted">Drag both gametes into the middle.</span>` + (st.warn3 ? `<br><span class="warn">${st.warn3}</span>` : "");
+}
+function wireFuse(st) {
+  const K = st.K, svg = document.getElementById(K + "_fuse");
+  svg.addEventListener("pointerdown", (evt) => {
+    if (st.embryo) return;
+    const p = clientToSvg(svg, evt);
+    st.warn3 = null;
+    for (let i = 0; i < 2; i++) {
+      if (st.placed[i]) continue;
+      if (Math.hypot(p.x - FG[i].x, p.y - FG[i].y) < GR) {
+        st.drag3 = { i, x: p.x, y: p.y }; svg.setPointerCapture(evt.pointerId); renderFuse(st); return;
+      }
+    }
+  });
+  svg.addEventListener("pointermove", (evt) => {
+    if (!st.drag3) return;
+    const p = clientToSvg(svg, evt); st.drag3.x = p.x; st.drag3.y = p.y; renderFuse(st);
+  });
+  const done = (evt) => {
+    if (!st.drag3) return;
+    const p = clientToSvg(svg, evt), d = st.drag3; st.drag3 = null;
+    if (Math.hypot(p.x - EMB.x, p.y - EMB.y) < EMB.r + 24) {
+      st.placed[d.i] = true; bump(K);
+      if (st.placed[0] && st.placed[1]) {
+        st.embryo = { a: st.pair[0], b: st.pair[1] };
+        st.byHand++; recordEmbryo(st, st.pair[0], st.pair[1]);
+        highlightByDataLine("code" + K, "embryo");
+        if (st.byHand >= 2) {
+          document.getElementById(K + "_draw1e").disabled = false;
+          document.getElementById(K + "_draw100").disabled = false;
+        }
+        refresh3(st);
+      }
+    } else st.warn3 = "Drop it in the middle circle.";
+    renderFuse(st);
+  };
+  svg.addEventListener("pointerup", done);
+  svg.addEventListener("pointercancel", done);
+  document.getElementById(K + "_newpair").addEventListener("click", () => { newPair(st); bump(K); });
+}
+function recordEmbryo(st, a, b) {
+  const dose = (a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0);
+  st.counts[dose]++; st.emb++;
+  const va = shownText(st.cfg, LONG, a.long), vb = shownText(st.cfg, LONG, b.long);
+  for (const v of new Set([va, vb])) st.carry[v] = (st.carry[v] || 0) + 1;
+}
+function drawEmbryos(st, n) {
+  const K = st.K, g = gapNow(st);
+  for (let i = 0; i < n; i++) recordEmbryo(st, oneGamete(st.rng, g), oneGamete(st.rng, g));
+  bump(K); highlightByDataLine("code" + K, "embryo");
+  refresh3(st);
+}
+function refresh3(st) {
+  const K = st.K;
+  document.getElementById(K + "3_now").textContent = String(Math.min(st.emb, 200));
+  if (st.byHand >= 2 && st.emb >= 200) {
+    markTask(K, K + "3"); record(BIT[K][4], true); st.q3.show();
+    if (!Gates[K].done) {
+      Gates[K].done = true; showSolved(K); unlockNext(K);
+      if (!NEXT[K] && typeof Score !== "undefined" && Score.finish) Score.finish();
+    }
+  }
+  const eTab = document.getElementById(K + "_etab"), n = st.emb || 1;
+  eTab.innerHTML = `<tr><th>embryo</th><th class="n">n</th><th class="n">share</th></tr>` +
+    [2, 1, 0].map(d => `<tr><td class="hapcode">${["aa", "Aa", "AA"][d]}</td><td class="n">${st.counts[d]}</td>` +
+      `<td class="n">${(100 * st.counts[d] / n).toFixed(0)}%</td></tr>`).join("") +
+    `<tr><td>total</td><td class="n">${st.emb}</td><td class="n"></td></tr>`;
+  const hTab = document.getElementById(K + "_htab");
+  const keys = Object.keys(st.carry).sort();
+  hTab.innerHTML = `<tr><th>version</th><th class="n">embryos with ≥1</th><th class="n">share</th></tr>` +
+    keys.map(v => {
+      const novel = st.cfg.recomb && v !== PARENTAL[0] && v !== PARENTAL[1];
+      return `<tr class="${novel ? "novel" : ""}"><td class="hap hapcode">${v}</td><td class="n">${st.carry[v]}</td>` +
+             `<td class="n">${(100 * st.carry[v] / n).toFixed(0)}%</td></tr>`;
+    }).join("");
+  drawBars(st);
+}
+/* AA / Aa / aa is a dosage ramp: one hue, light to dark, ordered by copies
+   of the big letter. Every bar carries its own count and its letters, and
+   the same three numbers sit in the table beside it. */
+function drawBars(st) {
+  const cv = document.getElementById(st.K + "_bars");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 58, r: 18, t: 26, b: 54 }, iw = W - pad.l - pad.r, ih = H - pad.t - pad.b;
+  const n = st.emb || 1;
+  const cats = [{ lab: "AA", v: st.counts[2] / n, c: DOSE[2], k: st.counts[2] },
+                { lab: "Aa", v: st.counts[1] / n, c: DOSE[1], k: st.counts[1] },
+                { lab: "aa", v: st.counts[0] / n, c: DOSE[0], k: st.counts[0] }];
+  ctx.strokeStyle = "#efede6"; ctx.lineWidth = 1;
+  ctx.fillStyle = MUTED; ctx.font = "11px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + ih - ih * i / 4;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + iw, y); ctx.stroke();
+    ctx.fillText((i / 4).toFixed(2), pad.l - 8, y);
+  }
+  ctx.strokeStyle = "#333"; ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ih); ctx.lineTo(pad.l + iw, pad.t + ih); ctx.stroke();
+  const slot = iw / 3, bw = Math.min(96, slot * 0.54);
+  cats.forEach((c, i) => {
+    const cx = pad.l + slot * (i + 0.5), h = Math.max(0, c.v * ih), y = pad.t + ih - h;
+    ctx.fillStyle = c.c; ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(cx - bw / 2, y, bw, h, [4, 4, 0, 0]); ctx.fill(); }
+    else ctx.fillRect(cx - bw / 2, y, bw, h);
+    ctx.strokeStyle = "#1e4d68"; ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = INK; ctx.font = "12px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    if (st.emb) ctx.fillText(`${c.k}  ${(100 * c.v).toFixed(0)}%`, cx, y - 5);
+    ctx.font = "13px ui-monospace, Menlo, monospace"; ctx.textBaseline = "top";
+    ctx.fillText(c.lab, cx, pad.t + ih + 8);
+  });
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("at the first spot on the long chromosome", pad.l + iw / 2, pad.t + ih + 30);
+  ctx.save(); ctx.translate(pad.l - 40, pad.t + ih / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = "bottom"; ctx.fillText("share of embryos", 0, 0); ctx.restore();
+}
+
+/* ====== One lab, built three times ==================================
+   Stage A, B and C get byte-identical controls. If the picture differs,
+   the difference came from STAGES[K], not from a second implementation.
+   ================================================================== */
+function numqMarkup(K, i, q) {
+  return `<div class="panel numq" id="numq${K}${i}">
+    <div class="q">${q.prompt}</div>
+    <div class="row">
+      <input type="number" id="${K}${i}_ans" min="${q.min}" max="${q.max}" step="${q.step}" placeholder="${q.unit}" />
+      <span class="unit">${q.unit}</span>
+      <button id="${K}${i}_submit">Submit</button>
+    </div>
+    <div class="verdict" id="${K}${i}_verdict"></div>
+  </div>`;
+}
+function buildLab(K, cfg) {
+  document.getElementById("lab" + K).innerHTML = `
+  <div class="step" id="${K}1">
+    <h3><span class="stepnum">1</span>Make four gametes by hand</h3>
+    <div class="step-body">
+      <div>
+        <svg class="bench" id="${K}_bench" viewBox="0 0 680 500"></svg>
+        <div class="status-line" id="${K}_status"></div>
+      </div>
+      <div>
+        <div class="btnrow">
+          <button id="${K}_rep" class="accent">Replicate</button>
+          <button id="${K}_collect" disabled>Collect these four gametes</button>
+          <button id="${K}_reset" class="ghost">Start over</button>
+        </div>
+        <div class="panel">
+          <h3>Rounds you have finished</h3>
+          <div class="roundlog" id="${K}_rounds"><div class="none">none yet</div></div>
+        </div>
+        ${numqMarkup(K, 1, cfg.q1)}
+      </div>
+    </div>
+  </div>
+
+  <div class="step step-locked" id="${K}2">
+    <h3><span class="stepnum">2</span>Draw one gamete, over and over</h3>
+    <p class="step-note">Finish step 1 to open this.</p>
+    <div class="step-body">
+      <div>
+        <svg class="bench" id="${K}_lastg" viewBox="0 0 300 156" style="max-width:330px"></svg>
+        <div class="panel graph-wrap" style="margin-top:12px"><canvas id="${K}_run" width="560" height="260"></canvas></div>
+        <div class="status-line" id="${K}_status2"></div>
+      </div>
+      <div>
+        <div class="btnrow">
+          <button id="${K}_draw1" class="accent">Draw a gamete</button>
+          <button id="${K}_draw20">Draw 20</button>
+          <button id="${K}_clear2" class="ghost">Clear</button>
+        </div>
+        <div class="panel"><h3>Gametes drawn</h3><table class="tally" id="${K}_gtab"></table></div>
+        ${numqMarkup(K, 2, cfg.q2)}
+      </div>
+    </div>
+  </div>
+
+  <div class="step step-locked" id="${K}3">
+    <h3><span class="stepnum">3</span>Fuse two gametes into an embryo</h3>
+    <p class="step-note">Finish step 2 to open this.</p>
+    <div class="step-body">
+      <div>
+        <svg class="bench" id="${K}_fuse" viewBox="0 0 560 360"></svg>
+        <div class="status-line" id="${K}_status3"></div>
+        <div class="panel graph-wrap" style="margin-top:12px"><canvas id="${K}_bars" width="560" height="300"></canvas></div>
+      </div>
+      <div>
+        <div class="btnrow">
+          <button id="${K}_newpair" class="ghost">New pair of gametes</button>
+          <button id="${K}_draw1e" class="accent" disabled>Draw an embryo</button>
+          <button id="${K}_draw100" disabled>Draw 100</button>
+        </div>
+        <div class="panel"><h3>Embryos</h3><table class="tally" id="${K}_etab"></table></div>
+        <div class="panel"><h3>Long-chromosome versions among the embryos</h3><table class="tally" id="${K}_htab"></table></div>
+        ${numqMarkup(K, 3, cfg.q3)}
+      </div>
+    </div>
+  </div>`;
+
+  const st = newState(K, cfg);
+  S[K] = st;
+  st.q1 = wireNumeric(K + "1", { bit: BIT[K][1], check: cfg.q1.ok, right: cfg.q1.right, wrong: cfg.q1.wrong });
+  st.q2 = wireNumeric(K + "2", { bit: BIT[K][3], check: cfg.q2.ok, right: cfg.q2.right, wrong: cfg.q2.wrong });
+  st.q3 = wireNumeric(K + "3", { bit: BIT[K][5], check: cfg.q3.ok, right: cfg.q3.right, wrong: cfg.q3.wrong });
+
+  wireBench(st);
+  wireFuse(st);
+  document.getElementById(K + "_draw1").addEventListener("click", () => drawGametes(st, 1));
+  document.getElementById(K + "_draw20").addEventListener("click", () => drawGametes(st, 20));
+  document.getElementById(K + "_clear2").addEventListener("click", () => { st.gam = []; st.last = null; renderStep2(st); });
+  document.getElementById(K + "_draw1e").addEventListener("click", () => drawEmbryos(st, 1));
+  document.getElementById(K + "_draw100").addEventListener("click", () => drawEmbryos(st, 100));
+
+  renderBench(st); benchStatus(st); renderStep2(st);
+  newPair(st); refresh3(st);
+  return st;
+}
+
+/* ====== Boot + Score ================================================
+   Scaffold layout (18 bits), three identical passes of six:
+     0/6/12   filled four gametes by hand, three rounds
+     1/7/13   the written question on the hand-filled rounds
+     2/8/14   drew forty gametes one at a time
+     3/9/15   the written question on the forty
+     4/10/16  fused by hand and then built two hundred embryos
+     5/11/17  the written question on the two hundred
+   ================================================================== */
+for (const K of ["A", "B", "C"]) buildLab(K, STAGES[K]);
+
+document.addEventListener("score:bypass", () => {
+  for (const K of ["A", "B", "C"]) {
+    Gates[K].open = true;
+    openStep(K, 2); openStep(K, 3);
+    const st = S[K];
+    document.getElementById(K + "_draw1e").disabled = false;
+    document.getElementById(K + "_draw100").disabled = false;
+    st.q1.show(); st.q2.show(); st.q3.show();
+  }
+});
+
+Score.init({
+  moduleId: "lesson8b",
+  version: 1,
+  scaffold: 18,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+  }
+});
+</script>
+</body>
+</html>

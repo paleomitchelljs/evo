@@ -300,6 +300,33 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **Lesson 8b built as one machine run three times (2026-09-10).** New lesson between
+  L8 and L9, on JM's ask for a genetics interactive where students drag chromosomes out of
+  a cell to make gametes. It resolves the open ruling the atlas recorded when Mendel's
+  ratios were pulled out of the old Lesson 8: the ratios come back, built by hand, right
+  before Hardy–Weinberg writes them down. Four things worth keeping for the next build of
+  this shape:
+  - **Where a lesson repeats itself, build the repeat from one function and a config.**
+    A/B/C are `buildLab(K, STAGES[K])` with identical markup and identical handlers; the
+    only differences are which spots carry a letter and whether a crossover exists. Three
+    hand-written copies of a three-step bench would have drifted apart by the second edit,
+    and the pedagogy depends on the passes being *the same* machine.
+  - **A free-choice interaction can still enforce a result.** The drag rule is only "one
+    long and one short per gamete", so the student's filling is genuinely their own — and
+    every legal filling still yields 2 big : 2 little. Segregation is not asserted anywhere
+    on the page; it is the only thing the bench can produce. Stage A's first question
+    ("fill them so as many as possible carry big A") exists to make the student try to
+    break it.
+  - **Verify the model out of the shipped file, not from a reimplementation.** `meiosis`
+    and `oneGamete` were sliced out of the HTML into a module and run 400,000 times per
+    cell before any bar was calibrated. That is what confirmed Stage C's answer (44) is
+    independent of which gap the student drops the rip into — had it not been, the question
+    would have been unanswerable.
+  - **Don't paint the discovery.** The round log first marked recombinant gametes in red;
+    that is the observation Stage C's first question asks the student to make, so the
+    colour was removed from the log and kept only in the summary tables, where the student
+    is already quantifying something they have seen.
+
 - **Lesson 7 Stage A rebuilt as a five-year "be a bird" lottery (2026-09-06).** Replaced the
   prisoner's-dilemma vignette (two sliders, a hard/soft dropdown, a four-cell table) on JM's
   request for something simpler: one slider picks a beak depth against three stacked panels
