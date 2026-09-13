@@ -109,6 +109,10 @@
 
   .bench { width:100%; height:auto; display:block; background:#fff; border:1px solid var(--rule); border-radius:4px; touch-action:none; user-select:none; }
   .bench text { user-select:none; }
+  /* the Punnett square. No frame of its own -- it sits inside a panel, and a
+     second border around it reads as a third grid. */
+  .sqbox { width:100%; height:auto; display:block; margin:0 auto; background:#fff; user-select:none; }
+  .sqbox text { user-select:none; }
   .bench .grab { cursor:grab; }
   .bench .grab.dragging { cursor:grabbing; }
 
@@ -178,8 +182,10 @@
       <ul class="setup">
         <li>One cell. Two long chromosomes, two short ones.</li>
         <li>Four spots on every chromosome. One is labelled: big A on one long copy, little a on the other.</li>
-        <li>Replicate the chromosomes, then fill all four gametes.</li>
-        <li>Every gamete takes one long chromosome and one short one.</li>
+        <li>Replicate, then divide twice — two cells, then four gametes.</li>
+        <li>One drag takes a whole side of a cell: a long chromosome and a short one.</li>
+        <li>Which copy lines up on which side of the plate is drawn fresh every round.</li>
+        <li>The square in step 3 crosses every gamete with every gamete.</li>
       </ul>
     </div>
   </div>
@@ -189,7 +195,7 @@
     <div class="panel">
       <h3>To open Stage B</h3>
       <ul class="tasks" id="tasksA">
-        <li data-task="A1">Fill four gametes by hand, three times over. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
+        <li data-task="A1">Run meiosis by hand, three times over. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
         <li data-task="A2">Draw 500 gametes and watch the share carrying big A. <span class="hint"><span id="A2_now">0</span> of 500</span></li>
         <li data-task="A3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="A3_now">0</span> of 200</span></li>
       </ul>
@@ -197,7 +203,7 @@
     </div>
     <div class="panel">
       <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line"><span class="com"># one cell: two long chromosomes, two short. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line"></span><span class="line" data-line="replicate"><span class="com"># replication: every chromosome becomes two identical chromatids</span></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign"><span class="com"># the randomization step: which chromatid lands in which gamete</span></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">dup</span>(long)[<span class="fn">sample</span>(<span class="num">4</span>), ]; S &lt;- <span class="fn">dup</span>(short)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># one gamete at random, five hundred times</span></span><span class="line" data-line="draw">g &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>, <span class="num">1</span>)]]$long[<span class="num">1</span>])</span><span class="line" data-line="draw"><span class="fn">cumsum</span>(g) / <span class="fn">seq_along</span>(g)      <span class="com"># running share carrying big A</span></span><span class="line"></span><span class="line" data-line="embryo"><span class="com"># two gametes fuse. 2 = AA, 1 = Aa, 0 = aa</span></span><span class="line" data-line="embryo">embryo &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>] + <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>]</span><span class="line" data-line="embryo"><span class="fn">table</span>(<span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">embryo</span>()))</span></pre>
+<pre class="code" id="codeA"><span class="line"><span class="com"># one cell: two long chromosomes, two short. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line"></span><span class="line" data-line="replicate"><span class="com"># replication: every chromosome becomes two identical chromatids</span></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign"><span class="com"># division I: the two homologs go to opposite poles, each</span></span><span class="line" data-line="assign"><span class="com"># chromosome picking its own side. division II: the sisters split.</span></span><span class="line" data-line="assign">divide &lt;- <span class="kw">function</span>(m) {</span><span class="line" data-line="assign">  d &lt;- <span class="fn">dup</span>(m); p &lt;- <span class="kw">if</span> (<span class="fn">runif</span>(<span class="num">1</span>) &lt; <span class="num">.5</span>) <span class="num">1</span>:<span class="num">4</span> <span class="kw">else</span> <span class="fn">c</span>(<span class="num">3</span>,<span class="num">4</span>,<span class="num">1</span>,<span class="num">2</span>)</span><span class="line" data-line="assign">  d[<span class="fn">c</span>(p[<span class="fn">sample</span>(<span class="num">2</span>)], p[<span class="num">2</span> + <span class="fn">sample</span>(<span class="num">2</span>)]), ]</span><span class="line" data-line="assign">}</span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">divide</span>(long); S &lt;- <span class="fn">divide</span>(short)</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># one gamete at random, five hundred times</span></span><span class="line" data-line="draw">g &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>, <span class="num">1</span>)]]$long[<span class="num">1</span>])</span><span class="line" data-line="draw"><span class="fn">cumsum</span>(g) / <span class="fn">seq_along</span>(g)      <span class="com"># running share carrying big A</span></span><span class="line"></span><span class="line" data-line="embryo"><span class="com"># two gametes fuse. 2 = AA, 1 = Aa, 0 = aa</span></span><span class="line" data-line="embryo">embryo &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>] + <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long[<span class="num">1</span>]</span><span class="line" data-line="embryo"><span class="fn">table</span>(<span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">embryo</span>()))</span></pre>
     </div>
   </div>
 </section>
@@ -217,7 +223,8 @@
         <li>The same cell. Every spot now carries a label.</li>
         <li>Long chromosome: A B C D on one copy, a b c d on the other.</li>
         <li>Short chromosome: E F G H on one copy, e f g h on the other.</li>
-        <li>Deal the chromatids so that every kind of gamete you can make comes out at once.</li>
+        <li>One meiosis gives you two kinds of gamete, and they are opposites.</li>
+        <li>Run it again for the other two. The plate does not line up the same way twice.</li>
         <li>The same three steps as Stage A.</li>
       </ul>
     </div>
@@ -228,7 +235,7 @@
     <div class="panel">
       <h3>To open Stage C</h3>
       <ul class="tasks" id="tasksB">
-        <li data-task="B1">Fill the four gametes so that every kind you can make comes out at once — no two the same. <span class="hint"><span id="B1_now">0</span> of 4 kinds</span></li>
+        <li data-task="B1">Run meiosis until every kind of gamete has turned up. <span class="hint"><span id="B1_now">0</span> of 4 kinds</span></li>
         <li data-task="B2">Draw 500 gametes and log every version that turns up. <span class="hint"><span id="B2_now">0</span> of 500</span></li>
         <li data-task="B3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="B3_now">0</span> of 200</span></li>
       </ul>
@@ -236,7 +243,7 @@
     </div>
     <div class="panel">
       <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line"><span class="com"># same cell, every spot read out now. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># ABCD / abcd</span></span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># EFGH / efgh</span></span><span class="line"></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">dup</span>(long)[<span class="fn">sample</span>(<span class="num">4</span>), ]; S &lt;- <span class="fn">dup</span>(short)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># every long-chromosome version that turns up in 500 gametes</span></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)                       <span class="com"># 2 = AA, 1 = Aa, 0 = aa</span></span></pre>
+<pre class="code" id="codeB"><span class="line"><span class="com"># same cell, every spot read out now. 1 = big letter, 0 = little.</span></span><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># ABCD / abcd</span></span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))   <span class="com"># EFGH / efgh</span></span><span class="line"></span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="assign"><span class="com"># division I: the two homologs go to opposite poles, each</span></span><span class="line" data-line="assign"><span class="com"># chromosome picking its own side. division II: the sisters split.</span></span><span class="line" data-line="assign">divide &lt;- <span class="kw">function</span>(m) {</span><span class="line" data-line="assign">  d &lt;- <span class="fn">dup</span>(m); p &lt;- <span class="kw">if</span> (<span class="fn">runif</span>(<span class="num">1</span>) &lt; <span class="num">.5</span>) <span class="num">1</span>:<span class="num">4</span> <span class="kw">else</span> <span class="fn">c</span>(<span class="num">3</span>,<span class="num">4</span>,<span class="num">1</span>,<span class="num">2</span>)</span><span class="line" data-line="assign">  d[<span class="fn">c</span>(p[<span class="fn">sample</span>(<span class="num">2</span>)], p[<span class="num">2</span> + <span class="fn">sample</span>(<span class="num">2</span>)]), ]</span><span class="line" data-line="assign">}</span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">divide</span>(long); S &lt;- <span class="fn">divide</span>(short)</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw"><span class="com"># every long-chromosome version that turns up in 500 gametes</span></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)                       <span class="com"># 2 = AA, 1 = Aa, 0 = aa</span></span></pre>
     </div>
   </div>
 </section>
@@ -268,7 +275,7 @@
     <div class="panel">
       <h3>Tasks</h3>
       <ul class="tasks" id="tasksC">
-        <li data-task="C1">Drop the mark into a gap, then fill four gametes. Five different spots. <span class="hint"><span id="C1_now">0</span> of 5 spots</span></li>
+        <li data-task="C1">Drop the marks into gaps, then run meiosis. Five different spots. <span class="hint"><span id="C1_now">0</span> of 5 spots</span></li>
         <li data-task="C2">Draw 500 gametes and log every version that turns up. <span class="hint"><span id="C2_now">0</span> of 500</span></li>
         <li data-task="C3">Fuse two gametes by hand, then build 200 embryos. <span class="hint"><span id="C3_now">0</span> of 200</span></li>
       </ul>
@@ -276,7 +283,7 @@
     </div>
     <div class="panel">
       <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="xover"><span class="com"># the slider, and the gaps you dropped the marks into</span></span><span class="line" data-line="xover">n  &lt;- <span class="num" id="cC_n">1</span>                <span class="com"># crossovers per chromosome</span></span><span class="line" data-line="xover">kL &lt;- <span class="num" id="cC_kL">c()</span></span><span class="line" data-line="xover">kS &lt;- <span class="num" id="cC_kS">c()</span></span><span class="line" data-line="xover"></span><span class="line" data-line="xover"><span class="com"># every crossing on a chromosome joins the same two chromatids -- the</span></span><span class="line" data-line="xover"><span class="com"># pair facing each other across the copies, rows 2 and 3. So two of them</span></span><span class="line" data-line="xover"><span class="com"># trade the stretch between the cuts back, and rows 1 and 4 stay whole.</span></span><span class="line" data-line="xover">rip &lt;- <span class="kw">function</span>(M, ks) {</span><span class="line" data-line="xover">  <span class="kw">for</span> (k <span class="kw">in</span> ks) { s &lt;- k:<span class="num">4</span>; t &lt;- M[<span class="num">2</span>, s]; M[<span class="num">2</span>, s] &lt;- M[<span class="num">3</span>, s]; M[<span class="num">3</span>, s] &lt;- t }</span><span class="line" data-line="xover">  M</span><span class="line" data-line="xover">}</span><span class="line"></span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">rip</span>(<span class="fn">dup</span>(long),  kL)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  S &lt;- <span class="fn">rip</span>(<span class="fn">dup</span>(short), kS)[<span class="fn">sample</span>(<span class="num">4</span>), ]</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)</span></pre>
+<pre class="code" id="codeC"><span class="line">long  &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line">short &lt;- <span class="fn">rbind</span>(<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>,<span class="num">1</span>), <span class="fn">c</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>))</span><span class="line" data-line="replicate">dup &lt;- <span class="kw">function</span>(m) m[<span class="fn">c</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">2</span>,<span class="num">2</span>), ]</span><span class="line"></span><span class="line" data-line="xover"><span class="com"># the slider, and the gaps you dropped the marks into</span></span><span class="line" data-line="xover">n  &lt;- <span class="num" id="cC_n">1</span>                <span class="com"># crossovers per chromosome</span></span><span class="line" data-line="xover">kL &lt;- <span class="num" id="cC_kL">c()</span></span><span class="line" data-line="xover">kS &lt;- <span class="num" id="cC_kS">c()</span></span><span class="line" data-line="xover"></span><span class="line" data-line="xover"><span class="com"># every crossing on a chromosome joins the same two chromatids -- the</span></span><span class="line" data-line="xover"><span class="com"># pair facing each other across the copies, rows 2 and 3. So two of them</span></span><span class="line" data-line="xover"><span class="com"># trade the stretch between the cuts back, and rows 1 and 4 stay whole.</span></span><span class="line" data-line="xover">rip &lt;- <span class="kw">function</span>(M, ks) {</span><span class="line" data-line="xover">  <span class="kw">for</span> (k <span class="kw">in</span> ks) { s &lt;- k:<span class="num">4</span>; t &lt;- M[<span class="num">2</span>, s]; M[<span class="num">2</span>, s] &lt;- M[<span class="num">3</span>, s]; M[<span class="num">3</span>, s] &lt;- t }</span><span class="line" data-line="xover">  M</span><span class="line" data-line="xover">}</span><span class="line"></span><span class="line" data-line="assign"><span class="com"># division I: the two homologs go to opposite poles, each</span></span><span class="line" data-line="assign"><span class="com"># chromosome picking its own side. division II: the sisters split.</span></span><span class="line" data-line="assign">divide &lt;- <span class="kw">function</span>(m, ks) {</span><span class="line" data-line="assign">  d &lt;- <span class="fn">rip</span>(<span class="fn">dup</span>(m), ks)</span><span class="line" data-line="assign">  p &lt;- <span class="kw">if</span> (<span class="fn">runif</span>(<span class="num">1</span>) &lt; <span class="num">.5</span>) <span class="num">1</span>:<span class="num">4</span> <span class="kw">else</span> <span class="fn">c</span>(<span class="num">3</span>,<span class="num">4</span>,<span class="num">1</span>,<span class="num">2</span>)</span><span class="line" data-line="assign">  d[<span class="fn">c</span>(p[<span class="fn">sample</span>(<span class="num">2</span>)], p[<span class="num">2</span> + <span class="fn">sample</span>(<span class="num">2</span>)]), ]</span><span class="line" data-line="assign">}</span><span class="line" data-line="assign">meiosis &lt;- <span class="kw">function</span>() {</span><span class="line" data-line="assign">  L &lt;- <span class="fn">divide</span>(long, kL); S &lt;- <span class="fn">divide</span>(short, kS)</span><span class="line" data-line="assign">  <span class="fn">lapply</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i) <span class="fn">list</span>(long = L[i, ], short = S[i, ]))</span><span class="line" data-line="assign">}</span><span class="line"></span><span class="line" data-line="draw">v &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">paste</span>(<span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long, collapse = <span class="str">""</span>))</span><span class="line" data-line="draw"><span class="fn">table</span>(v)</span><span class="line"></span><span class="line" data-line="embryo">gam &lt;- <span class="kw">function</span>() <span class="fn">meiosis</span>()[[<span class="fn">sample</span>(<span class="num">4</span>,<span class="num">1</span>)]]$long</span><span class="line" data-line="embryo">e &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, <span class="fn">gam</span>()[<span class="num">1</span>] + <span class="fn">gam</span>()[<span class="num">1</span>])</span><span class="line" data-line="embryo"><span class="fn">table</span>(e)</span></pre>
     </div>
   </div>
 </section>
@@ -335,23 +342,56 @@ const ABCD_IN_EMBRYO = 43.75;
    independently per chromosome and dealt one per gamete. Shuffling the two
    chromosomes separately is what lets the long and the short one combine
    freely -- the same freedom the hand-drag gives. */
+/* The four chromatids of one chromosome after the rips, before they are dealt.
+   The chiasma joins the two chromatids facing each other across the paired
+   copies -- the inner two as drawn, 1 and 2, never 0 and 2. Same counts either
+   way; only this one puts the crossing where the picture shows it. Every
+   crossover on a chromosome joins that same pair, so two of them trade back
+   the stretch between the cuts and the outer two chromatids stay whole however
+   many there are. That is a two-strand double, the textbook case, and it is
+   the reason ABCD survives on exactly one chromatid in four no matter where or
+   how often the student cuts.
+
+   The Punnett square's rows are enumerated from this same function, so the
+   square cannot say one thing while the sampler does another. */
+function chromatids(t, xo) {
+  const cs = [[1,1,1,1],[1,1,1,1],[0,0,0,0],[0,0,0,0]];
+  if (xo && xo[t]) for (const k of xo[t]) {
+    for (let i = k; i < NL; i++) { const s = cs[1][i]; cs[1][i] = cs[2][i]; cs[2][i] = s; }
+  }
+  return cs;
+}
+/* One meiosis, as two divisions. Division I sends the two homologs of a
+   chromosome to opposite poles, each chromosome picking its side on its own
+   -- that is independent assortment, and it is the only place the long and
+   the short chromosome get to combine freely. Division II splits the sisters:
+   gametes 0 and 1 come off one pole, 2 and 3 off the other.
+
+   So the four gametes of a round are NOT four independent draws. Absent a
+   rip, the two off one pole are the same gamete twice, and a round yields two
+   kinds of gamete, never four. The bench is gated on that fact and Stage B is
+   built on it.
+
+   `oneGamete` is untouched by any of it, which is why steps 2 and 3 can go on
+   calling this: taking one of the four at random still gives a uniform
+   chromatid from each chromosome, independently of the other. Only the joint
+   distribution of a whole round changed, and only the bench reads that. */
+function newPlan(rng) {
+  return { side: rng() < 0.5 ? 1 : 0,                 // 1 = the little-letter homolog goes left
+           flip: [rng() < 0.5 ? 1 : 0, rng() < 0.5 ? 1 : 0] };   // which sister takes the left gamete
+}
+function dealOrder(plan) {
+  const L = plan.side ? [2, 3] : [0, 1];              // the pole that ends up on the left
+  const R = plan.side ? [0, 1] : [2, 3];
+  const l = plan.flip[0] ? [L[1], L[0]] : L;
+  const r = plan.flip[1] ? [R[1], R[0]] : R;
+  return [l[0], l[1], r[0], r[1]];                    // chromatid index, per gamete
+}
 function meiosis(rng, xo) {
   const out = [];
   for (const t of [LONG, SHORT]) {
-    const cs = [[1,1,1,1],[1,1,1,1],[0,0,0,0],[0,0,0,0]];
-    // The chiasma joins the two chromatids facing each other across the paired
-    // copies -- the inner two as drawn, 1 and 2, never 0 and 2. Same counts
-    // either way; only this one puts the crossing where the picture shows it.
-    // Every crossover on a chromosome joins that same pair, so two of them
-    // trade back the stretch between the cuts and the outer two chromatids
-    // stay whole however many there are. That is a two-strand double, the
-    // textbook case, and it is the reason ABCD survives on exactly one
-    // chromatid in four no matter where or how often the student cuts.
-    if (xo && xo[t]) for (const k of xo[t]) {
-      for (let i = k; i < NL; i++) { const s = cs[1][i]; cs[1][i] = cs[2][i]; cs[2][i] = s; }
-    }
-    for (let i = 3; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const s = cs[i]; cs[i] = cs[j]; cs[j] = s; }
-    out.push(cs);
+    const cs = chromatids(t, xo), ord = dealOrder(newPlan(rng));
+    out.push(ord.map(k => cs[k]));
   }
   return [0,1,2,3].map(i => ({ long: out[0][i], short: out[1][i] }));
 }
@@ -363,17 +403,45 @@ function xoName(xo) {
   return `long ${f(LONG)} · short ${f(SHORT)}`;
 }
 
+/* ---- The square's axes ---------------------------------------------
+   Every gamete this cell can make, once each, read straight off the four
+   chromatids the sampler draws from. All four are equally likely, so the
+   rows come out equally weighted however the marks fell -- which is why
+   the square never needs to print a frequency beside a row.
+
+   `squareBasis` says what a row is. "gamete" is the whole thing, long
+   chromosome and short one together: two kinds in Stage A, four in Stage
+   B. Stage C uses "long", because once both chromosomes are cut the whole
+   gamete comes in sixteen kinds and the square would want 256 cells.
+   ------------------------------------------------------------------ */
+function kindKey(cfg, g) {
+  return cfg.squareBasis === "long"
+    ? shownText(cfg, LONG, g.long)
+    : shownText(cfg, LONG, g.long) + "|" + shownText(cfg, SHORT, g.short);
+}
+function gameteKinds(cfg, xo) {
+  const longOnly = cfg.squareBasis === "long";
+  const L = chromatids(LONG, xo), S = longOnly ? [null] : chromatids(SHORT, xo);
+  const seen = new Map();
+  for (const long of L) for (const short of S) {
+    const k = { key: "", long, short };
+    k.key = kindKey(cfg, k);
+    if (!seen.has(k.key)) seen.set(k.key, k);
+  }
+  return [...seen.values()].sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
+}
+
 /* ---- Stage configuration. The only thing that differs between passes. -- */
 const DRAWS = 500;                 // step 2 will not open the next step short of this
 
 const STAGES = {
   A: {
-    labelled: { 0: [0], 1: [] }, recomb: false,
+    labelled: { 0: [0], 1: [] }, recomb: false, squareBasis: "gamete", fuse: "onto",
     step1: { need: 3, mode: "rounds" },
-    q1: { prompt: "Fill the four gametes so that as many of them as possible carry big A. How many is that?",
+    q1: { prompt: "In one round, how many of your four gametes carry big A?",
           unit: "gametes out of 4", min: 0, max: 4, step: 1, ok: v => v === 2,
-          right: "Two. Every way of filling the cells gives the same split.",
-          wrong: "Not that. Fill the cells again and try to beat your own best." },
+          right: "Two. It cannot come out any other way.",
+          wrong: "Not that. Run the round again and count." },
     q2: { prompt: "Out of 100 gametes drawn this way, how many would carry big A?",
           unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 50) <= 6,
           right: "Yes — about half.",
@@ -384,14 +452,15 @@ const STAGES = {
           wrong: "Not that. Read the middle bar off your own 200." }
   },
   B: {
-    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: false,
+    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: false, squareBasis: "gamete", fuse: "onto",
     // Stage B's step 1 is gated on the doing, not on a written answer: the
-    // student has to deal one round in which all four kinds come out at once.
-    // Filling the cells in the order the chromatids sit in yields only two,
-    // so clearing this takes deliberately crossing a long copy with each
-    // short one -- which is the thing the stage is for. A question asking how
-    // many versions they had seen sat here and was answerable without ever
-    // doing it.
+    // student has to see all four kinds of gamete turn up. One meiosis cannot
+    // give them -- the two gametes off a pole are the same gamete twice, so a
+    // round yields two kinds and they are complementary. Getting the other two
+    // means running it again and waiting for the chromosomes to line up the
+    // other way round, which is the thing the stage is for. Three rounds on
+    // average. This gate used to ask for all four in a single round, which the
+    // old free-dealing bench allowed and meiosis does not.
     step1: { need: 4, mode: "kinds" },
     q1: null,
     q2: { prompt: "How many different gametes are possible — long version and short version counted together?",
@@ -401,10 +470,10 @@ const STAGES = {
     q3: { prompt: "Out of 100 embryos, how many carry at least one copy of the long version ABCD?",
           unit: "out of 100", min: 0, max: 100, step: 1, ok: v => Math.abs(v - 75) <= 7,
           right: "About 75 — everything except the embryos that drew abcd twice.",
-          wrong: "Not that. The table under the chart counts them." }
+          wrong: "Not that. Count the cells in the square with an ABCD in them." }
   },
   C: {
-    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: true,
+    labelled: { 0: [0,1,2,3], 1: [0,1,2,3] }, recomb: true, squareBasis: "long", fuse: "onto",
     // Every round cuts both chromosomes, so all three targets are fixed again:
     // whatever the slider says, two of the four long chromatids come out new
     // and exactly one of them is still ABCD.
@@ -421,7 +490,7 @@ const STAGES = {
           unit: "out of 100", min: 0, max: 100, step: 1,
           ok: v => Math.abs(v - ABCD_IN_EMBRYO) <= 8,
           right: "About 44, down from 75 in Stage B — and the three bars did not move.",
-          wrong: "Not that. The table under the chart counts them." }
+          wrong: "Not that. Count the cells in the square with an ABCD in them." }
   }
 };
 
@@ -515,12 +584,14 @@ function clientToSvg(svg, evt) {
            y: (evt.clientY - r.top) / r.height * vb.height };
 }
 
-/* Chromosome geometry, in the local space of one chromatid group. */
-const ARM   = [112, 84];        // long, short
-const SPAN  = [28, 21];         // spot-to-spot
-const SPOT  = 16;               // spot rect, square
-function spotX(t, i) { return -ARM[t] / 2 + SPAN[t] * (i + 0.5); }
-function gapX(t, k) { return spotX(t, k) - SPAN[t] / 2; }       // k = 1..3
+/* Chromosome geometry, in the local space of one chromatid. Chromosomes stand
+   upright everywhere on the page: the poles are left and right, so a
+   chromosome lies across the pull, which is the only way a plate reads. */
+const ARM   = [92, 72];         // long, short -- head to foot
+const SPAN  = [23, 18];         // spot-to-spot
+const SPOT  = 15;               // spot rect, square
+function spotY(t, i) { return -ARM[t] / 2 + SPAN[t] * (i + 0.5); }
+function gapY(t, k) { return spotY(t, k) - SPAN[t] / 2; }       // k = 1..3
 
 /* One chromatid. `hap` is four bits; `cfg.labelled[t]` decides which spots
    wear a letter. Unlabelled spots stay grey, which is the only difference
@@ -528,41 +599,48 @@ function gapX(t, k) { return spotX(t, k) - SPAN[t] / 2; }       // k = 1..3
 function chromatidNode(t, hap, cfg, opts) {
   opts = opts || {};
   const g = svgEl("g", { class: "chromatid" + (opts.grab ? " grab" : "") });
-  const w = ARM[t];
-  g.appendChild(svgEl("rect", { x: -w/2, y: -3, width: w, height: 6, rx: 3,
+  const h = ARM[t];
+  g.appendChild(svgEl("rect", { x: -3, y: -h/2, width: 6, height: h, rx: 3,
                                 fill: "#dedbd1", stroke: "#bdb9ac", "stroke-width": 1 }));
   const shown = cfg.labelled[t];
   for (let i = 0; i < NL; i++) {
-    const x = spotX(t, i), lab = shown.indexOf(i) >= 0;
+    const y = spotY(t, i), lab = shown.indexOf(i) >= 0;
     g.appendChild(svgEl("rect", {
-      x: x - SPOT/2, y: -SPOT/2, width: SPOT, height: SPOT, rx: 2,
+      x: -SPOT/2, y: y - SPOT/2, width: SPOT, height: SPOT, rx: 2,
       fill: lab ? (hap[i] ? HUE2 : "#d0e1ed") : "#c9c6bc",
       stroke: lab ? (hap[i] ? "#1e4d68" : "#8fb0c6") : "#b0ada2", "stroke-width": 1
     }));
     if (lab) {
-      const tx = svgEl("text", { x: x, y: 0, "text-anchor": "middle", "dominant-baseline": "central",
-        "font-family": "ui-monospace, Menlo, monospace", "font-size": 11, "font-weight": 700,
+      const tx = svgEl("text", { x: 0, y: y, "text-anchor": "middle", "dominant-baseline": "central",
+        "font-family": "ui-monospace, Menlo, monospace", "font-size": 10.5, "font-weight": 700,
         fill: hap[i] ? "#fff" : "#194055" });
       tx.textContent = hap[i] ? LETTER[t][i] : LETTER[t][i].toLowerCase();
       g.appendChild(tx);
     }
   }
   for (const k of (opts.notches || [])) {
-    const gx = gapX(t, k);
+    const gy = gapY(t, k);
     g.appendChild(svgEl("path", {
-      d: `M ${gx - 4} -11 L ${gx + 4} 11 M ${gx + 4} -11 L ${gx - 4} 11`,
+      d: `M -10 ${gy - 4} L 10 ${gy + 4} M 10 ${gy - 4} L -10 ${gy + 4}`,
       stroke: HOT, "stroke-width": 2, "stroke-linecap": "round", fill: "none" }));
   }
   return g;
 }
-function place(node, x, y) { node.setAttribute("transform", `translate(${x},${y})`); return node; }
+function place(node, x, y, s) {
+  node.setAttribute("transform", `translate(${x},${y})` + (s ? ` scale(${s})` : ""));
+  return node;
+}
 
 function cellNode(cx, cy, r, opts) {
   opts = opts || {};
-  return svgEl("circle", { cx, cy, r,
+  return svgEl("ellipse", { cx, cy, rx: r, ry: opts.ry || r,
     fill: opts.fill || "#fbfaf6",
     stroke: opts.stroke || RULE, "stroke-width": opts.sw || 1.5,
     "stroke-dasharray": opts.dash || "none" });
+}
+function inCell(p, cx, cy, rx, ry) {
+  const dx = (p.x - cx) / rx, dy = (p.y - cy) / ry;
+  return dx * dx + dy * dy <= 1;
 }
 function labelNode(x, y, text, opts) {
   opts = opts || {};
@@ -573,23 +651,28 @@ function labelNode(x, y, text, opts) {
   return t;
 }
 
-/* Gamete contents drawn inside a circle of radius r, long above short. */
+/* Gamete contents: the long chromosome standing beside the short one. */
+const GIN = 18;
 function gameteInto(parent, cx, cy, gam, cfg) {
-  parent.appendChild(place(chromatidNode(LONG,  gam.long,  cfg), cx, cy - 15));
-  parent.appendChild(place(chromatidNode(SHORT, gam.short, cfg), cx, cy + 16));
+  parent.appendChild(place(chromatidNode(LONG,  gam.long,  cfg), cx - GIN, cy));
+  parent.appendChild(place(chromatidNode(SHORT, gam.short, cfg), cx + GIN, cy));
 }
 
-/* ====== The bench: layout constants ================================== */
-const PC = { x: 340, y: 193, r: 128 };                 // parent cell
-// Sisters sit 24 apart; the two copies are held further apart than that so the
-// crossing has somewhere to be drawn between the inner chromatids.
-const SLOT_Y = [[92, 116, 152, 176], [210, 234, 270, 294]];
-const MID_Y  = [[104, 164], [222, 282]];               // the two copies, before replication
-const GX = [104, 262, 420, 578], GY = 420, GR = 64;    // the four gametes
-const TRAY = { x: 66, y: 330 };                        // where the rip mark waits
-// The chiasma pins between the two chromatids it actually joined.
-const MARK_Y = [ (SLOT_Y[LONG][1]  + SLOT_Y[LONG][2])  / 2,
-                 (SLOT_Y[SHORT][1] + SLOT_Y[SHORT][2]) / 2 ];
+/* ====== The bench: layout ===========================================
+   Three rows, because there are three things to show: the cell, the two
+   cells division I makes of it, and the four gametes division II makes of
+   those. The cells are ovals rather than circles because a dividing cell is
+   pulled toward two poles, and the poles are what the student drags to.
+   ================================================================== */
+const PC   = { x: 340, y: 140, rx: 152, ry: 118 };          // the cell
+const DC   = [{ x: 176, y: 368 }, { x: 504, y: 368 }];      // after division I
+const DR   = { rx: 118, ry: 96 };
+const GX   = [96, 262, 418, 584], GY = 556, GR = 62;        // the four gametes
+const ROW1 = [-58, 52];             // long pair above short pair, in the cell
+const ROW2 = [-40, 44];             // the same, in a daughter cell
+const SLOT1 = [-58, -20, 20, 58];   // the four chromatids across the first plate
+const SLOT2 = [-24, 24];            // the two sisters across the second
+const TRAY = { x: 68, y: 250 };     // where an unplaced rip mark waits
 
 /* ====== Per-stage state ============================================== */
 const S = {};
@@ -597,12 +680,13 @@ function newState(K, cfg) {
   return {
     K, cfg,
     rng: mulberry32(pageSeed("l8b_" + K)),
-    phase: "intact", xos: [[], []], nx: 1, chrom: null, drag: null, hoverGap: null, spots: {},
+    phase: "intact", xos: [[], []], nx: 1, chrom: null, plan: null, ord: null,
+    drag: null, hoverGap: null, spots: {}, kinds: new Set(),
     cells: [{}, {}, {}, {}],
     rounds: [], best: 0,
     gam: [], last: null,
-    pair: [null, null], placed: [false, false], drag3: null, byHand: 0, embryo: null,
-    emb: 0, counts: [0, 0, 0], carry: {}
+    pair: [null, null], placed: [false, false], drag3: null, byHand: 0, embryo: null, fuseAt: null,
+    emb: 0, counts: [0, 0, 0], carry: {}, sq: {}
   };
 }
 function freshChromatids(st) {
@@ -610,7 +694,8 @@ function freshChromatids(st) {
   for (const t of [LONG, SHORT]) {
     for (let k = 0; k < 4; k++) {
       const big = k < 2;                       // k 0,1 = one copy; k 2,3 = the other
-      c[t].push({ t, k, hap: [big?1:0, big?1:0, big?1:0, big?1:0], cell: null, notches: [] });
+      // `at` is null at the first plate, {d} in a daughter cell, {g} in a gamete.
+      c[t].push({ t, k, hap: [big?1:0, big?1:0, big?1:0, big?1:0], at: null, notches: [] });
     }
   }
   return c;
@@ -628,23 +713,86 @@ function rebuildRips(st) {
     }
   }
 }
+/* Back to one cell, with a fresh plan. The plan is drawn here and not at
+   Replicate, so the sides are already set the first time the student looks:
+   by metaphase the assortment has happened, and the picture should not
+   pretend it is still open. Drawing it fresh every round is the whole point
+   -- big A is not nailed to the left-hand side of the plate. */
+function resetBench(st) {
+  st.phase = "intact"; st.chrom = null; st.xos = [[], []]; st.warn = null;
+  st.cells = [{}, {}, {}, {}];
+  st.plan = { [LONG]: newPlan(st.rng), [SHORT]: newPlan(st.rng) };
+  st.ord  = { [LONG]: dealOrder(st.plan[LONG]), [SHORT]: dealOrder(st.plan[SHORT]) };
+}
 function marksLeft(st) { return st.cfg.recomb ? 2 * st.nx - st.xos[LONG].length - st.xos[SHORT].length : 0; }
 function placedMarks(st) {
   const out = [];
   if (!st.cfg.recomb || !st.chrom) return out;
   for (const t of [LONG, SHORT]) for (const k of st.xos[t])
-    out.push({ t, k, x: PC.x + gapX(t, k), y: MARK_Y[t] });
+    out.push({ t, k, x: PC.x, y: PC.y + ROW1[t] + gapY(t, k) });
   return out;
 }
 
-/* ====== Step 1 — drag the chromatids out ============================= */
+/* ---- what the plan says happens to each chromatid --------------------
+   `slotAt` is its place across the first plate, left to right. Whichever
+   homolog the plan put on the left, the inner two slots always hold
+   chromatids 1 and 2 -- so the chiasma goes on being drawn between the same
+   two it actually joins, and `chromatids()` needs no adjusting. */
+function slotAt(st, t, k)   { return st.plan[t].side ? 3 - k : k; }
+function gameteOf(st, t, k) { return st.ord[t].indexOf(k); }
+function poleOf(st, t, k)   { return gameteOf(st, t, k) < 2 ? 0 : 1; }
+
+function stageOf(st) {
+  if (st.phase === "intact") return "intact";
+  let plate = 0, daughter = 0;
+  for (const t of [LONG, SHORT]) for (const ch of st.chrom[t]) {
+    if (ch.at === null) plate++; else if (ch.at.d !== undefined) daughter++;
+  }
+  return plate ? "one" : daughter ? "two" : "done";
+}
+function chromatidPos(st, ch) {
+  const t = ch.t, a = ch.at;
+  if (a && a.g !== undefined) return { x: GX[a.g] + (t === LONG ? -GIN : GIN), y: GY };
+  if (a && a.d !== undefined)
+    return { x: DC[a.d].x + SLOT2[gameteOf(st, t, ch.k) % 2], y: DC[a.d].y + ROW2[t] };
+  return { x: PC.x + SLOT1[slotAt(st, t, ch.k)], y: PC.y + ROW1[t] };
+}
+/* A drag moves a whole side of a cell: one long chromosome and one short one.
+   At the first plate a chromosome is still two chromatids, so that is four
+   pieces; at the second it is one each, so two. Nothing on this bench moves a
+   chromatid on its own, because nothing in a cell does. */
+function groupAt(st, from, side) {
+  const out = [];
+  for (const t of [LONG, SHORT]) for (const ch of st.chrom[t]) {
+    if (from < 0) {
+      if (ch.at === null && (slotAt(st, t, ch.k) < 2 ? 0 : 1) === side) out.push(ch);
+    } else if (ch.at && ch.at.d === from && gameteOf(st, t, ch.k) % 2 === side) out.push(ch);
+  }
+  return out;
+}
+
+/* ====== Step 1 — divide the cell twice =============================== */
+function plateLine(cx, cy, ry) {
+  return svgEl("line", { x1: cx, y1: cy - ry + 10, x2: cx, y2: cy + ry - 10,
+    stroke: "#c9c5b8", "stroke-width": 1.5, "stroke-dasharray": "3 5" });
+}
 function renderBench(st) {
   const svg = document.getElementById(st.K + "_bench");
   while (svg.firstChild) svg.removeChild(svg.firstChild);
-  const cfg = st.cfg;
+  const cfg = st.cfg, ph = stageOf(st);
+  const spent = ph === "two" || ph === "done";
 
-  svg.appendChild(cellNode(PC.x, PC.y, PC.r, { fill: "#f7f5ee", stroke: "#cfccc0", sw: 2 }));
-  svg.appendChild(labelNode(PC.x, PC.y - PC.r - 8, "one cell"));
+  svg.appendChild(cellNode(PC.x, PC.y, PC.rx, { ry: PC.ry,
+    fill: spent ? "#faf9f5" : "#f7f5ee", stroke: spent ? "#ddd9cd" : "#cfccc0", sw: 2 }));
+  svg.appendChild(labelNode(PC.x, PC.y - PC.ry - 9, "one cell"));
+
+  for (let d = 0; d < 2; d++) {
+    const has = st.chrom && [LONG, SHORT].some(t => st.chrom[t].some(c => c.at && c.at.d === d));
+    svg.appendChild(cellNode(DC[d].x, DC[d].y, DR.rx, { ry: DR.ry,
+      fill: has ? "#f7f5ee" : "#fbfaf6", stroke: has ? "#cfccc0" : "#cfccc0",
+      sw: has ? 2 : 1.5, dash: has ? "none" : "6 5" }));
+    svg.appendChild(labelNode(DC[d].x, DC[d].y - DR.ry - 9, "cell " + (d + 1)));
+  }
 
   for (let i = 0; i < 4; i++) {
     const filled = st.cells[i][LONG] && st.cells[i][SHORT];
@@ -654,52 +802,66 @@ function renderBench(st) {
     svg.appendChild(labelNode(GX[i], GY + GR + 14, "gamete " + (i + 1)));
   }
 
-  if (st.phase === "intact") {
+  if (ph === "intact") {
     for (const t of [LONG, SHORT]) for (let c = 0; c < 2; c++) {
       const hap = c === 0 ? [1,1,1,1] : [0,0,0,0];
-      svg.appendChild(place(chromatidNode(t, hap, cfg), PC.x, MID_Y[t][c]));
+      const right = st.plan[t].side ? c === 0 : c === 1;   // the plan already picked its sides
+      svg.appendChild(place(chromatidNode(t, hap, cfg), PC.x + (right ? 30 : -30), PC.y + ROW1[t]));
     }
     return;
   }
 
-  // sister chromatids still together in the parent keep their centromere link
-  for (const t of [LONG, SHORT]) for (const pair of [[0,1],[2,3]]) {
-    const a = st.chrom[t][pair[0]], b = st.chrom[t][pair[1]];
-    if (a.cell === null && b.cell === null && !(st.drag && (st.drag.ch === a || st.drag.ch === b))) {
-      svg.appendChild(svgEl("line", { x1: PC.x, y1: SLOT_Y[t][pair[0]], x2: PC.x, y2: SLOT_Y[t][pair[1]],
-                                      stroke: "#a8a49a", "stroke-width": 2 }));
-      svg.appendChild(svgEl("circle", { cx: PC.x, cy: (SLOT_Y[t][pair[0]] + SLOT_Y[t][pair[1]]) / 2,
-                                        r: 3.5, fill: "#8d8a80" }));
-    }
+  if (ph === "one") svg.appendChild(plateLine(PC.x, PC.y, PC.ry));
+  if (ph === "two") for (let d = 0; d < 2; d++)
+    if (groupAt(st, d, 0).length) svg.appendChild(plateLine(DC[d].x, DC[d].y, DR.ry));
+
+  // Sisters are one chromosome until division II pulls them apart, so wherever
+  // two of them still sit in the same cell they keep a centromere between them.
+  const held = st.drag && st.drag.group ? st.drag.group : [];
+  for (const t of [LONG, SHORT]) for (const pr of [[0,1],[2,3]]) {
+    const a = st.chrom[t][pr[0]], b = st.chrom[t][pr[1]];
+    if (held.indexOf(a) >= 0 || held.indexOf(b) >= 0) continue;
+    const together = (a.at === null && b.at === null) ||
+                     (a.at && b.at && a.at.d !== undefined && a.at.d === b.at.d);
+    if (!together) continue;
+    const pa = chromatidPos(st, a), pb = chromatidPos(st, b), y = pa.y;
+    svg.appendChild(svgEl("line", { x1: pa.x, y1: y, x2: pb.x, y2: y,
+                                    stroke: "#a8a49a", "stroke-width": 2 }));
+    svg.appendChild(svgEl("circle", { cx: (pa.x + pb.x) / 2, cy: y, r: 3.5, fill: "#8d8a80" }));
   }
 
   // the rip mark: in its tray until dropped, then pinned in the gap it chose
-  if (cfg.recomb) {
+  if (cfg.recomb && ph === "one") {
     const left = marksLeft(st) - (st.drag && st.drag.mark ? 1 : 0);
     if (left > 0) {
       svg.appendChild(markNode(TRAY.x, TRAY.y));
       svg.appendChild(labelNode(TRAY.x, TRAY.y + 26, left === 1 ? "one to place" : left + " to place"));
     }
     if (st.hoverGap) {
-      const h = st.hoverGap;
-      svg.appendChild(svgEl("rect", { x: PC.x + gapX(h.t, h.k) - 5, y: SLOT_Y[h.t][1] - 12,
-        width: 10, height: SLOT_Y[h.t][2] - SLOT_Y[h.t][1] + 24, rx: 3,
+      const h = st.hoverGap, y = PC.y + ROW1[h.t] + gapY(h.t, h.k);
+      svg.appendChild(svgEl("rect", { x: PC.x + SLOT1[1] - 12, y: y - 5,
+        width: SLOT1[2] - SLOT1[1] + 24, height: 10, rx: 3,
         fill: "none", stroke: HOT, "stroke-width": 1.5, "stroke-dasharray": "4 3" }));
     }
   }
 
-  const dragged = st.drag && st.drag.ch;
+  const drag = st.drag && st.drag.group ? st.drag : null;
   for (const t of [LONG, SHORT]) for (const ch of st.chrom[t]) {
-    if (ch === dragged) continue;
+    if (drag && drag.group.indexOf(ch) >= 0) continue;
     const p = chromatidPos(st, ch);
-    svg.appendChild(place(chromatidNode(t, ch.hap, cfg, { grab: true, notches: ch.notches }), p.x, p.y));
+    svg.appendChild(place(chromatidNode(t, ch.hap, cfg,
+      { grab: !ch.at || ch.at.d !== undefined, notches: ch.notches }), p.x, p.y));
   }
-  if (dragged) {
-    const n = chromatidNode(dragged.t, dragged.hap, cfg, { grab: true, notches: dragged.notches });
-    n.setAttribute("opacity", "0.92");
-    svg.appendChild(place(n, st.drag.x, st.drag.y));
+  if (drag) {
+    const g = svgEl("g", { opacity: 0.92 });
+    for (const ch of drag.group) {
+      const home = chromatidPos(st, ch);
+      g.appendChild(place(chromatidNode(ch.t, ch.hap, cfg, { grab: true, notches: ch.notches }),
+        home.x + drag.x - drag.ox, home.y + drag.y - drag.oy));
+    }
+    svg.appendChild(g);
   }
-  for (const m of placedMarks(st)) svg.appendChild(markNode(m.x, m.y, 8));
+  if (ph === "one") for (const m of placedMarks(st)) svg.appendChild(markNode(m.x, m.y, 8));
   if (st.drag && st.drag.mark) svg.appendChild(markNode(st.drag.x, st.drag.y));
 }
 function markNode(x, y, r) {
@@ -711,18 +873,7 @@ function markNode(x, y, r) {
                                 stroke: HOT, "stroke-width": 2.2, "stroke-linecap": "round" }));
   return g;
 }
-function chromatidPos(st, ch) {
-  if (ch.cell === null) return { x: PC.x, y: SLOT_Y[ch.t][ch.k] };
-  return { x: GX[ch.cell], y: GY + (ch.t === LONG ? -15 : 16) };
-}
 
-function kindsInCells(st) {
-  const s = new Set();
-  for (const c of st.cells)
-    if (c[LONG] && c[SHORT])
-      s.add(shownText(st.cfg, LONG, c[LONG].hap) + "|" + shownText(st.cfg, SHORT, c[SHORT].hap));
-  return s;
-}
 function paintRipCode(st) {
   const K = st.K;
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
@@ -734,78 +885,76 @@ function paintRipCode(st) {
 }
 function benchStatus(st) {
   const el = document.getElementById(st.K + "_status");
-  const placed = st.chrom ? [LONG, SHORT].reduce((n, t) => n + st.chrom[t].filter(c => c.cell !== null).length, 0) : 0;
+  const ph = stageOf(st);
+  const filled = st.cells.filter(c => c[LONG] && c[SHORT]).length;
   let msg;
-  if (st.phase === "intact") msg = `<span class="muted">Two long chromosomes and two short ones. Replicate them to begin.</span>`;
+  if (ph === "intact")
+    msg = `<span class="muted">Two long chromosomes and two short ones. Replicate them to begin.</span>`;
   else if (st.cfg.recomb && marksLeft(st) > 0)
     msg = `<span class="muted">Every round cuts both chromosomes. Long ${st.xos[LONG].length} of ${st.nx}, short ${st.xos[SHORT].length} of ${st.nx}.</span>`;
-  else if (placed < 8) msg = `<span class="muted">${placed} of 8 chromatids moved. Every gamete takes one long chromosome and one short one.</span>`;
+  else if (ph === "one")
+    msg = `<span class="muted">Division one. Drag each side of the cell down to its own cell — a whole long chromosome and a whole short one go with it.</span>`;
+  else if (ph === "two")
+    msg = `<span class="muted">Division two. Now the sisters come apart: drag each side of each cell into its gamete. ${filled} of 4 filled.</span>`;
   else msg = `<span class="ok">All four gametes are filled.</span>`;
-  if (st.cfg.step1.mode === "kinds" && st.phase !== "intact" && placed > 0)
-    msg += ` <span class="muted">${kindsInCells(st).size} of 4 kinds so far.</span>`;
   if (st.warn) msg += `<br><span class="warn">${st.warn}</span>`;
   el.innerHTML = msg;
-  document.getElementById(st.K + "_collect").disabled = placed < 8;
-  document.getElementById(st.K + "_rep").disabled = st.phase !== "intact";
+  document.getElementById(st.K + "_collect").disabled = ph !== "done";
+  document.getElementById(st.K + "_rep").disabled = ph !== "intact";
   const nx = document.getElementById(st.K + "_nx");
-  if (nx) nx.disabled = placed > 0;
+  if (nx) nx.disabled = ph === "two" || ph === "done";
 }
-function cellUnder(p) {
-  for (let i = 0; i < 4; i++) if (Math.hypot(p.x - GX[i], p.y - GY) < GR) return i;
-  return null;
-}
-function nearestGap(p) {
+function nearestGap(st, p) {
+  if (Math.abs(p.x - PC.x) > 46) return null;       // the chiasma sits on the plate
   for (const t of [LONG, SHORT]) {
-    // +/-16, not more: at 22 the two chromosomes' catch bands overlap in the
-    // middle of the cell and every drop in that sliver resolves to the long one.
-    if (p.y < SLOT_Y[t][0] - 16 || p.y > SLOT_Y[t][3] + 16) continue;
-    let best = null, bd = 24;
-    for (let k = 1; k <= 3; k++) { const d = Math.abs(p.x - (PC.x + gapX(t, k))); if (d < bd) { bd = d; best = k; } }
+    const base = PC.y + ROW1[t];
+    if (p.y < base - ARM[t] / 2 - 12 || p.y > base + ARM[t] / 2 + 12) continue;
+    let best = null, bd = 26;
+    for (let k = 1; k <= 3; k++) { const d = Math.abs(p.y - (base + gapY(t, k))); if (d < bd) { bd = d; best = k; } }
     return best ? { t, k: best } : null;
   }
   return null;
-}
-function detach(st, ch) {
-  if (ch.cell !== null) { delete st.cells[ch.cell][ch.t]; ch.cell = null; }
 }
 function wireBench(st) {
   const K = st.K, svg = document.getElementById(K + "_bench");
 
   svg.addEventListener("pointerdown", (evt) => {
-    if (st.phase === "intact") return;
+    const ph = stageOf(st);
+    if (ph === "intact") return;
     const p = clientToSvg(svg, evt);
     st.warn = null;
-    const placedAny = [LONG, SHORT].some(t => st.chrom[t].some(c => c.cell !== null));
 
-    if (st.cfg.recomb && !placedAny) {                    // a rip mark
+    if (st.cfg.recomb && ph === "one") {                  // a rip mark
       for (const m of placedMarks(st)) if (Math.hypot(p.x - m.x, p.y - m.y) < 14) {
         st.xos[m.t] = st.xos[m.t].filter(k => k !== m.k);
         rebuildRips(st); paintRipCode(st);
         st.drag = { mark: true, x: p.x, y: p.y };
         svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st); return;
       }
-      if (marksLeft(st) > 0 && Math.hypot(p.x - TRAY.x, p.y - TRAY.y) < 15) {
+      if (marksLeft(st) > 0 && Math.hypot(p.x - TRAY.x, p.y - TRAY.y) < 16) {
         st.drag = { mark: true, x: p.x, y: p.y };
         svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st); return;
       }
     }
-    if (st.cfg.recomb && marksLeft(st) > 0) return;        // nothing moves until they are all placed
+    if (st.cfg.recomb && marksLeft(st) > 0) return;   // nothing divides until they are all placed
 
-    for (const t of [SHORT, LONG]) for (let i = 3; i >= 0; i--) {
-      const ch = st.chrom[t][i], q = chromatidPos(st, ch);
-      if (Math.abs(p.x - q.x) <= ARM[t] / 2 + 4 && Math.abs(p.y - q.y) <= 11) {
-        detach(st, ch);
-        st.drag = { ch, x: p.x, y: p.y };
-        svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st); return;
-      }
-    }
+    let from = null, side = 0;
+    if (ph === "one" && inCell(p, PC.x, PC.y, PC.rx + 18, PC.ry + 18)) {
+      from = -1; side = p.x < PC.x ? 0 : 1;
+    } else if (ph === "two") for (let d = 0; d < 2; d++)
+      if (inCell(p, DC[d].x, DC[d].y, DR.rx + 14, DR.ry + 14)) { from = d; side = p.x < DC[d].x ? 0 : 1; }
+    if (from === null) return;
+    const group = groupAt(st, from, side);
+    if (!group.length) return;
+    st.drag = { group, from, side, x: p.x, y: p.y, ox: p.x, oy: p.y };
+    svg.setPointerCapture(evt.pointerId); renderBench(st); benchStatus(st);
   });
 
   svg.addEventListener("pointermove", (evt) => {
     if (!st.drag) return;
     const p = clientToSvg(svg, evt);
     st.drag.x = p.x; st.drag.y = p.y;
-    st.hoverGap = st.drag.mark ? nearestGap(p) : null;
+    st.hoverGap = st.drag.mark ? nearestGap(st, p) : null;
     renderBench(st);
   });
 
@@ -814,18 +963,25 @@ function wireBench(st) {
     const p = clientToSvg(svg, evt), d = st.drag;
     st.drag = null; st.hoverGap = null;
     if (d.mark) {
-      const g = nearestGap(p);
+      const g = nearestGap(st, p);
       if (!g) st.warn = "That is not a gap — the mark went back to the tray.";
       else if (st.xos[g.t].indexOf(g.k) >= 0) st.warn = "There is already a mark in that gap.";
       else if (st.xos[g.t].length >= st.nx)
         st.warn = `That chromosome already has its ${st.nx === 1 ? "mark" : st.nx + " marks"}.`;
       else { st.xos[g.t].push(g.k); rebuildRips(st); bump(K); paintRipCode(st); }
+    } else if (d.from < 0) {
+      // division I -- the left side of the plate goes to cell 1, and it is not
+      // the student's to redirect. A spindle does not take requests.
+      if (inCell(p, DC[d.side].x, DC[d.side].y, DR.rx + 26, DR.ry + 26)) {
+        for (const ch of d.group) ch.at = { d: d.side };
+        bump(K); highlightByDataLine("code" + K, "assign");
+      } else st.warn = `That side of the cell goes to cell ${d.side + 1}.`;
     } else {
-      const i = cellUnder(p);
-      if (i !== null) {
-        if (st.cells[i][d.ch.t]) st.warn = `Gamete ${i + 1} already has a ${d.ch.t === LONG ? "long" : "short"} chromosome.`;
-        else { d.ch.cell = i; st.cells[i][d.ch.t] = d.ch; bump(K); highlightByDataLine("code" + K, "assign"); }
-      }
+      const g = 2 * d.from + d.side;
+      if (Math.hypot(p.x - GX[g], p.y - GY) < GR + 26) {
+        for (const ch of d.group) { ch.at = { g }; st.cells[g][ch.t] = ch; }
+        bump(K); highlightByDataLine("code" + K, "assign");
+      } else st.warn = `That side of cell ${d.from + 1} goes to gamete ${g + 1}.`;
     }
     renderBench(st); benchStatus(st);
   };
@@ -833,14 +989,13 @@ function wireBench(st) {
   svg.addEventListener("pointercancel", finish);
 
   document.getElementById(K + "_rep").addEventListener("click", () => {
-    st.xos = [[], []]; st.phase = "replicated"; st.warn = null; rebuildRips(st);
+    st.xos = [[], []]; st.phase = "plate"; st.warn = null; rebuildRips(st);
     st.cells = [{}, {}, {}, {}];
     bump(K); highlightByDataLine("code" + K, "replicate");
     renderBench(st); benchStatus(st);
   });
   document.getElementById(K + "_reset").addEventListener("click", () => {
-    st.phase = "intact"; st.chrom = null; st.xos = [[], []]; st.warn = null; st.cells = [{}, {}, {}, {}];
-    renderBench(st); benchStatus(st);
+    resetBench(st); renderBench(st); benchStatus(st);
   });
   document.getElementById(K + "_collect").addEventListener("click", () => collectRound(st));
 
@@ -864,7 +1019,7 @@ function collectRound(st) {
   if (xoNow) for (const t of [LONG, SHORT]) for (const k of xoNow[t]) st.spots[t + ":" + k] = true;
   if (prevKey !== xoKey(xoNow) && !Gates[K].done) {
     st.gam = []; st.last = null; st.tallyGap = xoKey(xoNow);
-    st.emb = 0; st.counts = [0, 0, 0]; st.carry = {}; st.byHand = 0;
+    st.emb = 0; st.counts = [0, 0, 0]; st.carry = {}; st.sq = {}; st.byHand = 0;
     document.getElementById(K + "_draw1e").disabled = true;
     document.getElementById(K + "_draw100").disabled = true;
     newPair(st); renderStep2(st); refresh3(st);
@@ -887,13 +1042,20 @@ function collectRound(st) {
     if (st.best < s1.need)
       st.warn = `${st.best} of the six spots used so far.`;
   } else if (s1.mode === "kinds") {
-    const kinds = new Set(gams.map(g => shownText(cfg, LONG, g.long) + "|" + shownText(cfg, SHORT, g.short)));
-    st.best = Math.max(st.best || 0, kinds.size);
-    if (kinds.size < s1.need && st.best < s1.need)
-      st.warn = `Only ${kinds.size} of the four kinds that round.`;
+    // Across rounds, not within one. One meiosis gives two kinds and they are
+    // complementary; the other two need the chromosomes to line up the other
+    // way round, which is a thing to wait for rather than a thing to arrange.
+    for (const g of gams) st.kinds.add(shownText(cfg, LONG, g.long) + "|" + shownText(cfg, SHORT, g.short));
+    st.best = st.kinds.size;
+    if (st.best < s1.need)
+      st.warn = `${st.best} of the four kinds so far. One meiosis only ever gives two — run it again.`;
   } else {
     st.best = st.rounds.length;
   }
+  // The square's rows come off the round that was just collected, so they have
+  // to be redrawn here. Refreshing only when the tallies reset left Stage C
+  // showing the uncut two-by-two until the student happened to draw an embryo.
+  drawSquare(st); squareStatus(st);
   document.getElementById(K + "1_now").textContent = String(Math.min(st.best, s1.need));
   if (st.q1 && st.rounds.length >= 1) st.q1.show();
   if (st.best >= s1.need) {
@@ -901,7 +1063,7 @@ function collectRound(st) {
     record(BIT[K][0], true);
     openStep(K, 2);
   }
-  st.phase = "intact"; st.chrom = null; st.xos = [[], []]; st.cells = [{}, {}, {}, {}];
+  resetBench(st);
   renderBench(st); benchStatus(st);
 }
 
@@ -993,38 +1155,76 @@ function drawRun(st) {
   ctx.fillText(share.toFixed(2), Math.min(ex + 8, W - 40), ey);
 }
 
-/* ====== Step 3 — two gametes fuse ==================================== */
-const FG = [{ x: 150, y: 76 }, { x: 410, y: 76 }], EMB = { x: 280, y: 240, r: 90 };
+/* ====== Step 3 — two gametes fuse ====================================
+   Two layouts for the same fusion. "into" is a dish already on the bench:
+   both gametes get carried into it, and the embryo's circle was drawn
+   before either arrived. "onto" has no dish. The student drags one gamete
+   onto the other, and the circle is made by the collision -- it appears
+   where the two met, which is the honest order of events. `emb` is what
+   tells them apart: the dish's fixed centre, or nothing.
+   ================================================================== */
+const FUSE = {
+  into: { fg: [{ x: 150, y:  76 }, { x: 410, y:  76 }], emb: { x: 280, y: 240 }, r: 90, box: "0 0 560 360" },
+  onto: { fg: [{ x: 186, y: 128 }, { x: 374, y: 128 }],                          r: 90, box: "0 0 560 264" }
+};
+const FUSE_SNAP = 22;                 // how far past the rim a drop still counts
+function fuseMode(cfg) { return cfg.fuse === "onto" ? FUSE.onto : FUSE.into; }
 
 function newPair(st) {
   const g = gapNow(st);
   st.pair = [oneGamete(st.rng, g), oneGamete(st.rng, g)];
-  st.placed = [false, false]; st.embryo = null; st.warn3 = null;
-  renderFuse(st);
+  st.placed = [false, false]; st.embryo = null; st.fuseAt = null; st.warn3 = null;
+  renderFuse(st); drawSquare(st);          // the old cell is no longer the one in hand
+}
+/* The left gamete is parent 1 whichever one the student picked up, so the
+   square's rows keep meaning the same thing however the drag went. */
+function fuseNow(st) {
+  const K = st.K;
+  st.embryo = { a: st.pair[0], b: st.pair[1] };
+  st.byHand++; recordEmbryo(st, st.pair[0], st.pair[1]);
+  highlightByDataLine("code" + K, "embryo");
+  if (st.byHand >= 2) {
+    document.getElementById(K + "_draw1e").disabled = false;
+    document.getElementById(K + "_draw100").disabled = false;
+  }
+  refresh3(st);
 }
 function renderFuse(st) {
   const K = st.K, cfg = st.cfg, svg = document.getElementById(K + "_fuse");
   while (svg.firstChild) svg.removeChild(svg.firstChild);
+  const M = fuseMode(cfg), onto = !M.emb;
+  // Where the embryo's circle goes, and whether there is one to draw yet.
+  const at = st.embryo ? (onto ? st.fuseAt : M.emb) : (onto ? null : M.emb);
 
-  svg.appendChild(cellNode(EMB.x, EMB.y, EMB.r, {
-    fill: st.embryo ? "#f2f7f1" : "#fbfaf6",
-    stroke: st.embryo ? "#6f8a4a" : "#cfccc0", sw: 2, dash: st.embryo ? "none" : "6 5" }));
-  svg.appendChild(labelNode(EMB.x, EMB.y - EMB.r - 8, "embryo"));
-
+  if (at) {
+    svg.appendChild(cellNode(at.x, at.y, M.r, {
+      fill: st.embryo ? "#f2f7f1" : "#fbfaf6",
+      stroke: st.embryo ? "#6f8a4a" : "#cfccc0", sw: 2, dash: st.embryo ? "none" : "6 5" }));
+    svg.appendChild(labelNode(at.x, at.y - M.r - 8, "embryo"));
+  }
   if (st.embryo) {
     const a = st.embryo.a, b = st.embryo.b;
-    svg.appendChild(place(chromatidNode(LONG,  a.long,  cfg), EMB.x, EMB.y - 45));
-    svg.appendChild(place(chromatidNode(LONG,  b.long,  cfg), EMB.x, EMB.y - 15));
-    svg.appendChild(place(chromatidNode(SHORT, a.short, cfg), EMB.x, EMB.y + 18));
-    svg.appendChild(place(chromatidNode(SHORT, b.short, cfg), EMB.x, EMB.y + 48));
+    // parent 1's chromosome to the left of parent 2's within each pair, the
+    // same order the square prints them in
+    svg.appendChild(place(chromatidNode(LONG,  a.long,  cfg), at.x - 44, at.y));
+    svg.appendChild(place(chromatidNode(LONG,  b.long,  cfg), at.x - 16, at.y));
+    svg.appendChild(place(chromatidNode(SHORT, a.short, cfg), at.x + 16, at.y));
+    svg.appendChild(place(chromatidNode(SHORT, b.short, cfg), at.x + 44, at.y));
     const dose = (a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0);
-    svg.appendChild(labelNode(EMB.x, EMB.y + EMB.r + 18, ["aa", "Aa", "AA"][dose],
+    svg.appendChild(labelNode(at.x, at.y + M.r + 18, ["aa", "Aa", "AA"][dose],
       { size: 15, fill: INK }));
   }
   for (let i = 0; i < 2; i++) {
-    if (st.placed[i] || (st.drag3 && st.drag3.i === i)) continue;
-    svg.appendChild(cellNode(FG[i].x, FG[i].y, GR, { fill: "#fbfaf6", stroke: "#cfccc0" }));
-    gameteInto(svg, FG[i].x, FG[i].y, st.pair[i], cfg);
+    if ((onto ? st.embryo : st.placed[i]) || (st.drag3 && st.drag3.i === i)) continue;
+    // In "onto" mode the stationary gamete is the target, so it lights up
+    // while the other one is close enough to fuse. Nothing else on the bench
+    // says where to let go.
+    const live = onto && st.drag3 && st.drag3.i !== i &&
+      Math.hypot(st.drag3.x - M.fg[i].x, st.drag3.y - M.fg[i].y) < GR + FUSE_SNAP;
+    svg.appendChild(cellNode(M.fg[i].x, M.fg[i].y, GR, {
+      fill: live ? "#f2f7f1" : "#fbfaf6",
+      stroke: live ? "#6f8a4a" : "#cfccc0", sw: live ? 2.5 : 1.5 }));
+    gameteInto(svg, M.fg[i].x, M.fg[i].y, st.pair[i], cfg);
   }
   if (st.drag3) {
     const g = svgEl("g", { opacity: 0.92 });
@@ -1035,7 +1235,8 @@ function renderFuse(st) {
   const el = document.getElementById(K + "_status3");
   el.innerHTML = st.embryo
     ? `<span class="ok">Fused. ${st.byHand} built by hand.</span>`
-    : `<span class="muted">Drag both gametes into the middle.</span>` + (st.warn3 ? `<br><span class="warn">${st.warn3}</span>` : "");
+    : `<span class="muted">${onto ? "Drag one gamete onto the other." : "Drag both gametes into the middle."}</span>`
+      + (st.warn3 ? `<br><span class="warn">${st.warn3}</span>` : "");
 }
 function wireFuse(st) {
   const K = st.K, svg = document.getElementById(K + "_fuse");
@@ -1043,9 +1244,10 @@ function wireFuse(st) {
     if (st.embryo) return;
     const p = clientToSvg(svg, evt);
     st.warn3 = null;
+    const F = fuseMode(st.cfg).fg;
     for (let i = 0; i < 2; i++) {
       if (st.placed[i]) continue;
-      if (Math.hypot(p.x - FG[i].x, p.y - FG[i].y) < GR) {
+      if (Math.hypot(p.x - F[i].x, p.y - F[i].y) < GR) {
         st.drag3 = { i, x: p.x, y: p.y }; svg.setPointerCapture(evt.pointerId); renderFuse(st); return;
       }
     }
@@ -1057,18 +1259,14 @@ function wireFuse(st) {
   const done = (evt) => {
     if (!st.drag3) return;
     const p = clientToSvg(svg, evt), d = st.drag3; st.drag3 = null;
-    if (Math.hypot(p.x - EMB.x, p.y - EMB.y) < EMB.r + 24) {
+    const M = fuseMode(st.cfg), onto = !M.emb;
+    if (onto) {
+      const t = M.fg[1 - d.i];                       // the one that stayed put
+      if (Math.hypot(p.x - t.x, p.y - t.y) < GR + FUSE_SNAP) { st.fuseAt = t; bump(K); fuseNow(st); }
+      else st.warn3 = "Drop it onto the other gamete.";
+    } else if (Math.hypot(p.x - M.emb.x, p.y - M.emb.y) < M.r + 24) {
       st.placed[d.i] = true; bump(K);
-      if (st.placed[0] && st.placed[1]) {
-        st.embryo = { a: st.pair[0], b: st.pair[1] };
-        st.byHand++; recordEmbryo(st, st.pair[0], st.pair[1]);
-        highlightByDataLine("code" + K, "embryo");
-        if (st.byHand >= 2) {
-          document.getElementById(K + "_draw1e").disabled = false;
-          document.getElementById(K + "_draw100").disabled = false;
-        }
-        refresh3(st);
-      }
+      if (st.placed[0] && st.placed[1]) fuseNow(st);
     } else st.warn3 = "Drop it in the middle circle.";
     renderFuse(st);
   };
@@ -1081,6 +1279,9 @@ function recordEmbryo(st, a, b) {
   st.counts[dose]++; st.emb++;
   const va = shownText(st.cfg, LONG, a.long), vb = shownText(st.cfg, LONG, b.long);
   for (const v of new Set([va, vb])) st.carry[v] = (st.carry[v] || 0) + 1;
+  // a is the left-hand gamete, which is the square's row. Rows are parent 1.
+  const cell = kindKey(st.cfg, a) + "×" + kindKey(st.cfg, b);
+  st.sq[cell] = (st.sq[cell] || 0) + 1;
 }
 function drawEmbryos(st, n) {
   const K = st.K, g = gapNow(st);
@@ -1115,8 +1316,114 @@ function refresh3(st) {
       return `<tr class="${novel ? "novel" : ""}"><td class="hap hapcode">${v}</td><td class="n">${st.carry[v]}</td>` +
              `<td class="n">${(100 * st.carry[v] / n).toFixed(0)}%</td></tr>`;
     }).join("");
-  drawBars(st);
+  drawSquare(st); squareStatus(st); drawBars(st);
 }
+/* ====== The square ==================================================
+   Rows are every gamete parent 1 can make, columns the same set again from
+   parent 2, and a cell is the embryo that pairing produces. The headers are
+   the same chromosome picture the bench draws, so "a row is a gamete" is
+   something the student sees rather than something the page claims.
+
+   Cells are tinted by copies of the big letter at the first spot, in the
+   same three steps as the bars underneath: the square and the chart are one
+   object read two ways, and the bars are the square's cells stacked by tint.
+   The number in a cell is the student's own embryos that landed there, and
+   the green outline is the one they just fused by hand.
+   ================================================================== */
+const TINT = ["#eff4f8", "#dbe9f2", "#bcd7e7"];   // 0, 1, 2 copies -- ink-safe fills
+
+function hapNode(x, y, s) {
+  const t = svgEl("text", { x, y, "text-anchor": "middle",
+    "font-family": "ui-monospace, Menlo, monospace", "font-size": 12.5,
+    "letter-spacing": "1.2", fill: INK });
+  t.textContent = s;
+  return t;
+}
+function drawSquare(st) {
+  const K = st.K, cfg = st.cfg, svg = document.getElementById(K + "_sq");
+  if (!svg) return;
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+  const kinds = gameteKinds(cfg, gapNow(st)), n = kinds.length;
+  const longOnly = cfg.squareBasis === "long";
+  const drawT = longOnly ? [LONG] : [LONG, SHORT];            // chromosomes a header draws
+  const textT = drawT.filter(t => cfg.labelled[t].length);    // chromosomes a cell spells out
+  const SC = 0.78, HSP = 24, BLOCK = 32, PL = 32, PT = 24, HW = 106, CW = 106;
+  // A header holds a standing chromosome, so a row can no longer be as short
+  // as its text. Both rows and the header band take the chromosome's height.
+  const HR = ARM[LONG] * SC + 14;
+  const TXT = (textT.length - 1) * BLOCK + 26;
+  const CH = Math.max(TXT + 28, HR);
+  const W = PL + HW + n * CW + 8, H = PT + HR + n * CH + 6;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.style.maxWidth = W + "px";
+
+  const colX = j => PL + HW + CW * (j + 0.5);
+  const rowY = i => PT + HR + CH * (i + 0.5);
+  const chromOf = (kind, t) => t === LONG ? kind.long : kind.short;
+
+  svg.appendChild(labelNode(PL + HW + n * CW / 2, PT - 9, "parent 2"));
+  const side = labelNode(0, 0, "parent 1");
+  side.setAttribute("transform", `translate(${PL - 10},${PT + HR + n * CH / 2}) rotate(-90)`);
+  svg.appendChild(side);
+
+  for (let j = 0; j < n; j++) {
+    svg.appendChild(svgEl("rect", { x: colX(j) - CW / 2, y: PT, width: CW, height: HR,
+      fill: "#f7f6f1", stroke: RULE, "stroke-width": 1 }));
+    svg.appendChild(svgEl("rect", { x: PL, y: rowY(j) - CH / 2, width: HW, height: CH,
+      fill: "#f7f6f1", stroke: RULE, "stroke-width": 1 }));
+    drawT.forEach((r0, r) => {
+      const t = r0, dx = (r - (drawT.length - 1) / 2) * HSP, hap = chromOf(kinds[j], t);
+      svg.appendChild(place(chromatidNode(t, hap, cfg), colX(j) + dx, PT + HR / 2, SC));
+      svg.appendChild(place(chromatidNode(t, hap, cfg), PL + HW / 2 + dx, rowY(j), SC));
+    });
+  }
+
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    const a = kinds[i], b = kinds[j];
+    const dose = (a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0);
+    const x = colX(j) - CW / 2, y = rowY(i) - CH / 2;
+    svg.appendChild(svgEl("rect", { x, y, width: CW, height: CH,
+      fill: TINT[dose], stroke: RULE, "stroke-width": 1 }));
+    svg.appendChild(svgEl("rect", { x, y, width: CW, height: 4, fill: DOSE[dose] }));
+    const top0 = y + Math.max(10, (CH - 16 - TXT) / 2);
+    textT.forEach((t, r) => {
+      const top = top0 + r * BLOCK;
+      if (r) svg.appendChild(svgEl("line", { x1: x + 16, y1: top - 5, x2: x + CW - 16, y2: top - 5,
+        stroke: "rgba(0,0,0,0.12)", "stroke-width": 1 }));
+      svg.appendChild(hapNode(colX(j), top + 9,  shownText(cfg, t, chromOf(a, t))));
+      svg.appendChild(hapNode(colX(j), top + 22, shownText(cfg, t, chromOf(b, t))));
+    });
+    // With four letters on the chromosome the dose at the first spot stops
+    // reading itself off the picture, so it gets named in the corner.
+    if (cfg.labelled[LONG].length > 1)
+      svg.appendChild(labelNode(x + CW - 5, y + 16, ["aa", "Aa", "AA"][dose], { size: 10, anchor: "end" }));
+    if (st.emb) svg.appendChild(labelNode(colX(j), y + CH - 5,
+      String(st.sq[a.key + "×" + b.key] || 0), { size: 10.5 }));
+  }
+
+  if (st.embryo) {
+    const i = kinds.findIndex(k => k.key === kindKey(cfg, st.embryo.a));
+    const j = kinds.findIndex(k => k.key === kindKey(cfg, st.embryo.b));
+    if (i >= 0 && j >= 0) svg.appendChild(svgEl("rect", {
+      x: colX(j) - CW / 2 + 1.5, y: rowY(i) - CH / 2 + 1.5, width: CW - 3, height: CH - 3,
+      fill: "none", stroke: "#6f8a4a", "stroke-width": 3 }));
+  }
+}
+function squareStatus(st) {
+  const el = document.getElementById(st.K + "_status4");
+  if (!el) return;
+  const n = gameteKinds(st.cfg, gapNow(st)).length, c = n * n;
+  el.innerHTML =
+    `<span class="muted">Rows — every gamete parent 1 can make. Columns — the same set from ` +
+    `parent 2. A cell is the embryo, parent 1's chromosome on top of each pair.</span><br>` +
+    `<span class="muted">${n} kinds of gamete, ${c} cells, each one 1 in ${c}.` +
+    (st.cfg.squareBasis === "long"
+      ? " Long chromosome only — the short one is cut and dealt the same way, on its own." : "") +
+    (st.emb ? ` The numbers in the cells are your ${st.emb} embryo${st.emb === 1 ? "" : "s"}.` : "") +
+    `</span>`;
+}
+
 /* AA / Aa / aa is a dosage ramp: one hue, light to dark, ordered by copies
    of the big letter. Every bar carries its own count and its letters, and
    the same three numbers sit in the table beside it. */
@@ -1178,10 +1485,10 @@ function numqMarkup(K, i, q) {
 function buildLab(K, cfg) {
   document.getElementById("lab" + K).innerHTML = `
   <div class="step" id="${K}1">
-    <h3><span class="stepnum">1</span>Make four gametes by hand</h3>
+    <h3><span class="stepnum">1</span>Run one meiosis by hand</h3>
     <div class="step-body">
       <div>
-        <svg class="bench" id="${K}_bench" viewBox="0 0 680 500"></svg>
+        <svg class="bench" id="${K}_bench" viewBox="0 0 680 650"></svg>
         <div class="status-line" id="${K}_status"></div>
       </div>
       <div>
@@ -1233,8 +1540,13 @@ function buildLab(K, cfg) {
     <p class="step-note">Finish step 2 to open this.</p>
     <div class="step-body">
       <div>
-        <svg class="bench" id="${K}_fuse" viewBox="0 0 560 360"></svg>
+        <svg class="bench" id="${K}_fuse" viewBox="${fuseMode(cfg).box}"></svg>
         <div class="status-line" id="${K}_status3"></div>
+        <div class="panel" style="margin-top:12px">
+          <h3>Every gamete against every gamete</h3>
+          <svg class="sqbox" id="${K}_sq" viewBox="0 0 560 400"></svg>
+          <div class="status-line" id="${K}_status4"></div>
+        </div>
         <div class="panel graph-wrap" style="margin-top:12px"><canvas id="${K}_bars" width="560" height="300"></canvas></div>
       </div>
       <div>
@@ -1265,6 +1577,7 @@ function buildLab(K, cfg) {
   document.getElementById(K + "_draw1e").addEventListener("click", () => drawEmbryos(st, 1));
   document.getElementById(K + "_draw100").addEventListener("click", () => drawEmbryos(st, 100));
 
+  resetBench(st);
   renderBench(st); benchStatus(st); renderStep2(st);
   newPair(st); refresh3(st);
   return st;
@@ -1279,7 +1592,7 @@ function buildLab(K, cfg) {
       3  A  big A per hundred gametes
       4  A  fused by hand and then built two hundred embryos
       5  A  Aa per hundred embryos
-      6  B  dealt one round in which all four kinds came out at once
+      6  B  ran meiosis until all four kinds of gamete had turned up
    (no B first question -- the gate above replaced it)
       7  B  drew five hundred gametes
       8  B  kinds of gamete possible
