@@ -1175,107 +1175,122 @@ window, Stage C keeps the best setting rather than the first passing one, and a 
 decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
-### Lesson 8 — A resemblance is a number, whatever is causing it
-`lesson8.html` · v4 · 12 checkpoints · **Skeleton built, text still owed**
+### Lesson 8 — Finding out what knowing the parents is actually worth
+`lesson8.html` · v8 · 20 checkpoints · **Built**
 
-*Rebuilt 2026-09-03 to JM's spec: heritability defined here off the parent–offspring
-correlation, and drilled until the student stops expecting it to mean "genetic".*
+*Rebuilt 2026-09-13 from JM's voice notes.* The lesson's goal is correlation and linear
+regression — the deterministic part and the stochastic part — couched in heritability,
+defined as: **to what extent can you predict a trait in an individual if you know the
+trait state of their parents?** Nothing more than that.
 
-**Corrected the same day: heritability is TWICE the single-parent correlation, not the
-correlation itself.** A child gets half its inheritance from the parent on the axis. Two
-routes on Galton's own families agree — 2 × 0.362 = 0.724, and the midparent–offspring
-regression slope is 0.713 (his famous ~0.65 number). The lesson had both halves and named
-neither: stage A landed 0.36 and stage D's knob landed 0.72. Stage A now prints both, and
-stage D's knob is labelled *heritability* and shows what half of it predicts for the first
-rung.
-**Interactives, gates and answer keys are finished and measured off the shipped code;
-five `.voice` blocks and five solved-banners are placeholders marked `TEXT FOR JM`.**
+**Six stages, A–F, reordered on JM's call.** The squares first, then the direction of
+causation, then cross-fostering, then Galton, then the decomposition, then selection.
+Galton moved from second to fourth because it now leads into the sliders below it. The
+Sep 10 five-stage version's Stage A (dragging a rule through three families) is gone; its
+band means survive as the grey marks in Stage D. Its Stage C and Stage D ran the same
+population off the same two sliders and differed only in the across axis, so they are
+welded into one Stage E. `version` 7 → 8, `scaffold` 16 → 20.
 
-*The one measurement, in every stage:* put both sides in spreads and read the tilt. On
-standardised axes that tilt **is** the correlation, which is why one number can be
-reported for a parent and a child, for two nestmates, for two cousins, and for three
-populations built by different means. `tiltOf()` in the source; nothing else is measured
-anywhere in the lesson.
+**Two rules from the notes, applied throughout.** The word *knob* does not appear — every
+control is a *slider*. No question says *recorded*; a verdict is **correct** or
+**incorrect** and nothing else.
 
-**Six stages, A–F.** The opener was added 2026-09-03 and the original five shifted to
-B–F, identifiers and all. The lesson was still locked, so no submission codes existed to
-protect: `version` went 2 → 3 and `scaffold` 10 → 12.
+**Four of the six stages gate on a lock-in, and count the tries.** Sliding past an answer
+is not choosing it, and the page says which try you landed on.
 
-**Terminology.** The vocabulary ratchet was retired on 2026-09-03, and lessons 5–8 were
-swept the same day to use the real words: this lesson names *heritability* and
-*parent–offspring correlation* throughout, where it previously said only "the tilt". "Tilt"
-survives in Stage A for the line being fitted, which is what it is.
+**The through-line.** Stage A ends on *correlation expresses how much less wrong your
+estimate will be than guessing blind*, in percent. Stage D asks for that same number on
+Galton's children in inches: 2.58 blind, 2.24 with the line, **13% less wrong** off a
+correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²).
 
-- **A — what knowing the parents buys you** *(JM's two questions, 2026-09-03)*
-  - *Interactive* — A binary trait as two columns of a hundred people: on the left,
-    everyone whose parents have it; on the right, everyone whose parents do not. Two
-    knobs set each column's share, and a switch relabels the trait from a disease to a
-    song **without changing a single number**. Gate: hold the top knob at 72% and make
-    knowing the parents worth nothing, then hold it at 72% and make it worth as much as
-    it can be. Then a numeric question: what the other rate would have to be for that
-    72% to tell you nothing — **72**, which is the point.
-  - *Goal* — JM's framing, verbatim in the voice block: *72% of people whose parents have
-    a particular genetic disease also have that disease — do you predict that they do
-    too?* and the same sentence about a song. Neither is answerable, and not because one
-    is genes and the other is culture: **72% on its own is not information about
-    anybody.** Measured on the page: at 72% against 72% the two columns are
-    indistinguishable, knowing the parents moves your answer by 0 points and the
-    correlation is 0.00; at 72% against 12% it moves it 60 points and the correlation is
-    0.61. The lesson's whole measure, in its plainest form — a correlation is how much
-    your best guess about somebody moves when you are told something else about them,
-    which on two 0/1 variables is exactly that gap rescaled.
-  - *Hands to* — B, which measures the same thing on a scatter.
+- **A — 72% of what?**
+  - *Interactive* — 200 people as two blocks of a hundred squares, parents-have-it on the
+    left and parents-do-not on the right, a slider for each rate, and a switch that
+    relabels the trait from a disease to a song **without changing a single number**.
+    Phase 1: lock in three pairs worth genuinely different amounts, each with a yes/no
+    call on a person pulled at random out of the left column — the call is there so the
+    student has committed before the page prices the commitment. Phase 2: ten questions
+    run backwards, *here is what it should be worth, find the rate that makes it so*,
+    locked in on the slider rather than typed. Ten correct opens Stage B; tolerance 5
+    points; a wrong lock costs nothing but a question.
+  - *The two question types* — arithmetic ones name a gap in points and take the gap, the
+    correlation and the shrink readouts dark, so the rate has to be worked out;
+    correlation ones name an r and leave the readout live, so the shape of r(p₁,p₂) has
+    to be explored. Generator verified: 100/100 solvable on four seeds, no fallbacks.
+  - *Goal* — 72% on its own is not information about anybody. At 72% against 72% the
+    columns are indistinguishable, the move is 0 points and r = 0.00; at 72% against 12%
+    the move is 60 points and r = 0.61, which buys a guess 21% less wrong than blind.
+    Closing question: what the other rate must be for the 72% to tell you nothing — **72**.
 
-- **B — the line from parent to child** *(Galton, real)*
-  - *Interactive* — 934 grown children from 205 families, each paired with both parents
-    in turn for 1,868 points, women's heights ×1.08 exactly as Galton did. Both axes in
-    spreads, so the line has only a tilt. Gate: drive the **tilt left over in what the
-    line misses** to nothing — a signed target with a true zero, because an average miss
-    is flat for a long way around its floor and would accept anything from 0.30 to 0.51.
-    Lands at **0.362**. Then a numeric question: where the line puts the child of a parent
-    two spreads up.
-  - *Hands to* — B, which produces the same number with no genes in it at all.
+- **B — heritability is not genetics** *(the direction of causation, flipped back)*
+  - *Interactive* — 1,200 parent-and-child pairs, everybody born with four limbs, the
+    genetic variation flatly **zero** at every setting and said so on the page. Slider one:
+    how often an accident takes a limb. Slider two: whether accidents land at random or
+    land in families. Gate: danger spread evenly, a quarter of everybody missing a limb,
+    correlation under 0.10 — lock it in; then hold that accident rate and move danger into
+    families until the correlation clears 0.25 — lock it in.
+  - *Calibration* — n and the family loading were both raised (400 → 1,200, k 2.2 → 4.2)
+    because at the original settings the reachable ceiling fell below the gate on some
+    seeds. Measured across ten seeds: at 16% accidents the ceiling is 0.33–0.39; at 40% it
+    is 0.62–0.70; at fam = 0 the correlation sits inside ±0.06 everywhere. The closing
+    question pins the accident rate at 40%, because the ceiling depends on it.
+  - *Goal* — JM's coal miner, in the voice block: the child gets black lung not from an
+    inherited susceptibility but because the probability of becoming a miner is higher if
+    your parent was one. A correlation between a parent and a child is not a statement
+    about genes.
 
-- **C — a song nobody is born with** *(learned, and still inherited)*
-  - *Interactive* — 60 broods, four nestlings each. Each father sings; each nestling
-    learns from whoever's nest it wakes up in. One knob (how carefully they copy) and one
-    switch (swap the eggs before they hatch). Gate: get nestmates sounding less than half
-    as different as strangers, then swap the eggs and accumulate **eight** swapped sets.
-  - *Goal* — Copying at 0.95 gives a tilt of 0.95 to the bird that raised it and, once the
-    eggs are swapped, **nothing** to the father it came from. Measured: single swapped
-    sets scatter with an SD of 0.12 — sixty fathers is not many — so the page averages
-    them, and eight sets land on −0.02 against a theory of −0.017. 58 of 60 simulated
-    students clear it on the eighth set, and the rest converge by pressing again.
+- **C — move the eggs** *(cross-fostering as the experiment that separates them)*
+  - *Interactive* — 600 chicks, one father each, two panels side by side: the chick
+    against the bird that raised it, and the chick against the father it came from.
+    Slider one, how carefully a chick copies its tutor; slider two, how much of the song
+    is already in the egg; a switch that swaps the eggs at laying. Three locks: build a
+    population resembling at 0.60 with nothing in the egg; **predict**, before touching
+    the swap, what the move does to that number; then the inverse problem — find the
+    population where the swap drops 0.60 to **0.25**.
+  - *Goal* — With the eggs left alone the tutor and the father are the same bird and the
+    two numbers are one number, which is the situation every field measurement is in. The
+    resemblance is real both times. Moving the eggs is what says where it came from.
+    Verified solvable on five seeds: step 1 has 6–7 slider settings, step 3 has 56–110.
 
-- **D — four limbs, and no resemblance** *(genetic, and not inherited)*
-  - *Interactive* — 400 parent-and-child pairs. Every gene says four; the variation is
-    accidents. Two knobs: how often an accident happens, and how much danger runs in
-    families. Gate: with danger spread evenly get a quarter of them missing a limb and the
-    tilt still under 0.10, then make danger familial and push the tilt past 0.30.
-  - *Goal* — The mirror of B. A trait every gene agrees about has a heritability of
-    **zero**; and putting the *environment* into families conjures one out of nothing.
-    Measured: clustering 0 → 0.01; 1.0 → 0.37; 1.6 → 0.53; reliably over 0.30 from 1.4 up.
+- **D — Galton's 934 children** *(mid-parent, in inches)*
+  - *Interactive* — 934 grown children from 205 families, women ×1.08, the two parents
+    averaged on the across axis. Two sliders and one commitment: the first tilts the line
+    (**the deterministic part**), the second widens a shaded band around it (**the
+    stochastic part**). The correlation and the heritability stay **dark until the line is
+    locked in**, so the stage cannot be solved by watching a number go green. Grey marks
+    show the children's average in each strip of parents, and they are what guides the
+    tilt — the miss readout is flat from 0.66 to 0.76 and is no guide at all.
+  - *Measured* — tilt **0.713**, band **±2.24 in** holding 69% of the children, r =
+    **0.497**. On this axis the heritability *is* the tilt, with no factor of two: JM's
+    call, 2026-09-13, taking the mid-parent regression rather than the single-parent one.
+    Second lock: tilt to zero, band ±2.58, which holds 68% and is the whole spread.
+  - *Goal* — Two numbers describe the whole thing. Where the line points, and how far off
+    it everybody is.
 
-- **E — down the ladder of relatives** *(where the number comes from)*
-  - *Interactive* — One knob, 3,000 families of each kind, four rungs: one parent and a
-    child, two full siblings, two half siblings, two first cousins. Galton's two **real**
-    numbers are drawn on the same axis as dashed marks — one parent 0.36, full siblings
-    0.40, which theory says should match and do. Gate: put the first rung on 0.36 (lands
-    at h ≈ 0.72). Then a numeric question: the cousins rung.
-  - *Goal* — Measured at the solved setting: **0.38, 0.36, 0.20, 0.12**. It halves down
-    the ladder, which is what makes the tilt a measurement of something rather than a
-    description of one pairing.
+- **E — what is in the part the line misses** *(old C and old D, welded)*
+  - *Interactive* — 3,000 families off a stationary additive model, standard normals drawn
+    once per seed so a slider morphs the cloud instead of reshuffling it. Two sliders, the
+    pile a child is handed and what a life adds; three across axes, two of which you could
+    never measure on a real family. Stalks in two colors and a three-way bar.
+  - *Goal* — Turning the life to nothing does not empty the leftover: half of what a
+    parent carries is re-dealt at conception and no measurement of the parents can see
+    which half, so the line still fails to reach **0.50**. Stripping the parents' lives off
+    the axis recovers 1, not a bigger heritability.
+  - *Note* — the realised tilt is offset from theory by up to ~7% on a given seed, so the
+    gate reads the realised value the student is looking at. Verified: 122–136 of 2,756
+    slider combinations hit the target on each of eight seeds.
 
-- **F — three roads to the same number** *(the drill)*
-  - *Interactive* — Three populations side by side, 2,500 pairs each: a child gets half of
-    what its parents were built with; a child copies whoever raises it; a parent and child
-    live under one roof. One knob each, plus a swap-the-babies switch. Gate: bring all
-    three tilts within 0.05 of each other near 0.36, then swap.
-  - *Goal* — Matched, the three scatters are indistinguishable — measured 0.34, 0.35, 0.37,
-    widest gap 0.031. Swap the babies and keep comparing each child to the parents it came
-    from, and it reads **0.34, 0.00, 0.00**. The number does not identify the cause; an
-    experiment does.
-  - *Hands to* — Lesson 9.
+- **F — the tilt is the exchange rate** *(selection, priced)*
+  - *Interactive* — Drag a cut across the parents; only families to the right of it breed.
+    The spread is pinned at 2.55 inches, so the cut is the only way to buy a response.
+  - *Goal* — How far above the average you drag the parents is your choice. How far the
+    children come is not.
+  - *Hands to* — Lesson 8b, then Lesson 9.
+
+**Still owed.** JM has said he wants to rework E and F and will come back to them. They
+carry over from the Sep 10 build with the slider/verdict vocabulary fixed and Stage E
+merged; their `.voice` blocks stay marked `TEXT FOR JM`.
+
 
 **Displaced content, needs a ruling.** The old Lesson 8 — Mendel's 3:1 and 9:3:3:1,
 the reference pile of 1,000 honest experimenters, and Fisher's complaint about Mendel's

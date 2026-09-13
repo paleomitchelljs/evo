@@ -24,9 +24,16 @@
   section.stage.stage-locked .lock-banner { display:block; }
   section.stage.stage-locked .stage-body { pointer-events:none; }
   .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    /* The plot column is capped at the canvas width, which setupCanvas pins at a
+     fixed 560px, and the second track takes what is left. Both tracks may go
+     narrower than their content, so a long line of R or a long stats line
+     scrolls or wraps inside its own box instead of widening the whole page.
+     Below 1100px there is not room for a 560px plot beside anything, so the
+     two columns stack. */
+  .grid { display:grid; grid-template-columns:minmax(0,592px) minmax(0,1fr); gap:16px; }
+  @media (max-width: 1100px) { .grid { grid-template-columns:minmax(0,1fr); } }
   .col { display:flex; flex-direction:column; gap:16px; }
-  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; min-width:0; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
   .stage-intro { margin-bottom:16px; }
   .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
@@ -88,7 +95,7 @@
   .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
   .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
   .key .sw:first-child { margin-left:0; }
-  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code { min-width:0; background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
   pre.code .line { display:block; padding:0 6px; border-radius:2px; }
   pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
@@ -115,6 +122,29 @@
   .ledger { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; }
   .ledger div { display:flex; justify-content:space-between; padding:3px 0; }
   .ledger .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:7px; vertical-align:baseline; }
+
+  /* ---- Lesson 8: locking in, and being told which way it went ---------
+     Four of the six stages ask for a commitment before they will say
+     anything back. That needs three things the rest of the sheet does not
+     have: a prompt that states the target, a pair of yes/no buttons, and a
+     tally that reads as unfinished until it is finished.                  */
+  .drill { margin-top:12px; padding-top:11px; border-top:1px solid var(--rule); }
+  .drill .prompt { font-size:13.5px; margin-bottom:9px; line-height:1.45; }
+  .drill .prompt b { font-weight:600; color:var(--accent2); }
+  .drill .prompt .target { font-family:ui-monospace,Menlo,monospace; font-weight:600; color:var(--ink); }
+  .yesno { display:flex; gap:8px; margin:9px 0 4px; }
+  .yesno button { flex:1 1 0; background:#fff; color:var(--ink); border:1px solid var(--rule);
+                  border-radius:4px; padding:8px 6px; cursor:pointer; font-size:13px; }
+  .yesno button.on { background:var(--accent2); border-color:var(--accent2); color:#fff; }
+  .yesno button:disabled { opacity:0.45; cursor:not-allowed; }
+  .flip { margin-top:7px; font:12.5px ui-monospace,Menlo,monospace; min-height:16px; }
+  .flip .ok { color:var(--good); font-weight:600; }
+  .flip .off { color:var(--bad); font-weight:600; }
+  .tally { display:inline-block; padding:2px 9px; border-radius:11px; background:#eceae2;
+           font:12px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .tally.on { background:#4a7a2a; color:#fff; }
+  .attempts { color:var(--muted); font:12px ui-monospace,Menlo,monospace; }
+  canvas.squares { cursor:default; }
 </style>
 </head>
 <body>
@@ -129,31 +159,31 @@
   <a href="#stageC" id="tocC" class="locked">C</a>
   <a href="#stageD" id="tocD" class="locked">D</a>
   <a href="#stageE" id="tocE" class="locked">E</a>
+  <a href="#stageF" id="tocF" class="locked">F</a>
 </nav>
 
-<!-- ========== STAGE A — one family, then all of them ================== -->
+<!-- ========== STAGE A — 72% of what? ================================== -->
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage A voice block. The opener is your line about how
-           many things turn out to be linear regressions, because that is what
-           this whole lesson is; the second paragraph is the two-ways-to-get-a-
-           thing line with "a thing" swapped for "a height", because the split
-           it names is the split the rule on the plot is about to make. -->
+      <!-- TEXT FOR JM: stage A voice block, from your dictation. The two
+           questions are yours verbatim; the third paragraph is the trap in
+           both of them, which is that 72% is not information about anybody
+           until the other rate is on the table. -->
       <div class="voice">
-        <p>A lot of things, as it turns out, are just linear regressions. Way more things in the world are linear regressions than people realize. If you get good at them and understand them, so many things in so many classes become easier.</p>
-        <p>Three families are below, one at a time. There are two ways to get a height: you got it yourself, or you inherited it.</p>
-        <p>Drag the rule to the one height that comes closest to all the children in the family. Not the tallest, not the father's — the one number that misses them all by the least.</p>
+        <p>Imagine you are curious about predicting whether some particular person has a trait. A genetic disease, say. Or a preference for a particular song.</p>
+        <p>You know that 72% of people whose parents have that trait also share it. 72% of people whose parents have the disease have the disease. 72% of people whose parents like the song like the song. So I tell you the parents have it. What is your prediction for the chance the child has it?</p>
+        <p>The answer is not as direct as it immediately seems. What we need to know is the chance the child would have that trait regardless of their parents. That is the comparison point. If 72% of all people have it, then knowing their parents adds no extra information, and the parents are not doing anything at all for our ability to predict. It can run the other way too. Say 90% of people like the song, and only 72% of the ones whose parents like it do. That is almost an anti-inheritance.</p>
       </div>
       <ul class="setup">
-        <li>Heights in inches, from families who wrote to Galton in 1885.</li>
-        <li>Every female height is multiplied by 1.08, exactly as Galton did, so a father, a mother and a daughter all sit on one scale.</li>
-        <li>Left of the plot: the two parents, and the mark halfway between them. Right of the plot: their grown children.</li>
-        <li>The dashed line across the whole plot is the average of all 934 children in the collection.</li>
-        <li>Under the plot: how far your rule is from a typical child in this family. Drive it down.</li>
-        <li>Three families, short parents to tall. Lock each one in before the next arrives.</li>
+        <li>200 people are shown below. Each square represents a person.</li>
+        <li>Colored squares indicate a person with the trait. Gray squares indicate a person without it.</li>
+        <li>The two groups are people whose parents have the trait and people whose parents do not.</li>
+        <li>Two sliders control the rate in each group.</li>
+        <li>Lock in a pair, and call the coin flip that comes with it.</li>
+        <li>The switch relabels the trait. It changes no number on this page.</li>
       </ul>
     </div>
   </div>
@@ -161,22 +191,17 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotA1" class="drag-y" width="560" height="372"></canvas>
-        <div class="fit-stats" id="statsA1">
-          <span class="label">the father</span> <span id="A_fa">—</span>
-          &nbsp; <span class="label">the mother × 1.08</span> <span id="A_mo">—</span>
-          &nbsp; <span class="label">halfway between them</span> <span id="A_mp">—</span>
+        <canvas id="plotA" class="squares" width="560" height="308"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">told the parents have it, you would say:</span> <span id="A_pYes">—</span>
           <br>
-          <span class="label">your rule sits at</span> <span id="A_rule">—</span>
-          &nbsp; <span class="label">and misses a typical child in this family by</span> <span id="A_miss">—</span>
-        </div>
-      </div>
-      <div class="panel graph-wrap step" id="stepA2">
-        <canvas id="plotA2" class="drag-y" width="560" height="368"></canvas>
-        <div class="fit-stats" id="statsA2">
-          <span class="label">bands with a rule dropped into the middle of them:</span> <span id="A_bands">0</span> <span class="label">of 5</span>
+          <span class="label">told they do not, you would say:</span> <span id="A_pNo">—</span>
           <br>
-          <span class="label">tilt of the line through your five rules:</span> <span id="A_tilt">—</span>
+          <span class="label">so knowing the parents moves your answer by:</span> <span id="A_gap">—</span>
+          <br>
+          <span class="label">how much knowing one thing moves your estimate is called correlation (r):</span> <span id="A_corr">—</span>
+          <br>
+          <span class="label">correlation expresses how much less wrong your estimate will be than guessing blind:</span> <span id="A_shrink">—</span>
         </div>
       </div>
     </div>
@@ -184,65 +209,87 @@
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsA">
-          <div class="buttons">
-            <button id="A_lock" class="accent">Lock in this family</button>
-            <button id="A_download" class="ghost">Download .R</button>
+          <div class="row" data-line="p1"><label for="A_p1">of those whose parents have it</label><input type="range" id="A_p1" min="0" max="100" step="1" value="72" /><output id="A_p1Out">72%</output></div>
+          <div class="row" data-line="p2"><label for="A_p2">of those whose parents do not</label><input type="range" id="A_p2" min="0" max="100" step="1" value="72" /><output id="A_p2Out">72%</output></div>
+          <div class="toggle"><input type="checkbox" id="A_song" /><label for="A_song">call it liking a song instead of having a disease</label></div>
+
+          <div class="drill" id="A_phase1">
+            <div class="prompt">Pull one person at random out of the group whose parents have it. Do you predict that person has it?</div>
+            <div class="yesno" id="A_pred">
+              <button data-p="1">yes, they have it</button>
+              <button data-p="0">no, they do not</button>
+            </div>
+            <div class="buttons">
+              <button id="A_lock" class="accent" disabled>Lock in this pair</button>
+              <button id="A_download" class="ghost">Download .R</button>
+            </div>
+            <div class="flip" id="A_flip"></div>
           </div>
-          <div class="fit-stats" id="A_lockmsg" style="min-height:16px;"></div>
+
+          <div class="drill" id="A_phase2" style="display:none;">
+            <div class="prompt" id="A_qprompt">—</div>
+            <div class="buttons">
+              <button id="A_qlock" class="accent">Lock in this answer</button>
+              <button id="A_qskip" class="ghost">Different question</button>
+            </div>
+            <div class="flip" id="A_qflip"></div>
+            <div style="margin-top:8px;"><span class="tally" id="A_tally">0 of 10 correct</span></div>
+          </div>
         </div>
       </div>
       <div class="panel">
-        <h3>Families you have locked in</h3>
+        <h3>Pairs you have locked in</h3>
         <div class="rungs" id="A_list"><div style="color:var(--muted);">none yet</div></div>
       </div>
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="A1">Put a rule through the middle of each of the three families. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
-          <li data-task="A2">Now all 934 children at once, sorted into five bands by their parents. Drop a rule into the middle of each band. <span class="hint"><span id="A2_now">the three families first</span></span></li>
+          <li data-task="A1">Lock in three pairs, calling the flip on each one. <span class="hint"><span id="A1_now">0</span> of 3</span></li>
+          <li data-task="A2">Then ten questions. Set the second slider where the question asks and lock it in. <span class="hint"><span id="A2_now">the three pairs first</span></span></li>
           <li data-task="A3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Your five rules are a line, and its tilt is one number. Stage B is open.</div>
+        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->72% is a rate. What it buys you is a difference between two rates. Stage B is open.</div>
       </div>
       <div class="panel numq" id="numqA">
-        <div class="q">Read the tilt of the line through your five rules: for every inch of parent, how many inches of child?</div>
+        <div class="q">You are told only that 72% of people whose parents have it have it themselves. What would the other rate have to be for that 72% to tell you nothing at all?</div>
         <div class="row">
-          <input type="number" id="A_ans" min="-2" max="3" step="0.01" placeholder="inches" />
-          <span class="unit">inches of child per inch of parent</span>
+          <input type="number" id="A_ans" min="0" max="100" step="1" placeholder="%" />
+          <span class="unit">%</span>
           <button id="A_submit">Submit</button>
         </div>
         <div class="verdict" id="A_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$kid &lt;- g$childHeight * <span class="fn">ifelse</span>(g$gender == <span class="str">"female"</span>, <span class="num">1.08</span>, <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># one family: the rule that misses its children by the least</span></span><span class="line">f &lt;- <span class="fn">subset</span>(g, family == <span class="str">"185"</span>)</span><span class="line"><span class="fn">mean</span>(f$kid)</span><span class="line"><span class="fn">sqrt</span>(<span class="fn">mean</span>((f$kid - <span class="fn">mean</span>(f$kid))^<span class="num">2</span>))</span><span class="line"></span><span class="line"><span class="com"># all of them, sorted into five bands by the parents</span></span><span class="line">band &lt;- <span class="fn">cut</span>(g$midparentHeight, <span class="fn">c</span>(<span class="num">62</span>,<span class="num">66.5</span>,<span class="num">68</span>,<span class="num">69.5</span>,<span class="num">71</span>,<span class="num">78</span>))</span><span class="line">m &lt;- <span class="fn">tapply</span>(g$kid, band, mean)</span><span class="line">x &lt;- <span class="fn">tapply</span>(g$midparentHeight, band, mean)</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(m ~ x))   <span class="com"># the tilt through your five rules</span></span></pre>
+<pre class="code" id="codeA"><span class="line" data-line="p1">p1 &lt;- <span class="num" id="cA_p1">0.72</span>   <span class="com"># parents have it</span></span><span class="line" data-line="p2">p2 &lt;- <span class="num" id="cA_p2">0.72</span>   <span class="com"># parents do not</span></span><span class="line">parent &lt;- <span class="fn">rep</span>(<span class="fn">c</span>(<span class="num">1</span>, <span class="num">0</span>), each = <span class="num">100</span>)</span><span class="line">child  &lt;- <span class="fn">rbinom</span>(<span class="num">200</span>, <span class="num">1</span>, <span class="fn">ifelse</span>(parent == <span class="num">1</span>, p1, p2))</span><span class="line"></span><span class="line"><span class="com"># what knowing the parent moves your answer by</span></span><span class="line">p1 - p2</span><span class="line"></span><span class="line"><span class="com"># the same move, as a correlation</span></span><span class="line">r &lt;- <span class="fn">cor</span>(parent, child); r</span><span class="line"></span><span class="line"><span class="com"># and what that correlation is worth about one person</span></span><span class="line"><span class="num">1</span> - <span class="fn">sqrt</span>(<span class="num">1</span> - r^<span class="num">2</span>)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE B — the line, and what it does not reach ========== -->
+<!-- ========== STAGE B — heritability is not genetics ================== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Solve Stage A to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage B voice block. Galton's own reason for inventing
-           the tool, in your words, sitting on top of Galton's own data. The
-           third paragraph is the instruction: the bar is the whole point of the
-           stage and the tilt is the thing that moves it. -->
+      <!-- TEXT FOR JM: stage B voice block, from your dictation. The flipped
+           direction of causation is the whole stage, and the limb count is
+           the cleanest case because the genetic variation is flatly zero and
+           the correlation still climbs the moment danger runs in families. -->
       <div class="voice">
-        <p>He literally invents linear regression to prove his idea of eugenics — that British people related to his cousin are better than British people who aren't related to his cousin. Which is the stupidest reason any statistical tool has ever been invented. Galton invents a whole branch of mathematics to try to say: if you know Darwin is smart, his cousin must also be smart. Which is not true.</p>
-        <p>These are his families. Every one of your five rules from Stage A is now one column of dots in here.</p>
-        <p>Grab the line and tilt it. The bar beside the plot is the children's whole variation, and the tilt decides how much of it the line reaches.</p>
+        <p>Heritability is our ability to predict a trait in an individual based on the state of the parent. That is all it is. The idea, and the way we measure it, were established long before we knew DNA was the basis of inheritance in a lot of biological systems. Roughly two of your lifetimes before. Most of how we measure it off a regression was worked out a full one of your lifetimes before we had the word gene.</p>
+        <p>A common problem students have is a misapprehension where causation is flipped. It is one thing to get correlation and causation flipped. It is another thing entirely to have the direction of causation flipped. Genes are heritable. Genetic differences are heritable. Heritability is not genetics.</p>
+        <p>To see that, take something purely genetic. The number of limbs a person has. It is determined genetically, and there is basically zero genetic variation in the population for it. There is still variation, though. People lose a limb from a fall, an accident, a predator, any number of ways, and none of those are genetic. Compare a parent's count to a child's and you get no correlation. They are completely separate.</p>
+        <p>Now add a heritability of danger. Risk proneness, risk-taking behavior, occupational hazards. Suddenly you can predict something like limblessness, which is not passed on genetically at all. If I tell you somebody's parent had black lung because they were a coal miner, the probability the child also has black lung is extremely high. Not because the parent passed on a genetic susceptibility. Because the probability somebody becomes a coal miner is a lot higher if their parent was one, and the probability someone gets black lung is a lot higher if they are a coal miner.</p>
       </div>
       <ul class="setup">
-        <li>934 grown children, each against their parents. One dot each.</li>
-        <li>The line always passes through the middle of the cloud, so there is only the tilt to set. Drag anywhere on the plot.</li>
-        <li>Every dot has a stalk running down to the line. That stalk is what the line did not reach on that child.</li>
-        <li>The bar: the whole block is the children's variation. The dark part is what the line accounts for, the pale part is what is left over.</li>
-        <li>The three buttons change what goes on the across axis — one parent, the other, or the two of them averaged.</li>
-        <li>Each of the three has its own best tilt. Find all three.</li>
+        <li>1,200 parent-and-child pairs. Everybody is born with four limbs.</li>
+        <li>Across: the parent's count. Up: the child's. Points are jittered so you can see how many sit on top of each other.</li>
+        <li>First slider: how often an accident takes a limb.</li>
+        <li>Second slider: whether accidents land at random, or whether some families are dangerous places to be born into.</li>
+        <li>The genes never move. They say four the whole time.</li>
+        <li>Lock in each setting. The page counts how many tries it took.</li>
       </ul>
     </div>
   </div>
@@ -250,84 +297,77 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotB" class="drag-tilt" width="560" height="362"></canvas>
-        <canvas id="barB" width="560" height="66" style="margin-top:6px;"></canvas>
+        <canvas id="plotB" class="dead" width="560" height="352"></canvas>
         <div class="fit-stats" id="statsB">
-          <span class="label">tilt:</span> <span id="B_tilt">—</span>
-          &nbsp;|&nbsp; <span class="label">misses a typical child by:</span> <span id="B_miss">—</span>
-          &nbsp;|&nbsp; <span class="label">accounts for:</span> <span id="B_acc">—</span>
-          <span class="label">of the children's variation</span>
+          <span class="label">missing at least one limb:</span> <span id="B_share">—</span>
+          &nbsp;|&nbsp; <span class="label">genetic variation in limb number:</span> <span id="B_gvar">none</span>
+          <br>
+          <span class="label">parent–offspring correlation:</span> <span id="B_corr">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="pickrow" id="B_pick">
-          <button data-src="fa">the father alone</button>
-          <button data-src="mo">the mother alone</button>
-          <button data-src="mp" class="on">both, averaged</button>
-        </div>
         <div class="controls" id="controlsB">
-          <div class="row" data-line="tilt"><label for="B_tilt_s">tilt of the line</label><input type="range" id="B_tilt_s" min="-0.30" max="1.40" step="0.01" value="0.00" /><output id="B_tiltOut">0.00</output></div>
+          <div class="row" data-line="acc"><label for="B_acc">how often an accident takes a limb</label><input type="range" id="B_acc" min="0" max="45" step="1" value="0" /><output id="B_accOut">0%</output></div>
+          <div class="row" data-line="fam"><label for="B_fam">how much danger runs in families</label><input type="range" id="B_fam" min="0" max="1" step="0.01" value="0" /><output id="B_famOut">0.00</output></div>
           <div class="buttons">
+            <button id="B_lock" class="accent">Lock in this setting</button>
+            <button id="B_reseed" class="secondary">New families</button>
             <button id="B_download" class="ghost">Download .R</button>
           </div>
+          <div class="flip" id="B_flip"></div>
         </div>
-      </div>
-      <div class="panel">
-        <h3>Best tilt found for</h3>
-        <div class="rungs" id="B_list"><div style="color:var(--muted);">none yet</div></div>
       </div>
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">With both parents on the across axis, tilt the line until the pale part of the bar is as small as it will go. <span class="hint"><span id="B1_now">not yet</span></span></li>
-          <li data-task="B2">Do it again for the father alone and for the mother alone. <span class="hint"><span id="B2_now">0</span> of 3 fitted</span></li>
+          <li data-task="B1">Leave danger spread evenly and take a limb off at least a quarter of everybody, with the correlation still under 0.10. Lock it in. <span class="hint"><span id="B1_now">not yet</span></span></li>
+          <li data-task="B2">Hold that accident rate. Move danger into families until the correlation is over 0.25. Lock it in. <span class="hint"><span id="B2_now">not yet</span></span></li>
           <li data-task="B3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Two parents beat either one of them, and the tilt on the two of them is not the tilt on one of them doubled. Stage C is open.</div>
+        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Nothing genetic moved between those two settings. What moved was where the accidents landed.</div>
       </div>
       <div class="panel numq" id="numqB">
-        <div class="q">With both parents on the across axis and the line at its best tilt, what share of the children's variation does the line account for? Give it as a decimal.</div>
+        <div class="q">Set the accident rate to 40% and push danger all the way into families. How high does the parent–offspring correlation go, for a trait every gene in this population agrees about?</div>
         <div class="row">
-          <input type="number" id="B_ans" min="0" max="1" step="0.01" placeholder="0.00" />
-          <span class="unit">of the children's variation</span>
+          <input type="number" id="B_ans" min="-1" max="1" step="0.01" placeholder="correlation" />
+          <span class="unit">correlation</span>
           <button id="B_submit">Submit</button>
         </div>
         <div class="verdict" id="B_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line">g$mp &lt;- g$midparentHeight</span><span class="line">g$fa &lt;- g$father</span><span class="line">g$mo &lt;- g$mother * <span class="num">1.08</span></span><span class="line"></span><span class="line" data-line="tilt">tilt &lt;- <span class="num" id="cB_tilt">0.00</span></span><span class="line">pred &lt;- <span class="fn">mean</span>(g$kid) + tilt * (g$mp - <span class="fn">mean</span>(g$mp))</span><span class="line">left &lt;- <span class="fn">mean</span>((g$kid - pred)^<span class="num">2</span>)</span><span class="line">whole &lt;- <span class="fn">mean</span>((g$kid - <span class="fn">mean</span>(g$kid))^<span class="num">2</span>)</span><span class="line"><span class="num">1</span> - left / whole      <span class="com"># the dark part of the bar</span></span><span class="line"></span><span class="line"><span class="com"># the tilt that makes the pale part smallest</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp, data = g))</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ fa, data = g))</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mo, data = g))</span></pre>
+<pre class="code" id="codeB"><span class="line" data-line="acc">acc &lt;- <span class="num" id="cB_acc">0.00</span>   <span class="com"># chance a given limb is lost</span></span><span class="line" data-line="fam">fam &lt;- <span class="num" id="cB_fam">0.00</span>   <span class="com"># share of the danger that runs in families</span></span><span class="line">n &lt;- <span class="num">1200</span></span><span class="line">L &lt;- <span class="fn">rnorm</span>(n)                       <span class="com"># how dangerous this family is</span></span><span class="line">zp &lt;- <span class="fn">sqrt</span>(fam)*L + <span class="fn">sqrt</span>(<span class="num">1</span>-fam)*<span class="fn">rnorm</span>(n)</span><span class="line">zc &lt;- <span class="fn">sqrt</span>(fam)*L + <span class="fn">sqrt</span>(<span class="num">1</span>-fam)*<span class="fn">rnorm</span>(n)</span><span class="line"></span><span class="line">pr &lt;- <span class="fn">function</span>(z) {</span><span class="line">  p &lt;- <span class="fn">plogis</span>(<span class="fn">qlogis</span>(acc) + <span class="num">4.2</span>*z)</span><span class="line">  p * acc / <span class="fn">mean</span>(p)          <span class="com"># hold the marginal rate</span></span><span class="line">}</span><span class="line">par_limbs &lt;- <span class="num">4</span> - <span class="fn">rbinom</span>(n, <span class="num">2</span>, <span class="fn">pr</span>(zp))</span><span class="line">kid_limbs &lt;- <span class="num">4</span> - <span class="fn">rbinom</span>(n, <span class="num">2</span>, <span class="fn">pr</span>(zc))</span><span class="line"></span><span class="line"><span class="fn">var</span>(<span class="fn">rep</span>(<span class="num">4</span>, n))                    <span class="com"># the genetic variation: zero, always</span></span><span class="line"><span class="fn">cor</span>(par_limbs, kid_limbs)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE C — what is in the part the line misses =========== -->
+<!-- ========== STAGE C — move the eggs ================================= -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Solve Stage B to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage C voice block. The 1,700-loci quote and the
-           thousand-little-things quote are here because the stage's whole move
-           depends on height being additive: a child gets half of each parent's
-           pile, and which half is a fresh draw. That fresh draw is the pale
-           blue block, and it is the thing students will insist is environment. -->
+      <!-- TEXT FOR JM: stage C voice block, from your dictation. The caveats
+           about mothers singing and siblings singing are yours and they stay,
+           because the stage runs one clean scenario and the students should
+           know it is one clean scenario. -->
       <div class="voice">
-        <p>Height isn't one gene. There are something like 1,700 individual loci associated with height, almost all of them very small effect — the largest single one we've ever found is associated with a 0.07-centimetre difference. Height is a thousand little things, and you add them up.</p>
-        <p>Below is a population built that way, and it can be taken apart, which Galton's families cannot. Two knobs: how big the pile a child is handed is, and how much a life adds on top of it.</p>
-        <p>Every stalk under the plot is now in two colours. Set the knobs so the tilt comes out where Galton's families put it, then start turning the life down.</p>
+        <p>A lot of birds choose their mates based on the song they sing. A male will often sing a song that sounds like the song his father sang. A female will often prefer one that sounds like the song her father sang. The song is learned. So mating success and mate choice in adult birds is influenced strongly by the non-genetic nature of song.</p>
+        <p>Different birds have different strengths of preference and different degrees of similarity. In some birds the mothers sing as well as the fathers. In some, siblings come back and sing. There are many other routes by which a bird may learn a song. For this we are going to run a scenario where a bird models its song on its father and on nothing else.</p>
+        <p>You will run it twice. Once with the eggs left where they were laid, and once with the eggs swapped, so a chick is raised by a bird it did not come from. The question is the same both times. How much of the father's song ends up in the chick?</p>
       </div>
       <ul class="setup">
-        <li>3,000 families. Two parents each, one grown child each, heights in inches.</li>
-        <li>A child is handed half of each parent's pile. Which half is a fresh draw every time.</li>
-        <li>The line is fitted for you here — Stage B was the fitting. This stage is about what it misses.</li>
-        <li>Each stalk runs from the line to the child in two colours: the part of the miss that is in what the child was handed, and the part a life added.</li>
-        <li>The bar is the same bar as Stage B, with the pale part split by those two colours.</li>
-        <li>The whole spread of the children moves when you move the knobs. Watch it, and watch what the tilt does and does not do.</li>
+        <li>600 chicks, one father each. A song is a number on a scale.</li>
+        <li>First slider: how carefully a chick copies the bird that raises it.</li>
+        <li>Second slider: how much of the song is already in the egg.</li>
+        <li>Reported: how much a chick resembles the bird that raised it, and how much it resembles the father it came from.</li>
+        <li>With the eggs left alone those are the same bird, so the two numbers are the same number.</li>
+        <li>Lock in each answer. Wrong locks are counted and shown.</li>
       </ul>
     </div>
   </div>
@@ -335,24 +375,49 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotC" class="dead" width="560" height="352"></canvas>
-        <canvas id="barC" width="560" height="88" style="margin-top:6px;"></canvas>
+        <canvas id="plotC" class="dead" width="560" height="356"></canvas>
         <div class="fit-stats" id="statsC">
-          <span class="label">tilt:</span> <span id="C_tilt">—</span>
-          &nbsp;|&nbsp; <span class="label">whole spread of the children:</span> <span id="C_sd">—</span>
-          &nbsp;|&nbsp; <span class="label">line misses a typical child by:</span> <span id="C_miss">—</span>
+          <span class="label">eggs:</span> <span id="C_mode">left where they were laid</span>
+          <br>
+          <span class="label">resembles the bird that raised it:</span> <span id="C_rTutor">—</span>
+          &nbsp;|&nbsp; <span class="label">resembles the father it came from:</span> <span id="C_rGen">—</span>
         </div>
-        <div class="ledger" id="C_ledger"></div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
         <div class="controls" id="controlsC">
-          <div class="row" data-line="sda"><label for="C_sda">the pile a child is handed</label><input type="range" id="C_sda" min="0" max="2.60" step="0.05" value="1.40" /><output id="C_sdaOut">1.40</output></div>
-          <div class="row" data-line="sde"><label for="C_sde">what a life adds on top</label><input type="range" id="C_sde" min="0" max="2.60" step="0.05" value="2.00" /><output id="C_sdeOut">2.00</output></div>
+          <div class="row" data-line="copy"><label for="C_copy">how carefully a chick copies its tutor</label><input type="range" id="C_copy" min="0" max="0.95" step="0.01" value="0.00" /><output id="C_copyOut">0.00</output></div>
+          <div class="row" data-line="egg"><label for="C_egg">how much of the song is in the egg</label><input type="range" id="C_egg" min="0" max="0.95" step="0.01" value="0.00" /><output id="C_eggOut">0.00</output></div>
+          <div class="pickrow" id="C_pick">
+            <button data-swap="0" class="on">leave the eggs alone</button>
+            <button data-swap="1">swap the eggs at laying</button>
+          </div>
+
+          <div class="drill" id="C_step1">
+            <div class="prompt">Eggs left alone, nothing in the egg. Set the copying so a chick resembles the bird that raised it at <span class="target">0.60</span>.</div>
+            <div class="buttons"><button id="C_lock1" class="accent">Lock in this setting</button></div>
+            <div class="flip" id="C_flip1"></div>
+          </div>
+
+          <div class="drill" id="C_step2" style="display:none;">
+            <div class="prompt">Before you touch the swap. Once those eggs are moved, how much will a chick resemble the father it came from?</div>
+            <div class="row" style="display:grid; grid-template-columns:1fr 76px; gap:10px; align-items:center;">
+              <input type="range" id="C_guess" min="0" max="1" step="0.01" value="0.50" /><output id="C_guessOut">0.50</output>
+            </div>
+            <div class="buttons"><button id="C_lock2" class="accent">Lock in this prediction</button></div>
+            <div class="flip" id="C_flip2"></div>
+          </div>
+
+          <div class="drill" id="C_step3" style="display:none;">
+            <div class="prompt">A different population of the same species. Left alone, a chick resembles the father it came from at <span class="target">0.60</span>. Swap the eggs and that drops to <span class="target">0.25</span>. Find the two settings that do both.</div>
+            <div class="buttons"><button id="C_lock3" class="accent">Lock in these settings</button></div>
+            <div class="flip" id="C_flip3"></div>
+          </div>
+
           <div class="buttons">
-            <button id="C_reseed" class="secondary">New families</button>
+            <button id="C_reseed" class="secondary">New broods</button>
             <button id="C_download" class="ghost">Download .R</button>
           </div>
         </div>
@@ -360,52 +425,53 @@
       <div class="panel">
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
-          <li data-task="C1">Bring the tilt to where Galton's families put it, within 0.03. <span class="hint"><span id="C1_now">not yet</span></span></li>
-          <li data-task="C2">Now take the life away entirely and read the pale part of the bar. <span class="hint"><span id="C2_now">not yet</span></span></li>
-          <li data-task="C3">Now split what the line misses evenly between its two colours. <span class="hint"><span id="C3_now">not yet</span></span></li>
+          <li data-task="C1">Build a population where a chick resembles its father at 0.60, with nothing in the egg. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Predict what swapping the eggs does to that number, then swap them. <span class="hint"><span id="C2_now">not yet</span></span></li>
+          <li data-task="C3">Find the population where the swap drops 0.60 to 0.25. <span class="hint"><span id="C3_now">not yet</span></span></li>
           <li data-task="C4">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->The variance in your kids depends not just on each parent's height, but on how much you and your partner are heterozygous at the same loci. Stage D is open.</div>
+        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->The resemblance was real both times. Moving the eggs is what says where it came from.</div>
       </div>
       <div class="panel numq" id="numqC">
-        <div class="q">With the life turned all the way off, what share of the children's variation does the line still fail to reach? Give it as a decimal.</div>
+        <div class="q">Put nothing in the egg and set the copying to 0.80, eggs left alone. A chick resembles its father at 0.80. Swap the eggs and measure a chick against the father it came from. What do you get?</div>
         <div class="row">
-          <input type="number" id="C_ans" min="0" max="1" step="0.01" placeholder="0.00" />
-          <span class="unit">of the children's variation</span>
+          <input type="number" id="C_ans" min="-1" max="1" step="0.01" placeholder="resemblance" />
+          <span class="unit">resemblance</span>
           <button id="C_submit">Submit</button>
         </div>
         <div class="verdict" id="C_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line" data-line="sda">sdA &lt;- <span class="num" id="cC_sda">1.40</span>   <span class="com"># the pile a child is handed</span></span><span class="line" data-line="sde">sdE &lt;- <span class="num" id="cC_sde">2.00</span>   <span class="com"># what a life adds</span></span><span class="line">n &lt;- <span class="num">3000</span>; MU &lt;- <span class="num">69.2</span></span><span class="line">Af &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA); Am &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA)</span><span class="line">Pf &lt;- MU + Af + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">Pm &lt;- MU + Am + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">mp &lt;- (Pf + Pm) / <span class="num">2</span></span><span class="line"></span><span class="line"><span class="com"># half of each pile, and a fresh draw for which half</span></span><span class="line">Ao  &lt;- (Af + Am)/<span class="num">2</span> + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA/<span class="fn">sqrt</span>(<span class="num">2</span>))</span><span class="line">Eo  &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">kid &lt;- MU + Ao + Eo</span><span class="line"></span><span class="line">fit  &lt;- <span class="fn">lm</span>(kid ~ mp)</span><span class="line"><span class="fn">coef</span>(fit)[<span class="num">2</span>]                    <span class="com"># the tilt</span></span><span class="line"><span class="fn">var</span>(Eo) / <span class="fn">var</span>(kid)             <span class="com"># the ochre block</span></span><span class="line">(<span class="fn">var</span>(<span class="fn">resid</span>(fit)) - <span class="fn">var</span>(Eo)) / <span class="fn">var</span>(kid)  <span class="com"># the pale blue</span></span></pre>
+<pre class="code" id="codeC"><span class="line" data-line="copy">cp  &lt;- <span class="num" id="cC_copy">0.00</span>   <span class="com"># how carefully a chick copies its tutor</span></span><span class="line" data-line="egg">egg &lt;- <span class="num" id="cC_egg">0.00</span>   <span class="com"># how much of the song is in the egg</span></span><span class="line">n &lt;- <span class="num">600</span></span><span class="line">G    &lt;- <span class="fn">rnorm</span>(n)                      <span class="com"># the father's heritable song value</span></span><span class="line"><span class="com"># the song he actually sings</span></span><span class="line">dad &lt;- egg*G + <span class="fn">sqrt</span>(<span class="num">1</span>-egg^<span class="num">2</span>)*<span class="fn">rnorm</span>(n)</span><span class="line"></span><span class="line">tutor &lt;- <span class="fn">if</span> (swap) dad[<span class="fn">sample</span>(n)] <span class="fn">else</span> dad</span><span class="line">ve &lt;- <span class="fn">max</span>(<span class="num">0.05</span>, <span class="num">1</span> - (cp^<span class="num">2</span> + egg^<span class="num">2</span> + <span class="num">2</span>*cp*egg^<span class="num">2</span>))</span><span class="line">chick &lt;- cp*tutor + egg*G + <span class="fn">sqrt</span>(ve)*<span class="fn">rnorm</span>(n)</span><span class="line"></span><span class="line"><span class="fn">cor</span>(chick, tutor)   <span class="com"># the bird that raised it</span></span><span class="line"><span class="fn">cor</span>(chick, dad)     <span class="com"># the father it came from</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE D — three things to put on the across axis ======== -->
+<!-- ========== STAGE D — Galton's 934 children ========================= -->
 <section class="stage stage-locked" id="stageD">
   <h2 class="stage-h">D</h2>
   <div class="lock-banner">Solve Stage C to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage D voice block. The eye-number line is here because
-           it is the cleanest statement that the question is about the variation
-           and not about the trait, which is exactly what changing the across
-           axis changes. Nothing about the population moves in this stage. -->
+      <!-- TEXT FOR JM: stage D voice block, from your dictation. The motive
+           and the dates both stay in, because the point of the paragraph is
+           that a measurement can be right while the reason for taking it is
+           worthless, and the 1885 date is what makes the gene-free claim in
+           Stage B land. -->
       <div class="voice">
-        <p>The trait can vary, the trait can be genetic, but what matters is that the variation in the trait is genetic.</p>
-        <p>Same 3,000 families as Stage C, same two knobs, same children. The only thing that changes is what goes on the across axis.</p>
-        <p>Three things can go there. Two of them you could never measure on a real family. One of them accounts for exactly as much of the children's variation as the tilt you can measure. Find which.</p>
+        <p>Francis Galton was Charles Darwin's cousin, and a horrible racist who ended up inventing the term eugenics. He wanted to prove, at least to himself, that being related to people of stature indicated something about an individual's quality. He spent a large fraction of his life trying to study the question of heritability.</p>
+        <p>He was working in 1885. There was absolutely no indication of how heritability worked, and in fact he did a lot of things incorrectly. It would be basically 50 years before DNA was nailed down as the molecule of inheritance. His work, despite its misguided factual basis and rather horrible motivations, was nonetheless very successful at its job of finding a way to measure heritability.</p>
+        <p>We are going to explore his data. 205 families who all had their heights measured, which lets us plot 934 grown children against their parents. Two sliders. One tilts a line, one widens a band around it. Lock in when you think you have both.</p>
       </div>
       <ul class="setup">
-        <li>Nothing about the population changes when you change the axis. The same children are plotted every time.</li>
-        <li>The parents' measured heights: what you would have if you went and measured two people.</li>
-        <li>The parents' piles: what the two of them were actually carrying, averaged, with their own lives stripped off.</li>
-        <li>The child's pile: what that child was handed, with its own life stripped off.</li>
-        <li>Reported for every axis: the tilt of the line, and the share of the children's variation the line accounts for.</li>
-        <li>The tilt from the first axis stays on screen while you look at the other two.</li>
+        <li>Across: the two parents averaged, in inches. Up: the grown child, in inches.</li>
+        <li>Every female height is multiplied by 1.08, exactly as Galton did, so a father, a mother and a daughter sit on one scale.</li>
+        <li>First slider tilts the line. That is the deterministic part, the amount of a parent that arrives in a child.</li>
+        <li>Second slider widens the band. That is everything else, and a right-sized band holds about two-thirds of the children.</li>
+        <li>The grey marks are the children's average in each strip of parents. A line that is tilted right runs through them.</li>
+        <li>Lock in when you think both are right. The page counts how many tries it took.</li>
       </ul>
     </div>
   </div>
@@ -413,76 +479,160 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotD" class="dead" width="560" height="352"></canvas>
-        <canvas id="barD" width="560" height="66" style="margin-top:6px;"></canvas>
+        <canvas id="plotD" class="dead" width="560" height="386"></canvas>
         <div class="fit-stats" id="statsD">
-          <span class="label">on this axis — tilt:</span> <span id="D_tilt">—</span>
-          &nbsp; <span class="label">accounts for:</span> <span id="D_acc">—</span>
+          <span class="label">your tilt:</span> <span id="D_tilt">—</span>
+          &nbsp;|&nbsp; <span class="label">your band:</span> <span id="D_band">—</span>
+          &nbsp;|&nbsp; <span class="label">children inside it:</span> <span id="D_inside">—</span>
           <br>
-          <span class="label">the tilt on the parents' measured heights, which is the one you could get from a real family:</span> <span id="D_ref">—</span>
+          <span class="label">your line misses a typical child by:</span> <span id="D_miss">—</span>
+          <br>
+          <span class="label">parent–offspring correlation:</span> <span id="D_corr">locked</span>
+          &nbsp;|&nbsp; <span class="label">heritability, which on this axis is the tilt itself:</span> <span id="D_h2">locked</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="pickrow" id="D_pick">
-          <button data-ax="mp" class="on">the parents' measured heights</button>
-          <button data-ax="amp">the parents' piles</button>
-          <button data-ax="ao">the child's pile</button>
-        </div>
         <div class="controls" id="controlsD">
-          <div class="row" data-line="sda"><label for="D_sda">the pile a child is handed</label><input type="range" id="D_sda" min="0" max="2.60" step="0.05" value="2.15" /><output id="D_sdaOut">2.15</output></div>
-          <div class="row" data-line="sde"><label for="D_sde">what a life adds on top</label><input type="range" id="D_sde" min="0" max="2.60" step="0.05" value="1.35" /><output id="D_sdeOut">1.35</output></div>
+          <div class="row" data-line="tilt"><label for="D_tilt_s">how much of a parent arrives in a child</label><input type="range" id="D_tilt_s" min="0" max="1.20" step="0.01" value="0.00" /><output id="D_tiltOut">0.00</output></div>
+          <div class="row" data-line="band"><label for="D_band_s">how much comes from everything else</label><input type="range" id="D_band_s" min="0.40" max="4.00" step="0.01" value="4.00" /><output id="D_bandOut">4.00</output></div>
           <div class="buttons">
-            <button id="D_reseed" class="secondary">New families</button>
+            <button id="D_lock" class="accent">Lock in this line</button>
             <button id="D_download" class="ghost">Download .R</button>
           </div>
+          <div class="flip" id="D_flip"></div>
         </div>
       </div>
       <div class="panel">
         <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Put all three on the across axis, then leave it on the one that accounts for as much as the measurable tilt. <span class="hint"><span id="D1_now">0 of 3 looked at</span></span></li>
-          <li data-task="D2">Now set the knobs so the child's pile accounts for 0.80 of the children's variation. <span class="hint"><span id="D2_now">not yet</span></span></li>
+          <li data-task="D1">Find the line and the band that fit Galton's children, and lock them in. <span class="hint"><span id="D1_now">not yet</span></span></li>
+          <li data-task="D2">Now run the tilt to zero, which is knowing nothing about the parents, and set the band to match again. <span class="hint"><span id="D2_now">not yet</span></span></li>
           <li data-task="D3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Heritability is genetic variation over phenotypic variation. Stage E is open.</div>
+        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Two numbers describe the whole thing. Where the line points, and how far off it everybody is.</div>
       </div>
       <div class="panel numq" id="numqD">
-        <div class="q">Push the knobs as far as they will go in any direction. What is the largest share of the children's variation the parents' measured heights can ever account for?</div>
+        <div class="q">Knowing nothing, you miss a typical child by 2.58 inches. Knowing the parents and using your best line, you miss by 2.24. How much less wrong is a guess about one child once you are told the parents? Give it as a percent.</div>
         <div class="row">
-          <input type="number" id="D_ans" min="0" max="1" step="0.01" placeholder="0.00" />
-          <span class="unit">of the children's variation</span>
+          <input type="number" id="D_ans" min="0" max="100" step="1" placeholder="%" />
+          <span class="unit">% less wrong</span>
           <button id="D_submit">Submit</button>
         </div>
         <div class="verdict" id="D_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># same children, three different across axes</span></span><span class="line">amp &lt;- (Af + Am) / <span class="num">2</span>          <span class="com"># the parents' piles</span></span><span class="line"></span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ mp ))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ amp))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ Ao ))$r.squared</span><span class="line"></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp ))[<span class="num">2</span>]</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ amp))[<span class="num">2</span>]</span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ Ao ))[<span class="num">2</span>]</span><span class="line"></span><span class="line"><span class="com"># stripping the parents' lives off the across axis does not</span></span><span class="line"><span class="com"># recover a bigger number -- it recovers 1</span></span></pre>
+<pre class="code" id="codeD"><span class="line">g &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/galton_families.csv"</span>)</span><span class="line">g$kid &lt;- g$childHeight * <span class="fn">ifelse</span>(g$gender == <span class="str">"female"</span>, <span class="num">1.08</span>, <span class="num">1</span>)</span><span class="line">g$mp  &lt;- g$midparentHeight</span><span class="line"></span><span class="line" data-line="tilt">tilt &lt;- <span class="num" id="cD_tilt">0.00</span>   <span class="com"># the deterministic part</span></span><span class="line" data-line="band">band &lt;- <span class="num" id="cD_band">4.00</span>   <span class="com"># the stochastic part, in inches</span></span><span class="line">pred &lt;- <span class="fn">mean</span>(g$kid) + tilt * (g$mp - <span class="fn">mean</span>(g$mp))</span><span class="line"><span class="fn">sqrt</span>(<span class="fn">mean</span>((g$kid - pred)^<span class="num">2</span>))   <span class="com"># how far off your line is</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">abs</span>(g$kid - pred) &lt; band)     <span class="com"># who your band holds</span></span><span class="line"></span><span class="line"><span class="com"># the two numbers the sliders are hunting</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp, data = g))[<span class="num">2</span>]</span><span class="line"><span class="fn">sd</span>(<span class="fn">resid</span>(<span class="fn">lm</span>(kid ~ mp, data = g)))</span><span class="line"><span class="fn">cor</span>(g$mp, g$kid)</span></pre>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE E — the tilt is the exchange rate ================= -->
+<!-- ========== STAGE E — what is in the part the line misses =========== -->
 <section class="stage stage-locked" id="stageE">
   <h2 class="stage-h">E</h2>
   <div class="lock-banner">Solve Stage D to unlock this section.</div>
   <div class="panel stage-intro">
     <div class="intro-grid">
-      <!-- TEXT FOR JM: stage E voice block. The puppy-tail quote, which is the
-           cleanest statement that choosing the parents and the trait coming
-           down are two separate steps -- and this stage is the second step
-           priced. Cut it if you would rather the selection lesson own this. -->
+      <!-- TEXT FOR JM: stage E voice block. This is one of the two you said
+           you would come back to. It is the old Stage C and the old Stage D
+           welded together, because they ran the same population off the same
+           two sliders and the only difference was the across axis. -->
       <div class="voice">
-        <p>Cut the tails off some puppies and only let the tailless puppies breed. That is selection — they make more of themselves, so puppies become more common. But taillessness doesn't become more common, because the trait isn't heritable. Selection is the differential reproduction step. Heritability is a separate step.</p>
+        <p>Height isn't one gene. There are something like 1,700 individual loci associated with height, almost all of them very small effect. The largest single one we have ever found is associated with a 0.07-centimetre difference. Height is a thousand little things, and you add them up.</p>
+        <p>Below is a population built that way. It can be taken apart, which Galton's families cannot. Two sliders: how big the pile a child is handed, and how much a life adds on top of it.</p>
+        <p>The trait can vary, the trait can be genetic, but what matters is that the variation in the trait is genetic. So there are three things that can go on the across axis. Two of them you could never measure on a real family. One of them accounts for exactly as much of the children's variation as the tilt you can measure. Find which.</p>
+      </div>
+      <ul class="setup">
+        <li>3,000 families. Two parents each, one grown child each, heights in inches.</li>
+        <li>A child is handed half of each parent's pile. Which half is a fresh draw every time.</li>
+        <li>The line is fitted for you here. Stage D was the fitting.</li>
+        <li>The bar splits the children's variation three ways: what the line reaches, what it misses because the halves were re-dealt, and what a life added.</li>
+        <li>Nothing about the population changes when you change the axis. The same children are plotted every time.</li>
+        <li>The tilt on the parents' measured heights stays on screen while you look at the other two.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotE" class="dead" width="560" height="352"></canvas>
+        <canvas id="barE" width="560" height="88" style="margin-top:6px;"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">on this axis — tilt:</span> <span id="E_tilt">—</span>
+          &nbsp;|&nbsp; <span class="label">accounts for:</span> <span id="E_acc">—</span>
+          &nbsp;|&nbsp; <span class="label">whole spread of the children:</span> <span id="E_sd">—</span>
+          <br>
+          <span class="label">the tilt on the parents' measured heights, which is the one a real family can give you:</span> <span id="E_ref">—</span>
+        </div>
+        <div class="ledger" id="E_ledger"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="pickrow" id="E_pick">
+          <button data-ax="mp" class="on">the parents' measured heights</button>
+          <button data-ax="amp">the parents' piles</button>
+          <button data-ax="ao">the child's pile</button>
+        </div>
+        <div class="controls" id="controlsE">
+          <div class="row" data-line="sda"><label for="E_sda">the pile a child is handed</label><input type="range" id="E_sda" min="0" max="2.60" step="0.05" value="1.40" /><output id="E_sdaOut">1.40</output></div>
+          <div class="row" data-line="sde"><label for="E_sde">what a life adds on top</label><input type="range" id="E_sde" min="0" max="2.60" step="0.05" value="2.00" /><output id="E_sdeOut">2.00</output></div>
+          <div class="buttons">
+            <button id="E_reseed" class="secondary">New families</button>
+            <button id="E_download" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage F</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">On the parents' measured heights, bring the tilt to where Galton's families put it, within 0.03. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E2">Now take the life away entirely and read what the line still fails to reach. <span class="hint"><span id="E2_now">not yet</span></span></li>
+          <li data-task="E3">Put all three axes up, then leave it on the one that accounts for as much as the measurable tilt. <span class="hint"><span id="E3_now">0 of 3 looked at</span></span></li>
+          <li data-task="E4">Answer the question below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. -->Heritability is genetic variation over phenotypic variation, and stripping the parents' lives off the axis recovers 1, not a bigger number.</div>
+      </div>
+      <div class="panel numq" id="numqE">
+        <div class="q">With the life turned all the way off, what share of the children's variation does the line still fail to reach? Give it as a decimal.</div>
+        <div class="row">
+          <input type="number" id="E_ans" min="0" max="1" step="0.01" placeholder="0.00" />
+          <span class="unit">of the children's variation</span>
+          <button id="E_submit">Submit</button>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line" data-line="sda">sdA &lt;- <span class="num" id="cE_sda">1.40</span>   <span class="com"># the pile a child is handed</span></span><span class="line" data-line="sde">sdE &lt;- <span class="num" id="cE_sde">2.00</span>   <span class="com"># what a life adds</span></span><span class="line">n &lt;- <span class="num">3000</span>; MU &lt;- <span class="num">69.2</span></span><span class="line">Af &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA); Am &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA)</span><span class="line">Pf &lt;- MU + Af + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">Pm &lt;- MU + Am + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">mp &lt;- (Pf + Pm) / <span class="num">2</span>; amp &lt;- (Af + Am) / <span class="num">2</span></span><span class="line"></span><span class="line"><span class="com"># half of each pile, and a fresh draw for which half</span></span><span class="line">Ao  &lt;- amp + <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdA/<span class="fn">sqrt</span>(<span class="num">2</span>))</span><span class="line">Eo  &lt;- <span class="fn">rnorm</span>(n, <span class="num">0</span>, sdE)</span><span class="line">kid &lt;- MU + Ao + Eo</span><span class="line"></span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ mp ))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ amp))$r.squared</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(kid ~ Ao ))$r.squared</span><span class="line"><span class="fn">var</span>(Eo) / <span class="fn">var</span>(kid)             <span class="com"># the ochre block</span></span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE F — the tilt is the exchange rate ================= -->
+<section class="stage stage-locked" id="stageF">
+  <h2 class="stage-h">F</h2>
+  <div class="lock-banner">Solve Stage E to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage F voice block, and the second of the two you
+           said you would come back to. The puppy-tail quote is doing the
+           separation of the two steps; cut it if the selection lesson should
+           own that instead. -->
+      <div class="voice">
+        <p>Cut the tails off some puppies and only let the tailless puppies breed. That is selection. They make more of themselves, so puppies become more common. But taillessness doesn't become more common, because the trait isn't heritable. Selection is the differential reproduction step. Heritability is a separate step.</p>
         <p>Here is the second step, priced. Drag the cut across the plot. Only the families to the right of it have children.</p>
         <p>How far above the average you drag the parents is your choice. How far the children come is not.</p>
       </div>
       <ul class="setup">
-        <li>3,000 families again. The whole spread of the children is held at 2.55 inches here, whatever the knob is doing.</li>
+        <li>3,000 families again. The whole spread of the children is held at 2.55 inches here, whatever the slider is doing.</li>
         <li>Drag the cut left or right. Families to the right of it breed; the rest are greyed out.</li>
         <li>The upright line is where the chosen parents average. The flat line is where their children average.</li>
         <li>Reported: how far the chosen parents sit above the average of everybody, and how far their children do.</li>
@@ -494,58 +644,57 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel graph-wrap">
-        <canvas id="plotE" class="drag-x" width="560" height="372"></canvas>
-        <div class="fit-stats" id="statsE">
-          <span class="label">families breeding:</span> <span id="E_n">—</span>
-          &nbsp;|&nbsp; <span class="label">tilt:</span> <span id="E_tilt">—</span>
+        <canvas id="plotF" class="drag-x" width="560" height="372"></canvas>
+        <div class="fit-stats" id="statsF">
+          <span class="label">families breeding:</span> <span id="F_n">—</span>
+          &nbsp;|&nbsp; <span class="label">tilt:</span> <span id="F_tilt">—</span>
           <br>
-          <span class="label">the chosen parents sit above the average by:</span> <span id="E_S">—</span>
+          <span class="label">the chosen parents sit above the average by:</span> <span id="F_S">—</span>
           <br>
-          <span class="label">the tilt prices their children at:</span> <span id="E_pred">—</span>
-          &nbsp;|&nbsp; <span class="label">the children came out:</span> <span id="E_obs">—</span>
+          <span class="label">the tilt prices their children at:</span> <span id="F_pred">—</span>
+          &nbsp;|&nbsp; <span class="label">the children came out:</span> <span id="F_obs">—</span>
         </div>
       </div>
     </div>
     <div class="col">
       <div class="panel controls-panel">
         <h3>Controls</h3>
-        <div class="controls" id="controlsE">
-          <div class="row" data-line="h"><label for="E_h">how much of the spread is handed down</label><input type="range" id="E_h" min="0.05" max="1.00" step="0.01" value="0.71" /><output id="E_hOut">0.71</output></div>
-          <div class="row" data-line="cut"><label for="E_cut">where the cut sits</label><input type="range" id="E_cut" min="63.0" max="76.0" step="0.05" value="63.00" /><output id="E_cutOut">63.00</output></div>
+        <div class="controls" id="controlsF">
+          <div class="row" data-line="h"><label for="F_h">how much of the spread is handed down</label><input type="range" id="F_h" min="0.05" max="1.00" step="0.01" value="0.71" /><output id="F_hOut">0.71</output></div>
+          <div class="row" data-line="cut"><label for="F_cut">where the cut sits</label><input type="range" id="F_cut" min="63.0" max="76.0" step="0.05" value="63.00" /><output id="F_cutOut">63.00</output></div>
           <div class="buttons">
-            <button id="E_reseed" class="secondary">New families</button>
-            <button id="E_download" class="ghost">Download .R</button>
+            <button id="F_reseed" class="secondary">New families</button>
+            <button id="F_download" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
         <h3>To finish the lesson</h3>
-        <ul class="tasks" id="tasksE">
-          <li data-task="E1">Choose parents whose children come out a full inch above the average of everybody. <span class="hint"><span id="E1_now">not yet</span></span></li>
-          <li data-task="E2">Now hand down 0.30 of the spread instead, and get that same inch back. <span class="hint"><span id="E2_now">not yet</span></span></li>
-          <li data-task="E3">Answer the question below.</li>
+        <ul class="tasks" id="tasksF">
+          <li data-task="F1">Choose parents whose children come out a full inch above the average of everybody. <span class="hint"><span id="F1_now">not yet</span></span></li>
+          <li data-task="F2">Now hand down 0.30 of the spread instead, and get that same inch back. <span class="hint"><span id="F2_now">not yet</span></span></li>
+          <li data-task="F3">Answer the question below.</li>
         </ul>
-        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. -->Anything you're measuring with genes — all you're measuring is shared inheritance. If you're also inheriting non-genetic things, that plays a role too, and gets folded into the same number.</div>
+        <div class="solved-banner" id="solvedF"><!-- TEXT FOR JM: stage F solved banner. -->Anything you're measuring with genes — all you're measuring is shared inheritance. If you're also inheriting non-genetic things, that plays a role too, and gets folded into the same number.</div>
       </div>
-      <div class="panel numq" id="numqE">
+      <div class="panel numq" id="numqF">
         <div class="q">A different population, not this one. You choose parents who sit 2.0 inches above the average, and the tilt there is 0.45. How far above the average do their children come out?</div>
         <div class="row">
-          <input type="number" id="E_ans" min="-5" max="5" step="0.01" placeholder="inches" />
+          <input type="number" id="F_ans" min="-5" max="5" step="0.01" placeholder="inches" />
           <span class="unit">inches above the average</span>
-          <button id="E_submit">Submit</button>
+          <button id="F_submit">Submit</button>
         </div>
-        <div class="verdict" id="E_verdict"></div>
+        <div class="verdict" id="F_verdict"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line" data-line="h">h &lt;- <span class="num" id="cE_h">0.71</span>   <span class="com"># share of the spread handed down</span></span><span class="line" data-line="cut">cut &lt;- <span class="num" id="cE_cut">63.00</span></span><span class="line">sdA &lt;- <span class="num">2.55</span> * <span class="fn">sqrt</span>(h); sdE &lt;- <span class="num">2.55</span> * <span class="fn">sqrt</span>(<span class="num">1</span> - h)</span><span class="line"></span><span class="line">chosen &lt;- mp &gt;= cut</span><span class="line">S &lt;- <span class="fn">mean</span>(mp[chosen]) - <span class="fn">mean</span>(mp)</span><span class="line">tilt &lt;- <span class="fn">coef</span>(<span class="fn">lm</span>(kid ~ mp))[<span class="num">2</span>]</span><span class="line"></span><span class="line">tilt * S                          <span class="com"># what the tilt prices them at</span></span><span class="line"><span class="fn">mean</span>(kid[chosen]) - <span class="fn">mean</span>(kid)     <span class="com"># what the children did</span></span></pre>
+<pre class="code" id="codeF"><span class="line" data-line="h">h &lt;- <span class="num" id="cF_h">0.71</span>      <span class="com"># how much of the spread is handed down</span></span><span class="line" data-line="cut">cut &lt;- <span class="num" id="cF_cut">63.00</span>  <span class="com"># where the cut sits, in inches</span></span><span class="line">n &lt;- <span class="num">3000</span>; MU &lt;- <span class="num">69.2</span>; SD &lt;- <span class="num">2.55</span></span><span class="line">mp  &lt;- MU + <span class="fn">rnorm</span>(n, <span class="num">0</span>, SD)</span><span class="line">kid &lt;- MU + h*(mp - MU) + <span class="fn">rnorm</span>(n, <span class="num">0</span>, SD*<span class="fn">sqrt</span>(<span class="num">1</span> - h^<span class="num">2</span>))</span><span class="line"></span><span class="line">sel &lt;- mp &gt;= cut</span><span class="line">S &lt;- <span class="fn">mean</span>(mp[sel]) - <span class="fn">mean</span>(mp)   <span class="com"># how far you moved the parents</span></span><span class="line">R &lt;- <span class="fn">mean</span>(kid[sel]) - <span class="fn">mean</span>(kid)  <span class="com"># how far the children came</span></span><span class="line">R / S                          <span class="com"># the tilt, back out again</span></span></pre>
       </div>
     </div>
   </div>
 </section>
 
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
-
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
@@ -618,14 +767,16 @@ const G_MO = [
 const G_FAM = [
 0,0,0,0,1,1,1,1,2,2,3,3,3,3,3,4,4,4,4,4,4,5,6,6,6,6,6,6,7,7,7,8,9,10,10,10,10,10,10,10,10,11,12,12,13,13,14,14,14,15,15,15,15,15,15,15,15,15,16,16,16,16,16,16,17,17,17,18,19,19,19,19,19,19,19,19,20,20,20,21,21,21,22,22,22,22,22,22,22,23,24,24,25,25,25,25,25,26,26,26,27,27,27,27,27,27,28,28,28,29,30,30,30,30,30,30,31,31,31,31,31,32,32,32,32,32,33,34,34,34,34,34,35,35,35,35,36,36,36,36,37,37,37,37,37,37,38,38,39,39,39,39,39,40,41,41,41,41,41,41,42,42,43,43,44,44,44,45,45,45,45,45,45,45,45,46,46,46,46,47,47,47,48,48,48,48,48,48,48,49,49,50,50,51,51,51,51,51,52,52,52,52,52,52,52,52,52,53,53,53,53,54,54,54,54,54,55,55,55,55,55,56,56,56,56,56,57,57,57,57,57,57,57,58,59,59,60,60,60,60,61,61,61,61,61,61,62,63,63,63,63,63,64,65,65,65,65,65,65,65,65,65,65,65,66,66,66,66,67,67,67,67,67,68,68,68,68,68,68,68,68,69,69,69,69,69,70,70,70,70,70,70,71,71,71,71,71,71,71,72,72,72,73,73,74,74,74,74,74,74,74,75,75,75,75,75,75,75,76,76,76,76,77,77,77,77,77,78,78,78,78,78,78,78,78,79,80,80,80,80,81,81,81,81,81,81,81,81,81,82,82,82,82,82,82,82,82,83,83,83,83,84,84,84,84,84,85,85,85,85,86,86,86,86,87,87,87,87,88,88,88,88,88,88,88,88,89,89,89,89,89,89,89,90,90,90,91,91,92,92,92,92,93,93,94,94,94,95,95,95,95,95,96,96,96,96,96,96,96,96,96,96,97,98,98,98,98,98,98,98,98,99,99,99,100,100,100,100,101,101,101,101,101,101,102,102,102,102,102,102,102,103,103,103,103,104,104,104,104,104,104,105,105,105,105,105,105,105,106,106,106,106,106,106,106,106,106,107,107,107,107,107,107,107,108,108,108,108,108,108,108,109,109,109,109,110,111,111,111,112,113,113,113,113,113,113,114,114,114,114,114,114,114,115,115,115,116,117,117,117,118,118,118,118,118,119,119,119,119,119,119,119,119,119,119,119,120,120,120,120,120,120,120,120,121,121,121,121,122,122,122,122,122,123,123,123,123,123,123,123,123,123,124,124,124,125,125,125,125,126,127,127,128,128,128,129,129,129,129,129,129,129,129,129,129,129,130,130,131,131,132,132,132,132,132,132,132,133,133,133,133,134,134,134,134,134,134,134,134,136,136,136,136,136,136,136,136,135,135,135,135,135,135,135,135,135,135,137,137,137,137,138,138,138,138,138,139,140,140,140,140,140,140,140,140,140,140,141,141,141,141,141,141,141,141,142,142,142,142,143,144,144,144,144,145,145,145,145,145,145,145,145,146,146,146,146,146,146,147,148,149,149,149,149,149,150,151,151,152,153,153,153,153,153,154,155,155,155,155,155,155,155,156,156,156,156,157,158,158,158,158,158,158,158,158,158,158,159,159,159,159,159,160,161,161,161,161,161,161,161,161,162,162,162,162,162,162,163,163,163,163,163,164,164,164,164,165,165,165,166,166,166,166,166,166,166,166,166,166,166,167,167,167,167,168,168,168,168,168,168,168,168,169,169,169,170,170,170,170,170,171,172,172,172,172,172,172,172,172,173,173,173,173,173,173,173,173,173,174,174,174,174,174,175,175,175,175,175,175,176,176,176,176,176,176,176,176,177,177,177,177,177,178,179,179,180,180,180,180,180,180,181,181,181,181,181,181,181,182,183,183,183,183,184,185,185,185,185,185,185,185,185,185,185,185,185,185,185,185,186,186,186,186,187,188,188,188,188,189,189,189,189,189,190,190,190,190,190,190,190,190,190,191,191,192,192,192,192,192,192,193,193,193,193,193,193,194,194,195,195,195,196,196,196,196,197,197,197,197,197,198,198,198,198,198,198,198,199,199,199,199,199,199,199,200,201,201,202,202,203,203,203,204,204];
 /* ====== Stage gates =================================================
-   A stage opens the next by being solved. Written questions are recorded on
-   the first attempt only and getting one wrong never shuts a door. */
+   A stage opens the next by being solved. A written question is scored on
+   the first attempt only, and getting one wrong never shuts a door. Nothing
+   on this page says "recorded" to a student: a question comes back correct
+   or incorrect and that is the whole vocabulary. */
 const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false},
-                D:{open:false,done:false}, E:{open:false,done:false} };
-const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+                D:{open:false,done:false}, E:{open:false,done:false}, F:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:"F", F:null };
 const BIT = { A1:0, A2:1, Aq:2,  B1:3, B2:4, Bq:5,
               C1:6, C2:7, C3:8, Cq:9,  D1:10, D2:11, Dq:12,
-              E1:13, E2:14, Eq:15 };
+              E1:13, E2:14, E3:15, Eq:16,  F1:17, F2:18, Fq:19 };
 
 function unlockNext(stage) {
   const nx = NEXT[stage]; if (!nx) return;
@@ -641,6 +792,10 @@ function markTask(stage, key) {
   const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
   if (li) li.classList.add("done");
 }
+function taskDone(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  return !!(li && li.classList.contains("done"));
+}
 function showSolved(stage) {
   const el = document.getElementById("solved" + stage);
   if (el) el.classList.add("shown");
@@ -652,7 +807,7 @@ function record(pos, ok) {
   // The last question on the page is answered after the last gate has already
   // closed, so a code minted at that gate would hand in with the final bit
   // still zero. Re-mint whenever the lesson is already complete.
-  if (Gates.E.done && Score.finish) Score.finish();
+  if (Gates.F.done && Score.finish) Score.finish();
 }
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
 function finishStage(stage) {
@@ -670,352 +825,703 @@ function wireNumeric(id, opts) {
     if (isNaN(v)) return;
     const ok = opts.check(v);
     out.className = "verdict shown " + (ok ? "right" : "wrong");
-    out.textContent = ok ? opts.right : opts.wrong;
+    out.textContent = (ok ? "Correct. " : "Incorrect. ") + (ok ? opts.right : opts.wrong);
     if (ok) { btn.disabled = true; input.disabled = true; }
     if (!scored) { scored = true; record(opts.bit, ok); if (opts.after) opts.after(ok); }
   });
   return { show: () => box.classList.add("shown") };
+}
+/* Every lock-in button on this page reports the same two things: whether it
+   went in, and how many tries it has taken. Counting the tries is the point
+   -- sliding past an answer is not choosing it, and a student who lands it
+   fourth time has done something a student who lands it first time has not. */
+function lockReport(elId, ok, tries, okMsg, offMsg) {
+  const el = document.getElementById(elId);
+  el.innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>')
+               + " &middot; " + (ok ? okMsg : offMsg)
+               + ' <span class="attempts">(' + tries + (tries === 1 ? " try)" : " tries)") + '</span>';
 }
 
 /* ====== Galton, prepared once =======================================
    934 grown children from 205 families. Female heights already carry
    Galton's 1.08, so fathers, mothers, sons and daughters share one scale. */
 const KIDBAR = mean(G_KID), MPBAR = mean(G_MP);
-const G_SRC = { fa: G_FA, mo: G_MO, mp: G_MP };
-const G_LABEL = { fa: "the father's height (in)", mo: "the mother's height (in)", mp: "the two parents averaged (in)" };
-const G_NAME = { fa: "the father alone", mo: "the mother alone", mp: "both, averaged" };
-const G_BEST = { fa: tiltOf(G_FA, G_KID), mo: tiltOf(G_MO, G_KID), mp: tiltOf(G_MP, G_KID) };
-
-/* ====== Stage A =====================================================
-   A1: three real families, one at a time, and one rule dragged through the
-   middle of each. A2: the same 934 children sorted into five bands, one rule
-   per band -- which is the same act five times over, and the five answers are
-   a line. Nothing here is fitted for the student. */
-const A_FAMS = [185, 119, 96];       // Galton's families 185, 120, 097
-const sA = { fi: 0, rule: KIDBAR, locked: [], fams: [], bands: [], mode: 1 };
-
-(function prepA() {
-  for (const fid of A_FAMS) {
-    const kids = [], idx = [];
-    for (let i = 0; i < G_FAM.length; i++) if (G_FAM[i] === fid) { kids.push(G_KID[i]); idx.push(i); }
-    const i0 = idx[0];
-    sA.fams.push({ fa: G_FA[i0], mo: G_MO[i0], mp: G_MP[i0], kids: kids, mid: mean(kids) });
-  }
-  const edges = [62.0, 66.5, 68.0, 69.5, 71.0, 78.0];
+const G_TILT = tiltOf(G_MP, G_KID);                       // 0.713
+const G_R    = covar(G_MP, G_KID) / Math.sqrt(vari(G_MP) * vari(G_KID));  // 0.497
+const G_SDK  = Math.sqrt(vari(G_KID));                    // 2.583 in
+function missAt(tilt) {
+  let s = 0;
+  for (let i = 0; i < G_MP.length; i++) { const d = G_KID[i] - (KIDBAR + tilt * (G_MP[i] - MPBAR)); s += d * d; }
+  return Math.sqrt(s / G_MP.length);
+}
+const G_RESID = missAt(G_TILT);                           // 2.241 in
+// The children's average inside each strip of parents. Stage D draws these as
+// the marks a rightly-tilted line has to run through.
+const G_BANDS = (function () {
+  const edges = [62.0, 66.5, 68.0, 69.5, 71.0, 78.0], out = [];
   for (let b = 0; b < 5; b++) {
     const xs = [], ys = [];
     for (let i = 0; i < G_MP.length; i++) if (G_MP[i] >= edges[b] && G_MP[i] < edges[b + 1]) { xs.push(G_MP[i]); ys.push(G_KID[i]); }
-    sA.bands.push({ lo: edges[b], hi: edges[b + 1], xs: xs, ys: ys, xbar: mean(xs), mid: mean(ys), rule: KIDBAR });
+    out.push({ x: mean(xs), y: mean(ys), n: xs.length });
   }
+  return out;
 })();
 
-const A_TOL1 = 0.30, A_TOL2 = 0.20;
+/* ====== Stage A — 72% of what? ======================================
+   Two columns of a hundred squares and two rates. Everything the rest of the
+   lesson measures is already here: the gap between the two rates is what
+   knowing the parent buys, the correlation is that gap put on a scale that
+   travels, and the shrink is what the correlation is actually worth about one
+   person, which is always a great deal less than the correlation looks.
 
-function jitter(i, k) { const t = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return t - Math.floor(t); }
+   Phase 1 is three locked pairs, each with a call on a person pulled at
+   random -- the call is there so a student has committed to a prediction
+   before the page tells them what the prediction was worth. Phase 2 is ten
+   questions that run the relationship backwards: here is what it should be
+   worth, find the rate that makes it so. */
+const A_RNG = mulberry32(pageSeed("l8A", 1, 99999));
+const A_ORDER = (function () {            // a fixed scatter, so a slider move
+  const o = [[], []];                     // adds squares instead of reshuffling
+  for (const c of [0, 1]) {
+    const ix = []; for (let i = 0; i < 100; i++) ix.push(i);
+    for (let i = 99; i > 0; i--) { const j = Math.floor(A_RNG() * (i + 1)); const t = ix[i]; ix[i] = ix[j]; ix[j] = t; }
+    o[c] = ix;
+  }
+  return o;
+})();
+const sA = { p1: 72, p2: 72, song: false, pred: null, locked: [], phase: 1,
+             q: null, right: 0, asked: 0, hideGap: false };
 
-function drawA1() {
-  const cv = document.getElementById("plotA1");
+function corrA(p1, p2) {
+  const pb = (p1 + p2) / 2;
+  if (pb <= 0 || pb >= 1) return 0;
+  return 0.5 * (p1 - p2) / Math.sqrt(pb * (1 - pb));
+}
+function shrinkA(r) { return 1 - Math.sqrt(Math.max(0, 1 - r * r)); }
+
+function drawA() {
+  const cv = document.getElementById("plotA");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const pad = { l: 50, r: 16, t: 14, b: 46 };
-  const f = makeFrame(pad, W, H, 0, 1, 55, 80);
-  const fam = sA.fams[sA.fi];
-  // y axis
-  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t + f.H); ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H); ctx.stroke();
-  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  for (let v = 56; v <= 80; v += 4) { const y = f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l - 4, y); ctx.lineTo(f.pad.l, y); ctx.stroke(); ctx.fillText(String(v), f.pad.l - 6, y); }
-  ctx.save(); ctx.translate(f.pad.l - 32, f.pad.t + f.H / 2); ctx.rotate(-Math.PI / 2);
-  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = "#555";
-  ctx.fillText("height (in)", 0, 0); ctx.restore();
-  // everybody's average
-  ctx.strokeStyle = "#b9b5a6"; ctx.setLineDash([5, 4]); ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.y(KIDBAR)); ctx.lineTo(f.pad.l + f.W, f.y(KIDBAR)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle = "#8d8a80"; ctx.font = "10px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-  ctx.fillText("the average of all 934 children", f.pad.l + 3, f.y(KIDBAR) - 3);
-  // the two parents, and the mark halfway between them
-  const xF = f.x(0.11), xM = f.x(0.24), xMid = f.x(0.175);
-  ctx.strokeStyle = "#b9b5a6"; ctx.beginPath(); ctx.moveTo(xF, f.y(fam.fa)); ctx.lineTo(xM, f.y(fam.mo)); ctx.stroke();
-  ctx.fillStyle = DEEP;
-  for (const p of [[xF, fam.fa], [xM, fam.mo]]) { ctx.beginPath(); ctx.arc(p[0], f.y(p[1]), 6, 0, 6.2832); ctx.fill(); }
-  ctx.strokeStyle = DEEP; ctx.lineWidth = 1.5; ctx.beginPath();
-  ctx.moveTo(xMid, f.y(fam.mp) - 6); ctx.lineTo(xMid + 6, f.y(fam.mp)); ctx.lineTo(xMid, f.y(fam.mp) + 6); ctx.lineTo(xMid - 6, f.y(fam.mp)); ctx.closePath(); ctx.stroke();
-  // the children, with a stalk each to the rule
-  const yR = f.y(sA.rule);
-  const n = fam.kids.length;
-  for (let i = 0; i < n; i++) {
-    const x = f.x(0.50 + 0.44 * (n === 1 ? 0.5 : i / (n - 1))) + (jitter(i, sA.fi) - 0.5) * 6;
-    const y = f.y(fam.kids[i]);
-    ctx.strokeStyle = "#c9c5b8"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, yR); ctx.stroke();
-    ctx.fillStyle = DOT; ctx.beginPath(); ctx.arc(x, y, 4.5, 0, 6.2832); ctx.fill();
+  const cell = 17, pad = 2, side = 10 * cell;
+  const x0 = [Math.round(W / 2 - side - 34), Math.round(W / 2 + 34)], y0 = 44;
+  const on = sA.song ? LIFE : DEEP;
+  const k = [Math.round(sA.p1), Math.round(sA.p2)];
+  for (const c of [0, 1]) {
+    ctx.fillStyle = "#3d3d3a"; ctx.font = "600 11.5px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(c === 0 ? "parents have it" : "parents do not", x0[c] + side / 2, y0 - 20);
+    ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
+    ctx.fillText("100 people", x0[c] + side / 2, y0 - 6);
+    const fill = new Array(100).fill(false);
+    for (let i = 0; i < k[c]; i++) fill[A_ORDER[c][i]] = true;
+    for (let i = 0; i < 100; i++) {
+      const r = Math.floor(i / 10), q = i % 10;
+      ctx.fillStyle = fill[i] ? on : PALE;
+      ctx.fillRect(x0[c] + q * cell, y0 + r * cell, cell - pad, cell - pad);
+    }
+    ctx.fillStyle = "#3d3d3a"; ctx.font = "600 12px ui-monospace, Menlo, monospace";
+    ctx.textBaseline = "top";
+    ctx.fillText(k[c] + " of 100", x0[c] + side / 2, y0 + side + 8);
+    ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
+    ctx.fillText(sA.song ? "like the song" : "have the disease", x0[c] + side / 2, y0 + side + 24);
   }
-  // the rule
-  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
-  ctx.moveTo(f.pad.l, yR); ctx.lineTo(f.pad.l + f.W, yR); ctx.stroke();
-  ctx.fillStyle = HOT; ctx.fillRect(f.pad.l + f.W - 10, yR - 5, 10, 10);
-  // x labels
-  ctx.fillStyle = "#555"; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("the father", xF, f.pad.t + f.H + 8);
-  ctx.fillText("the mother × 1.08", xM, f.pad.t + f.H + 22);
-  ctx.fillText("their " + n + " grown children", f.x(0.72), f.pad.t + f.H + 8);
-  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
-  ctx.fillText("family " + (sA.fi + 1) + " of 3", f.x(0.72), f.pad.t + f.H + 22);
-  sA._f1 = f;
-}
-
-function drawA2() {
-  const cv = document.getElementById("plotA2");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const pad = { l: 50, r: 16, t: 14, b: 44 };
-  const f = makeFrame(pad, W, H, 62, 78, 55, 80);
-  for (let b = 0; b < 5; b++) {
-    const bd = sA.bands[b];
-    ctx.fillStyle = (b % 2) ? "#f7f5ef" : "#fdfcf9";
-    ctx.fillRect(f.x(bd.lo), f.pad.t, f.x(bd.hi) - f.x(bd.lo), f.H);
-  }
-  drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
-  ctx.fillStyle = "rgba(92,134,161,0.5)";
-  for (let i = 0; i < G_MP.length; i++) {
-    const x = f.x(G_MP[i]) + (jitter(i, 3) - 0.5) * 3.5, y = f.y(G_KID[i]);
-    ctx.beginPath(); ctx.arc(x, y, 1.9, 0, 6.2832); ctx.fill();
-  }
-  // the five rules, joined so the shape they are making stays visible
-  ctx.strokeStyle = "#c9b0b5"; ctx.lineWidth = 1; ctx.setLineDash([4, 3]); ctx.beginPath();
-  for (let b = 0; b < 5; b++) {
-    const bd = sA.bands[b], xm = f.x(bd.xbar);
-    if (b === 0) ctx.moveTo(xm, f.y(bd.rule)); else ctx.lineTo(xm, f.y(bd.rule));
-  }
-  ctx.stroke(); ctx.setLineDash([]);
-  let centred = 0;
-  for (let b = 0; b < 5; b++) {
-    const bd = sA.bands[b], ok = Math.abs(bd.rule - bd.mid) <= A_TOL2;
-    if (ok) centred++;
-    ctx.strokeStyle = ok ? "#4a7a2a" : HOT; ctx.lineWidth = 3; ctx.beginPath();
-    ctx.moveTo(f.x(bd.lo) + 2, f.y(bd.rule)); ctx.lineTo(f.x(bd.hi) - 2, f.y(bd.rule)); ctx.stroke();
-    // the point the tilt is actually read from: this band's average parent
-    ctx.fillStyle = ok ? "#4a7a2a" : HOT; ctx.beginPath();
-    ctx.arc(f.x(bd.xbar), f.y(bd.rule), 4, 0, 6.2832); ctx.fill();
-  }
-  sA._f2 = f; sA._centred = centred;
-}
-
-function tiltA2() {
-  const xs = sA.bands.map(b => b.xbar), ys = sA.bands.map(b => b.rule);
-  return tiltOf(xs, ys);
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText(sA.song ? "a colored square is a person who likes the song"
+                       : "a colored square is a person who has the disease",
+               W / 2, y0 + side + 46);
 }
 
 function refreshA() {
-  const fam = sA.fams[sA.fi];
-  drawA1();
-  document.getElementById("A_fa").textContent = f2(fam.fa) + " in";
-  document.getElementById("A_mo").textContent = f2(fam.mo) + " in";
-  document.getElementById("A_mp").textContent = f2(fam.mp) + " in";
-  document.getElementById("A_rule").textContent = f2(sA.rule) + " in";
-  let s = 0; for (const k of fam.kids) s += (k - sA.rule) * (k - sA.rule);
-  document.getElementById("A_miss").textContent = f3(Math.sqrt(s / fam.kids.length)) + " in";
-  if (sA.mode === 2) {
-    drawA2();
-    document.getElementById("A_bands").textContent = String(sA._centred);
-    document.getElementById("A_tilt").textContent = sA._centred === 5 ? f2(tiltA2()) : "—";
-    document.getElementById("A2_now").textContent = sA._centred + " of 5 centred";
-  }
+  const p1 = sA.p1 / 100, p2 = sA.p2 / 100;
+  const r = corrA(p1, p2);
+  drawA();
+  document.getElementById("A_pYes").textContent = sA.p1 + "%";
+  document.getElementById("A_pNo").textContent  = sA.p2 + "%";
+  document.getElementById("A_gap").textContent  = sA.hideGap ? "—" : (Math.round(sA.p1 - sA.p2) + " points");
+  document.getElementById("A_corr").textContent = sA.hideGap ? "—" : f2(r);
+  document.getElementById("A_shrink").textContent = sA.hideGap ? "—" : Math.round(shrinkA(r) * 100) + "%";
+  document.getElementById("A_p1Out").value = sA.p1 + "%";
+  document.getElementById("A_p2Out").value = sA.p2 + "%";
+  document.getElementById("cA_p1").textContent = f2(p1);
+  document.getElementById("cA_p2").textContent = f2(p2);
 }
 
-(function wireA() {
-  const c1 = document.getElementById("plotA1"), c2 = document.getElementById("plotA2");
-  let drag = null;
-  function down(cv, which, e) {
-    if (!Gates.A.open) return;
-    cv.setPointerCapture(e.pointerId); drag = { cv: cv, which: which }; move(e); bump("A");
+/* --- phase 1: lock a pair, and call the person you pull out of it --- */
+function wireA1() {
+  for (const b of document.querySelectorAll("#A_pred button")) {
+    b.addEventListener("click", () => {
+      if (!Gates.A.open) return;
+      for (const o of document.querySelectorAll("#A_pred button")) o.classList.remove("on");
+      b.classList.add("on"); sA.pred = +b.dataset.p;
+      document.getElementById("A_lock").disabled = false;
+    });
   }
-  function move(e) {
-    if (!drag) return;
-    const p = canvasPt(drag.cv, e);
-    if (drag.which === 1) {
-      sA.rule = clamp(yInv(sA._f1, p.y), 55, 80);
-    } else {
-      const xv = xInv(sA._f2, p.x);
-      let b = 0; while (b < 4 && xv >= sA.bands[b].hi) b++;
-      if (drag.band == null) drag.band = b;
-      sA.bands[drag.band].rule = clamp(yInv(sA._f2, p.y), 55, 80);
-    }
-    refreshA();
-    if (drag.which === 2) checkA2();
-  }
-  function up(e) { if (drag && drag.cv.releasePointerCapture) { try { drag.cv.releasePointerCapture(e.pointerId); } catch (x) {} } drag = null; }
-  c1.addEventListener("pointerdown", e => down(c1, 1, e));
-  c2.addEventListener("pointerdown", e => down(c2, 2, e));
-  for (const cv of [c1, c2]) { cv.addEventListener("pointermove", move); cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up); }
-
   document.getElementById("A_lock").addEventListener("click", () => {
-    if (sA.mode !== 1) return;
-    const fam = sA.fams[sA.fi], msg = document.getElementById("A_lockmsg");
-    if (Math.abs(sA.rule - fam.mid) > A_TOL1) { msg.innerHTML = '<span class="off">the miss can still go lower than that</span>'; return; }
-    sA.locked.push({ mp: fam.mp, rule: sA.rule });
-    msg.innerHTML = '<span class="ok">locked in</span>';
+    if (sA.phase !== 1 || sA.pred == null) return;
+    const p1 = sA.p1 / 100, p2 = sA.p2 / 100, r = corrA(p1, p2);
+    const has = A_RNG() < p1 ? 1 : 0, ok = (has === sA.pred);
+    const gap = Math.abs(sA.p1 - sA.p2);
+    const fresh = sA.locked.every(L => Math.abs(L.gap - gap) >= 5);
+    if (!fresh) {
+      document.getElementById("A_flip").innerHTML =
+        '<span class="off">that pair is worth the same as one you already locked in</span> &middot; move the sliders further apart, or closer together';
+      return;
+    }
+    sA.locked.push({ p1: sA.p1, p2: sA.p2, gap: gap, r: r });
+    document.getElementById("A_flip").innerHTML =
+      "you said <b>" + (sA.pred ? "yes" : "no") + "</b> &middot; the person you pulled out "
+      + (has ? "has it" : "does not") + " &middot; " + (ok ? '<span class="ok">right this time</span>' : '<span class="off">wrong this time</span>')
+      + "<br>saying yes is right " + sA.p1 + " times in 100 in that group, and " + sA.p2 + " in 100 in the other one";
     const list = document.getElementById("A_list");
     if (sA.locked.length === 1) list.innerHTML = "";
     const row = document.createElement("div");
-    row.innerHTML = '<span class="lab">parents averaging ' + f2(fam.mp) + ' in</span><span class="val">children ' + f2(sA.rule) + ' in</span>';
+    row.innerHTML = '<span class="lab">' + sA.p1 + '% against ' + sA.p2 + '%</span><span class="val">moves you ' +
+                    (sA.p1 - sA.p2) + ' points &middot; r = ' + f2(r) + '</span>';
     list.appendChild(row);
     document.getElementById("A1_now").textContent = String(sA.locked.length);
+    bump("A");
+    for (const o of document.querySelectorAll("#A_pred button")) o.classList.remove("on");
+    sA.pred = null; document.getElementById("A_lock").disabled = true;
     if (sA.locked.length >= 3) {
       markTask("A", "A1"); record(BIT.A1, true);
-      sA.mode = 2;
-      document.getElementById("stepA2").classList.add("shown");
-      document.getElementById("A_lock").disabled = true;
-      document.getElementById("A2_now").textContent = "0 of 5 centred";
-      refreshA();
-    } else { sA.fi++; sA.rule = KIDBAR; refreshA(); }
+      sA.phase = 2;
+      document.getElementById("A_phase1").style.display = "none";
+      document.getElementById("A_phase2").style.display = "";
+      document.getElementById("A2_now").textContent = "0 of 10 correct";
+      nextQA();
+    }
   });
   wireDownload("A_download", "codeA", "lesson8_stageA.R");
+}
+
+/* --- phase 2: ten questions, run backwards ------------------------- */
+function rAt(P, p2) { return corrA(P / 100, p2 / 100); }
+function solveForR(P, target) {           // the rate that gets closest to a target r
+  let best = null, bestd = 9;
+  for (let v = 0; v <= 100; v++) { const d = Math.abs(rAt(P, v) - target); if (d < bestd) { bestd = d; best = v; } }
+  return { p2: best, err: bestd };
+}
+function makeQA() {
+  if (sA.asked % 2 === 0) {
+    const P = 20 + 5 * Math.floor(A_RNG() * 13);           // 20..80
+    const G = 10 + 10 * Math.floor(A_RNG() * 5);           // 10..50
+    const ans = [P - G, P + G].filter(v => v >= 0 && v <= 100);
+    return { kind: "gap", P: P, G: G, ans: ans, hide: true,
+             text: "Children of parents who have it: <b>" + P + "%</b>. Move the second slider until knowing the parents moves your estimate by <span class=\"target\">" + G + " points</span>." };
+  }
+  const targets = [-0.30, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65];
+  for (let t = 0; t < 40; t++) {
+    const P = 15 + 5 * Math.floor(A_RNG() * 15);           // 15..85
+    const R = targets[Math.floor(A_RNG() * targets.length)];
+    const s = solveForR(P, R);
+    if (s.err <= 0.012) {
+      return { kind: "corr", P: P, R: R, ans: [s.p2], hide: false,
+               text: "Children of parents who have it: <b>" + P + "%</b>. Move the second slider until the correlation reads <span class=\"target\">" + f2(R) + "</span>." };
+    }
+  }
+  return { kind: "gap", P: 50, G: 20, ans: [30, 70], hide: true,
+           text: "Children of parents who have it: <b>50%</b>. Move the second slider until knowing the parents moves your estimate by <span class=\"target\">20 points</span>." };
+}
+function nextQA() {
+  sA.q = makeQA();
+  sA.p1 = sA.q.P;
+  sA.hideGap = sA.q.hide;
+  document.getElementById("A_p1").value = String(sA.p1);
+  document.getElementById("A_p1").disabled = true;
+  document.getElementById("A_qprompt").innerHTML = sA.q.text;
+  refreshA();
+}
+function wireA2() {
+  document.getElementById("A_qskip").addEventListener("click", () => {
+    if (sA.phase !== 2 || Gates.A.done) return;
+    document.getElementById("A_qflip").innerHTML = "";
+    nextQA();
+  });
+  document.getElementById("A_qlock").addEventListener("click", () => {
+    if (sA.phase !== 2 || !sA.q || Gates.A.done) return;
+    const q = sA.q, v = sA.p2;
+    const ok = q.ans.some(a => Math.abs(v - a) <= 5);
+    sA.asked++;
+    if (ok) sA.right++;
+    // The prompt has already moved on by the time this is read, so the verdict
+    // has to name the question it belongs to or it reads as a contradiction.
+    const shown = q.ans.map(a => a + "%").join(" or ");
+    const asked = q.kind === "gap" ? (q.G + " points from " + q.P + "%")
+                                   : ("r = " + f2(q.R) + " from " + q.P + "%");
+    document.getElementById("A_qflip").innerHTML = ok
+      ? '<span class="ok">correct</span> &middot; ' + asked + " wanted " + shown
+      : '<span class="off">incorrect</span> &middot; ' + asked + " wanted " + shown + ", you locked in " + v + "%";
+    document.getElementById("A_tally").textContent = sA.right + " of 10 correct";
+    document.getElementById("A_tally").classList.toggle("on", sA.right >= 10);
+    document.getElementById("A2_now").textContent = sA.right + " of 10 correct, " + sA.asked + " answered";
+    bump("A");
+    if (sA.right >= 10 && !taskDone("A", "A2")) {
+      markTask("A", "A2"); record(BIT.A2, true);
+      sA.hideGap = false;
+      document.getElementById("A_p1").disabled = false;
+      document.getElementById("A_qlock").disabled = true;
+      document.getElementById("A_qskip").disabled = true;
+      document.getElementById("A_qprompt").textContent = "Ten of ten. Both sliders are yours again.";
+      qA.show(); finishStage("A"); refreshA();
+      return;
+    }
+    nextQA();
+  });
+}
+
+(function wireA() {
+  document.getElementById("A_p1").addEventListener("input", ev => {
+    sA.p1 = parseInt(ev.target.value, 10); bump("A"); highlightByDataLine("codeA", "p1"); refreshA();
+  });
+  document.getElementById("A_p2").addEventListener("input", ev => {
+    sA.p2 = parseInt(ev.target.value, 10); bump("A"); highlightByDataLine("codeA", "p2"); refreshA();
+  });
+  document.getElementById("A_song").addEventListener("change", ev => { sA.song = ev.target.checked; refreshA(); });
+  wireA1(); wireA2();
 })();
 
 const qA = wireNumeric("A", {
   bit: BIT.Aq,
-  check: v => Math.abs(v - 0.71) <= 0.11,
-  right: "Around 0.7. Every inch of parent buys about two-thirds of an inch of child, and the third inch goes somewhere else.",
-  wrong: "Not that. Read it off the line under the plot.",
+  check: v => Math.abs(v - 72) <= 2,
+  right: "72%. A rate only says something about somebody once you know the rate it is being compared against.",
+  wrong: "Not that. Put the top slider on 72 and find the other rate that leaves the two columns indistinguishable.",
   after: () => markTask("A", "A3")
 });
 
-function checkA2() {
-  if (sA.mode !== 2 || sA._centred !== 5) return;
-  if (!document.querySelector('#tasksA li[data-task="A2"]').classList.contains("done")) {
-    markTask("A", "A2"); record(BIT.A2, true); qA.show(); finishStage("A");
-  }
+/* ====== Stage B — four limbs, and no resemblance ====================
+   Everybody's genes say four. All the variation is accidents, so the
+   genetic variation in this trait is flatly zero at every setting. The
+   second slider does not touch a gene: it decides whether the accidents
+   land at random or land in families, and the parent-offspring correlation
+   climbs out of nothing the moment they land in families. That is the
+   direction-of-causation flip, done with a number on the page.
+
+   The uniforms behind the accident draws are fixed per seed, so moving a
+   slider morphs the same 400 families rather than dealing new ones. */
+const B_N = 1200, B_K = 4.2;
+const sB = { seed: pageSeed("l8B", 1, 99999), acc: 0, fam: 0,
+             Z: null, P: null, tries1: 0, tries2: 0, accLocked: null };
+
+function makeZB(seed, n) {
+  const z = makeNormal(mulberry32(seed)), u = mulberry32(seed ^ 0x5bf03635);
+  const o = { L: new Float64Array(n), ep: new Float64Array(n), ec: new Float64Array(n),
+              up: new Float64Array(2 * n), uc: new Float64Array(2 * n) };
+  for (let i = 0; i < n; i++) { o.L[i] = z(); o.ep[i] = z(); o.ec[i] = z(); }
+  for (let i = 0; i < 2 * n; i++) { o.up[i] = u(); o.uc[i] = u(); }
+  return o;
 }
+sB.Z = makeZB(sB.seed, B_N);
 
-/* ====== Stage B =====================================================
-   The same children as Stage A, all at once, and the line is now an input.
-   The bar is the point of the stage: the block is fixed, and the tilt decides
-   only how it is divided. On Galton's families the leftover cannot be broken
-   open any further, which is what Stage C is for. */
-const XBAR = { fa: mean(G_FA), mo: mean(G_MO), mp: mean(G_MP) };
-const XLIM = { fa: [60, 80], mo: [60, 80], mp: [62, 78] };
-const sB = { src: "mp", tilt: { fa: 0, mo: 0, mp: 0 }, fitted: { fa: false, mo: false, mp: false } };
-const B_TOL = 0.04;
-
-function statsB() {
-  const xs = G_SRC[sB.src], xb = XBAR[sB.src], t = sB.tilt[sB.src];
-  let s = 0;
-  for (let i = 0; i < xs.length; i++) { const d = G_KID[i] - (KIDBAR + t * (xs[i] - xb)); s += d * d; }
-  const left = s / xs.length, total = vari(G_KID);
-  return { left: left, total: total, acc: 1 - left / total, miss: Math.sqrt(left), tilt: t };
+function popB(Z, acc, fam) {
+  const n = B_N, par = new Float64Array(n), kid = new Float64Array(n);
+  if (acc <= 0) {
+    for (let i = 0; i < n; i++) { par[i] = 4; kid[i] = 4; }
+    return { par: par, kid: kid, share: 0, corr: 0 };
+  }
+  const sf = Math.sqrt(fam), sr = Math.sqrt(1 - fam), lg = Math.log(acc / (1 - acc));
+  const pp = new Float64Array(n), pc = new Float64Array(n);
+  let sp = 0, sc = 0;
+  for (let i = 0; i < n; i++) {
+    const zp = sf * Z.L[i] + sr * Z.ep[i], zc = sf * Z.L[i] + sr * Z.ec[i];
+    pp[i] = 1 / (1 + Math.exp(-(lg + B_K * zp)));
+    pc[i] = 1 / (1 + Math.exp(-(lg + B_K * zc)));
+    sp += pp[i]; sc += pc[i];
+  }
+  // Hold the marginal accident rate where the first slider put it, so moving
+  // danger into families does not quietly change how many limbs are lost.
+  const kp = acc / (sp / n), kc = acc / (sc / n);
+  let hurt = 0;
+  for (let i = 0; i < n; i++) {
+    const a = clamp(pp[i] * kp, 0, 1), b = clamp(pc[i] * kc, 0, 1);
+    let lp = 0, lc = 0;
+    if (Z.up[2 * i] < a) lp++; if (Z.up[2 * i + 1] < a) lp++;
+    if (Z.uc[2 * i] < b) lc++; if (Z.uc[2 * i + 1] < b) lc++;
+    par[i] = 4 - lp; kid[i] = 4 - lc;
+    if (lp > 0) hurt++; if (lc > 0) hurt++;
+  }
+  const vp = vari(par), vk = vari(kid);
+  const r = (vp < 1e-9 || vk < 1e-9) ? 0 : covar(par, kid) / Math.sqrt(vp * vk);
+  return { par: par, kid: kid, share: hurt / (2 * n), corr: r };
 }
 
 function drawB() {
-  const cv = document.getElementById("plotB");
+  const P = sB.P, cv = document.getElementById("plotB");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const lim = XLIM[sB.src];
-  const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, lim[0], lim[1], 55, 80);
-  drawAxes(ctx, f, G_LABEL[sB.src], "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
-  const xs = G_SRC[sB.src], xb = XBAR[sB.src], t = sB.tilt[sB.src];
-  const yAt = xv => KIDBAR + t * (xv - xb);
-  ctx.strokeStyle = "rgba(190,186,175,0.75)"; ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let i = 0; i < xs.length; i++) {
-    const x = f.x(xs[i]) + (jitter(i, 5) - 0.5) * 3;
-    ctx.moveTo(x, f.y(G_KID[i])); ctx.lineTo(x, f.y(clamp(yAt(xs[i]), 55, 80)));
+  const f = makeFrame({ l: 54, r: 16, t: 14, b: 52 }, W, H, 1.5, 4.5, 1.5, 4.5);
+  // The scale is 2, 3 and 4 limbs and nothing in between, so the ticks are
+  // drawn by hand -- evenly spaced ticks across this range land on 1.5 and 2.7.
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t + f.H);
+  ctx.lineTo(f.pad.l + f.W, f.pad.t + f.H); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const v of [2, 3, 4]) {
+    const x = f.x(v);
+    ctx.beginPath(); ctx.moveTo(x, f.pad.t + f.H); ctx.lineTo(x, f.pad.t + f.H + 4); ctx.stroke();
+    ctx.fillText(String(v), x, f.pad.t + f.H + 6);
   }
-  ctx.stroke();
-  ctx.fillStyle = "rgba(92,134,161,0.55)";
-  for (let i = 0; i < xs.length; i++) {
-    const x = f.x(xs[i]) + (jitter(i, 5) - 0.5) * 3;
-    ctx.beginPath(); ctx.arc(x, f.y(G_KID[i]), 2.0, 0, 6.2832); ctx.fill();
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of [2, 3, 4]) {
+    const y = f.y(v);
+    ctx.beginPath(); ctx.moveTo(f.pad.l - 4, y); ctx.lineTo(f.pad.l, y); ctx.stroke();
+    ctx.fillText(String(v), f.pad.l - 6, y);
   }
-  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
-  ctx.moveTo(f.x(lim[0]), f.y(clamp(yAt(lim[0]), 55, 80)));
-  ctx.lineTo(f.x(lim[1]), f.y(clamp(yAt(lim[1]), 55, 80)));
-  ctx.stroke();
-  sB._f = f;
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = "#555";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("the parent's limbs", f.pad.l + f.W / 2, f.pad.t + f.H + 24);
+  ctx.save(); ctx.translate(f.pad.l - 34, f.pad.t + f.H / 2); ctx.rotate(-Math.PI / 2);
+  ctx.textBaseline = "bottom"; ctx.fillText("the child's limbs", 0, 0); ctx.restore();
+
+  ctx.fillStyle = "rgba(92,134,161,0.16)";
+  for (let i = 0; i < B_N; i++) {
+    const x = f.x(P.par[i] + (jitterB(i, 1) - 0.5) * 0.62);
+    const y = f.y(P.kid[i] + (jitterB(i, 2) - 0.5) * 0.62);
+    ctx.beginPath(); ctx.arc(x, y, 2.1, 0, 6.2832); ctx.fill();
+  }
+  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  ctx.fillText("every genome in here says four", f.pad.l + f.W, f.pad.t + 2);
 }
+function jitterB(i, k) { const t = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return t - Math.floor(t); }
 
 function refreshB() {
+  sB.P = popB(sB.Z, sB.acc / 100, sB.fam);
   drawB();
-  const st = statsB();
-  document.getElementById("B_tilt").textContent = f2(st.tilt);
-  document.getElementById("B_miss").textContent = f3(st.miss) + " in";
-  document.getElementById("B_acc").textContent = f2(Math.max(0, st.acc));
-  const cv = document.getElementById("barB");
-  const { ctx, W, H } = setupCanvas(cv);
-  const a = clamp(st.acc, 0, 1);
-  drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: 1 - a, color: PALE }],
-          "dark: what the line accounts for   ·   pale: what it leaves over");
-  document.getElementById("B_tiltOut").value = f2(st.tilt);
-  document.getElementById("B_tilt_s").value = String(st.tilt);
-  const c = document.getElementById("cB_tilt"); if (c) c.textContent = f2(st.tilt);
-  checkB();
-}
-
-function checkB() {
-  const st = statsB();
-  const at = Math.abs(st.tilt - G_BEST[sB.src]) <= B_TOL;
-  if (at && !sB.fitted[sB.src]) {
-    sB.fitted[sB.src] = true;
-    const list = document.getElementById("B_list");
-    if (list.querySelector("div[style]")) list.innerHTML = "";
-    const row = document.createElement("div");
-    row.innerHTML = '<span class="lab">' + G_NAME[sB.src] + '</span><span class="val">tilt ' + f2(G_BEST[sB.src]) + ' · accounts for ' + f2(Math.max(0, st.acc)) + '</span>';
-    list.appendChild(row);
-    const n = ["fa", "mo", "mp"].filter(k => sB.fitted[k]).length;
-    document.getElementById("B2_now").textContent = String(n);
-  }
-  if (sB.fitted.mp && !document.querySelector('#tasksB li[data-task="B1"]').classList.contains("done")) {
-    markTask("B", "B1"); record(BIT.B1, true);
-    document.getElementById("B1_now").textContent = "found";
-  }
-  const all = sB.fitted.fa && sB.fitted.mo && sB.fitted.mp;
-  if (all && !document.querySelector('#tasksB li[data-task="B2"]').classList.contains("done")) {
-    markTask("B", "B2"); record(BIT.B2, true); qB.show(); finishStage("B");
-  }
+  document.getElementById("B_share").textContent = Math.round(sB.P.share * 100) + "%";
+  document.getElementById("B_corr").textContent = f2(sB.P.corr);
+  document.getElementById("B_gvar").textContent = "none";
+  document.getElementById("B_accOut").value = sB.acc + "%";
+  document.getElementById("B_famOut").value = f2(sB.fam);
+  document.getElementById("cB_acc").textContent = f2(sB.acc / 100);
+  document.getElementById("cB_fam").textContent = f2(sB.fam);
 }
 
 (function wireB() {
-  const cv = document.getElementById("plotB");
-  let dragging = false;
-  function apply(e) {
-    const p = canvasPt(cv, e), f = sB._f;
-    const xv = xInv(f, p.x), yv = yInv(f, p.y);
-    if (Math.abs(xv - XBAR[sB.src]) < 0.5) return;
-    sB.tilt[sB.src] = clamp((yv - KIDBAR) / (xv - XBAR[sB.src]), -0.30, 1.40);
-    refreshB();
-  }
-  cv.addEventListener("pointerdown", e => { if (!Gates.B.open) return; cv.setPointerCapture(e.pointerId); dragging = true; bump("B"); apply(e); });
-  cv.addEventListener("pointermove", e => { if (dragging) apply(e); });
-  cv.addEventListener("pointerup", e => { dragging = false; try { cv.releasePointerCapture(e.pointerId); } catch (x) {} });
-  cv.addEventListener("pointercancel", () => { dragging = false; });
-
-  document.getElementById("B_tilt_s").addEventListener("input", e => {
-    sB.tilt[sB.src] = parseFloat(e.target.value); bump("B");
-    highlightByDataLine("codeB", "tilt"); refreshB();
+  document.getElementById("B_acc").addEventListener("input", ev => {
+    sB.acc = parseInt(ev.target.value, 10); bump("B"); highlightByDataLine("codeB", "acc"); refreshB();
   });
-  document.querySelectorAll("#B_pick button").forEach(b => {
-    b.addEventListener("click", () => {
-      document.querySelectorAll("#B_pick button").forEach(o => o.classList.remove("on"));
-      b.classList.add("on"); sB.src = b.dataset.src; bump("B"); refreshB();
-    });
+  document.getElementById("B_fam").addEventListener("input", ev => {
+    sB.fam = parseFloat(ev.target.value); bump("B"); highlightByDataLine("codeB", "fam"); refreshB();
+  });
+  document.getElementById("B_reseed").addEventListener("click", () => {
+    sB.seed = randomSeed(1, 99999); sB.Z = makeZB(sB.seed, B_N); bump("B"); refreshB();
+  });
+  document.getElementById("B_lock").addEventListener("click", () => {
+    if (!Gates.B.open || Gates.B.done) return;
+    const P = sB.P;
+    if (!taskDone("B", "B1")) {
+      sB.tries1++;
+      const ok = sB.fam <= 0.03 && P.share >= 0.25 && Math.abs(P.corr) < 0.10;
+      lockReport("B_flip", ok, sB.tries1,
+        "a quarter of them are missing a limb and a parent tells you nothing about a child",
+        sB.fam > 0.03 ? "danger has to be spread evenly for this one"
+                      : (P.share < 0.25 ? "not enough of them are hurt yet" : "the correlation is still too high"));
+      if (ok) {
+        markTask("B", "B1"); record(BIT.B1, true); sB.accLocked = sB.acc;
+        document.getElementById("B1_now").textContent = "locked in on try " + sB.tries1;
+      }
+      return;
+    }
+    if (!taskDone("B", "B2")) {
+      sB.tries2++;
+      const held = Math.abs(sB.acc - sB.accLocked) <= 2;
+      const ok = held && P.corr > 0.25;
+      lockReport("B_flip", ok, sB.tries2,
+        "same accident rate, same genes, and now a parent predicts a child",
+        !held ? "the accident rate has to stay at " + sB.accLocked + "%" : "the correlation is not over 0.25 yet");
+      if (ok) {
+        markTask("B", "B2"); record(BIT.B2, true);
+        document.getElementById("B2_now").textContent = "locked in on try " + sB.tries2;
+        qB.show(); finishStage("B");
+      }
+    }
   });
   wireDownload("B_download", "codeB", "lesson8_stageB.R");
 })();
 
 const qB = wireNumeric("B", {
   bit: BIT.Bq,
-  check: v => Math.abs(v - 0.247) <= 0.045,
-  right: "About a quarter. The tilt is 0.71 and the share is 0.25, and those are two different measurements of the same line.",
-  wrong: "Not that. It is the dark part of the bar with both parents on the axis, read as a decimal.",
+  check: v => v >= 0.56 && v <= 0.78,
+  right: "Around 0.66, and every gene in the population still says four. A correlation between a parent and a child is not a statement about genes.",
+  wrong: "Not that. Accident rate to 40%, danger all the way into families, and read the correlation off the page.",
   after: () => markTask("B", "B3")
 });
 
-/* ====== The model behind Stages C, D and E ==========================
-   Standard normal draws are made once per seed and the knobs only scale
-   them, so moving a knob morphs the same cloud instead of reshuffling it --
-   which is the difference between seeing what a knob does and watching a
-   slideshow. A child is handed half of each parent's pile plus a fresh draw
-   of the same size as half a pile, which is what keeps the spread of the
-   children equal to the spread of the parents generation after generation. */
+/* ====== Stage C — move the eggs =====================================
+   A chick's song is built out of three things: what it copies off whoever
+   raises it, what came in the egg, and noise. With the eggs left alone the
+   tutor and the father are the same bird and the two resemblances are one
+   number, which is exactly the situation a field measurement is in. Moving
+   the eggs is the only thing that pulls them apart, and it is the whole
+   reason cross-fostering exists as an experimental design. */
+const C_N = 600;
+const sC = { seed: pageSeed("l8C", 1, 99999), copy: 0, egg: 0, swap: 0, step: 1,
+             Z: null, P: null, guess: 0.50, tries1: 0, tries2: 0, tries3: 0 };
+
+function makeZC(seed, n) {
+  const z = makeNormal(mulberry32(seed)), u = mulberry32(seed ^ 0x2f6b8f1d);
+  const o = { G: new Float64Array(n), u: new Float64Array(n), e: new Float64Array(n), perm: new Int32Array(n) };
+  for (let i = 0; i < n; i++) { o.G[i] = z(); o.u[i] = z(); o.e[i] = z(); o.perm[i] = i; }
+  // A derangement in one pass: every chick lands in somebody else's nest.
+  for (let i = n - 1; i > 0; i--) { const j = Math.floor(u() * i); const t = o.perm[i]; o.perm[i] = o.perm[j]; o.perm[j] = t; }
+  return o;
+}
+sC.Z = makeZC(sC.seed, C_N);
+
+function corrOf(a, b) {
+  const va = vari(a), vb = vari(b);
+  return (va < 1e-9 || vb < 1e-9) ? 0 : covar(a, b) / Math.sqrt(va * vb);
+}
+function popC(Z, cp, eg, swap) {
+  const n = C_N, dad = new Float64Array(n), tut = new Float64Array(n), chick = new Float64Array(n);
+  const s = Math.sqrt(Math.max(0, 1 - eg * eg));
+  for (let i = 0; i < n; i++) dad[i] = eg * Z.G[i] + s * Z.u[i];
+  for (let i = 0; i < n; i++) tut[i] = swap ? dad[Z.perm[i]] : dad[i];
+  const ve = Math.max(0.02, 1 - (cp * cp + eg * eg + 2 * cp * eg * eg)), se = Math.sqrt(ve);
+  for (let i = 0; i < n; i++) chick[i] = cp * tut[i] + eg * Z.G[i] + se * Z.e[i];
+  return { dad: dad, tut: tut, chick: chick, rT: corrOf(chick, tut), rG: corrOf(chick, dad) };
+}
+
+/* padL and padR are paddings, not edges -- makeFrame subtracts both from W. */
+function panelC(ctx, W, H, padL, padR, xs, ys, xlab, title) {
+  const f = makeFrame({ l: padL, r: padR, t: 30, b: 54 }, W, H, -3, 3, -3, 3);
+  drawAxes(ctx, f, xlab, "the chick's song", 2, 2, v => v.toFixed(0), v => v.toFixed(0));
+  ctx.fillStyle = "rgba(92,134,161,0.34)";
+  for (let i = 0; i < C_N; i += 1) {
+    ctx.beginPath(); ctx.arc(f.x(clamp(xs[i], -3, 3)), f.y(clamp(ys[i], -3, 3)), 1.7, 0, 6.2832); ctx.fill();
+  }
+  ctx.fillStyle = "#3d3d3a"; ctx.font = "600 11.5px -apple-system, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+  ctx.fillText(title, f.pad.l + f.W / 2, f.pad.t - 10);
+}
+
+function drawC() {
+  const P = sC.P, cv = document.getElementById("plotC");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  panelC(ctx, W, H, 44, W / 2 + 16, P.tut, P.chick, "the bird that raised it", "raised by");
+  panelC(ctx, W, H, W / 2 + 44, 16, P.dad, P.chick, "the father it came from", "came from");
+}
+
+function refreshC() {
+  sC.P = popC(sC.Z, sC.copy, sC.egg, sC.swap);
+  drawC();
+  document.getElementById("C_mode").textContent = sC.swap ? "swapped at laying" : "left where they were laid";
+  document.getElementById("C_rTutor").textContent = f2(sC.P.rT);
+  document.getElementById("C_rGen").textContent = f2(sC.P.rG);
+  document.getElementById("C_copyOut").value = f2(sC.copy);
+  document.getElementById("C_eggOut").value = f2(sC.egg);
+  document.getElementById("C_guessOut").value = f2(sC.guess);
+  document.getElementById("cC_copy").textContent = f2(sC.copy);
+  document.getElementById("cC_egg").textContent = f2(sC.egg);
+  for (const b of document.querySelectorAll("#C_pick button")) b.classList.toggle("on", +b.dataset.swap === sC.swap);
+}
+
+(function wireC() {
+  document.getElementById("C_copy").addEventListener("input", ev => {
+    sC.copy = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "copy"); refreshC();
+  });
+  document.getElementById("C_egg").addEventListener("input", ev => {
+    sC.egg = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "egg"); refreshC();
+  });
+  document.getElementById("C_guess").addEventListener("input", ev => {
+    sC.guess = parseFloat(ev.target.value); document.getElementById("C_guessOut").value = f2(sC.guess);
+  });
+  for (const b of document.querySelectorAll("#C_pick button")) {
+    b.addEventListener("click", () => {
+      if (!Gates.C.open) return;
+      if (sC.step === 2) { document.getElementById("C_flip2").innerHTML =
+        '<span class="off">lock in your prediction first</span>'; return; }
+      sC.swap = +b.dataset.swap; bump("C"); refreshC();
+    });
+  }
+  document.getElementById("C_reseed").addEventListener("click", () => {
+    sC.seed = randomSeed(1, 99999); sC.Z = makeZC(sC.seed, C_N); bump("C"); refreshC();
+  });
+
+  document.getElementById("C_lock1").addEventListener("click", () => {
+    if (!Gates.C.open || sC.step !== 1) return;
+    sC.tries1++;
+    const ok = sC.swap === 0 && sC.egg <= 0.05 && Math.abs(sC.P.rG - 0.60) <= 0.03;
+    lockReport("C_flip1", ok, sC.tries1, "0.60, and every bit of it is copied off the bird in the nest",
+      sC.swap !== 0 ? "put the eggs back where they were laid"
+                    : (sC.egg > 0.05 ? "there is still something in the egg" : "the resemblance is not 0.60 yet"));
+    if (ok) {
+      markTask("C", "C1"); record(BIT.C1, true);
+      document.getElementById("C1_now").textContent = "locked in on try " + sC.tries1;
+      sC.step = 2;
+      document.getElementById("C_step1").style.display = "none";
+      document.getElementById("C_step2").style.display = "";
+    }
+  });
+
+  document.getElementById("C_lock2").addEventListener("click", () => {
+    if (sC.step !== 2) return;
+    sC.tries2++;
+    const ok = sC.guess <= 0.08;
+    sC.swap = 1; refreshC();
+    lockReport("C_flip2", ok, sC.tries2,
+      "nothing was in the egg, so nothing survived the move",
+      "you said " + f2(sC.guess) + ", and moving the eggs took it to " + f2(sC.P.rG));
+    markTask("C", "C2"); record(BIT.C2, ok);
+    document.getElementById("C2_now").textContent = ok ? "predicted on try " + sC.tries2 : "predicted, and it was not that";
+    sC.step = 3;
+    document.getElementById("C_step2").style.display = "none";
+    document.getElementById("C_step3").style.display = "";
+  });
+
+  document.getElementById("C_lock3").addEventListener("click", () => {
+    if (sC.step !== 3 || Gates.C.done) return;
+    sC.tries3++;
+    const stay = popC(sC.Z, sC.copy, sC.egg, 0), moved = popC(sC.Z, sC.copy, sC.egg, 1);
+    const ok = Math.abs(stay.rG - 0.60) <= 0.04 && Math.abs(moved.rG - 0.25) <= 0.04;
+    lockReport("C_flip3", ok, sC.tries3,
+      "0.60 left alone, 0.25 after the move, so a bit over a third of the resemblance was in the egg",
+      "left alone you get " + f2(stay.rG) + ", and after the move " + f2(moved.rG));
+    if (ok) {
+      markTask("C", "C3"); record(BIT.C3, true);
+      document.getElementById("C3_now").textContent = "found on try " + sC.tries3;
+      qC.show(); finishStage("C");
+    }
+  });
+  wireDownload("C_download", "codeC", "lesson8_stageC.R");
+})();
+
+const qC = wireNumeric("C", {
+  bit: BIT.Cq,
+  check: v => Math.abs(v) <= 0.08,
+  right: "Zero. The 0.80 was real, it was just never about the egg.",
+  wrong: "Not that. Nothing of the song was in the egg, and the bird that did the teaching is now somebody else's father.",
+  after: () => markTask("C", "C4")
+});
+
+/* ====== Stage D — Galton's 934 children =============================
+   Two sliders and one commitment. The first slider is the deterministic
+   part of the regression: how much of a parent arrives in a child. The
+   second is the stochastic part, drawn as a band rather than a number
+   because a band is the thing a regression actually predicts -- not a
+   height, a height plus or minus something.
+
+   The correlation and the heritability stay dark until the line is locked
+   in, so the stage cannot be solved by watching a number go green. */
+const sD = { tilt: 0.00, band: 4.00, tries1: 0, tries2: 0, revealed: false };
+const D_TTOL = 0.05, D_BTOL = 0.20;
+
+function insideD(tilt, band) {
+  let k = 0;
+  for (let i = 0; i < G_MP.length; i++) {
+    if (Math.abs(G_KID[i] - (KIDBAR + tilt * (G_MP[i] - MPBAR))) < band) k++;
+  }
+  return k / G_MP.length;
+}
+
+function drawD() {
+  const cv = document.getElementById("plotD");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = makeFrame({ l: 52, r: 16, t: 14, b: 46 }, W, H, 62, 78, 55, 82);
+  const yAt = xv => KIDBAR + sD.tilt * (xv - MPBAR);
+  // the band first, so the dots and the line sit on top of it
+  ctx.fillStyle = "rgba(143,182,207,0.34)";
+  ctx.beginPath();
+  ctx.moveTo(f.x(62), f.y(clamp(yAt(62) + sD.band, 55, 82)));
+  ctx.lineTo(f.x(78), f.y(clamp(yAt(78) + sD.band, 55, 82)));
+  ctx.lineTo(f.x(78), f.y(clamp(yAt(78) - sD.band, 55, 82)));
+  ctx.lineTo(f.x(62), f.y(clamp(yAt(62) - sD.band, 55, 82)));
+  ctx.closePath(); ctx.fill();
+  drawAxes(ctx, f, "the two parents averaged (in)", "the grown child's height (in)", 4, 5,
+           v => v.toFixed(0), v => v.toFixed(0));
+  ctx.fillStyle = "rgba(92,134,161,0.50)";
+  for (let i = 0; i < G_MP.length; i++) {
+    const x = f.x(clamp(G_MP[i], 62, 78)) + (jitterB(i, 3) - 0.5) * 3.5;
+    ctx.beginPath(); ctx.arc(x, f.y(clamp(G_KID[i], 55, 82)), 1.9, 0, 6.2832); ctx.fill();
+  }
+  // the children's average inside each strip of parents
+  for (const b of G_BANDS) {
+    // a white underlay, or the marks vanish into 934 blue dots
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 5; ctx.beginPath();
+    ctx.moveTo(f.x(b.x) - 11, f.y(b.y)); ctx.lineTo(f.x(b.x) + 11, f.y(b.y)); ctx.stroke();
+    ctx.strokeStyle = "#3d3a32"; ctx.lineWidth = 2.4; ctx.beginPath();
+    ctx.moveTo(f.x(b.x) - 11, f.y(b.y)); ctx.lineTo(f.x(b.x) + 11, f.y(b.y)); ctx.stroke();
+  }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
+  ctx.moveTo(f.x(62), f.y(clamp(yAt(62), 55, 82))); ctx.lineTo(f.x(78), f.y(clamp(yAt(78), 55, 82))); ctx.stroke();
+  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("grey marks: the children's average in each strip of parents", f.pad.l + 4, f.pad.t + 2);
+}
+
+function refreshD() {
+  drawD();
+  const inside = insideD(sD.tilt, sD.band);
+  document.getElementById("D_tilt").textContent = f2(sD.tilt);
+  document.getElementById("D_band").textContent = "± " + f2(sD.band) + " in";
+  document.getElementById("D_inside").textContent = Math.round(inside * 100) + "%";
+  document.getElementById("D_miss").textContent = f2(missAt(sD.tilt)) + " in";
+  document.getElementById("D_corr").textContent = sD.revealed ? f2(G_R) : "locked";
+  document.getElementById("D_h2").textContent = sD.revealed ? f2(G_TILT) : "locked";
+  document.getElementById("D_tiltOut").value = f2(sD.tilt);
+  document.getElementById("D_bandOut").value = f2(sD.band);
+  document.getElementById("cD_tilt").textContent = f2(sD.tilt);
+  document.getElementById("cD_band").textContent = f2(sD.band);
+}
+
+(function wireD() {
+  document.getElementById("D_tilt_s").addEventListener("input", ev => {
+    sD.tilt = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "tilt"); refreshD();
+  });
+  document.getElementById("D_band_s").addEventListener("input", ev => {
+    sD.band = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "band"); refreshD();
+  });
+  document.getElementById("D_lock").addEventListener("click", () => {
+    if (!Gates.D.open || Gates.D.done) return;
+    if (!taskDone("D", "D1")) {
+      sD.tries1++;
+      const tOK = Math.abs(sD.tilt - G_TILT) <= D_TTOL, bOK = Math.abs(sD.band - G_RESID) <= D_BTOL;
+      lockReport("D_flip", tOK && bOK, sD.tries1,
+        "tilt " + f2(G_TILT) + ", band ±" + f2(G_RESID) + " in, holding about two-thirds of the children",
+        !tOK ? (sD.tilt > G_TILT ? "the line is running above the grey marks at one end" : "the line is running below the grey marks at one end")
+             : (sD.band > G_RESID ? "the band is holding too many of them" : "the band is holding too few of them"));
+      if (tOK && bOK) {
+        markTask("D", "D1"); record(BIT.D1, true); sD.revealed = true;
+        document.getElementById("D1_now").textContent = "locked in on try " + sD.tries1;
+        refreshD();
+      }
+      return;
+    }
+    if (!taskDone("D", "D2")) {
+      sD.tries2++;
+      const ok = sD.tilt <= 0.02 && Math.abs(sD.band - G_SDK) <= D_BTOL;
+      lockReport("D_flip", ok, sD.tries2,
+        "±" + f2(G_SDK) + " in, which is the whole spread of the children and what you have without the parents",
+        sD.tilt > 0.02 ? "the tilt is not at zero yet" : "the band is not the right width for a flat line");
+      if (ok) {
+        markTask("D", "D2"); record(BIT.D2, true);
+        document.getElementById("D2_now").textContent = "locked in on try " + sD.tries2;
+        qD.show(); finishStage("D");
+      }
+    }
+  });
+  wireDownload("D_download", "codeD", "lesson8_stageD.R");
+})();
+
+const qD = wireNumeric("D", {
+  bit: BIT.Dq,
+  check: v => v >= 9 && v <= 17,
+  right: "13%. A correlation of 0.50 between a parent and a child sounds like half of something, and about one guess in eight is what it buys you.",
+  wrong: "Not that. It is 1 minus 2.24 over 2.58, as a percent.",
+  after: () => markTask("D", "D3")
+});
+
+/* ====== The model behind Stages E and F ==============================
+   Standard normal draws are made once per seed and the sliders only scale
+   them, so moving a slider morphs the same cloud instead of reshuffling it.
+   A child is handed half of each parent's pile plus a fresh draw the size of
+   half a pile, which is what keeps the spread of the children equal to the
+   spread of the parents generation after generation. */
 const MU = 69.2, NMOD = 4000;
 function makeZ(seed, n) {
   const z = makeNormal(mulberry32(seed));
@@ -1047,111 +1553,16 @@ function fitStats(x, y) {
   return { tilt: t, total: tot, left: left, acc: 1 - left / tot, miss: Math.sqrt(left), xb: xb, yb: yb };
 }
 
-/* ====== Stage C =====================================================
-   The line is fitted for the student here; Stage B was the fitting. What is
-   new is that the leftover comes apart. Turning the life to nothing does not
-   empty it, because half of what a parent carries is re-dealt at conception
-   and no measurement of the parents can see which half. */
-const sC = { seed: pageSeed("l8C", 1, 99999), sdA: 1.40, sdE: 2.00, Z: null, P: null };
-sC.Z = makeZ(sC.seed, NMOD);
-
-function statsC() {
-  const P = sC.P, st = fitStats(P.mp, P.kid);
-  if (st.total < 1e-9) return { tilt: 0, acc: 0, leftG: 0, leftE: 0, sd: 0, miss: 0, xb: st.xb, yb: st.yb };
-  const leftAll = st.left / st.total, leftE = vari(P.eo) / st.total;
-  return { tilt: st.tilt, acc: 1 - leftAll, leftG: leftAll - leftE, leftE: leftE,
-           sd: Math.sqrt(st.total), miss: st.miss, xb: st.xb, yb: st.yb };
-}
-
-function drawC() {
-  const P = sC.P, st = statsC();
-  const cv = document.getElementById("plotC");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, 59, 79, 54, 84);
-  drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
-  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
-  // every 32nd child gets its miss drawn, in the two colours it is made of
-  for (let i = 0; i < P.n; i += 32) {
-    const x = f.x(P.mp[i]), pred = yAt(P.mp[i]), gEnd = P.kid[i] - P.eo[i];
-    ctx.strokeStyle = SHALLOW; ctx.lineWidth = 1.4; ctx.beginPath();
-    ctx.moveTo(x, f.y(clamp(pred, 54, 84))); ctx.lineTo(x, f.y(clamp(gEnd, 54, 84))); ctx.stroke();
-    ctx.strokeStyle = LIFE; ctx.beginPath();
-    ctx.moveTo(x, f.y(clamp(gEnd, 54, 84))); ctx.lineTo(x, f.y(clamp(P.kid[i], 54, 84))); ctx.stroke();
-  }
-  ctx.fillStyle = "rgba(92,134,161,0.22)";
-  for (let i = 0; i < P.n; i += 2) { ctx.beginPath(); ctx.arc(f.x(P.mp[i]), f.y(clamp(P.kid[i], 54, 84)), 1.6, 0, 6.2832); ctx.fill(); }
-  ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
-  ctx.moveTo(f.x(59), f.y(clamp(yAt(59), 54, 84))); ctx.lineTo(f.x(79), f.y(clamp(yAt(79), 54, 84))); ctx.stroke();
-}
-
-function refreshC() {
-  sC.P = popFrom(sC.Z, sC.sdA, sC.sdE);
-  drawC();
-  const st = statsC();
-  document.getElementById("C_tilt").textContent = f2(st.tilt);
-  document.getElementById("C_sd").textContent = f2(st.sd) + " in";
-  document.getElementById("C_miss").textContent = f2(st.miss) + " in";
-  const a = clamp(st.acc, 0, 1), g = clamp(st.leftG, 0, 1), e = clamp(st.leftE, 0, 1);
-  const cv = document.getElementById("barC");
-  const { ctx, W, H } = setupCanvas(cv);
-  const geo = drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: g, color: SHALLOW }, { share: e, color: LIFE }], null);
-  drawBrace(ctx, geo, 0, a + g, "handed down: " + f2(a + g));
-  document.getElementById("C_ledger").innerHTML =
-    '<div><span><span class="sw" style="background:' + DEEP + '"></span>what the line reaches</span><span>' + f2(a) + '</span></div>' +
-    '<div><span><span class="sw" style="background:' + SHALLOW + '"></span>missed, and handed down anyway</span><span>' + f2(g) + '</span></div>' +
-    '<div><span><span class="sw" style="background:' + LIFE + '"></span>missed, and added by a life</span><span>' + f2(e) + '</span></div>';
-  document.getElementById("C_sdaOut").value = f2(sC.sdA);
-  document.getElementById("C_sdeOut").value = f2(sC.sdE);
-  document.getElementById("cC_sda").textContent = f2(sC.sdA);
-  document.getElementById("cC_sde").textContent = f2(sC.sdE);
-  checkC(st);
-}
-
-function checkC(st) {
-  const done = k => document.querySelector('#tasksC li[data-task="' + k + '"]').classList.contains("done");
-  if (!done("C1") && Math.abs(st.tilt - 0.7126) <= 0.03) {
-    markTask("C", "C1"); record(BIT.C1, true);
-    document.getElementById("C1_now").textContent = "matched";
-  }
-  if (!done("C2") && sC.sdE === 0) {
-    markTask("C", "C2"); record(BIT.C2, true);
-    document.getElementById("C2_now").textContent = "the pale part did not go with it";
-    qC.show();
-  }
-  if (!done("C3") && sC.sdE > 0 && Math.abs(st.leftG - st.leftE) <= 0.04 && st.leftE > 0.05) {
-    markTask("C", "C3"); record(BIT.C3, true);
-    document.getElementById("C3_now").textContent = "split";
-  }
-  if (done("C1") && done("C2") && done("C3")) finishStage("C");
-}
-
-(function wireC() {
-  const a = document.getElementById("C_sda"), e = document.getElementById("C_sde");
-  a.addEventListener("input", ev => { sC.sdA = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "sda"); refreshC(); });
-  e.addEventListener("input", ev => { sC.sdE = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "sde"); refreshC(); });
-  document.getElementById("C_reseed").addEventListener("click", () => {
-    sC.seed = randomSeed(1, 99999); sC.Z = makeZ(sC.seed, NMOD); bump("C"); refreshC();
-  });
-  wireDownload("C_download", "codeC", "lesson8_stageC.R");
-})();
-
-const qC = wireNumeric("C", {
-  bit: BIT.Cq,
-  check: v => Math.abs(v - 0.50) <= 0.06,
-  right: "Half. Nothing in this population came from anywhere but the parents, and the line still cannot reach half of it.",
-  wrong: "Not that. Put the life knob on zero and read the pale part of the bar.",
-  after: () => markTask("C", "C4")
-});
-
-/* ====== Stage D =====================================================
-   Same children every time; only the across axis changes. Stripping the
-   parents' own lives off the axis is the correction people reach for, and it
-   returns 1 -- a fact about halves, not about the trait. The axis that
-   returns the tilt is the child's own pile. */
-const sD = { seed: pageSeed("l8D", 1, 99999), sdA: 2.15, sdE: 1.35, ax: "mp", seen: {}, Z: null, P: null };
-sD.Z = makeZ(sD.seed, NMOD);
-const D_AXLAB = { mp: "the two parents averaged (in)", amp: "the parents' piles, averaged (in)", ao: "the child's own pile (in)" };
+/* ====== Stage E — what is in the part the line misses ================
+   The old Stage C and the old Stage D, welded. They ran the same population
+   off the same two sliders, and the only thing that separated them was what
+   went on the across axis, so they are one stage with an axis picker.
+   Turning the life to nothing does not empty the leftover, because half of
+   what a parent carries is re-dealt at conception and no measurement of the
+   parents can see which half. */
+const sE = { seed: pageSeed("l8E", 1, 99999), sdA: 1.40, sdE: 2.00, ax: "mp", seen: { mp: 1 }, Z: null, P: null };
+sE.Z = makeZ(sE.seed, NMOD);
+const E_AXLAB = { mp: "the two parents averaged (in)", amp: "the parents' piles, averaged (in)", ao: "the child's own pile (in)" };
 
 function axisOf(P, ax) {
   if (ax === "mp") return P.mp;
@@ -1160,105 +1571,131 @@ function axisOf(P, ax) {
   return out;
 }
 
-function drawD() {
-  const P = sD.P, x = axisOf(P, sD.ax), st = fitStats(x, P.kid);
-  const cv = document.getElementById("plotD");
+function drawE(st, x) {
+  const P = sE.P, cv = document.getElementById("plotE");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const f = makeFrame({ l: 50, r: 16, t: 14, b: 44 }, W, H, 59, 79, 54, 84);
-  drawAxes(ctx, f, D_AXLAB[sD.ax], "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  drawAxes(ctx, f, E_AXLAB[sE.ax], "the child's height (in)", 4, 5, v => v.toFixed(0), v => v.toFixed(0));
+  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
+  if (sE.ax === "mp") {
+    for (let i = 0; i < P.n; i += 4) {
+      const px = f.x(clamp(x[i], 59, 79)), py = f.y(clamp(P.kid[i], 54, 84));
+      const pl = f.y(clamp(yAt(x[i]), 54, 84)), pg = f.y(clamp(P.kid[i] - P.eo[i], 54, 84));
+      ctx.strokeStyle = "rgba(143,182,207,0.65)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, pl); ctx.lineTo(px, pg); ctx.stroke();
+      ctx.strokeStyle = "rgba(192,122,44,0.55)";
+      ctx.beginPath(); ctx.moveTo(px, pg); ctx.lineTo(px, py); ctx.stroke();
+    }
+  }
   ctx.fillStyle = "rgba(92,134,161,0.32)";
   for (let i = 0; i < P.n; i += 2) { ctx.beginPath(); ctx.arc(f.x(clamp(x[i], 59, 79)), f.y(clamp(P.kid[i], 54, 84)), 1.6, 0, 6.2832); ctx.fill(); }
-  const yAt = xv => st.yb + st.tilt * (xv - st.xb);
   ctx.strokeStyle = HOT; ctx.lineWidth = 2.5; ctx.beginPath();
   ctx.moveTo(f.x(59), f.y(clamp(yAt(59), 54, 84))); ctx.lineTo(f.x(79), f.y(clamp(yAt(79), 54, 84))); ctx.stroke();
-  return st;
 }
-
-function refreshD() {
-  sD.P = popFrom(sD.Z, sD.sdA, sD.sdE);
-  const st = drawD();
-  const ref = fitStats(sD.P.mp, sD.P.kid);
-  const accAo = fitStats(axisOf(sD.P, "ao"), sD.P.kid).acc;
-  document.getElementById("D_tilt").textContent = f2(st.tilt);
-  document.getElementById("D_acc").textContent = f2(clamp(st.acc, 0, 1));
-  document.getElementById("D_ref").textContent = f2(ref.tilt);
-  const cv = document.getElementById("barD");
-  const { ctx, W, H } = setupCanvas(cv);
-  const a = clamp(st.acc, 0, 1);
-  drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: 1 - a, color: PALE }],
-          "dark: what this axis accounts for");
-  document.getElementById("D_sdaOut").value = f2(sD.sdA);
-  document.getElementById("D_sdeOut").value = f2(sD.sdE);
-  checkD(st, ref, accAo);
-}
-
-function checkD(st, ref, accAo) {
-  const done = k => document.querySelector('#tasksD li[data-task="' + k + '"]').classList.contains("done");
-  const nSeen = Object.keys(sD.seen).length;
-  document.getElementById("D1_now").textContent = nSeen + " of 3 looked at";
-  if (!done("D1") && nSeen === 3 && sD.ax === "ao" && ref.tilt >= 0.20 && Math.abs(st.acc - ref.tilt) <= 0.06) {
-    markTask("D", "D1"); record(BIT.D1, true);
-    document.getElementById("D1_now").textContent = "the child's own pile";
-  }
-  if (!done("D2") && Math.abs(accAo - 0.80) <= 0.03) {
-    markTask("D", "D2"); record(BIT.D2, true);
-    document.getElementById("D2_now").textContent = "set";
-    qD.show();
-  }
-  if (done("D1") && done("D2")) finishStage("D");
-}
-
-(function wireD() {
-  sD.seen[sD.ax] = true;
-  document.getElementById("D_sda").addEventListener("input", ev => { sD.sdA = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "sda"); refreshD(); });
-  document.getElementById("D_sde").addEventListener("input", ev => { sD.sdE = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "sde"); refreshD(); });
-  document.querySelectorAll("#D_pick button").forEach(b => {
-    b.addEventListener("click", () => {
-      document.querySelectorAll("#D_pick button").forEach(o => o.classList.remove("on"));
-      b.classList.add("on"); sD.ax = b.dataset.ax; sD.seen[sD.ax] = true; bump("D"); refreshD();
-    });
-  });
-  document.getElementById("D_reseed").addEventListener("click", () => {
-    sD.seed = randomSeed(1, 99999); sD.Z = makeZ(sD.seed, NMOD); bump("D"); refreshD();
-  });
-  wireDownload("D_download", "codeD", "lesson8_stageD.R");
-})();
-
-const qD = wireNumeric("D", {
-  bit: BIT.Dq,
-  check: v => Math.abs(v - 0.50) <= 0.06,
-  right: "Half, and only when a life adds nothing at all. Half of what a parent carries is re-dealt to each child, and no measurement of the parents can reach it.",
-  wrong: "Not that. Run the life knob to zero and the pile knob up, and watch the dark part stop growing.",
-  after: () => markTask("D", "D3")
-});
-
-/* ====== Stage E =====================================================
-   The whole spread is pinned at 2.55 inches here, so the cut is the only way
-   to buy a response and the knob is the only thing that prices it. The gate
-   reads what the tilt prices the chosen parents at, which is exact; the
-   children's realised average is shown beside it and is not. */
-const sE = { seed: pageSeed("l8E", 1, 99999), h: 0.71, cut: 63.00, Z: null, P: null };
-sE.Z = makeZ(sE.seed, NMOD);
-const E_SD = 2.55;
 
 function refreshE() {
-  sE.P = popFrom(sE.Z, E_SD * Math.sqrt(sE.h), E_SD * Math.sqrt(1 - sE.h));
-  const P = sE.P, st = fitStats(P.mp, P.kid);
+  sE.P = popFrom(sE.Z, sE.sdA, sE.sdE);
+  const P = sE.P, x = axisOf(P, sE.ax), st = fitStats(x, P.kid);
+  const ref = fitStats(P.mp, P.kid), accAo = fitStats(axisOf(P, "ao"), P.kid).acc;
+  drawE(st, x);
+  document.getElementById("E_tilt").textContent = f2(st.tilt);
+  document.getElementById("E_acc").textContent = f2(clamp(st.acc, 0, 1));
+  document.getElementById("E_sd").textContent = f2(Math.sqrt(vari(P.kid))) + " in";
+  document.getElementById("E_ref").textContent = f2(ref.tilt);
+
+  const cv = document.getElementById("barE");
+  const { ctx, W, H } = setupCanvas(cv);
+  const led = document.getElementById("E_ledger");
+  if (sE.ax === "mp") {
+    const a = clamp(ref.acc, 0, 1), e = clamp(vari(P.eo) / ref.total, 0, 1), g = clamp(1 - a - e, 0, 1);
+    const geo = drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: g, color: SHALLOW }, { share: e, color: LIFE }], null);
+    drawBrace(ctx, geo, 0, a + g, "everything that came down from the parents");
+    led.innerHTML =
+      '<div><span><span class="sw" style="background:' + DEEP + '"></span>what the line reaches</span><span>' + f2(a) + '</span></div>' +
+      '<div><span><span class="sw" style="background:' + SHALLOW + '"></span>missed, and handed down anyway</span><span>' + f2(g) + '</span></div>' +
+      '<div><span><span class="sw" style="background:' + LIFE + '"></span>missed, and added by a life</span><span>' + f2(e) + '</span></div>';
+  } else {
+    const a = clamp(st.acc, 0, 1);
+    drawBar(ctx, W, H, [{ share: a, color: DEEP }, { share: 1 - a, color: PALE }], "dark: what this axis accounts for");
+    led.innerHTML = '<div><span>this axis is not something you could measure on a real family</span><span></span></div>';
+  }
+  document.getElementById("E_sdaOut").value = f2(sE.sdA);
+  document.getElementById("E_sdeOut").value = f2(sE.sdE);
+  document.getElementById("cE_sda").textContent = f2(sE.sdA);
+  document.getElementById("cE_sde").textContent = f2(sE.sdE);
+  for (const b of document.querySelectorAll("#E_pick button")) b.classList.toggle("on", b.dataset.ax === sE.ax);
+  checkE(st, ref, accAo);
+}
+
+function checkE(st, ref, accAo) {
+  const nSeen = Object.keys(sE.seen).length;
+  document.getElementById("E3_now").textContent = nSeen + " of 3 looked at";
+  if (!taskDone("E", "E1") && sE.ax === "mp" && Math.abs(ref.tilt - G_TILT) <= 0.03) {
+    markTask("E", "E1"); record(BIT.E1, true);
+    document.getElementById("E1_now").textContent = "matched";
+  }
+  if (!taskDone("E", "E2") && taskDone("E", "E1") && sE.sdE === 0) {
+    markTask("E", "E2"); record(BIT.E2, true);
+    document.getElementById("E2_now").textContent = "the pale blue did not go with it";
+    qE.show();
+  }
+  if (!taskDone("E", "E3") && nSeen === 3 && sE.ax === "ao" && ref.tilt >= 0.20 && Math.abs(accAo - ref.tilt) <= 0.06) {
+    markTask("E", "E3"); record(BIT.E3, true);
+    document.getElementById("E3_now").textContent = "the child's own pile";
+  }
+  if (taskDone("E", "E1") && taskDone("E", "E2") && taskDone("E", "E3")) finishStage("E");
+}
+
+(function wireE() {
+  document.getElementById("E_sda").addEventListener("input", ev => { sE.sdA = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "sda"); refreshE(); });
+  document.getElementById("E_sde").addEventListener("input", ev => { sE.sdE = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "sde"); refreshE(); });
+  for (const b of document.querySelectorAll("#E_pick button")) {
+    b.addEventListener("click", () => {
+      if (!Gates.E.open) return;
+      sE.ax = b.dataset.ax; sE.seen[sE.ax] = 1; bump("E"); refreshE();
+    });
+  }
+  document.getElementById("E_reseed").addEventListener("click", () => {
+    sE.seed = randomSeed(1, 99999); sE.Z = makeZ(sE.seed, NMOD); bump("E"); refreshE();
+  });
+  wireDownload("E_download", "codeE", "lesson8_stageE.R");
+})();
+
+const qE = wireNumeric("E", {
+  bit: BIT.Eq,
+  check: v => Math.abs(v - 0.50) <= 0.06,
+  right: "Half. Nothing in this population came from anywhere but the parents, and the line still cannot reach half of it.",
+  wrong: "Not that. Put the life slider on zero and read the pale blue part of the bar.",
+  after: () => markTask("E", "E4")
+});
+
+/* ====== Stage F — the tilt is the exchange rate ======================
+   The whole spread is pinned at 2.55 inches here, so the cut is the only way
+   to buy a response and the slider is the only thing that prices it. The
+   gate reads what the tilt prices the chosen parents at, which is exact; the
+   children's realised average is shown beside it and is not. */
+const sF = { seed: pageSeed("l8F", 1, 99999), h: 0.71, cut: 63.00, Z: null, P: null };
+sF.Z = makeZ(sF.seed, NMOD);
+const F_SD = 2.55;
+
+function refreshF() {
+  sF.P = popFrom(sF.Z, F_SD * Math.sqrt(sF.h), F_SD * Math.sqrt(1 - sF.h));
+  const P = sF.P, st = fitStats(P.mp, P.kid);
   const selMP = [], selKID = [];
-  for (let i = 0; i < P.n; i++) if (P.mp[i] >= sE.cut) { selMP.push(P.mp[i]); selKID.push(P.kid[i]); }
+  for (let i = 0; i < P.n; i++) if (P.mp[i] >= sF.cut) { selMP.push(P.mp[i]); selKID.push(P.kid[i]); }
   const has = selMP.length >= 8;
   const S = has ? mean(selMP) - mean(P.mp) : 0;
   const pred = st.tilt * S;
   const obs = has ? mean(selKID) - mean(P.kid) : 0;
 
-  const cv = document.getElementById("plotE");
+  const cv = document.getElementById("plotF");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const f = makeFrame({ l: 50, r: 16, t: 14, b: 46 }, W, H, 62, 78, 57, 81);
   drawAxes(ctx, f, "the two parents averaged (in)", "the child's height (in)", 4, 4, v => v.toFixed(0), v => v.toFixed(0));
   for (let i = 0; i < P.n; i += 2) {
-    const on = P.mp[i] >= sE.cut;
+    const on = P.mp[i] >= sF.cut;
     ctx.fillStyle = on ? "rgba(30,77,104,0.45)" : "rgba(170,166,155,0.30)";
     ctx.beginPath(); ctx.arc(f.x(clamp(P.mp[i], 62, 78)), f.y(clamp(P.kid[i], 57, 81)), on ? 1.9 : 1.5, 0, 6.2832); ctx.fill();
   }
@@ -1268,8 +1705,8 @@ function refreshE() {
   ctx.strokeStyle = "#b9b5a6"; ctx.setLineDash([5, 4]); ctx.beginPath();
   ctx.moveTo(f.pad.l, f.y(MU)); ctx.lineTo(f.pad.l + f.W, f.y(MU)); ctx.stroke(); ctx.setLineDash([]);
   ctx.strokeStyle = "#3d3d3a"; ctx.lineWidth = 2; ctx.beginPath();
-  ctx.moveTo(f.x(sE.cut), f.pad.t); ctx.lineTo(f.x(sE.cut), f.pad.t + f.H); ctx.stroke();
-  ctx.fillStyle = "#3d3d3a"; ctx.fillRect(f.x(sE.cut) - 5, f.pad.t, 10, 9);
+  ctx.moveTo(f.x(sF.cut), f.pad.t); ctx.lineTo(f.x(sF.cut), f.pad.t + f.H); ctx.stroke();
+  ctx.fillStyle = "#3d3d3a"; ctx.fillRect(f.x(sF.cut) - 5, f.pad.t, 10, 9);
   if (has) {
     ctx.strokeStyle = DEEP; ctx.lineWidth = 1.5; ctx.setLineDash([3, 3]); ctx.beginPath();
     ctx.moveTo(f.x(mean(selMP)), f.pad.t); ctx.lineTo(f.x(mean(selMP)), f.pad.t + f.H); ctx.stroke();
@@ -1278,69 +1715,68 @@ function refreshE() {
     ctx.fillStyle = "#4a7a2a"; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
     ctx.fillText("their children average here", f.pad.l + 4, f.y(mean(selKID)) - 3);
   }
-  sE._f = f;
+  sF._f = f;
 
-  document.getElementById("E_n").textContent = String(selMP.length);
-  document.getElementById("E_tilt").textContent = f2(st.tilt);
-  document.getElementById("E_S").textContent = has ? f2(S) + " in" : "—";
-  document.getElementById("E_pred").textContent = has ? f2(pred) + " in" : "—";
-  document.getElementById("E_obs").textContent = has ? f2(obs) + " in" : "—";
-  document.getElementById("E_hOut").value = f2(sE.h);
-  document.getElementById("E_cutOut").value = f2(sE.cut);
-  document.getElementById("E_cut").value = String(sE.cut);
-  document.getElementById("cE_h").textContent = f2(sE.h);
-  document.getElementById("cE_cut").textContent = f2(sE.cut);
-  checkE(has ? pred : null);
+  document.getElementById("F_n").textContent = String(selMP.length);
+  document.getElementById("F_tilt").textContent = f2(st.tilt);
+  document.getElementById("F_S").textContent = has ? f2(S) + " in" : "—";
+  document.getElementById("F_pred").textContent = has ? f2(pred) + " in" : "—";
+  document.getElementById("F_obs").textContent = has ? f2(obs) + " in" : "—";
+  document.getElementById("F_hOut").value = f2(sF.h);
+  document.getElementById("F_cutOut").value = f2(sF.cut);
+  document.getElementById("F_cut").value = String(sF.cut);
+  document.getElementById("cF_h").textContent = f2(sF.h);
+  document.getElementById("cF_cut").textContent = f2(sF.cut);
+  checkF(has ? pred : null);
 }
 
-function checkE(pred) {
+function checkF(pred) {
   if (pred == null) return;
-  const done = k => document.querySelector('#tasksE li[data-task="' + k + '"]').classList.contains("done");
   const onInch = Math.abs(pred - 1.00) <= 0.07;
-  if (!done("E1") && onInch) {
-    markTask("E", "E1"); record(BIT.E1, true);
-    document.getElementById("E1_now").textContent = "done";
+  if (!taskDone("F", "F1") && onInch) {
+    markTask("F", "F1"); record(BIT.F1, true);
+    document.getElementById("F1_now").textContent = "done";
   }
-  if (!done("E2") && onInch && Math.abs(sE.h - 0.45) < 0.005) {
-    markTask("E", "E2"); record(BIT.E2, true);
-    document.getElementById("E2_now").textContent = "done, and the cut had to move a long way";
-    qE.show(); finishStage("E");
+  if (!taskDone("F", "F2") && onInch && Math.abs(sF.h - 0.45) < 0.005) {
+    markTask("F", "F2"); record(BIT.F2, true);
+    document.getElementById("F2_now").textContent = "done, and the cut had to move a long way";
+    qF.show(); finishStage("F");
   }
 }
 
-(function wireE() {
-  const cv = document.getElementById("plotE");
+(function wireF() {
+  const cv = document.getElementById("plotF");
   let dragging = false;
   function apply(e) {
     const p = canvasPt(cv, e);
-    sE.cut = clamp(Math.round(xInv(sE._f, p.x) * 20) / 20, 63.0, 76.0);
-    refreshE();
+    sF.cut = clamp(Math.round(xInv(sF._f, p.x) * 20) / 20, 63.0, 76.0);
+    refreshF();
   }
-  cv.addEventListener("pointerdown", e => { if (!Gates.E.open) return; cv.setPointerCapture(e.pointerId); dragging = true; bump("E"); apply(e); });
+  cv.addEventListener("pointerdown", e => { if (!Gates.F.open) return; cv.setPointerCapture(e.pointerId); dragging = true; bump("F"); apply(e); });
   cv.addEventListener("pointermove", e => { if (dragging) apply(e); });
   cv.addEventListener("pointerup", e => { dragging = false; try { cv.releasePointerCapture(e.pointerId); } catch (x) {} });
   cv.addEventListener("pointercancel", () => { dragging = false; });
-  document.getElementById("E_h").addEventListener("input", ev => { sE.h = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "h"); refreshE(); });
-  document.getElementById("E_cut").addEventListener("input", ev => { sE.cut = parseFloat(ev.target.value); bump("E"); highlightByDataLine("codeE", "cut"); refreshE(); });
-  document.getElementById("E_reseed").addEventListener("click", () => {
-    sE.seed = randomSeed(1, 99999); sE.Z = makeZ(sE.seed, NMOD); bump("E"); refreshE();
+  document.getElementById("F_h").addEventListener("input", ev => { sF.h = parseFloat(ev.target.value); bump("F"); highlightByDataLine("codeF", "h"); refreshF(); });
+  document.getElementById("F_cut").addEventListener("input", ev => { sF.cut = parseFloat(ev.target.value); bump("F"); highlightByDataLine("codeF", "cut"); refreshF(); });
+  document.getElementById("F_reseed").addEventListener("click", () => {
+    sF.seed = randomSeed(1, 99999); sF.Z = makeZ(sF.seed, NMOD); bump("F"); refreshF();
   });
-  wireDownload("E_download", "codeE", "lesson8_stageE.R");
+  wireDownload("F_download", "codeF", "lesson8_stageF.R");
 })();
 
-const qE = wireNumeric("E", {
-  bit: BIT.Eq,
+const qF = wireNumeric("F", {
+  bit: BIT.Fq,
   check: v => Math.abs(v - 0.90) <= 0.06,
   right: "0.90 inches. The tilt is the exchange rate between how far you move the parents and how far the children come.",
   wrong: "Not that. The tilt is inches of child per inch of parent, and you moved the parents two inches.",
-  after: () => markTask("E", "E3")
+  after: () => markTask("F", "F3")
 });
 
 /* ====== Boot ======================================================== */
 Score.init({
   moduleId: "lesson8",
-  version: 7,
-  scaffold: 16,
+  version: 8,
+  scaffold: 20,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
@@ -1350,11 +1786,12 @@ Score.init({
   }
 });
 refreshA();
-sB.tilt.mp = 0; refreshB();
+refreshB();
 refreshC();
 refreshD();
 refreshE();
-window.addEventListener("resize", () => { refreshA(); refreshB(); refreshC(); refreshD(); refreshE(); });
+refreshF();
+window.addEventListener("resize", () => { refreshA(); refreshB(); refreshC(); refreshD(); refreshE(); refreshF(); });
 </script>
 </body>
 </html>
