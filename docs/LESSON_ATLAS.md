@@ -1366,7 +1366,7 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
-`lesson9.html` · v4 · 30 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+`lesson9.html` · v5 · 30 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
 
 **Two stages added 2026-09-15, D and E, on JM's call.** D turns three of the spots into
 traits with three different dominance rules; E turns all eight into units of one
@@ -1496,36 +1496,56 @@ nothing says so — the buttons simply appear.
     flowers (**75**, ±8, with the miss message naming 25 as the genotype answer).
   - *Goal* — dominance is not a property of the gene. It is a property of what you measure.
 
-- **E — every spot adds up** (bits 24–29)
-  - *Interactive* — every spot labelled, the marks and the 1–3 slider back from Stage C,
-    and each big letter worth **one unit of size**. A gamete carries 0–8, a plant 0–16.
-    Nothing masks, nothing blends; the two copies add, which is the only model under which
-    a parent's size predicts a child's the way Lesson 8's line does.
-  - *Where the cut goes is the stage.* Uncut, all four spots on a chromosome travel as a
-    block, a gamete carries 0, 4 or 8, and a plant comes in **five sizes, 1:4:6:4:1** —
-    Nilsson-Ehle. A cut in the **middle** gap gives **nine** sizes in a clean
-    `1:8:28:56:70:56:28:8:1`, which is C(8,k): eight spots behaving like eight coin flips.
-    A cut **off-centre** gives **all seventeen**, every size from 0 to 16. Cuts in gaps 1
-    and 3 together give the same nine as one middle cut — the two-strand double again,
-    same invariance Stage C is built on.
-  - *What never moves.* The mean gamete is **4** and the mean plant **8**, at every cut
-    tested. The cut changes the spread and not the middle, which is the same split Lesson 8
-    draws as a line and a band.
-  - *The square had to change.* Sixteen kinds of gamete would want 256 cells, so rows are
-    **sizes** of gamete, not kinds — at most 9×9. Those rows are *not* equally likely (a
-    size-4 gamete can be built six ways, a size-0 gamete one), so this is the one square on
-    the page that prints a share beside each header. `gameteKinds` now returns a weight `w`
-    on every kind; on the other two bases the weights come out equal and nothing shows.
-  - *The histogram checks itself.* The filled bars are the student's own plants and the
-    hollow outline behind them is what the square says. Both come off `chromatids()`, the
-    same function the sampler draws from, so they cannot drift apart — measured agreement
-    over 400,000 draws: worst gap **0.084 points**.
-  - *Questions* — size units across all four gametes of a round (**16**, invariant across
-    all 64 combinations of cut positions); average units in one gamete (**4**, ±0.4);
-    average size of 200 plants (**8**, ±0.6).
-  - *Goal* — a trait built out of many spots arrives in steps, and the steps get finer the
-    more the chromosome is broken up. Put in hundreds of spots and you cannot see them at
-    all, which is the trait Lesson 8 ran a line through.
+- **E — build the biggest one you can** (bits 24–29)
+  - **Rebuilt 2026-09-15 on JM's call.** It used to be "every big letter is one
+    unit" — eight identical spots, a count from 0 to 16, and the activity was watching
+    the histogram get finer. Now every spot has a **signed effect and the two alleles
+    differ**, JM's example being *"C is +1 and c is −0.5, while D is −0.2 and d is +3"*,
+    the boxes are **green for a positive allele and red for a negative one**, and the
+    activity is to build the largest offspring you can.
+  - *The effects.* One allele helps and one hurts at every spot, so the biggest gamete is
+    the one carrying **all eight green alleles**. Long: A +2.0/a −1.5, B −2.5/b +2.5,
+    C +1.0/c −0.5, D +3.0/d −0.2. Short: E +1.5/e −2.0, F −2.0/f +2.0, G +0.5/g −1.0,
+    H +0.7/h −0.5. Best gamete **+13.2** (AbCD·EfGH), worst **−10.2**, best offspring
+    **+26.4**. Uncut, a gamete can only be −1.2 to +4.2 — the whole range comes from
+    recombination, which is the stage's argument.
+  - *Why the green alleles sit where they do.* The parent's chromosomes are all-big and
+    all-little, so the winning haplotype only exists if a crossover builds it — and which
+    cuts can build what is fixed by the bench: **1 cut** reaches 1000/1100/1110, **2 cuts**
+    reaches 1011/1001/1101, **3 cuts** reaches only 1010 (and complements). The greens are
+    laid out as **1011 on both chromosomes**, so the winner needs exactly two marks and
+    only in the gaps either side of the second spot. Two marks go three ways per
+    chromosome and both have to be right at once: **one of twenty legal placements wins**,
+    measured. JM chose this over the alternating layout, which would have been reachable
+    only at three cuts and visible at a glance from the stripes.
+  - *The gate is the doing, not a question.* Step 2 opens only once the student has
+    collected **both** extremes at the bench. Right marks are not enough: the winning long
+    chromatid and the winning short one land in the same gamete one round in four, so it
+    takes **5.3 rounds on average** after the marks are right. The progress line names the
+    target in the only terms visible on the chromosome — all eight boxes green, then all
+    eight red — rather than as a number the student would have to guess at.
+  - *The square became a gamete grid.* Sixteen gamete values no longer collapse, so a
+    square of offspring would want 256 cells. Rows are now the four long chromatids this
+    round can deal and columns the four short ones, and the sixteen cells are every gamete
+    the cell could make and what each is worth, with the best and worst outlined. It
+    redraws when a mark moves, which is the feedback the placing puzzle needs.
+  - *What never moves.* All four gametes of a round total **+6.0** at every cut setting;
+    the mean gamete is **+1.5** and the mean offspring **+3.0**. Cutting moves the spread
+    and not the middle — the same split Lesson 8 draws as a line and a band.
+  - *Why step 3 wants 500 offspring and not 200.* The winning cuts push the offspring sd
+    to **8.5**, so 200 leave the sample mean ±0.6 and a student reading their own table
+    correctly would be marked wrong on q3 about **a quarter of the time** — measured. At
+    500 the window ±1.2 passes 99.8% of correct readers, and the "forgot to double" answer
+    of +1.5 sits 3.9 SE away and stays excluded.
+  - *Questions* — what all four gametes of a round are worth together (**+6.0**, invariant
+    across every cut setting); what one gamete is worth on average (**+1.5**, ±0.8); what
+    the average offspring comes out at (**+3.0**, ±1.2).
+  - *Goal* — neither chromosome you were dealt could make that gamete. Recombination built
+    it out of pieces that were already there, and the same two cuts built the smallest one
+    too. It does not change the average; it widens what selection has to pick from.
+  - *Accessibility note* — green and red carry the sign, so the positive box is also drawn
+    **rounded** and the negative one square, and the key table under step 3 prints all
+    sixteen values.
 
 **Table headings, fixed 2026-09-14.** `table.tally th` was left-aligned while `td.n` was
 right-aligned, so a wide count heading — `embryos with ≥1` in step 3's long-version table —
