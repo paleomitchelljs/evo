@@ -4,7 +4,7 @@
  * functions: 22 copies of mulberry32, 20 of makeFrame and drawAxes, ~45 KB of
  * duplicated code. When an edit dropped a copy the page threw at load and the
  * lesson silently emitted no submission code at all -- that is what took out
- * lesson12 and lesson18 earlier in the project.
+ * lesson13 and lesson19 earlier in the project.
  *
  * HOW IT WORKS. This file loads BEFORE each lesson's inline <script>, so a
  * lesson that still defines its own copy shadows the one here and behaves
@@ -256,10 +256,10 @@ if (typeof document !== "undefined") {
  *
  * Most seeds can be drawn blind: a drift walk is a drift walk whichever way it
  * goes, and that it goes differently for different students is the point. A few
- * datasets are not like that. Lesson 6's cinema data and lesson 19's worms are
+ * datasets are not like that. Lesson 6's cinema data and lesson 20's worms are
  * built to display one specific reversal, and a scored question asks the student
  * to read that reversal off the screen. Measured over 20,000 seeds, lesson 6's
- * pooled-vs-within reversal survives 89% of draws and lesson 19's survives 97% —
+ * pooled-vs-within reversal survives 89% of draws and lesson 20's survives 97% —
  * so seeding those blind would hand roughly one student in nine a picture that
  * does not show the thing they are being asked to see, and mark them wrong for
  * reporting what was actually on it.

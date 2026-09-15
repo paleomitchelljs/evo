@@ -34,10 +34,10 @@ CASES = [
     ("Ada Lovelace-Byron", "lesson7", 2, [1, 0], [1, 1, 0, 1, 1, 0, 1, 1, 1], [1],
      {"A": 14, "B": 3, "C": 27}, 7200, 1450),
     ("bo", "s01", 1, [1, 1], [], [0, 1], {}, 65, 65),
-    ("Ann-Marie  O'Hara", "lesson26", 2, [], [1, 0, 1, 0, 1], [],
+    ("Ann-Marie  O'Hara", "lesson27", 2, [], [1, 0, 1, 0, 1], [],
      {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}, 3661, 900),
     # Every bit wrong, no activity: the shape of a student who clicked through.
-    ("Zed", "lesson12", 2, [], [0, 0, 0, 0], [], {}, 40, 0),
+    ("Zed", "lesson13", 2, [], [0, 0, 0, 0], [], {}, 40, 0),
     # Unicode in, slug out.
     ("José Ñuñez", "lesson3", 5, [], [1] * 12, [], {"A": 99}, 100000, 3600),
 ]

@@ -4,460 +4,1561 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 10: Watching alleles wander in a finite population</title>
+<title>BIO 202 — Lesson 10</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
-  * { box-sizing: border-box; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a;
+           --deep:#1e4d68; --shallow:#8fb6cf; --life:#c07a2c; }
+  * { box-sizing:border-box; }
   body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
   header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  header h1 { margin:0 0 4px; font-size:18px; } header p { margin:0; color:var(--muted); font-size:13px; }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  header p { margin:0; color:var(--muted); font-size:13px; }
   nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
   nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
   nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
-  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
   section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
   section.stage .stage-sub { margin:0 0 18px; color:var(--muted); font-size:13px; }
   section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
   section.stage.stage-locked .lock-banner { display:block; }
   section.stage.stage-locked .stage-body { pointer-events:none; }
   .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
-  .explore-tracker { margin-top:10px; padding:8px 12px; background:#f4f0dd; border-left:3px solid #caa04a; border-radius:0 4px 4px 0; font-size:12.5px; color:#4a3a14; display:none; }
-  .explore-tracker.shown { display:block; } .explore-tracker.complete { background:#e4efd4; border-left-color:#6f8a4a; color:#2e4410; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    /* The plot column is capped at the canvas width, which setupCanvas pins at a
+     fixed 560px, and the second track takes what is left. Both tracks may go
+     narrower than their content, so a long line of R or a long stats line
+     scrolls or wraps inside its own box instead of widening the whole page.
+     Below 1100px there is not room for a 560px plot beside anything, so the
+     two columns stack. */
+  .grid { display:grid; grid-template-columns:minmax(0,592px) minmax(0,1fr); gap:16px; }
+  @media (max-width: 1100px) { .grid { grid-template-columns:minmax(0,1fr); } }
   .col { display:flex; flex-direction:column; gap:16px; }
-  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; min-width:0; }
   .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .scenario p { margin:0 0 8px; } .scenario p:last-child { margin-bottom:0; }
-  .scenario .anchor-quote { background:#f5efe0; border-left:3px solid #caa04a; padding:10px 14px; border-radius:0 4px 4px 0; font-size:13.5px; color:#2e230a; margin:8px 0 4px; }
-  .scenario .anchor-quote .src { display:block; margin-top:6px; font-size:11px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
-  .prediction ol { margin:0; padding-left:20px; } .prediction li { margin-bottom:10px; }
-  .prediction label { display:block; margin:3px 0; cursor:pointer; font-size:14px; }
-  .prediction .q { font-weight:600; margin-bottom:4px; font-size:14px; }
-  .prediction button { margin-top:6px; padding:8px 14px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
-  .prediction button:disabled { background:#bbb; cursor:not-allowed; }
-  .prediction-done { background:var(--accent-soft); border:1px solid var(--accent); color:var(--accent); padding:8px 10px; border-radius:4px; font-size:13px; margin-bottom:6px; }
-  .controls.locked { opacity:0.4; pointer-events:none; }
-  .controls .row { display:grid; grid-template-columns:140px 1fr 70px; align-items:center; gap:10px; margin-bottom:6px; }
-  .controls label { font-size:13px; } .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } blockquote.voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .numq .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .numq input[type=number] { width:130px; padding:7px 9px; font:14px ui-monospace,Menlo,monospace; border:1px solid var(--rule); border-radius:4px; }
+  .numq .unit { font-size:13px; color:var(--muted); }
+  .numq button { padding:7px 13px; background:var(--accent); color:#fff; border:0; border-radius:4px; cursor:pointer; font-size:14px; }
+  .numq button:disabled { background:#bbb; cursor:not-allowed; }
+  .gm { margin-top:10px; }
+  .gm .gm-prompt { font-size:13.5px; line-height:1.45; margin-bottom:10px; }
+  .gm .gm-prompt b { font-family:ui-monospace,Menlo,monospace; font-weight:600; color:var(--ink); }
+  .gm .buttons { align-items:center; }
+  .gm canvas { display:block; margin-top:10px; max-width:100%; }
+  .gm canvas.pivot { cursor:crosshair; }
+  .gm .reading { margin-top:7px; font:12.5px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .gm .reading b { color:var(--ink); font-weight:600; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+  .verdict.wrong { background:#f8dfdb; border:1px solid var(--accent); color:#7c2230; }
+  .controls .row { display:grid; grid-template-columns:220px 1fr 76px; align-items:center; gap:10px; margin-bottom:6px; }
+  .controls .row.muted label { color:#a9a69c; }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
+  .controls input[type=range]:disabled { opacity:0.4; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
-  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); } .controls button.accent { background:var(--accent); }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button:disabled, .controls button.accent:disabled { background:#bbb; cursor:not-allowed; }
   .graph-wrap canvas { width:100%; height:auto; display:block; background:#fff; }
   .fit-stats { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; margin-top:8px; color:var(--ink); }
-  .fit-stats .label { color:var(--muted); } .fit-stats .big { font-size:16px; font-weight:600; color:var(--accent); }
-  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
-  pre.code .line { display:block; padding:0 6px; border-radius:2px; } pre.code .line.hi { background:var(--code-hi); }
+  .fit-stats .label { color:var(--muted); }
+  .fit-stats .ok { color:var(--good); font-weight:600; }
+  .fit-stats .off { color:var(--bad); font-weight:600; }
+  .rungs { font:12.5px ui-monospace,Menlo,monospace; }
+  .rungs div { padding:4px 0; border-bottom:1px solid #f0eee5; display:flex; justify-content:space-between; }
+  .rungs div:last-child { border-bottom:0; }
+  .rungs .lab { color:var(--ink); }
+  .rungs .val { font-weight:600; }
+  .toggle { display:flex; align-items:center; gap:8px; margin:8px 0 2px; font-size:13px; }
+  .toggle input { width:16px; height:16px; }
+  .key { font-size:12.5px; color:var(--muted); margin-top:6px; }
+  .key .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin:0 4px 0 12px; vertical-align:baseline; }
+  .key .sw:first-child { margin-left:0; }
+  pre.code { min-width:0; background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:360px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
   pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; } pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
   footer.wrap-up { padding:20px 24px 40px; max-width:1300px; margin:0 auto; color:var(--muted); font-size:13px; }
-  footer.wrap-up h2 { color:var(--ink); font-size:16px; } footer.wrap-up code { font-family:ui-monospace,Menlo,monospace; background:#eee; padding:1px 4px; border-radius:3px; }
-  footer.wrap-up .closing { background:#f5efe0; border-left:3px solid #caa04a; padding:12px 16px; border-radius:0 4px 4px 0; font-size:14px; color:#2e230a; margin:8px 0 16px; }
-  footer.wrap-up .closing .src { display:block; margin-top:6px; font-size:12px; color:#6a5018; font-family:ui-monospace,Menlo,monospace; }
-  .outcomes { max-width:1300px; margin:0 auto; padding:16px 24px 4px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  .outcomes h2 { margin:0 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
-  .outcomes p { margin:0 0 8px; }
+  .saved-counter { display:inline-block; padding:3px 9px; border-radius:12px; background:#2f6b8f; color:#fff; font:13px ui-monospace,Menlo,monospace; margin-left:8px; }
+
+  /* ---- Lesson 8: dragging on the plot itself ----------------------------
+     Every graph on this page is an input. The cursor has to say so, because
+     nothing else on the page does: the rules in Stage A and the band rules in
+     Stage A are dragged up and down, the line in Stage B is dragged to tilt it,
+     and the cut in Stage E is dragged across.                              */
+  canvas.drag-y { cursor:ns-resize; touch-action:none; }
+  canvas.drag-x { cursor:ew-resize; touch-action:none; }
+  canvas.drag-tilt { cursor:grab; touch-action:none; }
+  canvas.drag-tilt:active { cursor:grabbing; }
+  canvas.dead { cursor:default; }
+  .step { display:none; }
+  .step.shown { display:block; }
+  .pill { display:inline-block; padding:2px 8px; border-radius:11px; font:12px ui-monospace,Menlo,monospace; background:#eceae2; color:var(--muted); margin-right:6px; }
+  .pill.on { background:var(--deep); color:#fff; }
+  .pickrow { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
+  .pickrow button { flex:1 1 auto; background:#fff; color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:7px 9px; cursor:pointer; font-size:12.5px; text-align:left; }
+  .pickrow button.on { background:var(--deep); border-color:var(--deep); color:#fff; }
+  .ledger { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; }
+  .ledger div { display:flex; justify-content:space-between; padding:3px 0; }
+  .ledger .sw { display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:7px; vertical-align:baseline; }
+
+  /* ---- Lesson 8: locking in, and being told which way it went ---------
+     Four of the six stages ask for a commitment before they will say
+     anything back. That needs three things the rest of the sheet does not
+     have: a prompt that states the target, a pair of yes/no buttons, and a
+     tally that reads as unfinished until it is finished.                  */
+  .drill { margin-top:12px; padding-top:11px; border-top:1px solid var(--rule); }
+  .drill .prompt { font-size:13.5px; margin-bottom:9px; line-height:1.45; }
+  .drill .prompt b { font-weight:600; color:var(--accent2); }
+  .drill .prompt .target { font-family:ui-monospace,Menlo,monospace; font-weight:600; color:var(--ink); }
+  .yesno { display:flex; gap:8px; margin:9px 0 4px; }
+  .yesno button { flex:1 1 0; background:#fff; color:var(--ink); border:1px solid var(--rule);
+                  border-radius:4px; padding:8px 6px; cursor:pointer; font-size:13px; }
+  .yesno button.on { background:var(--accent2); border-color:var(--accent2); color:#fff; }
+  .yesno button:disabled { opacity:0.45; cursor:not-allowed; }
+  .flip { margin-top:7px; font:12.5px ui-monospace,Menlo,monospace; min-height:16px; }
+  .flip .ok { color:var(--good); font-weight:600; }
+  .flip .off { color:var(--bad); font-weight:600; }
+  .tally { display:inline-block; padding:2px 9px; border-radius:11px; background:#eceae2;
+           font:12px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .tally.on { background:#4a7a2a; color:#fff; }
+  .attempts { color:var(--muted); font:12px ui-monospace,Menlo,monospace; }
+  canvas.squares { cursor:default; }
+  .pair { display:grid; grid-template-columns:1fr 1fr; gap:0 18px; }
+  .note { font-size:12.5px; color:var(--muted); margin-top:8px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 10 — Watching alleles wander in a finite population</h1>
-  <p>An allele copied at random each generation, in a population small enough that luck alone moves it. Watch where it ends up.</p>
+  <h1>Lesson 10</h1>
 </header>
 <div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
-<div class="scenario" style="max-width:1300px; margin:16px auto 0; padding:0 24px;">
-  <div class="anchor-quote">
-      In the big population, one lightning strike had a 0.005% effect. The smaller population has a 0.5% effect. On its own, that one lightning strike is not going to change much. But it's not literally zero effect. And that one lightning strike is not the only random thing that's going to happen to my population of birds, whether it's 10,000 or 100. All the random effects in a generation get summed together at the next round of reproduction. Each generation doesn't start fresh.
-      <span class="src">— 202_lec09_06</span>
-    </div>
-</div>
+
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. One trajectory, then many</a>
-  <a href="#stageB" id="tocB" class="locked">B. Run to fixation</a>
-  <a href="#stageC" id="tocC" class="locked">C. Where it ends up</a>
-  <a href="#stageD" id="tocD" class="locked">D. Buri 1956 — 107 fly lines</a>
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+  <a href="#stageE" id="tocE" class="locked">E</a>
 </nav>
 
+<!-- ========== STAGE A — two draws, both of them A ===================== -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — One trajectory, then 50</h2>
+  <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage A voice block. Both paragraphs are yours, with the
+           name of the baseline cut out of the second one as you asked. -->
+      <div class="voice">
+        <p>You inherit loci. Do you inherit genotypes? You inherit an allele from each parent — you don't inherit a genotype from either parent. Do you inherit phenotypes? If you have a one-eyed parent, do you get one eye? No. What you inherit from the one-eyed parent are a bunch of individual loci.</p>
+        <p>What we are building here is a baseline. Our expectation of no change. It is not real. It is not a thing that exists. It requires an infinite number of individuals alive at one time, and it requires teleportation. Do either of those exist in the world? But it is our baseline for comparison.</p>
+      </div>
+      <ul class="setup">
+        <li>One locus. Two alleles in the pool, <b>A</b> and <b>a</b>.</li>
+        <li>Every individual is two draws out of that pool, one from each parent.</li>
+        <li>The square is every way those two draws can come out. Across: the allele from one parent. Up: the allele from the other.</li>
+        <li>The slider sets how much of the pool is <b>A</b>.</li>
+        <li>The switch moves the lit corner from two <b>A</b>'s to two <b>a</b>'s.</li>
+        <li>2,000 individuals are dealt underneath, so the corner can be checked against a count.</li>
+        <li>Lock in each answer. The page counts how many tries it took.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Each generation, sample 2N alleles with replacement from the previous generation. That is the Wright-Fisher rule. The expected next-generation frequency is the current frequency; the variance is p(1−p)/(2N).</p></div>
-      <div class="panel graph-wrap"><h3>Allele frequency over generations</h3><canvas id="plotA" width="560" height="280"></canvas><div class="fit-stats" id="statsA"><span class="label">N:</span> <span id="A_N">100</span> &nbsp;|&nbsp; <span class="label">p₀:</span> <span id="A_p0">0.50</span> &nbsp;|&nbsp; <span class="label">gens:</span> <span id="A_gens">200</span> &nbsp;|&nbsp; <span class="label">final p (this run):</span> <span id="A_finalP" class="big">—</span></div></div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predA">
-        <h3>Prediction</h3>
-        <ol><li><div class="q">Q1. Across 50 independent replicates with N = 100, p₀ = 0.5, after 200 generations:</div>
-          <label><input type="radio" name="qA1" value="cluster" /> Most replicates will still be near 0.5</label>
-          <label><input type="radio" name="qA1" value="spread" /> The replicates will be spread across (0, 1), with some fixed at 0 or 1</label>
-          <label><input type="radio" name="qA1" value="extreme" /> Almost all replicates will be fixed at 0 or 1</label></li>
-        </ol>
-        <button id="submitA" disabled>Submit → unlock the sliders</button>
-        <div class="explore-tracker" id="exploreA">Try at least 5 (N, p₀, seed) combinations to unlock Stage B. <span class="count">0/5 combos</span></div>
-      </div>
-      <div class="panel"><h3>Controls</h3>
-        <div class="controls locked" id="controlsA">
-          <div class="row" data-line="N"><label for="A_NIn">N (population)</label><input type="range" id="A_NIn" min="10" max="2000" step="10" value="100" /><output id="A_NOut">100</output></div>
-          <div class="row" data-line="p0"><label for="A_pIn">p₀ (start)</label><input type="range" id="A_pIn" min="0.05" max="0.95" step="0.01" value="0.5" /><output id="A_pOut">0.50</output></div>
-          <div class="row" data-line="gens"><label for="A_gIn">generations</label><input type="range" id="A_gIn" min="20" max="2000" step="10" value="200" /><output id="A_gOut">200</output></div>
-          <div class="row" data-line="seed"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
-          <div class="buttons"><label><input type="checkbox" id="A_fan" /> show 50-replicate fan</label> <button id="A_clearGuess" class="ghost">Clear envelope guess</button> <button id="A_download" class="ghost">Download .R</button></div>
-          <p style="font-size:12px;color:#6b6b68;margin:4px 0 0;">Click two points on the canvas to mark the upper and lower bound of where you expect most replicate trajectories to land at generation <span id="A_gensInline">200</span>. Then toggle the fan to check.</p>
+      <div class="panel graph-wrap">
+        <canvas id="plotA" class="dead" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsA">
+          <span class="label">the pool:</span> <span id="A_pool">—</span>
+          <br>
+          <span class="label">the lit corner:</span> <span id="A_corner">—</span>
+          &nbsp;|&nbsp; <span class="label">which works out to:</span> <span id="A_pred">—</span>
+          <br>
+          <span class="label">and in the 2,000 dealt below the square:</span> <span id="A_deal">—</span>
         </div>
       </div>
-      <div class="panel"><h3>R code — Wright-Fisher one trajectory</h3>
-<pre class="code" id="codeA"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cA_seed">42</span>)</span><span class="line" data-line="N">N &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="p0">p &lt;- <span class="num" id="cA_p">0.5</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cA_g">200</span></span><span class="line">traj &lt;- <span class="fn">numeric</span>(gens + <span class="num">1</span>); traj[<span class="num">1</span>] &lt;- p</span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  traj[g + <span class="num">1</span>] &lt;- p</span><span class="line">}</span><span class="line"><span class="fn">plot</span>(traj, type = <span class="str">"l"</span>, ylim = <span class="fn">c</span>(<span class="num">0</span>,<span class="num">1</span>))</span></pre></div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsA">
+          <div class="row" data-line="p"><label for="A_p">how much of the pool is A</label><input type="range" id="A_p" min="0" max="1" step="0.01" value="0.50" /><output id="A_pOut">0.50</output></div>
+          <div class="pickrow" id="A_pick">
+            <button data-c="AA" class="on">light the two-A corner</button>
+            <button data-c="aa">light the two-a corner</button>
+          </div>
+          <div class="buttons">
+            <button id="A_lock" class="accent">Lock in this pool</button>
+            <button id="A_deal_btn" class="secondary">Deal again</button>
+            <button id="A_download" class="ghost">Download .R</button>
+          </div>
+          <div class="flip" id="A_flip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">With the two-A corner lit, find the pool that gives <b>0.36</b> of the population two A's. <span class="hint"><span id="A1_now">not yet</span></span></li>
+          <li data-task="A2">Light the two-a corner instead, and find the pool that gives <b>0.49</b> of them two a's. <span class="hint"><span id="A2_now">not yet</span></span></li>
+          <li data-task="A3">Land three rounds of the game below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedA"><!-- TEXT FOR JM: stage A solved banner. -->Two draws out of the same pool. The corner is one share multiplied by itself, and it does not care which allele you point it at.</div>
+      </div>
+      <div class="panel numq" id="numqA">
+        <div class="q">Three rounds. Lock in an estimate, and the page deals 2,000 fresh individuals six more times to see whether it held.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="A_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="A_g1">the share who get two of it</label><input type="range" id="A_g1" min="0" max="1" step="0.01" value="0.50" /><output id="A_g1Out">0.50</output></div>
+            <div class="buttons">
+              <button id="A_glock" class="accent">Lock in this estimate</button>
+              <button id="A_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally" id="A_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="A_gflip"></div>
+          <canvas id="A_gstrip" width="520" height="116" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line" data-line="p">p &lt;- <span class="num" id="cA_p">0.50</span>          <span class="com"># the share of the pool that is A</span></span><span class="line">q &lt;- <span class="num">1</span> - p</span><span class="line">n &lt;- <span class="num">2000</span></span><span class="line"></span><span class="line"><span class="com"># two draws out of the pool, one per parent</span></span><span class="line">from_mum &lt;- <span class="fn">sample</span>(<span class="fn">c</span>(<span class="str">"A"</span>, <span class="str">"a"</span>), n, TRUE, <span class="fn">c</span>(p, q))</span><span class="line">from_dad &lt;- <span class="fn">sample</span>(<span class="fn">c</span>(<span class="str">"A"</span>, <span class="str">"a"</span>), n, TRUE, <span class="fn">c</span>(p, q))</span><span class="line"></span><span class="line"><span class="fn">mean</span>(from_mum == <span class="str">"A"</span> &amp; from_dad == <span class="str">"A"</span>)   <span class="com"># the two-A corner</span></span><span class="line">p * p</span><span class="line"></span><span class="line"><span class="fn">mean</span>(from_mum == <span class="str">"a"</span> &amp; from_dad == <span class="str">"a"</span>)   <span class="com"># the two-a corner</span></span><span class="line">q * q</span></pre>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE B — the two ways to be one of each ================ -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Run to fixation</h2>
-  <div class="lock-banner">Complete Stage A to unlock this section.</div>
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage B voice block. Your line about inheriting an allele
+           from each parent is what the two off-corners are. -->
+      <div class="voice">
+        <p>You inherit an allele from each parent. You don't inherit a genotype from either parent. When you put those alleles together, they construct an organism — and there is more than one road to the same organism.</p>
+      </div>
+      <ul class="setup">
+        <li>The same square, with nothing hidden this time.</li>
+        <li>Four boxes. Two of them are one of each allele, and they are not the same box.</li>
+        <li>The slider still sets how much of the pool is <b>A</b>.</li>
+        <li>Reported: the three genotype shares, and what they add to.</li>
+        <li>Lock in each answer. The page counts how many tries it took.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>500 replicates, run until each is fixed. Histogram the fixation times. The expected mean for a neutral allele at p = 0.5 is about 2.8N generations (Kimura's classical result); conditional on fixation, ~4N.</p></div>
-      <div class="panel graph-wrap"><h3>Time to fixation (across replicates)</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">N:</span> <span id="B_N">50</span> &nbsp;|&nbsp; <span class="label">replicates:</span> <span id="B_reps">500</span> &nbsp;|&nbsp; <span class="label">mean time:</span> <span id="B_mean" class="big">—</span> &nbsp;|&nbsp; <span class="label">% fixed A:</span> <span id="B_fix">—</span></div></div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predB">
-        <h3>Prediction</h3>
-        <ol><li><div class="q">Q1. With N = 50, p₀ = 0.5, the mean time to fixation across 500 replicates will be:</div>
-          <label><input type="radio" name="qB1" value="few" /> About 20 generations</label>
-          <label><input type="radio" name="qB1" value="medium" /> About 140 generations (≈ 2.8 × N)</label>
-          <label><input type="radio" name="qB1" value="many" /> About 5000 generations</label></li>
-        </ol>
-        <button id="submitB" disabled>Submit → unlock the slider</button>
-        <div class="explore-tracker" id="exploreB">Try at least 4 N values to unlock Stage C. <span class="count">0/4 N values</span></div>
-      </div>
-      <div class="panel"><h3>Controls</h3>
-        <div class="controls locked" id="controlsB">
-          <div class="row"><label for="B_NIn">N</label><input type="range" id="B_NIn" min="10" max="300" step="5" value="50" /><output id="B_NOut">50</output></div>
-          <div class="row"><label for="B_pIn">p₀</label><input type="range" id="B_pIn" min="0.05" max="0.95" step="0.05" value="0.5" /><output id="B_pOut">0.50</output></div>
-          <div class="row" data-line="seed"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
-          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div>
+      <div class="panel graph-wrap">
+        <canvas id="plotB" class="dead" width="560" height="400"></canvas>
+        <div class="fit-stats" id="statsB">
+          <span class="label">the pool:</span> <span id="B_pool">—</span>
+          <br>
+          <span class="label">two A's:</span> <span id="B_AA">—</span>
+          &nbsp;|&nbsp; <span class="label">one of each:</span> <span id="B_Aa">—</span>
+          &nbsp;|&nbsp; <span class="label">two a's:</span> <span id="B_aa">—</span>
+          <br>
+          <span class="label">which between them account for:</span> <span id="B_sum">—</span>
+          &nbsp;|&nbsp; <span class="label">in the 2,000 dealt below:</span> <span id="B_deal">—</span>
         </div>
       </div>
-      <div class="panel"><h3>R code — time to fixation</h3>
-<pre class="code" id="codeB"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cB_seed">42</span>)</span><span class="line">N &lt;- <span class="num">50</span>; p0 &lt;- <span class="num">0.5</span>; reps &lt;- <span class="num">500</span></span><span class="line">tfix &lt;- <span class="fn">replicate</span>(reps, {</span><span class="line">  p &lt;- p0; g &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) { p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p)/(<span class="num">2</span>*N); g &lt;- g + <span class="num">1</span> }</span><span class="line">  g</span><span class="line">})</span><span class="line"><span class="fn">mean</span>(tfix); <span class="fn">hist</span>(tfix)</span></pre></div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsB">
+          <div class="row" data-line="p"><label for="B_p">how much of the pool is A</label><input type="range" id="B_p" min="0" max="1" step="0.01" value="0.50" /><output id="B_pOut">0.50</output></div>
+          <div class="buttons">
+            <button id="B_lock" class="accent">Lock in this pool</button>
+            <button id="B_deal_btn" class="secondary">Deal again</button>
+            <button id="B_download" class="ghost">Download .R</button>
+          </div>
+          <div class="flip" id="B_flip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Find the pool that makes one-of-each as common as it can possibly be. <span class="hint"><span id="B1_now">not yet</span></span></li>
+          <li data-task="B2">Now find a pool where one-of-each is <b>0.32</b>. <span class="hint"><span id="B2_now">not yet</span></span></li>
+          <li data-task="B3">Land three rounds of the game below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedB"><!-- TEXT FOR JM: stage B solved banner. -->Two boxes, not one, which is where the 2 comes from. Half the pool in each allele is the most one-of-each you can ever get, and it is exactly half the population.</div>
+      </div>
+      <div class="panel numq" id="numqB">
+        <div class="q">Three rounds. Lock in an estimate, and the page deals 2,000 fresh individuals six more times to see whether it held.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="B_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="B_g1">the share who carry one of each</label><input type="range" id="B_g1" min="0" max="1" step="0.01" value="0.50" /><output id="B_g1Out">0.50</output></div>
+            <div class="buttons">
+              <button id="B_glock" class="accent">Lock in this estimate</button>
+              <button id="B_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally" id="B_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="B_gflip"></div>
+          <canvas id="B_gstrip" width="520" height="116" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line" data-line="p">p &lt;- <span class="num" id="cB_p">0.50</span>          <span class="com"># the share of the pool that is A</span></span><span class="line">q &lt;- <span class="num">1</span> - p</span><span class="line"></span><span class="line"><span class="com"># the four boxes of the square</span></span><span class="line">p * p        <span class="com"># two A's</span></span><span class="line">p * q        <span class="com"># A from one parent, a from the other</span></span><span class="line">q * p        <span class="com"># a from one parent, A from the other</span></span><span class="line">q * q        <span class="com"># two a's</span></span><span class="line"></span><span class="line"><span class="com"># the three genotypes, and what they add to</span></span><span class="line">p^<span class="num">2</span>; <span class="num">2</span>*p*q; q^<span class="num">2</span></span><span class="line">p^<span class="num">2</span> + <span class="num">2</span>*p*q + q^<span class="num">2</span></span></pre>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE C — what you can see ============================== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Where does a wandering allele end up?</h2>
-  <div class="lock-banner">Complete Stage B to unlock this section.</div>
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage C voice block, your two lines on what recessive
+           actually means and on it being a word about phenotypes. -->
+      <div class="voice">
+        <p>Recessive is not some extra property. Recessive is the word we use when something doesn't matter as a heterozygote. Things often don't matter as a heterozygote because they're broken, but there's a backup.</p>
+        <p>Dominant and recessive are not a real thing that describes a feature of genes. They are an outcome of the context in which a gene exists. They are always terms about phenotypes, not genes.</p>
+      </div>
+      <ul class="setup">
+        <li>900 individuals. The same square underneath, and the same two alleles.</li>
+        <li>One copy of <b>A</b> is enough to build the protein, so two of the three genotypes look identical.</li>
+        <li>The switch flips between what a person walking through the population can see, and what is actually there.</li>
+        <li>The slider sets how much of the pool is <b>a</b>, the broken copy.</li>
+        <li>Reported: the share showing the trait, the share carrying one copy without showing it, and how many times more common carriers are.</li>
+        <li>Lock in each answer. The page counts how many tries it took.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>For each of 8 starting frequencies (0.1, 0.2, …, 0.9), run 300 replicates. Plot fraction that fixed the allele against p₀. The diagonal is the neutral prediction; deviation is selection (or sampling noise).</p></div>
-      <div class="panel graph-wrap"><h3>Fixation probability vs starting frequency</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">N:</span> <span id="C_N">50</span> &nbsp;|&nbsp; <span class="label">replicates/level:</span> 300 &nbsp;|&nbsp; <span class="label">selection coeff s:</span> <span id="C_s">0.00</span> &nbsp;|&nbsp; <span class="label">RMSE from p₀ line:</span> <span id="C_rmse" class="big">—</span></div></div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predC">
-        <h3>Prediction</h3>
-        <ol><li><div class="q">Q1. With s = 0 (no selection) and N = 50, the eight points will:</div>
-          <label><input type="radio" name="qC1" value="diagonal" /> Sit on the diagonal (fix probability = p₀)</label>
-          <label><input type="radio" name="qC1" value="above" /> Sit above the diagonal</label>
-          <label><input type="radio" name="qC1" value="below" /> Sit below the diagonal</label></li>
-        </ol>
-        <button id="submitC" disabled>Submit → unlock s</button>
-        <div class="explore-tracker" id="exploreC">Try at least 3 s values (0, weak, strong) to unlock Stage D. <span class="count">0/3 s values</span></div>
-      </div>
-      <div class="panel"><h3>Controls</h3>
-        <div class="controls locked" id="controlsC">
-          <div class="row"><label for="C_NIn">N</label><input type="range" id="C_NIn" min="20" max="200" step="10" value="50" /><output id="C_NOut">50</output></div>
-          <div class="row"><label for="C_sIn">s (selection)</label><input type="range" id="C_sIn" min="-0.1" max="0.1" step="0.005" value="0" /><output id="C_sOut">0.00</output></div>
-          <div class="row" data-line="seed"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
-          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div>
+      <div class="panel graph-wrap">
+        <canvas id="plotC" class="squares" width="560" height="392"></canvas>
+        <div class="fit-stats" id="statsC">
+          <span class="label">the broken copy is:</span> <span id="C_q">—</span> <span class="label">of the pool</span>
+          <br>
+          <span class="label">showing the trait:</span> <span id="C_aff">—</span>
+          &nbsp;|&nbsp; <span class="label">carrying one copy and showing nothing:</span> <span id="C_car">—</span>
+          <br>
+          <span class="label">so carriers outnumber the people showing it by:</span> <span id="C_ratio">—</span>
         </div>
       </div>
-      <div class="panel"><h3>R code — fixation probability scan</h3>
-<pre class="code" id="codeC"><span class="line" data-line="seed"><span class="fn">set.seed</span>(<span class="num" id="cC_seed">42</span>)</span><span class="line">N &lt;- <span class="num">50</span>; s &lt;- <span class="num">0</span>; reps &lt;- <span class="num">300</span></span><span class="line">p0s &lt;- <span class="fn">seq</span>(<span class="num">0.1</span>, <span class="num">0.9</span>, <span class="num">0.1</span>)</span><span class="line">pfix &lt;- <span class="fn">sapply</span>(p0s, <span class="kw">function</span>(p0) {</span><span class="line">  <span class="fn">mean</span>(<span class="fn">replicate</span>(reps, {</span><span class="line">    p &lt;- p0</span><span class="line">    <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) {</span><span class="line">      p_sel &lt;- p*(<span class="num">1</span>+s)/(p*(<span class="num">1</span>+s)+(<span class="num">1</span>-p))</span><span class="line">      p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p_sel)/(<span class="num">2</span>*N)</span><span class="line">    }</span><span class="line">    p == <span class="num">1</span></span><span class="line">  }))</span><span class="line">})</span><span class="line"><span class="fn">plot</span>(p0s, pfix); <span class="fn">abline</span>(<span class="num">0</span>, <span class="num">1</span>)</span></pre></div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsC">
+          <div class="row" data-line="q"><label for="C_q_s">how much of the pool is the broken copy</label><input type="range" id="C_q_s" min="0" max="1" step="0.005" value="0.300" /><output id="C_qOut">0.300</output></div>
+          <div class="pickrow" id="C_pick">
+            <button data-v="seen" class="on">what you can see</button>
+            <button data-v="true">what is actually there</button>
+          </div>
+          <div class="buttons">
+            <button id="C_lock" class="accent">Lock in this pool</button>
+            <button id="C_deal_btn" class="secondary">New population</button>
+            <button id="C_download" class="ghost">Download .R</button>
+          </div>
+          <div class="flip" id="C_flip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Find the pool where <b>1 in 400</b> people show the trait. <span class="hint"><span id="C1_now">not yet</span></span></li>
+          <li data-task="C2">Now find the pool where carriers are <b>18 times</b> as common as the people showing it. <span class="hint"><span id="C2_now">not yet</span></span></li>
+          <li data-task="C3">Land three rounds of the game below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedC"><!-- TEXT FOR JM: stage C solved banner. -->The rarer the broken copy gets, the more lopsided it becomes: almost every copy of it in the population is sitting in somebody who will never show it.</div>
+      </div>
+      <div class="panel numq" id="numqC">
+        <div class="q">Three rounds. Lock in an estimate, and the page deals 20,000 fresh individuals six more times to see whether it held.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="C_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="C_g1">the share carrying one copy</label><input type="range" id="C_g1" min="0" max="0.5" step="0.002" value="0.100" /><output id="C_g1Out">0.100</output></div>
+            <div class="buttons">
+              <button id="C_glock" class="accent">Lock in this estimate</button>
+              <button id="C_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally" id="C_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="C_gflip"></div>
+          <canvas id="C_gstrip" width="520" height="116" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line" data-line="q">q &lt;- <span class="num" id="cC_q">0.300</span>        <span class="com"># the share of the pool that is the broken copy</span></span><span class="line">p &lt;- <span class="num">1</span> - q</span><span class="line"></span><span class="line">q^<span class="num">2</span>            <span class="com"># show the trait</span></span><span class="line"><span class="num">2</span>*p*q          <span class="com"># carry one copy, show nothing</span></span><span class="line">p^<span class="num">2</span>            <span class="com"># carry none of it</span></span><span class="line"></span><span class="line"><span class="com"># run it the other way: from what you can see to the pool</span></span><span class="line">seen &lt;- <span class="num">1</span>/<span class="num">400</span></span><span class="line">q_hat &lt;- <span class="fn">sqrt</span>(seen); q_hat</span><span class="line"><span class="num">2</span> * (<span class="num">1</span> - q_hat) * q_hat   <span class="com"># and so the carriers</span></span></pre>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE D — three alleles ================================= -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Buri 1956 — 107 fly lines</h2>
-  <div class="lock-banner">Complete Stage C to unlock this section.</div>
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage D voice block, the codominance line from 145.
+           It is here because AB is the box the students can read straight off. -->
+      <div class="voice">
+        <p>In an incomplete dominance system, I can't tell from a purple flower whether it's heterozygous red-blue or homozygous purple. Same phenotype, two possible genotypes. In codominance, both alleles are visible separately — like blood type AB. Type AB tells you with certainty: heterozygous A and B. No ambiguity.</p>
+      </div>
+      <ul class="setup">
+        <li>One locus, three alleles in the pool: <b>A</b>, <b>B</b> and <b>O</b>.</li>
+        <li>The same square, cut three ways instead of two. Nine boxes, six genotypes.</li>
+        <li>Two sliders set the A and B shares. Whatever is left over is <b>O</b>.</li>
+        <li><b>O</b> only shows when there is nothing else there. <b>A</b> and <b>B</b> are both visible when they turn up together.</li>
+        <li>Reported: the six genotype shares, and the four blood types they add up to.</li>
+        <li>Lock in each answer. The page counts how many tries it took.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Buri's empirical trajectories overlaid with a Wright-Fisher simulation at N=16 (the actual sample size each generation). The simulation matches the observed spread — drift accounts for the variance.</p></div>
-      <div class="panel graph-wrap"><h3>Observed Buri lines vs simulated WF lines</h3><canvas id="plotD" width="560" height="320"></canvas><div class="fit-stats" id="statsD"><span class="label">N (per line):</span> <span id="D_N">16</span> &nbsp;|&nbsp; <span class="label">gens:</span> 19 &nbsp;|&nbsp; <span class="label">observed lines fixed:</span> <span id="D_obsFix">—</span> &nbsp;|&nbsp; <span class="label">predicted lines fixed:</span> <span id="D_simFix" class="big">—</span></div></div>
-    </div>
-    <div class="col">
-      <div class="panel prediction" id="predD">
-        <h3>Prediction</h3>
-        <ol><li><div class="q">Q1. After 19 generations with N = 16, what fraction of the 107 Buri lines do you expect to have fixed or lost the allele?</div>
-          <label><input type="radio" name="qD1" value="few" /> Under 10%</label>
-          <label><input type="radio" name="qD1" value="some" /> About 25%</label>
-          <label><input type="radio" name="qD1" value="many" /> About 50% or more</label></li>
-        </ol>
-        <button id="submitD" disabled>Submit → reveal</button>
-        <div class="explore-tracker" id="exploreD">Resimulate at least 3 times. <span class="count">0/3 sims</span></div>
-      </div>
-      <div class="panel"><h3>Controls</h3>
-        <div class="controls locked" id="controlsD">
-          <div class="row"><label for="D_seedIn">sim seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
-          <div class="buttons"><button id="D_resim" class="accent">Resimulate</button> <button id="D_download" class="ghost">Download .R</button></div>
+      <div class="panel graph-wrap">
+        <canvas id="plotD" class="dead" width="560" height="404"></canvas>
+        <div class="fit-stats" id="statsD">
+          <span class="label">the pool:</span> <span id="D_pool">—</span>
+          <br>
+          <span class="label">carrying two of the same:</span> <span id="D_hom">—</span>
+          &nbsp;|&nbsp; <span class="label">carrying two different ones:</span> <span id="D_het">—</span>
+          <br>
+          <span class="label">blood types —</span> <span id="D_types">—</span>
         </div>
       </div>
-      <div class="panel"><h3>R code — Buri overlay</h3>
-<pre class="code" id="codeD"><span class="line">buri &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/buri_fly.csv"</span>)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>); N &lt;- <span class="num">16</span>; gens &lt;- <span class="num">19</span>; lines &lt;- <span class="num">107</span>; p0 &lt;- <span class="num">0.5</span></span><span class="line">sim &lt;- <span class="fn">replicate</span>(lines, {</span><span class="line">  p &lt;- p0; traj &lt;- p</span><span class="line">  <span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) { p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p)/(<span class="num">2</span>*N); traj &lt;- <span class="fn">c</span>(traj, p) }</span><span class="line">  traj</span><span class="line">})</span><span class="line"><span class="fn">matplot</span>(<span class="fn">t</span>(sim), type = <span class="str">"l"</span>, col = <span class="fn">rgb</span>(<span class="num">0</span>,<span class="num">0</span>,<span class="num">0</span>,<span class="num">0.1</span>))</span></pre></div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsD">
+          <div class="row" data-line="p"><label for="D_p">how much of the pool is A</label><input type="range" id="D_p" min="0" max="1" step="0.01" value="0.30" /><output id="D_pOut">0.30</output></div>
+          <div class="row" data-line="q"><label for="D_q">how much of the pool is B</label><input type="range" id="D_q" min="0" max="1" step="0.01" value="0.20" /><output id="D_qOut">0.20</output></div>
+          <div class="buttons">
+            <button id="D_lock" class="accent">Lock in this pool</button>
+            <button id="D_download" class="ghost">Download .R</button>
+          </div>
+          <div class="flip" id="D_flip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage E</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Find a pool where type <b>AB</b> is <b>0.06</b> of the population. <span class="hint"><span id="D1_now">not yet</span></span></li>
+          <li data-task="D2">Now find the pool where type <b>O</b> is <b>0.45</b> and type <b>A</b> is <b>0.40</b>. <span class="hint"><span id="D2_now">not yet</span></span></li>
+          <li data-task="D3">Land three rounds of the game below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedD"><!-- TEXT FOR JM: stage D solved banner. -->Nothing about the square needed there to be two alleles. Cut it into as many pieces as the locus has, and the boxes still add to one.</div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">Three rounds. Lock in an estimate, and the page deals 2,000 fresh individuals six more times to see whether it held.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="D_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="D_g1">the share carrying two different alleles</label><input type="range" id="D_g1" min="0" max="1" step="0.01" value="0.50" /><output id="D_g1Out">0.50</output></div>
+            <div class="buttons">
+              <button id="D_glock" class="accent">Lock in this estimate</button>
+              <button id="D_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally" id="D_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="D_gflip"></div>
+          <canvas id="D_gstrip" width="520" height="116" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line" data-line="p">pA &lt;- <span class="num" id="cD_p">0.30</span>         <span class="com"># the share of the pool that is A</span></span><span class="line" data-line="q">pB &lt;- <span class="num" id="cD_q">0.20</span>         <span class="com"># the share that is B</span></span><span class="line">pO &lt;- <span class="num">1</span> - pA - pB     <span class="com"># and what is left</span></span><span class="line"></span><span class="line"><span class="com"># six genotypes out of three alleles</span></span><span class="line">pA^<span class="num">2</span>; pB^<span class="num">2</span>; pO^<span class="num">2</span></span><span class="line"><span class="num">2</span>*pA*pB; <span class="num">2</span>*pA*pO; <span class="num">2</span>*pB*pO</span><span class="line"></span><span class="line"><span class="com"># and the four blood types they build</span></span><span class="line">pA^<span class="num">2</span> + <span class="num">2</span>*pA*pO      <span class="com"># type A</span></span><span class="line">pB^<span class="num">2</span> + <span class="num">2</span>*pB*pO      <span class="com"># type B</span></span><span class="line"><span class="num">2</span>*pA*pB            <span class="com"># type AB</span></span><span class="line">pO^<span class="num">2</span>               <span class="com"># type O</span></span></pre>
+      </div>
     </div>
   </div>
 </section>
 
-<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+<!-- ========== STAGE E — run it forward ================================ -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- TEXT FOR JM: stage E voice block. The inertia paragraph is yours with
+           the name taken out, and the three conditions are the thing the stage
+           is actually testing. -->
+      <div class="voice">
+        <p>We're analogizing evolution to motion. Newton's first law: an object at rest tends to stay at rest unless acted on by an outside force. This is our object at rest. A gene frequency tends to stay at that frequency unless acted on by an outside force.</p>
+        <p>One thing that's nice is that alleles are heritable. Full stop. We do not have to question heritability for alleles. Variation, differential replication, heritability of that variation — in any system at all where you have those three, you get evolution.</p>
+      </div>
+      <ul class="setup">
+        <li>The population from Stage B, handed forward 60 generations.</li>
+        <li>First slider: how much of the pool starts as <b>A</b>.</li>
+        <li>Second slider: how those alleles are packaged at the start — all in one-of-each individuals at one end, none at the other.</li>
+        <li>Three more sliders: how many offspring each genotype has.</li>
+        <li>Top plot: the share of the pool that is <b>A</b>, generation by generation. Bottom plot: the three genotype shares.</li>
+        <li>The alleles are inherited and the individuals differ. Both of those are true at every setting on this page.</li>
+      </ul>
+    </div>
+  </div>
 
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel graph-wrap">
+        <canvas id="plotE" class="dead" width="560" height="230"></canvas>
+        <canvas id="plotE2" class="dead" width="560" height="230" style="margin-top:6px;"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">started at:</span> <span id="E_start">—</span>
+          &nbsp;|&nbsp; <span class="label">after 60 generations:</span> <span id="E_end">—</span>
+          &nbsp;|&nbsp; <span class="label">moved by:</span> <span id="E_move">—</span>
+          <br>
+          <span class="label">genotypes you started with:</span> <span id="E_g0">—</span>
+          <br>
+          <span class="label">genotypes one generation later:</span> <span id="E_g1">—</span>
+          <br>
+          <span class="label">what the square predicts from the starting pool:</span> <span id="E_sq">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel controls-panel">
+        <h3>Controls</h3>
+        <div class="controls" id="controlsE">
+          <div class="row" data-line="p0"><label for="E_p0">how much of the pool starts as A</label><input type="range" id="E_p0" min="0.05" max="0.95" step="0.01" value="0.30" /><output id="E_p0Out">0.30</output></div>
+          <div class="row" data-line="pack"><label for="E_pack">how much of it starts in one-of-each individuals</label><input type="range" id="E_pack" min="0" max="1" step="0.01" value="1.00" /><output id="E_packOut">1.00</output></div>
+          <div class="row" data-line="wAA"><label for="E_wAA">offspring per individual, two A's</label><input type="range" id="E_wAA" min="0.5" max="4" step="0.1" value="2.0" /><output id="E_wAAOut">2.0</output></div>
+          <div class="row" data-line="wAa"><label for="E_wAa">offspring per individual, one of each</label><input type="range" id="E_wAa" min="0.5" max="4" step="0.1" value="2.0" /><output id="E_wAaOut">2.0</output></div>
+          <div class="row" data-line="waa"><label for="E_waa">offspring per individual, two a's</label><input type="range" id="E_waa" min="0.5" max="4" step="0.1" value="2.0" /><output id="E_waaOut">2.0</output></div>
+          <div class="buttons">
+            <button id="E_lock" class="accent">Lock in this run</button>
+            <button id="E_download" class="ghost">Download .R</button>
+          </div>
+          <div class="flip" id="E_flip"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish the lesson</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">Start with every allele packed into one-of-each individuals, give all three genotypes the same number of offspring, and lock in a run that ends where it started. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E2">Now move the share of A by at least <b>0.10</b> over the 60 generations. <span class="hint"><span id="E2_now">not yet</span></span></li>
+          <li data-task="E3">Put all three back to the same number of offspring, at <b>3 or more</b> each, and lock in a run that still ends where it started. <span class="hint"><span id="E3_now">not yet</span></span></li>
+          <li data-task="E4">Land three rounds of the game below.</li>
+        </ul>
+        <div class="solved-banner" id="solvedE"><!-- TEXT FOR JM: stage E solved banner. -->Every allele on this page is inherited and every population on it varies. Hand all three genotypes the same number of offspring and sixty generations go by with nothing to show for them. The differences in reproduction are what was missing.</div>
+      </div>
+      <div class="panel numq" id="numqE">
+        <div class="q">Three rounds. Lock in where the pool ends up, and the page runs six more populations of 20,000 the same way to see whether it held.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="E_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="E_g1">the share of the pool that is A, 60 generations on</label><input type="range" id="E_g1" min="0" max="1" step="0.01" value="0.50" /><output id="E_g1Out">0.50</output></div>
+            <div class="buttons">
+              <button id="E_glock" class="accent">Lock in this estimate</button>
+              <button id="E_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally" id="E_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="E_gflip"></div>
+          <canvas id="E_gstrip" width="520" height="116" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line" data-line="p0">p &lt;- <span class="num" id="cE_p0">0.30</span>          <span class="com"># the share of the pool that is A</span></span><span class="line" data-line="pack">pack &lt;- <span class="num" id="cE_pack">1.00</span>       <span class="com"># how much of it starts in one-of-each</span></span><span class="line" data-line="wAA">wAA &lt;- <span class="num" id="cE_wAA">2.0</span></span><span class="line" data-line="wAa">wAa &lt;- <span class="num" id="cE_wAa">2.0</span></span><span class="line" data-line="waa">waa &lt;- <span class="num" id="cE_waa">2.0</span></span><span class="line"></span><span class="line">het &lt;- pack * <span class="num">2</span> * <span class="fn">min</span>(p, <span class="num">1</span>-p)</span><span class="line">f &lt;- <span class="fn">c</span>(p - het/<span class="num">2</span>, het, <span class="num">1</span> - p - het/<span class="num">2</span>)   <span class="com"># AA, Aa, aa</span></span><span class="line"></span><span class="line"><span class="fn">for</span> (gen in <span class="num">1</span>:<span class="num">60</span>) {</span><span class="line">  w &lt;- f * <span class="fn">c</span>(wAA, wAa, waa)</span><span class="line">  p &lt;- (w[<span class="num">1</span>] + w[<span class="num">2</span>]/<span class="num">2</span>) / <span class="fn">sum</span>(w)   <span class="com"># the pool the parents hand on</span></span><span class="line">  f &lt;- <span class="fn">c</span>(p^<span class="num">2</span>, <span class="num">2</span>*p*(<span class="num">1</span>-p), (<span class="num">1</span>-p)^<span class="num">2</span>)  <span class="com"># and the square deals it out</span></span><span class="line">}</span><span class="line">p</span></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is the whole of Lesson 10. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-function mulberry32(seed) { let a=seed>>>0; return function(){a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15), t|1); t^=t+Math.imul(t^(t>>>7), t|61); return ((t^(t>>>14))>>>0)/4294967296; }; }
-function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
-function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
-function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
-function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
-function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
-function rbinom(rng,n,p){let k=0; for(let i=0;i<n;i++) if(rng()<p) k++; return k;}
-function wfStep(rng,N,p,s){const ps = p*(1+s)/(p*(1+s)+(1-p)); return rbinom(rng,2*N,ps)/(2*N);}
+/* ====== Shared helpers ==============================================
+   mean() is required by sim.js's olsSlope and is not defined there; the
+   rest are the three moments this page reads off every plot it draws. */
+function mean(a) { let s = 0; for (let i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
+function vari(a) { const m = mean(a); let s = 0; for (let i = 0; i < a.length; i++) { const d = a[i] - m; s += d * d; } return s / a.length; }
+function covar(a, b) { const ma = mean(a), mb = mean(b); let s = 0; for (let i = 0; i < a.length; i++) s += (a[i] - ma) * (b[i] - mb); return s / a.length; }
+function tiltOf(x, y) { return covar(x, y) / vari(x); }
+function f2(v) { return (Math.round(v * 100) / 100).toFixed(2); }
+function f3(v) { return (Math.round(v * 1000) / 1000).toFixed(3); }
+function yInv(f, py) { return f.yMin + (f.pad.t + f.H - py) / f.H * (f.yMax - f.yMin); }
+function xInv(f, px) { return f.xMin + (px - f.pad.l) / f.W * (f.xMax - f.xMin); }
+function canvasPt(cv, evt) {
+  const r = cv.getBoundingClientRect();
+  const w = +cv.dataset.cssW || cv.width, h = +cv.dataset.cssH || cv.height;
+  return { x: (evt.clientX - r.left) / r.width * w, y: (evt.clientY - r.top) / r.height * h };
+}
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function wireDownload(btnId, preId, fname) {
+  const b = document.getElementById(btnId); if (!b) return;
+  b.addEventListener("click", () => downloadText(fname, document.getElementById(preId).innerText + "\n"));
+}
 
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-const EXPLORE_THRESHOLD = { A:5, B:4, C:3, D:3 };
-function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"combos":stage==="B"?"N values":stage==="C"?"s values":"sims"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
-/* Scored scaffold slot each stage's questions write to. A stage absent from
-   this map still gates and still records engagement, but is not scored. */
-const PRED_POS = {A:0, B:1, C:2, D:3};
+/* Palette. The two blues are one family on purpose: together they are
+   everything that came down from the parents, and the split between them is
+   only whether the parents' own measurements could show it. The ochre is the
+   one block that is not inheritance at all. */
+const DEEP = "#1e4d68", SHALLOW = "#8fb6cf", LIFE = "#c07a2c";
+const PALE = "#ded9cd", DOT = "#5c86a1", HOT = "#b23a48", MUTED = "#6b6b68", RULE = "#e2e0d9";
 
-/* Graded prediction gate. `answers[i]` is either the winning value= token for a
-   radio group, or a predicate over the array of checked values for a checkbox
-   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
-   revealed on screen — the student finds out by running it. */
-function wirePrediction(stage, predId, names, answers, controlsId){
-  const root=document.getElementById(predId); const btn=root.querySelector("button");
-  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
-  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
-  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
-  btn.addEventListener("click",()=>{
-    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
-      if(typeof key==="function") return !!key(vals);
-      return vals.length===1 && vals[0]===key;});
-    const ol=root.querySelector("ol"); const msg=document.createElement("div");
-    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
-    root.insertBefore(msg, ol); btn.style.display="none";
-    Gates[stage].predicted=true;
-    document.getElementById("explore"+stage).classList.add("shown");
-    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
-    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
-    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
-      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
+/* ====== Stage gates =================================================
+   A stage opens the next by being solved. The closing games are scored on
+   the first lock only, and a miss costs a round and never a door. */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false},
+                D:{open:false,done:false}, E:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+const LAST = Object.keys(NEXT).filter(k => NEXT[k] === null)[0];
+const BIT = { A1:0, A2:1, Aq:2,  B1:3, B2:4, Bq:5,
+              C1:6, C2:7, Cq:8,  D1:9, D2:10, Dq:11,
+              E1:12, E2:13, E3:14, Eq:15 };
+
+function unlockNext(stage) {
+  const nx = NEXT[stage]; if (!nx) return;
+  const sec = document.getElementById("stage" + nx);
+  if (sec && sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc" + nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  if (Gates[nx]) Gates[nx].open = true;
+}
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+function taskDone(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  return !!(li && li.classList.contains("done"));
+}
+function showSolved(stage) {
+  const el = document.getElementById("solved" + stage);
+  if (el) el.classList.add("shown");
+}
+function record(pos, ok) {
+  if (pos == null) return;
+  if (typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+  // The last question on the page is answered after the last gate has already
+  // closed, so a code minted at that gate would hand in with the final bit
+  // still zero. Re-mint whenever the lesson is already complete.
+  if (Gates[LAST].done && Score.finish) Score.finish();
+}
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true; showSolved(stage); unlockNext(stage);
+  if (!NEXT[stage]) showDone(false);
+}
+/* The banner appears with the code, which is minted the moment the last gate
+   closes. Scrolling to it is saved for the very end -- pulling the page down
+   while the last game is still unplayed would be taking the student away from
+   the one thing left to do. */
+function showDone(scroll) {
+  const b = document.getElementById("done-banner");
+  if (!b) return;
+  b.classList.add("shown");
+  if (scroll && b.scrollIntoView) b.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+/* ====== The closing games ===========================================
+   No stage ends on a typed answer. Each one deals a round, takes an estimate
+   off a slider -- or off the line the student drags, in Stage D -- and then
+   runs the same population six more times, so the estimate is judged against
+   a spread instead of against one run. Three landed rounds clears it.
+
+   Only the FIRST lock is recorded. A miss costs a round and never a door,
+   which is the same contract the typed questions had: the interactive is the
+   gate, the question is the record. */
+function fmtPct(v) { return Math.round(v) + "%"; }
+function fmtInch(v) { return f2(v) + " in"; }
+
+/* One row of the result strip: the tolerance band, the truth, the six draws
+   and where the student put their mark. */
+function drawStrips(cvId, strips) {
+  const cv = document.getElementById(cvId);
+  // an empty result strip is a hole in the panel, so it only exists once there
+  // is a lock to report
+  if (!strips || !strips.length) { cv.style.display = "none"; return; }
+  cv.style.display = "block";
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  strips.forEach((sp, i) => {
+    const y = 6 + i * 54, mid = y + 32, x0 = 40, x1 = W - 40;
+    const X = v => x0 + (clamp(v, sp.min, sp.max) - sp.min) / (sp.max - sp.min) * (x1 - x0);
+    ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(sp.label, 6, y + 10);
+    if (sp.tol != null) {
+      ctx.fillStyle = "rgba(74,122,42,0.20)";
+      const a = X(sp.truth - sp.tol), b = X(sp.truth + sp.tol);
+      ctx.fillRect(a, mid - 10, Math.max(2, b - a), 20);
+    }
+    ctx.strokeStyle = "#cfcbbd"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x1, mid); ctx.stroke();
+    ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(sp.fmt(sp.min), x0 - 5, mid);
+    ctx.textAlign = "left"; ctx.fillText(sp.fmt(sp.max), x1 + 5, mid);
+    if (sp.values) {
+      ctx.fillStyle = "rgba(92,134,161,0.80)";
+      for (const v of sp.values) { ctx.beginPath(); ctx.arc(X(v), mid, 3.4, 0, 6.2832); ctx.fill(); }
+    }
+    ctx.strokeStyle = "#4a7a2a"; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(X(sp.truth), mid - 12); ctx.lineTo(X(sp.truth), mid + 12); ctx.stroke();
+    ctx.fillStyle = "#4a7a2a"; ctx.font = "10px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(sp.fmt(sp.truth), X(sp.truth), mid - 13);
+    if (sp.you != null) {
+      ctx.strokeStyle = HOT; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(X(sp.you), mid - 12); ctx.lineTo(X(sp.you), mid + 12); ctx.stroke();
+      ctx.fillStyle = HOT; ctx.font = "10px -apple-system, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("you " + sp.fmt(sp.you), X(sp.you), mid + 13);
+    }
   });
 }
 
-/* STAGE A — trajectories */
-const sA = { N:100, p0:0.5, gens:200, seed:42, fan:false, guessHi:null, guessLo:null, guessSubmitted:false };
-function drawStageA() {
-  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,sA.gens,0,1);
-  drawAxes(ctx,f,"generation","p",6,4,v=>v.toFixed(0),v=>v.toFixed(1));
-  // Predicted envelope (student's two clicks at the right edge of the canvas).
-  // Drawn as a shaded band even before the fan is revealed.
-  if (sA.guessHi !== null && sA.guessLo !== null) {
-    const hi = Math.max(sA.guessHi, sA.guessLo), lo = Math.min(sA.guessHi, sA.guessLo);
-    ctx.fillStyle = "rgba(47,107,143,0.18)";
-    ctx.fillRect(f.x(0), f.y(hi), f.x(sA.gens) - f.x(0), f.y(lo) - f.y(hi));
-    ctx.strokeStyle = "#2f6b8f"; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
-    ctx.beginPath(); ctx.moveTo(f.x(0), f.y(hi)); ctx.lineTo(f.x(sA.gens), f.y(hi)); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(f.x(0), f.y(lo)); ctx.lineTo(f.x(sA.gens), f.y(lo)); ctx.stroke();
-    ctx.setLineDash([]);
-    ctx.fillStyle = "#2f6b8f"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "left";
-    ctx.fillText("your predicted ±envelope", f.pad.l + 10, f.y(hi) - 4);
+function wireGame(id, cfg) {
+  const need = cfg.need || 3;
+  const el = k => document.getElementById(id + k);
+  const rng = mulberry32(pageSeed("l8q" + id, 1, 99999));
+  const st = { n: 0, hits: 0, scored: false, cleared: false, round: null, vals: {} };
+
+  function setVal(f, v) {
+    st.vals[f.key] = v;
+    el("_g" + f.i).value = String(v);
+    el("_g" + f.i + "Out").value = f.fmt(v);
   }
-  if (sA.fan) {
-    // Compute final-gen frequencies across replicates for the "fraction-fixed" readout.
-    const finals = [];
-    for(let r=0;r<50;r++){
-      const rng=mulberry32(sA.seed*131 + r);
-      let p=sA.p0; ctx.strokeStyle="rgba(60,60,60,0.18)"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
-      for(let g=1;g<=sA.gens;g++){ p=wfStep(rng,sA.N,p,0); ctx.lineTo(f.x(g),f.y(p)); }
-      ctx.stroke();
-      finals.push(p);
-    }
-    // Annotate fan vs prediction.
-    if (sA.guessHi !== null && sA.guessLo !== null) {
-      const hi = Math.max(sA.guessHi, sA.guessLo), lo = Math.min(sA.guessHi, sA.guessLo);
-      const inBand = finals.filter(p => p >= lo && p <= hi).length;
-      ctx.fillStyle = "#b23a48"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "right";
-      ctx.fillText(inBand + "/50 endpoints fall inside your band", f.pad.l + (f.x(sA.gens) - f.pad.l) - 6, f.pad.t + 14);
-    }
+  function touched() {
+    bump(id);
+    if (cfg.live) cfg.live(st.vals, st.round);
   }
-  // Highlighted single trajectory
-  const rng=mulberry32(sA.seed);
-  let p=sA.p0; ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(p));
-  for(let g=1;g<=sA.gens;g++){ p=wfStep(rng,sA.N,p,0); ctx.lineTo(f.x(g),f.y(p)); }
-  ctx.stroke();
-  document.getElementById("A_N").textContent=sA.N;
-  document.getElementById("A_p0").textContent=sA.p0.toFixed(2);
-  document.getElementById("A_gens").textContent=sA.gens;
-  document.getElementById("A_finalP").textContent=p.toFixed(3);
+  for (const f of cfg.fields) {
+    el("_g" + f.i).addEventListener("input", ev => { setVal(f, parseFloat(ev.target.value)); touched(); });
+  }
+  function deal() {
+    st.round = cfg.round(rng, st.n);
+    el("_gprompt").innerHTML = st.round.prompt;
+    for (const f of cfg.fields) setVal(f, st.round.start && st.round.start[f.key] != null ? st.round.start[f.key] : f.start);
+    el("_gflip").innerHTML = "";
+    el("_glock").disabled = false;
+    el("_gnext").disabled = true;
+    drawStrips(id + "_gstrip", null);
+    // a dealt round must not reach into the stage above it until the panel is
+    // actually open -- Stage A's game drives the same squares the stage does
+    if (st.shown && cfg.live) cfg.live(st.vals, st.round);
+  }
+  el("_gnext").addEventListener("click", () => { if (!st.cleared) deal(); });
+  el("_glock").addEventListener("click", () => {
+    if (st.cleared || !st.round) return;
+    const r = st.round, v = st.vals;
+    const res = cfg.judge ? cfg.judge(v, r)
+              : { ok: cfg.fields.every(f => Math.abs(v[f.key] - r.truth[f.key]) <= r.tol[f.key]) };
+    if (res.skip) {
+      el("_gflip").innerHTML = '<span class="off">not yet</span> &middot; ' + res.msg;
+      return;
+    }
+    const strips = [];
+    for (const f of cfg.fields) {
+      if (r.truth[f.key] == null) continue;
+      strips.push({ label: f.label, min: f.min, max: f.max, fmt: f.fmt,
+                    truth: r.truth[f.key], tol: r.tol[f.key], you: v[f.key] });
+    }
+    if (r.replay) strips.push(r.replay(v));
+    drawStrips(id + "_gstrip", strips);
+    st.n++;
+    if (res.ok) st.hits++;
+    el("_gtally").textContent = st.hits + " of " + need + " landed";
+    el("_gtally").classList.toggle("on", st.hits >= need);
+    el("_gflip").innerHTML = (res.ok ? '<span class="ok">landed</span>' : '<span class="off">missed</span>')
+      + " &middot; " + (res.msg || (res.ok ? r.right(v) : r.wrong(v)));
+    el("_glock").disabled = true;
+    el("_gnext").disabled = false;
+    if (!st.scored) { st.scored = true; record(cfg.bit, res.ok); }
+    if (st.hits >= need) {
+      st.cleared = true;
+      el("_gnext").disabled = true;
+      const vd = el("_verdict");
+      vd.className = "verdict shown right";
+      vd.innerHTML = cfg.done;
+      if (cfg.after) cfg.after(true);
+    }
+  });
+  deal();
+  return {
+    show: () => {
+      document.getElementById("numq" + id).classList.add("shown");
+      st.shown = true;
+      if (cfg.live) cfg.live(st.vals, st.round);
+    },
+    set: (key, v) => { for (const f of cfg.fields) if (f.key === key) { setVal(f, v); touched(); } },
+    state: st
+  };
+}
+/* Every lock-in button on this page reports the same two things: whether it
+   went in, and how many tries it has taken. Counting the tries is the point
+   -- sliding past an answer is not choosing it, and a student who lands it
+   fourth time has done something a student who lands it first time has not. */
+function lockReport(elId, ok, tries, okMsg, offMsg) {
+  const el = document.getElementById(elId);
+  el.innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>')
+               + " &middot; " + (ok ? okMsg : offMsg)
+               + ' <span class="attempts">(' + tries + (tries === 1 ? " try)" : " tries)") + '</span>';
 }
 
-// Canvas click handler: first two clicks set the envelope bounds (the "draw
-// your fan" prediction); subsequent clicks replace the higher/lower bound
-// closer to the click.
-(function wireDrawFan(){
-  const cv = document.getElementById("plotA");
-  cv.style.cursor = "crosshair";
-  cv.addEventListener("click", (e) => {
-    const rect = cv.getBoundingClientRect();
-    const py = e.clientY - rect.top;
-    const pad = { l: 50, r: 12, t: 18, b: 38 };
-    const H = +cv.dataset.cssH || cv.height;
-    const cssH = H;
-    const usableH = cssH - pad.t - pad.b;
-    if (py < pad.t || py > pad.t + usableH) return;
-    const v = 1 - (py - pad.t) / usableH;
-    const clamped = Math.max(0, Math.min(1, v));
-    if (sA.guessHi === null) { sA.guessHi = clamped; }
-    else if (sA.guessLo === null) { sA.guessLo = clamped; }
-    else {
-      // Replace whichever bound the click is closer to.
-      const dHi = Math.abs(clamped - sA.guessHi);
-      const dLo = Math.abs(clamped - sA.guessLo);
-      if (dHi < dLo) sA.guessHi = clamped; else sA.guessLo = clamped;
+/* ====== The square ==================================================
+   Every stage but the last draws the same object: a unit square cut once
+   per allele on each axis, so every box is one way two draws can come out
+   and its area is the share of the population that comes out that way. The
+   only thing that changes between stages is which boxes are lit and how
+   many cuts there are. */
+/* Shares on this page run from about a half down to a few ten-thousandths,
+   so the small ones get the digits they need and the rest stay at three. */
+function fs(v) { return v > 0 && v < 0.01 ? v.toFixed(4) : f3(v); }
+
+function drawSquare(cv, cuts, colorOf, labelOf, axLabs) {
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const pad = { l: 76, t: 54, r: 16, b: 26 };
+  const S = Math.min(W - pad.l - pad.r, H - pad.t - pad.b);
+  // the square is square, so whatever the canvas has spare goes to the sides
+  pad.l += Math.max(0, (W - pad.l - pad.r - S) / 2);
+  const off = [0];
+  for (const c of cuts) off.push(off[off.length - 1] + c.share);
+  ctx.textBaseline = "middle";
+  for (let i = 0; i < cuts.length; i++) {
+    for (let j = 0; j < cuts.length; j++) {
+      const x = pad.l + off[i] * S, y = pad.t + off[j] * S;
+      const w = cuts[i].share * S, h = cuts[j].share * S;
+      if (w <= 0 || h <= 0) continue;
+      ctx.fillStyle = colorOf(i, j);
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.2; ctx.strokeRect(x, y, w, h);
+      const lab = labelOf(i, j, cuts[i].share * cuts[j].share);
+      if (lab && w > 46 && h > 26) {
+        ctx.fillStyle = lab.dark ? "#fff" : "#2b2b28";
+        ctx.textAlign = "center";
+        ctx.font = "600 12px -apple-system, sans-serif";
+        ctx.fillText(lab.top, x + w / 2, y + h / 2 - 7);
+        ctx.font = "11.5px ui-monospace, Menlo, monospace";
+        ctx.fillText(lab.bot, x + w / 2, y + h / 2 + 8);
+      }
     }
-    if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("A");
-    drawStageA();
+  }
+  ctx.strokeStyle = "#9a978c"; ctx.lineWidth = 1;
+  ctx.strokeRect(pad.l + 0.5, pad.t + 0.5, S - 1, S - 1);
+  // the cuts, named and measured, on both axes
+  ctx.font = "600 12px ui-monospace, Menlo, monospace";
+  for (let i = 0; i < cuts.length; i++) {
+    const cx = pad.l + (off[i] + cuts[i].share / 2) * S;
+    const cy = pad.t + (off[i] + cuts[i].share / 2) * S;
+    if (cuts[i].share > 0.06) {
+      ctx.fillStyle = "#2b2b28"; ctx.textAlign = "center";
+      ctx.fillText(cuts[i].name, cx, pad.t - 22);
+      ctx.fillStyle = MUTED; ctx.font = "11px ui-monospace, Menlo, monospace";
+      ctx.fillText(f2(cuts[i].share), cx, pad.t - 8);
+      ctx.font = "600 12px ui-monospace, Menlo, monospace";
+      ctx.fillStyle = "#2b2b28"; ctx.textAlign = "right";
+      ctx.fillText(cuts[i].name, pad.l - 12, cy - 6);
+      ctx.fillStyle = MUTED; ctx.font = "11px ui-monospace, Menlo, monospace";
+      ctx.fillText(f2(cuts[i].share), pad.l - 12, cy + 7);
+      ctx.font = "600 12px ui-monospace, Menlo, monospace";
+    }
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(axLabs[0], pad.l, 14);
+  ctx.save(); ctx.translate(14, pad.t + S); ctx.rotate(-Math.PI / 2);
+  ctx.fillText(axLabs[1], 0, 0); ctx.restore();
+}
+
+/* A deal of n individuals, held as two uniforms apiece so that moving a
+   slider morphs the same individuals instead of dealing a fresh population
+   every time the number changes. */
+function makeDeal(seed, n) {
+  const r = mulberry32(seed), a = new Float64Array(n), b = new Float64Array(n);
+  for (let i = 0; i < n; i++) { a[i] = r(); b[i] = r(); }
+  return { a: a, b: b, n: n };
+}
+function dealShare(D, test) {
+  let k = 0;
+  for (let i = 0; i < D.n; i++) if (test(D.a[i], D.b[i])) k++;
+  return k / D.n;
+}
+
+/* ====== Stage A — two draws, both of them A =========================
+   One corner of the square, and a switch that moves it to the other corner.
+   The whole stage is that the corner is one share multiplied by itself, and
+   that nothing in that sentence names which allele it is about. */
+const A_N = 2000;
+const sA = { p: 0.50, corner: "AA", seed: pageSeed("l9A", 1, 99999), D: null, tries1: 0, tries2: 0 };
+sA.D = makeDeal(sA.seed, A_N);
+
+function refreshA() {
+  const p = sA.p, q = 1 - p, lit = sA.corner;
+  const cuts = [{ name: "A", share: p }, { name: "a", share: q }];
+  const litIJ = lit === "AA" ? [0, 0] : [1, 1];
+  drawSquare(document.getElementById("plotA"), cuts,
+    (i, j) => (i === litIJ[0] && j === litIJ[1]) ? DEEP : PALE,
+    (i, j, area) => {
+      const nm = (i === 0 ? "A" : "a") + (j === 0 ? "A" : "a");
+      const on = (i === litIJ[0] && j === litIJ[1]);
+      return { top: nm, bot: f3(area), dark: on };
+    },
+    ["the allele from one parent", "the allele from the other parent"]);
+  const pred = lit === "AA" ? p * p : q * q;
+  const got = dealShare(sA.D, lit === "AA" ? ((x, y) => x < p && y < p) : ((x, y) => x >= p && y >= p));
+  document.getElementById("A_pool").textContent = "A " + f2(p) + " · a " + f2(q);
+  document.getElementById("A_corner").textContent = lit === "AA" ? "A and A" : "a and a";
+  document.getElementById("A_pred").textContent =
+    (lit === "AA" ? f2(p) + " × " + f2(p) : f2(q) + " × " + f2(q)) + " = " + f3(pred);
+  document.getElementById("A_deal").textContent = Math.round(got * A_N) + " of 2,000, which is " + f3(got);
+  document.getElementById("A_pOut").value = f2(p);
+  document.getElementById("cA_p").textContent = f2(p);
+  for (const b of document.querySelectorAll("#A_pick button")) b.classList.toggle("on", b.dataset.c === sA.corner);
+}
+
+(function wireA() {
+  document.getElementById("A_p").addEventListener("input", ev => {
+    sA.p = parseFloat(ev.target.value); bump("A"); highlightByDataLine("codeA", "p"); refreshA();
   });
+  for (const b of document.querySelectorAll("#A_pick button")) {
+    b.addEventListener("click", () => { if (!Gates.A.open) return; sA.corner = b.dataset.c; bump("A"); refreshA(); });
+  }
+  document.getElementById("A_deal_btn").addEventListener("click", () => {
+    sA.seed = randomSeed(1, 99999); sA.D = makeDeal(sA.seed, A_N); bump("A"); refreshA();
+  });
+  document.getElementById("A_lock").addEventListener("click", () => {
+    if (!Gates.A.open || Gates.A.done) return;
+    const p = sA.p, q = 1 - p;
+    if (!taskDone("A", "A1")) {
+      sA.tries1++;
+      const ok = sA.corner === "AA" && Math.abs(p * p - 0.36) <= 0.006;
+      lockReport("A_flip", ok, sA.tries1,
+        "0.60 of the pool, and 0.60 of those get a second one: 0.36",
+        sA.corner !== "AA" ? "this one is about the two-A corner" :
+          (p * p > 0.36 ? "that corner is bigger than 0.36" : "that corner is smaller than 0.36"));
+      if (ok) {
+        markTask("A", "A1"); record(BIT.A1, true);
+        document.getElementById("A1_now").textContent = "locked in on try " + sA.tries1;
+      }
+      return;
+    }
+    if (!taskDone("A", "A2")) {
+      sA.tries2++;
+      const ok = sA.corner === "aa" && Math.abs(q * q - 0.49) <= 0.006;
+      lockReport("A_flip", ok, sA.tries2,
+        "0.70 of the pool is a, and 0.70 of those get a second one: 0.49. Same move, other allele",
+        sA.corner !== "aa" ? "move the lit corner to two a's first" :
+          (q * q > 0.49 ? "that corner is bigger than 0.49" : "that corner is smaller than 0.49"));
+      if (ok) {
+        markTask("A", "A2"); record(BIT.A2, true);
+        document.getElementById("A2_now").textContent = "locked in on try " + sA.tries2;
+        qA.show(); finishStage("A");
+      }
+    }
+  });
+  wireDownload("A_download", "codeA", "lesson9_stageA.R");
 })();
-["A_NIn","A_pIn","A_gIn","A_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={A_NIn:"N",A_pIn:"p0",A_gIn:"gens",A_seedIn:"seed"}[id]; sA[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent= key==="p0"?v.toFixed(2):v; if(key==="N"){document.getElementById("cA_N").textContent=v; highlightByDataLine("codeA","N");} if(key==="p0"){document.getElementById("cA_p").textContent=v.toFixed(2); highlightByDataLine("codeA","p0");} if(key==="gens"){document.getElementById("cA_g").textContent=v; highlightByDataLine("codeA","gens");} if(key==="seed"){document.getElementById("cA_seed").textContent=v; highlightByDataLine("codeA","seed");} drawStageA(); bumpExplore("A");}));
-document.getElementById("A_fan").addEventListener("change",(e)=>{sA.fan=e.target.checked; drawStageA();});
-document.getElementById("A_clearGuess").addEventListener("click",()=>{ sA.guessHi=null; sA.guessLo=null; drawStageA(); });
-document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson10_stageA.R",`set.seed(${sA.seed}); N <- ${sA.N}; p <- ${sA.p0}; gens <- ${sA.gens}
-traj <- numeric(gens+1); traj[1] <- p
-for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj[g+1] <- p }
-plot(traj, type="l", ylim=c(0,1))
-`);});
-wirePrediction("A","predA",["qA1"],["spread"],"controlsA"); drawStageA();
 
-/* STAGE B — time to fixation */
-const sB = { N:50, p0:0.5, seed:42 };
-function drawStageB() {
-  const reps=500; const tfix=new Array(reps); let fixA=0;
-  for(let r=0;r<reps;r++){
-    const rng=mulberry32(sB.seed + r*7);
-    let p=sB.p0, g=0;
-    while(p>0 && p<1) { p=wfStep(rng,sB.N,p,0); g++; if(g>50*sB.N) break; }
-    tfix[r]=g; if(p===1) fixA++;
+const qA = wireGame("A", {
+  bit: BIT.Aq,
+  fields: [{ key: "s", i: 1, label: "the share who get two of it", min: 0, max: 1, start: 0.50, fmt: f2 }],
+  round: (rng, n) => {
+    const which = n % 2 === 0 ? "A" : "a";
+    const x = 0.15 + 0.05 * Math.floor(rng() * 15);       // 0.15 .. 0.85
+    const truth = x * x;
+    return {
+      which: which, x: x,
+      prompt: "<b>" + f2(x) + "</b> of the pool is <b>" + which + "</b>. What share of the population is dealt two of them?",
+      truth: { s: truth }, tol: { s: 0.02 },
+      right: () => f2(x) + " × " + f2(x) + " = " + f3(truth),
+      wrong: () => "both draws have to come up " + which + ", and each one does " + f2(x) + " of the time",
+      replay: () => {
+        const vals = [];
+        for (let k = 0; k < 6; k++) {
+          const D = makeDeal(randomSeed(1, 99999), A_N);
+          vals.push(dealShare(D, (u, v) => u < x && v < x));
+        }
+        return { label: "six fresh deals of 2,000 individuals", min: 0, max: 1, fmt: f2, truth: mean(vals), values: vals };
+      }
+    };
+  },
+  done: "Three rounds, and it never mattered which allele you pointed at. A corner of the square is one share multiplied by itself.",
+  after: () => markTask("A", "A3")
+});
+
+/* ====== Stage B — the two ways to be one of each =====================
+   The same square with nothing hidden. The 2 in front of the p and the q is
+   not a fudge factor and it is not an algebra step: it is the second box,
+   and the stage is over the moment a student sees that there are two of
+   them. */
+const B_N = 2000;
+const sB = { p: 0.50, seed: pageSeed("l9B", 1, 99999), D: null, tries1: 0, tries2: 0 };
+sB.D = makeDeal(sB.seed, B_N);
+
+function refreshB() {
+  const p = sB.p, q = 1 - p;
+  const cuts = [{ name: "A", share: p }, { name: "a", share: q }];
+  drawSquare(document.getElementById("plotB"), cuts,
+    (i, j) => (i === 0 && j === 0) ? DEEP : (i === 1 && j === 1) ? SHALLOW : LIFE,
+    (i, j, area) => {
+      const nm = (i === 0 ? "A" : "a") + (j === 0 ? "A" : "a");
+      return { top: nm, bot: f3(area), dark: !(i === 1 && j === 1) };
+    },
+    ["the allele from one parent", "the allele from the other parent"]);
+  const het = 2 * p * q;
+  const got = dealShare(sB.D, (x, y) => (x < p) !== (y < p));
+  document.getElementById("B_pool").textContent = "A " + f2(p) + " · a " + f2(q);
+  document.getElementById("B_AA").textContent = f3(p * p);
+  document.getElementById("B_Aa").textContent = f3(het) + "  (" + f2(p) + " × " + f2(q) + ", twice)";
+  document.getElementById("B_aa").textContent = f3(q * q);
+  document.getElementById("B_sum").textContent = f2(p * p + het + q * q);
+  document.getElementById("B_deal").textContent = Math.round(got * B_N) + " of 2,000 carry one of each";
+  document.getElementById("B_pOut").value = f2(p);
+  document.getElementById("cB_p").textContent = f2(p);
+}
+
+(function wireB() {
+  document.getElementById("B_p").addEventListener("input", ev => {
+    sB.p = parseFloat(ev.target.value); bump("B"); highlightByDataLine("codeB", "p"); refreshB();
+  });
+  document.getElementById("B_deal_btn").addEventListener("click", () => {
+    sB.seed = randomSeed(1, 99999); sB.D = makeDeal(sB.seed, B_N); bump("B"); refreshB();
+  });
+  document.getElementById("B_lock").addEventListener("click", () => {
+    if (!Gates.B.open || Gates.B.done) return;
+    const p = sB.p, q = 1 - p, het = 2 * p * q;
+    if (!taskDone("B", "B1")) {
+      sB.tries1++;
+      const ok = Math.abs(p - 0.5) <= 0.005;
+      lockReport("B_flip", ok, sB.tries1,
+        "half the pool in each allele, and one-of-each comes out at 0.50 — the most it can ever be",
+        het < 0.5 ? "one of the two boxes is being squeezed; even them up" : "not yet");
+      if (ok) {
+        markTask("B", "B1"); record(BIT.B1, true);
+        document.getElementById("B1_now").textContent = "locked in on try " + sB.tries1;
+      }
+      return;
+    }
+    if (!taskDone("B", "B2")) {
+      sB.tries2++;
+      const ok = Math.abs(het - 0.32) <= 0.006;
+      lockReport("B_flip", ok, sB.tries2,
+        "0.20 and 0.80 works, and so does 0.80 and 0.20 — the two boxes do not care which allele is the rare one",
+        het > 0.32 ? "one-of-each is still too common" : "one-of-each is too rare");
+      if (ok) {
+        markTask("B", "B2"); record(BIT.B2, true);
+        document.getElementById("B2_now").textContent = "locked in on try " + sB.tries2 + ", at A = " + f2(p);
+        qB.show(); finishStage("B");
+      }
+    }
+  });
+  wireDownload("B_download", "codeB", "lesson9_stageB.R");
+})();
+
+const qB = wireGame("B", {
+  bit: BIT.Bq,
+  fields: [{ key: "s", i: 1, label: "the share who carry one of each", min: 0, max: 1, start: 0.50, fmt: f2 }],
+  round: rng => {
+    const p = 0.10 + 0.05 * Math.floor(rng() * 17);       // 0.10 .. 0.90
+    const truth = 2 * p * (1 - p);
+    return {
+      prompt: "<b>" + f2(p) + "</b> of the pool is <b>A</b>, so <b>" + f2(1 - p) + "</b> of it is <b>a</b>. What share of the population is dealt one of each?",
+      truth: { s: truth }, tol: { s: 0.02 },
+      right: () => f2(p) + " × " + f2(1 - p) + " = " + f3(p * (1 - p)) + ", and there are two boxes like that",
+      wrong: () => "one box is " + f2(p) + " × " + f2(1 - p) + ". Count the boxes",
+      replay: () => {
+        const vals = [];
+        for (let k = 0; k < 6; k++) {
+          const D = makeDeal(randomSeed(1, 99999), B_N);
+          vals.push(dealShare(D, (u, v) => (u < p) !== (v < p)));
+        }
+        return { label: "six fresh deals of 2,000 individuals", min: 0, max: 1, fmt: f2, truth: mean(vals), values: vals };
+      }
+    };
+  },
+  done: "One of each is two boxes of the square, never one. That is the whole of the 2.",
+  after: () => markTask("B", "B3")
+});
+
+/* ====== Stage C — what you can see ==================================
+   900 individuals, drawn twice over: once as the population somebody
+   walking through it would see, and once with the genotypes showing. The
+   two pictures are the same population, and the gap between them is the
+   whole reason a rare recessive trait is so much rarer than the allele
+   behind it. */
+const C_N = 900, C_COLS = 36;
+const sC = { q: 0.300, view: "seen", seed: pageSeed("l9C", 1, 99999), D: null, tries1: 0, tries2: 0 };
+sC.D = makeDeal(sC.seed, C_N);
+
+function genoC(u, v, q) {          // 0 = two A, 1 = one of each, 2 = two a
+  const a = u < q, b = v < q;
+  return (a && b) ? 2 : (a || b) ? 1 : 0;
+}
+
+function drawC() {
+  const cv = document.getElementById("plotC");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const rows = Math.ceil(C_N / C_COLS);
+  // the grid has to fit the canvas both ways, or the caption under it is cut off
+  const cell = Math.min(Math.floor((W - 40) / C_COLS), Math.floor((H - 70) / rows));
+  const x0 = Math.round((W - cell * C_COLS) / 2), y0 = 34;
+  for (let i = 0; i < C_N; i++) {
+    const g = genoC(sC.D.a[i], sC.D.b[i], sC.q);
+    const r = Math.floor(i / C_COLS), c = i % C_COLS;
+    ctx.fillStyle = (sC.view === "seen")
+      ? (g === 2 ? LIFE : "#cfd8cf")
+      : (g === 2 ? LIFE : g === 1 ? SHALLOW : DEEP);
+    ctx.fillRect(x0 + c * cell, y0 + r * cell, cell - 2, cell - 2);
   }
-  const mean=tfix.reduce((a,b)=>a+b,0)/reps;
-  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const xMax=Math.max(...tfix);
-  const f=makeFrame(pad,W,H,0,xMax,0,1);
-  drawAxes(ctx,f,"generations to fixation","",6,0,v=>v.toFixed(0),v=>"");
-  const bins=40, binW=xMax/bins; const counts=new Array(bins).fill(0);
-  for(const t of tfix){const i=Math.min(bins-1, Math.floor(t/binW)); counts[i]++;}
-  const maxC=Math.max(...counts);
-  for(let i=0;i<bins;i++){if(counts[i]===0) continue; const h=counts[i]/maxC*f.H*0.9; ctx.fillStyle="rgba(120,120,120,0.6)"; ctx.fillRect(f.x(i*binW)+1, f.pad.t+f.H-h, f.x((i+1)*binW)-f.x(i*binW)-2, h);}
-  // mark mean
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(mean),f.pad.t); ctx.lineTo(f.x(mean),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("mean = "+mean.toFixed(0), f.x(mean)+4, f.pad.t+12);
-  document.getElementById("B_N").textContent=sB.N; document.getElementById("B_reps").textContent=reps; document.getElementById("B_mean").textContent=mean.toFixed(0); document.getElementById("B_fix").textContent=(100*fixA/reps).toFixed(1)+"%";
+  ctx.fillStyle = "#3d3d3a"; ctx.font = "600 12px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(sC.view === "seen" ? "what you can see" : "what is actually there", x0, 16);
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
+  const key = (sC.view === "seen")
+    ? "orange: shows the trait · grey: shows nothing"
+    : "orange: two broken copies · mid blue: one · dark blue: none";
+  ctx.textAlign = "right"; ctx.fillText(key, x0 + cell * C_COLS - 2, 16);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("900 individuals, one square each", x0, y0 + rows * cell + 6);
 }
-["B_NIn","B_pIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={B_NIn:"N",B_pIn:"p0",B_seedIn:"seed"}[id]; sB[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent= key==="p0"?v.toFixed(2):v; if(key==="seed"){document.getElementById("cB_seed").textContent=v; highlightByDataLine("codeB","seed");} drawStageB(); if(key==="N") bumpExplore("B");}));
-document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson10_stageB.R",`set.seed(${sB.seed}); N <- ${sB.N}; p0 <- ${sB.p0}; reps <- 500
-tfix <- replicate(reps, { p <- p0; g <- 0; while (p > 0 && p < 1) { p <- rbinom(1, 2*N, p)/(2*N); g <- g + 1 }; g })
-mean(tfix)
-`);});
-wirePrediction("B","predB",["qB1"],["medium"],"controlsB"); drawStageB();
 
-/* STAGE C — fixation prob vs p0 */
-const sC = { N:50, s:0, seed:42 };
-function drawStageC() {
-  const p0s=[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]; const reps=300; const pfix=[];
-  let mse=0;
-  for(const p0 of p0s){let fix=0; for(let r=0;r<reps;r++){const rng=mulberry32(sC.seed + Math.floor(p0*100) + r*11); let p=p0; while(p>0&&p<1){p=wfStep(rng,sC.N,p,sC.s); if(p===0||p===1) break;} if(p===1) fix++;} const pf=fix/reps; pfix.push(pf); mse+=(pf-p0)*(pf-p0);}
-  const rmse=Math.sqrt(mse/p0s.length);
-  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,1,0,1);
-  drawAxes(ctx,f,"starting frequency p₀","fixation probability",5,5,v=>v.toFixed(1),v=>v.toFixed(1));
-  // diagonal
-  ctx.strokeStyle="rgba(60,60,60,0.5)"; ctx.lineWidth=1; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(1),f.y(1)); ctx.stroke(); ctx.setLineDash([]);
-  // points
-  ctx.fillStyle="#b23a48";
-  for(let i=0;i<p0s.length;i++){ctx.beginPath(); ctx.arc(f.x(p0s[i]),f.y(pfix[i]),5,0,2*Math.PI); ctx.fill();}
-  document.getElementById("C_N").textContent=sC.N; document.getElementById("C_s").textContent=sC.s.toFixed(2); document.getElementById("C_rmse").textContent=rmse.toFixed(3);
+function refreshC() {
+  const q = sC.q, p = 1 - q;
+  drawC();
+  const aff = q * q, car = 2 * p * q;
+  document.getElementById("C_q").textContent = f3(q);
+  document.getElementById("C_aff").textContent = fs(aff) + (aff > 0 ? "  (1 in " + Math.round(1 / Math.max(aff, 1e-9)).toLocaleString() + ")" : "");
+  document.getElementById("C_car").textContent = fs(car) + (car > 0 ? "  (1 in " + Math.round(1 / Math.max(car, 1e-9)).toLocaleString() + ")" : "");
+  document.getElementById("C_ratio").textContent = aff > 0 ? f2(car / aff) + " to 1" : "—";
+  document.getElementById("C_qOut").value = f3(q);
+  document.getElementById("cC_q").textContent = f3(q);
+  for (const b of document.querySelectorAll("#C_pick button")) b.classList.toggle("on", b.dataset.v === sC.view);
 }
-["C_NIn","C_sIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={C_NIn:"N",C_sIn:"s",C_seedIn:"seed"}[id]; sC[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=key==="s"?v.toFixed(2):v; if(key==="seed"){document.getElementById("cC_seed").textContent=v; highlightByDataLine("codeC","seed");} drawStageC(); if(key==="s") bumpExplore("C");}));
-document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson10_stageC.R",`set.seed(${sC.seed}); N <- ${sC.N}; s <- ${sC.s}; reps <- 300
-p0s <- seq(0.1, 0.9, 0.1)
-pfix <- sapply(p0s, function(p0) mean(replicate(reps, {
-  p <- p0
-  while (p > 0 && p < 1) { p_sel <- p*(1+s)/(p*(1+s)+(1-p)); p <- rbinom(1, 2*N, p_sel)/(2*N) }
-  p == 1
-})))
-plot(p0s, pfix); abline(0, 1)
-`);});
-wirePrediction("C","predC",["qC1"],["diagonal"],"controlsC"); drawStageC();
 
-/* STAGE D — Buri overlay */
-const sD = { seed:42, buri:null };
-async function loadBuri() {
-  try { const r=await fetch("../../data/clean/buri_fly.json"); sD.buri=await r.json(); } catch(e) { sD.buri=null; }
-  drawStageD();
-}
-function drawStageD() {
-  // Buri lines may come as array of lines, each with trajectory of bw75 frequency at gens 0..19
-  // Fallback: synthesize 107 lines via WF at N=16 starting at p=0.5
-  let observed=null;
-  if (sD.buri && Array.isArray(sD.buri) && sD.buri.length) {
-    // Try several shape options
-    if (sD.buri[0].traj) observed = sD.buri.map(l=>l.traj);
-    else if (sD.buri[0].length) observed = sD.buri;
-    else observed=null;
+(function wireC() {
+  document.getElementById("C_q_s").addEventListener("input", ev => {
+    sC.q = parseFloat(ev.target.value); bump("C"); highlightByDataLine("codeC", "q"); refreshC();
+  });
+  for (const b of document.querySelectorAll("#C_pick button")) {
+    b.addEventListener("click", () => { if (!Gates.C.open) return; sC.view = b.dataset.v; bump("C"); refreshC(); });
   }
-  const N=16, gens=19, lines=107, p0=0.5;
-  // Simulated lines
-  const rng=mulberry32(sD.seed);
-  const simLines=[];
-  for(let l=0;l<lines;l++){let p=p0; const traj=[p]; for(let g=1;g<=gens;g++){p=wfStep(rng,N,p,0); traj.push(p);} simLines.push(traj);}
-  const simFixed=simLines.filter(l=>l[gens]===0||l[gens]===1).length;
-  // Observed-fixed count (if data present)
-  let obsFixed="—";
-  if (observed) obsFixed = observed.filter(t=>t[gens]===0||t[gens]===1 || t[gens]===0 || t[gens]===N).length;
-  document.getElementById("D_N").textContent=N;
-  document.getElementById("D_simFix").textContent=simFixed+" / "+lines+" ("+(100*simFixed/lines).toFixed(0)+"%)";
-  document.getElementById("D_obsFix").textContent=observed ? (obsFixed+" / "+observed.length) : "(data not loaded; using simulation)";
-  // Draw
-  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
-  drawAxes(ctx,f,"generation","p (bw75)",5,4,v=>v.toFixed(0),v=>v.toFixed(1));
-  // Simulated lines - light gray
-  ctx.strokeStyle="rgba(120,120,120,0.18)"; ctx.lineWidth=1;
-  for(const traj of simLines){ctx.beginPath(); for(let g=0;g<=gens;g++){if(g===0) ctx.moveTo(f.x(g),f.y(traj[g])); else ctx.lineTo(f.x(g),f.y(traj[g]));} ctx.stroke();}
-  // Observed lines - crimson
-  if (observed) {
-    ctx.strokeStyle="rgba(178,58,72,0.3)"; ctx.lineWidth=1.5;
-    for(const traj of observed){ if(!traj || !traj.length) continue; ctx.beginPath(); for(let g=0;g<traj.length;g++){const v=typeof traj[g]==='number'?traj[g]: (traj[g].freq ?? (traj[g]/N)); if(g===0) ctx.moveTo(f.x(g),f.y(v)); else ctx.lineTo(f.x(g),f.y(v));} ctx.stroke(); }
-  }
-  ctx.fillStyle="#333"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("gray = WF sim · crimson = Buri observed", f.pad.l+8, f.pad.t+12);
-}
-document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
-document.getElementById("D_resim").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
-document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson10_stageD.R",`buri <- read.csv("data/clean/buri_fly.csv")
-set.seed(${sD.seed}); N <- 16; gens <- 19; lines <- 107; p0 <- 0.5
-sim <- replicate(lines, { p <- p0; traj <- p; for (g in 1:gens) { p <- rbinom(1, 2*N, p)/(2*N); traj <- c(traj, p) }; traj })
-matplot(t(sim), type="l", col=rgb(0,0,0,0.1))
-`);});
-wirePrediction("D","predD",["qD1"],["many"],"controlsD"); loadBuri();
+  document.getElementById("C_deal_btn").addEventListener("click", () => {
+    sC.seed = randomSeed(1, 99999); sC.D = makeDeal(sC.seed, C_N); bump("C"); refreshC();
+  });
+  document.getElementById("C_lock").addEventListener("click", () => {
+    if (!Gates.C.open || Gates.C.done) return;
+    const q = sC.q, p = 1 - q, aff = q * q, ratio = aff > 0 ? (2 * p * q) / aff : 1e9;
+    if (!taskDone("C", "C1")) {
+      sC.tries1++;
+      const ok = Math.abs(aff - 0.0025) <= 0.0004;
+      lockReport("C_flip", ok, sC.tries1,
+        "0.05 of the pool. One in 400 shows it, and nearly one in 10 is carrying it around",
+        aff > 0.0025 ? "more than 1 in 400 are showing it" : "fewer than 1 in 400 are showing it");
+      if (ok) {
+        markTask("C", "C1"); record(BIT.C1, true);
+        document.getElementById("C1_now").textContent = "locked in on try " + sC.tries1;
+      }
+      return;
+    }
+    if (!taskDone("C", "C2")) {
+      sC.tries2++;
+      const ok = Math.abs(ratio - 18) <= 0.8;
+      lockReport("C_flip", ok, sC.tries2,
+        "0.10 of the pool: 1 in 100 shows it and 18 in 100 carry it",
+        ratio > 18 ? "carriers outnumber them by more than 18 to 1 — the broken copy is too rare"
+                   : "carriers outnumber them by less than 18 to 1 — the broken copy is too common");
+      if (ok) {
+        markTask("C", "C2"); record(BIT.C2, true);
+        document.getElementById("C2_now").textContent = "locked in on try " + sC.tries2;
+        qC.show(); finishStage("C");
+      }
+    }
+  });
+  wireDownload("C_download", "codeC", "lesson9_stageC.R");
+})();
 
-/* Pretest / Posttest */
-Score.init({moduleId:"lesson10", version:2, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+const qC = wireGame("C", {
+  bit: BIT.Cq,
+  fields: [{ key: "car", i: 1, label: "the share carrying one copy", min: 0, max: 0.5, start: 0.100, fmt: fs }],
+  round: rng => {
+    const N = [400, 900, 1600, 2500, 10000][Math.floor(rng() * 5)];
+    const q = 1 / Math.sqrt(N), truth = 2 * q * (1 - q);
+    return {
+      q: q,
+      prompt: "<b>1 in " + N.toLocaleString() + "</b> people show the trait, and nothing is happening in this population. What share of it is carrying one copy and showing nothing?",
+      truth: { car: truth }, tol: { car: Math.max(0.006, 0.12 * truth) },
+      right: () => "the broken copy is " + fs(q) + " of the pool, so carriers are 2 × " + fs(q) + " × " + f3(1 - q) + " = " + fs(truth),
+      wrong: () => "1 in " + N.toLocaleString() + " is the corner, so the share of the pool is its square root: " + fs(q),
+      replay: () => {
+        const vals = [];
+        for (let k = 0; k < 6; k++) {
+          const D = makeDeal(randomSeed(1, 99999), 20000);
+          vals.push(dealShare(D, (u, v) => (u < q) !== (v < q)));
+        }
+        return { label: "six fresh deals of 20,000 people", min: 0, max: 0.5, fmt: f3, truth: mean(vals), values: vals };
+      }
+    };
+  },
+  done: "A trait you can see is a corner of the square, so the allele behind it is the square root of what you counted. The rarer the trait, the more of that allele is hiding in people who will never show it.",
+  after: () => markTask("C", "C3")
+});
+
+/* ====== Stage D — three alleles =====================================
+   The same square with a third cut in it. Nine boxes, six genotypes, four
+   blood types -- and the arithmetic never changed. Two of the boxes are
+   still the two roads to the same heterozygote, three times over. */
+const D_N = 2000;
+const sD = { p: 0.30, q: 0.20, seed: pageSeed("l9D", 1, 99999), D: null, tries1: 0, tries2: 0 };
+sD.D = makeDeal(sD.seed, D_N);
+const D_NAMES = ["A", "B", "O"];
+const D_COL = { A: DEEP, B: SHALLOW, AB: LIFE, O: PALE };
+
+function typeOf(i, j) {            // which blood type a pair of alleles builds
+  const s = [D_NAMES[i], D_NAMES[j]].sort().join("");
+  if (s === "AB") return "AB";
+  if (s === "AA" || s === "AO") return "A";
+  if (s === "BB" || s === "BO") return "B";
+  return "O";
+}
+function allelesOf(D, i, p, q) {   // which allele each of the two draws picked
+  const f = u => (u < p ? 0 : u < p + q ? 1 : 2);
+  return [f(D.a[i]), f(D.b[i])];
+}
+
+function refreshD() {
+  let p = sD.p, q = sD.q;
+  if (p + q > 0.99) { q = Math.max(0, 0.99 - p); sD.q = q; document.getElementById("D_q").value = String(q); }
+  const r = 1 - p - q;
+  const cuts = [{ name: "A", share: p }, { name: "B", share: q }, { name: "O", share: r }];
+  drawSquare(document.getElementById("plotD"), cuts,
+    (i, j) => D_COL[typeOf(i, j)],
+    (i, j, area) => ({ top: D_NAMES[i] + D_NAMES[j], bot: f3(area), dark: typeOf(i, j) !== "O" }),
+    ["the allele from one parent", "the allele from the other parent"]);
+  const hom = p * p + q * q + r * r;
+  const tA = p * p + 2 * p * r, tB = q * q + 2 * q * r, tAB = 2 * p * q, tO = r * r;
+  document.getElementById("D_pool").textContent = "A " + f2(p) + " · B " + f2(q) + " · O " + f2(r);
+  document.getElementById("D_hom").textContent = f3(hom);
+  document.getElementById("D_het").textContent = f3(1 - hom);
+  document.getElementById("D_types").textContent =
+    "A " + f3(tA) + " · B " + f3(tB) + " · AB " + f3(tAB) + " · O " + f3(tO);
+  document.getElementById("D_pOut").value = f2(p);
+  document.getElementById("D_qOut").value = f2(q);
+  document.getElementById("cD_p").textContent = f2(p);
+  document.getElementById("cD_q").textContent = f2(q);
+}
+
+(function wireD() {
+  document.getElementById("D_p").addEventListener("input", ev => {
+    sD.p = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "p"); refreshD();
+  });
+  document.getElementById("D_q").addEventListener("input", ev => {
+    sD.q = parseFloat(ev.target.value); bump("D"); highlightByDataLine("codeD", "q"); refreshD();
+  });
+  document.getElementById("D_lock").addEventListener("click", () => {
+    if (!Gates.D.open || Gates.D.done) return;
+    const p = sD.p, q = sD.q, r = 1 - p - q;
+    if (!taskDone("D", "D1")) {
+      sD.tries1++;
+      const ab = 2 * p * q, ok = Math.abs(ab - 0.06) <= 0.005;
+      lockReport("D_flip", ok, sD.tries1,
+        "A " + f2(p) + " and B " + f2(q) + " — one of many pools that do it, because AB only ever cares about those two",
+        ab > 0.06 ? "type AB is still too common" : "type AB is too rare");
+      if (ok) {
+        markTask("D", "D1"); record(BIT.D1, true);
+        document.getElementById("D1_now").textContent = "locked in on try " + sD.tries1;
+      }
+      return;
+    }
+    if (!taskDone("D", "D2")) {
+      sD.tries2++;
+      const tO = r * r, tA = p * p + 2 * p * r;
+      const ok = Math.abs(tO - 0.45) <= 0.025 && Math.abs(tA - 0.40) <= 0.025;
+      lockReport("D_flip", ok, sD.tries2,
+        "O about 0.67 of the pool and A about 0.25 of it, which is roughly where a lot of real populations sit",
+        Math.abs(tO - 0.45) > 0.025 ? "type O is at " + f2(tO) + ", not 0.45" : "type O is right; type A is at " + f2(tA));
+      if (ok) {
+        markTask("D", "D2"); record(BIT.D2, true);
+        document.getElementById("D2_now").textContent = "locked in on try " + sD.tries2;
+        qD.show(); finishStage("D");
+      }
+    }
+  });
+  wireDownload("D_download", "codeD", "lesson9_stageD.R");
+})();
+
+const qD = wireGame("D", {
+  bit: BIT.Dq,
+  fields: [{ key: "het", i: 1, label: "the share carrying two different alleles", min: 0, max: 1, start: 0.50, fmt: f2 }],
+  round: rng => {
+    const p = 0.10 + 0.05 * Math.floor(rng() * 11);          // 0.10 .. 0.60
+    const qMax = 0.85 - p;                                    // leaves O at 0.15 or more
+    const q = 0.10 + 0.05 * Math.floor(rng() * (Math.floor((qMax - 0.10) / 0.05) + 1));
+    const r = 1 - p - q;
+    const truth = 1 - (p * p + q * q + r * r);
+    return {
+      prompt: "Three alleles in the pool: <b>A</b> at " + f2(p) + ", <b>B</b> at " + f2(q) + ", <b>O</b> at " + f2(r)
+            + ". What share of the population is dealt two alleles that are not the same?",
+      truth: { het: truth }, tol: { het: 0.03 },
+      right: () => "the three matching corners come to " + f3(1 - truth) + ", and everybody else is one of the six off-boxes",
+      wrong: () => "the quick way is the three corners: " + f2(p) + "² + " + f2(q) + "² + " + f2(r) + "², and then everyone else",
+      replay: () => {
+        const vals = [];
+        for (let k = 0; k < 6; k++) {
+          const DD = makeDeal(randomSeed(1, 99999), D_N);
+          const f = u => (u < p ? 0 : u < p + q ? 1 : 2);
+          vals.push(dealShare(DD, (u, v) => f(u) !== f(v)));
+        }
+        return { label: "six fresh deals of 2,000 individuals", min: 0, max: 1, fmt: f2, truth: mean(vals), values: vals };
+      }
+    };
+  },
+  done: "Three alleles, six genotypes, and the same square. A locus does not have to have two alleles for any of this to work — it never did.",
+  after: () => markTask("D", "D3")
+});
+
+/* ====== Stage E — run it forward ====================================
+   The population is handed forward sixty generations. Nothing here is
+   hidden: the alleles are inherited, the individuals differ, and both of
+   those stay true at every setting. The only thing the three offspring
+   sliders can do is make the differences between genotypes matter, and
+   with the three of them level the line is flat however long you run it.
+
+   The genotype shares are worth watching on their own: start the
+   population anywhere you like and one round of pairing puts them on the
+   square, which is why a real population can be read this way without
+   anybody knowing its history. */
+const E_GENS = 60;
+const sE = { p0: 0.30, pack: 1.00, w: [2.0, 2.0, 2.0], tries1: 0, tries2: 0, tries3: 0, R: null };
+
+function startF(p0, pack) {
+  const het = pack * 2 * Math.min(p0, 1 - p0);
+  return [p0 - het / 2, het, 1 - p0 - het / 2];
+}
+function runE(p0, pack, w) {
+  let f = startF(p0, pack), p = p0;
+  const ps = [p0], fs = [f.slice()];
+  for (let g = 1; g <= E_GENS; g++) {
+    const t = [f[0] * w[0], f[1] * w[1], f[2] * w[2]], tot = t[0] + t[1] + t[2];
+    p = tot > 1e-12 ? (t[0] + t[1] / 2) / tot : p;
+    f = [p * p, 2 * p * (1 - p), (1 - p) * (1 - p)];
+    ps.push(p); fs.push(f.slice());
+  }
+  return { ps: ps, fs: fs };
+}
+/* The same run in a population of N, where the pool each generation is a
+   draw rather than a number. It is only ever used to scatter six dots
+   around the answer. */
+function runEFinite(p0, pack, w, N, seed) {
+  const z = makeNormal(mulberry32(seed));
+  let f = startF(p0, pack), p = p0;
+  for (let g = 1; g <= E_GENS; g++) {
+    const t = [f[0] * w[0], f[1] * w[1], f[2] * w[2]], tot = t[0] + t[1] + t[2];
+    let pp = tot > 1e-12 ? (t[0] + t[1] / 2) / tot : p;
+    pp = clamp(pp + Math.sqrt(Math.max(0, pp * (1 - pp) / (2 * N))) * z(), 0, 1);
+    p = pp; f = [p * p, 2 * p * (1 - p), (1 - p) * (1 - p)];
+  }
+  return p;
+}
+
+function lineE(cv, series, colors, title) {
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = makeFrame({ l: 46, r: 14, t: 22, b: 34 }, W, H, 0, E_GENS, 0, 1);
+  drawAxes(ctx, f, "generations", "share", 6, 4, v => v.toFixed(0), v => v.toFixed(1));
+  for (let k = 0; k < series.length; k++) {
+    ctx.strokeStyle = colors[k]; ctx.lineWidth = 2.2; ctx.beginPath();
+    for (let g = 0; g < series[k].length; g++) {
+      const x = f.x(g), y = f.y(clamp(series[k][g], 0, 1));
+      if (g === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText(title, f.pad.l, 4);
+}
+
+function refreshE() {
+  const R = runE(sE.p0, sE.pack, sE.w);
+  sE.R = R;
+  lineE(document.getElementById("plotE"), [R.ps], [DEEP], "the share of the pool that is A");
+  lineE(document.getElementById("plotE2"),
+        [R.fs.map(f => f[0]), R.fs.map(f => f[1]), R.fs.map(f => f[2])],
+        [DEEP, LIFE, SHALLOW], "the three genotypes — dark: two A's · orange: one of each · pale: two a's");
+  const end = R.ps[E_GENS], sq = [sE.p0 * sE.p0, 2 * sE.p0 * (1 - sE.p0), (1 - sE.p0) * (1 - sE.p0)];
+  const tri = f => f.map(v => f3(v)).join(" / ");
+  document.getElementById("E_start").textContent = f3(sE.p0);
+  document.getElementById("E_end").textContent = f3(end);
+  document.getElementById("E_move").textContent = (end - sE.p0 >= 0 ? "+" : "") + f3(end - sE.p0);
+  document.getElementById("E_g0").textContent = tri(R.fs[0]);
+  document.getElementById("E_g1").textContent = tri(R.fs[1]);
+  document.getElementById("E_sq").textContent = tri(sq);
+  document.getElementById("E_p0Out").value = f2(sE.p0);
+  document.getElementById("E_packOut").value = f2(sE.pack);
+  const names = ["wAA", "wAa", "waa"], ids = ["E_wAAOut", "E_wAaOut", "E_waaOut"], cids = ["cE_wAA", "cE_wAa", "cE_waa"];
+  for (let k = 0; k < 3; k++) {
+    document.getElementById(ids[k]).value = sE.w[k].toFixed(1);
+    document.getElementById(cids[k]).textContent = sE.w[k].toFixed(1);
+  }
+  document.getElementById("cE_p0").textContent = f2(sE.p0);
+  document.getElementById("cE_pack").textContent = f2(sE.pack);
+}
+
+(function wireE() {
+  const bind = (id, key, line) => document.getElementById(id).addEventListener("input", ev => {
+    const v = parseFloat(ev.target.value);
+    if (key === "p0") sE.p0 = v; else if (key === "pack") sE.pack = v; else sE.w[key] = v;
+    bump("E"); highlightByDataLine("codeE", line); refreshE();
+  });
+  bind("E_p0", "p0", "p0"); bind("E_pack", "pack", "pack");
+  bind("E_wAA", 0, "wAA"); bind("E_wAa", 1, "wAa"); bind("E_waa", 2, "waa");
+  document.getElementById("E_lock").addEventListener("click", () => {
+    if (!Gates.E.open || Gates.E.done) return;
+    const end = sE.R.ps[E_GENS], moved = Math.abs(end - sE.p0);
+    const level = Math.abs(sE.w[0] - sE.w[1]) < 1e-9 && Math.abs(sE.w[1] - sE.w[2]) < 1e-9;
+    if (!taskDone("E", "E1")) {
+      sE.tries1++;
+      const ok = sE.pack >= 0.98 && level && moved < 0.001;
+      lockReport("E_flip", ok, sE.tries1,
+        "not one individual started with two of the same allele, and the pool is still where it started sixty generations later",
+        sE.pack < 0.98 ? "pack the alleles all the way into one-of-each individuals first"
+                       : (!level ? "the three offspring numbers are not all the same yet" : "that run does not end where it started"));
+      if (ok) {
+        markTask("E", "E1"); record(BIT.E1, true);
+        document.getElementById("E1_now").textContent = "locked in on try " + sE.tries1;
+      }
+      return;
+    }
+    if (!taskDone("E", "E2")) {
+      sE.tries2++;
+      const ok = moved >= 0.10;
+      lockReport("E_flip", ok, sE.tries2,
+        "moved by " + f3(end - sE.p0) + ", and the only thing you changed was how many offspring each genotype had",
+        "that run moved by " + f3(moved) + ", and it needs 0.10");
+      if (ok) {
+        markTask("E", "E2"); record(BIT.E2, true);
+        document.getElementById("E2_now").textContent = "locked in on try " + sE.tries2;
+      }
+      return;
+    }
+    if (!taskDone("E", "E3")) {
+      sE.tries3++;
+      const ok = level && sE.w[0] >= 3 && moved < 0.001;
+      lockReport("E_flip", ok, sE.tries3,
+        "three or more offspring each and sixty generations of it, and the pool has not moved a thousandth",
+        !level ? "the three offspring numbers have to be the same again"
+               : (sE.w[0] < 3 ? "all three need to be at 3 or more" : "that run does not end where it started"));
+      if (ok) {
+        markTask("E", "E3"); record(BIT.E3, true);
+        document.getElementById("E3_now").textContent = "locked in on try " + sE.tries3;
+        qE.show(); finishStage("E");
+      }
+    }
+  });
+  wireDownload("E_download", "codeE", "lesson9_stageE.R");
+})();
+
+const qE = wireGame("E", {
+  bit: BIT.Eq,
+  fields: [{ key: "p", i: 1, label: "the share of the pool that is A", min: 0, max: 1, start: 0.50, fmt: f2 }],
+  round: (rng, n) => {
+    const p0 = 0.15 + 0.05 * Math.floor(rng() * 14);
+    let w;
+    if (n % 2 === 0) { const v = 1.0 + 0.5 * Math.floor(rng() * 6); w = [v, v, v]; }
+    else if (rng() < 0.5) w = [2.6, 2.3, 2.0];
+    else w = [2.0, 2.3, 2.6];
+    const truth = runE(p0, 1, w).ps[E_GENS];
+    return {
+      prompt: "The pool starts at <b>" + f2(p0) + "</b> A, with every allele packed into one-of-each individuals. Offspring per individual: <b>"
+            + w[0].toFixed(1) + "</b> for two A's, <b>" + w[1].toFixed(1) + "</b> for one of each, <b>" + w[2].toFixed(1)
+            + "</b> for two a's. Where is the A share sixty generations later?",
+      truth: { p: truth }, tol: { p: 0.03 },
+      right: () => (w[0] === w[2])
+        ? "nothing told the two alleles apart, so sixty generations went by and left the pool exactly where it was"
+        : "the differences in reproduction are the entire move, and sixty generations is a long time to apply one",
+      wrong: () => (w[0] === w[2])
+        ? "every genotype had the same number of offspring, so nothing was ever going to separate the alleles"
+        : "the run is on the sliders above — set it there and read the end of the line",
+      replay: () => {
+        const vals = [];
+        for (let k = 0; k < 6; k++) vals.push(runEFinite(p0, 1, w, 20000, randomSeed(1, 99999)));
+        return { label: "six more populations of 20,000, run the same way", min: 0, max: 1, fmt: f2, truth: mean(vals), values: vals };
+      }
+    };
+  },
+  done: "Variation was there, and every allele on the page was inherited. Sixty generations still went by with nothing to show for them, every time the three genotypes had the same number of offspring. Differences in reproduction are the part that was missing.",
+  after: () => { markTask("E", "E4"); showDone(true); }
+});
+
+/* ====== Boot ======================================================== */
+Score.init({
+  moduleId: "lesson10",
+  version: 5,
+  scaffold: 16,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+  }
+});
+refreshA();
+refreshB();
+refreshC();
+refreshD();
+refreshE();
+window.addEventListener("resize", () => { refreshA(); refreshB(); refreshC(); refreshD(); refreshE(); });
 </script>
 </body>
 </html>

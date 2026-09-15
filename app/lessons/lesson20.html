@@ -4,383 +4,571 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 20: Measuring rates across sliding intervals</title>
+<title>BIO 202 — Lesson 20: Removing the family resemblance before comparing species</title>
 <link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/dag.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent2:#2f6b8f; --rule:#e2e0d9; --quote-bg:#f5efe0; --quote-rule:#caa04a; --quote-ink:#2e230a; --quote-src:#6a5018; --todo-bg:#f0ece0; --todo-rule:#b4a06a; }
-  * { box-sizing:border-box; }
-  body { margin:0; font:15px/1.55 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
-  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
-  header h1 { margin:0 0 4px; font-size:18px; }
-  header p { margin:0; color:var(--muted); font-size:13px; }
-  main { max-width:820px; margin:0 auto; padding:24px; }
-  .draft-banner { background:#fbe4c6; border:1px solid #a86a1a; color:#5c3802; padding:10px 14px; border-radius:4px; font-size:13px; margin:0 0 24px; }
-  .anchor-quote { background:var(--quote-bg); border-left:3px solid var(--quote-rule); padding:14px 18px; border-radius:0 4px 4px 0; font-size:15px; color:var(--quote-ink); margin:0 0 28px; }
-  .anchor-quote .src { display:block; margin-top:10px; font-size:12px; color:var(--quote-src); font-family:ui-monospace,Menlo,monospace; }
-  section.stage { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:18px 22px; margin:0 0 16px; }
-  section.stage h2 { margin:0 0 4px; font-size:17px; color:var(--ink); }
-  section.stage .sub { margin:0 0 14px; color:var(--muted); font-size:13px; }
-  section.stage .anchor { background:var(--quote-bg); border-left:3px solid var(--quote-rule); padding:10px 14px; border-radius:0 4px 4px 0; font-size:13.5px; color:var(--quote-ink); margin:0 0 12px; }
-  section.stage .anchor .src { display:block; margin-top:6px; font-size:11px; color:var(--quote-src); font-family:ui-monospace,Menlo,monospace; }
-  section.stage .todo { background:var(--todo-bg); border:1px dashed var(--todo-rule); padding:10px 14px; border-radius:4px; font-size:12.5px; color:var(--quote-src); font-family:ui-monospace,Menlo,monospace; }
-  footer.wrap-up { max-width:820px; margin:32px auto 0; padding:24px; border-top:1px solid var(--rule); color:var(--muted); font-size:13px; }
-  footer.wrap-up h2 { color:var(--ink); font-size:15px; margin:0 0 10px; }
-  footer.wrap-up .closing { background:var(--quote-bg); border-left:3px solid var(--quote-rule); padding:14px 18px; border-radius:0 4px 4px 0; font-size:14px; color:var(--quote-ink); margin:0 0 18px; }
-  footer.wrap-up .closing .src { display:block; margin-top:8px; font-size:12px; color:var(--quote-src); font-family:ui-monospace,Menlo,monospace; }
-  footer.wrap-up a.next { display:inline-block; padding:10px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:4px; font-weight:600; }
-  footer.wrap-up a.home { color:var(--muted); text-decoration:none; margin-left:14px; }
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
+  *{box-sizing:border-box} body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--ink)}
+  header{padding:16px 24px;border-bottom:1px solid var(--rule);background:var(--panel)} header h1{margin:0 0 4px;font-size:18px} header p{margin:0;color:var(--muted);font-size:13px}
+  nav.toc{position:sticky;top:0;z-index:5;background:var(--stage-bar);border-bottom:1px solid var(--rule);padding:8px 24px;font-size:13px} nav.toc a{color:var(--muted);text-decoration:none;margin-right:14px} nav.toc a.locked{color:#b8b8b4;text-decoration:line-through}
+  section.stage{padding:28px 24px 40px;border-bottom:1px solid var(--rule);max-width:1300px;margin:0 auto} section.stage h2.stage-h{margin:0 0 4px;font-size:20px} section.stage .stage-sub{margin:0 0 18px;color:var(--muted);font-size:13px}
+  section.stage.stage-locked{opacity:.38;filter:grayscale(.4)} section.stage.stage-locked .lock-banner{display:block} section.stage.stage-locked .stage-body{pointer-events:none}
+  .lock-banner{display:none;margin:0 0 16px;padding:10px 14px;background:var(--lock-bg);border:1px dashed var(--lock-rule);border-radius:4px;font-size:13px;color:var(--lock-ink);text-align:center}
+  .explore-tracker{margin-top:10px;padding:8px 12px;background:#f4f0dd;border-left:3px solid #caa04a;border-radius:0 4px 4px 0;font-size:12.5px;color:#4a3a14;display:none} .explore-tracker.shown{display:block} .explore-tracker.complete{background:#e4efd4;border-left-color:#6f8a4a;color:#2e4410}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} .col{display:flex;flex-direction:column;gap:16px}
+  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px} .panel h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+  .scenario p{margin:0 0 8px} .scenario p:last-child{margin-bottom:0} .scenario .anchor-quote{background:#f5efe0;border-left:3px solid #caa04a;padding:10px 14px;border-radius:0 4px 4px 0;font-size:13.5px;color:#2e230a;margin:8px 0 4px} .scenario .anchor-quote .src{display:block;margin-top:6px;font-size:11px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
+  .prediction ol{margin:0;padding-left:20px} .prediction li{margin-bottom:10px} .prediction label{display:block;margin:3px 0;cursor:pointer;font-size:14px} .prediction .q{font-weight:600;margin-bottom:4px;font-size:14px}
+  .prediction button{margin-top:6px;padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px} .prediction button:disabled{background:#bbb;cursor:not-allowed}
+  .prediction-done{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:4px;font-size:13px;margin-bottom:6px}
+  .controls.locked{opacity:.4;pointer-events:none} .controls .row{display:grid;grid-template-columns:140px 1fr 70px;align-items:center;gap:10px;margin-bottom:6px} .controls label{font-size:13px} .controls output{font-family:ui-monospace,Menlo,monospace;font-size:13px} .controls input[type=range]{width:100%}
+  .controls .buttons{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .controls button{background:#333;color:#fff;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:13px} .controls button.ghost{background:transparent;color:#333;border:1px solid var(--rule)} .controls button.accent{background:var(--accent)}
+  .graph-wrap canvas{width:100%;height:auto;display:block;background:#fff}
+  .fit-stats{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;margin-top:8px;color:var(--ink)} .fit-stats .label{color:var(--muted)} .fit-stats .big{font-size:16px;font-weight:600;color:var(--accent)}
+  pre.code{background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:4px;font:12px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto;margin:0;max-height:360px} pre.code .line{display:block;padding:0 6px;border-radius:2px} pre.code .line.hi{background:var(--code-hi)} pre.code .kw{color:#c792ea} pre.code .fn{color:#82aaff} pre.code .num{color:#f78c6c} pre.code .str{color:#c3e88d} pre.code .com{color:#676f8a;font-style:italic}
+  footer.wrap-up{padding:20px 24px 40px;max-width:1300px;margin:0 auto;color:var(--muted);font-size:13px} footer.wrap-up h2{color:var(--ink);font-size:16px} footer.wrap-up .closing{background:#f5efe0;border-left:3px solid #caa04a;padding:12px 16px;border-radius:0 4px 4px 0;font-size:14px;color:#2e230a;margin:8px 0 16px} footer.wrap-up .closing .src{display:block;margin-top:6px;font-size:12px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
+  .outcomes{max-width:1300px;margin:0 auto;padding:16px 24px 4px;border-bottom:1px solid var(--rule);background:var(--panel)} .outcomes h2{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600} .outcomes p{margin:0 0 8px}
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 20 — Measuring rates across sliding intervals</h1>
-  <p>Measure how fast something changed. Then measure the same change over a longer stretch, and get a different number.</p>
+  <h1>Lesson 20 — Removing the family resemblance before comparing species</h1>
+  <p>Species that share ancestors are not separate readings. So what happens to a slope drawn across species once you first take out what they share just by being related?</p>
 </header>
-<div id="score-name" style="max-width:820px;margin:16px auto 0;padding:0 24px"></div>
+<div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
+<div class="scenario" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"><div class="anchor-quote">I survey species of earthworms around the world. For each species, I measure body size and soil pH. I get a clean negative regression. But within each clade — these three sister species, those three sister species — the relationship is positive. You can make a negative overall trend out of a bunch of positive smaller trends. The fact of stratification is inherent in all life on Earth, because we're all descended from a set of nested common ancestors. When comparing living things, relatedness will always matter.<span class="src">— 202_lec26_02</span></div></div>
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A. The line straight across</a>
+  <a href="#stageB" id="tocB" class="locked">B. Subtract the shared branches</a>
+  <a href="#stageC" id="tocC" class="locked">C. How much is just the tree?</a>
+  <a href="#stageD" id="tocD" class="locked">D. AVONET birds</a>
+  <a href="#stageE" id="tocE" class="locked">E. The earthworm sign flip</a>
+</nav>
 
-<main>
-
-<div class="anchor-quote">
-  Siccar Point plays a big role in the history of geology — which means it has a big role in the history of the Industrial Revolution and economics in general. It also has a huge role in biology. This is where deep time was discovered. Charles Darwin, trained as a geologist, learned about this and studied with Adam Sedgwick. He understood the geological principles of Siccar Point, and that led him to understand deep time — which led to the theory of evolution.
-  <span class="src">— 312_lec_strat2_01</span>
-</div>
-
-<section class="stage">
-  <h2>A — Rate = distance / time</h2>
-  <div class="anchor">
-    If I told you a car was driving at 50 mph and has gone 100 miles, how long ago did it leave? You have a distance and a speed — distance divided by speed gives you time. Number of mutations is your distance. The slope of mutations versus time is your speed. Number of mutations divided by slope gives you time to most recent common ancestor.
-    <span class="src">— 202_lec20_02</span>
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A — Draw the line straight across the species</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Generate a tree of N species. Simulate two traits x and y, each by Brownian motion. The traits evolve independently — the "true" slope is 0. But the naive OLS regression of y on x will often show a non-zero slope, because species in the same clade have correlated trait values.</p></div>
+      <div class="panel graph-wrap"><h3>Naive scatter of x vs y across species</h3><canvas id="plotA" width="560" height="280"></canvas><div class="fit-stats" id="statsA"><span class="label">N species:</span> <span id="A_n">30</span> &nbsp;|&nbsp; <span class="label">true slope:</span> 0 &nbsp;|&nbsp; <span class="label">naive OLS slope:</span> <span id="A_slope" class="big">—</span> &nbsp;|&nbsp; <span class="label">OLS P-value:</span> <span id="A_p">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predA"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. Two traits truly evolve independently on a tree. Across 30 species, what fraction of OLS regressions on the tip values give P &lt; 0.05?</div>
+          <label><input type="radio" name="qA1" value="five" /> About 5% (the correct false-positive rate)</label>
+          <label><input type="radio" name="qA1" value="more" /> Substantially more than 5% — phylogenetic non-independence inflates false positives</label>
+          <label><input type="radio" name="qA1" value="never" /> Essentially 0%</label></li></ol>
+        <button id="submitA" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreA">Try at least 5 seeds. <span class="count">0/5 seeds</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsA">
+          <div class="row"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
+          <div class="row"><label for="A_nIn">N species</label><input type="range" id="A_nIn" min="10" max="100" step="5" value="30" /><output id="A_nOut">30</output></div>
+          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — naive OLS</h3>
+<pre class="code" id="codeA"><span class="line"><span class="kw">library</span>(ape)</span><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>); N &lt;- <span class="num">30</span></span><span class="line">tr &lt;- <span class="fn">rcoal</span>(N)   <span class="com"># random coalescent tree</span></span><span class="line">x &lt;- <span class="fn">rTraitCont</span>(tr); y &lt;- <span class="fn">rTraitCont</span>(tr)   <span class="com"># independent BM</span></span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(y ~ x))   <span class="com"># naive slope</span></span></pre></div>
+    </div>
   </div>
-  <div id="l20-sim" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
-    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">10,000 generations of a Brownian-motion trait. Slide the interval length and watch the median measured rate (per generation) fall as the interval grows. This is the Gingerich decline, from one simulated lineage.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;">
-      <div>
-        <canvas id="l20plot1" width="380" height="180" style="width:100%;display:block;background:#fafaf7;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
-        <canvas id="l20plot2" width="380" height="180" style="width:100%;display:block;background:#fafaf7;border:1px solid #e2e0d9;border-radius:4px;margin-top:6px;"></canvas>
+</section>
+
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B — Subtract what the branches already share</h2>
+  <div class="lock-banner">Complete Stage A.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>For each internal node of the tree, compute the contrast: (x_left − x_right) / sqrt(t_left + t_right). Do the same for y. Then regress y-contrasts on x-contrasts through the origin. For independent BM traits, this slope is centered on 0.</p></div>
+      <div class="panel graph-wrap"><h3>Naive vs phylogenetic-contrasts slope</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">naive OLS slope:</span> <span id="B_naive">—</span> &nbsp;|&nbsp; <span class="label">PIC slope:</span> <span id="B_pic" class="big">—</span> &nbsp;|&nbsp; <span class="label">PIC P-value:</span> <span id="B_p">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predB"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. When traits truly evolve independently on a tree, the phylogenetic-contrasts slope across many simulations will be:</div>
+          <label><input type="radio" name="qB1" value="zero" /> Centered on 0</label>
+          <label><input type="radio" name="qB1" value="biased" /> Systematically positive</label>
+          <label><input type="radio" name="qB1" value="biased2" /> Systematically negative</label></li></ol>
+        <button id="submitB" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreB">Try at least 5 seeds. <span class="count">0/5 seeds</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
+          <div class="row"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
+          <div class="row"><label for="B_corrIn">true correlation</label><input type="range" id="B_corrIn" min="-1" max="1" step="0.1" value="0" /><output id="B_corrOut">0.0</output></div>
+          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — phylogenetic independent contrasts</h3>
+<pre class="code" id="codeB"><span class="line"><span class="kw">library</span>(ape)</span><span class="line">px &lt;- <span class="fn">pic</span>(x, tr); py &lt;- <span class="fn">pic</span>(y, tr)</span><span class="line"><span class="fn">summary</span>(<span class="fn">lm</span>(py ~ <span class="num">0</span> + px))   <span class="com"># PIC slope through origin</span></span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C — How much of the resemblance is just the tree?</h2>
+  <div class="lock-banner">Complete Stage B.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Pagel's λ scales the off-diagonal elements of the phylogenetic covariance matrix. At λ=0, off-diagonals are 0 (no shared ancestry effect). At λ=1, full BM. The maximum-likelihood λ tells you how much your trait is phylogenetically conserved.</p></div>
+      <div class="panel graph-wrap"><h3>How well each setting explains the data</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">true setting:</span> <span id="C_true">1.0</span> &nbsp;|&nbsp; <span class="label">best-fit setting:</span> <span id="C_best" class="big">—</span> &nbsp;|&nbsp; <span class="label">95% range:</span> <span id="C_ci">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predC"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. If a trait evolves by pure Brownian motion on a tree, Pagel's λ should fit at:</div>
+          <label><input type="radio" name="qC1" value="zero" /> 0</label>
+          <label><input type="radio" name="qC1" value="half" /> 0.5</label>
+          <label><input type="radio" name="qC1" value="one" /> 1</label>
+          <label><input type="radio" name="qC1" value="negative" /> Negative</label></li></ol>
+        <button id="submitC" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreC">Try at least 3 true λ values. <span class="count">0/3 values</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsC">
+          <div class="row"><label for="C_trueIn">how much is shared ancestry</label><input type="range" id="C_trueIn" min="0" max="1" step="0.1" value="1" /><output id="C_trueOut">1.0</output></div>
+          <div class="row"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
+          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — Pagel's λ</h3>
+<pre class="code" id="codeC"><span class="line"><span class="kw">library</span>(phytools)</span><span class="line"><span class="fn">phylosig</span>(tr, x, method = <span class="str">"lambda"</span>, test = <span class="kw">TRUE</span>)</span></pre></div>
+    </div>
+  </div>
+
+  <!-- DAG sub-panel: shared ancestry as the confounder Pagel's λ measures. -->
+  <div class="stage-body" style="margin-top:24px;border-top:1px dashed #c9c4b3;padding-top:20px;">
+    <div class="panel scenario" style="max-width:1100px;margin:0 auto 14px;">
+      <h3>Three ways two species could look alike</h3>
+      <p>Two species' traits look correlated. Three causal stories could produce that. Build each one in the DAG below and see what the trait-vs-trait scatter looks like.</p>
+      <ol style="font-size:13.5px; margin:6px 0 6px 20px;">
+        <li><strong>Direct effect.</strong> Trait 1 → Trait 2. Real biology happens within each lineage.</li>
+        <li><strong>Shared ancestry.</strong> Phylogeny → Trait 1, Phylogeny → Trait 2. Both traits inherited from a common ancestor; no within-lineage link.</li>
+        <li><strong>Both.</strong> All three arrows present.</li>
+      </ol>
+    </div>
+    <div id="dag-l19-mount" style="max-width:1180px;margin:0 auto;"></div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D — AVONET birds — hand-wing index vs migration</h2>
+  <div class="lock-banner">Complete Stage C.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3><p>Hand-wing index (a wing-shape ratio) is known to correlate with dispersal ability. Naive cross-species correlation may overstate the relationship because closely related species share both. Compare naive OLS vs phylogenetic correction.</p></div>
+      <div class="panel graph-wrap"><h3>Hand-wing index vs flight ability proxy</h3><canvas id="plotD" width="560" height="280"></canvas><div class="fit-stats" id="statsD"><span class="label">N species shown:</span> <span id="D_n">—</span> &nbsp;|&nbsp; <span class="label">naive slope:</span> <span id="D_naive">—</span> &nbsp;|&nbsp; <span class="label">corrected slope (PIC-like):</span> <span id="D_pic" class="big">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predD"><h3>Prediction</h3>
+        <ol><li><div class="q">Q1. The PIC-corrected slope between hand-wing index and a flight-ability proxy will be:</div>
+          <label><input type="radio" name="qD1" value="similar" /> Similar to the naive slope — phylogeny doesn't matter much here</label>
+          <label><input type="radio" name="qD1" value="smaller" /> Smaller than the naive slope — phylogeny inflated the naive estimate</label>
+          <label><input type="radio" name="qD1" value="flipped" /> Opposite sign — phylogeny reversed the apparent direction</label></li></ol>
+        <button id="submitD" disabled>Submit → reveal</button>
+        <div class="explore-tracker" id="exploreD">Toggle between traits at least 2 times. <span class="count">0/2 toggles</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
+          <div class="row"><label for="D_seedIn">subsample seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
+          <div class="buttons"><button id="D_redraw" class="accent">Redraw subset</button> <button id="D_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — AVONET PGLS</h3>
+<pre class="code" id="codeD"><span class="line"><span class="kw">library</span>(ape); <span class="kw">library</span>(nlme)</span><span class="line">birds &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/avonet_birds.csv"</span>)</span><span class="line"><span class="com"># Match to BirdTree, then PGLS</span></span><span class="line">m &lt;- <span class="fn">gls</span>(migration ~ hand_wing_index, data = birds,</span><span class="line">         correlation = <span class="fn">corBrownian</span>(phy = bird_tree))</span><span class="line"><span class="fn">summary</span>(m)</span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — The earthworm sign flip</h2>
+  <div class="lock-banner">Complete Stage D.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3>
+        <p>Synthetic earthworm data faithful to the structure in the lecture quote: 30 species in 6 clades of 5 species each. Within each clade, larger worms prefer slightly more alkaline soils (positive slope). Across clades, the bigger-bodied clades happen to occupy more acidic soils (so pooled across clades, the slope flips negative). The categorical variable is <em>clade membership</em> — and once it's drawn into the model, the within-clade slope is what's actually happening biologically.</p>
       </div>
-      <div>
-        <label style="display:block;font-size:13px;margin-bottom:4px;">interval length = <output id="l20_Lout">100</output> generations</label>
-        <input type="range" id="l20_L" min="1" max="2000" step="1" value="100" style="width:100%;" />
-        <label style="display:block;font-size:13px;margin:10px 0 4px;">seed = <output id="l20_sOut">42</output></label>
-        <input type="range" id="l20_s" min="1" max="999" step="1" value="42" style="width:100%;" />
-        <div style="font:12px ui-monospace,Menlo,monospace;color:#1d1d1b;margin-top:10px;">
-          <span style="color:#6b6b68;">median rate at this L:</span> <span id="l20_rate" style="color:#b23a48;font-weight:600;">—</span>
+      <div class="panel graph-wrap"><h3>Earthworm body size vs soil pH — pooled vs within-clade</h3>
+        <canvas id="plotE" width="560" height="320"></canvas>
+        <div class="fit-stats" id="statsE">
+          <span class="label">pooled slope:</span> <span id="E_pool" class="big">—</span>
+          &nbsp;|&nbsp;
+          <span class="label">median within-clade slope:</span> <span id="E_within">—</span>
         </div>
-        <p style="font-size:12px;color:#6b6b68;margin:8px 0 0;">Top: the simulated trait trajectory with two endpoints L apart highlighted. Bottom: rate distribution across all non-overlapping L-windows. As L grows, the rate distribution slides toward zero — the Brownian-motion lineage's apparent speed drops as you ask about it over longer windows.</p>
       </div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predE"><h3>Prediction</h3>
+        <ol>
+          <li><div class="q">Q1. When you switch from pooled to within-clade view, the within-clade slopes will be:</div>
+            <label><input type="radio" name="qE1" value="same" /> Roughly the same as the pooled slope</label>
+            <label><input type="radio" name="qE1" value="weaker" /> Weaker than the pooled slope, but the same sign</label>
+            <label><input type="radio" name="qE1" value="flipped" /> Opposite sign — pooled negative; within-clade positive</label></li>
+          <li><div class="q">Q2. Which is the right way to describe what the pooled negative slope was measuring?</div>
+            <label><input type="radio" name="qE2" value="evolution" /> "Larger body size causes worms to prefer acidic soil"</label>
+            <label><input type="radio" name="qE2" value="clade" /> "Across clades, the larger-bodied lineages happen to live in more acidic soils — that's a fact about which clade lives where, not about evolution along any single lineage"</label>
+            <label><input type="radio" name="qE2" value="noise" /> "The data are just noise"</label></li>
+        </ol>
+        <button id="submitE" disabled>Submit → unlock</button>
+        <div class="explore-tracker" id="exploreE">Toggle the clade-coloring at least once. <span class="count">0/1 toggles</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsE">
+        <div class="row"><label for="E_modeIn">view</label>
+          <select id="E_modeIn" style="grid-column:2 / 4; padding:6px;">
+            <option value="pool">pooled (no clade coloring)</option>
+            <option value="strat">color by clade, show within-clade fits</option>
+          </select></div></div></div>
+      <div class="panel"><h3>R code — Simpson's paradox on a tree</h3>
+<pre class="code" id="codeE"><span class="line">worms &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/earthworm_clades.csv"</span>)</span><span class="line">pooled  &lt;- <span class="fn">lm</span>(soil_pH ~ body_size, data = worms)</span><span class="line">within  &lt;- <span class="fn">lm</span>(soil_pH ~ body_size + clade, data = worms)</span><span class="line"><span class="fn">summary</span>(pooled)$coefficients[<span class="str">"body_size"</span>, ]</span><span class="line"><span class="fn">summary</span>(within)$coefficients[<span class="str">"body_size"</span>, ]</span></pre></div>
     </div>
   </div>
 </section>
 
-<section class="stage">
-  <h2>B — Gingerich's decline</h2>
-  <div class="anchor">
-    A lot of solids can flow more than you'd expect. You see this with windows in really old buildings — sometimes there's a thickening at the bottom. Some of it is just because they used to make windows thicker at the bottom. Some of it is that non-crystalline solids can flow a bit more than people realize. There's still motion.
-    <span class="src">— 312_lec02_03</span>
-  </div>
-  <div class="panel-lite" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
-    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">Every pair of measurements in 1,400 real time series — fossils, museum skins, field studies — plotted as how fast the trait changed against how long the gap was. Both axes step by powers of ten.</p>
-    <canvas id="l20plotB" width="640" height="320" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
-    <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:8px;">
-      <span style="color:#6b6b68;">slope:</span> <span id="l20B_slope" style="font-size:16px;font-weight:600;color:#b23a48;">—</span>
-      &nbsp;|&nbsp; <span style="color:#6b6b68;">interval span:</span> <span id="l20B_span">—</span>
-    </div>
-  </div>
-</section>
-
-<section class="stage">
-  <h2>C — Why does the rate decline?</h2>
-  <div class="anchor">
-    A lot of Permian things we have fossils of were burrowers. That's not necessarily because Permian things burrowed more than things today. Maybe they did, maybe they didn't. But think about how a fossil is made — something dies and gets buried. If you die in your burrow, you've skipped a step. You're already buried. So burrowers fossilize more easily. All else being equal, if you live underground, you have an easier time ending up underground when you're dead.
-    <span class="src">— 440_lec11_04</span>
-  </div>
-  <div class="panel-lite" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
-    <div class="q" style="font-weight:600;font-size:14px;margin-bottom:6px;">Predict first. Three ways a trait might behave over time. Which one, measured the way Stage B measures, produces the steepest decline?</div>
-    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qC" value="static" /> A trait that is not going anywhere, bouncing around a fixed value</label>
-    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qC" value="walk" /> A trait wandering with no destination</label>
-    <label style="display:block;margin:4px 0;font-size:14px;cursor:pointer;"><input type="radio" name="qC" value="trend" /> A trait moving steadily in one direction</label>
-    <button id="l20submitC" disabled style="margin-top:8px;padding:8px 14px;background:#b23a48;color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px;">Submit → unlock the three</button>
-    <div id="l20Cbox" style="opacity:.4;pointer-events:none;margin-top:14px;">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-        <button class="l20tab" data-k="walk">wandering</button>
-        <button class="l20tab" data-k="trend">steady trend</button>
-        <button class="l20tab" data-k="static">going nowhere</button>
-      </div>
-      <canvas id="l20plotC" width="640" height="300" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
-      <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:8px;">
-        <span style="color:#6b6b68;">this process gives slope:</span> <span id="l20C_sim" style="font-size:15px;font-weight:600;color:#2f6b8f;">—</span>
-        &nbsp;|&nbsp; <span style="color:#6b6b68;">the real fossils give:</span> <span id="l20C_real" style="font-size:15px;font-weight:600;color:#b23a48;">—</span>
-      </div>
-</div>
-  </div>
-</section>
-
-<section class="stage">
-  <h2>D — The PETS time series — Hyopsodus across the Eocene</h2>
-  <div class="anchor">
-    We don't know about the alpine dinosaurs. We don't know about the rainforest dinosaurs. Those are not environments where sediments get preserved. We know about river delta dinosaurs. We know about swamp dinosaurs. We know about coastline dinosaurs.
-    <span class="src">— 312_lec22_03</span>
-  </div>
-  <div class="panel-lite" style="background:#fff;border:1px solid #e2e0d9;border-radius:6px;padding:14px 16px;margin-top:12px;">
-    <p style="margin:0 0 8px;font-size:13px;color:#4a4a48;">One real series at a time. Slide the window and read the rate it gives you.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;" id="l20series"></div>
-    <canvas id="l20plotD" width="640" height="260" style="width:100%;display:block;background:#fff;border:1px solid #e2e0d9;border-radius:4px;"></canvas>
-    <label style="display:block;font-size:13px;margin:12px 0 4px;">window, in steps = <output id="l20D_wOut">2</output></label>
-    <input type="range" id="l20D_w" min="2" max="40" step="1" value="2" style="width:100%;" />
-    <div style="font:12.5px ui-monospace,Menlo,monospace;margin-top:8px;">
-      <span style="color:#6b6b68;">mean rate at this window:</span> <span id="l20D_rate" style="font-size:16px;font-weight:600;color:#b23a48;">—</span>
-      &nbsp;|&nbsp; <span style="color:#6b6b68;">points in series:</span> <span id="l20D_n">—</span>
-    </div>
-  </div>
-</section>
-</main>
-
-<footer class="wrap-up">
-  <p><strong>Lesson 21</strong> takes the same rate question to the genome: why do some parts of the genome change a lot and others almost not at all?</p>
-</footer>
+<div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 40px"></div>
+<script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
-<script>
-(function () {
-  const mount = document.getElementById("l20-sim"); if (!mount) return;
-  function rng(seed){let s=seed>>>0;return ()=>{s=(s+0x6D2B79F5)>>>0;let t=s;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296};}
-  function gauss(r){let u=0,v=0;while(u==0)u=r();while(v==0)v=r();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-  const state = { L: 100, seed: pageSeed("l20") };
-  let traj = null;
-  function makeTraj() {
-    const r = rng(state.seed); const N = 10000;
-    const out = new Array(N); out[0] = 0;
-    for (let i = 1; i < N; i++) out[i] = out[i-1] + gauss(r) * 0.1;
-    traj = out;
-  }
-  function setup(cv) {
-    const dpr = window.devicePixelRatio || 1;
-    if (!cv.dataset.cssW) { cv.dataset.cssW = String(cv.width); cv.dataset.cssH = String(cv.height); }
-    const cssW = +cv.dataset.cssW, cssH = +cv.dataset.cssH;
-    cv.width = cssW * dpr; cv.height = cssH * dpr;
-    cv.style.width = cssW + "px"; cv.style.height = cssH + "px";
-    const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { ctx, W: cssW, H: cssH };
-  }
-  function drawAll() {
-    if (!traj) makeTraj();
-    const L = Math.max(1, state.L | 0);
-    // Top: trajectory + highlight a single window of length L.
-    const { ctx, W, H } = setup(document.getElementById("l20plot1"));
-    ctx.clearRect(0, 0, W, H);
-    const pad = { l: 30, r: 8, t: 12, b: 22 };
-    const xMax = traj.length;
-    const yMin = Math.min(...traj), yMax = Math.max(...traj);
-    function x(v){return pad.l + v / xMax * (W - pad.l - pad.r);}
-    function y(v){return H - pad.b - (v - yMin) / (yMax - yMin) * (H - pad.t - pad.b);}
-    ctx.strokeStyle = "#888"; ctx.lineWidth = 1; ctx.beginPath();
-    for (let i = 0; i < traj.length; i += 5) { const xx = x(i), yy = y(traj[i]); if (i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy); }
-    ctx.stroke();
-    // Highlight a window starting at 0
-    ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2; ctx.beginPath();
-    ctx.moveTo(x(0), y(traj[0]));
-    const end = Math.min(L, traj.length - 1);
-    ctx.lineTo(x(end), y(traj[end])); ctx.stroke();
-    ctx.fillStyle = "#666"; ctx.font = "10px sans-serif"; ctx.textAlign = "left";
-    ctx.fillText("trait over " + traj.length + " generations (red line spans L = " + L + ")", pad.l, 10);
-    // Bottom: rate distribution across non-overlapping windows of length L.
-    const rates = [];
-    for (let i = 0; i + L < traj.length; i += L) {
-      const d = Math.abs(traj[i + L] - traj[i]);
-      rates.push(d / L);
-    }
-    rates.sort((a, b) => a - b);
-    const median = rates.length ? rates[Math.floor(rates.length / 2)] : 0;
-    document.getElementById("l20_rate").textContent = median.toExponential(2) + " per gen";
-    const { ctx: ctx2, W: W2, H: H2 } = setup(document.getElementById("l20plot2"));
-    ctx2.clearRect(0, 0, W2, H2);
-    if (rates.length) {
-      const pad2 = { l: 30, r: 8, t: 12, b: 22 };
-      const rMax = rates[rates.length - 1] || 1;
-      const bins = 24, binW = rMax / bins;
-      const counts = new Array(bins).fill(0);
-      for (const r of rates) counts[Math.min(bins - 1, Math.floor(r / binW))]++;
-      const maxC = Math.max(...counts);
-      for (let i = 0; i < bins; i++) {
-        const xLeft = pad2.l + (i / bins) * (W2 - pad2.l - pad2.r);
-        const xRight = pad2.l + ((i + 1) / bins) * (W2 - pad2.l - pad2.r);
-        const h = (counts[i] / maxC) * (H2 - pad2.t - pad2.b) * 0.95;
-        ctx2.fillStyle = "rgba(178,58,72,0.55)";
-        ctx2.fillRect(xLeft + 1, H2 - pad2.b - h, xRight - xLeft - 2, h);
-      }
-      // Median line
-      const medX = pad2.l + (median / rMax) * (W2 - pad2.l - pad2.r);
-      ctx2.strokeStyle = "#000"; ctx2.lineWidth = 1.5; ctx2.setLineDash([4, 3]);
-      ctx2.beginPath(); ctx2.moveTo(medX, pad2.t); ctx2.lineTo(medX, H2 - pad2.b); ctx2.stroke(); ctx2.setLineDash([]);
-      ctx2.fillStyle = "#666"; ctx2.font = "10px sans-serif"; ctx2.textAlign = "left";
-      ctx2.fillText("distribution of |Δtrait|/L across non-overlapping windows of length L", pad2.l, 10);
-    }
-  }
-  document.getElementById("l20_L").addEventListener("input", e => { state.L = +e.target.value; document.getElementById("l20_Lout").textContent = state.L; drawAll(); });
-  document.getElementById("l20_s").addEventListener("input", e => { state.seed = +e.target.value; document.getElementById("l20_sOut").textContent = state.seed; traj = null; drawAll(); });
-  document.getElementById("l20_s").value = String(state.seed);
-  document.getElementById("l20_sOut").textContent = String(state.seed);
-  drawAll();
-})();
-</script>
-<div id="score-final" style="max-width:820px;margin:0 auto;padding:0 24px"></div>
-<div style="max-width:820px;margin:0 auto;padding:8px 24px 32px">
-  <button id="finishBtn" style="padding:10px 18px;background:var(--accent);color:#fff;border:0;border-radius:4px;font-size:14px;cursor:pointer">Get my completion code</button>
-</div>
 <script src="../assets/score.js"></script>
+<script src="../assets/dag.js"></script>
 <script>
-  
-/* ---------- Stage B: 1,400 real series ----------
-   Precomputed from data/clean/pets_timeseries.json: every within-series pair of
-   measurements, binned by half-decade of interval, median rate per bin. Doing
-   the 310,557 pairs live in the page would stall it. */
-const PETS_CURVE=[{"x":-6.0,"y":4.2753,"n":2191},{"x":-5.5,"y":3.8532,"n":7309},{"x":-5.0,"y":3.4913,"n":15056},{"x":-4.5,"y":3.1542,"n":16944},{"x":-4.0,"y":2.8109,"n":2899},{"x":-3.5,"y":2.1199,"n":924},{"x":-3.0,"y":1.595,"n":3080},{"x":-2.5,"y":1.0502,"n":11170},{"x":-2.0,"y":0.5871,"n":24988},{"x":-1.5,"y":0.2493,"n":39114},{"x":-1.0,"y":0.0269,"n":71232},{"x":-0.5,"y":-0.5992,"n":44850},{"x":0.0,"y":-1.2379,"n":40132},{"x":0.5,"y":-1.4343,"n":27146},{"x":1.0,"y":-1.6878,"n":3383},{"x":1.5,"y":-3.079,"n":139}];
-const PETS_SERIES=[{"id":"582","pts":[[0.0,2.644626],[0.001032,2.6376],[0.009375,2.886686],[0.009951,3.105311],[0.010528,3.027709],[0.011682,2.961175],[0.013124,2.915822],[0.014693,3.02471],[0.014921,3.240781],[0.015933,3.236159],[0.016438,3.063318],[0.017502,2.919841],[0.017704,3.024274],[0.018208,3.425755],[0.019221,3.223501],[0.01997,3.028947],[0.021,2.888357],[0.022788,3.039699],[0.024239,3.042417],[0.024596,2.976564],[0.025017,2.933979],[0.026872,3.459006],[0.028173,2.966586],[0.030725,2.699527],[0.032207,3.003083],[0.033228,2.847977],[0.034249,2.888796],[0.03476,3.087844],[0.051827,2.800853],[0.052317,2.71395],[0.058316,2.709407],[0.074811,3.088541],[0.074905,3.128158],[0.075031,3.009887],[0.077626,2.904471],[0.078215,2.928476],[0.079687,2.905566],[0.080438,3.087011],[0.080734,2.927751],[0.081028,2.960154],[0.095911,2.869879],[0.096192,2.974119],[0.096683,3.256199],[0.097171,3.074211],[0.097306,3.341449],[0.098649,3.52081],[0.104704,3.697209],[0.105498,3.780223],[0.105896,3.875562],[0.106294,3.895046],[0.106433,3.945931],[0.106831,3.924853],[0.107229,3.32726],[0.107627,3.874199],[0.108025,3.92544],[0.108421,3.915415],[0.108819,3.651494],[0.109315,3.937395],[0.109354,3.984337],[0.109509,3.806431],[0.112431,3.634557],[0.112734,3.701387],[0.113514,3.549621],[0.113818,3.659554],[0.114118,3.538138],[0.114418,3.699028],[0.114721,3.643375],[0.115021,3.789796],[0.115625,3.729408],[0.115925,3.36986],[0.117432,3.577114],[0.120244,3.927905],[0.120879,3.989929],[0.121515,3.905742],[0.121769,3.935286],[0.122086,3.850099],[0.123043,3.824785],[0.123995,3.808815],[0.124313,3.886007],[0.124948,3.832684],[0.125139,3.742226],[0.129649,3.439892],[0.130831,3.674623],[0.131424,3.589353],[0.132013,3.885339],[0.133256,3.121135],[0.133848,3.454613],[0.135948,3.612211],[0.13713,3.538732],[0.14146,3.311711],[0.142692,3.398666],[0.14272,3.218271],[0.148568,3.540107],[0.154186,3.386766],[0.1548,3.422597],[0.155414,3.581513],[0.156028,3.537196],[0.156642,3.498993],[0.157316,3.652928],[0.15793,3.655544],[0.158544,3.650999],[0.158851,3.60111],[0.159158,3.604157],[0.159772,3.553664],[0.160757,3.497193],[0.161181,3.561415],[0.161713,3.597459],[0.162776,3.782184],[0.163305,3.557753],[0.163838,3.93407],[0.164964,3.719197],[0.165497,3.820327],[0.166026,3.895351],[0.167088,3.844119],[0.167621,3.529158],[0.16815,3.754925],[0.168415,3.725054],[0.169417,3.639611],[0.170081,3.404234],[0.171411,3.349066],[0.172075,3.206562],[0.172738,3.068202],[0.173401,3.365142],[0.174065,3.433367],[0.175258,3.323705],[0.200782,3.500453],[0.204102,3.650204],[0.207423,3.424683],[0.210743,3.107912],[0.217384,3.1438],[0.219293,3.138949],[0.222613,3.02796],[0.225934,3.177235],[0.232575,3.884811],[0.235895,3.776249],[0.239215,3.775391],[0.242536,2.9144],[0.244993,2.874029],[0.246826,2.93499],[0.247104,3.116506],[0.247382,2.941445],[0.247936,3.18361],[0.248213,3.307291],[0.248491,3.324944],[0.248629,3.158587],[0.248907,3.379141],[0.249184,3.265394],[0.249461,3.206497],[0.250017,3.887407],[0.250571,3.481646],[0.251926,3.465757],[0.253158,3.148378],[0.253432,3.226404],[0.253705,3.226],[0.253979,3.278148],[0.254254,3.327961],[0.254801,3.357901],[0.254942,3.225863],[0.255224,3.127194],[0.25607,3.025967],[0.256352,3.329187],[0.256634,3.417161],[0.257339,3.267805],[0.257621,3.338941],[0.257903,3.437618],[0.258185,3.241179],[0.258467,3.219704],[0.259327,3.150846],[0.259609,3.359636],[0.259891,3.17584],[0.260173,3.15465],[0.260737,3.08778],[0.261019,3.004968],[0.261428,2.996485],[0.26171,3.102825],[0.261992,3.141267],[0.262274,3.058391],[0.262556,3.068756],[0.262838,3.116152],[0.26312,3.299677],[0.263704,3.12579],[0.26398,2.889143],[0.264256,2.848942],[0.264533,3.141177],[0.264809,3.099633],[0.265085,2.994934],[0.265362,3.141024],[0.265486,2.965116],[0.265764,3.210272],[0.26604,3.044874],[0.266316,2.926884],[0.266593,3.210226],[0.266869,3.163946],[0.267145,3.143402],[0.267422,3.04918],[0.267893,3.205849],[0.268175,3.244133],[0.268457,3.109342],[0.268739,3.134569],[0.269021,3.23583]]},{"id":"581","pts":[[0.0,3.253419],[0.006159,3.22647],[0.00702,3.518777],[0.007494,3.746571],[0.008356,3.497539],[0.009217,3.20276],[0.010078,3.773678],[0.01094,3.15453],[0.011801,3.723942],[0.012663,3.193723],[0.014773,3.364871],[0.015634,3.126967],[0.016496,3.249741],[0.017357,3.311833],[0.018219,3.079772],[0.01889,3.047717],[0.018955,3.469813],[0.019078,3.004621],[0.01957,3.311805],[0.019693,3.138258],[0.019874,3.13895],[0.024179,3.367315],[0.024302,3.247229],[0.024493,3.13878],[0.024616,3.282339],[0.024739,3.208621],[0.024862,3.204282],[0.024985,3.101683],[0.025231,3.225877],[0.025532,3.113827],[0.027408,3.11416],[0.027972,3.028648],[0.028254,3.17788],[0.028536,3.023595],[0.028818,3.261018],[0.029234,3.052126],[0.030077,3.041618],[0.030358,3.103193],[0.03064,3.102215],[0.0322,3.139266],[0.03248,3.08279],[0.032762,3.151957],[0.033043,3.258041],[0.033323,3.406313],[0.033464,3.130227],[0.033746,3.201607],[0.034028,3.305603],[0.03431,3.336711],[0.034592,2.959704],[0.035156,3.191225],[0.035438,3.193465],[0.035565,2.964371],[0.035847,3.203683],[0.036129,3.205041],[0.036975,3.572117],[0.037257,2.799032],[0.037539,3.151138],[0.037694,3.145015],[0.038258,3.132338],[0.03854,3.421036],[0.038822,3.231902],[0.039104,3.230279],[0.039386,3.221143],[0.039668,3.242602],[0.03983,3.181079],[0.040112,3.293085],[0.040394,3.23583],[0.040676,3.134569],[0.040958,3.109342],[0.04124,3.244133],[0.041522,3.205849],[0.041993,3.04918],[0.04227,3.143402],[0.042546,3.163946],[0.042822,3.210226],[0.043099,2.926884],[0.043375,3.044874],[0.043652,3.210272],[0.043929,2.965116],[0.044053,3.141024],[0.04433,2.994934],[0.044606,3.099633],[0.044882,3.141177],[0.045159,2.848942],[0.045435,2.889143],[0.045712,3.12579],[0.046295,3.299677],[0.046577,3.116152],[0.046859,3.068756],[0.047141,3.058391],[0.047423,3.141267],[0.047705,3.102825],[0.047987,2.996485],[0.048396,3.004968],[0.048678,3.08778],[0.049242,3.15465],[0.049524,3.17584],[0.049806,3.359636],[0.050088,3.150846],[0.050948,3.219704],[0.05123,3.241179],[0.051512,3.437618],[0.051794,3.338941],[0.052076,3.267805],[0.052781,3.417161],[0.053063,3.329187],[0.053345,3.025967],[0.054191,3.127194],[0.054473,3.225863],[0.054614,3.357901],[0.055161,3.327961],[0.055436,3.278148],[0.05571,3.226],[0.055983,3.226404],[0.056257,3.148378],[0.057489,3.465757],[0.058844,3.481646],[0.059398,3.887407],[0.059954,3.206497],[0.060232,3.265394],[0.060508,3.379141],[0.060786,3.158587],[0.060924,3.324944],[0.061202,3.307291],[0.06148,3.18361],[0.062034,2.941445],[0.062311,3.116506],[0.062589,2.93499],[0.064422,2.874029],[0.066879,2.9144],[0.0702,3.775391],[0.07352,3.776249],[0.076841,3.884811],[0.083481,3.177235],[0.086802,3.02796],[0.090122,3.138949],[0.092031,3.1438],[0.098672,3.107912],[0.101993,3.424683],[0.105313,3.650204],[0.108633,3.500453],[0.134158,3.323705],[0.13535,3.433367],[0.136014,3.365142],[0.136677,3.068202],[0.137341,3.206562],[0.138004,3.349066],[0.139335,3.404234],[0.139998,3.639611],[0.141,3.725054],[0.141265,3.754925],[0.141794,3.529158],[0.142327,3.844119],[0.143389,3.895351],[0.143919,3.820327],[0.144452,3.719197],[0.145577,3.93407],[0.14611,3.557753],[0.14664,3.782184],[0.147702,3.597459],[0.148235,3.561415],[0.148658,3.497193],[0.149643,3.553664],[0.150257,3.604157],[0.150564,3.60111],[0.150871,3.650999],[0.151485,3.655544],[0.152099,3.652928],[0.152773,3.498993],[0.153387,3.537196],[0.154001,3.581513],[0.154615,3.422597],[0.155229,3.386766],[0.160847,3.540107],[0.166695,3.218271],[0.166723,3.398666],[0.167955,3.311711],[0.172285,3.538732],[0.173467,3.612211],[0.175567,3.454613],[0.17616,3.121135],[0.177402,3.885339],[0.177991,3.589353],[0.178584,3.674623],[0.179766,3.439892],[0.184276,3.742226],[0.184467,3.832684],[0.185102,3.886007],[0.18542,3.808815],[0.186373,3.824785],[0.187329,3.850099],[0.187647,3.935286],[0.187901,3.905742],[0.188536,3.989929],[0.189171,3.927905],[0.191984,3.577114],[0.193491,3.36986],[0.193791,3.729408],[0.194394,3.789796],[0.194694,3.643375]]},{"id":"459","pts":[[0.0,8.43],[0.001326,8.24],[0.001713,8.73],[0.002486,8.87],[0.003702,8.32],[0.00442,7.5],[0.005083,8.29],[0.007657,8.45],[0.015195,9.96],[0.023096,9.58],[0.023491,9.07],[0.023886,8.0],[0.024281,9.08],[0.026877,10.3],[0.027667,9.01],[0.028458,9.24],[0.029756,8.81],[0.030659,8.92],[0.03327,9.1],[0.034044,8.01],[0.034767,8.83],[0.036368,8.51],[0.037039,8.87],[0.037866,8.39],[0.038589,8.76],[0.039283,8.41],[0.04027,9.49],[0.040984,9.59],[0.041697,9.77],[0.042575,9.73],[0.044111,8.25],[0.044934,9.7],[0.046416,11.21],[0.047379,10.5],[0.048064,10.21],[0.048696,9.39],[0.049328,10.21],[0.050118,10.37],[0.050856,9.35],[0.05133,8.3],[0.051909,9.09],[0.052699,8.47],[0.054332,9.65],[0.055125,10.56],[0.056239,9.6],[0.057883,10.44],[0.058519,10.38],[0.059368,10.22],[0.060481,9.66],[0.061807,9.63],[0.062602,9.25],[0.063202,9.61],[0.063856,9.79],[0.064619,9.8],[0.068651,9.0],[0.069468,9.61],[0.070504,8.28],[0.071711,8.13],[0.073372,8.23],[0.075285,8.62],[0.076643,9.67],[0.078405,9.64],[0.079289,8.15],[0.082002,9.63],[0.082827,9.51],[0.084183,10.62],[0.085363,8.79],[0.086306,8.58],[0.087363,10.33],[0.08842,11.19],[0.089024,11.02],[0.090735,7.78],[0.091741,8.06],[0.092597,8.3],[0.094803,7.76],[0.095723,9.74],[0.0974,11.5],[0.098591,9.73],[0.100323,7.99],[0.102109,6.99],[0.102957,9.04],[0.103965,8.09],[0.10476,8.47],[0.105927,6.95],[0.106881,7.15],[0.107359,8.95],[0.108101,10.51],[0.109342,9.74],[0.109505,10.66],[0.110048,8.93],[0.110677,8.55],[0.111412,8.87],[0.111832,9.4],[0.113301,9.8],[0.114351,9.94],[0.115086,10.32],[0.117027,9.9],[0.117552,10.42],[0.118582,10.94],[0.120503,13.36],[0.121351,10.61],[0.122538,11.56],[0.123725,10.45],[0.124516,9.51],[0.125307,13.64],[0.126211,12.26],[0.128002,13.98],[0.129434,14.99],[0.134198,14.35],[0.13581,15.33],[0.13891,17.99],[0.140837,14.86],[0.143628,14.6],[0.144804,13.95],[0.145327,10.99],[0.145784,11.83],[0.147026,15.53],[0.148007,14.51],[0.149052,16.43],[0.149706,10.89],[0.15035,14.26],[0.151575,12.82],[0.152416,13.61],[0.153125,16.29],[0.153922,14.44],[0.154586,16.39],[0.155428,15.26],[0.156092,15.08],[0.156882,12.94],[0.157406,12.75],[0.158018,10.32],[0.15876,10.67],[0.159372,10.53],[0.160726,10.88],[0.161425,16.17],[0.16208,11.24],[0.162735,14.12],[0.163338,13.24],[0.16407,14.84],[0.16463,13.96],[0.164932,16.55],[0.165535,14.45],[0.166828,15.93],[0.167646,14.48],[0.16812,15.86],[0.168766,15.98],[0.171458,12.86],[0.17171,13.98],[0.172297,16.53],[0.172968,12.18],[0.173555,13.34],[0.174226,16.47],[0.17473,14.91],[0.175401,16.36],[0.175875,13.89],[0.176693,16.17],[0.177339,16.68],[0.178589,15.48],[0.179278,16.13],[0.179881,16.31],[0.181734,15.11],[0.182345,16.06],[0.183044,22.94],[0.183699,14.98],[0.184354,18.31],[0.184987,20.23],[0.187761,12.92],[0.188427,11.91],[0.189281,13.01],[0.190196,12.78],[0.191019,13.29],[0.191904,12.78],[0.192819,17.78],[0.193612,16.92],[0.194466,12.5],[0.195137,16.44],[0.195991,11.06],[0.196601,13.15],[0.197355,13.39],[0.198102,14.63],[0.199836,10.85],[0.20157,14.69],[0.202407,15.95],[0.203274,11.8],[0.204141,12.19],[0.205097,15.69],[0.205994,9.69],[0.206915,10.94],[0.207836,10.84],[0.208696,13.73],[0.209607,12.21],[0.210136,13.08],[0.210857,14.77],[0.211579,13.82],[0.2123,10.58],[0.213021,14.14],[0.213743,16.45],[0.214332,17.38],[0.215166,12.63],[0.215706,15.06]]}];
-function fitSlope(pts){
-  const n=pts.length; let mx=0,my=0;
-  pts.forEach(p=>{mx+=p.x;my+=p.y;}); mx/=n; my/=n;
-  let sxy=0,sxx=0; pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my); sxx+=(p.x-mx)**2;});
-  return sxy/sxx;
+function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function makeNormal(rng){let spare=null; return function(){if(spare!==null){const s=spare; spare=null; return s;} let u=0,v=0,s=0; do{u=rng()*2-1; v=rng()*2-1; s=u*u+v*v;}while(s>=1||s===0); const m=Math.sqrt(-2*Math.log(s)/s); spare=v*m; return u*m;};}
+function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
+function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
+function ols(xs, ys) {const mx=xs.reduce((a,b)=>a+b,0)/xs.length, my=ys.reduce((a,b)=>a+b,0)/ys.length; let sxx=0, sxy=0; for(let i=0;i<xs.length;i++){sxx+=(xs[i]-mx)**2; sxy+=(xs[i]-mx)*(ys[i]-my);} const b=sxy/sxx; const a=my-b*mx; let ssr=0; for(let i=0;i<xs.length;i++){const yh=a+b*xs[i]; ssr+=(ys[i]-yh)**2;} const sres=Math.sqrt(ssr/(xs.length-2)); const seB=sres/Math.sqrt(sxx); return {a, b, seB, t:b/seB}; }
+function olsThroughOrigin(xs, ys) { let sxx=0, sxy=0; for(let i=0;i<xs.length;i++){sxx+=xs[i]*xs[i]; sxy+=xs[i]*ys[i];} const b=sxy/sxx; let ssr=0; for(let i=0;i<xs.length;i++){const yh=b*xs[i]; ssr+=(ys[i]-yh)**2;} const sres=Math.sqrt(ssr/(xs.length-1)); const seB=sres/Math.sqrt(sxx); return {b, seB, t:b/seB};}
+
+// Tree generation (random coalescent), with BM trait simulation
+function genTree(N, rng) {
+  // Build a random coalescent: leaves merge pairwise until one node
+  const nodes = [];
+  for(let i=0;i<N;i++) nodes.push({id:i, isTip:true, name:"sp"+(i+1), depth:0});
+  let next=N; let active=[...nodes];
+  while(active.length>1) {
+    const i=Math.floor(rng()*active.length); const j=Math.floor(rng()*active.length); if(i===j) continue;
+    const a=active[i], b=active[j];
+    const t=rng()*0.5+0.1; // branch length
+    const parent={id:next++, isTip:false, name:"n"+next, children:[a,b], branchA:t, branchB:t, depth:Math.max(a.depth, b.depth)+t};
+    active=active.filter(n=>n!==a&&n!==b); active.push(parent); nodes.push(parent);
+  }
+  return active[0]; // root
 }
-const REAL_SLOPE=fitSlope(PETS_CURVE);
-function plotLogLog(canvasId, series, opts){
-  const cv=document.getElementById(canvasId); const {ctx,W,H}=setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const pad={l:62,r:16,t:16,b:44};
-  const all=series.flatMap(s=>s.pts);
-  const xs=all.map(p=>p.x), ys=all.map(p=>p.y);
-  const f=makeFrame(pad,W,H,Math.min(...xs)-0.3,Math.max(...xs)+0.3,Math.min(...ys)-0.3,Math.max(...ys)+0.3);
-  drawAxes(ctx,f,opts.xl||"interval  (powers of ten)",opts.yl||"rate  (powers of ten)");
-  series.forEach(s=>{
-    ctx.strokeStyle=s.col; ctx.lineWidth=2; ctx.beginPath();
-    s.pts.forEach((p,i)=>{const x=f.x(p.x),y=f.y(p.y); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-    ctx.stroke();
-    ctx.fillStyle=s.col;
-    s.pts.forEach(p=>{ctx.beginPath();ctx.arc(f.x(p.x),f.y(p.y),3,0,2*Math.PI);ctx.fill();});
-    if(s.label){ctx.font="12px -apple-system";ctx.textAlign="left";
-      ctx.fillText(s.label,f.pad.l+8,f.y(s.pts[0].y)-8);}
-  });
+function simBM(root, rng, sigma=1) {
+  const normal=makeNormal(rng);
+  function recurse(node, parentVal, branchLen) {
+    const v = parentVal + sigma*Math.sqrt(branchLen)*normal();
+    node.value=v;
+    if (!node.isTip) {recurse(node.children[0], v, node.branchA); recurse(node.children[1], v, node.branchB);}
+  }
+  root.value=0; if (!root.isTip) {recurse(root.children[0], 0, root.branchA); recurse(root.children[1], 0, root.branchB);}
 }
-function drawStageB(){
-  plotLogLog("l20plotB",[{pts:PETS_CURVE,col:"#b23a48",label:"1,400 real series"}],{});
-  document.getElementById("l20B_slope").textContent=REAL_SLOPE.toFixed(2);
-  document.getElementById("l20B_span").textContent=
-    (PETS_CURVE[PETS_CURVE.length-1].x-PETS_CURVE[0].x)+" powers of ten";
+function getTips(root) {const tips=[]; function rec(n){if(n.isTip) tips.push(n); else {rec(n.children[0]); rec(n.children[1]);}} rec(root); return tips;}
+function pic(root, key="value") {
+  const contrasts=[]; const branchSums=[];
+  function rec(node) {
+    if (node.isTip) return {val:node[key], extra:0};
+    const a=rec(node.children[0]); const b=rec(node.children[1]);
+    const ta=node.branchA+a.extra; const tb=node.branchB+b.extra;
+    const c = (a.val - b.val) / Math.sqrt(ta + tb);
+    contrasts.push(c); branchSums.push(ta+tb);
+    const valHere = (a.val/ta + b.val/tb) / (1/ta + 1/tb);
+    const extraHere = (ta*tb)/(ta+tb);
+    return {val: valHere, extra: extraHere};
+  }
+  rec(root);
+  return contrasts;
 }
 
-/* ---------- Stage C: which process gives that slope ---------- */
-const C_KINDS={
-  walk:{ label:"wandering",
-    note:"A trait wandering with no destination. Each step is independent, so a long gap accumulates the steps but the distance grows only as the square root of the time — the measured rate falls, but only half as fast as the fossils do.",
-    step:(prev,rng)=>prev+gauss(rng) },
-  trend:{ label:"a steady trend",
-    note:"A trait moving the same amount every step. Over any window the distance is proportional to the time, so the rate is the same whatever window you use. A flat line — nothing like the fossils.",
-    step:(prev)=>prev+0.15 },
-  static:{ label:"going nowhere",
-    note:"A trait not going anywhere at all, just bouncing around a fixed value. Over a long gap the two ends are both near the same place, so the distance stops growing while the time keeps going. This is the steepest of the three, and it is the closest to what the fossils actually do.",
-    step:(_,rng)=>gauss(rng) }
-};
-function simCurve(kind){
-  const rng=mulberry32(pageSeed("l20curve"+kind)), reps=60, N=200, bins={};
-  for(let s=0;s<reps;s++){
-    const x=[0];
-    for(let i=1;i<N;i++) x.push(C_KINDS[kind].step(x[i-1],rng));
-    for(let i=0;i<N;i+=7) for(let j=i+1;j<N;j+=7){
-      const dt=j-i, r=Math.abs(x[j]-x[i])/dt;
-      if(r>0){const k=Math.round(Math.log10(dt)*2)/2; (bins[k]=bins[k]||[]).push(Math.log10(r));}
-    }
-  }
-  return Object.keys(bins).map(Number).sort((a,b)=>a-b)
-    .filter(k=>bins[k].length>=20)
-    .map(k=>{const v=bins[k].sort((a,b)=>a-b); return {x:k,y:v[Math.floor(v.length/2)]};});
-}
-const sC={kind:"walk",unlocked:false};
-function drawStageC(){
-  const c=simCurve(sC.kind);
-  // shift the simulated curve to sit alongside the real one for comparison
-  const off=PETS_CURVE[0].y-c[0].y;
-  const shifted=c.map(p=>({x:p.x+PETS_CURVE[0].x-c[0].x,y:p.y+off}));
-  plotLogLog("l20plotC",[
-    {pts:PETS_CURVE,col:"#b23a48",label:"the fossils"},
-    {pts:shifted,col:"#2f6b8f",label:C_KINDS[sC.kind].label}
-  ],{});
-  document.getElementById("l20C_sim").textContent=fitSlope(c).toFixed(2);
-  document.getElementById("l20C_real").textContent=REAL_SLOPE.toFixed(2);
-  document.getElementById("l20C_note").textContent=C_KINDS[sC.kind].note;
-  document.querySelectorAll(".l20tab").forEach(t=>{
-    const on=t.dataset.k===sC.kind;
-    t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
-      (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
-  });
-}
-document.querySelectorAll(".l20tab").forEach(t=>t.addEventListener("click",()=>{
-  if(!sC.unlocked) return;
-  sC.kind=t.dataset.k; drawStageC();
-  if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("C");
-}));
-(function wireC(){
-  const btn=document.getElementById("l20submitC");
-  document.querySelectorAll('input[name="qC"]').forEach(r=>r.addEventListener("change",()=>{btn.disabled=false;}));
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:5, B:3, C:3, D:2, E:1 };
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=(stage==="D"?"toggles":(stage==="C"?"values":"seeds")); c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"E",E:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
+/* Scored scaffold slot each stage's questions write to. A stage absent from
+   this map still gates and still records engagement, but is not scored. */
+const PRED_POS = {A:0, B:1, C:2, D:3, E:4};
+
+/* Graded prediction gate. `answers[i]` is either the winning value= token for a
+   radio group, or a predicate over the array of checked values for a checkbox
+   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
+   revealed on screen — the student finds out by running it. */
+function wirePrediction(stage, predId, names, answers, controlsId){
+  const root=document.getElementById(predId); const btn=root.querySelector("button");
+  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
+  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
+  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
   btn.addEventListener("click",()=>{
-    const p=document.querySelector('input[name="qC"]:checked'); if(!p) return;
-    if(typeof Score!=="undefined"&&Score.recordCheckpoint) Score.recordCheckpoint(0, p.value==="static");
-    btn.style.display="none"; sC.unlocked=true;
-    const b=document.getElementById("l20Cbox"); b.style.opacity="1"; b.style.pointerEvents="auto";
-    drawStageC();
-  });
-})();
-
-/* ---------- Stage D: one real series, sliding window ---------- */
-const sD={i:0,w:2};
-function drawStageD(){
-  const ser=PETS_SERIES[sD.i], pts=ser.pts;
-  const cv=document.getElementById("l20plotD"); const {ctx,W,H}=setupCanvas(cv);
-  ctx.clearRect(0,0,W,H);
-  const pad={l:62,r:16,t:16,b:44};
-  const xs=pts.map(p=>p[0]), ys=pts.map(p=>p[1]);
-  const f=makeFrame(pad,W,H,Math.min(...xs),Math.max(...xs),Math.min(...ys),Math.max(...ys));
-  drawAxes(ctx,f,"age (millions of years)","trait");
-  ctx.strokeStyle="#9a9a95"; ctx.lineWidth=1.2; ctx.beginPath();
-  pts.forEach((p,i)=>{const x=f.x(p[0]),y=f.y(p[1]); i?ctx.lineTo(x,y):ctx.moveTo(x,y);}); ctx.stroke();
-  ctx.fillStyle="rgba(47,107,143,0.6)";
-  pts.forEach(p=>{ctx.beginPath();ctx.arc(f.x(p[0]),f.y(p[1]),2.4,0,2*Math.PI);ctx.fill();});
-  // highlight one window
-  const i0=Math.floor((pts.length-sD.w)/2), i1=i0+sD.w;
-  if(i1<pts.length){
-    ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath();
-    ctx.moveTo(f.x(pts[i0][0]),f.y(pts[i0][1])); ctx.lineTo(f.x(pts[i1][0]),f.y(pts[i1][1])); ctx.stroke();
-  }
-  let s=0,n=0;
-  for(let i=0;i+sD.w<pts.length;i++){
-    const dt=Math.abs(pts[i+sD.w][0]-pts[i][0]);
-    if(dt>0 && pts[i][1]>0 && pts[i+sD.w][1]>0){
-      s+=Math.abs(Math.log(pts[i+sD.w][1])-Math.log(pts[i][1]))/dt; n++;
-    }
-  }
-  document.getElementById("l20D_rate").textContent = n ? (s/n).toExponential(2) : "—";
-  document.getElementById("l20D_n").textContent = pts.length;
-  document.querySelectorAll(".l20ser").forEach((t,k)=>{
-    const on=k===sD.i;
-    t.style.cssText="padding:7px 11px;border-radius:4px;cursor:pointer;font-size:13px;border:1px solid "+
-      (on?"#2f6b8f":"#e2e0d9")+";background:"+(on?"#2f6b8f":"#fff")+";color:"+(on?"#fff":"#1d1d1b");
+    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
+      if(typeof key==="function") return !!key(vals);
+      return vals.length===1 && vals[0]===key;});
+    const ol=root.querySelector("ol"); const msg=document.createElement("div");
+    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
+    root.insertBefore(msg, ol); btn.style.display="none";
+    Gates[stage].predicted=true;
+    document.getElementById("explore"+stage).classList.add("shown");
+    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
+    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
+    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
+      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
   });
 }
-(function buildSeriesTabs(){
-  const box=document.getElementById("l20series");
-  box.innerHTML=PETS_SERIES.map((s,i)=>'<button class="l20ser" data-i="'+i+'">series '+s.id+'</button>').join("");
-  box.querySelectorAll(".l20ser").forEach(b=>b.addEventListener("click",()=>{
-    sD.i=+b.dataset.i; drawStageD();
-    if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
-  }));
-})();
-document.getElementById("l20D_w").addEventListener("input",e=>{
-  sD.w=+e.target.value; document.getElementById("l20D_wOut").textContent=sD.w;
-  drawStageD(); if(typeof Score!=="undefined"&&Score.bumpManipulation) Score.bumpManipulation("D");
-});
 
-  Score.init({ moduleId: "lesson20", version: 2, pretest: 0, scaffold: 1, posttest: 0,
-    mountNamePrompt: "#score-name", mountFinalCode: "#score-final",
-    onReady: function () { try { drawStageB(); drawStageC(); drawStageD(); } catch (e) {} } });
-  document.getElementById("finishBtn").addEventListener("click", function () { Score.finish(); });
+const sA = { seed:42, n:30 };
+function drawStageA() {
+  const rng=mulberry32(sA.seed); const tree=genTree(sA.n, rng);
+  simBM(tree, rng, 1);
+  // Save x values, then simulate y independently
+  const tipsX=getTips(tree); const xs=tipsX.map(t=>t.value);
+  simBM(tree, rng, 1);
+  const tipsY=getTips(tree); const ys=tipsY.map(t=>t.value);
+  const fit=ols(xs, ys);
+  // approx P-value from t (df = N-2)
+  const df=sA.n-2; const pApprox=2*(1-pnorm(Math.abs(fit.t)));
+  document.getElementById("A_n").textContent=sA.n; document.getElementById("A_slope").textContent=fit.b.toFixed(3); document.getElementById("A_p").textContent=pApprox.toFixed(3);
+  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const xMin=Math.min(...xs)*1.1, xMax=Math.max(...xs)*1.1, yMin=Math.min(...ys)*1.1, yMax=Math.max(...ys)*1.1;
+  const f=makeFrame(pad,W,H,xMin,xMax,yMin,yMax);
+  drawAxes(ctx,f,"trait x","trait y",5,4,v=>v.toFixed(1),v=>v.toFixed(1));
+  ctx.fillStyle="#2f6b8f"; for(let i=0;i<xs.length;i++){ctx.beginPath(); ctx.arc(f.x(xs[i]),f.y(ys[i]),4,0,2*Math.PI); ctx.fill();}
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(f.x(xMin),f.y(fit.a+fit.b*xMin)); ctx.lineTo(f.x(xMax),f.y(fit.a+fit.b*xMax)); ctx.stroke();
+}
+function pnorm(z) { return 0.5*(1+erf(z/Math.sqrt(2))); }
+function erf(x) { const a=0.3275911, p=0.254829592, q=-0.284496736, r=1.421413741, s=-1.453152027, t=1.061405429; const sign=x<0?-1:1; x=Math.abs(x); const tInv=1/(1+a*x); const y=1-(p+q*tInv+r*tInv*tInv+s*tInv*tInv*tInv+t*tInv*tInv*tInv*tInv)*tInv*Math.exp(-x*x); return sign*y; }
+["A_seedIn","A_nIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="A_seedIn"){sA.seed=v; document.getElementById("A_seedOut").textContent=v;} else {sA.n=v; document.getElementById("A_nOut").textContent=v;} drawStageA(); if(id==="A_seedIn") bumpExplore("A");}));
+document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson19_stageA.R",`library(ape); set.seed(${sA.seed}); N <- ${sA.n}
+tr <- rcoal(N); x <- rTraitCont(tr); y <- rTraitCont(tr)
+summary(lm(y ~ x))
+`);});
+wirePrediction("A","predA",["qA1"],["more"],"controlsA"); drawStageA();
+
+const sB = { seed:42, corr:0 };
+function drawStageB() {
+  const rng=mulberry32(sB.seed); const tree=genTree(30, rng);
+  simBM(tree, rng, 1); const tipsX=getTips(tree); const xs=tipsX.map(t=>t.value);
+  // y = correlated with x via shared BM noise (approx)
+  simBM(tree, rng, 1); const tipsY=getTips(tree); const ys=tipsY.map((t,i)=>sB.corr*xs[i]+Math.sqrt(1-sB.corr*sB.corr)*t.value);
+  // PIC contrasts
+  for(let i=0;i<tipsX.length;i++){tipsX[i].xVal=xs[i]; tipsX[i].yVal=ys[i];}
+  const cx=pic(tree, "xVal"); const cy=pic(tree, "yVal");
+  const naive=ols(xs,ys); const picFit=olsThroughOrigin(cx, cy);
+  const pPIC = 2*(1-pnorm(Math.abs(picFit.t)));
+  document.getElementById("B_naive").textContent=naive.b.toFixed(3); document.getElementById("B_pic").textContent=picFit.b.toFixed(3); document.getElementById("B_p").textContent=pPIC.toFixed(3);
+  const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:50,r:12,t:18,b:38}; const xMin=Math.min(...cx)*1.1, xMax=Math.max(...cx)*1.1, yMin=Math.min(...cy)*1.1, yMax=Math.max(...cy)*1.1;
+  const f=makeFrame(pad,W,H,xMin,xMax,yMin,yMax);
+  drawAxes(ctx,f,"contrast of x","contrast of y",5,4,v=>v.toFixed(2),v=>v.toFixed(2));
+  ctx.fillStyle="#2f6b8f"; for(let i=0;i<cx.length;i++){ctx.beginPath(); ctx.arc(f.x(cx[i]),f.y(cy[i]),4,0,2*Math.PI); ctx.fill();}
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(f.x(xMin),f.y(picFit.b*xMin)); ctx.lineTo(f.x(xMax),f.y(picFit.b*xMax)); ctx.stroke();
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("PIC slope = "+picFit.b.toFixed(3), f.pad.l+10, f.pad.t+12);
+}
+["B_seedIn","B_corrIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="B_seedIn"){sB.seed=v; document.getElementById("B_seedOut").textContent=v;} else {sB.corr=v; document.getElementById("B_corrOut").textContent=v.toFixed(1);} drawStageB(); if(id==="B_seedIn") bumpExplore("B");}));
+document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson19_stageB.R",`library(ape); set.seed(${sB.seed})
+tr <- rcoal(30); x <- rTraitCont(tr); y <- rTraitCont(tr)
+summary(lm(pic(y,tr) ~ 0 + pic(x,tr)))
+`);});
+wirePrediction("B","predB",["qB1"],["zero"],"controlsB"); drawStageB();
+
+const sC = { trueLambda:1, seed:42 };
+function drawStageC() {
+  // Generate a trait with a given Pagel's lambda by mixing BM signal (covariance) with white noise
+  const rng=mulberry32(sC.seed); const tree=genTree(40, rng);
+  simBM(tree, rng, 1);
+  const tips=getTips(tree);
+  // Scale phylogenetic component by lambda
+  const normal=makeNormal(rng);
+  for(let i=0;i<tips.length;i++) tips[i].observed = Math.sqrt(sC.trueLambda)*tips[i].value + Math.sqrt(1-sC.trueLambda)*normal();
+  // Profile likelihood: at each lambda, compute log-likelihood (gaussian under tree covariance)
+  // Simplified: use the ratio of PIC variance to OLS variance as proxy
+  const ll=[]; const lambdas=[];
+  for(let lam=0; lam<=1; lam+=0.05) {
+    lambdas.push(lam);
+    // Effective trait: lam*observed (BM signal) + (1-lam)*observed (treated as independent)
+    // Simplified profile: SSR from PIC under scaling lam
+    for(let i=0;i<tips.length;i++) tips[i].scaled = tips[i].observed * Math.sqrt(lam) + tips[i].observed * Math.sqrt(1-lam);
+    const contrasts=pic(tree, "scaled");
+    const varC = contrasts.reduce((a,b)=>a+b*b,0)/contrasts.length;
+    // Use -log(varC) as a proxy for log-likelihood (higher when contrasts are less spread under correct lam)
+    ll.push(-tips.length*0.5*Math.log(varC));
+  }
+  const maxLL=Math.max(...ll); const bestIdx=ll.indexOf(maxLL); const bestLam=lambdas[bestIdx];
+  // 95% CI: λ where logLik drops by 1.92
+  let loLam=lambdas[0], hiLam=lambdas[lambdas.length-1];
+  for(let i=bestIdx; i>=0; i--){if(ll[i]<maxLL-1.92){loLam=lambdas[i+1]||lambdas[i]; break;}}
+  for(let i=bestIdx; i<ll.length; i++){if(ll[i]<maxLL-1.92){hiLam=lambdas[i-1]||lambdas[i]; break;}}
+  document.getElementById("C_true").textContent=sC.trueLambda.toFixed(1); document.getElementById("C_best").textContent=bestLam.toFixed(2); document.getElementById("C_ci").textContent="("+loLam.toFixed(2)+", "+hiLam.toFixed(2)+")";
+  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:60,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,1,Math.min(...ll),Math.max(...ll));
+  drawAxes(ctx,f,"Pagel's λ","log-likelihood (proxy)",5,4,v=>v.toFixed(1),v=>v.toFixed(1));
+  ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<ll.length;i++){const x=f.x(lambdas[i]),y=f.y(ll[i]); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(bestLam),f.pad.t); ctx.lineTo(f.x(bestLam),f.pad.t+f.H); ctx.stroke();
+  ctx.strokeStyle="#888"; ctx.beginPath(); ctx.moveTo(f.x(sC.trueLambda),f.pad.t); ctx.lineTo(f.x(sC.trueLambda),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
+}
+["C_trueIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="C_trueIn"){sC.trueLambda=v; document.getElementById("C_trueOut").textContent=v.toFixed(1); bumpExplore("C");} else {sC.seed=v; document.getElementById("C_seedOut").textContent=v;} drawStageC();}));
+document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson19_stageC.R",`library(phytools); library(ape)
+set.seed(${sC.seed}); tr <- rcoal(40); x <- rTraitCont(tr)
+phylosig(tr, x, method = "lambda", test = TRUE)
+`);});
+wirePrediction("C","predC",["qC1"],["one"],"controlsC"); drawStageC();
+
+const sD = { seed:42, data:null };
+async function loadAvonet() {
+  try { const r=await fetch("../../data/clean/avonet_birds.json"); sD.data=await r.json(); }
+  catch(e){ sD.data=null; }
+  drawStageD();
+}
+function drawStageD() {
+  // Pull hand-wing index and a proxy for migration distance (or another related trait)
+  let pairs=[];
+  if (sD.data && Array.isArray(sD.data) && sD.data.length) {
+    const rng=mulberry32(sD.seed);
+    const sample = sD.data.slice().sort(()=>rng()-0.5).slice(0, 200);
+    for(const r of sample) {
+      const hwi=+r.hand_wing_index || +r.HWI || +r.hwi;
+      const mig=+r.migration || +r.mig_distance || +r.range_size;
+      if(isFinite(hwi)&&isFinite(mig)) pairs.push({x:hwi, y:mig, family:r.family||"unknown"});
+    }
+  }
+  if (pairs.length===0) {
+    // Fallback: simulate
+    const rng=mulberry32(sD.seed); const normal=makeNormal(rng);
+    for(let i=0;i<150;i++){const x=20+15*normal(); const y=Math.max(0, 0.5*x + 5*normal()); pairs.push({x, y, family:"fam"+(i%10)});}
+  }
+  const xs=pairs.map(p=>p.x), ys=pairs.map(p=>p.y);
+  const naive=ols(xs,ys);
+  // Approximate PIC by using within-family contrasts (rough)
+  const fams={}; for(const p of pairs){if(!fams[p.family]) fams[p.family]=[]; fams[p.family].push(p);}
+  const cx=[], cy=[];
+  for(const f of Object.keys(fams)) {
+    const arr=fams[f]; if(arr.length<2) continue;
+    // Take pairwise differences within family as contrasts
+    for(let i=0;i<arr.length-1;i++){cx.push(arr[i].x - arr[i+1].x); cy.push(arr[i].y - arr[i+1].y);}
+  }
+  const pic=olsThroughOrigin(cx, cy);
+  document.getElementById("D_n").textContent=pairs.length; document.getElementById("D_naive").textContent=naive.b.toFixed(3); document.getElementById("D_pic").textContent=pic.b.toFixed(3);
+  const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const pad={l:60,r:12,t:18,b:38}; const xMin=Math.min(...xs)*0.95, xMax=Math.max(...xs)*1.05, yMin=Math.min(...ys)*0.95, yMax=Math.max(...ys)*1.05;
+  const f=makeFrame(pad,W,H,xMin,xMax,yMin,yMax);
+  drawAxes(ctx,f,"hand-wing index","trait y (e.g. range)",5,4,v=>v.toFixed(0),v=>v.toFixed(0));
+  ctx.fillStyle="rgba(47,107,143,0.6)"; for(const p of pairs){ctx.beginPath(); ctx.arc(f.x(p.x),f.y(p.y),3,0,2*Math.PI); ctx.fill();}
+  // Naive line
+  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(f.x(xMin),f.y(naive.a+naive.b*xMin)); ctx.lineTo(f.x(xMax),f.y(naive.a+naive.b*xMax)); ctx.stroke();
+  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("naive slope = "+naive.b.toFixed(3), f.pad.l+10, f.pad.t+12);
+}
+document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
+document.getElementById("D_redraw").addEventListener("click",()=>{const s=Math.floor(Math.random()*999)+1; document.getElementById("D_seedIn").value=s; document.getElementById("D_seedIn").dispatchEvent(new Event("input")); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson19_stageD.R",`library(ape); library(nlme)
+birds <- read.csv("data/clean/avonet_birds.csv")
+m <- gls(migration_distance ~ hand_wing_index, data = birds, correlation = corBrownian(phy = bird_tree))
+summary(m)
+`);});
+wirePrediction("D","predD",["qD1"],["smaller"],"controlsD"); loadAvonet();
+
+/* ====== STAGE E — earthworm Simpson's paradox ====== */
+// Synthetic data: 6 clades × 5 species each. Within-clade slope (body→pH)
+// is positive; across-clade slope is negative because the large-bodied
+// clades occupy more acidic soils.
+// Per-student seed, drawn until the reversal it is built to show is actually
+// present: Stage E asks the student to compare the pooled body→pH slope with
+// the within-clade ones, and about one seed in forty produces a draw where the
+// within-clade slopes do not average positive. See seedSatisfying() in sim.js.
+function buildWorms(seed){
+  const rng = mulberry32(seed);
+  function g(){let u=0,v=0;while(u==0)u=rng();while(v==0)v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const rows = [];
+  const cladeCenters = [
+    {bodyMean: 2.0, pHMean: 7.5},  // small, alkaline
+    {bodyMean: 3.0, pHMean: 7.0},
+    {bodyMean: 4.0, pHMean: 6.4},
+    {bodyMean: 5.5, pHMean: 5.8},
+    {bodyMean: 7.0, pHMean: 5.2},
+    {bodyMean: 8.5, pHMean: 4.6}   // large, acidic
+  ];
+  for (let c = 0; c < cladeCenters.length; c++) {
+    const ctr = cladeCenters[c];
+    for (let i = 0; i < 5; i++) {
+      const bodyDev = g() * 0.7;       // within-clade body size variation
+      const body = ctr.bodyMean + bodyDev;
+      // Within-clade: more body size → more alkaline (positive slope ≈ +0.20)
+      const pHDev = 0.20 * bodyDev + 0.25 * g();
+      const pH = ctr.pHMean + pHDev;
+      rows.push({ body, pH, clade: c });
+    }
+  }
+  return rows;
+}
+const WORM_DATA = buildWorms(seedSatisfying("l19worms", function (seed) {
+  const rows = buildWorms(seed);
+  const slope = (rs) => wormOLS(rs.map(d => d.body), rs.map(d => d.pH)).slope;
+  if (slope(rows) >= 0) return false;             // pooled must run downhill
+  let sum = 0, n = 0;
+  for (let c = 0; c < 6; c++) {
+    const g = rows.filter(d => d.clade === c);
+    if (g.length > 1) { sum += slope(g); n++; }
+  }
+  return n > 0 && sum / n > 0;                    // inside a clade it must run uphill
+}));
+const WORM_COLORS = ["#2f6b8f","#b23a48","#c28a2b","#2f6b3a","#542788","#a52a2a"];
+const sE = { mode: "pool" };
+function wormOLS(xs, ys) {
+  const mx = xs.reduce((a,b)=>a+b,0)/xs.length;
+  const my = ys.reduce((a,b)=>a+b,0)/ys.length;
+  let sxx=0, sxy=0;
+  for (let i=0;i<xs.length;i++){const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; sxy+=dx*dy;}
+  const slope = sxx > 0 ? sxy/sxx : 0;
+  return { slope, intercept: my - slope*mx };
+}
+function drawStageE() {
+  const cv = document.getElementById("plotE"); const {ctx, W, H} = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  const xs = WORM_DATA.map(d=>d.body), ys = WORM_DATA.map(d=>d.pH);
+  const pad = { l: 60, r: 12, t: 20, b: 40 };
+  const xMin = 0, xMax = Math.max(...xs)*1.1;
+  const yMin = Math.min(...ys)*0.9, yMax = Math.max(...ys)*1.05;
+  const f = makeFrame(pad, W, H, xMin, xMax, yMin, yMax);
+  drawAxes(ctx, f, "earthworm body size (cm)", "soil pH", 5, 5, v=>v.toFixed(0), v=>v.toFixed(1));
+  const pooled = wormOLS(xs, ys);
+  const byClade = {};
+  for (const d of WORM_DATA) (byClade[d.clade] = byClade[d.clade] || []).push(d);
+  const cladeFits = {};
+  for (const c in byClade) cladeFits[c] = wormOLS(byClade[c].map(d=>d.body), byClade[c].map(d=>d.pH));
+  // Points
+  for (const d of WORM_DATA) {
+    ctx.fillStyle = (sE.mode === "strat") ? WORM_COLORS[d.clade] : "#1d1d1baa";
+    ctx.beginPath(); ctx.arc(f.x(d.body), f.y(d.pH), 4, 0, 2*Math.PI); ctx.fill();
+  }
+  // Pooled fit
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = (sE.mode === "pool") ? 2.6 : 1.4;
+  ctx.setLineDash(sE.mode === "strat" ? [5,4] : []);
+  ctx.beginPath();
+  ctx.moveTo(f.x(xMin), f.y(pooled.intercept + pooled.slope * xMin));
+  ctx.lineTo(f.x(xMax), f.y(pooled.intercept + pooled.slope * xMax));
+  ctx.stroke(); ctx.setLineDash([]);
+  if (sE.mode === "strat") {
+    for (const c in byClade) {
+      const sub = byClade[c]; const fit = cladeFits[c];
+      const xLo = Math.min(...sub.map(d=>d.body)), xHi = Math.max(...sub.map(d=>d.body));
+      ctx.strokeStyle = WORM_COLORS[c]; ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(f.x(xLo), f.y(fit.intercept + fit.slope*xLo));
+      ctx.lineTo(f.x(xHi), f.y(fit.intercept + fit.slope*xHi));
+      ctx.stroke();
+    }
+  }
+  ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace"; ctx.textAlign = "left";
+  ctx.fillText("pooled slope = " + pooled.slope.toFixed(2) + " pH/cm", f.pad.l+8, f.pad.t+12);
+  // Median within-clade slope
+  const inSlopes = Object.values(cladeFits).map(f=>f.slope).sort((a,b)=>a-b);
+  const medW = inSlopes[Math.floor(inSlopes.length/2)];
+  document.getElementById("E_pool").textContent = pooled.slope.toFixed(2);
+  document.getElementById("E_within").textContent = medW.toFixed(2);
+}
+document.getElementById("E_modeIn").addEventListener("change", (e) => { sE.mode = e.target.value; drawStageE(); bumpExplore("E"); });
+wirePrediction("E","predE",["qE1","qE2"],["flipped","clade"],"controlsE");
+drawStageE();
+
+/* ====== DAG widget — Stage C ====== */
+(function mountDAGc(){
+  if (typeof DAG === "undefined") return;
+  DAG.init({
+    mount: "#dag-l19-mount",
+    nodes: [
+      { id: "clade",  label: "Clade (ancestry)", x: 290, y: 55, type: "categorical", levels: 3 },
+      { id: "trait1", label: "Trait 1",          x: 110, y: 200 },
+      { id: "trait2", label: "Trait 2",          x: 470, y: 200 }
+    ],
+    arrows: [],
+    initialAxes: { x: "trait1", y: "trait2" },
+    initialColor: "clade",
+    n: 240,
+    seed: pageSeed("l19dag"),
+    onChange: () => { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("C"); }
+  });
+})();
+
+Score.init({moduleId:"lesson20", version:4, scaffold:6, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

@@ -19,7 +19,7 @@ Outputs (under data/clean/):
                              ~250 SNPs with genome-wide coverage, starting
                              frequency in [0.1, 0.9], genotyped in most years
                              — small enough to load in the browser for the
-                             drift lesson (lesson11 fetches the .json and
+                             drift lesson (lesson12 fetches the .json and
                              averages 2·freq_total·(1−freq_total) per year)
 
 Alleles in the .ped are coded 1/2 with 0 denoting missing. We tally the

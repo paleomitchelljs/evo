@@ -244,7 +244,7 @@ def report(records, out=sys.stdout):
 
 
 def mod_key(mod):
-    """Sort lesson2 before lesson10, and lessons before scaffolds."""
+    """Sort lesson2 before lesson11, and lessons before scaffolds."""
     m = re.match(r"^([a-z_]*?)(\d*)$", mod)
     prefix, num = (m.group(1), m.group(2)) if m else (mod, "")
     return (prefix, int(num) if num else -1)
