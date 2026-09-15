@@ -18,7 +18,7 @@ your passes rather than more building.
 Every answer key in Arcs 4 and 5, and in the ten lessons graded earlier, was
 measured off the shipped code rather than assumed.
 
-**What is still spec.** Lessons 21–25 each keep three later-stage TODO blocks —
+**What is still spec.** Lessons 22–26 each keep three later-stage TODO blocks —
 the classification drills and real-data stages. Those are deliberately not faked:
 several are already covered by scaffolds (S14, S16, S17, S18, S19, S20), and
 deciding whether to fold the scaffold in or build a separate stage is a
@@ -28,7 +28,10 @@ curricular call.
 lesson to be *about the nature of a linear regression*: the slope of the offspring-on-
 mid-parent line as the share of the children's variation that came down from the
 parents, and the residual as everything else — including the genetic part of
-everything else. Five stages: A one family at a time and then five bands (the
+everything else. **Superseded 2026-09-13** — that sentence is itself the conflation JM
+then called out. The slope *is* the heritability and is not a share of anything; R² is
+the separate number that prices the deterministic part against the stochastic one. See
+the Lesson 8 entry in `docs/LESSON_ATLAS.md`. Five stages: A one family at a time and then five bands (the
 regression built as a separate best guess per band, which turns out to be a line);
 B Galton's 934 children with the line as an input and the variance split as a bar;
 C a model whose leftover comes apart into a genetic block and a life block; D the
@@ -58,7 +61,7 @@ Two things to rule on:
    and Fisher's complaint — to
    `_reference/retired/lessons/lesson8_mendel_ratios_2026-09-03.html`. Two consequences to
    rule on: Arc 2 is still titled "Ratios, baselines, and the two forces that move them"
-   and now opens on a continuous-trait lesson with no ratios in it; and Lesson 9 builds
+   and now opens on a continuous-trait lesson with no ratios in it; and Lesson 10 builds
    Hardy–Weinberg without the Mendelian ratios that used to set it up. Either the arc
    boundary moves so Lesson 8 closes Arc 1 beside Lesson 7, or Mendel returns as its own
    lesson ahead of 9.
@@ -89,8 +92,14 @@ Two things to rule on:
    territory. S26 poses it but the biology-free version is still owed.
 4. **Regenerate `docs/LESSON_ATLAS.md`.** It is banner-flagged as stale and
    should be rebuilt in one pass now that the structure has stopped moving.
-5. **Lesson numbering.** Gaps at 27/28/29/32/33 after the Arc 5 collapse.
-   Renumber in one sweep or not at all — module ids carry the submission codes.
+5. **Lesson numbering — done 2026-09-15.** JM's call: the old `lesson8b` became
+   `lesson9`, and every lesson above it moved up one — files, module ids, titles and
+   cross-references, in a single sweep. `lesson6b` was deliberately left alone.
+   Nothing released was touched: lessons 1–8 and 6b keep their names and their
+   submission codes, and everything from 9 up was still `x` in `LOCKS.txt`, so no
+   code a student has already handed in stops decoding. The gaps left by the Arc 5
+   collapse now sit at 28/29/30/33/34; those are design slots with no file of their
+   own, and they moved with everything else so that no two lessons share a number.
 
 ---
 
@@ -133,21 +142,21 @@ a sample of the target register.
 
 ## P1 — same round, lower cost
 
-- **Rewrite the skeleton TODO specs out of tell-form.** `lesson22.html:52` states
+- **Rewrite the skeleton TODO specs out of tell-form.** `lesson23.html:52` states
   "The ratio dN/dS hovers around 1"; `:61` "Watch dN/dS fall toward 0." Those are
   answers written as page copy and will be pasted as page copy. Rewrite each as
   *control + committed prediction, outcome unstated*.
 - **Fix L22's anchor quotes.** Stage D (`:76`) anchors on neuronal action
   potentials with an inline gloss that renders as literal asterisks and hands over
   the punchline; Stage C (`:67`) anchors on orthologs vs paralogs, a different
-  topic. Same stray-markdown fix in `lesson14.html` and `lesson32.html`.
+  topic. Same stray-markdown fix in `lesson15.html` and `lesson33.html`.
 - **Add streakiness to L1 or L2.** The Lec 10 demo (`:1338` — half the class writes
   fake rolls, half rolls real dice, you sort them almost perfectly) appears in none
   of the 58 student-facing files. L1 currently builds "balance / no lean," which
   serves Thread A. It does not build "randomness is streaky," which is what Arc 2
   runs on.
 - **L34's bookend.** Its spec claims a callback to Lesson 1's motion-not-gravity
-  framing; Lesson 1 has no such framing (`grep` for it returns only lesson34).
+  framing; Lesson 1 has no such framing (`grep` for it returns only lesson35).
   Either retarget the callback to L3's ladder, or — better, since "evolution is the
   net change resulting from many forces" *is* Δz̄ = Cov + E in prose — add the
   decomposition framing to L1 so the bookend becomes true and Thread A gets an

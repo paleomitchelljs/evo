@@ -66,7 +66,7 @@ what-you-see-is-what-didn't-die. Well served except the survivorship leg.
 
 ```
 app/lessons/lesson*.html       29 lessons, all with a working interactive
-                               (27/28/29/32/33 folded away — see below)
+                               (28/29/30/33/34 folded away — see below)
 app/scaffolds/s01–s25.html     25 working drills (20–52 KB each, canvas + handlers)
 app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene dropping
                                — live on the index, UNSCORED, absent from the atlas
@@ -149,22 +149,29 @@ s19, s20) cover skeleton content outright. Real outstanding builds ≈ 8–9, no
 The shipped lesson files carry the 47-unit sequence with an offset. This map is the
 Rosetta stone for the whole project and previously existed only as a Python dict at
 `scripts/check_lessons.py:36-47`. The vocabulary ratchet is checked at the **new**
-position, so e.g. lesson12 is unit 13 and may use a term that unlocks at unit 12.
+position, so e.g. lesson14 is unit L14 at seq 19 and may use a term that unlocks
+earlier in the sequence than its own file number suggests.
+
+**Renumbered 2026-09-15.** `lesson8b` became `lesson9` and everything above it moved
+up one. One side effect worth knowing: from `lesson10` up, the file number and the
+unit number now agree, which they did not before. Two files carry no unit of their
+own and so have no row below — `lesson6b` (fit on half the record, score on the
+other half) and `lesson9` (meiosis by hand, the old `lesson8b`).
 
 | file | unit | seq | | file | unit | seq | | file | unit | seq |
 |---|---|---|---|---|---|---|---|---|---|---|
-| lesson1 | L1 | 1 | | lesson13 | L14 | 19 | | lesson25 | L26 | 37 |
-| lesson2 | L2 | 2 | | lesson14 | L15 | 21 | | lesson26 | L27 | 38 |
-| lesson3 | L4 | 4 | | lesson15 | L16 | 23 | | lesson27 | L28 | 40 |
-| lesson4 | L5 | 5 | | lesson16 | L17 | 24 | | lesson28 | L29 | 41 |
-| lesson5 | L6 | 7 | | lesson17 | L18 | 26 | | lesson29 | L30 | 42 |
-| lesson6 | L7 | 9 | | lesson18 | L19 | 27 | | lesson30 | L31 | 43 |
-| lesson7 | L8 | 12 | | lesson19 | L20 | 29 | | lesson31 | L32 | 44 |
-| lesson8 | L9 | 14 | | lesson20 | L21 | 31 | | lesson32 | L33 | 45 |
-| lesson9 | L10 | 15 | | lesson21 | L22 | 32 | | lesson33 | L34 | 46 |
-| lesson10 | L11 | 16 | | lesson22 | L23 | 33 | | lesson34 | L35 | 47 |
-| lesson11 | L12 | 17 | | lesson23 | L24 | 34 | | | | |
-| lesson12 | L13 | 18 | | lesson24 | L25 | 35 | | | | |
+| lesson1 | L1 | 1 | | lesson14 | L14 | 19 | | lesson26 | L26 | 37 |
+| lesson2 | L2 | 2 | | lesson15 | L15 | 21 | | lesson27 | L27 | 38 |
+| lesson3 | L4 | 4 | | lesson16 | L16 | 23 | | lesson28 | L28 | 40 |
+| lesson4 | L5 | 5 | | lesson17 | L17 | 24 | | lesson29 | L29 | 41 |
+| lesson5 | L6 | 7 | | lesson18 | L18 | 26 | | lesson30 | L30 | 42 |
+| lesson6 | L7 | 9 | | lesson19 | L19 | 27 | | lesson31 | L31 | 43 |
+| lesson7 | L8 | 12 | | lesson20 | L20 | 29 | | lesson32 | L32 | 44 |
+| lesson8 | L9 | 14 | | lesson21 | L21 | 31 | | lesson33 | L33 | 45 |
+| lesson10 | L10 | 15 | | lesson22 | L22 | 32 | | lesson34 | L34 | 46 |
+| lesson11 | L11 | 16 | | lesson23 | L23 | 33 | | lesson35 | L35 | 47 |
+| lesson12 | L12 | 17 | | lesson24 | L24 | 34 | | | | |
+| lesson13 | L13 | 18 | | lesson25 | L25 | 35 | | | | |
 
 **Sequence units with no lesson file.** These are real gaps in the design, not
 bookkeeping:
@@ -175,7 +182,7 @@ bookkeeping:
 - **[22] L16a** — the weighting. **Built 2026-08-24** as `s25_counting_weights`,
   following the established rung-as-scaffold pattern; promote it to a full unit
   when the Arc 5 collapse renumbers the lesson files.
-- **[28] L19a** — rotate the diagram at its hinges (partly covered by lesson18 A)
+- **[28] L19a** — rotate the diagram at its hinges (partly covered by lesson19 A)
 - **[39] L27b** — the nesting step; pries apart the two meanings of "leftover"
 - **Checkpoints C1, C2, C3** — never built
 
@@ -254,7 +261,7 @@ scaffolded stage and worthless as the transfer test.
 function absent from the lesson, `sim.js` and `score.js`, and any lesson that
 omits the `sim.js` include. A missing helper throws at page load, which means no
 name box and no submission code, with nothing on screen saying so — it is how
-lesson12 and lesson18 were both silently dead for a while.
+lesson13 and lesson19 were both silently dead for a while.
 
 **Never declare scoring you do not do.** The gate fails any lesson with
 `scaffold: N` (N > 0) that never calls `recordCheckpoint`. Such a lesson emits a
@@ -300,7 +307,7 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
-- **Lesson 8b built as one machine run three times (2026-09-10).** New lesson between
+- **Lesson 9 built as one machine run three times (2026-09-10).** New lesson between
   L8 and L9, on JM's ask for a genetics interactive where students drag chromosomes out of
   a cell to make gametes. It resolves the open ruling the atlas recorded when Mendel's
   ratios were pulled out of the old Lesson 8: the ratios come back, built by hand, right
@@ -485,7 +492,7 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   transitions only.
 
 - **Covariance/Price naming lives in the code panel, not prose.** An earlier pass
-  named `cov(x,y)/var(x)` in the closers of lessons 3/12/15/17. The ratchet reserves
+  named `cov(x,y)/var(x)` in the closers of lessons 3/13/16/18. The ratchet reserves
   "the identity" for unit 38. Reconciled by keeping the thread as *the recurring
   slope you keep fitting* and removing premature naming from prose. Reverting is
   one line per lesson, and the checker will flag it.
@@ -495,7 +502,7 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   scaffolded real-data stage and weak as the unscaffolded measurement (Pass D).
   Bighorn pedigree and salamander morphology are in `data/clean/` if a true
   transfer set is wanted.
-- **Lesson 11's Florida Scrub Jay curve is nearly flat, and that is the point.**
+- **Lesson 12's Florida Scrub Jay curve is nearly flat, and that is the point.**
   The observed points sit inside the constant-size envelope, so the richer
   bottleneck model is overfitting. This is the intended reveal and a direct
   enactment of "high P-value: I don't know if my model was bad." Not a data bug.
@@ -517,9 +524,9 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   `SEEDING_IN_PROGRESS` makes `Score.bumpManipulation` ignore those synthetic
   events, so engagement counts still measure the student.
 - **Two datasets are drawn by rejection, not blind.** Lesson 6's cinema data and
-  lesson 19's worms exist to display one specific reversal, and a scored
+  lesson 20's worms exist to display one specific reversal, and a scored
   question asks the student to read it off the screen. Measured over 20,000
-  seeds the reversal survives 89% of draws in lesson 6 and 97% in lesson 19 — so
+  seeds the reversal survives 89% of draws in lesson 6 and 97% in lesson 20 — so
   seeding blind would hand about one student in nine a picture that does not
   show the thing they are being asked to see. `seedSatisfying()` draws at
   random, checks the property, and redraws if it is missing: ~1.16 draws on
@@ -547,23 +554,23 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   **Fixed.** The outline is kept but should not be used as the content reference.
 - `structurephilosophy.md` §Enforcement claimed `validate.py` is the gate.
   **Fixed** — it now points at `scripts/check_lessons.py`.
-- `lesson34.html` Stage D calls back to a Lesson 1 framing that was never built.
-- Stray literal markdown renders on the page in `lesson14.html`, `lesson22.html`,
-  `lesson32.html`.
-- Anolis ecomorph counting is built three times: lesson18 D, lesson24 D, s19.
+- `lesson35.html` Stage D calls back to a Lesson 1 framing that was never built.
+- Stray literal markdown renders on the page in `lesson15.html`, `lesson23.html`,
+  `lesson33.html`.
+- Anolis ecomorph counting is built three times: lesson19 D, lesson25 D, s19.
 - `docs/LESSON_ATLAS.md` claims to describe every lesson and omits all 24 scaffolds
   and the Descent explorer.
-- **Eight lessons score a single bit.** `lesson20`–`lesson25`, `lesson30` and
-  `lesson34` each declare `scaffold: 1` and record one checkpoint. Their codes
+- **Eight lessons score a single bit.** `lesson21`–`lesson26`, `lesson31` and
+  `lesson35` each declare `scaffold: 1` and record one checkpoint. Their codes
   decode correctly, but one bit per student is a coin flip: not enough to grade a
   student on, and not enough for the item analysis to say anything about the
-  lesson. 21–25 still carry three TODO stages each, so this is expected there;
-  `lesson20`, `lesson30` and `lesson34` are built out and still score once. Adding
+  lesson. 22–26 still carry three TODO stages each, so this is expected there;
+  `lesson21`, `lesson31` and `lesson35` are built out and still score once. Adding
   checkpoints is lesson-design work, not wiring — the slots have to attach to
   predictions worth scoring.
 - **`index.html` undersells Arc 4/5.** Units 4 and 5 are still captioned
-  "outlines (text ready, simulators pending)". `lesson20` (5 canvases, no TODOs),
-  `lesson26`, `lesson30`, `lesson31` and `lesson34` are built; only 21–25 still
+  "outlines (text ready, simulators pending)". `lesson21` (5 canvases, no TODOs),
+  `lesson27`, `lesson31`, `lesson32` and `lesson35` are built; only 22–26 still
   match the caption.
 - `s01`–`s20` score the bookends only (`scaffold: 0`); the five rounds carry no
   answer bits. **Partly addressed 2026-08-25** — each round now bumps an `R`

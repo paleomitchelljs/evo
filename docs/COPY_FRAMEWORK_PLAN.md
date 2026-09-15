@@ -116,7 +116,7 @@ drive the lesson end to end in a browser, commit. Copy changes touch no scoring,
 
 **Do not big-bang all 54 pages.** Migrate lessons 1–4 to prove the mechanism, then migrate
 on touch: any page being edited for other reasons gets converted in the same commit. Lessons
-20–34 are mostly skeletons and can wait indefinitely.
+21–35 are mostly skeletons and can wait indefinitely.
 
 ## 5. Effort
 

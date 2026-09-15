@@ -3,8 +3,8 @@
 > **Stale as of 2026-08-24.** This atlas has not been regenerated since the Arc 5
 > collapse and the scoring work. Known divergences from the repo:
 >
-> - **Arc 5 is now four lessons, not nine.** Lessons 27/28/29 folded into Lesson 26
->   stage D; 32/33 into Lesson 34 stage B; the five files are in
+> - **Arc 5 is now four lessons, not nine.** Lessons 28/29/30 folded into Lesson 27
+>   stage D; 33/34 into Lesson 35 stage B; the five files are in
 >   `_reference/retired/lessons/`. Sections below for those five describe files
 >   that no longer ship.
 > - **The checkpoint counts below are declarations, not scored questions.** Ten
@@ -12,8 +12,8 @@
 >   live in each lesson's `Score.init`.
 > - **It omits the 25 scaffolds and the Descent explorer**, which are shipped,
 >   student-facing, and cover several gaps this document reports as empty.
-> - **Lesson 15 stage B** now opens on the slope carried from Lesson 7, and
->   **Lesson 26 stage A** on the slopes carried from scaffold S25.
+> - **Lesson 16 stage B** now opens on the slope carried from Lesson 7, and
+>   **Lesson 27 stage A** on the slopes carried from scaffold S25.
 >
 > `docs/PROJECT_NOTES.md` §2 is the accurate statement of what exists.
 > Regenerate this file after the next content pass rather than patching it.
@@ -1176,12 +1176,26 @@ decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — Finding out what knowing the parents is actually worth
-`lesson8.html` · v8 · 20 checkpoints · **Built**
+`lesson8.html` · v11 · 14 checkpoints · **Built**
+
+**Cut to four stages, 2026-09-14, on JM's call.** Stages E and F are out. They belong to
+a later lesson on additive genetic variation — F may belong to the selection lesson
+instead — and are parked whole, markup and script together, at
+`_reference/retired/lessons/lesson8_stagesEF_2026-09-14.html`. The last six-stage version
+of the page is commit `7aa63fa`. `version` 10 → 11, `scaffold` 20 → 14. Stage D is now
+terminal: it opens the done banner and mints the code.
 
 *Rebuilt 2026-09-13 from JM's voice notes.* The lesson's goal is correlation and linear
 regression — the deterministic part and the stochastic part — couched in heritability,
 defined as: **to what extent can you predict a trait in an individual if you know the
 trait state of their parents?** Nothing more than that.
+
+**Re-aimed 2026-09-13 on JM's call that the page conflated R² with the slope.** The
+ruling, in his words: *the mid-parent–offspring slope is the heritability, the
+deterministic portion; R² measures the relative strength of the deterministic portion
+against the stochastic portion of the regression.* They are two different numbers off
+one fit — 0.713 and 0.247 on Galton — and the page now says so at every stage that
+reports either. `version` 8 → 9; the checkpoint count is unchanged at 20.
 
 **Six stages, A–F, reordered on JM's call.** The squares first, then the direction of
 causation, then cross-fostering, then Galton, then the decomposition, then selection.
@@ -1191,17 +1205,55 @@ band means survive as the grey marks in Stage D. Its Stage C and Stage D ran the
 population off the same two sliders and differed only in the across axis, so they are
 welded into one Stage E. `version` 7 → 8, `scaffold` 16 → 20.
 
+**Every closing question is a game, 2026-09-14, on JM's call.** No stage ends on a typed
+answer any more. All four run one engine, `wireGame(id, cfg)`: the page deals a round, the
+student sets an estimate on a slider — or by dragging the line, in Stage D — locks it,
+and the page then **draws the same population six more times** and paints a result strip:
+the tolerance band, the truth, those six draws as dots, and the student's own mark. Three
+landed rounds clears it, "Deal the next round" is what advances, and the tally reads
+*n of 3 landed*. **Only the first lock is recorded**, so the old contract holds — the
+interactive is the gate, the question is the record, and a miss costs a round and never a
+door.
+
+- **A** — a fresh rate every round; set the other group's rate so the parents tell you
+  nothing. The squares are the instrument and the readouts stay dark while the game runs;
+  the stage's own second slider and the game's slider drive each other. Replay: what
+  knowing the parents bought, in six fresh samples of 200. Window 2 points.
+- **B** — a random accident rate with the danger all the way into families; estimate the
+  correlation. One set of 1,200 scatters by sd 0.02–0.03, so the window is ±0.07.
+- **C** — random copying and random egg, eggs swapped; estimate what a chick keeps of the
+  father it came from. One set of broods scatters by sd 0.04, so the window is ±0.07.
+  Round one is always the clean case with nothing in the egg.
+- **D** — the flagship. Each round deals a cloud whose **tilt and share were drawn
+  independently of each other**, so no round can be solved by reading one off the other.
+  Drag the line onto the cloud for the tilt, then set the share, which draws a band of
+  `sd(kid)·√(1−share)` with a live *your band is holding NN%* reading — the right share
+  holds about two-thirds. Windows ±0.08 on the tilt and ±0.12 on the share (0.10 of share
+  is only ~3.6 points of coverage, and coverage on 320 points is itself worth 2.6).
+  The miss message says which of the two was wrong.
+
+**"Good job!" banner, same call.** `#done-banner` sits directly above `#score-final`, so
+the banner and the completion code arrive together. `showDone()` shows it when the last
+gate closes — which is when the code is minted — and again, this time scrolling itself
+into view, when Stage D's game is cleared. It never scrolls on the first showing: that
+would drag the student off the one thing still left to do.
+
 **Two rules from the notes, applied throughout.** The word *knob* does not appear — every
 control is a *slider*. No question says *recorded*; a verdict is **correct** or
 **incorrect** and nothing else.
 
-**Four of the six stages gate on a lock-in, and count the tries.** Sliding past an answer
+**Every stage gates on a lock-in, and counts the tries.** Sliding past an answer
 is not choosing it, and the page says which try you landed on.
 
-**The through-line.** Stage A ends on *correlation expresses how much less wrong your
-estimate will be than guessing blind*, in percent. Stage D asks for that same number on
-Galton's children in inches: 2.58 blind, 2.24 with the line, **13% less wrong** off a
-correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²).
+**The through-line.** *Two numbers come off one line and they are not the same number.*
+Stage A separates them at the start: the gap between the two rates is the move, and the
+correlation is that same move rescaled, not a second name for it. Stage D reveals the
+tilt (**0.71**, the heritability) beside the share it accounts for (**0.25**) and the
+0.75 left to everything else, and its closing question hands the student a population
+with a tilt of 0.40 and a share of 0.08 and asks for the heritability — **0.40**, and
+answering 0.08 is exactly the mistake the stage exists to kill. Stage A's *how much less
+wrong a guess about one person is* readout stays, now labelled by what it means rather
+than as a property of the correlation.
 
 - **A — 72% of what?**
   - *Interactive* — 200 people as two blocks of a hundred squares, parents-have-it on the
@@ -1220,7 +1272,7 @@ correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²
   - *Goal* — 72% on its own is not information about anybody. At 72% against 72% the
     columns are indistinguishable, the move is 0 points and r = 0.00; at 72% against 12%
     the move is 60 points and r = 0.61, which buys a guess 21% less wrong than blind.
-    Closing question: what the other rate must be for the 72% to tell you nothing — **72**.
+    Closing game: a fresh rate every round, and the answer is that same rate back.
 
 - **B — heritability is not genetics** *(the direction of causation, flipped back)*
   - *Interactive* — 1,200 parent-and-child pairs, everybody born with four limbs, the
@@ -1233,7 +1285,7 @@ correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²
     because at the original settings the reachable ceiling fell below the gate on some
     seeds. Measured across ten seeds: at 16% accidents the ceiling is 0.33–0.39; at 40% it
     is 0.62–0.70; at fam = 0 the correlation sits inside ±0.06 everywhere. The closing
-    question pins the accident rate at 40%, because the ceiling depends on it.
+    game names its own accident rate each round and judges it against six fresh sets.
   - *Goal* — JM's coal miner, in the voice block: the child gets black lung not from an
     inherited susceptibility but because the probability of becoming a miner is higher if
     your parent was one. A correlation between a parent and a child is not a statement
@@ -1242,8 +1294,9 @@ correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²
 - **C — move the eggs** *(cross-fostering as the experiment that separates them)*
   - *Interactive* — 600 chicks, one father each, two panels side by side: the chick
     against the bird that raised it, and the chick against the father it came from.
-    Slider one, how carefully a chick copies its tutor; slider two, how much of the song
-    is already in the egg; a switch that swaps the eggs at laying. Three locks: build a
+    Slider one, how carefully a chick copies its tutor; slider two, the **genetic basis
+    for the song** (renamed from "how much of the song is in the egg" on JM's call,
+    2026-09-14); a switch that swaps the eggs at laying. Three locks: build a
     population resembling at 0.60 with nothing in the egg; **predict**, before touching
     the swap, what the move does to that number; then the inverse problem — find the
     population where the swap drops 0.60 to **0.25**.
@@ -1254,58 +1307,85 @@ correlation of 0.50. The two agree exactly, because both are 1 − √(1 − r²
 
 - **D — Galton's 934 children** *(mid-parent, in inches)*
   - *Interactive* — 934 grown children from 205 families, women ×1.08, the two parents
-    averaged on the across axis. Two sliders and one commitment: the first tilts the line
-    (**the deterministic part**), the second widens a shaded band around it (**the
-    stochastic part**). The correlation and the heritability stay **dark until the line is
-    locked in**, so the stage cannot be solved by watching a number go green. Grey marks
-    show the children's average in each strip of parents, and they are what guides the
-    tilt — the miss readout is flat from 0.66 to 0.76 and is no guide at all.
-  - *Measured* — tilt **0.713**, band **±2.24 in** holding 69% of the children, r =
-    **0.497**. On this axis the heritability *is* the tilt, with no factor of two: JM's
-    call, 2026-09-13, taking the mid-parent regression rather than the single-parent one.
-    Second lock: tilt to zero, band ±2.58, which holds 68% and is the whole spread.
-  - *Goal* — Two numbers describe the whole thing. Where the line points, and how far off
-    it everybody is.
+    averaged on the across axis. One slider tilts the line (**the deterministic part**).
+    The correlation and the heritability stay **dark until the line is locked in**, so the
+    stage cannot be solved by watching a number go green. Grey marks show the children's
+    average in each strip of parents, and they are what guides the tilt — the miss readout
+    is flat from 0.66 to 0.76 and is no guide at all.
+  - *The band became a bracket, 2026-09-14.* JM: *"there's no indication of how to do it
+    — what the students are looking for. If a student doesn't know the appropriate number
+    or width visually, they have to just blindly guess."* The width slider is gone. The
+    student now **picks a strip of parents** — the same five strips the grey marks name —
+    their children light up and the rest of the plot goes grey, and a **bracket is dragged
+    over that visible column**: an edge to resize it, the middle to slide it. Everything
+    it needs is on the page while it moves: a live *catching 96 of 132 — 73%* count with
+    the two-in-three target named as a number, and a dot on the line reading *the line
+    puts them here*. Checks: the catch inside 60–74%, and the centre within 0.5 in of
+    where the line puts that strip's children. Then **no parents at all** — the line goes
+    flat at the children's average, all 934 light up, and the same job is done again.
+  - *Measured* — tilt **0.713**, r = **0.497**, R² = **0.247**, residual **2.24 in**
+    against a children's spread of **2.58 in**. On this axis the heritability *is* the
+    tilt, with no factor of two: JM's call, 2026-09-13, taking the mid-parent regression
+    rather than the single-parent one. The share is revealed beside it — `0.25` accounted
+    for, `0.75` left to everything else — because 0.71 and 0.25 off one fit is the stage's
+    whole argument.
+  - *Why the payoff sentence quotes the fit and not the two brackets.* Galton's heights
+    are heavily rounded, so the share a bracket catches moves in steps: **any width from
+    about 2.1 to 2.7 in catches two in three of almost any strip**, and the with-parents
+    and without-parents windows overlap. Two hand-placed brackets therefore cannot be
+    trusted to show the difference on their own. The report states both widths the student
+    built and then anchors on 2.24 against 2.58 — a tilt of 0.71 taking an eighth off the
+    width.
+  - *Goal* — Two numbers come off one line and they are not the same number. The tilt is
+    the heritability, the deterministic part. The share is how strong that deterministic
+    part is next to the stochastic one — and the bracket is that share measured in inches.
+  - *Hands to* — Lesson 9, then Lesson 10.
 
-- **E — what is in the part the line misses** *(old C and old D, welded)*
-  - *Interactive* — 3,000 families off a stationary additive model, standard normals drawn
-    once per seed so a slider morphs the cloud instead of reshuffling it. Two sliders, the
-    pile a child is handed and what a life adds; three across axes, two of which you could
-    never measure on a real family. Stalks in two colors and a three-way bar.
-  - *Goal* — Turning the life to nothing does not empty the leftover: half of what a
-    parent carries is re-dealt at conception and no measurement of the parents can see
-    which half, so the line still fails to reach **0.50**. Stripping the parents' lives off
-    the axis recovers 1, not a bigger heritability.
-  - *Note* — the realised tilt is offset from theory by up to ~7% on a given seed, so the
-    gate reads the realised value the student is looking at. Verified: 122–136 of 2,756
-    slider combinations hit the target on each of eight seeds.
-
-- **F — the tilt is the exchange rate** *(selection, priced)*
-  - *Interactive* — Drag a cut across the parents; only families to the right of it breed.
-    The spread is pinned at 2.55 inches, so the cut is the only way to buy a response.
-  - *Goal* — How far above the average you drag the parents is your choice. How far the
-    children come is not.
-  - *Hands to* — Lesson 8b, then Lesson 9.
-
-**Still owed.** JM has said he wants to rework E and F and will come back to them. They
-carry over from the Sep 10 build with the slider/verdict vocabulary fixed and Stage E
-merged; their `.voice` blocks stay marked `TEXT FOR JM`.
-
+**Stages E and F, removed 2026-09-14 and awaiting a home.** E built a population that
+could be taken apart — three across axes, two of them unmeasurable on a real family, and
+a three-way bar splitting the children's variation into what the line reaches, what the
+re-dealt halves cost, and what a life added; its third lock asked for the two axes that
+tilt at 1 and the bigger of their two shares (on the mid-parent axis slope = h² and
+R² = h⁴/2; on the parents' piles slope = 1 and R² = h²/2; on the child's own pile
+slope = 1 and R² = h²). F dragged a cut across the parents and priced the response at the
+tilt, with the share reported alongside as a distractor that pays for nothing. Both are
+parked at `_reference/retired/lessons/lesson8_stagesEF_2026-09-14.html`, to be rebuilt
+into a lesson on additive genetic variation; F may instead belong to the selection lesson
+JM has already said gets its own page.
 
 **Displaced content, needs a ruling.** The old Lesson 8 — Mendel's 3:1 and 9:3:3:1,
 the reference pile of 1,000 honest experimenters, and Fisher's complaint about Mendel's
 data being too clean — is archived at
 `_reference/retired/lessons/lesson8_mendel_ratios_2026-09-03.html`. **Arc 2 is titled
 "Ratios, baselines, and the two forces that move them" and now opens on a
-continuous-trait lesson with no ratios in it**, and Lesson 9 builds Hardy–Weinberg
+continuous-trait lesson with no ratios in it**, and Lesson 10 builds Hardy–Weinberg
 without the Mendelian ratios that used to motivate it. Either the arc's framing moves,
 or Mendel comes back as a lesson before this one.
 
-**Resolved 2026-09-10 by Lesson 8b**, below: the ratios come back, built rather than
+**Resolved 2026-09-10 by Lesson 9**, below: the ratios come back, built rather than
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
-### Lesson 8b — Dragging chromosomes out of a cell to make gametes
-`lesson8b.html` · v2 · 17 checkpoints · **Built**
+### Lesson 9 — Dragging chromosomes out of a cell to make gametes
+`lesson9.html` · v4 · 30 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+
+**Two stages added 2026-09-15, D and E, on JM's call.** D turns three of the spots into
+traits with three different dominance rules; E turns all eight into units of one
+quantitative trait. `version` 3 → 4, `scaffold` 18 → 30. The lab is now built five times
+off `STAGES[K]` rather than three, and what a stage can vary grew by two things: which of
+three **readouts** the step-3 tables and chart show (`readout`), and whether a Punnett
+row is a kind of gamete or a **size** of gamete (`squareBasis: "dose"`).
+
+**Step 1 gates on one round plus its question, 2026-09-14, on JM's call:** *"they should
+only have to run through one round of collecting the gametes & getting the question right
+to progress. If they get the question wrong, they have to run through it again to get more
+shots at answering correctly."* So one collected round opens the written question, a
+correct answer opens step 2, and a wrong answer shuts the question until another round is
+collected. The three counting gates that used to stand here are gone — three rounds in A,
+all four kinds in B, five crossover spots in C. **Stage B had no first question at all and
+has been given one**, because the thing its old gate made a student notice is now asked
+rather than waited for: *in one round, how many different kinds of gamete did you get?*
+(**2**, and they are complements). `version` 2 → 3, `scaffold` 17 → 18, and Stage B's bit
+row stops being the odd one out.
 
 Three passes over one machine, built three times from a single `buildLab(K, cfg)` off
 `STAGES[K]`. Every pass is the same three steps — fill four gametes by hand, draw one
@@ -1318,10 +1398,9 @@ with four. Replication gives eight chromatids; each gamete takes one long and on
 The drag enforces only that rule, so the student's own filling is free — and every legal
 filling still comes out 2 big : 2 little, which is the point of Stage A.
 
-**Step 1 opens step 2 on a different condition in each pass**, which is where most of the
-lesson's difficulty lives (`cfg.step1`): `rounds` (A and C count collected rounds),
-`kinds` (B needs one round containing all four gamete types at once), `spots` (C needs
-five of the six rip positions used).
+**Step 1 opens step 2 the same way in all three passes**: collect one round, then answer
+the question under the bench. Before 2026-09-14 each pass had its own counting condition
+and they are recorded above.
 
 **Step 2 will not open step 3 short of 500 gametes** (`DRAWS`), drawn from a bench that
 starts with only the one-at-a-time button. **Draw 20 / Draw 100 do not exist on the page
@@ -1336,27 +1415,26 @@ nothing says so — the buttons simply appear.
   - *Questions* — most gametes carrying big A in one round (**2**); big A per 100 gametes
     (**50**, ±6); Aa per 100 embryos (**50**, ±8). The 50 is the item worth watching: the
     common wrong answers are 33 (three outcomes, equal) and 25.
-- **B — every spot labelled** (bits 6–10, and **no first question**)
+- **B — every spot labelled** (bits 6–11)
   - Long copies are `ABCD` / `abcd`, short are `EFGH` / `efgh`.
-  - *Step 1 is the whole point of the stage.* It opens only on a round in which all four
-    kinds come out at once — `ABCD·EFGH`, `ABCD·efgh`, `abcd·EFGH`, `abcd·efgh`. Dealing
-    the chromatids in the order they sit in yields **two** kinds, not four, so clearing it
-    takes deliberately crossing a long copy with each short one. A written question
-    ("how many versions have you seen?") sat here until 2026-09-10 and was answerable
-    without ever doing it; the gate replaced it, which is why B records five bits, not six.
-    A round that misses shows `Only N of the four kinds that round.` and the log keeps it.
-  - *Questions* — kinds of gamete possible (**4**); embryos per 100 carrying at least one
-    `ABCD` (**75**, ±7).
+  - *What step 1 is for.* One meiosis yields **two** kinds of gamete, not four, and they
+    are complements: the two gametes off a pole are the same gamete twice. The other two
+    need the chromosomes to line up the other way round, which is a thing to wait for
+    rather than a thing to arrange. From 2026-09-10 to 2026-09-14 that was a gate — step 2
+    opened only once all four kinds had turned up across rounds, about three rounds on
+    average. It is now the stage's first question instead.
+  - *Questions* — kinds of gamete in one round (**2**); kinds of gamete possible (**4**);
+    embryos per 100 carrying at least one `ABCD` (**75**, ±7).
   - The four spots on one chromosome never come apart; the two chromosomes combine freely.
-- **C — cut both chromosomes** (bits 11–16)
+- **C — cut both chromosomes** (bits 12–17)
   - Every round cuts **both**: at least one mark on the long chromosome and one on the
     short. A **slider sets how many go on each, 1 to 3** — three gaps a chromosome, so
     three is every gap. Marks are dragged from a tray that counts down, can be lifted back
     out of a gap, and nothing on the bench moves until all of them are placed. The slider
     locks once a chromatid has been dealt, and moving it clears that round's marks.
-  - Step 1 opens only when **five of the six spots** have been used across rounds;
-    repeating one does not count, and the log tags every round with what made it
-    (`long 1, 3 · short 2`).
+  - The log tags every round with what made it (`long 1, 3 · short 2`). Step 1 used to
+    open only once **five of the six spots** had been used across rounds; since
+    2026-09-14 one round and the question are enough.
   - **Every crossover on a chromosome joins the same two chromatids** — the pair facing
     each other across the paired copies, rows 1 and 2, never 0 and 2. Both give the same
     counts; only this one puts the crossing where the textbook puts it, and it leaves the
@@ -1385,8 +1463,74 @@ nothing says so — the buttons simply appear.
     (written for sliders a student fits) does not apply to it.
   - *Goal* — the question that read **75** in Stage B reads **44** here, and the AA/Aa/aa
     bars did not move at all. What recombination changed is not in the chart.
-  - *Hands to* — Lesson 9. The 1:2:1 the student just built by hand is the baseline
+  - *The answer text was rewritten 2026-09-14.* It read "About 44, down from 75 in
+    Stage B — and the three bars did not move," which JM caught: *"what bars? ... the
+    frequencies of AA, Aa, and aa have been the same since Part A!"* The comparison is
+    with Stage B, but the bars have been 25/50/25 since Stage **A**, so the sentence now
+    names them and says since when.
+  - *Hands to* — Lesson 10. The 1:2:1 the student just built by hand is the baseline
     Hardy–Weinberg then writes down.
+
+- **D — three spots, three rules** (bits 18–23)
+  - *Interactive* — the same bench, no marks. Three spots labelled: **A** and **B** on the
+    long chromosome, **E** on the short. A/a is petal shape, B/b petal colour, E/e leaf
+    colour. Four kinds of gamete, sixteen cells, exactly Stage B's square.
+  - *The three rules, and the one thing they share.* Measured on 200,000 flowers:
+    genotypes come out **25 / 50 / 25 at all three spots** and never move. What moves is
+    what sits on top. A/a has one masking the other, so Aa looks like AA and the phenotype
+    is **75 frilled : 25 smooth** — two genotypes, one look. B/b has both showing side by
+    side: BB red, bb white, Bb **striped**, so the phenotype is **25 : 50 : 25** and the
+    genotype reads straight off the petal. E/e blends: EE dark, ee pale, Ee mid-green, so
+    the phenotype is **25 : 50 : 25** again — same ratio as B/b, different thing underneath.
+  - *The chart is the argument.* Three rows, each drawing the three genotypes as bars with
+    the looks **bracketed underneath them**. A bracket spanning two bars is dominance, drawn
+    rather than asserted, and it is computed from `look[]` — a dominant locus is one whose
+    `look[1]` equals its `look[2]`, and nothing in the page special-cases it.
+  - *A and B are linked, deliberately.* They sit on one chromosome with nothing cutting
+    between them, so they arrive together and `AB|E, AB|e, ab|E, ab|e` are the only gametes
+    — verified, 0 of 200,000 gametes carried big A with little b. That is Stage C's point
+    arriving as a consequence, and it costs the stage nothing: each locus on its own is
+    still 1 : 2 : 1, and one locus at a time is all a dominance rule is about.
+  - *Questions* — gametes carrying A and B together in one round (**2**, invariant across
+    20,000 rounds); big A with little b per 100 gametes (**0**); frilled petals per 100
+    flowers (**75**, ±8, with the miss message naming 25 as the genotype answer).
+  - *Goal* — dominance is not a property of the gene. It is a property of what you measure.
+
+- **E — every spot adds up** (bits 24–29)
+  - *Interactive* — every spot labelled, the marks and the 1–3 slider back from Stage C,
+    and each big letter worth **one unit of size**. A gamete carries 0–8, a plant 0–16.
+    Nothing masks, nothing blends; the two copies add, which is the only model under which
+    a parent's size predicts a child's the way Lesson 8's line does.
+  - *Where the cut goes is the stage.* Uncut, all four spots on a chromosome travel as a
+    block, a gamete carries 0, 4 or 8, and a plant comes in **five sizes, 1:4:6:4:1** —
+    Nilsson-Ehle. A cut in the **middle** gap gives **nine** sizes in a clean
+    `1:8:28:56:70:56:28:8:1`, which is C(8,k): eight spots behaving like eight coin flips.
+    A cut **off-centre** gives **all seventeen**, every size from 0 to 16. Cuts in gaps 1
+    and 3 together give the same nine as one middle cut — the two-strand double again,
+    same invariance Stage C is built on.
+  - *What never moves.* The mean gamete is **4** and the mean plant **8**, at every cut
+    tested. The cut changes the spread and not the middle, which is the same split Lesson 8
+    draws as a line and a band.
+  - *The square had to change.* Sixteen kinds of gamete would want 256 cells, so rows are
+    **sizes** of gamete, not kinds — at most 9×9. Those rows are *not* equally likely (a
+    size-4 gamete can be built six ways, a size-0 gamete one), so this is the one square on
+    the page that prints a share beside each header. `gameteKinds` now returns a weight `w`
+    on every kind; on the other two bases the weights come out equal and nothing shows.
+  - *The histogram checks itself.* The filled bars are the student's own plants and the
+    hollow outline behind them is what the square says. Both come off `chromatids()`, the
+    same function the sampler draws from, so they cannot drift apart — measured agreement
+    over 400,000 draws: worst gap **0.084 points**.
+  - *Questions* — size units across all four gametes of a round (**16**, invariant across
+    all 64 combinations of cut positions); average units in one gamete (**4**, ±0.4);
+    average size of 200 plants (**8**, ±0.6).
+  - *Goal* — a trait built out of many spots arrives in steps, and the steps get finer the
+    more the chromosome is broken up. Put in hundreds of spots and you cannot see them at
+    all, which is the trait Lesson 8 ran a line through.
+
+**Table headings, fixed 2026-09-14.** `table.tally th` was left-aligned while `td.n` was
+right-aligned, so a wide count heading — `embryos with ≥1` in step 3's long-version table —
+sat over the column to its left with its own numbers nowhere near it. A `th.n` rule now
+right-aligns the heading of any column whose cells are right-aligned.
 
 **Verified numerically before shipping** (`meiosis` and `oneGamete` pulled straight out of
 the page rather than reimplemented), across **all 19 combinations of slider setting and
@@ -1417,8 +1561,8 @@ half); B closer `202_lec12_04`; C intro `461_lec18_01` (second half), `202_lec14
 C closer `202_lec19_05`, `202_lec14_05`, `461_lec14_02`. The dictionary metaphor is split
 deliberately — B gets "same words, different definitions", C gets the ripping.
 
-### Lesson 9 — Building the population where nothing changes
-`lesson9.html` · v2 · 4 checkpoints · **Built**
+### Lesson 10 — Building the population where nothing changes
+`lesson10.html` · v2 · 4 checkpoints · **Built**
 
 - **A — A population with nothing acting on it**
   - *Interactive* — One slider for allele frequency; the three genotype frequencies follow.
@@ -1445,12 +1589,12 @@ deliberately — B gets "same words, different definitions", C gets the ripping.
     investigate.
   - *Goal* — A failed check tells you *something* is off, never *what*. The hybrid origin
     of Italian sparrows makes several answers defensible at once.
-  - *Hands to* — Lesson 10 isolates the small-population culprit.
+  - *Hands to* — Lesson 11 isolates the small-population culprit.
 
 ---
 
-### Lesson 10 — Watching alleles wander in a finite population
-`lesson10.html` · v2 · 4 checkpoints · **Built**
+### Lesson 11 — Watching alleles wander in a finite population
+`lesson11.html` · v2 · 4 checkpoints · **Built**
 
 - **A — One trajectory, then 50**
   - *Interactive* — Wright-Fisher sampling. Sliders for population size, starting
@@ -1478,12 +1622,12 @@ deliberately — B gets "same words, different definitions", C gets the ripping.
   - *Interactive* — Buri's real trajectories overlaid with a simulation at the true per-line
     sample size of 16.
   - *Goal* — The simulation reproduces the observed spread with no free parameters.
-  - *Hands to* — Lesson 11 runs it backwards.
+  - *Hands to* — Lesson 12 runs it backwards.
 
 ---
 
-### Lesson 11 — Reading a population's hidden size from how fast it loses variety
-`lesson11.html` · v2 · 4 checkpoints · **Built**
+### Lesson 12 — Reading a population's hidden size from how fast it loses variety
+`lesson12.html` · v2 · 4 checkpoints · **Built**
 
 - **A — Variety draining out of a small population**
   - *Interactive* — Slider for effective size; watch the decay curve and its half-life.
@@ -1509,12 +1653,12 @@ deliberately — B gets "same words, different definitions", C gets the ripping.
   - *Goal* — **The real curve is nearly flat.** The observed points sit *inside* the
     constant-size envelope, so the richer bottleneck model is overfitting. This is the
     intended reveal, not a data problem.
-  - *Hands to* — Lesson 12 turns a directional force back on.
+  - *Hands to* — Lesson 13 turns a directional force back on.
 
 ---
 
-### Lesson 12 — Pushing the allele frequency with selection
-`lesson12.html` · v2 · 4 checkpoints · **Built**
+### Lesson 13 — Pushing the allele frequency with selection
+`lesson13.html` · v2 · 4 checkpoints · **Built**
 
 > Fixed this session: an undefined `wfStep` threw at page load, so this lesson could never
 > show a name box or emit a code.
@@ -1549,12 +1693,12 @@ deliberately — B gets "same words, different definitions", C gets the ripping.
   - *Interactive* — Five trajectories from known settings; label each as wandering only,
     selection dominated, or the boundary case. Must commit before the next round.
   - *Goal* — Confront the boundary where a single trace cannot tell you.
-  - *Hands to* — Lesson 13 asks why harmful variants persist.
+  - *Hands to* — Lesson 14 asks why harmful variants persist.
 
 ---
 
-### Lesson 13 — Where deleterious alleles get held in place
-`lesson13.html` · v2 · 4 checkpoints · **Built**
+### Lesson 14 — Where deleterious alleles get held in place
+`lesson14.html` · v2 · 4 checkpoints · **Built**
 
 - **A — New variants arriving, nothing removing them**
   - *Interactive* — Start from zero; new mutants appear at a set rate with no selection.
@@ -1583,18 +1727,18 @@ deliberately — B gets "same words, different definitions", C gets the ripping.
     matches. A multi-select asks what else could contribute.
   - *Goal* — When the balance model misses by a wide margin, the model is missing a term.
     Same shape as Lesson 1's one-directional lean, three arcs later.
-  - *Hands to* — Lesson 14 opens Arc 3.
+  - *Hands to* — Lesson 15 opens Arc 3.
 
 ---
 
 ## Arc 3 — Structure, response, and family resemblance across species
 
-Lessons 14–19.
+Lessons 15–20.
 
 ---
 
-### Lesson 14 — Counting heterozygote deficits
-`lesson14.html` · v2 · 4 checkpoints · **Built**
+### Lesson 15 — Counting heterozygote deficits
+`lesson15.html` · v2 · 4 checkpoints · **Built**
 
 - **A — One well-stirred population**
   - *Interactive* — Sample from a single mixed population many times; watch the shortfall
@@ -1615,18 +1759,18 @@ Lessons 14–19.
     pooled ↔ split slider peels a single bar of total variance into within- and
     between-deme pieces.**
   - *Goal* — The between/total ratio is the whole idea, shown as one bar splitting. Same
-    move reappears at the colony level in Lesson 30.
+    move reappears at the colony level in Lesson 31.
   - *Hands to* — Stage D takes it to real loci.
 
 - **D — Florida Scrub Jay — per-locus F**
   - *Interactive* — Per-locus shortfall across the jay dataset; outliers flagged.
   - *Goal* — Most loci sit at the baseline; a few outliers are candidates worth chasing.
-  - *Hands to* — Lesson 15 brings the parent-child slope back as a lever.
+  - *Hands to* — Lesson 16 brings the parent-child slope back as a lever.
 
 ---
 
-### Lesson 15 — How far a population shifts when you breed from the extremes
-`lesson15.html` · v2 · 4 checkpoints · **Built**
+### Lesson 16 — How far a population shifts when you breed from the extremes
+`lesson16.html` · v2 · 4 checkpoints · **Built**
 
 - **A — Breeding only from one tail of a bell-shaped trait**
   - *Interactive* — Slider for the fraction allowed to breed; readouts for the threshold
@@ -1653,12 +1797,12 @@ Lessons 14–19.
     response. Fit the slope across years; drought years highlighted.
   - *Goal* — Recover the carry-over from a wild population, year by year, with resampled
     uncertainty.
-  - *Hands to* — Lesson 16 is the mirror image: what movement between patches does.
+  - *Hands to* — Lesson 17 is the mirror image: what movement between patches does.
 
 ---
 
-### Lesson 16 — Spreading or staying — populations connected by migration
-`lesson16.html` · v2 · 4 checkpoints · **Built**
+### Lesson 17 — Spreading or staying — populations connected by migration
+`lesson17.html` · v2 · 4 checkpoints · **Built**
 
 - **A — Two isolated populations drift apart**
   - *Interactive* — Two populations from the same start, drifting independently; the gap
@@ -1686,12 +1830,12 @@ Lessons 14–19.
     submit the numbers.
   - *Goal* — Most of the genome says "connected"; a few loci say otherwise. Then a case
     where geography visibly sets the answer.
-  - *Hands to* — Lesson 17 asks how a costly habit spreads.
+  - *Hands to* — Lesson 18 asks how a costly habit spreads.
 
 ---
 
-### Lesson 17 — Helping relatives when cooperation can spread
-`lesson17.html` · v2 · 4 checkpoints · **Built**
+### Lesson 18 — Helping relatives when cooperation can spread
+`lesson18.html` · v2 · 4 checkpoints · **Built**
 
 - **A — What happens without the rule**
   - *Interactive* — A helping allele introduced among strangers. Several replicates, each
@@ -1717,13 +1861,13 @@ Lessons 14–19.
   - *Interactive* — Toggle among a diploid mammal, a haplodiploid bee, and a clonal
     bacterium; the relatedness values change and the rule's advice changes with them.
   - *Goal* — One rule, three answers. The bee's sisters-over-daughters result predicts
-    sterile workers — set up here, cashed at Lesson 31.
-  - *Hands to* — Lesson 18 steps back to the trees these arguments lean on.
+    sterile workers — set up here, cashed at Lesson 32.
+  - *Hands to* — Lesson 19 steps back to the trees these arguments lean on.
 
 ---
 
-### Lesson 18 — Reading trees with rotated nodes
-`lesson18.html` · v2 · 5 checkpoints · **Built**
+### Lesson 19 — Reading trees with rotated nodes
+`lesson19.html` · v2 · 5 checkpoints · **Built**
 
 > Fixed this session: undefined `mulberry32`, `makeFrame` and `drawAxes` threw at page
 > load, so this lesson could never show a name box or emit a code.
@@ -1758,12 +1902,12 @@ Lessons 14–19.
     branches. A depth slider; the sister-pair scatter responds.
   - *Goal* — Topology alone does not predict how similar two species should be; branch
     length does.
-  - *Hands to* — Lesson 19, which needs exactly that to correct a slope.
+  - *Hands to* — Lesson 20, which needs exactly that to correct a slope.
 
 ---
 
-### Lesson 19 — Removing the family resemblance before comparing species
-`lesson19.html` · v3 · 4 checkpoints · **Built**
+### Lesson 20 — Removing the family resemblance before comparing species
+`lesson20.html` · v3 · 4 checkpoints · **Built**
 
 - **A — Draw the line straight across the species**
   - *Interactive* — A tree with two traits evolving genuinely independently. Fit the naive
@@ -1798,20 +1942,20 @@ Lessons 14–19.
   - *Goal* — **The slope reverses sign.** Within clades, bigger worms prefer more alkaline
     soil; across clades, bigger-bodied lineages happen to live in acidic soil. Same shape as
     Lesson 6 Stage E, now with the tree as the grouping.
-  - *Hands to* — Lesson 20 opens Arc 4 on deep time.
+  - *Hands to* — Lesson 21 opens Arc 4 on deep time.
 
 ---
 
 ## Arc 4 — Deep time, genomes, and species boundaries
 
-Lessons 20–25. **These are skeletons.** Each has its title, its lecture anchor quotes, and
+Lessons 21–26. **These are skeletons.** Each has its title, its lecture anchor quotes, and
 a build spec in the instructor `TODO` block, but no scored interactive. Two exceptions are
 noted.
 
 ---
 
-### Lesson 20 — Measuring rates across sliding intervals
-`lesson20.html` · v1 · 0 checkpoints · **Skeleton, one live stage**
+### Lesson 21 — Measuring rates across sliding intervals
+`lesson21.html` · v1 · 0 checkpoints · **Skeleton, one live stage**
 
 - **A — Rate = distance / time** — *has a working simulator.* 10,000 generations of a
   wandering trait; slide the interval length and watch the measured rate per generation
@@ -1825,12 +1969,12 @@ noted.
   against the empirical curve.
 - **D — The PETS time series** — *spec only.* Sliding-window rate analysis on real Eocene
   mammal data.
-- *Hands to* — Lesson 21 asks the same rate question of the genome.
+- *Hands to* — Lesson 22 asks the same rate question of the genome.
 
 ---
 
-### Lesson 21 — Mutation target size and the parallel evolution it produces
-`lesson21.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 22 — Mutation target size and the parallel evolution it produces
+`lesson22.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — Two genes, two mutation rates** — two loci, one with a much larger target; compare
   their substitution rates.
@@ -1842,12 +1986,12 @@ noted.
   scaffold S17.
 - *Goal (whole lesson)* — How often something evolves is set by how many ways there are to
   reach it, not by how likely any one mutation is.
-- *Hands to* — Lesson 22 turns this into a per-gene measurement.
+- *Hands to* — Lesson 23 turns this into a per-gene measurement.
 
 ---
 
-### Lesson 22 — Reading selection off codon ratios
-`lesson22.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 23 — Reading selection off codon ratios
+`lesson23.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — Two kinds of change in a gene nothing is acting on** — simulate a coding sequence
   with no selection; count both kinds of change; the ratio sits at one.
@@ -1858,12 +2002,12 @@ noted.
 - **D — Five genes, five patterns** — classify real genes by their pattern; linked to S18.
 - *Goal (whole lesson)* — A ratio between two kinds of change is a measurement of what has
   been happening to a gene.
-- *Hands to* — Lesson 23 moves from one gene to two whole lineages.
+- *Hands to* — Lesson 24 moves from one gene to two whole lineages.
 
 ---
 
-### Lesson 23 — How incompatibilities pile up between two diverging lineages
-`lesson23.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 24 — How incompatibilities pile up between two diverging lineages
+`lesson24.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — Two populations diverging neutrally** — each accumulates changes that are fine on
   their own background.
@@ -1875,12 +2019,12 @@ noted.
   sunflowers, sticklebacks.
 - *Goal (whole lesson)* — Reproductive isolation accelerates. Most of it needs no selection
   for isolation at all.
-- *Hands to* — Lesson 24 takes the opposite case.
+- *Hands to* — Lesson 25 takes the opposite case.
 
 ---
 
-### Lesson 24 — Same outcome, three different histories
-`lesson24.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 25 — Same outcome, three different histories
+`lesson25.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — How alike should two species be?** — a trait evolving up a tree; rank tip pairs by
   similarity and ask whether similarity tracks relatedness.
@@ -1892,12 +2036,12 @@ noted.
   tree; shuffle tip labels to ask how often the pattern arises by chance.
 - *Goal (whole lesson)* — Looking alike has three possible histories and they are
   distinguishable — but only against a tree.
-- *Hands to* — Lesson 25 asks what the tips even are.
+- *Hands to* — Lesson 26 asks what the tips even are.
 
 ---
 
-### Lesson 25 — Deciding one species or two — and what would change your mind
-`lesson25.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 26 — Deciding one species or two — and what would change your mind
+`lesson26.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — Two populations, you make the call** — a marginal pair; commit a call, then state in
   free text what observation would flip it *before* the stage unlocks.
@@ -1908,20 +2052,20 @@ noted.
   it; linked to S20.
 - *Goal (whole lesson)* — A species boundary is a hypothesis about future independence.
   The commitment is stable; the method for testing it varies by case.
-- *Hands to* — Lesson 26 opens Arc 5 by naming the accounting that has been running all
+- *Hands to* — Lesson 27 opens Arc 5 by naming the accounting that has been running all
   along.
 
 ---
 
 ## Arc 5 — One accounting move, run at seven scales
 
-Lessons 26–34. Lesson 26 is the core; 27–33 are branches, one nested transition each;
-34 is the capstone. **Only Lesson 26 Stage A is built.**
+Lessons 27–35. Lesson 27 is the core; 28–34 are branches, one nested transition each;
+35 is the capstone. **Only Lesson 27 Stage A is built.**
 
 ---
 
-### Lesson 26 — Splitting a change in the average into two pieces
-`lesson26.html` · v1 · 1 checkpoint · **Stage A built, B–D are previews**
+### Lesson 27 — Splitting a change in the average into two pieces
+`lesson27.html` · v1 · 1 checkpoint · **Stage A built, B–D are previews**
 
 - **A — One level: how the average moves** — *built.* Each dot is an individual: trait
   across the bottom, fitness up the side, with the fitted line drawn. A slider steepens the
@@ -1934,54 +2078,54 @@ Lessons 26–34. Lesson 26 is the core; 27–33 are branches, one nested transit
 - **C — The diagnostic: which level is selection at?** — *preview.* The ratio of between to
   within; when it crosses one, the group is the unit.
 - **D — Re-derive Hamilton's rule** — *preview.* Swap in the altruism fitness form and
-  Lesson 17's rule falls out of the same algebra.
-- *Hands to* — Lessons 27–33, each running the diagnostic at one transition.
+  Lesson 18's rule falls out of the same algebra.
+- *Hands to* — Lessons 28–34, each running the diagnostic at one transition.
 
 ---
 
-### Lessons 27–33 — the seven transitions
-All **Skeleton** (v1, 0 checkpoints), except Lesson 30 Stage B, which has a working
+### Lessons 28–34 — the seven transitions
+All **Skeleton** (v1, 0 checkpoints), except Lesson 31 Stage B, which has a working
 simulator. Every one follows the same four-part shape: **A** a named baseline where the
 lower level is the unit; **B** introduce the structure that could make the higher level a
 unit; **C** run the between/within diagnostic; **D** a real empirical anchor.
 
-- **Lesson 27 — When the chromosome becomes the unit** *(gene → chromosome)*
+- **Lesson 28 — When the chromosome becomes the unit** *(gene → chromosome)*
   - A genes shuffled freely · B genes that can no longer be separated · C how wide the
     change reaches · D the dachshund's short legs and the 20-megabase footprint around FGFR3.
   - *Goal* — A gene is only a unit if recombination can separate it from its neighbours.
 
-- **Lesson 28 — When the genome wins out over the gene** *(chromosome → genome)*
+- **Lesson 29 — When the genome wins out over the gene** *(chromosome → genome)*
   - A fair meiosis · B introduce a driver that gets into 70% of gametes · C what stops a
     cheating gene (suppressors) · D the Alu transposon that removed the ape tail.
   - *Goal* — Genes can cheat; the genome polices them because it pays the cost.
 
-- **Lesson 29 — When the cell wins out over the genome** *(genome → cell)*
+- **Lesson 30 — When the cell wins out over the genome** *(genome → cell)*
   - A one cell, no internal competition · B endosymbiosis introduces subunits with their
     own replication · C the cell's policing (moving essential genes to the nucleus) ·
     D cancer initiation as the failure mode.
   - *Goal* — Reproduction competing with itself can happen entirely inside one individual.
 
-- **Lesson 30 — When cells stop competing — the body emerges** *(cell → individual, CORE)*
+- **Lesson 31 — When cells stop competing — the body emerges** *(cell → individual, CORE)*
   - A cells living on their own · **B — has a working simulator:** 200 cells in 10 colonies,
     a within-colony relatedness slider, live readouts of the within- and between-colony
     terms and which level currently wins · C the diagnostic · D three anchors (honeybee or
     Volvox for the clean case, somatic mutation data for the failure).
-  - *Goal* — Your body is a truce. Same between/total ratio as Lesson 14's split bar, now on
+  - *Goal* — Your body is a truce. Same between/total ratio as Lesson 15's split bar, now on
     fitness rather than allele frequency.
 
-- **Lesson 31 — When workers stop reproducing — the colony emerges** *(individual → superorganism)*
+- **Lesson 32 — When workers stop reproducing — the colony emerges** *(individual → superorganism)*
   - A solitary insects · B haplodiploid sisters · C the diagnostic with worker policing ·
     D honeybees and naked mole rats.
-  - *Goal* — Lesson 17's bee result, cashed: sisters-over-daughters plus policing makes the
+  - *Goal* — Lesson 18's bee result, cashed: sisters-over-daughters plus policing makes the
     colony the unit. Mole rats reach the same place by inbreeding instead.
 
-- **Lesson 32 — When species outpersist each other** *(superorganism → lineage)*
+- **Lesson 33 — When species outpersist each other** *(superorganism → lineage)*
   - A many lineages with identical individual fitness · B heritable traits that promote
     splitting · C the diagnostic at the lineage level · D bird wing shape against speciation
     rate.
   - *Goal* — Selection above the individual, with no individual being fitter than any other.
 
-- **Lesson 33 — Beyond the species — when the unit doesn't have a name yet** *(speculative)*
+- **Lesson 34 — Beyond the species — when the unit doesn't have a name yet** *(speculative)*
   - A strip the substrate away (prions, memes, language) · B ideas that get copied ·
     C holobionts · D free-response: the student picks their own candidate and runs the
     diagnostic on it.
@@ -1990,8 +2134,8 @@ unit; **C** run the between/within diagnostic; **D** a real empirical anchor.
 
 ---
 
-### Lesson 34 — Capstone — What is an Individual?
-`lesson34.html` · v1 · 0 checkpoints · **Skeleton**
+### Lesson 35 — Capstone — What is an Individual?
+`lesson35.html` · v1 · 0 checkpoints · **Skeleton**
 
 - **A — All seven cascades side by side** — every transition with its diagnostic and its
   empirical anchor in one view, each clickable back to its lesson.
@@ -2022,14 +2166,14 @@ to reorder anything, this block is the part to leave alone.
   range rather than a value, deliberately.
 
 **Known gaps.**
-- Lessons 20–25 and 27–34 have no interactives and score zero. Fifteen builds outstanding.
-- Lesson 26 B–D are previews on a page whose Stage A is the arc's keystone.
+- Lessons 21–26 and 27–34 have no interactives and score zero. Fifteen builds outstanding.
+- Lesson 27 B–D are previews on a page whose Stage A is the arc's keystone.
 - Lesson 2's index title still says "Resampling to ask if new data still belongs", which
   now describes only its first half.
-- Around 110 soft jargon warnings remain in the prose of Lessons 5–19 — all for terms the
+- Around 110 soft jargon warnings remain in the prose of Lessons 5–20 — all for terms the
   ledger unlocks at that unit, so they are stylistic rather than violations.
 
 **Verification status.** All 34 lessons load without JavaScript errors and reach a
 submission code. Lessons 1–4 were driven end to end in a headless browser and their codes
-decoded through the instructor verifier. Lessons 5–34 were smoke-tested only: name gate,
+decoded through the instructor verifier. Lessons 5–35 were smoke-tested only: name gate,
 first-stage unlock, and every unlocked control nudged once.
