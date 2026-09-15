@@ -1503,46 +1503,62 @@ nothing says so — the buttons simply appear.
     differ**, JM's example being *"C is +1 and c is −0.5, while D is −0.2 and d is +3"*,
     the boxes are **green for a positive allele and red for a negative one**, and the
     activity is to build the largest offspring you can.
-  - *The effects.* One allele helps and one hurts at every spot, so the biggest gamete is
-    the one carrying **all eight green alleles**. Long: A +2.0/a −1.5, B −2.5/b +2.5,
-    C +1.0/c −0.5, D +3.0/d −0.2. Short: E +1.5/e −2.0, F −2.0/f +2.0, G +0.5/g −1.0,
-    H +0.7/h −0.5. Best gamete **+13.2** (AbCD·EfGH), worst **−10.2**, best offspring
-    **+26.4**. Uncut, a gamete can only be −1.2 to +4.2 — the whole range comes from
-    recombination, which is the stage's argument.
-  - *Why the green alleles sit where they do.* The parent's chromosomes are all-big and
-    all-little, so the winning haplotype only exists if a crossover builds it — and which
-    cuts can build what is fixed by the bench: **1 cut** reaches 1000/1100/1110, **2 cuts**
-    reaches 1011/1001/1101, **3 cuts** reaches only 1010 (and complements). The greens are
-    laid out as **1011 on both chromosomes**, so the winner needs exactly two marks and
-    only in the gaps either side of the second spot. Two marks go three ways per
-    chromosome and both have to be right at once: **one of twenty legal placements wins**,
-    measured. JM chose this over the alternating layout, which would have been reachable
-    only at three cuts and visible at a glance from the stripes.
-  - *The gate is the doing, not a question.* Step 2 opens only once the student has
-    collected **both** extremes at the bench. Right marks are not enough: the winning long
-    chromatid and the winning short one land in the same gamete one round in four, so it
-    takes **5.3 rounds on average** after the marks are right. The progress line names the
-    target in the only terms visible on the chromosome — all eight boxes green, then all
-    eight red — rather than as a number the student would have to guess at.
+  - *The effects, and the point of where they sit.* One allele helps and one hurts at
+    every spot, so the gamete a student wants carries **all eight green alleles** — and
+    the bench will not build it. **Long:** A +0.3/a −0.2, B −1.5/b +1.5, C +1.0/c −0.5,
+    D +3.0/d −0.2. **Short:** E +1.5/e −0.6, F +2.0/f −1.0, G −1.2/g +1.0, H −0.5/h +0.4.
+  - *Why it is out of reach, which is JM's whole brief for the stage.* The long
+    chromosome's all-green haplotype is 1011 and takes **two** marks. The short one's is
+    1100 and takes **one**. The slider spends the same number on both, so the two
+    chromosomes disagree and nobody gets everything. Measured over every legal placement:
+
+    | marks each | best gamete | what you give up |
+    |---|---|---|
+    | 1 | **+10.2** | A on the long — worth 0.5 |
+    | 2 | +9.8 | H on the short — worth 0.9 |
+    | 3 | +4.7 | most of both |
+    | *all eight green, if it existed* | *+10.7* | *nothing builds it* |
+
+    So **one mark beats two by 0.4** and the student has to look at both to see it: the
+    intuition that more cuts means more options is right about the long chromosome and
+    wrong about the pair. The locus that one mark cannot reach is **A, deliberately the
+    smallest effect on the board** — what you give up is usually not much, which is also
+    how real genomes are. Best offspring buildable **+20.4** against an imaginable +21.4.
+  - *The gate is the doing, and it is the reachable extreme.* Step 2 opens only once the
+    student has collected both **+10.2** and **−5.2** at the bench. `REACH` is computed at
+    load by running every legal placement through the same `chromatids()` the bench uses,
+    so the gate cannot drift from what the bench will hand over. Right marks are still not
+    enough: the winning long chromatid and the winning short one land in the same gamete
+    one round in four, so it takes **5.2 rounds on average** after that — measured.
+  - *How the page says what it wants without saying the answer.* The progress line reports
+    the best so far and whether **a better one exists** ("+9.8, and there is a better one"
+    → "+10.2 ✓ nothing beats it"), never the target number. Since the grid that would
+    answer it lives in step 3 and is locked during the hunt, **the bench itself quotes what
+    the marks currently on it can reach** — *"the best gamete this cell can make is +9.8
+    and the worst is −4.8"* — which is what turns the puzzle into comparing settings rather
+    than adding sixteen numbers by hand. The key table's +10.2 and the histogram's ticks
+    only appear in step 3, after the gate is already passed.
   - *The square became a gamete grid.* Sixteen gamete values no longer collapse, so a
     square of offspring would want 256 cells. Rows are now the four long chromatids this
     round can deal and columns the four short ones, and the sixteen cells are every gamete
     the cell could make and what each is worth, with the best and worst outlined. It
     redraws when a mark moves, which is the feedback the placing puzzle needs.
-  - *What never moves.* All four gametes of a round total **+6.0** at every cut setting;
-    the mean gamete is **+1.5** and the mean offspring **+3.0**. Cutting moves the spread
-    and not the middle — the same split Lesson 8 draws as a line and a band.
-  - *Why step 3 wants 500 offspring and not 200.* The winning cuts push the offspring sd
-    to **8.5**, so 200 leave the sample mean ±0.6 and a student reading their own table
-    correctly would be marked wrong on q3 about **a quarter of the time** — measured. At
-    500 the window ±1.2 passes 99.8% of correct readers, and the "forgot to double" answer
-    of +1.5 sits 3.9 SE away and stays excluded.
-  - *Questions* — what all four gametes of a round are worth together (**+6.0**, invariant
-    across every cut setting); what one gamete is worth on average (**+1.5**, ±0.8); what
-    the average offspring comes out at (**+3.0**, ±1.2).
-  - *Goal* — neither chromosome you were dealt could make that gamete. Recombination built
-    it out of pieces that were already there, and the same two cuts built the smallest one
-    too. It does not change the average; it widens what selection has to pick from.
+  - *What never moves.* All four gametes of a round total **+10.0** at every setting;
+    the mean gamete is **+2.5** and the mean offspring **+5.0**. Every spot is big on two
+    of the four gametes and little on the other two, so no placement was ever going to
+    give more size overall — it only decides how it is parcelled out. Cutting moves the
+    spread and not the middle, the same split Lesson 8 draws as a line and a band.
+  - *Why step 3 wants 500 offspring and not 200.* The histogram spans the whole imaginable
+    range, some thirty bins, so 200 leave it sparse and the right tail — the part the
+    student has been working toward — barely shows. Both answer windows pass 100% of
+    correct readers at 500, measured.
+  - *Questions* — what all four gametes of a round are worth together (**+10.0**, invariant
+    across every setting); what one gamete is worth on average (**+2.5**, ±0.8); what the
+    average offspring comes out at (**+5.0**, ±1.2).
+  - *Goal* — the best gamete you can imagine is not one you can build. Recombination
+    widens what selection has to pick from, it does not change the average, and how far it
+    can widen is set by where the chromosome will break. The same one cut that built the
+    biggest built the smallest.
   - *Accessibility note* — green and red carry the sign, so the positive box is also drawn
     **rounded** and the negative one square, and the key table under step 3 prints all
     sixteen values.
