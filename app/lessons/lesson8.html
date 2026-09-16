@@ -6,6 +6,7 @@
 <script src="../assets/lock.js"></script>
 <title>BIO 202 — Lesson 8</title>
 <link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/paths.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a;
            --deep:#1e4d68; --shallow:#8fb6cf; --life:#c07a2c; }
@@ -87,6 +88,17 @@
   .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
   .controls input[type=range]:disabled { opacity:0.4; }
+  /* ---- Lesson 8: the causal model replaces the sliders -------------------
+     Stages B, C and D are set by dragging the arrows of a path diagram. The
+     range inputs behind them are still the state, so every listener, gate
+     check and R-code number below is wired exactly as it was -- they are just
+     no longer the thing the student touches. They are never shown and never
+     focused -- the arrows carry the slider role and the keyboard handling.
+     display:none rather than a visually-hidden box, because the rule above
+     sets width:100% on every range input here and would win on specificity,
+     leaving a 1,100px control stretching the stage sideways. */
+  .path-input { display:none; }
+  .pathwrap { margin:2px 0 10px; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
   .controls button:disabled { background:#bbb; cursor:not-allowed; }
@@ -306,8 +318,10 @@
       <ul class="setup">
         <li>1,200 parent-and-child pairs. Everybody is born with four limbs.</li>
         <li>Across: the parent's count. Up: the child's. Points are jittered so you can see how many sit on top of each other.</li>
-        <li>First slider: how often an accident takes a limb.</li>
-        <li>Second slider: whether accidents land at random, or whether some families are dangerous places to be born into.</li>
+        <li>The model is drawn beside the plot, and its arrows are the controls. Click one to pick it up, then drag it up or down. The thicker it gets, the more that cause is doing.</li>
+        <li>A limb is lost to an accident and to nothing else. The lower arrow is that step: how often an accident takes a limb, the same in both lives.</li>
+        <li>What a family changes is not the limb, it is the <em>chance of the accident</em>. The upper arrow is that step, and it forks, because the family a parent was raised in and the family a child is raised in are the same family.</li>
+        <li>There is no arrow between the parent's limbs and the child's limbs, and there is nowhere to draw one. Every route between them goes up through the family and back down. Watch the correlation climb anyway.</li>
         <li>The genes never move. They say four the whole time.</li>
         <li>Lock in each setting. The page counts how many tries it took.</li>
       </ul>
@@ -328,10 +342,17 @@
     </div>
     <div class="col">
       <div class="panel controls-panel">
-        <h3>Controls</h3>
+        <h3>The causal model</h3>
         <div class="controls" id="controlsB">
-          <div class="row" data-line="acc"><label for="B_acc">how often an accident takes a limb</label><input type="range" id="B_acc" min="0" max="45" step="1" value="0" /><output id="B_accOut">0%</output></div>
-          <div class="row" data-line="fam"><label for="B_fam">how much danger runs in families</label><input type="range" id="B_fam" min="0" max="1" step="0.01" value="0" /><output id="B_famOut">0.00</output></div>
+          <!-- The two controls are the two arrows. The inputs stay in the
+               markup, hidden, because everything downstream of them -- the
+               listeners, the gate checks, the R code, the refresh -- is wired
+               to them and does not need to know what is drawing them. -->
+          <div class="pathwrap" id="pathsB" data-line="acc"></div>
+          <input type="range" id="B_acc" min="0" max="45" step="1" value="0" class="path-input" />
+          <output id="B_accOut" class="path-input">0%</output>
+          <input type="range" id="B_fam" min="0" max="1" step="0.01" value="0" class="path-input" />
+          <output id="B_famOut" class="path-input">0.00</output>
           <div class="buttons">
             <button id="B_lock" class="accent">Lock in this setting</button>
             <button id="B_reseed" class="secondary">New families</button>
@@ -391,10 +412,11 @@
       </div>
       <ul class="setup">
         <li>600 chicks, one father each. A song is a number on a scale.</li>
-        <li>First slider: how carefully a chick copies the bird that raises it.</li>
-        <li>Second slider: the genetic basis for the song.</li>
+        <li>The model is drawn beside the plots, and its arrows are the controls. Click one to pick it up, then drag it up or down.</li>
+        <li>The arrow out of the bird that raised it: how carefully a chick copies its tutor.</li>
+        <li>The arrow out of the father it came from: the genetic basis for the song.</li>
         <li>Reported: how much a chick resembles the bird that raised it, and how much it resembles the father it came from.</li>
-        <li>With the eggs left alone those are the same bird, so the two numbers are the same number.</li>
+        <li>With the eggs left alone those are the same bird — the diagram draws one box with both arrows leaving it — so the two numbers are the same number. Swap the eggs and the box splits in two.</li>
         <li>Lock in each answer. Wrong locks are counted and shown.</li>
       </ul>
     </div>
@@ -414,10 +436,13 @@
     </div>
     <div class="col">
       <div class="panel controls-panel">
-        <h3>Controls</h3>
+        <h3>The causal model</h3>
         <div class="controls" id="controlsC">
-          <div class="row" data-line="copy"><label for="C_copy">how carefully a chick copies its tutor</label><input type="range" id="C_copy" min="0" max="0.95" step="0.01" value="0.00" /><output id="C_copyOut">0.00</output></div>
-          <div class="row" data-line="egg"><label for="C_egg">genetic basis for the song</label><input type="range" id="C_egg" min="0" max="0.95" step="0.01" value="0.00" /><output id="C_eggOut">0.00</output></div>
+          <div class="pathwrap" id="pathsC" data-line="copy"></div>
+          <input type="range" id="C_copy" min="0" max="0.95" step="0.01" value="0.00" class="path-input" />
+          <output id="C_copyOut" class="path-input">0.00</output>
+          <input type="range" id="C_egg" min="0" max="0.95" step="0.01" value="0.00" class="path-input" />
+          <output id="C_eggOut" class="path-input">0.00</output>
           <div class="pickrow" id="C_pick">
             <button data-swap="0" class="on">leave the eggs alone</button>
             <button data-swap="1">swap the eggs at laying</button>
@@ -504,7 +529,8 @@
       <ul class="setup">
         <li>Across: the two parents averaged, in inches. Up: the grown child, in inches.</li>
         <li>Every female height is multiplied by 1.08, exactly as Galton did, so a father, a mother and a daughter sit on one scale.</li>
-        <li>The slider tilts the line. That is the deterministic part, the amount of a parent that arrives in a child.</li>
+        <li>Drag the left arrow of the model to tilt the line. That is the deterministic part, the amount of a parent that arrives in a child.</li>
+        <li>The other arrow is not yours to set. These are Galton's real children, so what is left over is whatever the data says it is — it stays dark until the line is locked in.</li>
         <li>The grey marks are the children's average in each strip of parents. A line that is tilted right runs through them.</li>
         <li>Then pick a strip of parents. Their children light up; the rest of the plot goes grey.</li>
         <li>Drag the bracket over those children — an edge to resize it, the middle to slide it. The page counts what it catches.</li>
@@ -540,9 +566,11 @@
     </div>
     <div class="col">
       <div class="panel controls-panel">
-        <h3>The line</h3>
+        <h3>The causal model</h3>
         <div class="controls" id="controlsD">
-          <div class="row" data-line="tilt"><label for="D_tilt_s">how much of a parent arrives in a child</label><input type="range" id="D_tilt_s" min="0" max="1.20" step="0.01" value="0.00" /><output id="D_tiltOut">0.00</output></div>
+          <div class="pathwrap" id="pathsD" data-line="tilt"></div>
+          <input type="range" id="D_tilt_s" min="0" max="1.20" step="0.01" value="0.00" class="path-input" />
+          <output id="D_tiltOut" class="path-input">0.00</output>
           <div class="buttons">
             <button id="D_lock" class="accent">Lock in this line</button>
           </div>
@@ -607,6 +635,7 @@
 <div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/paths.js"></script>
 <script src="../assets/score.js"></script>
 <script>
 /* ====== Shared helpers ==============================================
@@ -1138,13 +1167,15 @@ const qA = wireGame("A", {
 /* ====== Stage B — four limbs, and no resemblance ====================
    Everybody's genes say four. All the variation is accidents, so the
    genetic variation in this trait is flatly zero at every setting. The
-   second slider does not touch a gene: it decides whether the accidents
+   second arrow does not touch a gene: it decides whether the accidents
    land at random or land in families, and the parent-offspring correlation
    climbs out of nothing the moment they land in families. That is the
-   direction-of-causation flip, done with a number on the page.
+   direction-of-causation flip, done with a number on the page -- and the
+   diagram above the controls is where it is easiest to see, because the
+   arrow that makes the correlation appear never touches the parent at all.
 
-   The uniforms behind the accident draws are fixed per seed, so moving a
-   slider morphs the same 400 families rather than dealing new ones. */
+   The uniforms behind the accident draws are fixed per seed, so moving an
+   arrow morphs the same 400 families rather than dealing new ones. */
 const B_N = 1200, B_K = 4.2;
 const sB = { seed: pageSeed("l8B", 1, 99999), acc: 0, fam: 0,
              Z: null, P: null, tries1: 0, tries2: 0, accLocked: null };
@@ -1174,7 +1205,7 @@ function popB(Z, acc, fam) {
     pc[i] = 1 / (1 + Math.exp(-(lg + B_K * zc)));
     sp += pp[i]; sc += pc[i];
   }
-  // Hold the marginal accident rate where the first slider put it, so moving
+  // Hold the marginal accident rate where the first arrow put it, so moving
   // danger into families does not quietly change how many limbs are lost.
   const kp = acc / (sp / n), kc = acc / (sc / n);
   let hurt = 0;
@@ -1232,9 +1263,46 @@ function drawB() {
 }
 function jitterB(i, k) { const t = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453; return t - Math.floor(t); }
 
+/* The causal model, drawn, with its two arrows as the only controls.
+
+   The argument of the stage is what is NOT in this picture: there is no arrow
+   from the parent's limbs to the child's limbs, and there never can be one,
+   because nothing about a lost limb is passed on. The correlation that climbs
+   out of the second arrow is a confound -- one cause reaching both of them --
+   and the ghost arrow across the bottom says so while it happens. */
+const pathsB = Paths.init({
+  mount: "#pathsB", width: 460, height: 400,
+  boxes: [
+    { id: "fam",    label: "the family you were born into", x: 230, y: 32, w: 230, h: 44 },
+    { id: "parAcc", label: "the parent's accidents", x: 96,  y: 176, w: 168, h: 44 },
+    { id: "kidAcc", label: "the child's accidents",  x: 364, y: 176, w: 168, h: 44 },
+    { id: "par",    label: "the parent's limbs", x: 96,  y: 322, w: 168, h: 44, kind: "outcome" },
+    { id: "kid",    label: "the child's limbs",  x: 364, y: 322, w: 168, h: 44, kind: "outcome" }
+  ],
+  arrows: [
+    // The family does not reach a limb. It reaches the PROBABILITY of an
+    // accident, in both generations at once, and the accident is what takes
+    // the limb -- which is the chain popB() actually runs: a family latent
+    // feeds each individual's risk, risk feeds the accident draw, and only
+    // the draw touches the limb count.
+    { id: "fam", from: "fam", to: ["parAcc", "kidAcc"], input: "B_fam",
+      label: "how much danger runs in families", fmt: f2,
+      labelAt: { x: 230, y: 116 } },
+    // One fact about the world, holding in two lives that share no endpoint:
+    // hence a tier of two edges on one control rather than a fork.
+    { id: "acc", edges: [["parAcc", "par"], ["kidAcc", "kid"]], input: "B_acc",
+      label: "how often an accident takes a limb",
+      fmt: v => Math.round(v) + "%", labelAt: { x: 230, y: 250 } },
+    { id: "none", from: "par", to: "kid", ghost: true, readonly: true,
+      label: "nothing here — no limb is inherited", labelAt: { x: 230, y: 376 } }
+  ],
+  idleNote: "Click an arrow to pick it up, then drag it up or down. The thicker it gets, the more that cause is doing."
+});
+
 function refreshB() {
   sB.P = popB(sB.Z, sB.acc / 100, sB.fam);
   drawB();
+  pathsB.sync();
   document.getElementById("B_share").textContent = Math.round(sB.P.share * 100) + "%";
   document.getElementById("B_corr").textContent = f2(sB.P.corr);
   document.getElementById("B_gvar").textContent = "none";
@@ -1296,7 +1364,7 @@ const qB = wireGame("B", {
     for (let k = 0; k < 6; k++) draws.push(popB(makeZB(randomSeed(1, 99999), B_N), acc / 100, 1).corr);
     const t = mean(draws);
     return {
-      prompt: "Accidents take a limb from about <b>" + acc + "%</b> of people, and the danger runs all the way into families. Not one gene varies. Where does the parent–offspring correlation land? Set the sliders above and look, if you want to.",
+      prompt: "Accidents take a limb from about <b>" + acc + "%</b> of people, and the danger runs all the way into families. Not one gene varies. Where does the parent–offspring correlation land? Set the arrows above and look, if you want to.",
       truth: { r: t }, tol: { r: 0.07 },
       right: () => "and the genetic variation behind that number is still flatly zero",
       wrong: () => "the six fresh sets below are where it actually lands",
@@ -1364,9 +1432,65 @@ function drawC() {
   panelC(ctx, W, H, W / 2 + 44, 16, P.dad, P.chick, "the father it came from", "came from");
 }
 
+/* The causal model, with the experiment built into it.
+
+   Left alone, the tutor and the father are the SAME BIRD, and the diagram
+   says so by drawing one box with both arrows leaving it. That is the state
+   every field measurement is stuck in, and it is why the two resemblances
+   come back as one number. Swapping the eggs splits the box in two, and the
+   two arrows finally point at different birds. The picture performs the
+   experiment; the numbers underneath only report it. */
+const pathsC = Paths.init({
+  mount: "#pathsC", width: 470, height: 352,
+  boxes: [
+    { id: "tut",  label: "the bird that raised it", x: 118, y: 44, w: 196, h: 46 },
+    { id: "dad",  label: "the father it came from", x: 352, y: 44, w: 196, h: 46 },
+    { id: "else", label: "everything else", x: 66, y: 248, w: 116, h: 34 },
+    { id: "kid",  label: "the chick's song", x: 272, y: 302, w: 220, h: 46, kind: "outcome" }
+  ],
+  arrows: [
+    { id: "copy", from: "tut", to: "kid", input: "C_copy",
+      label: "how carefully a chick copies its tutor", fmt: f2, bend: -30,
+      labelAt: { x: 104, y: 146 } },
+    { id: "egg",  from: "dad", to: "kid", input: "C_egg",
+      label: "genetic basis for the song", fmt: f2, bend: 30,
+      labelAt: { x: 402, y: 146 } },
+    { id: "noise", from: "else", to: "kid", readonly: true,
+      label: "noise", text: "—", labelAt: { x: 66, y: 202 },
+      hint: "Whatever the two arrows above do not account for ends up here." }
+  ],
+  idleNote: "Click an arrow to pick it up, then drag it up or down. Watch what the two boxes at the top do when you move the eggs."
+});
+
+/* One bird or two. This is the whole stage in one line. */
+function pathsCmode() {
+  if (sC.swap) {
+    pathsC.setBox("tut", { hidden: false });
+    pathsC.setBox("dad", { x: 352, y: 44, w: 196, h: 46,
+                           label: "the father it came from", sub: null });
+    pathsC.setArrow("copy", { from: "tut", bend: -30, labelAt: { x: 104, y: 146 } });
+    pathsC.setArrow("egg", { bend: 30, labelAt: { x: 402, y: 146 } });
+  } else {
+    // One bird. The box slides to the middle and takes both arrows with it,
+    // which is the only honest way to draw what a field measurement sees.
+    pathsC.setBox("tut", { hidden: true });
+    pathsC.setBox("dad", { x: 246, y: 44, w: 280, h: 52,
+                           label: "the bird that raised it",
+                           sub: "— and the father it came from" });
+    pathsC.setArrow("copy", { from: "dad", bend: -92, labelAt: { x: 166, y: 146 } });
+    pathsC.setArrow("egg", { bend: 92, labelAt: { x: 336, y: 218 } });
+  }
+}
+
 function refreshC() {
   sC.P = popC(sC.Z, sC.copy, sC.egg, sC.swap);
   drawC();
+  pathsC.batch(() => {
+    pathsCmode();
+    // the same floor popC() uses, so the arrow never reports a noise level the
+    // simulation is not actually running
+    pathsC.setArrow("noise", { text: f2(Math.sqrt(Math.max(0.02, 1 - (sC.copy * sC.copy + sC.egg * sC.egg + 2 * sC.copy * sC.egg * sC.egg)))) });
+  });
   document.getElementById("C_mode").textContent = sC.swap ? "swapped at laying" : "left where they were laid";
   document.getElementById("C_rTutor").textContent = f2(sC.P.rT);
   document.getElementById("C_rGen").textContent = f2(sC.P.rG);
@@ -1472,7 +1596,7 @@ const qC = wireGame("C", {
 });
 
 /* ====== Stage D — Galton's 934 children =============================
-   One slider and one bracket. The slider is the deterministic part of the
+   One arrow and one bracket. The arrow is the deterministic part of the
    regression: how much of a parent arrives in a child, which on the
    mid-parent axis is the heritability itself.
 
@@ -1572,9 +1696,47 @@ function drawD() {
   ctx.fillText("drag an edge of the bracket to resize it, the middle to slide it", f.pad.l + 4, f.pad.t + 15);
 }
 
+/* The causal model behind the line.
+
+   Only one of these two arrows is the student's. Stage D runs on Galton's
+   real 934 children, not on a simulation, so there is no dial on "everything
+   else": the scatter is whatever the data says it is. So the second arrow
+   stays dark and reports nothing until the line is locked in -- which is the
+   same contract the correlation and the heritability readouts already keep,
+   and for the same reason. The stage must not be solvable by watching a
+   number go green. Once the line is in, it lights up at the 0.75 the fit
+   leaves behind, next to a tilt of 0.71, which is the argument of the whole
+   stage standing in one picture. */
+const pathsD = Paths.init({
+  mount: "#pathsD", width: 440, height: 262,
+  boxes: [
+    { id: "par",  label: "the two parents averaged", x: 116, y: 38, w: 200, h: 48 },
+    { id: "else", label: "everything else", x: 342, y: 38, w: 164, h: 48 },
+    { id: "kid",  label: "the grown child", x: 222, y: 208, w: 216, h: 46, kind: "outcome" }
+  ],
+  arrows: [
+    { id: "tilt", from: "par", to: "kid", input: "D_tilt_s",
+      label: "how much of a parent arrives in a child", fmt: f2, bend: -22,
+      labelAt: { x: 86, y: 140 } },
+    // no label: the box it leaves already says "everything else", and saying
+    // it twice makes the panel look like it has three things in it
+    { id: "else", from: "else", to: "kid", readonly: true, dark: true, bend: 22,
+      label: "", text: "locked", labelAt: { x: 386, y: 150 },
+      hint: "These are Galton's real children, so this one is not a setting — it is whatever is left once the line has had its say. Lock the line in and it will tell you how much that is." }
+  ],
+  idleNote: "Click the left arrow to pick it up, then drag it up or down until the line runs through the grey marks."
+});
+
 function refreshD() {
   drawD();
   const c = catchD(), b = c.band;
+  pathsD.batch(() => {
+    pathsD.setArrow("else", sD.revealed
+      ? { dark: false, text: f2(1 - G_R2), readonly: true,
+          hint: "The tilt accounts for " + f2(G_R2) + " of the children's variation. This arrow is the " + f2(1 - G_R2) + " it does not." }
+      : { dark: true, text: "locked" });
+    pathsD.sync();
+  });
   document.getElementById("D_tilt").textContent = f2(sD.tilt);
   document.getElementById("D_miss").textContent = f2(missAt(sD.tilt)) + " in";
   document.getElementById("D_who").textContent = b
@@ -1864,7 +2026,7 @@ function fitStats(x, y) {
 /* ====== Boot ======================================================== */
 Score.init({
   moduleId: "lesson8",
-  version: 11,
+  version: 12,
   scaffold: 14,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

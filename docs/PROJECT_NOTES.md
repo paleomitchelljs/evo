@@ -73,6 +73,16 @@ app/interactives/descent.html  pedigree explorer: coalescence, IBD, gene droppin
 app/assets/sim.js              canonical shared helpers (fallback; locals shadow it)
 app/assets/score.js            submission codes + cross-lesson carryover
 app/assets/lock.js             release gate: reads LOCKS.txt, hides a locked page
+app/assets/paths.js/.css       path-diagram controls: the arrows ARE the sliders
+                               — a fixed causal model whose edges are draggable.
+                               Not dag.js: that one lets a student BUILD a graph;
+                               this one makes a lesson's own graph adjustable.
+                               Binds each arrow to a hidden <input type=range>,
+                               so existing listeners/gates/R-code keep working.
+                               One control can drive a fork (one cause, two
+                               outcomes) or a tier (the same relationship in two
+                               places sharing no endpoint, via `edges`).
+                               Used by lesson8 stages B, C and D.
 LOCKS.txt                      one row per page, o = open / x = locked
 instructor/                    verify_code.html, aggregate.html
 scripts/check_lessons.py       structural checks (+ --style, --terms reports)

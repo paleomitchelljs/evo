@@ -1176,7 +1176,43 @@ decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — Finding out what knowing the parents is actually worth
-`lesson8.html` · v11 · 14 checkpoints · **Built**
+`lesson8.html` · v12 · 14 checkpoints · **Built**
+
+**The sliders became a causal model, 2026-09-16, on JM's call.** Stages B, C and D
+no longer have slider rows. Each has a **path diagram** — boxes for the variables,
+arrows for the causes — and **the arrows are the controls**: click one to pick it
+up, then drag it up or down, or use the − / + that appear on it, or the arrow keys.
+The stroke thickens as the contribution grows, so the picture and the number say the
+same thing. Built on a new shared primitive, `app/assets/paths.js` + `paths.css`,
+which is *not* `dag.js`: dag.js lets a student build a graph and watch a distribution
+fall out of it; this one takes a graph the lesson has already fixed and makes its
+edges adjustable. Each arrow is bound to a hidden `<input type="range">` that is
+still the state, so every listener, gate check, code-line highlight and R-code number
+downstream is wired exactly as before. `version` 11 → 12; `scaffold` stays 14 and no
+checkpoint moved. **Stage A keeps its two rate sliders** — its controls are two rates
+in a 2×2, not two causes — and every closing game keeps its estimate slider, because
+those ask for a reading of an outcome, not for a contribution.
+
+**What each diagram argues.** B: **two tiers, corrected on JM's call 2026-09-16.** The
+first draft had the family reaching a limb directly, which is not what `popB()` runs
+and not what the stage means. A limb is lost to an accident and to nothing else; what
+a family changes is the *probability of the accident*. So the model is now
+`the family you were born into` forking to `the parent's accidents` and `the child's
+accidents` (that fork is the **danger runs in families** control), and each of those
+dropping to its own limb count (both of those are the one **how often an accident
+takes a limb** control, a tier rather than a fork — two edges sharing no endpoint).
+A ghost arrow across the bottom is labelled *nothing here — no limb is inherited*.
+Every route from one limb box to the other goes up through the family and back down,
+and the correlation climbs anyway. This also matches `popB` exactly: a family latent
+`L` feeds each individual's risk `z`, `z` feeds the accident probability `p`, and only
+the draw off `p` touches the limb count. C: with the eggs left alone the tutor and the father are **one box** with
+both arrows leaving it, and swapping the eggs **splits the box in two** — the diagram
+performs the experiment, the numbers only report it. D: `the two parents averaged`
+and `everything else` both reach `the grown child`, but only the left arrow is the
+student's; the right one is **dark and reads "locked"** until the line is locked in,
+because these are Galton's real children and what is left over is not a setting. On
+the lock it lights up at **0.75** beside a tilt of **0.71** — two numbers off one fit,
+side by side, which is the argument of the stage.
 
 **Cut to four stages, 2026-09-14, on JM's call.** Stages E and F are out. They belong to
 a later lesson on additive genetic variation — F may belong to the selection lesson
@@ -1238,9 +1274,10 @@ gate closes — which is when the code is minted — and again, this time scroll
 into view, when Stage D's game is cleared. It never scrolls on the first showing: that
 would drag the student off the one thing still left to do.
 
-**Two rules from the notes, applied throughout.** The word *knob* does not appear — every
-control is a *slider*. No question says *recorded*; a verdict is **correct** or
-**incorrect** and nothing else.
+**Two rules from the notes, applied throughout.** The word *knob* does not appear. In
+Stage A and in every closing game a control is a *slider*; in Stages B, C and D it is
+an *arrow*, and the prose there names arrows, never sliders. No question says
+*recorded*; a verdict is **correct** or **incorrect** and nothing else.
 
 **Every stage gates on a lock-in, and counts the tries.** Sliding past an answer
 is not choosing it, and the page says which try you landed on.
@@ -1276,9 +1313,9 @@ than as a property of the correlation.
 
 - **B — heritability is not genetics** *(the direction of causation, flipped back)*
   - *Interactive* — 1,200 parent-and-child pairs, everybody born with four limbs, the
-    genetic variation flatly **zero** at every setting and said so on the page. Slider one:
-    how often an accident takes a limb. Slider two: whether accidents land at random or
-    land in families. Gate: danger spread evenly, a quarter of everybody missing a limb,
+    genetic variation flatly **zero** at every setting and said so on the page. The lower
+    arrow: how often an accident takes a limb. The upper one, out of the family and into
+    the accident nodes: whether accidents land at random or land in families. Gate: danger spread evenly, a quarter of everybody missing a limb,
     correlation under 0.10 — lock it in; then hold that accident rate and move danger into
     families until the correlation clears 0.25 — lock it in.
   - *Calibration* — n and the family loading were both raised (400 → 1,200, k 2.2 → 4.2)
@@ -1294,20 +1331,21 @@ than as a property of the correlation.
 - **C — move the eggs** *(cross-fostering as the experiment that separates them)*
   - *Interactive* — 600 chicks, one father each, two panels side by side: the chick
     against the bird that raised it, and the chick against the father it came from.
-    Slider one, how carefully a chick copies its tutor; slider two, the **genetic basis
+    One arrow, how carefully a chick copies its tutor; the other, the **genetic basis
     for the song** (renamed from "how much of the song is in the egg" on JM's call,
-    2026-09-14); a switch that swaps the eggs at laying. Three locks: build a
+    2026-09-14); a switch that swaps the eggs at laying, which splits the source box
+    in two. Three locks: build a
     population resembling at 0.60 with nothing in the egg; **predict**, before touching
     the swap, what the move does to that number; then the inverse problem — find the
     population where the swap drops 0.60 to **0.25**.
   - *Goal* — With the eggs left alone the tutor and the father are the same bird and the
     two numbers are one number, which is the situation every field measurement is in. The
     resemblance is real both times. Moving the eggs is what says where it came from.
-    Verified solvable on five seeds: step 1 has 6–7 slider settings, step 3 has 56–110.
+    Verified solvable on five seeds: step 1 has 6–7 workable settings, step 3 has 56–110.
 
 - **D — Galton's 934 children** *(mid-parent, in inches)*
   - *Interactive* — 934 grown children from 205 families, women ×1.08, the two parents
-    averaged on the across axis. One slider tilts the line (**the deterministic part**).
+    averaged on the across axis. One arrow tilts the line (**the deterministic part**).
     The correlation and the heritability stay **dark until the line is locked in**, so the
     stage cannot be solved by watching a number go green. Grey marks show the children's
     average in each strip of parents, and they are what guides the tilt — the miss readout
