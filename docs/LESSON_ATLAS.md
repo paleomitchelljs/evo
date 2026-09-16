@@ -1563,6 +1563,17 @@ nothing says so — the buttons simply appear.
     **rounded** and the negative one square, and the key table under step 3 prints all
     sixteen values.
 
+**Step 3 shows the draw, 2026-09-15.** Once the first embryo has been fused by hand the
+bench stops being a place to drag and becomes a place to watch: every embryo drawn after
+that is redrawn as **gamete + gamete = embryo** in three circles, so the picture changes
+with each draw the way step 2's single gamete does. JM asked for it so that drawing
+embryos looks like drawing gametes. "New pair of gametes" puts the dragging bench back.
+
+The label under the embryo follows the stage's readout rather than being hard-coded to the
+A locus: `aa`/`Aa`/`AA` in A, B and C, the three trait genotypes in D (`AA  BB  Ee`), and
+the size in E (`+0.3`). Stage E also prints each gamete's own value under its circle, so
+the arithmetic is on the screen: **+3.0 and −2.7 make +0.3**.
+
 **Table headings, fixed 2026-09-14.** `table.tally th` was left-aligned while `td.n` was
 right-aligned, so a wide count heading — `embryos with ≥1` in step 3's long-version table —
 sat over the column to its left with its own numbers nowhere near it. A `th.n` rule now

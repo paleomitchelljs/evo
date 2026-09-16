@@ -1042,6 +1042,7 @@ function newState(K, cfg) {
     rounds: [], best: 0,
     gam: [], last: null,
     pair: [null, null], placed: [false, false], drag3: null, byHand: 0, embryo: null, fuseAt: null,
+    shown: null,
     emb: 0, counts: [0, 0, 0], carry: {}, sq: {},
     // Stage D keeps a dose tally per trait, Stage E a count per size. Both are
     // always allocated: the readout decides which one is written and read, and
@@ -1392,7 +1393,7 @@ function collectRound(st) {
   if (xoNow) for (const t of [LONG, SHORT]) for (const k of xoNow[t]) st.spots[t + ":" + k] = true;
   if (prevKey !== xoKey(xoNow) && !Gates[K].done) {
     st.gam = []; st.last = null; st.tallyGap = xoKey(xoNow);
-    st.emb = 0; st.counts = [0, 0, 0]; st.carry = {}; st.sq = {}; st.byHand = 0;
+    st.emb = 0; st.counts = [0, 0, 0]; st.carry = {}; st.sq = {}; st.byHand = 0; st.shown = null;
     st.tri = TRAITS.map(() => [0, 0, 0]); st.vals = [];
     document.getElementById(K + "_draw1e").disabled = true;
     document.getElementById(K + "_draw100").disabled = true;
@@ -1595,10 +1596,55 @@ const FUSE = {
 const FUSE_SNAP = 22;                 // how far past the rim a drop still counts
 function fuseMode(cfg) { return cfg.fuse === "onto" ? FUSE.onto : FUSE.into; }
 
+/* Once the first one has been fused by hand the bench stops being a place to
+   drag and becomes a place to watch: every embryo drawn after that is shown as
+   gamete + gamete = embryo, in the same three circles, so the picture changes
+   with each draw the way step 2's single gamete does. */
+const DRAWN = { g: [{ x: 92, y: 132 }, { x: 250, y: 132 }], emb: { x: 444, y: 132 },
+                gr: 58, r: 76, plus: 171, eq: 347 };
+
+function embryoLabel(st, a, b) {
+  if (st.cfg.readout === "size")   return f1(embryoSize(a, b));
+  if (st.cfg.readout === "traits") return TRAITS.map(L => genoText(L, doseAt(a, b, L.t, L.i))).join("  ");
+  return ["aa", "Aa", "AA"][(a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0)];
+}
+function gameteLabel(st, g) { return st.cfg.readout === "size" ? f1(gameteSize(g)) : ""; }
+
+function renderDrawn(st) {
+  const K = st.K, cfg = st.cfg, svg = document.getElementById(K + "_fuse");
+  const a = st.shown.a, b = st.shown.b;
+  const sign = (x, ch) => {
+    const t = labelNode(x, DRAWN.emb.y, ch, { size: 26, fill: "#a8a49a" });
+    svg.appendChild(t);
+  };
+  [a, b].forEach((g, i) => {
+    const at = DRAWN.g[i];
+    svg.appendChild(cellNode(at.x, at.y, DRAWN.gr, { fill: "#fbfaf6", stroke: "#cfccc0", sw: 1.5 }));
+    gameteInto(svg, at.x, at.y, g, cfg);
+    svg.appendChild(labelNode(at.x, at.y - DRAWN.gr - 8, "gamete"));
+    const lab = gameteLabel(st, g);
+    if (lab) svg.appendChild(labelNode(at.x, at.y + DRAWN.gr + 17, lab, { size: 13, fill: INK }));
+  });
+  sign(DRAWN.plus, "+");
+  sign(DRAWN.eq, "=");
+  const e = DRAWN.emb;
+  svg.appendChild(cellNode(e.x, e.y, DRAWN.r, { fill: "#f2f7f1", stroke: "#6f8a4a", sw: 2 }));
+  svg.appendChild(place(chromatidNode(LONG,  a.long,  cfg), e.x - 44, e.y));
+  svg.appendChild(place(chromatidNode(LONG,  b.long,  cfg), e.x - 16, e.y));
+  svg.appendChild(place(chromatidNode(SHORT, a.short, cfg), e.x + 16, e.y));
+  svg.appendChild(place(chromatidNode(SHORT, b.short, cfg), e.x + 44, e.y));
+  svg.appendChild(labelNode(e.x, e.y - DRAWN.r - 8, "embryo"));
+  svg.appendChild(labelNode(e.x, e.y + DRAWN.r + 17, embryoLabel(st, a, b), { size: 15, fill: INK }));
+  document.getElementById(K + "_status3").innerHTML =
+    `<span class="muted">The one that just came out. ${st.emb} built so far, ` +
+    `${st.byHand} of them by hand.</span>`;
+}
+
 function newPair(st) {
   const g = gapNow(st);
   st.pair = [oneGamete(st.rng, g), oneGamete(st.rng, g)];
   st.placed = [false, false]; st.embryo = null; st.fuseAt = null; st.warn3 = null;
+  st.shown = null;                       // back to a bench you drag on
   renderFuse(st); drawSquare(st);          // the old cell is no longer the one in hand
 }
 /* The left gamete is parent 1 whichever one the student picked up, so the
@@ -1606,6 +1652,7 @@ function newPair(st) {
 function fuseNow(st) {
   const K = st.K;
   st.embryo = { a: st.pair[0], b: st.pair[1] };
+  st.shown = null;
   st.byHand++; recordEmbryo(st, st.pair[0], st.pair[1]);
   highlightByDataLine("code" + K, "embryo");
   if (st.byHand >= 2) {
@@ -1617,6 +1664,7 @@ function fuseNow(st) {
 function renderFuse(st) {
   const K = st.K, cfg = st.cfg, svg = document.getElementById(K + "_fuse");
   while (svg.firstChild) svg.removeChild(svg.firstChild);
+  if (st.shown) return renderDrawn(st);
   const M = fuseMode(cfg), onto = !M.emb;
   // Where the embryo's circle goes, and whether there is one to draw yet.
   const at = st.embryo ? (onto ? st.fuseAt : M.emb) : (onto ? null : M.emb);
@@ -1635,8 +1683,7 @@ function renderFuse(st) {
     svg.appendChild(place(chromatidNode(LONG,  b.long,  cfg), at.x - 16, at.y));
     svg.appendChild(place(chromatidNode(SHORT, a.short, cfg), at.x + 16, at.y));
     svg.appendChild(place(chromatidNode(SHORT, b.short, cfg), at.x + 44, at.y));
-    const dose = (a.long[0] ? 1 : 0) + (b.long[0] ? 1 : 0);
-    svg.appendChild(labelNode(at.x, at.y + M.r + 18, ["aa", "Aa", "AA"][dose],
+    svg.appendChild(labelNode(at.x, at.y + M.r + 18, embryoLabel(st, a, b),
       { size: 15, fill: INK }));
   }
   for (let i = 0; i < 2; i++) {
@@ -1717,7 +1764,14 @@ function drawEmbryos(st, n) {
     st.singles3 = (st.singles3 || 0) + 1;
     if (st.singles3 >= BULK_AFTER) revealBulk(K, ["_draw100"]);
   }
-  for (let i = 0; i < n; i++) recordEmbryo(st, oneGamete(st.rng, g), oneGamete(st.rng, g));
+  let la = null, lb = null;
+  for (let i = 0; i < n; i++) {
+    la = oneGamete(st.rng, g); lb = oneGamete(st.rng, g);
+    recordEmbryo(st, la, lb);
+  }
+  // the last one drawn is the one the bench shows, the same way step 2 shows
+  // the last gamete out of five hundred
+  if (la) { st.shown = { a: la, b: lb }; renderFuse(st); }
   bump(K); highlightByDataLine("code" + K, "embryo");
   refresh3(st);
 }
@@ -2348,7 +2402,7 @@ document.addEventListener("score:bypass", () => {
 
 Score.init({
   moduleId: "lesson9",
-  version: 6,
+  version: 7,
   scaffold: 30,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
