@@ -130,6 +130,23 @@ exactly why `check_lessons.py` fails when a page has no row: a page missing from
 the file would look released forever and never say so. Client-side, therefore a
 curtain and not a vault; nothing that must stay unseen belongs in a public repo.
 
+**Two names that open every stage.** Both are recognised in `app/assets/score.js`,
+compared after `nameToken()` normalises case, spaces and punctuation, so the spelling
+does not have to be exact.
+
+- **`JMitchell`** (also `J. Mitchell`, `JSMitchell`, `JS Mitchell`) — the instructor
+  bypass. Every section, gate and inner step opens at once, and the run **still mints a
+  code**, in whatever name was typed. That is deliberate: a code in JM's name is how the
+  codec gets exercised end to end, and it is worthless to hand in anyway.
+- **`Study Mode`** (also `study mode`, `StudyMode`, `study-mode`) — added 2026-09-16 on
+  JM's call, for students who want to replay an interactive without walking the lesson
+  again. Opens exactly the same doors and **mints no code at all**: the final panel says
+  so in words rather than going blank, because an empty panel where a code belongs reads
+  as a bug and a code reading "Study Mode" reads as something to submit.
+
+Neither touches a student's real record: the score key is `bio202-score:<module>v<n>:<nameToken>`,
+so a study-mode run lands in its own bucket.
+
 **Cross-lesson carryover.** `Score.carry(key, value)` / `Score.recall(key)` /
 `Score.recallInfo(key)` persist to a course-wide, per-student namespace
 (`bio202-carry:<nameToken>`), deliberately outside the per-module, version-stamped

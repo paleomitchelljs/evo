@@ -135,6 +135,7 @@
     studentName: null,
     passcode: null,
     bypass: false,
+    study: false,
     // Epoch ms when the student confirmed their name (the clock start for
     // "how fast they worked"). Persisted so a reload measures from the true
     // first start, not the reload.
@@ -341,7 +342,19 @@
   // from whatever name was entered, so a bypassed run emits a code in the
   // instructor's name and is worthless to hand in.
   const BYPASS_TOKENS = ["jmitchell", "j_mitchell", "jsmitchell", "js_mitchell"];
-  function isBypassName(name) { return BYPASS_TOKENS.indexOf(nameToken(name)) !== -1; }
+  // "Study Mode" opens the same doors, and is for students who want to play with
+  // an interactive without walking the lesson again. It differs from the
+  // instructor tokens in one way: it MINTS NO CODE. The instructor tokens still
+  // emit one, because a code in JM's name is how the codec gets tested; a code
+  // reading "Study Mode" would just be something a student might try to hand in.
+  // nameToken() collapses punctuation and spaces to "_", so "Study Mode",
+  // "study-mode" and "study mode" all arrive as study_mode.
+  const STUDY_TOKENS = ["study_mode", "studymode"];
+  function isStudyName(name) { return STUDY_TOKENS.indexOf(nameToken(name)) !== -1; }
+  function isBypassName(name) {
+    const t = nameToken(name);
+    return BYPASS_TOKENS.indexOf(t) !== -1 || STUDY_TOKENS.indexOf(t) !== -1;
+  }
   function openEverything() {
     document.querySelectorAll("section.stage.stage-locked")
       .forEach(function (sec) { sec.classList.remove("stage-locked"); });
@@ -366,6 +379,7 @@
     document.dispatchEvent(new CustomEvent("score:bypass"));
   }
   function isBypass() { return state.bypass === true; }
+  function isStudy() { return state.study === true; }
 
   function renderNamePrompt(selector) {
     let mount;
@@ -414,7 +428,9 @@
         state.lastTick = Date.now();
         bindActivity();
         state.bypass = isBypassName(name);
-        stat.textContent = state.bypass ? "Confirmed — every stage open." : "Confirmed.";
+        state.study = isStudyName(name);
+        stat.textContent = state.study ? "Study mode — every stage open, and no code at the end."
+                         : state.bypass ? "Confirmed — every stage open." : "Confirmed.";
         if (state.onReady) state.onReady(state.passcode);
         if (state.bypass) openEverything();
       } catch (e) {
@@ -654,6 +670,18 @@
       console.warn("Score: finish() called but no mountFinalCode container.");
       return;
     }
+    // Study mode gets the whole lesson and none of the credit, and says so
+    // rather than going quiet -- a blank panel where a code belongs reads as a
+    // bug, and a code reading "Study Mode" reads as something to hand in.
+    if (state.study) {
+      state.mountFinalCode.innerHTML =
+        '<div class="score-card score-final-card">' +
+          '<h3 class="score-card-h">Study mode</h3>' +
+          '<p class="score-card-p">Every stage was open from the start, so there is no code to hand in. ' +
+          'Confirm your own name to do the lesson for credit.</p>' +
+        '</div>';
+      return;
+    }
     // Encoding is async (WebCrypto). Show a placeholder so the panel never
     // flashes empty while the digest runs.
     state.mountFinalCode.innerHTML =
@@ -768,6 +796,7 @@
     bumpManipulation, getManipulations, manipulationCount,
     scoring, nameToken, elapsedSeconds, activeSeconds,
     isBypass,              // instructor bypass: every stage open, code in JM's name
+    isStudy,               // study mode: every stage open, no code at all
     decodeCode,            // v3 verifier entry point
     DEFAULT_SALT,          // so instructor tools can prefill the salt field
     hashName, parseCode,   // legacy dash-format only
