@@ -1469,7 +1469,57 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
-`lesson9.html` · v5 · 30 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+`lesson9.html` · v8 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+
+**Stages D and E rebuilt off the shared bench, 2026-09-16, on JM's brief.** A–C still
+run on `buildLab` and are untouched. D and E now have their own builders —
+`buildDeduceLab()` and `buildSelectionLab()` — because neither is three passes over a
+meiosis any more. `scaffold` 30 → 24: D and E gate on what the student does there
+(three slots each) rather than on the bench's six.
+
+**D — the phenotype is visible, and nobody says which gene is which.** One body carries
+all three traits at once: outline (circle / square), colour (blue / both / red) and
+distortion (wide / even / tall). The three rules the stage has always been about fall
+out of the drawing — one allele masking, both showing, the two blending — and colour
+and distortion deliberately share a genotype ratio and a look count, so what separates
+them is that one middle shows *both* alleles and the other shows *neither*.
+**Which locus drives which trait, and which allele does what, are drawn from the page
+seed** and named nowhere until the student has committed. Two parents, both het at all
+three loci; crossing them and **sorting the offspring by one gene** is the way in —
+line them up by a genotype and the trait that gene drives stops moving. Loci are A and
+D (the two ends of the long chromosome) and E on the short, with one crossover per
+chromosome, so all three assort independently: measured over 4,000 offspring, every
+pairwise r is under 0.035 and each locus is a clean 25/50/25.
+
+**E — build it by hand, then hand it to a population.** Three panels, replacing three
+bench passes, four tables and two charts.
+
+1. *Build the biggest and the smallest offspring these chromosomes allow.* The
+   crossover count is the same on both chromosomes, which is the constraint: the best
+   gamete is **+10.2 at one crossover**, falls to **+9.8 at two** and **+4.7 at three**,
+   and the all-green gamete that does not exist would be **+10.7**. Gate: build both
+   extremes, ±20.4 and −10.4.
+2. *A population runs the same eight spots with nothing choosing.*
+3. *The student picks a direction, a share that breeds, and a crossover chance.*
+
+   Each press founds a **new** population and keeps the last six on the chart, so
+   replicates under identical selection visibly plateau at different heights. The mean
+   and the spread are drawn on the same axes. Two things are meant to be seen and are
+   never explained: **the response is not a property of selection alone** (median +10.5
+   in the first ten generations, +0.0 in the last ten, spread at zero by the end in
+   60 of 60 runs, selection unchanged throughout), and **where it stops is not the best
+   set of alleles** (41 of 60 runs end short, by a median of 6.0).
+
+   *Why N = 16.* At N = 40 the population reaches the optimum in three runs out of
+   four, which hides the second point entirely. Measured at 40 / 24 / 16 / 12.
+
+   *The crossover chance, added on JM's call mid-build,* moves the ceiling rather than
+   the speed. Median end point over 40 runs against an ideal of +21.4: **+9.2** at 0%,
+   **+11.0** at 10%, **+15.4** at 25% and above; it reaches the ideal 0/40, 2/40, 5/40,
+   9/40, 15/40 as the rate climbs. At 0% nothing is reshuffled, only the two founding
+   haplotypes exist, and the wanted set of alleles is not merely hard to reach — it is
+   not in the population at any frequency. The locus the run usually fails to fix is
+   the same one panel 1 says you cannot get at one crossover.
 
 **Two stages added 2026-09-15, D and E, on JM's call.** D turns three of the spots into
 traits with three different dominance rules; E turns all eight into units of one
