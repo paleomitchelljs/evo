@@ -190,7 +190,8 @@
   .efcell.good { background:#e4efd4; border-color:#6f8a4a; }
   .efcell.bad  { background:#f8dfdb; border-color:var(--accent); }
   .efcell.fix  { background:#eee; }
-  .efnote { font-size:11.5px; color:var(--muted); margin-top:6px; }
+  .efline { display:flex; align-items:center; gap:8px; margin-bottom:5px; }
+  .efline .lab { width:34px; flex:none; }
 
   .btnrow { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
   .btnrow button { background:#333; color:#fff; border:0; border-radius:4px; padding:7px 12px; cursor:pointer; font-size:13px; }
@@ -2808,6 +2809,7 @@ const sE9 = {
   bestBuilt: null, worstBuilt: null, extremesDone: false,
   driftRuns: [], driftDone: false,
   selRuns: [], bs: 0.6, ds: 0, nb: 0.5, nd: 0.5, rec: 1, selDone: false,
+  builds: 0, closeRuns: 0,
   rng: mulberry32(pageSeed("l9Epop", 1, 99999))
 };
 /* Every chromatid this setting yields, with what each is worth. */
@@ -2914,7 +2916,7 @@ function buildSelectionLab() {
           <button id="E_driftRun" class="accent">Run a population for ${E_GENS} generations</button>
           <button id="E_driftNew" class="ghost">Clear the chart</button>
         </div>
-        <div class="panel"><h3>What the eight spots are doing</h3>
+        <div class="panel"><h3>Frequency of each allele</h3>
           <div class="efreq" id="E_driftFreq"><div class="none">not yet</div></div></div>
       </div>
     </div>
@@ -2949,7 +2951,7 @@ function buildSelectionLab() {
             <button id="E_selNew" class="ghost">Clear the chart</button>
           </div>
         </div>
-        <div class="panel"><h3>Where the eight spots ended up</h3>
+        <div class="panel"><h3>Frequency of each allele</h3>
           <div class="efreq" id="E_selFreq"><div class="none">not yet</div></div></div>
       </div>
     </div>
@@ -3094,21 +3096,55 @@ function eUseGamete() {
     const v = dec1(sE9.gam[0].v + sE9.gam[1].v);
     if (sE9.bestBuilt === null || v > sE9.bestBuilt) sE9.bestBuilt = v;
     if (sE9.worstBuilt === null || v < sE9.worstBuilt) sE9.worstBuilt = v;
+    sE9.builds++;
   }
   bump("E"); eDrawPanel1(); eCheckExtremes();
 }
 
+/* Panel 1 is solved by building one of the two biggest embryos this cell can
+   make and one of the two smallest. That is the checkpoint, and it is the only
+   thing that records BIT E0.
+
+   Opening panel 2 is a separate question. Blocking the population panels behind
+   the puzzle would strand anyone who cannot crack it, so a run of honest
+   attempts opens them too -- and the completion code, not the door, is what
+   holds the standard. See eSelSolved(). */
+const E_TRIES_TO_PASS = 8;
+
 function eCheckExtremes() {
-  if (sE9.extremesDone) return;
   const near = (v, set) => v !== null && set.some(t => Math.abs(v - t) < 0.05);
-  const ok = near(sE9.bestBuilt, E_TOPS.hi) && near(sE9.worstBuilt, E_TOPS.lo);
-  if (!ok) return;
-  sE9.extremesDone = true;
-  record(BIT["E"][0], true);
-  markTask("E", "E1");
-  document.getElementById("E1_now").textContent = "both built";
-  openStep("E", 2);
+  if (!sE9.extremesDone && near(sE9.bestBuilt, E_TOPS.hi) && near(sE9.worstBuilt, E_TOPS.lo)) {
+    sE9.extremesDone = true;
+    record(BIT["E"][0], true);
+    markTask("E", "E1");
+    document.getElementById("E1_now").textContent = "both built";
+  }
+  if (!sE9.extremesDone) {
+    document.getElementById("E1_now").textContent =
+      sE9.builds + " built — keep going, or carry on below and show it in the simulations";
+  }
+  if (sE9.extremesDone || sE9.builds >= E_TRIES_TO_PASS) openStep("E", 2);
+  // solving it after the simulations have already run still closes the lesson
+  if (sE9.extremesDone && sE9.selDone && eSelSolved() && !Gates.E.done) {
+    Gates.E.done = true; showSolved("E");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  }
 }
+
+/* The completion code waits for one of two things: panel 1 solved outright, or
+   five selection runs that finished within a tenth of the whole genetic range
+   of the best a population could possibly do in the direction it was pushed.
+   Either is a demonstration that the ceiling is understood. */
+const E_CLOSE = 0.10 * (E_ALL_GREEN - E_ALL_RED);
+const E_CLOSE_RUNS = 5;
+
+function eRunIsClose(run) {
+  const dir = eDir(run.cfg);
+  if (!dir) return false;
+  const end = run.hist[run.hist.length - 1].mean;
+  return Math.abs(end - eIdeal(dir)) <= E_CLOSE;
+}
+function eSelSolved() { return sE9.extremesDone || sE9.closeRuns >= E_CLOSE_RUNS; }
 
 /* ---- panels 2 and 3: replicates, not one long run -------------------
    Each press founds a NEW population and runs it for E_GENS, and the chart
@@ -3118,9 +3154,10 @@ function eCheckExtremes() {
    it costs nothing but keeping the arrays. */
 function eRunOnce(cfg, rec) {
   let pop = eFound(sE9.rng);
+  const freq0 = eFreq(pop);
   const hist = [eStats(pop)];
   for (let g = 0; g < E_GENS; g++) { pop = eStep(pop, cfg, sE9.rng, rec); hist.push(eStats(pop)); }
-  return { hist, freq: eFreq(pop), pop, rec: rec, cfg: cfg };
+  return { hist, freq0: freq0, freq: eFreq(pop), pop, rec: rec, cfg: cfg };
 }
 /* Which way the two arrows are pushing the trait, on balance. Zero means they
    cancel, and then there is no "right" allele to colour anything against. */
@@ -3156,23 +3193,31 @@ function eDrawDrift() {
       + z.sd.toFixed(1)
       + (sE9.driftRuns.length > 1 ? " &middot; " + sE9.driftRuns.length + " populations on the chart" : "");
   }
-  document.getElementById("E_driftFreq").innerHTML = sE9.driftRuns.length
-    ? eFreqMarkup(sE9.driftRuns[sE9.driftRuns.length - 1].freq, 0)
+  const dlast = sE9.driftRuns.length ? sE9.driftRuns[sE9.driftRuns.length - 1] : null;
+  document.getElementById("E_driftFreq").innerHTML = dlast
+    ? eFreqMarkup(dlast.freq0, dlast.freq, 0)
     : '<div class="none">not yet</div>';
 }
 
 function eRunSel() {
-  ePush(sE9.selRuns, eRunOnce({ bs: sE9.bs, ds: sE9.ds, nb: sE9.nb, nd: sE9.nd }, sE9.rec));
+  const run = eRunOnce({ bs: sE9.bs, ds: sE9.ds, nb: sE9.nb, nd: sE9.nd }, sE9.rec);
+  ePush(sE9.selRuns, run);
+  if (eRunIsClose(run)) sE9.closeRuns++;
   bump("E"); eDrawSel();
   if (!sE9.selDone) {
     sE9.selDone = true;
     record(BIT["E"][2], true);
     markTask("E", "E3");
-    document.getElementById("E3_now").textContent = "run";
-    if (!Gates.E.done) {
-      Gates.E.done = true; showSolved("E");
-      if (typeof Score !== "undefined" && Score.finish) Score.finish();
-    }
+  }
+  // the code is held until panel 1 is solved, or five runs have landed close
+  const left = E_CLOSE_RUNS - sE9.closeRuns;
+  document.getElementById("E3_now").textContent = sE9.extremesDone
+    ? "run"
+    : (left > 0 ? sE9.closeRuns + " of " + E_CLOSE_RUNS + " runs close enough"
+                : "run");
+  if (eSelSolved() && !Gates.E.done) {
+    Gates.E.done = true; showSolved("E");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
   }
 }
 function eDrawSel() {
@@ -3182,7 +3227,8 @@ function eDrawSel() {
   const dir = last ? eDir(last.cfg) : 0;
   const ideal = last && dir !== 0 ? eIdeal(dir) : null;
   eTrajectory("E_selC", sE9.selRuns,
-    ideal == null ? null : { v: ideal, label: "every spot fixed the right way" });
+    ideal == null ? null
+      : { v: ideal, label: (dir > 0 ? "maximum" : "minimum") + " genetically possible" });
   const line = document.getElementById("E_selline");
   if (!last) { line.textContent = "no population yet"; return; }
   const h = last.hist, a = h[0], z = h[h.length - 1];
@@ -3195,12 +3241,12 @@ function eDrawSel() {
     + "<br>stopped at <b>" + f1(z.mean) + "</b>"
     + (ideal == null
         ? "; the two arrows are pulling the same way, so nothing is pulling the trait"
-        : "; every spot fixed the way these arrows wanted would be " + f1(ideal))
+        : "; the " + (dir > 0 ? "maximum" : "minimum") + " genetically possible is " + f1(ideal))
     + (sE9.selRuns.length > 1
         ? " &middot; " + sE9.selRuns.length + " runs, ending between " + f1(Math.min(...ends))
           + " and " + f1(Math.max(...ends))
         : "");
-  document.getElementById("E_selFreq").innerHTML = eFreqMarkup(last.freq, dir);
+  document.getElementById("E_selFreq").innerHTML = eFreqMarkup(last.freq0, last.freq, dir);
 }
 
 /* The mean and the spread on one pair of axes, for every replicate on the
@@ -3213,14 +3259,15 @@ function eTrajectory(cvId, runs, ref) {
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   let lo = -6, hi = 6;
-  for (const r of runs) for (const s of r.hist) { lo = Math.min(lo, s.mean - 1); hi = Math.max(hi, s.mean + 1); }
+  for (const r of runs) for (const st of r.hist) {
+    lo = Math.min(lo, st.mean - st.sd - 1);
+    hi = Math.max(hi, st.mean + st.sd + 1);
+  }
   if (ref) { lo = Math.min(lo, ref.v - 1); hi = Math.max(hi, ref.v + 1); }
-  const f = makeFrame({ l: 46, r: 52, t: 14, b: 40 }, W, H, 0, E_GENS, lo, hi);
+  const f = makeFrame({ l: 46, r: 20, t: 14, b: 40 }, W, H, 0, E_GENS, lo, hi);
   drawAxes(ctx, f, "generations", "average size", 4, 4, v => v.toFixed(0), v => v.toFixed(0));
   if (!runs.length) return;
 
-  // A line to read the trajectories against: where they started, when nothing
-   // is choosing, and the best any set of alleles could do when something is.
   if (ref) {
     ctx.strokeStyle = "#8a8578"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(f.pad.l, f.y(ref.v)); ctx.lineTo(f.pad.l + f.W, f.y(ref.v)); ctx.stroke();
@@ -3229,48 +3276,52 @@ function eTrajectory(cvId, runs, ref) {
     ctx.textAlign = "right"; ctx.textBaseline = "bottom";
     ctx.fillText(ref.label, f.pad.l + f.W - 3, f.y(ref.v) - 4);
   }
-  const sdMax = Math.max(1, ...runs.flatMap(r => r.hist.map(s => s.sd)));
-  const ySd = v => f.pad.t + f.H - (v / sdMax) * f.H;
+  /* The spread is a ribbon around the average rather than a second line on a
+     second scale. One line, one axis: the band is the trait's spread in the
+     same units as the mean, so it closing IS the variation running out, and
+     there is no second y-scale to decode. */
   runs.forEach((r, ri) => {
     const last = ri === runs.length - 1;
-    ctx.strokeStyle = last ? "#c08a3e" : "rgba(192,138,62,0.22)";
-    ctx.lineWidth = last ? 1.8 : 1.2;
+    ctx.fillStyle = last ? "rgba(178,58,72,0.17)" : "rgba(178,58,72,0.07)";
     ctx.beginPath();
-    r.hist.forEach((s, i) => { const x = f.x(i), y = ySd(s.sd); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    ctx.stroke();
+    r.hist.forEach((st, i) => {
+      const x = f.x(i), y = f.y(st.mean + st.sd);
+      i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    });
+    for (let i = r.hist.length - 1; i >= 0; i--) {
+      const st = r.hist[i];
+      ctx.lineTo(f.x(i), f.y(st.mean - st.sd));
+    }
+    ctx.closePath(); ctx.fill();
     ctx.strokeStyle = last ? HOT : "rgba(178,58,72,0.22)";
     ctx.lineWidth = last ? 2.6 : 1.4;
     ctx.beginPath();
-    r.hist.forEach((s, i) => { const x = f.x(i), y = f.y(s.mean); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    r.hist.forEach((st, i) => { const x = f.x(i), y = f.y(st.mean); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
     ctx.stroke();
   });
-  const h = runs[runs.length - 1].hist;
-  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ctx.fillStyle = "#c08a3e"; ctx.fillText("spread", f.pad.l + f.W + 4, ySd(h[h.length - 1].sd));
-  ctx.fillStyle = HOT;      ctx.fillText("average", f.pad.l + f.W + 4, f.y(h[h.length - 1].mean));
 }
 
 /* Every locus, the allele that ended up there, and -- once something has been
    selecting -- the allele that direction wanted. A spot that went the wrong
    way is the part worth seeing. */
-function eFreqMarkup(freq, dir) {
-  let j = 0, out = "";
-  for (const t of [LONG, SHORT]) for (let i = 0; i < NL; i++, j++) {
-    const p = freq[j], L = LETTER[t][i];
-    const wantBig = dir === 0 ? null
-      : (dir > 0 ? EFFECT[t][i].big > EFFECT[t][i].little : EFFECT[t][i].big < EFFECT[t][i].little);
-    const fixed = p > 0.995 || p < 0.005;
-    let cls = "mid";
-    if (dir !== 0 && fixed) cls = ((p > 0.5) === wantBig) ? "good" : "bad";
-    else if (fixed) cls = "fix";
-    const shown = p > 0.5 ? L : L.toLowerCase();
-    out += `<div class="efcell ${cls}"><span class="n">${shown}</span>`
-        +  `<span class="p">${Math.round(p * 100)}%</span></div>`;
-  }
-  const note = dir === 0
-    ? "the share of each spot carrying the big letter"
-    : "green: the spot fixed on the allele that direction wanted. red: it fixed on the other one.";
-  return `<div class="efrow">${out}</div><div class="efnote">${note}</div>`;
+function eFreqMarkup(freq0, freq, dir) {
+  const row = (f, label) => {
+    let j = 0, cells = "";
+    for (const t of [LONG, SHORT]) for (let i = 0; i < NL; i++, j++) {
+      const p = f[j], L = LETTER[t][i];
+      const wantBig = dir === 0 ? null
+        : (dir > 0 ? EFFECT[t][i].big > EFFECT[t][i].little : EFFECT[t][i].big < EFFECT[t][i].little);
+      const fixed = p > 0.995 || p < 0.005;
+      let cls = "mid";
+      if (dir !== 0 && fixed) cls = ((p > 0.5) === wantBig) ? "good" : "bad";
+      else if (fixed) cls = "fix";
+      const shown = p > 0.5 ? L : L.toLowerCase();
+      cells += `<div class="efcell ${cls}"><span class="n">${shown}</span>`
+             + `<span class="p">${Math.round(p * 100)}%</span></div>`;
+    }
+    return `<div class="efline"><span class="lab">${label}</span><div class="efrow">${cells}</div></div>`;
+  };
+  return row(freq0, "start") + row(freq, "end");
 }
 
 
@@ -3481,7 +3532,7 @@ document.addEventListener("score:bypass", () => {
 
 Score.init({
   moduleId: "lesson9",
-  version: 9,
+  version: 10,
   scaffold: 24,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

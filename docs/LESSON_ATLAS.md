@@ -1485,7 +1485,23 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
-`lesson9.html` · v9 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+`lesson9.html` · v10 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+
+**Population panels tidied, 2026-09-16.** The reference line reads **"maximum genetically
+possible"** (or minimum, following the arrows). The spread stopped being a second gold
+line on a second y-scale and became a **ribbon around the mean** — one axis, one set of
+units, and the band closing *is* the variation running out. The allele panel is headed
+**"Frequency of each allele"** and now carries **two rows, start and end**, so what
+selection did to each locus is visible rather than inferred; the green/red legend under
+it is gone.
+
+**The completion code now has two routes.** Either panel 1 is solved outright, or **five
+selection runs finish within a tenth of the whole genetic range** of the best a
+population could do in the direction it was pushed (`E_CLOSE` = 3.28 on a range of 32.8).
+Because the second route is unreachable if the puzzle blocks the door, panel 2 now opens
+on the solve **or** on `E_TRIES_TO_PASS` = 8 honest builds — the door is cheap, the code
+is not. `BIT E0` still records only on the real solve, so a student who takes the long
+way round gets the checkpoint marked as missed and the lesson still finishes.
 
 **Text pass from JM's voice notes, 2026-09-16.** Every stage's voice block and setup
 bullets are his dictation, close to verbatim. A is now the full Mendel narrative — a monk
