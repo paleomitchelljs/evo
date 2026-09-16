@@ -1485,7 +1485,39 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
-`lesson9.html` · v8 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+`lesson9.html` · v9 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+
+**Text pass from JM's voice notes, 2026-09-16.** Every stage's voice block and setup
+bullets are his dictation, close to verbatim. A is now the full Mendel narrative — a monk
+who studied physics, back-crosses, and the long list of what he did *not* know (no
+nucleus, no mitosis, no meiosis, no chromosome, no molecule of inheritance, no idea the
+particles were strung together), closing on the danger of smuggling all of that in when
+you learn segregation and independent assortment today.
+
+**Verdict boxes are now just "Correct." / "Incorrect, please try again."** JM's rule:
+*connecting to broader material is for lecture and the students, not for pop-up boxes.*
+Two exceptions survive, and both point at something on the page rather than explaining a
+phenomenon — C3 notes that big-A/big-A, big-A/little-a and little-a/little-a have sat at
+25/50/25 throughout A, B and C, and D's mapping miss says to sort by a gene and compare
+what the two homozygotes share against what the heterozygote does differently.
+**All five solved banners are gone** for the same reason; the worst of them claimed
+"selection sees stretches of DNA", which selection does not do — it acts on inherited
+variation, it does not see anything.
+
+**Step-1 questions can now run in phases** (`cfg.q1.phases`), and each phase has to be
+earned at the bench: answering one shuts the input until another round is collected, so
+the rounds cannot be skipped. **B** asks how many kinds of gamete one round gave (two,
+complements) and then how many after several (four) — the second is what opens step 2.
+**C lost its slider**: it asks the same question three times over, at one recombination
+per chromosome then two then three, setting the count itself between them. The answer is
+two every time, which is the point of asking three times.
+
+**E's panel 1 quotes what cannot be built.** The reachable ceiling and floor came off the
+readout and were replaced by the all-green and all-red values in parentheses (+21.4 and
+−11.4), neither of which any setting produces. The gate now accepts the **top two and
+bottom two** reachable values (+20.4/+19.6 and −9.6/−10.4) rather than one exact number,
+so landing near the ceiling counts. Sizes are phrased as an *expected effect of genetics
+on height* throughout.
 
 **Stage E's selection widget became a birth/death model, 2026-09-16, on JM's call.**
 The direction toggle and the "share that breeds" slider are gone. In their place is
