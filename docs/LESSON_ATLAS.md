@@ -1176,7 +1176,37 @@ decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — Finding out what knowing the parents is actually worth
-`lesson8.html` · v13 · 13 checkpoints · **Built**
+`lesson8.html` · v14 · 12 checkpoints · **Built**
+
+**Second pass on JM's voice notes, 2026-09-16.**
+
+- **A** — the mechanism paragraph now says the mechanism decides *what kind* of
+  evolutionary model you use (direct genetic vs indirect vs non-genetic), and that a
+  non-heritable trait needs a non-evolutionary model. "we can pretend" → "we can look
+  at a scenario where, say". The coin-flip report stopped quoting the other group's
+  rate, which was not what the call was about: it now reads *saying yes is right N
+  times in 100, while saying no is right 100−N times in 100*.
+- **B — the family box is gone; the risk is inherited.** JM: the boxes mixed second
+  and third person ("the family you were born into" beside "the child's accidents").
+  The fix was structural, not cosmetic: **`the parent's accidents` → `heritable risk`
+  → `the child's accidents`**, each dropping to its own limb count. `popB()` changed to
+  match — the child's risk is now drawn **from the parent's** (`zc = fam·zp +
+  √(1−fam²)·e`, so `fam` *is* the parent–child correlation in risk) rather than from a
+  shared family latent. Verified over ten seeds: risk at 0 gives r between −0.036 and
+  0.047; risk at 1 gives 0.469 to 0.589, so both gates clear with room. The game's
+  six-draw scatter is sd 0.021–0.033, unchanged, so its ±0.07 window still fits.
+- **C — the merged model was drawn flipped.** The bend signs disagreed with the label
+  positions, so in the eggs-left-alone state the *learning* label sat over the genetic
+  arrow, and toggling the eggs made the heavy arrow jump sides — which is why it read
+  as though the labels, arrows and toggles were all flipped. The toggles were fine; the
+  bends were backwards. Now the thin and thick arrows keep their sides in both states.
+- **D — the payoff message is cut to one line**, and **the closing game is gone** with
+  it (`BIT.Dq`; `scaffold` 13 → 12). Removing it broke the completion code: the mint
+  fired from `record()` only once `Gates.D.done` was already true, which used to happen
+  because the game recorded *after* the gate closed. `finishStage()` now mints when it
+  closes the last gate, and `record()` keeps its re-mint so the A/B/C games still land
+  in the code when they are played afterwards. **Regression to watch for**: the code
+  panel silently staying empty.
 
 **Rewritten from JM's voice notes, 2026-09-16.** Every stage's voice block and setup
 bullets are his dictation, close to verbatim. The substantive changes:
@@ -1228,19 +1258,16 @@ that point and no checkpoint moved (it became 13 with the rewrite above).
 in a 2×2, not two causes — and every closing game keeps its estimate slider, because
 those ask for a reading of an outcome, not for a contribution.
 
-**What each diagram argues.** B: **two tiers, corrected on JM's call 2026-09-16.** The
-first draft had the family reaching a limb directly, which is not what `popB()` runs
-and not what the stage means. A limb is lost to an accident and to nothing else; what
-a family changes is the *probability of the accident*. So the model is now
-`the family you were born into` forking to `the parent's accidents` and `the child's
-accidents` (that fork is the **danger runs in families** control), and each of those
-dropping to its own limb count (both of those are the one **how often an accident
-takes a limb** control, a tier rather than a fork — two edges sharing no endpoint).
-A ghost arrow across the bottom is labelled *nothing here — no limb is inherited*.
-Every route from one limb box to the other goes up through the family and back down,
-and the correlation climbs anyway. This also matches `popB` exactly: a family latent
-`L` feeds each individual's risk `z`, `z` feeds the accident probability `p`, and only
-the draw off `p` touches the limb count. C: with the eggs left alone the tutor and the father are **one box** with
+**What each diagram argues.** B: **two tiers, corrected twice on JM's call,
+2026-09-16.** The first draft had the family reaching a limb directly, which `popB()`
+never did. The second put a `the family you were born into` box above both
+generations — right about the mechanism, wrong about the person (a "you" box beside
+"the child's accidents") and wrong about the transmission. The model is now
+`the parent's accidents` → **heritable risk** → `the child's accidents`, with each
+dropping to its own limb count (one **how often an accident takes a limb** control
+driving both — a tier, two edges sharing no endpoint). A ghost arrow across the bottom
+is labelled *nothing here — no limb is inherited*. The only line crossing the
+generations never touches a limb, and the correlation in limbs climbs anyway. C: with the eggs left alone the tutor and the father are **one box** with
 both arrows leaving it, and swapping the eggs **splits the box in two** — the diagram
 performs the experiment, the numbers only report it. D: `the two parents averaged`
 and `everything else` both reach `the grown child`, but only the left arrow is the
@@ -1290,12 +1317,12 @@ door.
   nothing. The squares are the instrument and the readouts stay dark while the game runs;
   the stage's own second slider and the game's slider drive each other. Replay: what
   knowing the parents bought, in six fresh samples of 200. Window 2 points.
-- **B** — a random accident rate with the danger all the way into families; estimate the
+- **B** — a random accident rate with the risk passed on in full; estimate the
   correlation. One set of 1,200 scatters by sd 0.02–0.03, so the window is ±0.07.
 - **C** — random copying and random egg, eggs swapped; estimate what a chick keeps of the
   father it came from. One set of broods scatters by sd 0.04, so the window is ±0.07.
   Round one is always the clean case with nothing in the egg.
-- **D** — the flagship. Each round deals a cloud whose **tilt and share were drawn
+- **D** — *removed 2026-09-16.* It dealt a cloud whose **tilt and share were drawn
   independently of each other**, so no round can be solved by reading one off the other.
   Drag the line onto the cloud for the tilt, then set the share, which draws a band of
   `sd(kid)·√(1−share)` with a live *your band is holding NN%* reading — the right share
@@ -1349,8 +1376,9 @@ than as a property of the correlation.
 - **B — heritability is not genetics** *(the direction of causation, flipped back)*
   - *Interactive* — 1,200 parent-and-child pairs, everybody born with four limbs, the
     genetic variation flatly **zero** at every setting and said so on the page. The lower
-    arrow: how often an accident takes a limb. The upper one, out of the family and into
-    the accident nodes: whether accidents land at random or land in families. Gate: danger spread evenly, a quarter of everybody missing a limb,
+    arrow: how often an accident takes a limb, the same in both lives. The upper one,
+    running parent to child between the two accident boxes: how much of the risk is
+    inherited. Gate: danger spread evenly, a quarter of everybody missing a limb,
     correlation under 0.10 — lock it in; then hold that accident rate and move danger into
     families until the correlation clears 0.25 — lock it in.
   - *Calibration* — n and the family loading were both raised (400 → 1,200, k 2.2 → 4.2)
