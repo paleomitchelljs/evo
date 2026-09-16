@@ -70,7 +70,8 @@
     return { x: b.x + dx * t, y: b.y + dy * t };
   }
 
-  // Pull the head back off the box edge so the arrowhead sits clear of it.
+  // Pull the line end back off the box edge. The gap grows with the stroke,
+  // because a head measured in stroke widths grows with it too.
   function backOff(p, from, gap) {
     const dx = p.x - from.x, dy = p.y - from.y;
     const d = Math.hypot(dx, dy) || 1;
@@ -94,7 +95,8 @@
       label: a.label || "", fmt: a.fmt || (v => String(v)),
       readonly: !!a.readonly, dark: !!a.dark, ghost: !!a.ghost,
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
-      hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null
+      hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null,
+      dragSpan: a.dragSpan || 0
     }));
 
     const state = { sel: null, drag: null, held: false, dirty: false };
@@ -111,12 +113,12 @@
     const defs = svg("defs");
     [["paths-head", "#2f6b8f"], ["paths-head-sel", "#b23a48"], ["paths-head-dark", "#c4c0b4"]]
       .forEach(([id, fill]) => {
-        // userSpaceOnUse, so the head stays the same size no matter how fat the
-        // arrow gets. Scaled heads turn a strong path into a blot, and two
-        // strong paths converging on one box into a single blot.
-        const m = svg("marker", { id: id, viewBox: "0 0 10 10", refX: "9", refY: "5",
-                                  markerUnits: "userSpaceOnUse",
-                                  markerWidth: "14", markerHeight: "14",
+        // markerUnits is strokeWidth (the default), so the head grows with the
+        // line. A fixed head is worse than a big one: past about 8px of stroke
+        // the line simply swallows it and the arrow stops reading as an arrow.
+        // 2.6 stroke-widths stays a head rather than a blot at full weight.
+        const m = svg("marker", { id: id, viewBox: "0 0 10 10", refX: "7.6", refY: "5",
+                                  markerWidth: "2.6", markerHeight: "2.6",
                                   orient: "auto-start-reverse" });
         m.appendChild(svg("path", { d: "M0,0 L10,5 L0,10 z", fill: fill }));
         defs.appendChild(m);
@@ -164,7 +166,8 @@
     }
     function isFork(eds) { return eds.length > 1 && eds.every(e => e.from === eds[0].from); }
 
-    function geom(fromId, toId, bend) {
+    function geom(fromId, toId, bend, width) {
+      width = width || 2;
       const b1 = boxes[fromId], b2 = boxes[toId];
       if (!b1 || !b2) return null;
       const straightMid = { x: (b1.x + b2.x) / 2, y: (b1.y + b2.y) / 2 };
@@ -172,7 +175,7 @@
       const nx = -dy / len, ny = dx / len;
       const ctrl = { x: straightMid.x + nx * bend, y: straightMid.y + ny * bend };
       const p1 = edgePoint(b1, ctrl);
-      const p2 = backOff(edgePoint(b2, ctrl), ctrl, 3);
+      const p2 = backOff(edgePoint(b2, ctrl), ctrl, 2 + width * 1.9);
       // the point the label rides on: the curve at t = 0.5
       const mid = { x: 0.25 * p1.x + 0.5 * ctrl.x + 0.25 * p2.x,
                     y: 0.25 * p1.y + 0.5 * ctrl.y + 0.25 * p2.y };
@@ -228,7 +231,7 @@
           // than as two arrows that happen to share a tail. A tier has no
           // shared tail to fan out from, so its edges keep their own bend.
           const b = autoBend(a, ed.from, ed.to);
-          const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b);
+          const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b, width);
           if (!g) return;
           const cls = ["paths-arrow"];
           if (a.ghost) cls.push("ghost");
@@ -382,11 +385,14 @@
         ev.preventDefault();
         const s = spec(a); if (!s) return;
         state.sel = a.id;
-        state.drag = { id: a.id, y0: ev.clientY, v0: s.v, span: s.max - s.min };
+        // dragSpan buys precision: an arrow whose useful window is a sliver of
+        // its range needs more pixels of travel to cover that range.
+        state.drag = { id: a.id, y0: ev.clientY, v0: s.v, span: s.max - s.min,
+                       px: a.dragSpan || DRAG_SPAN };
         const move = e => {
           if (!state.drag) return;
           e.preventDefault();
-          setValue(a, state.drag.v0 + (state.drag.y0 - e.clientY) / DRAG_SPAN * state.drag.span);
+          setValue(a, state.drag.v0 + (state.drag.y0 - e.clientY) / state.drag.px * state.drag.span);
         };
         const up = () => {
           state.drag = null;

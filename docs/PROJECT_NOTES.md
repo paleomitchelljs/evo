@@ -82,6 +82,8 @@ app/assets/paths.js/.css       path-diagram controls: the arrows ARE the sliders
                                One control can drive a fork (one cause, two
                                outcomes) or a tier (the same relationship in two
                                places sharing no endpoint, via `edges`).
+                               Per-arrow `dragSpan` buys precision where the
+                               useful window is a sliver of the range.
                                Used by lesson8 stages B, C and D.
 LOCKS.txt                      one row per page, o = open / x = locked
 instructor/                    verify_code.html, aggregate.html

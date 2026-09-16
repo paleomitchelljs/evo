@@ -1176,7 +1176,41 @@ decodes as `lesson7 v7`, `111111111111`, 12/12.
 
 
 ### Lesson 8 — Finding out what knowing the parents is actually worth
-`lesson8.html` · v12 · 14 checkpoints · **Built**
+`lesson8.html` · v13 · 13 checkpoints · **Built**
+
+**Rewritten from JM's voice notes, 2026-09-16.** Every stage's voice block and setup
+bullets are his dictation, close to verbatim. The substantive changes:
+
+- **The framing moved from "what is 72% worth" to "is the trait heritable at all".**
+  Stage A now opens on the point that the trait does not matter — disease, song,
+  dialect — what matters is how heritable it is, and that a rate without a base rate
+  is meaningless. Stage B opens on heritability as the thing that decides whether an
+  evolutionary model applies at all, and on heritability being older than, and largely
+  unconnected to, DNA.
+- **Stage C renamed throughout.** The boxes are `father that raised it` and
+  `biological father`; the copying arrow is **learning**; "nothing in the egg" is gone
+  everywhere in favour of **genetic basis for the song** — in the model, the prompts,
+  the lock messages, the plot axes, the R code and the closing game. The other-factors
+  box carries its number directly beneath it with no heading, because a heading over a
+  number the student cannot set reads as a third control.
+- **Stage D: the bracket is gone, replaced by the other-factors arrow.** Both arrows
+  are the student's now. `heritability of height` tilts the line; the second arrow sets
+  a band in inches either side of it, and the job is to open it until two children in
+  three sit inside — *in every strip on offer*, so one number is being found rather
+  than one per strip. Boxes are `parents' average height`, `child height`, and
+  `other factors that impact height`. **Only the middle three strips are offered**
+  (`D_COLS`): the outer two run to the edges of the data and are far wider than the
+  ones between. Measured: any band from **2.00 to 2.35 in** holds 60–74% in all three,
+  and the true residual **2.24 in** sits inside that window.
+- **"Now take the parents away" is cut**, and with it `BIT.D3`. `scaffold` 14 → 13.
+- **The four closing games stay and stay scored**, but no longer appear as checklist
+  bullets — the "To open Stage X" lists now contain only what actually opens the next
+  stage. Each game panel's own blurb was rewritten to say what that game is
+  (*Worth nothing at all*, *Guess the correlation before you look*, *Guess what
+  survives the swap*, *Two numbers off one cloud*), which is where the description
+  moved to. Stage D's game says **heritability** where it used to say *tilt*.
+- **Arrowheads scale with stroke width again.** A fixed head was swallowed whole once a
+  line passed about 8px, and the arrow stopped reading as an arrow.
 
 **The sliders became a causal model, 2026-09-16, on JM's call.** Stages B, C and D
 no longer have slider rows. Each has a **path diagram** — boxes for the variables,
@@ -1188,8 +1222,9 @@ which is *not* `dag.js`: dag.js lets a student build a graph and watch a distrib
 fall out of it; this one takes a graph the lesson has already fixed and makes its
 edges adjustable. Each arrow is bound to a hidden `<input type="range">` that is
 still the state, so every listener, gate check, code-line highlight and R-code number
-downstream is wired exactly as before. `version` 11 → 12; `scaffold` stays 14 and no
-checkpoint moved. **Stage A keeps its two rate sliders** — its controls are two rates
+downstream is wired exactly as before. `version` 11 → 12; `scaffold` was still 14 at
+that point and no checkpoint moved (it became 13 with the rewrite above).
+**Stage A keeps its two rate sliders** — its controls are two rates
 in a 2×2, not two causes — and every closing game keeps its estimate slider, because
 those ask for a reading of an outcome, not for a contribution.
 
@@ -1345,7 +1380,9 @@ than as a property of the correlation.
 
 - **D — Galton's 934 children** *(mid-parent, in inches)*
   - *Interactive* — 934 grown children from 205 families, women ×1.08, the two parents
-    averaged on the across axis. One arrow tilts the line (**the deterministic part**).
+    averaged on the across axis. One arrow sets the **heritability of height**, a second
+    sets the band of **other factors** in inches (2026-09-16; it replaced a hand-dragged
+    bracket, and the "no parents at all" pass was cut with it).
     The correlation and the heritability stay **dark until the line is locked in**, so the
     stage cannot be solved by watching a number go green. Grey marks show the children's
     average in each strip of parents, and they are what guides the tilt — the miss readout
