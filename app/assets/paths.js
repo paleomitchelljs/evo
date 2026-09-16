@@ -96,7 +96,7 @@
       readonly: !!a.readonly, dark: !!a.dark, ghost: !!a.ghost,
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
       hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null,
-      dragSpan: a.dragSpan || 0
+      dragSpan: a.dragSpan || 0, signed: !!a.signed
     }));
 
     const state = { sel: null, drag: null, held: false, dirty: false };
@@ -111,7 +111,8 @@
     mount.appendChild(note);
 
     const defs = svg("defs");
-    [["paths-head", "#2f6b8f"], ["paths-head-sel", "#b23a48"], ["paths-head-dark", "#c4c0b4"]]
+    [["paths-head", "#2f6b8f"], ["paths-head-sel", "#b23a48"], ["paths-head-dark", "#c4c0b4"],
+     ["paths-head-down", "#9a6b1f"]]
       .forEach(([id, fill]) => {
         // markerUnits is strokeWidth (the default), so the head grows with the
         // line. A fixed head is worse than a big one: past about 8px of stroke
@@ -136,11 +137,20 @@
       const step = parseFloat(el.step) || (max - min) / 100;
       return { el, min, max, step, v: parseFloat(el.value) };
     }
+    /* A signed arrow runs through zero: it can push a thing up or pull it
+       down, and BOTH ends are strong. So thickness comes off the magnitude and
+       the sign is carried by colour instead -- otherwise the strongest negative
+       setting draws as a hairline, which says the opposite of what it means. */
     function norm(a) {
       const s = spec(a);
       if (!s || a.dark) return 0;
+      if (a.signed) {
+        const lim = Math.max(Math.abs(s.min), Math.abs(s.max)) || 1;
+        return clamp(Math.abs(s.v) / lim, 0, 1);
+      }
       return clamp((s.v - s.min) / (s.max - s.min || 1), 0, 1);
     }
+    function isNeg(a) { const s = spec(a); return !!(a.signed && s && s.v < 0); }
     function setValue(a, v) {
       const s = spec(a);
       if (!s || a.readonly) return;
@@ -233,13 +243,17 @@
           const b = autoBend(a, ed.from, ed.to);
           const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b, width);
           if (!g) return;
+          const neg = isNeg(a);
           const cls = ["paths-arrow"];
           if (a.ghost) cls.push("ghost");
           else if (a.dark) cls.push("dark");
           else if (n <= 0.0001) cls.push("zero");
+          else if (neg) cls.push("down");
           if (sel) cls.push("selected");
           const head = a.ghost ? null
-                     : (sel ? "url(#paths-head-sel)" : (a.dark || n <= 0.0001 ? "url(#paths-head-dark)" : "url(#paths-head)"));
+                     : (sel ? "url(#paths-head-sel)"
+                            : (a.dark || n <= 0.0001 ? "url(#paths-head-dark)"
+                                                     : (neg ? "url(#paths-head-down)" : "url(#paths-head)")));
           const path = svg("path", { d: g.d, class: cls.join(" "),
                                      "stroke-width": width.toFixed(2),
                                      "marker-end": head });
@@ -289,6 +303,7 @@
             if (showVal) {
               const vcls = ["paths-arrow-value"];
               if (sel) vcls.push("selected");
+              else if (isNeg(a)) vcls.push("down");
               if (a.dark) vcls.push("dark");
               const t = svg("text", { x: tx, y: ty + 2, class: vcls.join(" ") });
               const sp2 = spec(a);

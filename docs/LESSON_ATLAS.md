@@ -1178,6 +1178,22 @@ decodes as `lesson7 v7`, `111111111111`, 12/12.
 ### Lesson 8 — Finding out what knowing the parents is actually worth
 `lesson8.html` · v14 · 12 checkpoints · **Built**
 
+**Third pass, 2026-09-16.** B: the dotted "nothing here" stand-in between the two limb
+boxes is gone — drawing a line to say there is no line is a contradiction, and the
+connection between parent and child is already on the page as the plot beside it. That
+plot stopped jittering 1,200 pairs into fake clouds: limbs are whole numbers, so every
+pair lands on one of nine cells and each cell is now **one disc with area carrying the
+count**. Boxes lost their leading "the" and the accident nodes became *accident
+probability*; the arrow is *base accident probability*; the "every genome in here says
+four" caption came off.
+
+C: the merged box is just **father's song**, and with the eggs left alone there is now
+**one graph**, not the same relationship drawn twice under two headings — which was the
+confusion the stage exists to remove. Swapping splits it into **biological father's
+song** and **adopted father's song**, two boxes and two graphs, biological on the left
+in both so nothing jumps sides on the toggle. The readout follows: one number when
+there is one bird, two when there are two.
+
 **Second pass on JM's voice notes, 2026-09-16.**
 
 - **A** — the mechanism paragraph now says the mechanism decides *what kind* of
@@ -1471,6 +1487,28 @@ stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
 `lesson9.html` · v8 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
 
+**Stage E's selection widget became a birth/death model, 2026-09-16, on JM's call.**
+The direction toggle and the "share that breeds" slider are gone. In their place is
+the Lesson 8 arrow widget (`paths.js`, now linked from this page too): a **size** box
+reaching **birth rate** and **death rate**, with an **other factors** box feeding each
+of those — the stochastic part. The two size arrows are **signed**: positive means
+bigger individuals have more of it, negative means smaller ones do. Signed arrows
+carry magnitude in the stroke and direction in the colour, because a strong pull
+downward is still a strong pull; `paths.js` grew a `signed` option for this.
+
+*Getting the two arrows to cancel took three attempts, and the first two were wrong in
+ways worth recording.* Resolving deaths first and breeding the survivors lets the death
+arrow cull before the birth arrow picks — at `bs = ds = +0.6` the trait **fell** by a
+median of 10.4. Drawing both against one pool fixed the sign but not the size, because
+removing half a population by weighted draw saturates while picking parents with
+replacement does not — the same setting then drove the trait **up** by 12.2. The model
+now builds the next generation as N slots, each a birth with probability `E_TURN` and a
+survival otherwise, both routes weighted draws of the same kind. Verified on the
+one-generation response over 600 fresh populations: births alone at +0.6 give **+0.55**,
+deaths alone at +0.6 give **−0.63**, and both at +0.6 give **−0.041** — the same number
+the model gives with nothing set at all (−0.042). Net selection runs on `bs − ds`, and
+nothing on the page says so.
+
 **Stages D and E rebuilt off the shared bench, 2026-09-16, on JM's brief.** A–C still
 run on `buildLab` and are untouched. D and E now have their own builders —
 `buildDeduceLab()` and `buildSelectionLab()` — because neither is three passes over a
@@ -1500,7 +1538,7 @@ bench passes, four tables and two charts.
    and the all-green gamete that does not exist would be **+10.7**. Gate: build both
    extremes, ±20.4 and −10.4.
 2. *A population runs the same eight spots with nothing choosing.*
-3. *The student picks a direction, a share that breeds, and a crossover chance.*
+3. *The student says what size does to births and deaths, and sets a crossover chance.*
 
    Each press founds a **new** population and keeps the last six on the chart, so
    replicates under identical selection visibly plateau at different heights. The mean
