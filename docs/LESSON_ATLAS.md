@@ -1485,7 +1485,20 @@ or Mendel comes back as a lesson before this one.
 stated, immediately before Hardy–Weinberg. The arc framing needs no move.
 
 ### Lesson 9 — Dragging chromosomes out of a cell to make gametes
-`lesson9.html` · v10 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+`lesson9.html` · v11 · 24 checkpoints · **Built** *(was `lesson8b` until 2026-09-15)*
+
+**Stage E's trait became protein content in a corn kernel, 2026-09-16, on JM's call.**
+The height paragraph stays — 1,700 loci, a 0.07 cm largest effect — because it is what
+makes the point about additive traits. What changed is the worked example after it: the
+eight spots now move **protein %**, panel 1 builds the highest- and lowest-protein
+kernels, and the birth/death model reads *protein % → birth rate*. Axis label, readouts,
+the causal-model box, the task list and the R-code comment all follow. Stage A's Mendel
+paragraph now says he examined traits he thought **"bred true"**.
+
+*Part D's gene→trait mapping was already per-student* and stays that way: `DGENE` and
+`DPOL` come from `pageSeed`, whose base is drawn from WebCrypto on every page load. 6
+permutations × 8 polarities = 48 combinations; 40 sampled loads produced 26 distinct
+ones. It re-rolls on reload as well as between students.
 
 **Population panels tidied, 2026-09-16.** The reference line reads **"maximum genetically
 possible"** (or minimum, following the arrows). The spread stopped being a second gold

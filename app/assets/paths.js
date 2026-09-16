@@ -386,7 +386,9 @@
       if (a.readonly) { note.innerHTML = a.hint || "<b>" + a.label + "</b> — this one is not yours to set."; return; }
       const s = spec(a);
       note.innerHTML = "<b>" + a.label + "</b> is now " + (s ? a.fmt(s.v) : "—")
-        + ". Drag it up to make it bigger, down to make it smaller — or use the &minus; and + on it."
+        // comma, not an em-dash: a dash sitting two words from the &minus;
+        // glyph reads as part of the control rather than as punctuation
+        + ". Drag it up to make it bigger, down to make it smaller, or use the &minus; and + on it."
         + (a.hint ? " " + a.hint : "");
     }
 
