@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 18: Helping relatives when cooperation can spread</title>
+<title>BIO 202 — Lesson 18: Reading trees with rotated nodes</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
@@ -23,143 +23,161 @@
   .prediction-done{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:4px;font-size:13px;margin-bottom:6px}
   .controls.locked{opacity:.4;pointer-events:none} .controls .row{display:grid;grid-template-columns:140px 1fr 70px;align-items:center;gap:10px;margin-bottom:6px} .controls label{font-size:13px} .controls output{font-family:ui-monospace,Menlo,monospace;font-size:13px} .controls input[type=range]{width:100%}
   .controls .buttons{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .controls button{background:#333;color:#fff;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:13px} .controls button.ghost{background:transparent;color:#333;border:1px solid var(--rule)} .controls button.accent{background:var(--accent)}
-  .graph-wrap canvas{width:100%;height:auto;display:block;background:#fff}
+  .graph-wrap canvas{width:100%;height:auto;display:block;background:#fff;cursor:pointer}
   .fit-stats{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;margin-top:8px;color:var(--ink)} .fit-stats .label{color:var(--muted)} .fit-stats .big{font-size:16px;font-weight:600;color:var(--accent)}
   pre.code{background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:4px;font:12px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto;margin:0;max-height:360px} pre.code .line{display:block;padding:0 6px;border-radius:2px} pre.code .line.hi{background:var(--code-hi)} pre.code .kw{color:#c792ea} pre.code .fn{color:#82aaff} pre.code .num{color:#f78c6c} pre.code .str{color:#c3e88d} pre.code .com{color:#676f8a;font-style:italic}
   footer.wrap-up{padding:20px 24px 40px;max-width:1300px;margin:0 auto;color:var(--muted);font-size:13px} footer.wrap-up h2{color:var(--ink);font-size:16px} footer.wrap-up .closing{background:#f5efe0;border-left:3px solid #caa04a;padding:12px 16px;border-radius:0 4px 4px 0;font-size:14px;color:#2e230a;margin:8px 0 16px} footer.wrap-up .closing .src{display:block;margin-top:6px;font-size:12px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
   .outcomes{max-width:1300px;margin:0 auto;padding:16px 24px 4px;border-bottom:1px solid var(--rule);background:var(--panel)} .outcomes h2{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600} .outcomes p{margin:0 0 8px}
+  .drill-feedback{padding:10px 14px;border-radius:4px;margin-top:8px;display:none;font-size:13px} .drill-feedback.shown{display:block} .drill-feedback.correct{background:#e6f0dd;border:1px solid #6f8a4a;color:#3d5728} .drill-feedback.wrong{background:#fbe4c6;border:1px solid #a86a1a;color:#5c3802}
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 18 — Helping relatives when cooperation can spread</h1>
-  <p>A habit that costs the one doing it and helps others — how could that ever spread? Set up a population that never helps, drop in a helping type, and find where it tips.</p>
+  <h1>Lesson 18 — Reading trees with rotated nodes</h1>
+  <p>The same branching tree can be drawn many ways. Learn to see which parts of the drawing carry information and which are just how it happened to be hung.</p>
 </header>
 <div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
-<div class="scenario" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"><div class="anchor-quote">Hamilton's rule. Kin selection happens when r×b &gt; c. r is relatedness. b is the benefit to the recipient. c is the cost to the giver. A big benefit to a distant relative can be okay. A small benefit to a close relative can be okay. Random stranger needs a kidney — most won't give. Family member — many will.<span class="src">— 461_lec22_05</span></div></div>
+<div class="scenario" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"><div class="anchor-quote">The order of the tips is different, but humans and mice are still the closest relatives here. The individual patterns are the same throughout. These aren't a different pattern of relationship — they're just spun a different way. Think of it like a mobile with things hanging off of it. You can spin the mobile, but things are still connected the same way.<span class="src">— 440_lec01_06</span></div></div>
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. Selfish baseline</a>
-  <a href="#stageB" id="tocB" class="locked">B. Add altruism — r, b, c</a>
-  <a href="#stageC" id="tocC" class="locked">C. r·b vs c boundary</a>
-  <a href="#stageD" id="tocD" class="locked">D. Bees — worker sterility</a>
+  <a href="#stageA" id="tocA">A. Rotation widget</a>
+  <a href="#stageB" id="tocB" class="locked">B. MRCA drill</a>
+  <a href="#stageC" id="tocC" class="locked">C. "Primitive?" drill</a>
+  <a href="#stageD" id="tocD" class="locked">D. Anolis ecomorphs</a>
+  <a href="#stageE" id="tocE" class="locked">E. Branch lengths matter too</a>
 </nav>
 
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — What happens without the rule</h2>
+  <h2 class="stage-h">A — Rotate a node; the tree is the same</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>An altruism allele is introduced at frequency 0.1 in a population where no one is related to anyone else (r = 0). The allele pays the cost c and gets nothing back from a random partner. With no kin structure, there is nothing for Hamilton's rule to bite on. Each replicate is one possible future.</p></div>
-      <div class="panel graph-wrap"><h3>Five replicate trajectories — pure drift, no Hamilton math</h3><canvas id="plotA" width="560" height="260"></canvas><div class="fit-stats" id="statsA"><span class="label">N:</span> 500 &nbsp;|&nbsp; <span class="label">gens:</span> <span id="A_g">100</span> &nbsp;|&nbsp; <span class="label">replicates shown:</span> 5 &nbsp;|&nbsp; <span class="label">mean ending freq:</span> <span id="A_drift" class="big">—</span></div></div>
+      <div class="panel scenario"><h3>Scenario</h3><p>5-tip tree: shark, tuna, lizard, mouse, human. The mouse and human are sister taxa. The lizard is sister to (mouse, human). The tuna is sister to (lizard, mouse, human). The shark is the outgroup. Rotate any node — the relationships don't change. Only the visual order.</p></div>
+      <div class="panel graph-wrap"><h3>Click any internal node to rotate</h3><canvas id="plotA" width="560" height="320"></canvas><div class="fit-stats" id="statsA"><span class="label">tip order (current):</span> <span id="A_order">—</span> &nbsp;|&nbsp; <span class="label">rotations:</span> <span id="A_rots" class="big">0</span></div></div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predA"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. In a population with no kin structure and no altruism, an "altruism" allele introduced at frequency 0.1 will:</div>
-          <label><input type="radio" name="qA1" value="up" /> Rise to fixation</label>
-          <label><input type="radio" name="qA1" value="drift" /> Drift randomly (it's neutral)</label>
-          <label><input type="radio" name="qA1" value="loss" /> Decline toward zero — altruism without kin structure is just cost</label></li></ol>
-        <button id="submitA" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreA">Try at least 3 seeds. <span class="count">0/3 seeds</span></div></div>
+        <ol><li><div class="q">Q1. Click 5 different rotations. After each, ask yourself: "Did the tree change?" Then commit:</div>
+          <label><input type="radio" name="qA1" value="changes" /> Each rotation produces a different tree</label>
+          <label><input type="radio" name="qA1" value="same" /> All rotations show the same tree — only the visual order changes</label>
+          <label><input type="radio" name="qA1" value="depends" /> Depends which node you rotate</label></li></ol>
+        <button id="submitA" disabled>Submit → unlock rotation</button>
+        <div class="explore-tracker" id="exploreA">Make at least 5 rotations. <span class="count">0/5 rotations</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsA">
-          <div class="row"><label for="A_seedIn">seed</label><input type="range" id="A_seedIn" min="1" max="999" step="1" value="42" /><output id="A_seedOut">42</output></div>
-          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — neutral baseline</h3>
-<pre class="code" id="codeA"><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>)</span><span class="line">N &lt;- <span class="num">500</span>; gens &lt;- <span class="num">100</span>; p &lt;- <span class="num">0.1</span></span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p)/(<span class="num">2</span>*N)</span></pre></div>
+          <div class="buttons"><button id="A_reset" class="ghost">Reset rotations</button> <button id="A_download" class="ghost">Download .R</button></div></div></div>
+      <div class="panel"><h3>R code — Newick string is invariant under rotation</h3>
+<pre class="code" id="codeA"><span class="line"><span class="com"># The two Newick strings below represent the same tree:</span></span><span class="line">tree1 &lt;- <span class="str">"(shark,(tuna,(lizard,(mouse,human))));"</span></span><span class="line">tree2 &lt;- <span class="str">"((((human,mouse),lizard),tuna),shark);"</span></span><span class="line"><span class="com"># ape::all.equal.phylo(read.tree(text=tree1), read.tree(text=tree2)) returns TRUE</span></span></pre></div>
     </div>
   </div>
 </section>
 
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Add altruism — sliders for r, b, c</h2>
+  <h2 class="stage-h">B — Find the most recent common ancestor</h2>
   <div class="lock-banner">Complete Stage A.</div>
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Pairs of individuals interact. With probability r, each pair shares the altruism allele (they're related). The altruist pays c to give benefit b to its partner. Track allele frequency over generations.</p></div>
-      <div class="panel graph-wrap"><h3>Altruist frequency over generations</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">r:</span> <span id="B_r">0.50</span> &nbsp;|&nbsp; <span class="label">b:</span> <span id="B_b">0.30</span> &nbsp;|&nbsp; <span class="label">c:</span> <span id="B_c">0.10</span> &nbsp;|&nbsp; <span class="label">r·b − c:</span> <span id="B_diff" class="big">—</span> &nbsp;|&nbsp; <span class="label">altruist freq at gen 200:</span> <span id="B_final">—</span></div></div>
+      <div class="panel scenario"><h3>Scenario</h3><p>The MRCA of two tips is found by tracing each tip back to the root until the two paths meet. The common ancestor is the deepest internal node both tips descend from. Many students try to go forward from one tip to the other — that doesn't work; you have to go back to the join.</p></div>
+      <div class="panel graph-wrap"><h3>Click the MRCA of the two crimson tips</h3><canvas id="plotB" width="560" height="320"></canvas><div class="fit-stats" id="statsB"><span class="label">round:</span> <span id="B_round">1/5</span> &nbsp;|&nbsp; <span class="label">score:</span> <span id="B_score" class="big">0/0</span></div>
+        <div class="drill-feedback" id="B_fb"></div>
+      </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predB"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. With r = 0.5 (siblings), b = 0.3, c = 0.1, the altruist allele will:</div>
-          <label><input type="radio" name="qB1" value="rise" /> Rise (r·b = 0.15 &gt; c = 0.1)</label>
-          <label><input type="radio" name="qB1" value="fall" /> Fall</label>
-          <label><input type="radio" name="qB1" value="stable" /> Stay at starting frequency</label></li></ol>
-        <button id="submitB" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreB">Try at least 5 (r, b, c) combos straddling the boundary. <span class="count">0/5 combos</span></div></div>
+        <ol><li><div class="q">Q1. Before you click, predict — to find the MRCA of two tips, do you:</div>
+          <label><input type="radio" name="qB1" value="forward" /> Trace from one tip forward to the other</label>
+          <label><input type="radio" name="qB1" value="back" /> Trace each tip back toward the root until the paths meet</label>
+          <label><input type="radio" name="qB1" value="rotate" /> Rotate the tree until they're adjacent</label></li></ol>
+        <button id="submitB" disabled>Submit → unlock drill</button>
+        <div class="explore-tracker" id="exploreB">Complete all 5 rounds to unlock Stage C. <span class="count">0/5 rounds</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
-          <div class="row"><label for="B_rIn">r (relatedness)</label><input type="range" id="B_rIn" min="0" max="1" step="0.05" value="0.5" /><output id="B_rOut">0.50</output></div>
-          <div class="row"><label for="B_bIn">b (benefit)</label><input type="range" id="B_bIn" min="0" max="1" step="0.05" value="0.3" /><output id="B_bOut">0.30</output></div>
-          <div class="row"><label for="B_cIn">c (cost)</label><input type="range" id="B_cIn" min="0" max="0.5" step="0.025" value="0.1" /><output id="B_cOut">0.10</output></div>
-          <div class="row"><label for="B_seedIn">seed</label><input type="range" id="B_seedIn" min="1" max="999" step="1" value="42" /><output id="B_seedOut">42</output></div>
-          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — altruism dynamics</h3>
-<pre class="code" id="codeB"><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>)</span><span class="line">N &lt;- <span class="num">500</span>; r &lt;- <span class="num">0.5</span>; b &lt;- <span class="num">0.3</span>; cc &lt;- <span class="num">0.1</span>; p &lt;- <span class="num">0.2</span>; gens &lt;- <span class="num">200</span></span><span class="line"><span class="com"># Mean fitness of altruist: 1 - c + r*b (recipient has altruist allele w.p. r)</span></span><span class="line"><span class="com"># Mean fitness of selfish: 1 + p*r*b (gets benefit from altruistic relatives at rate p*r... simplified)</span></span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  w_alt &lt;- <span class="num">1</span> - cc + r * b</span><span class="line">  w_sel &lt;- <span class="num">1</span></span><span class="line">  p_new &lt;- p * w_alt / (p * w_alt + (<span class="num">1</span>-p) * w_sel)</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">2</span>*N,p_new)/(<span class="num">2</span>*N)</span><span class="line">}</span></pre></div>
+          <div class="buttons"><button id="B_next" class="accent">Next tree</button></div></div></div>
+      <div class="panel"><h3>R code — MRCA via ape</h3>
+<pre class="code" id="codeB"><span class="line"><span class="kw">library</span>(ape)</span><span class="line">tr &lt;- <span class="fn">read.tree</span>(text=<span class="str">"((A,B),(C,D));"</span>)</span><span class="line"><span class="fn">getMRCA</span>(tr, <span class="fn">c</span>(<span class="str">"A"</span>,<span class="str">"D"</span>))   <span class="com"># root node</span></span></pre></div>
     </div>
   </div>
 </section>
 
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Where helping starts to pay</h2>
+  <h2 class="stage-h">C — "Primitive?" — the trap</h2>
   <div class="lock-banner">Complete Stage B.</div>
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>The line r·b = c divides the (b, c) plane into two regions. With r = 0.5, the line is c = 0.5·b: altruism spreads only when the benefit is at least twice the cost. With r = 1 (clones), any net benefit spreads. With r = 0 (strangers), nothing spreads.</p></div>
-      <div class="panel graph-wrap"><h3>(b, c) phase plane with r·b = c boundary</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">r:</span> <span id="C_r">0.50</span> &nbsp;|&nbsp; <span class="label">your point (b, c):</span> (<span id="C_bc">—</span>) &nbsp;|&nbsp; <span class="label">spreads?</span> <span id="C_spread" class="big">—</span></div></div>
+      <div class="panel scenario"><h3>Scenario</h3><p>The instinct is to compare a living organism to humans (or another familiar form) and call the more-different one "primitive." This is wrong. Primitive only means "similar to a common ancestor at a specific trait." For two living taxa, evolution has continued in both for the same elapsed time. Neither is primitive overall.</p></div>
+      <div class="panel graph-wrap"><h3>Pick the answer</h3><canvas id="plotC" width="560" height="180"></canvas>
+        <div class="fit-stats" id="statsC"><span class="label">pair:</span> <span id="C_pair">—</span> &nbsp;|&nbsp; <span class="label">score:</span> <span id="C_score" class="big">0/0</span></div>
+        <div class="drill-feedback" id="C_fb"></div>
+      </div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predC"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. As r increases (more relatedness), the region of (b, c) space where altruism spreads:</div>
-          <label><input type="radio" name="qC1" value="grows" /> Grows — the line c = r·b rotates upward</label>
-          <label><input type="radio" name="qC1" value="shrinks" /> Shrinks</label>
-          <label><input type="radio" name="qC1" value="same" /> Stays the same</label></li></ol>
-        <button id="submitC" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreC">Try at least 3 r values. <span class="count">0/3 r values</span></div></div>
+        <ol><li><div class="q">Q1. Between a shark and a tuna, which is more primitive?</div>
+          <label><input type="radio" name="qC1" value="shark" /> Shark</label>
+          <label><input type="radio" name="qC1" value="tuna" /> Tuna</label>
+          <label><input type="radio" name="qC1" value="neither" /> Neither — they've both evolved for the same amount of time</label></li></ol>
+        <button id="submitC" disabled>Submit → unlock drill</button>
+        <div class="explore-tracker" id="exploreC">Complete all 5 rounds. <span class="count">0/5 rounds</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsC">
-          <div class="row"><label for="C_rIn">r</label><input type="range" id="C_rIn" min="0" max="1" step="0.05" value="0.5" /><output id="C_rOut">0.50</output></div>
-          <div class="row"><label for="C_bIn">b (point)</label><input type="range" id="C_bIn" min="0" max="1" step="0.05" value="0.6" /><output id="C_bOut">0.60</output></div>
-          <div class="row"><label for="C_cIn">c (point)</label><input type="range" id="C_cIn" min="0" max="0.5" step="0.025" value="0.2" /><output id="C_cOut">0.20</output></div>
-          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — phase plane</h3>
-<pre class="code" id="codeC"><span class="line">r &lt;- <span class="num">0.5</span>; b &lt;- <span class="num">0.6</span>; cc &lt;- <span class="num">0.2</span></span><span class="line">r*b &gt; cc   <span class="com"># Hamilton's rule satisfied?</span></span></pre></div>
+          <div class="buttons"><button id="C_choose_a" class="accent">First</button> <button id="C_choose_b" class="accent">Second</button> <button id="C_choose_n" class="accent">Neither</button> <button id="C_next" class="ghost">Skip</button></div></div></div>
+      <div class="panel"><h3>R code — there is no "primitive" function</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># Two living species: branch lengths from MRCA to tip are equal under a molecular clock.</span></span><span class="line"><span class="com"># Neither is "more primitive" — they've each had the same elapsed time to evolve.</span></span></pre></div>
     </div>
   </div>
 </section>
 
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Same rule, three biologies — who should you help?</h2>
+  <h2 class="stage-h">D — Anolis ecomorphs</h2>
   <div class="lock-banner">Complete Stage C.</div>
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3>
-        <p>Same Hamilton's rule for all three. Different relatedness values for each because of how they inherit DNA:</p>
-        <ul style="margin:6px 0; padding-left:20px; font-size:13.5px;">
-          <li><strong>Diploid mammal</strong> (mouse, human): two parents each contribute half. r to sister, daughter, brother all = 0.5.</li>
-          <li><strong>Haplodiploid bee</strong> (female worker): female is diploid, brothers are haploid from unfertilized eggs. r to full sister = 0.75 (mom's recombined 0.5 + dad's clonal 1.0, halved). r to own daughter = 0.5. r to brother = 0.25.</li>
-          <li><strong>Clonal bacterium</strong> (or a Wolbachia-style parthenogen): every offspring of every cell in your colony is your clone. r = 1 to all "kin".</li>
-        </ul>
-        <p>For each, ask: with a fixed (b, c), which kin is it most worth helping?</p>
-      </div>
-      <div class="panel graph-wrap"><h3>r to each kin, by inheritance system</h3><canvas id="plotD" width="560" height="320"></canvas><div class="fit-stats" id="statsD"><span class="label">organism:</span> <span id="D_org" class="big">all three</span> &nbsp;|&nbsp; <span class="label">highest r:</span> <span id="D_topR">—</span></div></div>
+      <div class="panel scenario"><h3>Scenario</h3><p>Schematic Anolis tree. Tip color = ecomorph. Look at where the "trunk-ground" lizards sit — are they gathered on one branch, or scattered across the tree? Ask what that would take on each island.</p></div>
+      <div class="panel graph-wrap"><h3>Anolis lineages and their ecomorphs</h3><canvas id="plotD" width="560" height="380"></canvas><div class="fit-stats" id="statsD"><span class="label">tips:</span> <span id="D_n">—</span> &nbsp;|&nbsp; <span class="label">ecomorph categories:</span> <span id="D_morphs">—</span> &nbsp;|&nbsp; <span class="label">independent origins per ecomorph:</span> <span id="D_origins" class="big">—</span></div></div>
     </div>
     <div class="col">
       <div class="panel prediction" id="predD"><h3>Prediction</h3>
-        <ol>
-          <li><div class="q">Q1. A female haplodiploid worker (e.g. a honey bee) compares helping her mother make more sisters vs. raising her own daughters. Hamilton's rule favors:</div>
-            <label><input type="radio" name="qD1" value="equal" /> Equal — both 0.5</label>
-            <label><input type="radio" name="qD1" value="sister" /> Sister 0.75 &gt; Daughter 0.5 — helping mother wins</label>
-            <label><input type="radio" name="qD1" value="daughter" /> Daughter 0.5 &gt; Sister 0.25</label>
-            <label><input type="radio" name="qD1" value="brother" /> Brother is closest</label></li>
-          <li><div class="q">Q2. A clonal bacterium considers an act that saves a neighboring cell at some cost to itself. Why does Hamilton's rule trivially favor helping in this case?</div>
-            <label><input type="radio" name="qD2" value="zero" /> Cost is zero in bacteria</label>
-            <label><input type="radio" name="qD2" value="clone" /> r = 1 — the neighbor's genes are your genes</label>
-            <label><input type="radio" name="qD2" value="growth" /> Bacteria reproduce faster, so benefits compound</label></li>
-        </ol>
+        <ol><li><div class="q">Q1. Across Caribbean Anolis, how many independent origins of "trunk-ground" body plan do you expect?</div>
+          <label><input type="radio" name="qD1" value="one" /> 1 — they all inherited it from a common ancestor</label>
+          <label><input type="radio" name="qD1" value="few" /> 3–5 — once per Caribbean island radiation</label>
+          <label><input type="radio" name="qD1" value="many" /> 10+ — every species evolves its own</label></li></ol>
         <button id="submitD" disabled>Submit → reveal</button>
-        <div class="explore-tracker" id="exploreD">Toggle through all three organism views. <span class="count">0/3 toggles</span></div></div>
+        <div class="explore-tracker" id="exploreD">Toggle ecomorph categories to count origins. <span class="count">0/2 categories</span></div></div>
       <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
-          <div class="row"><label for="D_orgSel">show:</label><select id="D_orgSel" style="grid-column:2 / 4; padding:3px 6px;"><option value="all">all three</option><option value="diploid">diploid mammal only</option><option value="haplo">haplodiploid bee only</option><option value="clonal">clonal bacterium only</option></select></div>
+          <div class="row"><label for="D_morphIn">highlight ecomorph</label>
+            <select id="D_morphIn" style="padding:6px"><option>trunk-ground</option><option>twig</option><option>grass-bush</option><option>crown-giant</option><option>all</option></select><span></span></div>
           <div class="buttons"><button id="D_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — relatedness across systems</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># Three inheritance systems; one rule.</span></span><span class="line">diploid &lt;- <span class="fn">c</span>(sister=<span class="num">0.5</span>, daughter=<span class="num">0.5</span>, brother=<span class="num">0.5</span>)</span><span class="line">haplo   &lt;- <span class="fn">c</span>(sister=<span class="num">0.75</span>, daughter=<span class="num">0.5</span>, brother=<span class="num">0.25</span>)</span><span class="line">clonal  &lt;- <span class="fn">c</span>(sister=<span class="num">1</span>, daughter=<span class="num">1</span>, brother=<span class="num">1</span>)</span><span class="line"><span class="com"># Hamilton's rule: helping spreads if r * b > c, regardless of which row you're in.</span></span></pre></div>
+      <div class="panel"><h3>R code — Anolis ecomorph origins</h3>
+<pre class="code" id="codeD"><span class="line"><span class="kw">library</span>(ape)</span><span class="line">tr &lt;- <span class="fn">read.tree</span>(<span class="str">"data/clean/anolis_tree.nwk"</span>)</span><span class="line">ecomorphs &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/anolis_svl.csv"</span>)$ecomorph</span><span class="line"><span class="com"># Count independent state changes on the tree (parsimony)</span></span></pre></div>
+    </div>
+  </div>
+</section>
+
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E — Sister taxa share an ancestor. Branch length tells you how recently.</h2>
+  <div class="lock-banner">Complete Stage D.</div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel scenario"><h3>Scenario</h3>
+        <p>Take the same four-tip tree twice. Same topology, same sister relationships. Different branch lengths: in the "shallow" tree, every tip diverged from its sister recently; in the "deep" tree, the same sisters diverged much earlier. Trait values evolve under Brownian motion along each branch — variance accumulates with time.</p>
+        <p>Watch the trait scatter on the right. Same topology, same sister pairs. How correlated should sister trait values be in each case?</p>
+      </div>
+      <div class="panel graph-wrap"><h3>Same topology — two branch-length depths</h3><canvas id="plotE" width="560" height="320"></canvas><div class="fit-stats" id="statsE"><span class="label">depth scale:</span> <span id="E_depth">1.0</span> &nbsp;|&nbsp; <span class="label">sister-pair r (BM-simulated):</span> <span id="E_r" class="big">—</span></div></div>
+    </div>
+    <div class="col">
+      <div class="panel prediction" id="predE"><h3>Prediction</h3>
+        <ol>
+          <li><div class="q">Q1. If two sister taxa diverged 1 million years ago, will their trait values be more or less similar than two sisters that diverged 10 million years ago?</div>
+            <label><input type="radio" name="qE1" value="more" /> More similar — less time for traits to drift apart</label>
+            <label><input type="radio" name="qE1" value="less" /> Less similar — more time elapsed</label>
+            <label><input type="radio" name="qE1" value="same" /> Same — sister taxa are sister taxa</label></li>
+          <li><div class="q">Q2. Two species share a most recent common ancestor at the same node in the tree. Does the topology alone tell you how similar their trait values should be?</div>
+            <label><input type="radio" name="qE2" value="yes" /> Yes — topology determines similarity</label>
+            <label><input type="radio" name="qE2" value="no" /> No — branch lengths set the expected similarity; topology only sets the pairing</label></li>
+        </ol>
+        <button id="submitE" disabled>Submit → unlock the depth slider</button>
+        <div class="explore-tracker" id="exploreE">Slide the depth across 3+ values. <span class="count">0/3 depths</span></div></div>
+      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsE">
+          <div class="row"><label for="E_depthIn">tree depth (×)</label><input type="range" id="E_depthIn" min="0.1" max="3" step="0.1" value="1.0" /><output id="E_depthOut">1.0</output></div>
+          <div class="row"><label for="E_seedIn">seed</label><input type="range" id="E_seedIn" min="1" max="999" step="1" value="42" /><output id="E_seedOut">42</output></div></div></div>
+      <div class="panel"><h3>R code — BM on a tree</h3>
+<pre class="code" id="codeE"><span class="line"><span class="com"># Brownian motion along branches: trait variance accumulates with branch length.</span></span><span class="line"><span class="com"># Sister r ≈ shared / (shared + private), where shared = ancestor-to-MRCA</span></span><span class="line"><span class="com"># and private = MRCA-to-tip. Topology alone fixes the pairing; depth scales r.</span></span></pre></div>
     </div>
   </div>
 </section>
@@ -169,21 +187,31 @@
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
+function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
+function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h};}
+function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){
+  xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString());
+  ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath();
+  ctx.moveTo(f.pad.l,f.pad.t); ctx.lineTo(f.pad.l,f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W,f.pad.t+f.H); ctx.stroke();
+  ctx.fillStyle="#333"; ctx.font="11px ui-monospace, monospace"; ctx.textAlign="center"; ctx.textBaseline="top";
+  for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks,x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+6);}
+  ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks,y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);}
+  ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="12px -apple-system, sans-serif"; ctx.fillStyle="#555";
+  ctx.fillText(xLabel,f.pad.l+f.W/2,f.pad.t+f.H+26);
+  ctx.save(); ctx.translate(f.pad.l-38,f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore();
+}
 function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
-function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
-function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
 function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
-function rbinom(rng,n,p){let k=0; for(let i=0;i<n;i++) if(rng()<p) k++; return k;}
 
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-const EXPLORE_THRESHOLD = { A:3, B:5, C:3, D:3 };
-function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"seeds":stage==="B"?"combos":stage==="C"?"r values":"views"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
+const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false}, E:{predicted:false,explores:0,done:false} };
+const EXPLORE_THRESHOLD = { A:5, B:5, C:5, D:2, E:3 };
+function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"rotations":(stage==="D"?"categories":(stage==="E"?"depths":"rounds")); c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
+function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:"E",E:null}[s];}
+function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:"stageE",E:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
 /* Scored scaffold slot each stage's questions write to. A stage absent from
    this map still gates and still records engagement, but is not scored. */
-const PRED_POS = {A:0, B:1, C:2, D:3};
+const PRED_POS = {A:0, B:1, C:2, D:3, E:4};
 
 /* Graded prediction gate. `answers[i]` is either the winning value= token for a
    radio group, or a predicate over the array of checked values for a checkbox
@@ -210,143 +238,303 @@ function wirePrediction(stage, predId, names, answers, controlsId){
   });
 }
 
-const sA = { seed:42 };
+/* ====== STAGE A — tree rotation widget ====== */
+// Tree as nested arrays: [leftChild, rightChild] or "tipName"
+let treeA = ["shark", ["tuna", ["lizard", ["mouse", "human"]]]];
+let rotsA = 0;
+function flatten(t) { if (typeof t === "string") return [t]; return [...flatten(t[0]), ...flatten(t[1])]; }
+function drawTree(ctx, t, x0, y0, x1, y1, nodes) {
+  // x0..x1 horizontal span; y0..y1 vertical span; depths get x positions; tips at y0..y1
+  // Compute depths
+  function depth(t) { if (typeof t === "string") return 0; return 1 + Math.max(depth(t[0]), depth(t[1])); }
+  const maxD = depth(t);
+  function layoutTips(t, yMin, yMax) {
+    if (typeof t === "string") return [{name:t, y:(yMin+yMax)/2}];
+    const aTips=layoutTips(t[0], yMin, (yMin+yMax)/2);
+    const bTips=layoutTips(t[1], (yMin+yMax)/2, yMax);
+    return [...aTips, ...bTips];
+  }
+  const tips = layoutTips(t, y0, y1);
+  function tipY(name) { return tips.find(p=>p.name===name).y; }
+  function nodeY(t) { if (typeof t === "string") return tipY(t); return (nodeY(t[0]) + nodeY(t[1])) / 2; }
+  function maxDepth(t) { if (typeof t === "string") return 0; return 1 + Math.max(maxDepth(t[0]), maxDepth(t[1])); }
+  function nodeX(t, dEnd) { return x0 + (1 - (maxDepth(t)/(maxD+0.001))) * (x1 - x0 - 100) ; }
+  function draw(t, depthHere) {
+    const xHere = x0 + (depthHere / (maxD + 1)) * (x1 - x0 - 80);
+    if (typeof t === "string") { ctx.fillStyle="#333"; ctx.font="13px -apple-system, sans-serif"; ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(t, xHere+8, tipY(t)); return tipY(t); }
+    const y1d = draw(t[0], depthHere+1); const y2d = draw(t[1], depthHere+1);
+    const yMid = (y1d + y2d) / 2;
+    // Vertical bar
+    ctx.strokeStyle="#333"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(xHere, y1d); ctx.lineTo(xHere, y2d); ctx.stroke();
+    // Horizontal to children
+    const xChild = x0 + ((depthHere+1) / (maxD + 1)) * (x1 - x0 - 80);
+    ctx.beginPath(); ctx.moveTo(xHere, y1d); ctx.lineTo(xChild, y1d); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(xHere, y2d); ctx.lineTo(xChild, y2d); ctx.stroke();
+    // Click hotspot
+    ctx.fillStyle="rgba(178,58,72,0.6)"; ctx.beginPath(); ctx.arc(xHere, yMid, 5, 0, 2*Math.PI); ctx.fill();
+    nodes.push({x:xHere, y:yMid, ref:t});
+    return yMid;
+  }
+  draw(t, 0);
+  return tips;
+}
 function drawStageA() {
-  const reps=5, N=500, gens=100;
-  const trajs=[], endFreqs=[];
-  for(let r=0;r<reps;r++){
-    const rng=mulberry32(sA.seed + r*97); let p=0.1; const traj=[p];
-    for(let g=1;g<=gens;g++){p=rbinom(rng,2*N,p)/(2*N); traj.push(p);}
-    trajs.push(traj); endFreqs.push(traj[gens]);
-  }
-  const meanEnd = endFreqs.reduce((a,b)=>a+b,0)/reps;
-  document.getElementById("A_g").textContent=gens;
-  document.getElementById("A_drift").textContent=meanEnd.toFixed(3);
   const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
-  drawAxes(ctx,f,"generation","p (altruism)",5,4,v=>v.toFixed(0),v=>v.toFixed(2));
-  const colors=["#888","#6b6b68","#a0a0a0","#555","#777"];
-  trajs.forEach((traj, idx) => {
-    ctx.strokeStyle=colors[idx]; ctx.lineWidth=1.4; ctx.beginPath();
-    for(let g=0;g<=gens;g++){const x=f.x(g),y=f.y(traj[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);}
-    ctx.stroke();
-  });
-  // Starting frequency reference line
-  ctx.strokeStyle="#b23a48"; ctx.setLineDash([4,4]); ctx.lineWidth=1; ctx.beginPath();
-  ctx.moveTo(f.pad.l, f.y(0.1)); ctx.lineTo(f.pad.l+f.W, f.y(0.1)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left";
-  ctx.fillText("starting freq = 0.1", f.pad.l+10, f.y(0.1)-4);
+  const nodes=[];
+  drawTree(ctx, treeA, 40, 30, W, H-30, nodes);
+  cv.dataset.nodes = JSON.stringify(nodes.map(n=>({x:n.x, y:n.y, depth:n.ref.length||0})));
+  cv._nodes = nodes;
+  const order = flatten(treeA).join(" → ");
+  document.getElementById("A_order").textContent = order;
+  document.getElementById("A_rots").textContent = rotsA;
 }
-document.getElementById("A_seedIn").addEventListener("input",(e)=>{sA.seed=+e.target.value; document.getElementById("A_seedOut").textContent=sA.seed; drawStageA(); bumpExplore("A");});
-document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson17_stageA.R",`set.seed(${sA.seed}); N <- 500; gens <- 100; p <- 0.1
-for (g in 1:gens) p <- rbinom(1,2*N,p)/(2*N)
-p
-`);});
-wirePrediction("A","predA",["qA1"],["loss"],"controlsA"); drawStageA();
+function rotateAt(t, target) {
+  if (typeof t === "string") return t;
+  if (t === target) return [t[1], t[0]];
+  return [rotateAt(t[0], target), rotateAt(t[1], target)];
+}
+document.getElementById("plotA").addEventListener("click", (e) => {
+  if (!Gates.A.predicted) return;
+  const cv=e.currentTarget; const rect=cv.getBoundingClientRect(); const x=(e.clientX-rect.left); const y=(e.clientY-rect.top);
+  if (!cv._nodes) return;
+  // Find nearest node within 12px
+  let nearest=null, minDist=12;
+  for(const n of cv._nodes) { const d=Math.hypot(n.x-x, n.y-y); if (d<minDist) {minDist=d; nearest=n;} }
+  if (nearest) { treeA = rotateAt(treeA, nearest.ref); rotsA++; drawStageA(); bumpExplore("A"); }
+});
+document.getElementById("A_reset").addEventListener("click", () => { treeA = ["shark", ["tuna", ["lizard", ["mouse", "human"]]]]; rotsA = 0; drawStageA(); });
+document.getElementById("A_download").addEventListener("click", () => { downloadText("lesson18_stageA.R", `# Same tree, two Newick strings:
+library(ape)
+tr1 <- read.tree(text = "(shark,(tuna,(lizard,(mouse,human))));")
+tr2 <- read.tree(text = "((((human,mouse),lizard),tuna),shark);")
+all.equal.phylo(tr1, tr2)   # TRUE
+`); });
+wirePrediction("A","predA",["qA1"],["same"],"controlsA"); drawStageA();
 
-const sB = { r:0.5, b:0.3, c:0.1, seed:42 };
+/* ====== STAGE B — MRCA drill ====== */
+const drillB = [
+  { tree: ["A", ["B", ["C", ["D", "E"]]]], tips: ["B", "E"], answerDepth: 1 },
+  { tree: [["A", "B"], ["C", ["D", "E"]]], tips: ["A", "D"], answerDepth: 0 },
+  { tree: [[["A", "B"], "C"], ["D", "E"]], tips: ["B", "C"], answerDepth: 1 },
+  { tree: ["A", [["B", "C"], ["D", "E"]]], tips: ["B", "E"], answerDepth: 1 },
+  { tree: [[["A", "B"], ["C", "D"]], "E"], tips: ["A", "D"], answerDepth: 1 }
+];
+let bIdx=0, bScore=0;
+function findMRCA(t, tips, depth=0) {
+  if (typeof t === "string") return tips.includes(t) ? {node:null, contains:1, depth} : {node:null, contains:0, depth};
+  const a=findMRCA(t[0], tips, depth+1); const b=findMRCA(t[1], tips, depth+1);
+  if (a.node) return a; if (b.node) return b;
+  if (a.contains + b.contains >= 2) return {node:t, contains:2, depth};
+  return {node:null, contains:a.contains+b.contains, depth};
+}
 function drawStageB() {
-  const rng=mulberry32(sB.seed); const N=500; const gens=200; let p=0.2; const traj=[p];
-  for(let g=1;g<=gens;g++){
-    const w_alt=1-sB.c+sB.r*sB.b; const w_sel=1+p*sB.r*sB.b*0; // simplified
-    const p_new=p*w_alt/(p*w_alt + (1-p)*w_sel);
-    p=rbinom(rng,2*N,p_new)/(2*N); traj.push(p);
-  }
-  const diff = sB.r*sB.b - sB.c;
-  document.getElementById("B_r").textContent=sB.r.toFixed(2); document.getElementById("B_b").textContent=sB.b.toFixed(2); document.getElementById("B_c").textContent=sB.c.toFixed(2);
-  document.getElementById("B_diff").textContent=(diff>=0?"+":"")+diff.toFixed(3);
-  document.getElementById("B_final").textContent=traj[gens].toFixed(3);
+  const round = drillB[bIdx];
   const cv=document.getElementById("plotB"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,gens,0,1);
-  drawAxes(ctx,f,"generation","p (altruism)",5,4,v=>v.toFixed(0),v=>v.toFixed(2));
-  ctx.strokeStyle=diff>=0?"#2f6b8f":"#b23a48"; ctx.lineWidth=2; ctx.beginPath(); for(let g=0;g<=gens;g++){const x=f.x(g),y=f.y(traj[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+  const nodes=[];
+  drawTree(ctx, round.tree, 40, 30, W, H-30, nodes);
+  cv._nodes = nodes; cv._round = round;
+  // Highlight target tips
+  ctx.fillStyle="#b23a48"; ctx.font="bold 13px -apple-system, sans-serif"; ctx.textBaseline="middle"; ctx.textAlign="left";
+  // Need to re-find tip positions — redraw the labels in crimson on top
+  function tipPositions(t, yMin, yMax) { if (typeof t === "string") return [{name:t, y:(yMin+yMax)/2}]; const aTips=tipPositions(t[0], yMin, (yMin+yMax)/2); const bTips=tipPositions(t[1], (yMin+yMax)/2, yMax); return [...aTips, ...bTips]; }
+  const tipPs = tipPositions(round.tree, 30, H-30);
+  function depthFn(t){ if(typeof t==="string") return 0; return 1+Math.max(depthFn(t[0]), depthFn(t[1])); }
+  const maxD = depthFn(round.tree);
+  for(const tp of tipPs) { if(round.tips.includes(tp.name)) { const xTip = 40 + ((maxD+1) / (maxD + 1)) * (W - 40 - 80); ctx.fillText(tp.name, xTip+8, tp.y); }}
+  document.getElementById("B_round").textContent = (bIdx+1) + "/5";
+  document.getElementById("B_score").textContent = bScore + "/" + bIdx;
 }
-["B_rIn","B_bIn","B_cIn","B_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={B_rIn:"r",B_bIn:"b",B_cIn:"c",B_seedIn:"seed"}[id]; sB[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=(key==="seed")?v:v.toFixed(2); drawStageB(); bumpExplore("B");}));
-document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson17_stageB.R",`set.seed(${sB.seed}); N <- 500; r <- ${sB.r}; b <- ${sB.b}; cc <- ${sB.c}; p <- 0.2; gens <- 200
-for (g in 1:gens) { w_alt <- 1 - cc + r*b; p_new <- p*w_alt/(p*w_alt + (1-p)); p <- rbinom(1,2*N,p_new)/(2*N) }
-p
-`);});
-wirePrediction("B","predB",["qB1"],["rise"],"controlsB"); drawStageB();
+document.getElementById("plotB").addEventListener("click", (e) => {
+  if (!Gates.B.predicted) return;
+  const cv=e.currentTarget; const rect=cv.getBoundingClientRect(); const x=(e.clientX-rect.left); const y=(e.clientY-rect.top);
+  if (!cv._nodes || !cv._round) return;
+  let nearest=null, minDist=20;
+  for(const n of cv._nodes) { const d=Math.hypot(n.x-x, n.y-y); if (d<minDist) {minDist=d; nearest=n;} }
+  if (!nearest) return;
+  const mrcaResult = findMRCA(cv._round.tree, cv._round.tips);
+  const correct = nearest.ref === mrcaResult.node;
+  const fb = document.getElementById("B_fb"); fb.className = "drill-feedback shown " + (correct ? "correct" : "wrong");
+  fb.textContent = correct ? "Correct — that's the MRCA of " + cv._round.tips.join(" and ") : "Not quite. Trace each crimson tip back toward the root and find where the paths meet.";
+  if (correct) bScore++;
+  bumpExplore("B");
+});
+document.getElementById("B_next").addEventListener("click", () => { bIdx = (bIdx+1) % drillB.length; document.getElementById("B_fb").className = "drill-feedback"; drawStageB(); });
+wirePrediction("B","predB",["qB1"],["back"],"controlsB"); drawStageB();
 
-const sC = { r:0.5, b:0.6, c:0.2 };
+/* ====== STAGE C — "primitive?" drill ====== */
+const drillC = [
+  { a:"shark", b:"tuna", answer:"neither" },
+  { a:"lamprey", b:"human", answer:"neither" },
+  { a:"crocodile", b:"chicken", answer:"neither" },
+  { a:"platypus", b:"mouse", answer:"neither" },
+  { a:"coelacanth", b:"horse", answer:"neither" }
+];
+let cIdx=0, cScore=0;
 function drawStageC() {
+  const round = drillC[cIdx];
   const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,1,0,0.5);
-  drawAxes(ctx,f,"b (benefit)","c (cost)",5,5,v=>v.toFixed(1),v=>v.toFixed(2));
-  // Shade region: c < r*b is "altruism spreads"
-  ctx.fillStyle="rgba(47,107,143,0.15)"; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(1),f.y(0)); ctx.lineTo(f.x(1),f.y(Math.min(0.5, sC.r))); ctx.closePath(); ctx.fill();
-  ctx.fillStyle="rgba(178,58,72,0.10)"; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(0),f.y(0.5)); ctx.lineTo(f.x(1),f.y(0.5)); ctx.lineTo(f.x(1),f.y(Math.min(0.5,sC.r))); ctx.closePath(); ctx.fill();
-  // Boundary line c = r*b
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(f.x(0),f.y(0)); ctx.lineTo(f.x(1),f.y(Math.min(0.5,sC.r))); ctx.stroke();
-  // Annotate
-  ctx.fillStyle="#2f6b8f"; ctx.font="11px ui-monospace"; ctx.fillText("altruism spreads (c < r·b)", f.x(0.55), f.y(0.05));
-  ctx.fillStyle="#b23a48"; ctx.fillText("altruism declines (c > r·b)", f.x(0.05), f.y(0.4));
-  // current point
-  const spreads = sC.c < sC.r*sC.b;
-  ctx.fillStyle=spreads?"#2f6b8f":"#b23a48"; ctx.beginPath(); ctx.arc(f.x(sC.b), f.y(sC.c), 7, 0, 2*Math.PI); ctx.fill();
-  document.getElementById("C_r").textContent=sC.r.toFixed(2); document.getElementById("C_bc").textContent=sC.b.toFixed(2)+", "+sC.c.toFixed(2);
-  document.getElementById("C_spread").textContent=spreads?"yes":"no";
+  ctx.fillStyle="#333"; ctx.font="22px -apple-system, sans-serif"; ctx.textAlign="center"; ctx.textBaseline="middle";
+  ctx.fillText(round.a + "  vs  " + round.b, W/2, H/2 - 20);
+  ctx.font="13px -apple-system"; ctx.fillStyle="#666"; ctx.fillText("Which is more primitive?", W/2, H/2 + 16);
+  document.getElementById("C_pair").textContent = round.a + " vs " + round.b;
+  document.getElementById("C_score").textContent = cScore + "/" + cIdx;
 }
-["C_rIn","C_bIn","C_cIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; const key={C_rIn:"r",C_bIn:"b",C_cIn:"c"}[id]; sC[key]=v; const out=document.getElementById(id.replace("In","Out")); out.textContent=v.toFixed(2); drawStageC(); if(key==="r") bumpExplore("C");}));
-document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson17_stageC.R",`r <- ${sC.r}; b <- ${sC.b}; cc <- ${sC.c}
-r*b > cc
-`);});
-wirePrediction("C","predC",["qC1"],["grows"],"controlsC"); drawStageC();
+function answerC(choice) {
+  if (!Gates.C.predicted) return;
+  const round = drillC[cIdx];
+  const correct = (choice === round.answer);
+  const fb = document.getElementById("C_fb"); fb.className = "drill-feedback shown " + (correct ? "correct" : "wrong");
+  fb.textContent = correct ? "Right — neither is more primitive. Both have evolved for the same elapsed time." : "Wrong — the answer is always 'neither.' Two living organisms have both been evolving since their last common ancestor for equal elapsed time.";
+  if (correct) cScore++;
+  bumpExplore("C");
+}
+document.getElementById("C_choose_a").addEventListener("click", () => answerC(drillC[cIdx].a));
+document.getElementById("C_choose_b").addEventListener("click", () => answerC(drillC[cIdx].b));
+document.getElementById("C_choose_n").addEventListener("click", () => answerC("neither"));
+document.getElementById("C_next").addEventListener("click", () => { cIdx = (cIdx+1) % drillC.length; document.getElementById("C_fb").className = "drill-feedback"; drawStageC(); });
+wirePrediction("C","predC",["qC1"],["neither"],"controlsC"); drawStageC();
 
-const sD = { org:"all" };
-const D_R = {
-  diploid: { sister:0.5, daughter:0.5, brother:0.5, label:"diploid mammal", color:"#2f6b8f" },
-  haplo:   { sister:0.75, daughter:0.5, brother:0.25, label:"haplodiploid bee (female)", color:"#b23a48" },
-  clonal:  { sister:1, daughter:1, brother:1, label:"clonal bacterium", color:"#caa04a" }
-};
+/* ====== STAGE D — Anolis ====== */
+const sD = { morph:"trunk-ground" };
 function drawStageD() {
-  const orgs = (sD.org === "all") ? ["diploid","haplo","clonal"] : [sD.org];
-  const kins = ["sister","daughter","brother"];
+  // Synthetic schematic Anolis tree of 12 tips with ecomorph labels.
+  const taxa = [
+    {name:"A_cristatellus", morph:"trunk-ground", x:0},
+    {name:"A_gundlachi", morph:"trunk-ground", x:1},
+    {name:"A_pulchellus", morph:"grass-bush", x:2},
+    {name:"A_evermanni", morph:"trunk-crown", x:3},
+    {name:"A_occultus", morph:"twig", x:4},
+    {name:"A_sagrei", morph:"trunk-ground", x:5},
+    {name:"A_distichus", morph:"trunk", x:6},
+    {name:"A_carolinensis", morph:"trunk-crown", x:7},
+    {name:"A_garmani", morph:"crown-giant", x:8},
+    {name:"A_lineatopus", morph:"trunk-ground", x:9},
+    {name:"A_valencienni", morph:"twig", x:10},
+    {name:"A_grahami", morph:"trunk-crown", x:11}
+  ];
+  const morphs = [...new Set(taxa.map(t=>t.morph))]; document.getElementById("D_morphs").textContent = morphs.length;
+  document.getElementById("D_n").textContent = taxa.length;
+  // Count origins per ecomorph: each clade boundary where it appears once = origin
+  // Highly simplified: just count how many "runs" of the highlighted morph appear in x-order across the tips
+  const ms = (sD.morph==="all") ? morphs : [sD.morph];
+  let origins = 0;
+  for(const m of ms) { let runOpen=false; for(const t of taxa) { if(t.morph===m) { if(!runOpen) {origins++; runOpen=true;}} else runOpen=false; } }
+  document.getElementById("D_origins").textContent = origins + (sD.morph==="all"?" (summed across morphs)":"");
   const cv=document.getElementById("plotD"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:60,r:12,t:24,b:60}; const f=makeFrame(pad,W,H,-0.5,kins.length-0.5,0,1.05);
-  drawAxes(ctx,f,null,"relatedness (r)",kins.length-1,4,v=>{const i=Math.round(v); return kins[i]||"";},v=>v.toFixed(2));
-  // Grouped bars: at each kin position, draw one bar per included organism.
-  const barW = 0.8 / orgs.length;
-  for (let k = 0; k < kins.length; k++) {
-    for (let o = 0; o < orgs.length; o++) {
-      const cfg = D_R[orgs[o]];
-      const val = cfg[kins[k]];
-      const center = k - 0.4 + (o + 0.5) * barW;
-      ctx.fillStyle = cfg.color;
-      ctx.fillRect(f.x(center - barW/2 + 0.02), f.y(val), f.x(center + barW/2 - 0.02) - f.x(center - barW/2 + 0.02), f.y(0) - f.y(val));
-    }
+  const pad={l:30,r:170,t:20,b:20}; const yStep = (H-pad.t-pad.b) / taxa.length;
+  const colors = {"trunk-ground":"#b23a48","grass-bush":"#6f8a4a","trunk-crown":"#2f6b8f","twig":"#caa04a","trunk":"#a86a1a","crown-giant":"#88a8c0"};
+  // Draw tips as horizontal bars
+  for(let i=0;i<taxa.length;i++) {
+    const t = taxa[i]; const y = pad.t + (i+0.5)*yStep;
+    const highlighted = (sD.morph==="all" || t.morph===sD.morph);
+    ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W-pad.r, y); ctx.stroke();
+    // ecomorph color dot
+    ctx.fillStyle = highlighted ? (colors[t.morph]||"#666") : "rgba(120,120,120,0.4)";
+    ctx.beginPath(); ctx.arc(W-pad.r+5, y, 6, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = highlighted ? "#333" : "rgba(120,120,120,0.6)"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(t.name + " (" + t.morph + ")", W-pad.r+18, y);
   }
-  // 0.5 reference line (own-offspring baseline for the diploid case)
-  ctx.strokeStyle="#000"; ctx.setLineDash([3,3]); ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(f.pad.l, f.y(0.5)); ctx.lineTo(f.pad.l + f.W, f.y(0.5)); ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle="#000"; ctx.font="10.5px ui-monospace"; ctx.textAlign="left"; ctx.fillText("r = 0.5 (diploid own-offspring baseline)", f.pad.l + 6, f.y(0.5) - 4);
-  // Legend
-  ctx.font="11px -apple-system, sans-serif"; ctx.textAlign="left"; ctx.textBaseline="middle";
-  let lx = f.pad.l + 8, ly = f.pad.t + 8;
-  orgs.forEach(o => {
-    const cfg = D_R[o];
-    ctx.fillStyle = cfg.color; ctx.fillRect(lx, ly - 5, 12, 10);
-    ctx.fillStyle = "#333"; ctx.fillText(cfg.label, lx + 16, ly);
-    lx += ctx.measureText(cfg.label).width + 36;
-  });
-  // Top-r readout
-  let topR = 0, topLabel = "";
-  for (const o of orgs) for (const k of kins) {
-    if (D_R[o][k] > topR) { topR = D_R[o][k]; topLabel = `${D_R[o].label} ↔ ${k}: r = ${topR.toFixed(2)}`; }
-  }
-  document.getElementById("D_org").textContent = (sD.org === "all") ? "all three" : D_R[sD.org].label;
-  document.getElementById("D_topR").textContent = topLabel;
+  // Draw schematic backbone (just a vertical line)
+  ctx.strokeStyle="#333"; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H-pad.b); ctx.stroke();
 }
-document.getElementById("D_orgSel").addEventListener("change", (e) => { sD.org = e.target.value; drawStageD(); bumpExplore("D"); });
-document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson17_stageD.R",`# Three inheritance systems
-diploid <- c(sister=0.5, daughter=0.5, brother=0.5)
-haplo   <- c(sister=0.75, daughter=0.5, brother=0.25)
-clonal  <- c(sister=1, daughter=1, brother=1)
-rbind(diploid, haplo, clonal)
+document.getElementById("D_morphIn").addEventListener("change",(e)=>{sD.morph=e.target.value; drawStageD(); bumpExplore("D");});
+document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson18_stageD.R",`library(ape)
+tr <- read.tree("data/clean/anolis_tree.nwk")
+ecomorphs <- read.csv("data/clean/anolis_svl.csv")$ecomorph
+# Count independent origins of each ecomorph by Dollo / parsimony reconstruction
 `);});
-wirePrediction("D","predD",["qD1","qD2"],["sister","clone"],"controlsD"); drawStageD();
+wirePrediction("D","predD",["qD1"],["few"],"controlsD"); drawStageD();
 
-Score.init({moduleId:"lesson18", version:3, scaffold:5, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+/* ====== STAGE E — branch lengths and BM correlation ====== */
+// Four tips paired as sisters: (A,B) and (C,D). Same topology under any depth.
+// Brownian motion variance accumulates linearly with branch length. Sister r
+// depends on (shared ancestor-to-MRCA time) / (total root-to-tip time).
+const sE = { depth: 1.0, seed: 42 };
+function bmSimSister(reps, shared, priv, rng) {
+  // Returns observed Pearson r between sister-pair traits across `reps` trials.
+  const xs = [], ys = [];
+  function gauss(){ let u=0,v=0; while(u==0)u=rng(); while(v==0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  for (let i = 0; i < reps; i++) {
+    const common = gauss() * Math.sqrt(shared);
+    xs.push(common + gauss() * Math.sqrt(priv));
+    ys.push(common + gauss() * Math.sqrt(priv));
+  }
+  // Pearson
+  let mx=0, my=0; for(let i=0;i<reps;i++){mx+=xs[i]; my+=ys[i];} mx/=reps; my/=reps;
+  let sxx=0, syy=0, sxy=0;
+  for(let i=0;i<reps;i++){const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy;}
+  return sxy / Math.sqrt(sxx*syy);
+}
+function drawStageE() {
+  const cv = document.getElementById("plotE"); const {ctx,W,H} = setupCanvas(cv); ctx.clearRect(0,0,W,H);
+  // Left half: tree drawing. Right half: trait scatter for sister pairs.
+  const treeW = W * 0.45, scatW = W * 0.55;
+  // ---- tree: 4 tips, two sister pairs (A,B) and (C,D) ----
+  const depth = sE.depth;
+  const tipX = treeW - 24;
+  const rootX = 40;
+  const split1X = rootX + (tipX - rootX) * 0.30;       // top-level split (root)
+  const split2X = rootX + (tipX - rootX) * (0.30 + 0.55 * (1/depth));  // sister split — closer to tip at depth=1, closer to root at depth=3
+  // For visualization: at depth = depth, the "shared/private" ratio implied is:
+  // shared = total - private; let private = 1 (fixed), shared = depth ⇒ total = depth + 1.
+  // r = shared / total = depth / (depth + 1).
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1.8;
+  function vline(x, y1, y2){ ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke(); }
+  function hline(y, x1, x2){ ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke(); }
+  const tipsY = [40, 90, 200, 250];   // A, B, C, D
+  const sisAB = (tipsY[0] + tipsY[1])/2;
+  const sisCD = (tipsY[2] + tipsY[3])/2;
+  // Sister branch lengths (split2X to tipX): "private" segments per tip
+  hline(tipsY[0], split2X, tipX); hline(tipsY[1], split2X, tipX);
+  hline(tipsY[2], split2X, tipX); hline(tipsY[3], split2X, tipX);
+  vline(split2X, tipsY[0], tipsY[1]); vline(split2X, tipsY[2], tipsY[3]);
+  // Shared backbones (split1X to split2X): "shared" segments per pair
+  hline(sisAB, split1X, split2X); hline(sisCD, split1X, split2X);
+  vline(split1X, sisAB, sisCD);
+  // Root
+  hline((sisAB+sisCD)/2, rootX, split1X);
+  // Tip labels
+  ctx.fillStyle = "#333"; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ["A","B","C","D"].forEach((lab, i) => ctx.fillText(lab, tipX + 4, tipsY[i]));
+  // Annotation
+  ctx.fillStyle = "#6b6b68"; ctx.font = "11px ui-monospace, monospace"; ctx.textAlign = "center";
+  ctx.fillText("depth ×" + depth.toFixed(1), (rootX + tipX)/2, 22);
+  // ---- right side: sister-pair trait scatter ----
+  const rng = mulberry32(sE.seed);
+  const shared = depth; const priv = 1;
+  const reps = 80;
+  function gauss(){ let u=0,v=0; while(u==0)u=rng(); while(v==0)v=rng(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const xs = [], ys = [];
+  for (let i = 0; i < reps; i++) {
+    const common = gauss() * Math.sqrt(shared);
+    xs.push(common + gauss() * Math.sqrt(priv));
+    ys.push(common + gauss() * Math.sqrt(priv));
+  }
+  // r calc
+  let mx=0, my=0; for(let i=0;i<reps;i++){mx+=xs[i]; my+=ys[i];} mx/=reps; my/=reps;
+  let sxx=0, syy=0, sxy=0;
+  for(let i=0;i<reps;i++){const dx=xs[i]-mx, dy=ys[i]-my; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy;}
+  const r = sxy / Math.sqrt(sxx*syy);
+  // axes
+  const pad = { l: treeW + 50, r: 12, t: 26, b: 38 };
+  const xMin = Math.min(...xs), xMax = Math.max(...xs);
+  const yMin = Math.min(...ys), yMax = Math.max(...ys);
+  const f = makeFrame({l:pad.l, r:pad.r, t:pad.t, b:pad.b}, W, H, xMin, xMax, yMin, yMax);
+  drawAxes(ctx, f, "tip A trait", "tip B trait", 4, 4, v=>v.toFixed(1), v=>v.toFixed(1));
+  ctx.fillStyle = "#2f6b8f"; for (let i = 0; i < reps; i++) { ctx.beginPath(); ctx.arc(f.x(xs[i]), f.y(ys[i]), 3, 0, 2*Math.PI); ctx.fill(); }
+  // OLS line
+  const slope = sxy / sxx, intercept = my - slope*mx;
+  ctx.strokeStyle = "#b23a48"; ctx.lineWidth = 2; ctx.beginPath();
+  ctx.moveTo(f.x(xMin), f.y(slope*xMin + intercept)); ctx.lineTo(f.x(xMax), f.y(slope*xMax + intercept)); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "12px ui-monospace"; ctx.textAlign = "right";
+  ctx.fillText("sister-pair r = " + r.toFixed(2), f.pad.l + f.W - 6, f.pad.t + 12);
+  document.getElementById("E_depth").textContent = depth.toFixed(1);
+  document.getElementById("E_r").textContent = r.toFixed(2);
+}
+document.getElementById("E_depthIn").addEventListener("input", (e) => { sE.depth = +e.target.value; document.getElementById("E_depthOut").textContent = sE.depth.toFixed(1); drawStageE(); bumpExplore("E"); });
+document.getElementById("E_seedIn").addEventListener("input", (e) => { sE.seed = +e.target.value; document.getElementById("E_seedOut").textContent = sE.seed; drawStageE(); });
+wirePrediction("E","predE",["qE1","qE2"],["more","no"],"controlsE"); drawStageE();
+
+Score.init({moduleId:"lesson18", version:3, scaffold:6, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
 </script>
 </body>
 </html>

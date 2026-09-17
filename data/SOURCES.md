@@ -387,7 +387,7 @@ consumption.
 - **Citation.** Buri, P. (1956). Gene frequency in small populations of mutant *Drosophila*. *Evolution* 10(4): 367–402.
 - **URL / DOI.** Raw matrix from the `popgenr` R package (Aaron Adamack); shipped here as `data/raw/fly.csv`. License: research/teaching use (original paper is open via Wiley historical archive).
 - **What it is.** Buri's classic drift experiment: 107 replicate populations of 8♂ + 8♀ *D. melanogaster*, tracked over 19 generations from p₀ = 0.5. The matrix is 20 rows (generations 0–19) × 33 columns (count of populations holding each possible allele count 0..32 of 32 total gene copies per population). The empirical drift variance fits a Wright–Fisher null with Ne ≈ 9, not the census 16 — a foundational demonstration that effective size ≠ census size.
-- **Used in.** Lesson 9 (drift I — sex ratio, absolute N, and the Ne/Nc gap) as the empirical Step D. Buri's data is the single canonical lab-controlled drift dataset.
+- **Used in.** **Lesson 10, the real-data panel on Stage A** (added 2026-09-17). The student sets an even population size, the page runs 107 fresh bottles at that size six times over and lays them on Buri's, and the fit comes out at **9.8 against a census of 16** — least squares over all nineteen generations of his variances, with the band taken off the six simulated repeats (sd ≈ 1.0). The stage's own game asks exactly this question of a made-up pond; this asks it of flies somebody counted. Buri's data is the single canonical lab-controlled drift dataset.
 - **Clean derivative.**
   - `data/clean/buri_fly.csv`/`.json` — long format: (generation, allele_count, n_pops). 530 rows.
   - `data/clean/buri_fly_summary.csv`/`.json` — per-generation summary: (generation, n_pops, mean_p, var_p, n_lost, n_fixed). 20 rows. Reproduces Buri's reported 30 losses + 28 fixations by generation 19.
@@ -398,7 +398,8 @@ consumption.
 - **Citation.** Pelletier, F., Hogg, J. T., Festa-Bianchet, M., Coltman, D. W., et al. (2022). Intense selective hunting leads to artificial evolution in horn size. *Evolutionary Applications* (and predecessors: Coltman et al. 2003 *Nature*).
 - **URL / DOI.** Dryad: <https://doi.org/10.5061/dryad.41d7q>. License: CC0.
 - **What it is.** 39 years of phenotypic data on horn size in Ram Mountain (Alberta) bighorn sheep, paired with a pedigree of 1,133 individuals (253 founders, 880 with assigned parents). Horn length, "Avhb114" (average horn base at age class), relative longevity, by sex × age × cohort × year. The dataset that supports the trophy-hunting selection-response and post-protection plateau analysis.
-- **Used in.** **Lesson 7 stage E**, as the one real population that supplies all four of that lesson's knobs at once — see the measured values below. Also Lesson 15 (selection II — heritability as a state; selection-coefficient drill). The horn-length trajectory shows initial decline under hunting, then plateau after protection — the discussion case for V_A exhaustion vs. survivor bias.
+- **Used in.** **Lesson 7 stage E**, as the one real population that supplies all four of that lesson's knobs at once — see the measured values below. Also Lesson 14 (selection II — heritability as a state; selection-coefficient drill), which was Lesson 15 before the 2026-09-16 renumber. The horn-length trajectory shows initial decline under hunting, then plateau after protection — the discussion case for V_A exhaustion vs. survivor bias.
+- **Also used in Lesson 10, the real-data panel on Stage B** (added 2026-09-17), which uses the *pedigree* rather than the horns: the same gene drop the stage does by hand, run down 1,133 real sheep. Measured off the shipped file — **135 founders born before 1996 had a shot at the 120 lambs born 2005 or later; 119 of them have no copy left down there, and what survives is the equivalent of about 6.** Roughly 21% of the last cohort's copies trace to a ram paternity was never assigned for, which the panel says on screen rather than hiding.
 - **The four numbers Lesson 7 reads off it**, computed from `bighorn_horn.csv` + `bighorn_pedigree.csv` and stated on that page:
   - *how many there are* — **86**, the median count of distinct sheep seen per year over 1973–2013 (range 19–219).
   - *how much is inherited* — **0.40**, from parent–offspring slopes of 0.228 (430 dam–offspring pairs) and 0.182 (181 sire–offspring pairs). **Standardised within sex first**: males average 51.9 cm and females 21.3 cm, so the raw pooled slope is an artefact of the dimorphism and means nothing.
@@ -408,6 +409,7 @@ consumption.
 - **Clean derivative.**
   - `data/clean/bighorn_horn.csv`/`.json` — 4,015 individual-year records. Columns: ID, yr, age, sex, cohort, hlM, hlF, Avhb114M, Avhb114F, relLongM, relLongF (NA preserved).
   - `data/clean/bighorn_pedigree.csv`/`.json` — 1,133 rows: (id, dam, sire). 253 founders (both parents NA).
+  - `data/clean/bighorn_genedrop.json` — the pedigree joined to birth cohorts off `bighorn_horn.csv` and put in topological order, which is what gene dropping in a browser needs and what neither parent file has on its own. Built by `scripts/make_bighorn_genedrop.py`. 1,133 records of (i, id, dam, sire, cohort, depth), parents as indices; 253 founders, 370 with one parent only, 8 generations, cohorts 1963–2013.
 - **Redistribution.** CC0 license; redistributed in cleaned form.
 
 ## Trier, Hermansen et al. 2014 — Italian sparrow hybrid speciation
@@ -496,6 +498,7 @@ consumption.
 - **URL / DOI.** `isleroyalewolf.org`. The cut used here is the project's own
   `Data_wolves_moose_Isle_Royale_June2019` table, obtained via the `data-raw/`
   directory of the `dsem` R package (James Thorson, NOAA), which redistributes it.
+- **Used in.** **Lesson 10, the real-data panel on Stage D** (added 2026-09-17). The wolf counts are a bust somebody counted rather than one the page invented: over the full record the wolves **average 21.1 animals and drift like 12.7**, and the student drags a start year to find that the gap widens the later they start (2000 onward: 16.3 against 7.2). Three straight winters at two wolves are what does it.
 - **What it is.** One row per winter, 1959–2019: wolf count, moose count, kill rate,
   predation rate, moose recruitment, diet composition, browse indices, and a climate
   block (rainfall, seasonal temperatures, winter NAO, snow depth, ice bridges).

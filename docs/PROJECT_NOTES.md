@@ -4,6 +4,18 @@ The single durable notes-and-memory file for this repo. Consolidated 2026-08-24
 from thirteen scattered docs, most of which are now retired to
 `_reference/retired/` (see §8).
 
+**Numbering changed on 2026-09-16.** The old Lesson 10 (the baseline where
+nothing is happening) was absorbed into Lesson 9; the old Lesson 11
+(Wright–Fisher trajectories, Buri's fly lines, the Florida Scrub Jay stage) was
+replaced by a new Lesson 10 built on drift as differential reproduction. Both
+old files are in `_reference/retired/lessons/`. Everything from 12 up moved down
+one, so 12→11 … 27→26, 31→30, 32→31, 35→34, and the design-slot gaps now sit at
+27/28/29 and 32/33. Nothing released was touched: 1–8 and 6b keep their names
+and their submission codes, and everything from 9 up was still `x` in
+`LOCKS.txt`, so no code a student has handed in stops decoding. **Lesson numbers
+written anywhere below this line predate that change and are one too high from
+12 up.**
+
 **Read order for anyone — human or agent — picking this up:**
 
 1. `structurephilosophy.md` — why, and the 47-unit sequence. Canonical.

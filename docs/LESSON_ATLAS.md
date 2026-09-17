@@ -1,7 +1,16 @@
 # BIO 202 — Lesson Atlas
 
-> **Stale as of 2026-08-24.** This atlas has not been regenerated since the Arc 5
-> collapse and the scoring work. Known divergences from the repo:
+> **Stale as of 2026-08-24, and the numbering below is now wrong as well.**
+> This atlas has not been regenerated since the Arc 5 collapse and the scoring
+> work. Known divergences from the repo:
+>
+> - **Every lesson number from 12 up is one too high, as of 2026-09-16.** The old
+>   Lesson 10 was absorbed into Lesson 9 and the old Lesson 11 was replaced, so
+>   12 became 11, 13 became 12, and so on to 35 becoming 34. Sections below keep
+>   the old numbers. Read `LOCKS.txt` for the current list.
+> - **The entry for `lesson10.html` below describes a retired file.** The new
+>   Lesson 10 is the drift lesson written 2026-09-16 and is described in
+>   `docs/WORK_ORDER.md`; it is not in this atlas yet.
 >
 > - **Arc 5 is now four lessons, not nine.** Lessons 28/29/30 folded into Lesson 27
 >   stage D; 33/34 into Lesson 35 stage B; the five files are in

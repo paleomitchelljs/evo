@@ -50,17 +50,26 @@ LESSON_UNIT = {
     # lesson9 is the old lesson8b (meiosis by hand), renumbered 2026-09-15. Like
     # lesson6b it carries no "L" unit of its own, so it has no row here and the
     # --terms report simply does not order it.
-    10: ("L10", 15), 11: ("L11", 16), 12: ("L12", 17), 13: ("L13", 18),
-    14: ("L14", 19), 15: ("L15", 21), 16: ("L16", 23), 17: ("L17", 24),
-    18: ("L18", 26), 19: ("L19", 27), 20: ("L20", 29), 21: ("L21", 31),
-    22: ("L22", 32), 23: ("L23", 33), 24: ("L24", 34), 25: ("L25", 35),
-    26: ("L26", 37), 27: ("L27", 38),
+    #
+    # Renumbered again 2026-09-16, everything from 12 up moving down one. The
+    # old lesson10 (the baseline where nothing is happening) was absorbed into
+    # lesson9, and the old lesson11 (Wright-Fisher trajectories) was replaced by
+    # the new lesson10, which is drift built as differential reproduction with
+    # no trait attached. Both are archived under _reference/retired/lessons/.
+    # The unit ids below are notes, not gates, and are already stale against the
+    # sequence the course actually follows -- they only order the --terms report.
+    10: ("L11", 16), 11: ("L12", 17), 12: ("L13", 18),
+    13: ("L14", 19), 14: ("L15", 21), 15: ("L16", 23), 16: ("L17", 24),
+    17: ("L18", 26), 18: ("L19", 27), 19: ("L20", 29), 20: ("L21", 31),
+    21: ("L22", 32), 22: ("L23", 33), 23: ("L24", 34), 24: ("L25", 35),
+    25: ("L26", 37), 26: ("L27", 38),
     # The old 27/28/29 (gene->chromosome, ->genome, ->cell) were folded into
-    # lesson27 stage D, and the old 32/33 (lineage, off-DNA) into lesson35
-    # stage B, 2026-08-24. Their unit ids stay in UNIT_SEQ; only the lesson
-    # files are gone, which is why 28/29/30 and 33/34 have no rows.
-    31: ("L31", 43), 32: ("L32", 44),
-    35: ("L35", 47),
+    # what is now lesson26 stage D, and the old 32/33 (lineage, off-DNA) into
+    # what is now lesson34 stage B, 2026-08-24. Their unit ids stay in UNIT_SEQ;
+    # only the lesson files are gone, which is why 27/28/29 and 32/33 have no
+    # rows.
+    30: ("L31", 43), 31: ("L32", 44),
+    34: ("L35", 47),
 }
 
 # The full 47-unit id->seq table, so ledger unlock ids resolve to positions even
@@ -166,6 +175,9 @@ JS_GLOBALS = {
     "structuredClone","queueMicrotask","TextEncoder","TextDecoder","Uint8Array","Float64Array",
     "Event","CustomEvent","Image","FileReader","Worker","Intl","AbortController",
     "Int32Array","ArrayBuffer","DataView","crypto","atob","btoa","escape","unescape",
+    # the rest of the typed-array family. Three of them were already listed and
+    # the others were not, so lesson10's Float32Array read as an undefined helper.
+    "Int8Array","Uint8ClampedArray","Int16Array","Uint16Array","Uint32Array","Float32Array",
     "if","for","while","switch","catch","return","function","typeof","new","await","super",
     "constructor","get","set","of","in","do","else","try","case","void","delete","yield",
 }
