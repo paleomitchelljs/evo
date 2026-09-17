@@ -8,9 +8,10 @@
 >   Lesson 10 was absorbed into Lesson 9 and the old Lesson 11 was replaced, so
 >   12 became 11, 13 became 12, and so on to 35 becoming 34. Sections below keep
 >   the old numbers. Read `LOCKS.txt` for the current list.
-> - **The entry for `lesson10.html` below describes a retired file.** The new
->   Lesson 10 is the drift lesson written 2026-09-16 and is described in
->   `docs/WORK_ORDER.md`; it is not in this atlas yet.
+> - **Lessons 10 and 11 are current.** Both were rebuilt from scratch 2026-09-17
+>   and their entries below were written against the shipped files, with the
+>   measured numbers in them. They are the only two entries in this atlas that
+>   can be trusted without opening the page.
 >
 > - **Arc 5 is now four lessons, not nine.** Lessons 28/29/30 folded into Lesson 27
 >   stage D; 33/34 into Lesson 35 stage B; the five files are in
@@ -1869,68 +1870,162 @@ half); B closer `202_lec12_04`; C intro `461_lec18_01` (second half), `202_lec14
 C closer `202_lec19_05`, `202_lec14_05`, `461_lec14_02`. The dictionary metaphor is split
 deliberately — B gets "same words, different definitions", C gets the ripping.
 
-### Lesson 10 — Building the population where nothing changes
-`lesson10.html` · v2 · 4 checkpoints · **Built**
+### Lesson 10 — The error is inherited
+`lesson10.html` · v2 · 13 checkpoints · **Rebuilt 2026-09-17**
 
-- **A — A population with nothing acting on it**
-  - *Interactive* — One slider for allele frequency; the three genotype frequencies follow.
-  - *Goal* — A baseline of no change — explicitly framed on-page as a fiction requiring
-    infinite population size and teleportation.
-  - *Hands to* — Stage B breaks it deliberately.
+Replaced the differential-reproduction build of 2026-09-16, which is archived at
+`_reference/retired/lessons/lesson10_2026-09-16_differential-reproduction.html`.
+Five stages, one generation operator with different arguments each time. Every
+number on screen is measured off the simulator; the bars are checked by
+`scripts/check_lesson10_numbers.js` (42 checks, driven against the shipped page).
 
-- **B — Turn the assumptions off**
-  - *Interactive* — Four toggles with their own sliders: finite population, mutation,
-    selection, non-random mating. Run 100 generations and watch which one moves the
-    frequency most.
-  - *Goal* — Each violation leaves a different signature. Ranking them is the point.
-  - *Hands to* — Stage C asks whether a given miss is bigger than sampling noise.
+- **A — Differential reproduction with nothing attached to it**
+  - *Interactive* — One pond. A spread slider changes how unevenly the offspring
+    are divided up and changes nothing else. A scatter of every breeder's share
+    against the copies of dark it carries, with a line fitted through it, sits
+    beside the pond. Nothing on the screen knows what colour a breeder is.
+  - *Gates* — Commit how many breeders leave nothing behind (a flat pond leaves
+    **13%**, which is the surprise); then move the frequency more than 0.12 in a
+    single generation while holding 100 breeders, which only the spread can do.
+  - *Game* — Say **how far** the frequency moves in one generation, never which
+    way. The six re-runs straddle the start.
+  - *Hands to* — Stage B, which asks where the next generation begins.
 
-- **C — Is the miss bigger than chance?**
-  - *Interactive* — Sample N individuals at a set true frequency and inbreeding level;
-    compare observed genotype counts to what the tidy ratio expects.
-  - *Goal* — The test is weak at small N; a real violation can pass unnoticed.
-  - *Hands to* — Stage D takes it to a wild population where the culprit is unknown.
+- **B — Where the next generation's parents come from**
+  - *Interactive* — Twenty ponds. One switch: the parents are drawn from the
+    generation before, or from the pond the run started with. The per-generation
+    randomness is identical; the setting you are not on stays on screen in grey.
+  - *Numbers* — At 25 breeders over 200 generations the inheriting rule fixes
+    19 of 20 and ends 0.476 from the start. The fresh-start rule fixes **0 of 60
+    over 300 generations** and its distance from the start sits flat at ~0.05
+    however long it runs.
+  - *Gates* — Get all 20 inheriting ponds down to one colour; then run the other
+    setting three times at 150 generations or more and read the fixation count.
+  - *Game* — How far from the start a typical pond ends after G generations.
+    Four times the generations is not four times the distance.
+  - *Hands to* — Stage C, where the walls do the rest.
 
-- **D — A wild locus — four candidate culprits**
-  - *Interactive* — Italian sparrow loci ranked by how far they sit from the tidy ratio.
-    Click a locus for its breakdown. A multi-select asks which of the four forces you would
-    investigate.
-  - *Goal* — A failed check tells you *something* is off, never *what*. The hybrid origin
-    of Italian sparrows makes several answers defensible at once.
-  - *Hands to* — Lesson 11 isolates the small-population culprit.
+- **C — A hundred and seven ponds and the two walls** · real data: **Buri 1956**
+  - *Interactive* — 107 ponds run at once; a tally of where they sit, scrubbable
+    by generation, with the two walls counted separately. Mean variety below,
+    against its fitted decay.
+  - *Numbers* — Half the variety goes in **1.386 × the headcount** generations,
+    checked at four sizes. Buri's own record: variety falls 0.500 → **0.1616**
+    over nineteen generations, which is 5.93% a generation, which is a pond of
+    **8.2 against a census of 16**. **58 of his 107 bottles** have one colour
+    left at generation 19; 107 simulated bottles of sixteen flies reach ~25.
+  - *Hands to* — Stage D, which is where that gap gets explained.
+
+- **D — Three ways to shrink a system without removing a body** · real data:
+  **Isle Royale wolves**
+  - *Interactive* — Uneven shares, a lopsided lek, a bust on a ten-generation
+    cycle. All three report the evenly-breeding pond that loses variety at the
+    same rate, from the arithmetic **and** from the measured decay, side by side.
+  - *Numbers* — One breeding male out of a hundred birds is worth about **four**.
+    61 winters of wolves average **21.1** and drift like **12.7**, and the plain
+    average misses the band at every start year the slider reaches.
+  - *Gates* — Reach ten or fewer by each of the three routes, holding a hundred
+    bodies throughout.
+
+- **E — The slope and the scatter** · real data: **the LTEE fitness lines**
+  - *Interactive* — The pond again, with the dark version now buying its carrier
+    a share. The true line and the line you could fit to one generation are drawn
+    together. Forty ponds of five hundred and forty of twenty run underneath,
+    same advantage in both.
+  - *Numbers* — A **2% advantage in a pond of twenty wins 27 of 40**. There is a
+    wide window of advantages that are decisive at five hundred and a coin flip
+    at twenty. Twelve LTEE populations from one clone are spread **0.021** at
+    generation 0 against a measurement bar of 0.022, and **0.206** at 50,000
+    against a bar of 0.099; the leader changes hands repeatedly.
+
+**Voice.** A intro `461_lec06_10` (insects madlibbed to breeders), `461_lec09_06`,
+`202_lec09_06`; A banner `202_lec11_04`. B intro JM's dictated compounding
+passage (2026-09-17) plus `202_lec10_01`; B banner the conclusion half of the
+same dictation. C intro JM's dictated "nothing keeping it around" passage plus
+`202_lec09_07`; C banner `202_lec09_04` + `202_lec11_02`. D intro JM's dictated
+sex-ratio passage, `461_lec09_05`, `202_lec11_07`; D banner `202_lec11_03`
+(outcome half) + `461_lec09_07`. E intro `202_lec09_03`, `202_lec10_01` (second
+half), `202_lec10_02`; E banner `202_lec11_01` + `202_lec12_02`.
 
 ---
 
-### Lesson 11 — Watching alleles wander in a finite population
-`lesson11.html` · v2 · 4 checkpoints · **Built**
+### Lesson 11 — Whose ancestors, and how long ago
+`lesson11.html` · v5 · 12 checkpoints · **Rebuilt 2026-09-17**
 
-- **A — One trajectory, then 50**
-  - *Interactive* — Wright-Fisher sampling. Sliders for population size, starting
-    frequency, generations, seed. A fan of 50 replicates can be toggled on. You can also
-    click two points to mark where you expect most trajectories to land.
-  - *Goal* — No force is acting, and the frequency moves anyway.
-  - *Hands to* — Stage B runs them to the end.
+Replaced the heterozygosity-decay skeleton, archived at
+`_reference/retired/lessons/lesson11_2026-09-16_hidden-size-skeleton.html`. The
+statistic is `F = 1 − Ho/He` and nothing above it: **no F_ST, no migration, no
+comparison between populations** — that is a later lesson, and the operator is
+shaped so that lesson adds an argument rather than a rewrite. Bars checked by
+`scripts/check_lesson11_numbers.js` (41 checks).
 
-- **B — Run to fixation**
-  - *Interactive* — 500 replicates run until every one hits 0 or 1; histogram of fixation
-    times.
-  - *Goal* — Wandering has an endpoint: variation is lost. Time to get there scales with
-    population size.
-  - *Hands to* — Stage C asks where they end up, not when.
+- **A — Two different genetic ancestors**
+  - *Interactive* — Four hundred individuals drawn as two halves apiece. One
+    knob: how often a partner is a relative. Solid bars are the pairings you can
+    count, dashed bars are what random pairing would give.
+  - *Numbers* — With every partner a sibling the counted two-tone rate falls from
+    ~193 of 400 to ~42 while the frequency of dark does not move (0.491 against
+    0.505). The gap reaches **0.78**.
+  - *Gates* — Open a gap of 0.20 without moving the frequency by more than 0.03;
+    commit how many of the 400 would be two-tone under random pairing.
 
-- **C — Where does a wandering allele end up?**
-  - *Interactive* — Eight starting frequencies × 300 replicates each; fraction fixed
-    plotted against starting frequency, with a diagonal reference. A selection slider tilts
-    the points off the diagonal.
-  - *Goal* — Under pure wandering, the odds of fixing equal where you started. Departure
-    from the diagonal *is* the signature of selection.
-  - *Hands to* — Stage D checks the whole picture against real flies.
+- **B — An ancestor of everyone, genes in hardly anyone** · real data:
+  **Ram Mountain bighorn**
+  - *Interactive* — A fixed 52-bird tree, six rows, three successive single-chick
+    funnels, and one bird who is the parent of all fourteen in the bottom row.
+    Sixteen distinct founder copies dropped down it.
+  - *Numbers* — **All eight founders are genealogical ancestors of all fourteen**
+    bottom-row birds. Founders 1–6 have a copy down there in 83–87% of drops;
+    **founders 7 and 8 in 24–26%**. Of the sixteen copies, **6.9 survive**.
+    Ram Mountain: 1,133 real sheep, **49 founders (98 copies) had a shot at the
+    120 lambs born 2005 or later and about 38 of those copies are still there**,
+    with ~8 of the cohort's copies from an animal nobody identified.
+  - *Gates* — Commit the surviving copy count; then find a founder that is an
+    ancestor of every bird at the bottom and is in fewer than half the drops.
 
-- **D — Buri 1956 — 107 fly lines**
-  - *Interactive* — Buri's real trajectories overlaid with a simulation at the true per-line
-    sample size of 16.
-  - *Goal* — The simulation reproduces the observed spread with no free parameters.
-  - *Hands to* — Lesson 12 runs it backwards.
+- **C — Two numbers that are not the same number**
+  - *Interactive* — A pond bred over generations with the whole pedigree drawn,
+    a knob for how often a partner is the closest relative available, and one
+    mated pair traced back in two colours to the first bird on both sides.
+  - *Numbers* — At 40 breeders over 20 generations of **random** mating,
+    kinship down the pedigree reaches **0.228** and the gap sits at **−0.074**.
+    The gap does not answer to the headcount at all (a pond of 80 and a pond of
+    20 give the same); only the knob moves it, to 0.997 at the far end.
+  - *Committed estimate* — A pond of thirty, nobody ever choosing a relative,
+    twenty generations: the gap is **nothing**, while 0.27 of the founders'
+    variety really did go. This is the stage.
+  - *Do not* — re-assert that the two agree. An earlier build did;
+    `check_lesson11_numbers.js` is what caught it.
+
+- **D — Which of the two is doing the damage**
+  - *Interactive* — Two parents and a hundred chicks. Three relationships, and
+    two knobs: broken copies per founding genome, and how many places there are
+    in the genome for them to sit in. A nine-cell sweep of both.
+  - *Numbers* — Load zero, brother and sister: **nothing is lost**. Load five,
+    100 places: unrelated 22%, siblings 79%. Load five, 20,000 places:
+    **unrelated 0.7%, siblings 72%.** The room protects two strangers from each
+    other and does nothing for two people who got their copies from the same
+    grandparents.
+  - *Gates* — A sibling pair whose hundred chicks all hatch; an unrelated pair
+    that loses a fifth or more.
+
+- **E — The walk, run backwards** · real data: **two published constants**
+  - *Interactive* — One bird, the two copies of one gene, walked back a
+    generation at a time until they are one copy. A marking-rate knob puts marks
+    on the path. Five hundred walks as a histogram.
+  - *Numbers* — The two copies meet **twice the headcount** generations back,
+    checked at four sizes, with a spread as wide as the mean. Two-tone comes out
+    at `4Nμ/(1+4Nμ)`, measured against the arithmetic at three settings.
+    Backwards on our own species: one base in a thousand at 1.25 per 10⁸ per
+    generation gives **≈20,000**, against eight billion people.
+
+**Voice.** A intro `202_lec11_02` (opening half), `202_lec09_02`; A banner
+`202_lec10_07`. B intro `202_lec10_04`, `461_lec08_06`; B banner `202_lec13_02`
+(names cut) + `202_lec13_03`. C intro `461_lec08_05`, `202_lec10_05`, JM's
+dictated definition (2026-09-17); C banner `461_lec09_04` + `461_lec09_03`.
+D intro `202_lec13_04`, `202_lec13_05`; D banner `202_lec13_07`. E intro
+`202_lec12_05`, `461_lec14_04`, `202_lec20_02`; E banner `202_lec13_06` +
+`461_lec14_05`.
 
 ---
 

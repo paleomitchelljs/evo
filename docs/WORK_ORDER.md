@@ -1,5 +1,141 @@
 # Work order — next edit round
 
+**Lessons 10 and 11 rebuilt from scratch — 2026-09-17.** JM asked for a total
+overhaul of both, aimed at three things: what causes drift, what makes it go
+faster or slower, and laying foundations for drift–selection balance, neutral
+diversity, coalescence and F_ST **without making any of those explicit**. He
+chose the arc himself: **10 is drift, whole; 11 is ancestry, whole.** Nothing
+was carried over from either old file — both are archived under
+`_reference/retired/lessons/`.
+
+- **Lesson 10** (`version: 2`, `scaffold: 13`, five stages). A random
+  differential reproduction with nothing attached · B **the error is
+  inherited** — one switch decides whether the next generation's parents come
+  from the generation before it or from the pond the run started with, and the
+  amount of randomness per generation is identical either way · C 107 ponds and
+  the two absorbing walls · D three routes to a smaller system (uneven shares,
+  a lopsided lek, a bust) · E the slope and the scatter.
+- **Lesson 11** (`version: 5`, `scaffold: 12`, five stages). A the gap between
+  the pairings you can count and the pairings random mating would give · B gene
+  dropping down a fixed 52-bird tree · C two numbers that are not the same
+  number · D which of the two is doing the damage · E the walk run backwards.
+
+**Stage B of Lesson 10 is the new thing and the one to protect.** One switch,
+two settings, everything else identical. Measured: at 25 breeders over 200
+generations the inheriting pond fixes 19 of 20 and ends 0.476 from where it
+started; the fresh-start pond fixes **0 of 60 over 300 generations** and its
+typical distance from the start sits flat at ~0.05 however long it runs. That
+contrast is the whole of "the random error itself is inherited" and it costs
+one argument in the operator.
+
+**Rulings taken on the way.**
+- **No F_ST, no migration, no multiple-population comparison yet.** JM: *"the
+  pure inbreeding statistic (F = 1 - (Ho / He)) is the only point we're
+  currently at. But having it built so that **in a later lesson** we can
+  slightly expand a known activity to include Fst/etc would be ideal."* Both
+  lessons are written against an operator that takes **one pool per parent
+  slot**, so a second population is a new argument rather than a rewrite.
+  Replicate ponds (Buri's 107, the 20 in 10B, the 40 in 10E) are fine — they
+  are the sampling distribution of one process, not a comparison between
+  populations with different histories.
+- **The scope ladder (old Lesson 10 Stage F) is cut.** It is about what counts
+  as an individual, not about drift, and it was the one stage with no real
+  anchor. The code is in git history.
+
+**The core operator is duplicated verbatim between the two files and should be
+`app/assets/pop.js`.** `makePop`, `makePool`, `breed`, `breedFreq`,
+`reallyInTheGame`, `acrossGenerations` and `priceTerms` are byte-identical in
+`lesson10.html` and `lesson11.html`. They were written general on purpose:
+`share` flat is drift and a function of the genotype is selection; `pools` is
+where migration goes; `copy` is where mutation goes; both are defaulted and
+exercised. **Extract them when a third lesson wants them, not before** — three
+working instances give an API, and designing one from zero gives a guess. When
+extracting, the engine needs its own test suite pinned against the closed forms
+this round measured: `Ne = 1/Σp²`, H decaying at `1/(2Ne)`, half-life `1.386N`,
+`u(p) = (1-e^(-4Nsp))/(1-e^(-4Ns))`, `4NmNf/(Nm+Nf)`, the harmonic mean,
+coalescent depth `2N`, and `4Nμ/(1+4Nμ)`.
+
+**`priceTerms` keeps `cov` and `within` separately named and never sums them.**
+`structurephilosophy.md` is explicit that the scatter around a fitted line and
+the change within a lineage share a shape and not an identity. A shared engine
+is exactly where those two would quietly fuse into one "leftover", so the two
+terms are split from day one even in lessons where only one is live.
+
+**The bar checks are `scripts/check_lesson10_numbers.js` (42 checks) and
+`scripts/check_lesson11_numbers.js` (41 checks).** Both drive the shipped page
+in headless Chrome. They now check a fourth thing beyond the old three: **no
+constant answer may clear three rounds of any closing game.** Each game's three
+round classes are tested for an empty common interval. That check caught two of
+the four defects below.
+
+**Four real defects the checks caught, all fixed, all of which come back if the
+simulators are edited carelessly:**
+1. **Lesson 11 Stage C claimed two routes to one number, and they are not one
+   number.** Kinship down the pedigree rises under drift alone; `1 - Ho/He`
+   compares this generation's two-tone birds against *this generation's own*
+   frequencies, which have already drifted, so under random mating it sits at
+   zero however small the pond is (measured: 0.228 against −0.074 at N=40 over
+   20 generations). The stage now draws both and makes the difference the
+   point, and its committed estimate asks for the gap after twenty generations
+   of a pond of thirty where nobody ever chooses a relative — the answer is
+   **nothing**, while 0.27 of the founders' variety really did go. **Do not
+   re-fuse them.**
+2. **Lesson 10 Stage E's second bar sat at 35 of 40 where the right answer
+   produces 36.7 ± 1.8** — a bar a correct student fails one run in six. Now 33.
+3. **Three of the six closing games could deal the same round twice**, which
+   let one constant clear all three. Every game now rotates three fixed classes.
+4. **`neFromDecay` was fitting into the tail**, where mean variety is a handful
+   of unfixed ponds and its log is nearly all noise. That biased every small-Ne
+   estimate shallow. It now fits only where H is above 5% of its start.
+
+**Real data, five panels, all failing soft.**
+- **10C — Buri 1956.** 107 bottles, 32 copies each, 19 generations. Heterozygosity
+  falls 0.500 → **0.1616**, which is 5.93% a generation, which is a pond of
+  **8.2 against a census of 16**. By generation 19, **58 of 107** bottles have
+  one colour left; 107 simulated bottles of sixteen flies only reach ~25. That
+  gap is the door into Stage D.
+- **10D — Isle Royale.** 61 winters. Average **21.1**, drifts like **12.7**.
+  The plain average misses the band at every start year the slider reaches.
+- **10E — the LTEE fitness lines.** Twelve populations from one clone. At
+  generation 0 they are spread **0.021** against a repeat-measurement bar of
+  0.022 — indistinguishable. At 50,000 they are spread **0.206** against a bar
+  of **0.099**. The leader changes hands repeatedly. Several lineages evolved
+  higher mutation rates, which the panel says out loud.
+- **11B — Ram Mountain.** 1,133 real sheep. **49 founders (98 copies) had a
+  shot at the 120 lambs born 2005 or later; about 38 of those copies are still
+  there**, and about 8 of the cohort's copies came from an animal nobody
+  identified. NB the retired build reported "135 founders, 119 with nothing
+  left" — that counted founders old enough to have had a shot rather than
+  founders that actually feed the cohort, which inflates the story with
+  founders that have no descendants there at all. 49 is the honest number.
+- **11E — no file, and that is the point.** Two published constants (two copies
+  in one person differ at ~1 base in 1,000; new marks land at ~1.25 per 10⁸
+  bases per generation) and the stage's own arithmetic give **≈20,000**. There
+  are eight billion people. The slider stops at 60,000.
+
+**The FSJ deposit was evaluated for 10E and rejected — do not retry it without
+reading this.** `fsj_allele_freq_subset.csv` is 250 SNPs over 24 years, which
+looks like the perfect "is this streak drift or selection?" dataset. It is not:
+the observed year-to-year variance in frequency is **below** what independent
+binomial sampling at the stated depths would produce on its own, so a neutral
+envelope built the obvious way overstates the real one and the panel would
+teach the opposite of what it claims. The cohorts overlap — the same birds are
+resampled year to year — so the sampling is not independent. The flat FSJ
+heterozygosity curve recorded elsewhere in these notes is the same fact seen
+from another angle.
+
+**Known and deliberate:** `check_lessons.py`'s `LESSON_UNIT` still labels
+lesson10 as `L11 seq 16` and lesson11 as `L12 seq 17`. Its own comment says the
+ids are notes rather than gates and are already stale against the sequence the
+course follows; they only order the `--terms` report. Left alone.
+
+**Still worth finding data for.** Lesson 11 Stage D has no real counterpart. The
+Habsburg pedigree (Alvarez et al. 2009) is the obvious candidate — a real
+pedigree with real inbreeding coefficients and real recessive outcomes — and it
+would let the stage say the thing it currently only simulates.
+
+---
+
 **Lesson 10 rebuilt, and everything above it renumbered — 2026-09-16.** JM asked for
 the drift lesson to be rebuilt in the Lesson 8/9 shape and moved into slot 10, on
 Vellend's framing (drift is differential reproduction *not caused by* heritable

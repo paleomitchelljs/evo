@@ -348,6 +348,47 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 ## 5. Design decisions on record
 
+- **Lessons 10 and 11 rebuilt from scratch (2026-09-17), and written against a
+  shared generation operator.** JM asked for a total overhaul of both, aimed at
+  what causes drift, what makes it faster or slower, and foundations for
+  drift–selection balance, neutral diversity, coalescence and F_ST that are
+  never made explicit. He chose the split: **10 is drift, whole; 11 is ancestry,
+  whole.** Full detail, measured numbers and the rulings are in
+  `docs/WORK_ORDER.md`. Four things worth keeping for the next build of this
+  shape:
+  - **Write the operator more general than the lesson needs, and leave the
+    unused arguments defaulted and exercised.** `breed()` takes one pool per
+    parent slot, a share function and a copy function. Flat share is drift; a
+    function of the genotype is selection; a second pool is migration; the copy
+    function is mutation. Lesson 10 Stage B gets its whole point — that the
+    error is inherited — by passing the *founding* population as the pool
+    instead of the current one. That is one argument, not a second simulator.
+  - **A shared engine is a shared failure mode, so it needs closed forms to be
+    pinned against.** This round measured eight: `1/Σp²`, `1/(2Ne)`, `1.386N`,
+    `(1−e^(−4Nsp))/(1−e^(−4Ns))`, `4NmNf/(Nm+Nf)`, the harmonic mean, `2N`, and
+    `4Nμ/(1+4Nμ)`. Extract `app/assets/pop.js` when a third lesson wants the
+    operator, with those as its test suite — not before.
+  - **Keep the two Price terms separately named even where only one is live.**
+    `structurephilosophy.md` forbids implying that the scatter around a fitted
+    line *is* the transmission term. A shared engine is exactly where the two
+    would fuse into one "leftover", so `priceTerms` returns `cov` and `within`
+    and never sums them.
+  - **A bar check that only tests one round misses the constant answer.** The
+    two checker scripts now test that no single number clears three rounds of
+    any closing game, by taking the three round classes' tolerance bands and
+    requiring an empty intersection. It caught three games that could deal the
+    same round twice.
+
+- **Kinship and 1 − Ho/He are two different numbers and must not be presented as
+  one (2026-09-17).** An early build of Lesson 11 Stage C claimed the kinship
+  recursion down a pedigree and the two-tone count were two routes to the same
+  quantity. They are not. Kinship rises under drift alone. `1 − Ho/He` compares
+  this generation's two-tone birds against *this generation's own* frequencies,
+  which have already drifted, so under random mating it sits at zero however
+  small the pond is — measured at 0.228 against −0.074 in a pond of 40 over 20
+  generations. `check_lesson11_numbers.js` caught it and now pins them to
+  parting company in the direction the stage claims.
+
 - **Lesson 9 built as one machine run three times (2026-09-10).** New lesson between
   L8 and L9, on JM's ask for a genetics interactive where students drag chromosomes out of
   a cell to make gametes. It resolves the open ruling the atlas recorded when Mendel's

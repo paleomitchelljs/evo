@@ -4,348 +4,2530 @@
 <meta charset="utf-8" />
 <!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
 <script src="../assets/lock.js"></script>
-<title>BIO 202 — Lesson 11: Reading a population's hidden size from how fast it loses variety</title>
+<title>BIO 202 — Lesson 11</title>
 <link rel="stylesheet" href="../assets/score.css">
 <style>
-  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; }
-  *{box-sizing:border-box} body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;background:var(--bg);color:var(--ink)}
-  header{padding:16px 24px;border-bottom:1px solid var(--rule);background:var(--panel)} header h1{margin:0 0 4px;font-size:18px} header p{margin:0;color:var(--muted);font-size:13px}
-  nav.toc{position:sticky;top:0;z-index:5;background:var(--stage-bar);border-bottom:1px solid var(--rule);padding:8px 24px;font-size:13px} nav.toc a{color:var(--muted);text-decoration:none;margin-right:14px} nav.toc a.locked{color:#b8b8b4;text-decoration:line-through}
-  section.stage{padding:28px 24px 40px;border-bottom:1px solid var(--rule);max-width:1300px;margin:0 auto} section.stage h2.stage-h{margin:0 0 4px;font-size:20px} section.stage .stage-sub{margin:0 0 18px;color:var(--muted);font-size:13px}
-  section.stage.stage-locked{opacity:.38;filter:grayscale(.4)} section.stage.stage-locked .lock-banner{display:block} section.stage.stage-locked .stage-body{pointer-events:none}
-  .lock-banner{display:none;margin:0 0 16px;padding:10px 14px;background:var(--lock-bg);border:1px dashed var(--lock-rule);border-radius:4px;font-size:13px;color:var(--lock-ink);text-align:center}
-  .explore-tracker{margin-top:10px;padding:8px 12px;background:#f4f0dd;border-left:3px solid #caa04a;border-radius:0 4px 4px 0;font-size:12.5px;color:#4a3a14;display:none} .explore-tracker.shown{display:block} .explore-tracker.complete{background:#e4efd4;border-left-color:#6f8a4a;color:#2e4410}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} .col{display:flex;flex-direction:column;gap:16px}
-  .panel{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:14px 16px} .panel h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
-  .scenario p{margin:0 0 8px} .scenario p:last-child{margin-bottom:0} .scenario .anchor-quote{background:#f5efe0;border-left:3px solid #caa04a;padding:10px 14px;border-radius:0 4px 4px 0;font-size:13.5px;color:#2e230a;margin:8px 0 4px} .scenario .anchor-quote .src{display:block;margin-top:6px;font-size:11px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
-  .prediction ol{margin:0;padding-left:20px} .prediction li{margin-bottom:10px} .prediction label{display:block;margin:3px 0;cursor:pointer;font-size:14px} .prediction .q{font-weight:600;margin-bottom:4px;font-size:14px}
-  .prediction button{margin-top:6px;padding:8px 14px;background:var(--accent);color:#fff;border:0;border-radius:4px;cursor:pointer;font-size:14px} .prediction button:disabled{background:#bbb;cursor:not-allowed}
-  .prediction-done{background:var(--accent-soft);border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:4px;font-size:13px;margin-bottom:6px}
-  .controls.locked{opacity:.4;pointer-events:none} .controls .row{display:grid;grid-template-columns:140px 1fr 70px;align-items:center;gap:10px;margin-bottom:6px} .controls label{font-size:13px} .controls output{font-family:ui-monospace,Menlo,monospace;font-size:13px} .controls input[type=range]{width:100%}
-  .controls .buttons{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap} .controls button{background:#333;color:#fff;border:0;border-radius:4px;padding:6px 10px;cursor:pointer;font-size:13px} .controls button.ghost{background:transparent;color:#333;border:1px solid var(--rule)} .controls button.accent{background:var(--accent)}
-  .graph-wrap canvas{width:100%;height:auto;display:block;background:#fff}
-  .fit-stats{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;margin-top:8px;color:var(--ink)} .fit-stats .label{color:var(--muted)} .fit-stats .big{font-size:16px;font-weight:600;color:var(--accent)}
-  pre.code{background:var(--code-bg);color:var(--code-ink);padding:12px 14px;border-radius:4px;font:12px/1.55 ui-monospace,Menlo,monospace;overflow-x:auto;margin:0;max-height:360px} pre.code .line{display:block;padding:0 6px;border-radius:2px} pre.code .line.hi{background:var(--code-hi)} pre.code .kw{color:#c792ea} pre.code .fn{color:#82aaff} pre.code .num{color:#f78c6c} pre.code .str{color:#c3e88d} pre.code .com{color:#676f8a;font-style:italic}
-  footer.wrap-up{padding:20px 24px 40px;max-width:1300px;margin:0 auto;color:var(--muted);font-size:13px} footer.wrap-up h2{color:var(--ink);font-size:16px} footer.wrap-up code{font-family:ui-monospace,Menlo,monospace;background:#eee;padding:1px 4px;border-radius:3px} footer.wrap-up .closing{background:#f5efe0;border-left:3px solid #caa04a;padding:12px 16px;border-radius:0 4px 4px 0;font-size:14px;color:#2e230a;margin:8px 0 16px} footer.wrap-up .closing .src{display:block;margin-top:6px;font-size:12px;color:#6a5018;font-family:ui-monospace,Menlo,monospace}
-  .outcomes{max-width:1300px;margin:0 auto;padding:16px 24px 4px;border-bottom:1px solid var(--rule);background:var(--panel)} .outcomes h2{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600} .outcomes p{margin:0 0 8px}
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+
+  /* Lecture voice — JM's own words, spliced from the lecture corpus. Source
+     ids are in the comment above each block and in docs/LESSON_ATLAS.md. */
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+
+  .controls .row { display:grid; grid-template-columns:218px 1fr 86px; align-items:center; gap:10px; margin-bottom:6px; }
+  @media (max-width:520px) { .controls .row { grid-template-columns:1fr; } }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .row.off { opacity:0.38; pointer-events:none; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button.accent:disabled { background:#bbb; }
+  .toggle { display:flex; align-items:center; gap:8px; margin:9px 0 4px; font-size:13px; }
+  .toggle input { width:15px; height:15px; }
+
+  canvas.plot { width:100%; height:auto; display:block; background:#fff; }
+  .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
+  .readout .label { color:var(--muted); }
+  .readout b { font-weight:600; }
+  .readout .ok { color:var(--good); font-weight:600; }
+  .readout .off { color:var(--bad); font-weight:600; }
+  .readout .big { font-size:15px; font-weight:600; }
+
+  table.tally { border-collapse:collapse; font:12.5px ui-monospace,Menlo,monospace; width:100%; }
+  table.tally th { text-align:left; font-weight:600; color:var(--muted); font-size:11px; text-transform:uppercase;
+                   letter-spacing:0.04em; padding:3px 6px 3px 0; border-bottom:1px solid var(--rule); }
+  table.tally th.n { text-align:right; }
+  table.tally td { padding:3px 6px 3px 0; border-bottom:1px solid #f0eee5; }
+  table.tally td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  table.tally tr.sel td { background:#f3efe2; }
+  .chip { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:-1px; margin-right:5px; border:1px solid rgba(0,0,0,0.25); }
+
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .gm { margin-top:10px; }
+  .gm .gm-prompt { font-size:13.5px; line-height:1.45; margin-bottom:10px; }
+  .gm .gm-prompt b { font-family:ui-monospace,Menlo,monospace; font-weight:600; color:var(--ink); }
+  .gm .buttons { align-items:center; }
+  .gm canvas { display:block; margin-top:10px; max-width:100%; }
+  .flip { margin-top:7px; font:12.5px ui-monospace,Menlo,monospace; min-height:16px; line-height:1.55; }
+  .flip .ok { color:var(--good); font-weight:600; }
+  .flip .off { color:var(--bad); font-weight:600; }
+  .tally-pill { display:inline-block; padding:2px 9px; border-radius:11px; background:#eceae2;
+                font:12px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .tally-pill.on { background:#4a7a2a; color:#fff; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:340px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; }
+  pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+
+  /* ---- the real-data panels ------------------------------------------
+     Full width, under the stage's two columns, so the record gets the
+     room the simulation gets. */
+  .realdata { margin-top:16px; border-left:4px solid var(--accent2); }
+  .rd-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr); gap:20px; align-items:start; }
+  @media (max-width:1040px) { .rd-grid { grid-template-columns:minmax(0,1fr); } }
+  .realdata ul.setup li b { font-family:ui-monospace,Menlo,monospace; }
+
+  /* ---- the pedigree, Stage B ------------------------------------------
+     Six rows of birds in a fixed tree. The canvas is wide, so it gets its
+     own scroller rather than squashing the rest of the column. */
+  .pedwrap { overflow-x:auto; }
+  .pedwrap canvas { min-width:620px; }
+
+  /* ---- the two rules, Stage B / the routes, Stage D --------------------
+     One switch with two settings, and the setting you are not on stays
+     on screen in grey. The contrast is the stage, so it has to
+     accumulate rather than replace. */
+  .ruleswitch { display:flex; gap:6px; margin-bottom:10px; }
+  .ruleswitch button { flex:1 1 0; background:#fff; border:1px solid var(--rule); color:var(--ink);
+                       border-radius:4px; padding:8px 7px; cursor:pointer; font-size:12.5px; line-height:1.3; text-align:left; }
+  .ruleswitch button.on { background:var(--accent2); border-color:var(--accent2); color:#fff; }
 </style>
 </head>
 <body>
 <header>
-  <h1>Lesson 11 — Reading a population's hidden size from how fast it loses variety</h1>
-  <p>The Florida Scrub Jay, a real fragmented population. By the end you will ask whether a few decades of data can even reveal a dip in size — or whether reading one in would be fooling yourself.</p>
+  <h1>Lesson 11</h1>
 </header>
-<div id="score-name" style="max-width:1300px;margin:16px auto 0;padding:0 24px"></div>
-<div class="scenario" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"><div class="anchor-quote">There are 9 billion people on the planet. You can't mate with most of them... A normal human meets about 10,000–20,000 people over a lifetime they could have biological kids with. So for human purposes, our effective population size is 10,000–20,000.<span class="src">— 202_lec10_06</span></div></div>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
 <nav class="toc" id="toc">
-  <a href="#stageA" id="tocA">A. Variety draining out</a>
-  <a href="#stageB" id="tocB" class="locked">B. Squeeze, then release</a>
-  <a href="#stageC" id="tocC" class="locked">C. Read the size off the decline</a>
-  <a href="#stageD" id="tocD" class="locked">D. Florida Scrub Jay</a>
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+  <a href="#stageE" id="tocE" class="locked">E</a>
 </nav>
 
+<!-- ========== STAGE A — two different genetic ancestors ================ -->
 <section class="stage stage-locked" id="stageA">
-  <h2 class="stage-h">A — Variety draining out of a small population</h2>
+  <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 202_lec11_02, opening half only. The conclusion quote,
+           202_lec10_07, is held back for the banner. -->
+      <div class="voice">
+        <p>A heterozygote is an individual with two different genetic ancestors for that locus. To have a heterozygote, there has to be more than one allele — if there's only one allele, a heterozygote is impossible.</p>
+        <p>You inherit alleles, not genotypes, and definitely not phenotypes. A genotype is a pairing. It is made fresh every generation out of whichever two copies happened to come together, and it is taken apart again when that individual breeds.</p>
+      </div>
+      <ul class="setup">
+        <li>Four hundred individuals. One locus, two versions of the gene. Each individual is drawn as two halves, one per copy.</li>
+        <li>Nobody dies here and nobody is selected. The only control is who gets paired with whom.</li>
+        <li>At one end of the knob, partners are drawn from the whole pond at random. At the other, every partner is the closest relative there is.</li>
+        <li>The left bars are the three pairings you can count on the screen. The right bars are how many of each there would be if the pairing were at random.</li>
+        <li>The counter under the bars is the gap between them, as a fraction of the right-hand ones.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>One locus, observed heterozygosity Hₜ. Each generation: H decays by factor (1 − 1/(2Nₑ)). Plot the trajectory. Bigger Nₑ → slower decay. The decay rate per generation is the inverse of "effective genetic time."</p></div>
-      <div class="panel graph-wrap"><h3>Heterozygosity over time</h3><canvas id="plotA" width="560" height="280"></canvas><div class="fit-stats" id="statsA"><span class="label">Nₑ:</span> <span id="A_Ne">100</span> &nbsp;|&nbsp; <span class="label">decay rate:</span> <span id="A_dr">—</span>/gen &nbsp;|&nbsp; <span class="label">half-life (≈ 1.4·Nₑ gen):</span> <span id="A_halfLife" class="big">—</span></div></div>
+      <div class="panel">
+        <canvas id="A_pond" class="plot" width="660" height="230"></canvas>
+        <div class="readout" id="A_pondRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="A_bars" class="plot" width="660" height="250"></canvas>
+        <div class="readout" id="A_barsRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="A_traj" class="plot" width="660" height="230"></canvas>
+        <div class="readout" id="A_read"></div>
+      </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predA"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. The half-life of heterozygosity (time for H to drop to H₀/2) scales as:</div>
-          <label><input type="radio" name="qA1" value="logN" /> log(Nₑ)</label>
-          <label><input type="radio" name="qA1" value="N" /> Nₑ</label>
-          <label><input type="radio" name="qA1" value="N2" /> Nₑ²</label>
-          <label><input type="radio" name="qA1" value="constant" /> A constant independent of Nₑ</label></li></ol>
-        <button id="submitA" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreA">Try at least 4 Nₑ values. <span class="count">0/4 values</span></div></div>
-      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsA">
-          <div class="row" data-line="Ne"><label for="A_NIn">Nₑ</label><input type="range" id="A_NIn" min="10" max="2000" step="10" value="100" /><output id="A_NOut">100</output></div>
-          <div class="row" data-line="gens"><label for="A_gIn">generations</label><input type="range" id="A_gIn" min="50" max="5000" step="50" value="500" /><output id="A_gOut">500</output></div>
-          <div class="buttons"><button id="A_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — heterozygosity decay</h3>
-<pre class="code" id="codeA"><span class="line" data-line="Ne">Ne &lt;- <span class="num" id="cA_Ne">100</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cA_g">500</span></span><span class="line">H0 &lt;- <span class="num">0.5</span></span><span class="line">H &lt;- H0 * (<span class="num">1</span> - <span class="num">1</span>/(<span class="num">2</span>*Ne))^(<span class="num">0</span>:gens)</span><span class="line"><span class="fn">plot</span>(<span class="num">0</span>:gens, H, type = <span class="str">"l"</span>, ylim = <span class="fn">c</span>(<span class="num">0</span>, H0))</span></pre></div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="A_controls">
+          <div class="row" data-line="f"><label for="A_f">how often a partner is a relative</label><input type="range" id="A_f" min="0" max="1" step="0.05" value="0" /><output id="A_fOut">0.00</output></div>
+          <div class="row" data-line="p"><label for="A_p">how common the dark version is</label><input type="range" id="A_p" min="0.05" max="0.95" step="0.05" value="0.5" /><output id="A_pOut">0.50</output></div>
+          <div class="buttons">
+            <button id="A_step" class="secondary">One generation</button>
+            <button id="A_run" class="accent">Run 15 generations</button>
+            <button id="A_reset" class="ghost">Fresh pond</button>
+            <button id="A_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage B</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Open a gap of 0.20 or more between the two sets of bars, without moving how common the dark version is by more than 0.03. <span class="hint"><span id="A1_now">gap so far: —</span></span></li>
+          <li data-task="A2">Say how many of the 400 would be two-tone if the pairing were at random. <span class="hint"><span id="A2_now">set the pond up first</span></span></li>
+          <li data-task="A3">Clear the three rounds below. <span class="hint"><span id="A3_now">0 of 3 landed</span></span></li>
+        </ul>
+        <!-- VOICE (banner): 202_lec10_07, which states the stage's point. -->
+        <div class="solved-banner" id="solvedA">An F of 1 — perfect inbreeding — means I don't have a population. With 50 AA, 50 aa, and zero heterozygotes, I have two populations. A big-A population and a little-a population that aren't interbreeding. Any value of F greater than zero is essentially saying my population is not one. It's some amount of less than one. That's why inbreeding accelerates drift — it's like having a smaller effective population. Stage B is open.</div>
+      </div>
+      <div class="panel numq" id="numqA">
+        <div class="q">Three rounds. Each deals a pond you have not seen and gives you the counts. Read the gap off them. Lock it in and the same pond is dealt six more times.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="A_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="A_g0">the gap is</label><input type="range" id="A_g0" min="-0.2" max="1" step="0.01" value="0" /><output id="A_g0Out">0.00</output></div>
+            <div class="buttons">
+              <button id="A_glock" class="accent">Lock in this estimate</button>
+              <button id="A_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally-pill" id="A_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="A_gflip"></div>
+          <canvas id="A_gstrip" width="520" height="70" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line"><span class="com"># 400 individuals, two copies each, at one locus</span></span><span class="line" data-line="p">p &lt;- <span class="num" id="cA_p">0.5</span>          <span class="com"># how common the dark version is</span></span><span class="line" data-line="f">f &lt;- <span class="num" id="cA_f">0</span>            <span class="com"># how often a partner is a relative</span></span><span class="line"></span><span class="line"><span class="com"># count what is on the screen</span></span><span class="line">Ho &lt;- <span class="fn">mean</span>(a != b)              <span class="com"># two-tone individuals</span></span><span class="line">p  &lt;- <span class="fn">mean</span>(<span class="fn">c</span>(a, b))              <span class="com"># and the frequency they imply</span></span><span class="line"></span><span class="line"><span class="com"># what the pairing would give if it were at random</span></span><span class="line">He &lt;- <span class="num">2</span> * p * (<span class="num">1</span> - p)</span><span class="line"></span><span class="line"><span class="com"># the gap between them, as a fraction of the second</span></span><span class="line"><span class="num">1</span> - Ho / He</span></pre>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE B — an ancestor of everyone, genes in nobody ======= -->
 <section class="stage stage-locked" id="stageB">
-  <h2 class="stage-h">B — Squeeze the population, then let it back out</h2>
-  <div class="lock-banner">Complete Stage A.</div>
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Solve Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 202_lec10_04 and 461_lec08_06, both near-verbatim. The
+           conclusion quotes, 202_lec13_02 and 202_lec13_03, are held for the
+           banner. -->
+      <div class="voice">
+        <p>You are literally zero genetically related to most of your ancestors. You get zero genes from a majority of them. Three generations back, you're usually still related to most. By eight generations back, someone has dropped out of your actual lineage. By around twelve generations back on average, you are genetically connected to fewer of your ancestors than the ones you're still connected to. They passed on zero of their genes that are still inside you.</p>
+        <p>You're not equally related to your grandparents. And you are not, on a genetic level, even at all related to some of your great-great-great-grandparents. You have no DNA in common with them. None of their DNA made it through to you. Maybe it did to your sister, or your cousin — they didn't just disappear from the family. But for any one individual, there's a set of ancestors in the past from whom you didn't actually inherit any DNA.</p>
+      </div>
+      <ul class="setup">
+        <li>Fifty-two birds. Every bird's parents are known, the lines are the pedigree, and nothing you do changes them.</li>
+        <li>The eight birds in the top row start with two copies each. Sixteen copies, all different, one colour apiece.</li>
+        <li>Each chick takes one of its mother's two copies and one of its father's two. A coin picks which.</li>
+        <li>Nothing dies here and nothing is selected. The coin is the only thing happening.</li>
+        <li>The bottom row is the fourteen birds alive now. The table counts, over many drops, how often each founder still has a copy down there.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Pre-bottleneck Nₑ = 1000. At generation 200, Nₑ drops to a slider value (the bottleneck) for some duration, then recovers. Heterozygosity decays slowly, then crashes, then resumes slow decay (now from a lower starting point).</p></div>
-      <div class="panel graph-wrap"><h3>Heterozygosity through a bottleneck</h3><canvas id="plotB" width="560" height="280"></canvas><div class="fit-stats" id="statsB"><span class="label">bottleneck Nₑ:</span> <span id="B_Nbot">50</span> &nbsp;|&nbsp; <span class="label">duration:</span> <span id="B_dur">50</span> gen &nbsp;|&nbsp; <span class="label">% H lost in bottleneck:</span> <span id="B_loss" class="big">—</span></div></div>
+      <div class="panel pedwrap">
+        <canvas id="B_ped" class="plot" width="900" height="430"></canvas>
+        <div class="readout" id="B_pedRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="B_bars" class="plot" width="660" height="230"></canvas>
+        <div class="readout" id="B_read"></div>
+      </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predB"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. Squeeze the population down to 10 and hold it there for 50 generations. Note how much variety is lost. Now make the squeeze ten times shallower — down to 100 instead of 10. To lose that same amount of variety again, you would have to hold it there:</div>
-          <label><input type="radio" name="qB1" value="longer" /> Ten times as long</label>
-          <label><input type="radio" name="qB1" value="shorter" /> A tenth as long</label>
-          <label><input type="radio" name="qB1" value="same" /> The same 50 generations</label>
-          <label><input type="radio" name="qB1" value="never" /> No length of time gets you back to that much loss</label></li></ol>
-        <button id="submitB" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreB">Try at least 5 (depth, duration) combos. <span class="count">0/5 combos</span></div></div>
-      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsB">
-          <div class="row"><label for="B_NbotIn">bottleneck Nₑ</label><input type="range" id="B_NbotIn" min="5" max="500" step="5" value="50" /><output id="B_NbotOut">50</output></div>
-          <div class="row"><label for="B_durIn">duration (gen)</label><input type="range" id="B_durIn" min="5" max="500" step="5" value="50" /><output id="B_durOut">50</output></div>
-          <div class="buttons"><button id="B_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — two-epoch demography</h3>
-<pre class="code" id="codeB"><span class="line">Ne_pre &lt;- <span class="num">1000</span>; Ne_bot &lt;- <span class="num" id="cB_Nb">50</span>; dur &lt;- <span class="num" id="cB_d">50</span></span><span class="line">gens &lt;- <span class="num">800</span>; t_bot &lt;- <span class="num">200</span>; H &lt;- <span class="fn">numeric</span>(gens+<span class="num">1</span>); H[<span class="num">1</span>] &lt;- <span class="num">0.5</span></span><span class="line"><span class="kw">for</span> (g <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  Ne &lt;- <span class="kw">if</span> (g &gt;= t_bot &amp;&amp; g &lt; t_bot + dur) Ne_bot <span class="kw">else</span> Ne_pre</span><span class="line">  H[g+<span class="num">1</span>] &lt;- H[g] * (<span class="num">1</span> - <span class="num">1</span>/(<span class="num">2</span>*Ne))</span><span class="line">}</span></pre></div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="B_controls">
+          <div class="buttons">
+            <button id="B_one" class="secondary">Drop it down once</button>
+            <button id="B_many" class="accent">Drop it 200 more times</button>
+            <button id="B_reset" class="ghost">Start the tally over</button>
+            <button id="B_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+        <div class="readout" id="B_pickRead" style="margin-top:10px;">Click a founder in the table to light up its copies in the tree.</div>
+      </div>
+      <div class="panel">
+        <h3>The eight founders</h3>
+        <table class="tally" id="B_table"><thead><tr><th>founder</th><th class="n">is an ancestor of</th><th class="n">still has a copy</th></tr></thead><tbody></tbody></table>
+      </div>
+      <div class="panel">
+        <h3>To open Stage C</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Say how many of the sixteen founder copies survive into the bottom row, before you drop it. <span class="hint"><span id="B1_now">drop it once first</span></span></li>
+          <li data-task="B2">Find a founder that is an ancestor of every bird in the bottom row and still has a copy there in fewer than half the drops. <span class="hint"><span id="B2_now">not yet</span></span></li>
+          <li data-task="B3">Clear the three rounds below. <span class="hint"><span id="B3_now">0 of 3 landed</span></span></li>
+          <li data-task="B4">Drop the genome down a pedigree somebody spent forty years writing. <span class="hint"><span id="B4_now">not yet</span></span></li>
+        </ul>
+        <!-- VOICE (banner): 202_lec13_02 with the two students' names cut,
+             spliced with the opening of 202_lec13_03. -->
+        <div class="solved-banner" id="solvedB">Lots of people can genealogically chase themselves back to Genghis Khan. But not that many will actually have genes from Genghis Khan. And what genes different people have in common might differ. It's entirely possible one of you has Genghis Khan's amylase, another has his collagen, and I have none of his at all. At some point, Genghis Khan's last descendant with his DNA is going to die. Genealogically, though, he'll persist for a very, very long time, because of how many descendants he has. Stage C is open.</div>
+      </div>
+      <div class="panel numq" id="numqB">
+        <div class="q">Three rounds. Each names one founder and asks the same thing: out of 100 drops down this tree, in how many does that founder still have at least one copy in the bottom row? Lock it in and the page runs six more batches of 100.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="B_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="B_g0">out of 100 drops</label><input type="range" id="B_g0" min="0" max="100" step="1" value="50" /><output id="B_g0Out">50</output></div>
+            <div class="buttons">
+              <button id="B_glock" class="accent">Lock in this estimate</button>
+              <button id="B_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally-pill" id="B_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="B_gflip"></div>
+          <canvas id="B_gstrip" width="520" height="70" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeB"><span class="line"><span class="com"># 16 distinct copies on the 8 founders, dropped down a fixed tree</span></span><span class="line">a &lt;- <span class="fn">integer</span>(<span class="num">2</span> * <span class="fn">nrow</span>(ped))</span><span class="line"><span class="kw">for</span> (i <span class="kw">in</span> <span class="fn">seq_len</span>(<span class="fn">nrow</span>(ped))) {</span><span class="line">  <span class="kw">if</span> (<span class="fn">is.na</span>(ped$dam[i])) {</span><span class="line">    a[<span class="num">2</span>*i-<span class="num">1</span>] &lt;- <span class="num">2</span>*i-<span class="num">1</span>; a[<span class="num">2</span>*i] &lt;- <span class="num">2</span>*i     <span class="com"># a founder</span></span><span class="line">  } <span class="kw">else</span> {</span><span class="line">    a[<span class="num">2</span>*i-<span class="num">1</span>] &lt;- a[<span class="num">2</span>*ped$dam[i] - <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">.5</span>)]</span><span class="line">    a[<span class="num">2</span>*i  ] &lt;- a[<span class="num">2</span>*ped$sire[i] - <span class="fn">rbinom</span>(<span class="num">1</span>,<span class="num">1</span>,<span class="num">.5</span>)]</span><span class="line">  }</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># which of the 16 are left in the bottom row</span></span><span class="line"><span class="fn">length</span>(<span class="fn">unique</span>(a[<span class="fn">c</span>(<span class="num">2</span>*bottom-<span class="num">1</span>, <span class="num">2</span>*bottom)]))</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== real data: Ram Mountain ===================================
+       1,133 bighorn sheep with their mothers and fathers written down,
+       1973 to 2013. The same coin, dropped down a pedigree nobody made up. -->
+  <div class="panel realdata" id="realB">
+    <h3>Now drop it down a pedigree somebody spent forty years writing</h3>
+    <div class="rd-grid">
+      <div>
+        <canvas id="B_sheep" class="plot" width="700" height="300"></canvas>
+        <div class="readout" id="B_sheepRead"></div>
+      </div>
+      <div>
+        <ul class="setup" style="margin-top:0; padding-top:0; border-top:0;">
+          <li>Ram Mountain, Alberta. Every bighorn sheep on the mountain caught, marked and followed from <b>1973</b> to <b>2013</b>.</li>
+          <li><b>1,133</b> sheep with their mothers and fathers written down, eight generations deep.</li>
+          <li>The same coin as the tree above, dropped down that pedigree instead.</li>
+          <li>About a fifth of the lambs have a mother in the file and no father. Those take their second copy from a ram nobody identified, which is honest rather than tidy.</li>
+          <li>Ninety-eight founder copies went into the sheep that feed that cohort. Say how many of them are still in the lambs born 2005 or later.</li>
+        </ul>
+        <div class="controls" style="margin-top:12px;">
+          <div class="row"><label for="B_sg0">founder copies still there</label><input type="range" id="B_sg0" min="0" max="140" step="1" value="70" /><output id="B_sg0Out">70</output></div>
+          <div class="buttons">
+            <button id="B_srun" class="secondary">Drop it down 200 times</button>
+            <button id="B_slock" class="accent">Lock it in</button>
+          </div>
+        </div>
+        <div class="flip" id="B_sflip"></div>
+        <canvas id="B_sstrip" width="520" height="70" style="display:none;"></canvas>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE C — a more recent common ancestor than average ===== -->
 <section class="stage stage-locked" id="stageC">
-  <h2 class="stage-h">C — Read a population's size off how fast it loses variety</h2>
-  <div class="lock-banner">Complete Stage B.</div>
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 461_lec08_05 (32 generations back), 202_lec10_05 (no such
+           thing as an unrelated person), and JM's dictated definition
+           (2026-09-17). The conclusion quotes, 461_lec09_04 and
+           461_lec09_03, are held for the banner. -->
+      <div class="voice">
+        <p>Go 32 generations back — about 930 years, year 1100 AD — and you have more ancestors than there are base pairs in your DNA. About four billion. There are about eight billion people alive today. Were there more people alive in the year 1100? No. Something is wrong with this picture. The answer: we're all massively inbred. The genealogy doesn't bifurcate cleanly. The same individuals show up in your family tree multiple times.</p>
+        <p>There is no such thing as an unrelated person. The question is not, are they related — the question is to what extent.</p>
+        <p>As you inbreed, you have a more recent common ancestor. If I have a lot of inbreeding, that means my common ancestor is inherently more recent. Because that's what inbreeding is. It's having a more recent common ancestor with your mate than you'd expect by random chance. That's how we're going to define it: you and your mate are more closely related to one another than the population average would suggest.</p>
+      </div>
+      <ul class="setup">
+        <li>A pond of birds, bred generation after generation. Every pairing is drawn and kept, so the whole pedigree is on the screen.</li>
+        <li>The knob is how partners are found. At one end, a partner is anyone in the pond. At the other, it is the closest relative available.</li>
+        <li>The highlighted pair has both its ancestries traced back, in two colours, and the first bird on both sides is ringed.</li>
+        <li>Two numbers are reported, and they are not the same number. The gap is counted off the two-tone birds exactly as in Stage A.</li>
+        <li>The other one is how much of the founders' variety is left, which is the thing Lesson 10 watched drain away.</li>
+        <li>One of them answers to the knob. One of them answers to the headcount. Find out which is which.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Simulate H̄ trajectories with a known true Nₑ plus measurement noise. Fit Nₑ by scanning candidate values. Read off the best value and a 95% range from the curve.</p></div>
-      <div class="panel graph-wrap"><h3>Total miss vs Nₑ</h3><canvas id="plotC" width="560" height="280"></canvas><div class="fit-stats" id="statsC"><span class="label">true Nₑ:</span> <span id="C_trueN">200</span> &nbsp;|&nbsp; <span class="label">best-fit Nₑ:</span> <span id="C_bestN" class="big">—</span> &nbsp;|&nbsp; <span class="label">95% range:</span> <span id="C_ci">—</span></div></div>
+      <div class="panel pedwrap">
+        <canvas id="C_ped" class="plot" width="900" height="380"></canvas>
+        <div class="readout" id="C_pedRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_traj" class="plot" width="660" height="240"></canvas>
+        <div class="readout" id="C_read"></div>
+      </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predC"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. If you fit Nₑ from a 100-generation H̄ trajectory with 10% measurement noise, the 95% range on Nₑ will:</div>
-          <label><input type="radio" name="qC1" value="tight" /> Pin Nₑ to within ±5%</label>
-          <label><input type="radio" name="qC1" value="wide" /> Be wide — Nₑ is hard to estimate precisely from short series</label>
-          <label><input type="radio" name="qC1" value="zero" /> Be zero — the fit is exact</label></li></ol>
-        <button id="submitC" disabled>Submit → unlock</button>
-        <div class="explore-tracker" id="exploreC">Try at least 3 noise levels. <span class="count">0/3 noise levels</span></div></div>
-      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsC">
-          <div class="row"><label for="C_trueIn">true Nₑ</label><input type="range" id="C_trueIn" min="50" max="2000" step="25" value="200" /><output id="C_trueOut">200</output></div>
-          <div class="row"><label for="C_noiseIn">measurement noise</label><input type="range" id="C_noiseIn" min="0.001" max="0.05" step="0.001" value="0.01" /><output id="C_noiseOut">0.010</output></div>
-          <div class="row"><label for="C_seedIn">seed</label><input type="range" id="C_seedIn" min="1" max="999" step="1" value="42" /><output id="C_seedOut">42</output></div>
-          <div class="buttons"><button id="C_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — fit Nₑ by SSR</h3>
-<pre class="code" id="codeC"><span class="line"><span class="fn">set.seed</span>(<span class="num">42</span>); true_Ne &lt;- <span class="num">200</span>; noise &lt;- <span class="num">0.01</span></span><span class="line">gens &lt;- <span class="num">100</span></span><span class="line">Hobs &lt;- <span class="num">0.5</span>*(<span class="num">1</span>-<span class="num">1</span>/(<span class="num">2</span>*true_Ne))^(<span class="num">0</span>:gens) + <span class="fn">runif</span>(gens+<span class="num">1</span>, -noise, noise)</span><span class="line">Ne_grid &lt;- <span class="fn">seq</span>(<span class="num">10</span>, <span class="num">2000</span>, <span class="num">10</span>)</span><span class="line">ssr &lt;- <span class="fn">sapply</span>(Ne_grid, <span class="kw">function</span>(N) <span class="fn">sum</span>((Hobs - <span class="num">0.5</span>*(<span class="num">1</span>-<span class="num">1</span>/(<span class="num">2</span>*N))^(<span class="num">0</span>:gens))^<span class="num">2</span>))</span><span class="line">Ne_grid[<span class="fn">which.min</span>(ssr)]</span></pre></div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="C_controls">
+          <div class="row" data-line="N"><label for="C_N">breeders in the pond</label><input type="range" id="C_N" min="8" max="80" step="2" value="40" /><output id="C_NOut">40</output></div>
+          <div class="row" data-line="k"><label for="C_k">how often a partner is the closest relative</label><input type="range" id="C_k" min="0" max="1" step="0.05" value="0" /><output id="C_kOut">0.00</output></div>
+          <div class="row" data-line="gens"><label for="C_gens">generations</label><input type="range" id="C_gens" min="6" max="30" step="1" value="14" /><output id="C_gensOut">14</output></div>
+          <div class="buttons">
+            <button id="C_run" class="accent">Breed the pond</button>
+            <button id="C_pick" class="secondary">Highlight another pair</button>
+            <button id="C_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Hold 40 or more breeders and get the gap above 0.35. <span class="hint"><span id="C1_now">gap so far: —</span></span></li>
+          <li data-task="C2">Say what the gap comes to after twenty generations of a pond of thirty where nobody ever chooses a relative. <span class="hint"><span id="C2_now">not yet</span></span></li>
+          <li data-task="C3">Clear the three rounds below. <span class="hint"><span id="C3_now">0 of 3 landed</span></span></li>
+        </ul>
+        <!-- VOICE (banner): 461_lec09_04 spliced with 461_lec09_03. -->
+        <div class="solved-banner" id="solvedC">Inbreeding speeds up drift because instead of one big population you've got smaller populations within which drift is faster. High inbreeding means your population isn't acting like one big one. The actual count is the same. Genetically, you're a bunch of small populations, not one big one. Because of inbreeding, we do not function like a population of 8 billion. Genetically we function like a population of 15,000. Vastly smaller. From the perspective of drift, that's the number that matters. Stage D is open.</div>
+      </div>
+      <div class="panel numq" id="numqC">
+        <div class="q">Three rounds. Each deals a pond with its own headcount, its own way of finding partners and its own number of generations. What is the gap at the end? Lock it in and the page breeds the same pond six more times.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="C_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="C_g0">the gap is</label><input type="range" id="C_g0" min="0" max="1" step="0.01" value="0.2" /><output id="C_g0Out">0.20</output></div>
+            <div class="buttons">
+              <button id="C_glock" class="accent">Lock in this estimate</button>
+              <button id="C_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally-pill" id="C_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="C_gflip"></div>
+          <canvas id="C_gstrip" width="520" height="70" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># two numbers, and they are not the same number</span></span><span class="line" data-line="N">N    &lt;- <span class="num" id="cC_N">40</span></span><span class="line" data-line="k">k    &lt;- <span class="num" id="cC_k">0</span>            <span class="com"># how often a partner is the closest relative</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cC_gens">14</span></span><span class="line"></span><span class="line"><span class="com"># how much of the founders' variety is gone: kinship down the tree</span></span><span class="line">K[i,j] &lt;- <span class="num">0.25</span> * (K[di,dj] + K[di,sj] + K[si,dj] + K[si,sj])</span><span class="line">K[i,i] &lt;- <span class="num">0.5</span> * (<span class="num">1</span> + K[dam[i], sire[i]])</span><span class="line">F      &lt;- <span class="fn">mean</span>(K[<span class="fn">cbind</span>(dam, sire)])</span><span class="line"></span><span class="line"><span class="com"># the gap: count the two-tone birds, as in Stage A</span></span><span class="line"><span class="num">1</span> - <span class="fn">mean</span>(a != b) / (<span class="num">2</span> * p * (<span class="num">1</span> - p))</span><span class="line"></span><span class="line"><span class="com"># and what that is worth as a headcount</span></span><span class="line">N / (<span class="num">1</span> + F)</span></pre>
+      </div>
     </div>
   </div>
 </section>
 
+<!-- ========== STAGE D — which of the two is doing the damage =========== -->
 <section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D — Florida Scrub Jay across the decades</h2>
-  <div class="lock-banner">Complete Stage C.</div>
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 202_lec13_04 near-verbatim, plus 202_lec13_05's image. The
+           conclusion quote, 202_lec13_07, is held for the banner. -->
+      <div class="voice">
+        <p>Recessive is not some extra property. Recessive is the word we use when something doesn't matter as a heterozygote. Things often don't matter as a heterozygote because they're broken, but there's a backup. You have about 100 mutations; almost all of them are either neutral, or they break something.</p>
+        <p>Take a hammer to a random spot on your car. That is what a mutation usually does. It is not that the hammer is aimed at anything. It is that there are far more ways to break a working thing than to improve one, and every one of us is already carrying the dents.</p>
+      </div>
+      <ul class="setup">
+        <li>Two parents, and a hundred chicks from them. Every chick takes one copy of each gene from each parent.</li>
+        <li>Each founding genome carries some number of broken copies, scattered at random across the places in the genome. Nothing is wrong with a bird that carries one broken copy and one working one.</li>
+        <li>A chick that ends up with a broken copy at the <i>same</i> place from <i>both</i> parents is the one that does not hatch.</li>
+        <li>Three ways for the parents to be related, and two knobs: how many broken copies a founding genome carries, and how many places there are in the genome for them to sit in.</li>
+        <li>The strip under the chicks shows where the breakages are in each parent, and which places the two of them share.</li>
+      </ul>
+    </div>
+  </div>
+
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel scenario"><h3>Scenario</h3><p>Loci from <code>data/clean/fsj_allele_freq_subset.csv</code> across decades. Mean heterozygosity per year is plotted. Fit a one-epoch model (constant Nₑ) vs a two-epoch (bottleneck) model. The faint blue trajectories around the 1-epoch fit are five simulated decay paths under the same fitted Nₑ — they show how much noise constant-Nₑ drift alone produces. Compare the observed dots to that envelope, not just to the mean line.</p></div>
-      <div class="panel graph-wrap"><h3>Observed FSJ heterozygosity over time</h3><canvas id="plotD" width="560" height="280"></canvas><div class="fit-stats" id="statsD"><span class="label">one-epoch fit Nₑ:</span> <span id="D_Ne1">—</span> &nbsp;|&nbsp; <span class="label">two-epoch fit:</span> <span id="D_Ne2" class="big">—</span> &nbsp;|&nbsp; <span class="label">change in total miss:</span> <span id="D_dSSR">—</span></div></div>
+      <div class="panel">
+        <canvas id="D_pair" class="plot" width="660" height="260"></canvas>
+        <div class="readout" id="D_pairRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="D_kids" class="plot" width="660" height="250"></canvas>
+        <div class="readout" id="D_read"></div>
+      </div>
+      <div class="panel">
+        <canvas id="D_grid" class="plot" width="660" height="210"></canvas>
+        <div class="readout" id="D_gridRead"></div>
+      </div>
     </div>
     <div class="col">
-      <div class="panel prediction" id="predD"><h3>Prediction</h3>
-        <ol><li><div class="q">Q1. After the synthetic noise envelope is drawn under the 1-epoch fit, do the FSJ observed points sit inside that envelope or outside it?</div>
-          <label><input type="radio" name="qD1" value="inside" /> Inside — the residuals are consistent with a constant-Nₑ decay; the 2-epoch fit is overfitting</label>
-          <label><input type="radio" name="qD1" value="outside" /> Outside — the observed dips exceed what constant-Nₑ drift would produce; a bottleneck is real</label>
-          <label><input type="radio" name="qD1" value="mixed" /> Some inside, some outside — depends on the year</label></li></ol>
-        <button id="submitD" disabled>Submit → reveal</button>
-        <div class="explore-tracker" id="exploreD">Run the fit at least 2 times. <span class="count">0/2 runs</span></div></div>
-      <div class="panel"><h3>Controls</h3><div class="controls locked" id="controlsD">
-          <div class="row"><label for="D_seedIn">resample seed</label><input type="range" id="D_seedIn" min="1" max="999" step="1" value="42" /><output id="D_seedOut">42</output></div>
-          <div class="buttons"><button id="D_refit" class="accent">Refit</button> <button id="D_download" class="ghost">Download .R</button></div></div></div>
-      <div class="panel"><h3>R code — FSJ Nₑ</h3>
-<pre class="code" id="codeD"><span class="line">fsj &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/fsj_allele_freq_subset.csv"</span>)</span><span class="line">H &lt;- <span class="fn">tapply</span>(<span class="num">2</span>*fsj$freq_total*(<span class="num">1</span>-fsj$freq_total), fsj$year, <span class="fn">mean</span>)</span><span class="line">yrs &lt;- <span class="fn">as.numeric</span>(<span class="fn">names</span>(H))</span><span class="line">Ne_grid &lt;- <span class="fn">seq</span>(<span class="num">10</span>, <span class="num">5000</span>, <span class="num">10</span>)</span><span class="line">ssr &lt;- <span class="fn">sapply</span>(Ne_grid, <span class="kw">function</span>(N) {</span><span class="line">  Hp &lt;- H[<span class="num">1</span>] * (<span class="num">1</span> - <span class="num">1</span>/(<span class="num">2</span>*N))^(yrs - yrs[<span class="num">1</span>])</span><span class="line">  <span class="fn">sum</span>((H - Hp)^<span class="num">2</span>)</span><span class="line">})</span></pre></div>
+      <div class="panel">
+        <h3>How the two parents are related</h3>
+        <div class="ruleswitch" id="D_rel">
+          <button data-rel="none" class="on">no relation</button>
+          <button data-rel="cousins">first cousins</button>
+          <button data-rel="sibs">brother and sister</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="D_controls">
+          <div class="row" data-line="load"><label for="D_load">broken copies per founding genome</label><input type="range" id="D_load" min="0" max="10" step="1" value="5" /><output id="D_loadOut">5</output></div>
+          <div class="row" data-line="L"><label for="D_L">places in the genome</label><input type="range" id="D_L" min="50" max="20000" step="50" value="200" /><output id="D_LOut">200</output></div>
+          <div class="buttons">
+            <button id="D_run" class="accent">Have a hundred chicks</button>
+            <button id="D_sweep" class="secondary">Run all nine combinations</button>
+            <button id="D_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage E</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Get a brother-and-sister pair whose hundred chicks all hatch. <span class="hint"><span id="D1_now">not yet</span></span></li>
+          <li data-task="D2">Get an unrelated pair that loses a fifth of its chicks or more. <span class="hint"><span id="D2_now">not yet</span></span></li>
+          <li data-task="D3">Say what a twenty-thousand-place genome does to a brother-and-sister pair. <span class="hint"><span id="D3_now">not yet</span></span></li>
+          <li data-task="D4">Clear the three rounds below. <span class="hint"><span id="D4_now">0 of 3 landed</span></span></li>
+        </ul>
+        <!-- VOICE (banner): 202_lec13_07, which names the mechanism. -->
+        <div class="solved-banner" id="solvedD">In the general population, your chance of finding someone with the same constellation of broken alleles is roughly one over the mutation rate — very, very low. With a close relative, it's a lot higher, because you have a lot more in common that's identical-by-descent. Identical-by-descent of loss-of-function alleles is what drives the biological negative outcomes of incest. The mechanism is that close relatives share the same broken alleles inherited from the same recent ancestor, so their kids end up homozygous for the broken ones. Stage E is open.</div>
+      </div>
+      <div class="panel numq" id="numqD">
+        <div class="q">Three rounds. Each deals a pair, a load and a genome size. Out of a hundred chicks, how many do not hatch? Lock it in and the same pair has six more clutches of a hundred.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="D_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="D_g0">chicks that do not hatch</label><input type="range" id="D_g0" min="0" max="100" step="1" value="20" /><output id="D_g0Out">20</output></div>
+            <div class="buttons">
+              <button id="D_glock" class="accent">Lock in this estimate</button>
+              <button id="D_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally-pill" id="D_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="D_gflip"></div>
+          <canvas id="D_gstrip" width="520" height="70" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"><span class="line"><span class="com"># each founding genome gets its own broken places</span></span><span class="line" data-line="L">L    &lt;- <span class="num" id="cD_L">200</span>          <span class="com"># places in the genome</span></span><span class="line" data-line="load">load &lt;- <span class="num" id="cD_load">5</span>            <span class="com"># broken copies on each one</span></span><span class="line">mk   &lt;- <span class="kw">function</span>() <span class="fn">sample</span>(L, load)</span><span class="line"></span><span class="line"><span class="com"># a gamete takes each broken place with probability one half</span></span><span class="line">gam &lt;- <span class="kw">function</span>(x, y) <span class="fn">c</span>(x[<span class="fn">runif</span>(<span class="fn">length</span>(x)) &lt; <span class="num">.5</span>],</span><span class="line">                          y[<span class="fn">runif</span>(<span class="fn">length</span>(y)) &lt; <span class="num">.5</span>])</span><span class="line"></span><span class="line"><span class="com"># a chick with the same place broken from both sides</span></span><span class="line">chick &lt;- <span class="kw">function</span>() <span class="fn">length</span>(<span class="fn">intersect</span>(<span class="fn">gam</span>(P1a,P1b), <span class="fn">gam</span>(P2a,P2b))) &gt; <span class="num">0</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">replicate</span>(<span class="num">100</span>, <span class="fn">chick</span>()))</span></pre>
+      </div>
     </div>
   </div>
 </section>
 
-<div id="score-final" style="max-width:1300px;margin:0 auto;padding:0 24px 40px"></div>
+<!-- ========== STAGE E — how far back the two copies meet =============== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 202_lec12_05 and 461_lec14_04, both near-verbatim, plus
+           202_lec20_02's arithmetic. The conclusion quotes, 202_lec13_06 and
+           461_lec14_05, are held for the banner. -->
+      <div class="voice">
+        <p>The most recent common ancestor is the actual real individual that connects two individuals. Every pair of individuals on the planet, at some point, came from a cell that divided in two. If you trace your cells back to your zygote, and that zygote back to your parents' zygotes, and so on — eventually you will find some cell, somewhere in the past, that divided and led down the line to you and to whoever else you're talking about.</p>
+        <p>The most recent common ancestor is not the first individual with a given allele. It's the most recent individual that all the living individuals carrying that allele can trace back to. The original allele arose earlier and got passed forward — but all our information about its early history is lost.</p>
+        <p>If I told you a car was driving at 50 mph and has gone 100 miles, how long ago did it leave? You have a distance and a speed — distance divided by speed gives you time. Number of mutations is your distance. The slope of mutations versus time is your speed.</p>
+      </div>
+      <ul class="setup">
+        <li>One bird in a pond, and the two copies of one gene it is carrying.</li>
+        <li>Each copy came from one of its mother's two, or one of its father's two. Walk both of them back a generation at a time until they arrive at the same copy in the same bird.</li>
+        <li>Nothing here is selected, nobody dies out of turn, and the headcount never changes.</li>
+        <li>The second knob puts a mark on a copy whenever it is passed on, at whatever rate you set. Marks are how you can tell two copies apart.</li>
+        <li>A bird is two-tone at this gene when at least one mark sits on the path between its two copies.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel pedwrap">
+        <canvas id="E_walk" class="plot" width="900" height="380"></canvas>
+        <div class="readout" id="E_walkRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="E_hist" class="plot" width="660" height="250"></canvas>
+        <div class="readout" id="E_read"></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="E_controls">
+          <div class="row" data-line="N"><label for="E_N">breeders in the pond</label><input type="range" id="E_N" min="5" max="300" step="5" value="50" /><output id="E_NOut">50</output></div>
+          <div class="row" data-line="mu"><label for="E_mu">marks per copy per generation</label><input type="range" id="E_mu" min="0" max="0.02" step="0.0005" value="0" /><output id="E_muOut">0.0000</output></div>
+          <div class="buttons">
+            <button id="E_one" class="secondary">Walk one pair back</button>
+            <button id="E_run" class="accent">Walk 500 pairs back</button>
+            <button id="E_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">Find the pond where two copies in one bird meet, on average, two hundred generations back. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E2">Say how far back the two copies in one bird meet in a pond of fifty, before you run it. <span class="hint"><span id="E2_now">not yet</span></span></li>
+          <li data-task="E3">Clear the three rounds below. <span class="hint"><span id="E3_now">0 of 3 landed</span></span></li>
+          <li data-task="E4">Run the arithmetic backwards on a real species. <span class="hint"><span id="E4_now">not yet</span></span></li>
+        </ul>
+        <!-- VOICE (banner): 202_lec13_06 spliced with 461_lec14_05. Both
+             state the lesson's conclusion, not just the stage's. -->
+        <div class="solved-banner" id="solvedE">Heterozygotes are a measure, in units of mutation rate, of how long ago your common ancestors for one locus were. And across your genome, that's the average for all of them. This is why heterozygosity works as a measure of drift, and so many other things. It is fundamentally a measurement of the rate of evolution — the rate of allele change — by looking at our ancestry. For any individual locus, the coalescent time is about four times the effective population size. That's the same number as fixation by drift. Because fixation and coalescence are the same process, run backwards.</div>
+      </div>
+      <div class="panel numq" id="numqE">
+        <div class="q">Three rounds. Each deals a pond size and a marking rate. What fraction of the birds come out two-tone at this gene? Lock it in and the page walks six more batches of 500.</div>
+        <div class="gm">
+          <div class="gm-prompt" id="E_gprompt">—</div>
+          <div class="controls">
+            <div class="row"><label for="E_g0">two-tone at this gene</label><input type="range" id="E_g0" min="0" max="1" step="0.01" value="0.3" /><output id="E_g0Out">0.30</output></div>
+            <div class="buttons">
+              <button id="E_glock" class="accent">Lock in this estimate</button>
+              <button id="E_gnext" class="secondary" disabled>Deal the next round</button>
+              <span class="tally-pill" id="E_gtally">0 of 3 landed</span>
+            </div>
+          </div>
+          <div class="flip" id="E_gflip"></div>
+          <canvas id="E_gstrip" width="520" height="70" style="display:none;"></canvas>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line"><span class="com"># two copies in one bird, walked back until they are one copy</span></span><span class="line" data-line="N">N  &lt;- <span class="num" id="cE_N">50</span></span><span class="line" data-line="mu">mu &lt;- <span class="num" id="cE_mu">0</span>       <span class="com"># marks per copy per generation</span></span><span class="line"></span><span class="line">meet &lt;- <span class="kw">function</span>(N) {</span><span class="line">  t &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">repeat</span> {</span><span class="line">    t &lt;- t + <span class="num">1</span></span><span class="line">    <span class="kw">if</span> (<span class="fn">sample</span>(<span class="num">2</span>*N, <span class="num">1</span>) == <span class="fn">sample</span>(<span class="num">2</span>*N, <span class="num">1</span>)) <span class="kw">return</span>(t)</span><span class="line">  }</span><span class="line">}</span><span class="line">t &lt;- <span class="fn">replicate</span>(<span class="num">500</span>, <span class="fn">meet</span>(N))</span><span class="line"><span class="fn">mean</span>(t)                       <span class="com"># how far back</span></span><span class="line"><span class="fn">mean</span>(<span class="fn">runif</span>(<span class="num">500</span>) &lt; <span class="num">1</span> - <span class="fn">exp</span>(-<span class="num">2</span>*mu*t))   <span class="com"># and how many come out two-tone</span></span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== real data: running it backwards ===========================
+       No file for this one. Two published constants and the arithmetic of
+       the stage, which is the whole point: the measurement goes the other
+       way round. -->
+  <div class="panel realdata" id="realE">
+    <h3>Now run it backwards on a species somebody measured</h3>
+    <div class="rd-grid">
+      <div>
+        <canvas id="E_real" class="plot" width="700" height="300"></canvas>
+        <div class="readout" id="E_realRead"></div>
+      </div>
+      <div>
+        <ul class="setup" style="margin-top:0; padding-top:0; border-top:0;">
+          <li>Two numbers have been measured for our own species, and neither of them is a headcount.</li>
+          <li>Pick any two copies of the same stretch of DNA in one person. They differ at about <b>one base in a thousand</b>. That is the two-tone rate, measured directly off sequenced genomes.</li>
+          <li>New marks land at about <b>1.25 per hundred million bases per generation</b>, measured by sequencing parents and their children and counting what is in the child and in neither parent.</li>
+          <li>The slider is the only thing left unknown. Move it until the curve on the left passes through the measured point.</li>
+          <li>Then compare what you get to the eight billion people who are actually here.</li>
+        </ul>
+        <div class="controls" style="margin-top:12px;">
+          <div class="row"><label for="E_rn">breeders in the pond</label><input type="range" id="E_rn" min="500" max="60000" step="500" value="30000" /><output id="E_rnOut">30000</output></div>
+          <div class="buttons">
+            <button id="E_rlock" class="accent">Lock it in</button>
+          </div>
+        </div>
+        <div class="flip" id="E_rflip"></div>
+        <canvas id="E_rstrip" width="520" height="70" style="display:none;"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is the whole of Lesson 11. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
 <script>
-function mulberry32(seed){let a=seed>>>0;return function(){a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
-function setupCanvas(canvas){const dpr=window.devicePixelRatio||1; if(!canvas.dataset.cssW){canvas.dataset.cssW=String(canvas.width); canvas.dataset.cssH=String(canvas.height);} const cssW=+canvas.dataset.cssW, cssH=+canvas.dataset.cssH; canvas.width=cssW*dpr; canvas.height=cssH*dpr; canvas.style.width=cssW+"px"; canvas.style.height=cssH+"px"; const ctx=canvas.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,W:cssW,H:cssH}; }
-function makeFrame(pad,W,H,xMin,xMax,yMin,yMax){const w=W-pad.l-pad.r,h=H-pad.t-pad.b; return {pad,W:w,H:h,xMin,xMax,yMin,yMax, x:v=>pad.l+(v-xMin)/(xMax-xMin)*w, y:v=>pad.t+h-(v-yMin)/(yMax-yMin)*h}; }
-function drawAxes(ctx,f,xLabel,yLabel,xTicks,yTicks,xFmt,yFmt){xFmt=xFmt||(v=>v.toString()); yFmt=yFmt||(v=>v.toString()); ctx.strokeStyle="#333"; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(f.pad.l, f.pad.t); ctx.lineTo(f.pad.l, f.pad.t+f.H); ctx.lineTo(f.pad.l+f.W, f.pad.t+f.H); ctx.stroke(); ctx.fillStyle="#333"; ctx.font="10px ui-monospace"; ctx.textAlign="center"; ctx.textBaseline="top"; for(let i=0;i<=xTicks;i++){const v=f.xMin+(f.xMax-f.xMin)*i/xTicks, x=f.x(v); ctx.beginPath(); ctx.moveTo(x,f.pad.t+f.H); ctx.lineTo(x,f.pad.t+f.H+4); ctx.stroke(); ctx.fillText(xFmt(v),x,f.pad.t+f.H+5);} ctx.textAlign="right"; ctx.textBaseline="middle"; for(let i=0;i<=yTicks;i++){const v=f.yMin+(f.yMax-f.yMin)*i/yTicks, y=f.y(v); ctx.beginPath(); ctx.moveTo(f.pad.l-4,y); ctx.lineTo(f.pad.l,y); ctx.stroke(); ctx.fillText(yFmt(v),f.pad.l-6,y);} ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.font="11px -apple-system, sans-serif"; ctx.fillStyle="#555"; if(xLabel) ctx.fillText(xLabel, f.pad.l+f.W/2, f.pad.t+f.H+22); if(yLabel){ ctx.save(); ctx.translate(f.pad.l-32, f.pad.t+f.H/2); ctx.rotate(-Math.PI/2); ctx.fillText(yLabel,0,0); ctx.restore(); } }
-function downloadText(filename, text) { const blob=new Blob([text],{type:"text/plain"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{document.body.removeChild(a); URL.revokeObjectURL(url);},0); }
-function highlightByDataLine(codeId, key){const pre=document.getElementById(codeId); if(!pre) return; pre.querySelectorAll(".line").forEach(l=>l.classList.remove("hi")); pre.querySelectorAll(`.line[data-line="${key}"]`).forEach(l=>l.classList.add("hi"));}
+/* =====================================================================
+   LESSON 11 — whose ancestors, and how long ago.
 
-const Gates = { A:{predicted:false,explores:0,done:false}, B:{predicted:false,explores:0,done:false}, C:{predicted:false,explores:0,done:false}, D:{predicted:false,explores:0,done:false} };
-const EXPLORE_THRESHOLD = { A:4, B:5, C:3, D:2 };
-function bumpExplore(stage){ if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); const g=Gates[stage]; if(!g.predicted||g.done) return; g.explores+=1; const tracker=document.getElementById("explore"+stage); const c=tracker.querySelector(".count"); const noun=stage==="A"?"values":stage==="B"?"combos":stage==="C"?"noise levels":"runs"; c.textContent=g.explores+"/"+EXPLORE_THRESHOLD[stage]+" "+noun; if(g.explores>=EXPLORE_THRESHOLD[stage]){g.done=true; tracker.classList.add("complete"); c.textContent=`${g.explores}+ done — ` + (nextStageLabel(stage) ? `Stage ${nextStageLabel(stage)} unlocked.` : `Lesson complete.`); unlockNext(stage); } }
-function nextStageLabel(s){return {A:"B",B:"C",C:"D",D:null}[s];}
-function unlockNext(stage){const next={A:"stageB",B:"stageC",C:"stageD",D:null}[stage]; if(next){document.getElementById(next).classList.remove("stage-locked"); const toc=document.getElementById("toc"+nextStageLabel(stage)); if(toc) toc.classList.remove("locked");} else if (typeof Score !== "undefined" && Score.finish) Score.finish(); }
-/* Scored scaffold slot each stage's questions write to. A stage absent from
-   this map still gates and still records engagement, but is not scored. */
-const PRED_POS = {A:0, B:1, C:2, D:3};
+   Five stages, one measurement: the gap between the pairings you can
+   count and the pairings random mating would have given you.
 
-/* Graded prediction gate. `answers[i]` is either the winning value= token for a
-   radio group, or a predicate over the array of checked values for a checkbox
-   group. The result is written to scaffold bit PRED_POS[stage] + i. Nothing is
-   revealed on screen — the student finds out by running it. */
-function wirePrediction(stage, predId, names, answers, controlsId){
-  const root=document.getElementById(predId); const btn=root.querySelector("button");
-  const picked=n=>Array.from(root.querySelectorAll(`input[name="${n}"]:checked`)).map(e=>e.value);
-  function check(){btn.disabled=!names.every(n=>picked(n).length>0);}
-  names.forEach(n=>root.querySelectorAll(`input[name="${n}"]`).forEach(r=>r.addEventListener("change",check)));
-  btn.addEventListener("click",()=>{
-    const results=names.map((n,i)=>{const vals=picked(n), key=(answers||[])[i];
-      if(typeof key==="function") return !!key(vals);
-      return vals.length===1 && vals[0]===key;});
-    const ol=root.querySelector("ol"); const msg=document.createElement("div");
-    msg.className="prediction-done"; msg.innerHTML="Locked in. Now try it and see.";
-    root.insertBefore(msg, ol); btn.style.display="none";
-    Gates[stage].predicted=true;
-    document.getElementById("explore"+stage).classList.add("shown");
-    if(controlsId) document.getElementById(controlsId).classList.remove("locked");
-    const start=(typeof PRED_POS!=="undefined")?PRED_POS[stage]:undefined;
-    if(typeof Score!=="undefined" && Score.recordCheckpoint && start!==undefined)
-      results.forEach((r,i)=>Score.recordCheckpoint(start+i, r));
+     A  the gap exists, and the allele frequencies never moved
+     B  the same coin as Lesson 10, dropped down a fixed tree
+     C  the pedigree makes the gap, and the counting finds it again
+     D  which of the two is actually doing the damage
+     E  the same walk, run backwards, until the two copies are one
+
+   THE CORE OPERATOR IS THE ONE FROM LESSON 10, VERBATIM. makePop,
+   makePool, breed and breedFreq are byte-identical between the two
+   files. They belong in app/assets/pop.js and are duplicated here only
+   because the third lesson that wants them has not been written yet --
+   see docs/WORK_ORDER.md. The two Price terms stay separately named for
+   the same reason they do there: the scatter around a fitted line and
+   the change within a lineage are the same shape and not the same
+   object, and a shared engine is exactly where they would quietly fuse.
+
+   Every number on screen is measured off the simulator, never asserted.
+   The checks are in scripts/check_lesson11_numbers.js, which drives this
+   page in headless Chrome. Re-run it after any edit to a simulator.
+   ===================================================================== */
+
+const GREEN = "#4a7a2a", HOT = "#b23a48", BLUE = "#2f6b8f", MUTED = "#6b6b68";
+const PALE = "#e8c96a", MID = "#9a8a6e", DARK = "#55407e";   // 0, 1, 2 copies
+const clamp = (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v);
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const sd = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / Math.max(1, a.length - 1)); };
+const f2 = v => v.toFixed(2), f3 = v => v.toFixed(3);
+
+/* Gamma deviate, Marsaglia-Tsang. The shares come out of this so that the
+   mean is pinned at 1 whatever the spread is: only the unevenness moves. */
+function rgamma(rng, k, th) {
+  if (k < 1) { const u = rng(); return rgamma(rng, 1 + k, th) * Math.pow(u, 1 / k); }
+  const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+  for (;;) {
+    let x, v;
+    do { const u1 = rng() || 1e-12, u2 = rng();
+         x = Math.sqrt(-2 * Math.log(u1)) * Math.cos(6.283185307 * u2); v = 1 + c * x; } while (v <= 0);
+    v = v * v * v; const u = rng();
+    if (u < 1 - 0.0331 * x * x * x * x) return d * v * th;
+    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v * th;
+  }
+}
+const gshare = (rng, cv) => cv <= 0 ? 1 : rgamma(rng, 1 / (cv * cv), cv * cv);
+
+/* sim.js's rbinom loops n times, which is fine for a bottle of flies and
+   far too slow for 40 ponds of 500 run to fixation. Shadowed here with a
+   normal approximation above 60 trials; below that the exact loop. */
+function rbinomFast(rng, n, p) {
+  if (p <= 0) return 0;
+  if (p >= 1) return n;
+  if (n > 60) {
+    const m = n * p, s = Math.sqrt(n * p * (1 - p));
+    const u1 = rng() || 1e-12, u2 = rng();
+    const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(6.283185307 * u2);
+    return clamp(Math.round(m + s * z), 0, n);
+  }
+  let k = 0; for (let i = 0; i < n; i++) if (rng() < p) k++; return k;
+}
+
+/* ====== the core ======================================================
+   A population is a headcount and 2n allele bits. A pool is the set of
+   individuals a parent may be drawn from, with a share apiece. */
+function makePop(rng, n, p0) {
+  const a = new Uint8Array(2 * n);
+  const idx = []; for (let i = 0; i < 2 * n; i++) idx.push(i);
+  for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+  const k = Math.round(2 * n * p0);
+  for (let i = 0; i < k; i++) a[idx[i]] = 1;
+  return { n, a };
+}
+const popFreq = pop => { let k = 0; for (let i = 0; i < pop.a.length; i++) k += pop.a[i]; return k / pop.a.length; };
+const variety = p => 2 * p * (1 - p);
+const darkCopies = (pop, i) => pop.a[2 * i] + pop.a[2 * i + 1];
+
+/* How many breeders are really in the game: one over the sum of the
+   squared shares. Checked against the measured decay, not assumed. */
+function reallyInTheGame(w) {
+  let s = 0; for (const v of w) s += v;
+  let q = 0; for (const v of w) { const p = v / s; q += p * p; }
+  return 1 / q;
+}
+/* Across a run of different sizes, the same quantity: add up one over
+   each generation, not the generations. */
+function acrossGenerations(list) { let s = 0; for (const v of list) s += 1 / v; return list.length / s; }
+
+/* A pool: which individuals of which population, and what each is worth.
+   `share` is the whole selection hook -- flat is drift, a function of the
+   genotype is selection. `spread` is differential reproduction with
+   nothing attached to it, which is drift whatever `share` is doing. */
+function makePool(rng, pop, opts) {
+  opts = opts || {};
+  const idx = opts.idx || null;
+  const m = idx ? idx.length : pop.n;
+  const w = new Float64Array(m);
+  const sh = opts.share || null, cv = opts.spread || 0;
+  for (let j = 0; j < m; j++) {
+    const i = idx ? idx[j] : j;
+    w[j] = (sh ? sh(pop, i) : 1) * gshare(rng, cv);
+  }
+  const cum = new Float64Array(m);
+  let s = 0; for (let j = 0; j < m; j++) { s += w[j]; cum[j] = s; }
+  return { pop, idx, w, cum, total: s };
+}
+function drawParent(rng, pool) {
+  const u = rng() * pool.total;
+  let lo = 0, hi = pool.cum.length - 1;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (pool.cum[m] < u) lo = m + 1; else hi = m; }
+  return pool.idx ? pool.idx[lo] : lo;
+}
+/* One generation. `pools` is one pool per parent slot -- the same pool
+   twice for a closed randomly-mating population, two different subsets
+   for a lek, the founding population for stage B's second rule, and a
+   pool spanning two populations when a later lesson wants migration.
+   `copy` is the mutation hook: identity here, and the only place an
+   allele can fail to be inherited. */
+function breed(rng, pools, n, copy, counts) {
+  const out = new Uint8Array(2 * n);
+  if (counts) counts.fill(0);
+  for (let k = 0; k < n; k++) {
+    const pa = drawParent(rng, pools[0]), pb = drawParent(rng, pools[1]);
+    if (counts) { counts[pa]++; counts[pb]++; }
+    let x = pools[0].pop.a[2 * pa + (rng() < 0.5 ? 0 : 1)];
+    let y = pools[1].pop.a[2 * pb + (rng() < 0.5 ? 0 : 1)];
+    if (copy) { x = copy(x, rng); y = copy(y, rng); }
+    out[2 * k] = x; out[2 * k + 1] = y;
+  }
+  return { n, a: out };
+}
+
+/* The same operator with the genotypes integrated out. Legal exactly when
+   every share depends on the allele and nothing else, which is true of
+   stages B, C and E -- and it is the difference between 40 ponds of 500
+   running in a blink and running for a minute. `s` is what one copy of
+   dark is worth; s = 0 is drift alone. */
+function breedFreq(rng, p, n, s) {
+  if (p <= 0) return 0;
+  if (p >= 1) return 1;
+  const pp = s ? p * (1 + s + s * p) / (1 + 2 * s * p) : p;
+  return rbinomFast(rng, 2 * n, pp) / (2 * n);
+}
+
+/* The two terms, kept apart. `cov` is what covaries with the genotype --
+   selection. `within` is what changes inside a lineage between parent and
+   offspring -- mutation, and zero everywhere in this lesson. They are the
+   same shape and not the same object; never add them into one number. */
+function priceTerms(counts, dark, n) {
+  let wbar = 0; for (let i = 0; i < n; i++) wbar += counts[i];
+  wbar /= n;
+  let zbar = 0; for (let i = 0; i < n; i++) zbar += dark[i];
+  zbar /= n;
+  let cov = 0; for (let i = 0; i < n; i++) cov += (counts[i] - wbar) * (dark[i] - zbar);
+  cov /= n;
+  return { cov: wbar > 0 ? cov / wbar : 0, within: 0, wbar, zbar };
+}
+
+/* ====== gates ========================================================
+   A stage opens the next by being solved. The written questions record
+   on their first attempt and getting one wrong never shuts a door. */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false},
+                D:{open:false,done:false}, E:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
+/* Named one per slot rather than as an array, so check_lessons.py's
+   slot-coverage pass can see that every declared slot is written -- it
+   reads `name: <integer>` and an array of indices is invisible to it. */
+const BIT = { A2:0,  A3:1,
+              B1:2,  B3:3,  B4:4,
+              C2:5,  C3:6,
+              D3:7,  D4:8,
+              E2:9,  E3:10, E4:11 };
+/* A stage with a real-data panel waits for the panel too, unless the
+   fetch failed -- in which case realOffline() releases the wait rather
+   than stranding the student behind a file. */
+const RealNeeded = { B:false, E:false };
+
+function unlockNext(stage) {
+  const nx = NEXT[stage];
+  if (!nx) { showDone(true); return; }
+  const sec = document.getElementById("stage" + nx);
+  if (sec && sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc" + nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
+}
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+const taskDone = (stage, key) => {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  return !!(li && li.classList.contains("done"));
+};
+function hint(id, text) { const el = document.getElementById(id + "_now"); if (el) el.textContent = text; }
+function showSolved(stage) { const el = document.getElementById("solved" + stage); if (el) el.classList.add("shown"); }
+function record(pos, ok) {
+  if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+  // Re-mint if the lesson is already finished: the last stage's committed
+  // estimate can be locked after its game has closed the final gate, and a
+  // code minted at that gate would carry the bit as a zero.
+  if (Gates.E.done && Score.finish) Score.finish();
+}
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function showDone(scroll) {
+  const b = document.getElementById("done-banner");
+  if (!b) return;
+  b.classList.add("shown");
+  if (scroll && b.scrollIntoView) b.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true;
+  showSolved(stage);
+  unlockNext(stage);
+}
+/* Called by each stage when one of its gates lands. A stage is done when
+   every task in its list is ticked. */
+function checkStageDone(stage) {
+  const lis = document.querySelectorAll(`#tasks${stage} li[data-task]`);
+  for (const li of lis) if (!li.classList.contains("done")) return;
+  finishStage(stage);
+}
+function realOffline(stage, readId, what) {
+  RealNeeded[stage] = false;
+  const el = document.getElementById(readId);
+  if (el) el.innerHTML = '<span class="off">' + what + " did not load.</span> That panel is skipped; the rest of the stage still counts.";
+  const li = document.querySelector(`#tasks${stage} li[data-task="${stage}4"]`);
+  if (li) { li.classList.add("done"); }
+  checkStageDone(stage);
+}
+
+/* ====== the result strip ============================================
+   One lock reported as a band, a truth mark, the student's own mark,
+   and the six re-runs as dots. The dots are the point: a single run is
+   not the number, and the band is set off their measured scatter. */
+function drawStrips(cvId, strips) {
+  const cv = document.getElementById(cvId);
+  if (!cv) return;
+  if (!strips || !strips.length) { cv.style.display = "none"; return; }
+  cv.style.display = "block";
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  strips.forEach((sp, i) => {
+    const y = 6 + i * 58, mid = y + 32, x0 = 44, x1 = W - 44;
+    const X = v => x0 + (clamp(v, sp.min, sp.max) - sp.min) / (sp.max - sp.min) * (x1 - x0);
+    ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+    ctx.fillText(sp.label, 6, y + 10);
+    if (sp.tol != null) {
+      ctx.fillStyle = "rgba(74,122,42,0.20)";
+      const a = X(sp.truth - sp.tol), b = X(sp.truth + sp.tol);
+      ctx.fillRect(a, mid - 10, Math.max(2, b - a), 20);
+    }
+    ctx.strokeStyle = "#cfcbbd"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, mid); ctx.lineTo(x1, mid); ctx.stroke();
+    ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.fillText(sp.fmt(sp.min), x0 - 5, mid);
+    ctx.textAlign = "left";  ctx.fillText(sp.fmt(sp.max), x1 + 5, mid);
+    if (sp.values) {
+      ctx.fillStyle = "rgba(47,107,143,0.80)";
+      for (const v of sp.values) { ctx.beginPath(); ctx.arc(X(v), mid, 3.4, 0, 6.2832); ctx.fill(); }
+    }
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(X(sp.truth), mid - 12); ctx.lineTo(X(sp.truth), mid + 12); ctx.stroke();
+    ctx.fillStyle = GREEN; ctx.font = "10px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(sp.fmt(sp.truth), X(sp.truth), mid - 13);
+    if (sp.you != null) {
+      ctx.strokeStyle = HOT; ctx.lineWidth = 2.2;
+      ctx.beginPath(); ctx.moveTo(X(sp.you), mid - 12); ctx.lineTo(X(sp.you), mid + 12); ctx.stroke();
+      ctx.fillStyle = HOT; ctx.font = "10px -apple-system, sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText("you " + sp.fmt(sp.you), X(sp.you), mid + 13);
+    }
   });
 }
 
-const sA = { Ne:100, gens:500 };
-function drawStageA() {
-  const H0=0.5; const traj=new Array(sA.gens+1); for(let g=0;g<=sA.gens;g++) traj[g]=H0*Math.pow(1-1/(2*sA.Ne), g);
-  const dr=1-Math.pow(1-1/(2*sA.Ne),1); const halfLife=Math.log(0.5)/Math.log(1-1/(2*sA.Ne));
-  document.getElementById("A_Ne").textContent=sA.Ne; document.getElementById("A_dr").textContent=dr.toFixed(5); document.getElementById("A_halfLife").textContent=halfLife.toFixed(0)+" gen";
-  const cv=document.getElementById("plotA"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,0,sA.gens,0,H0);
-  drawAxes(ctx,f,"generation","heterozygosity",6,4,v=>v.toFixed(0),v=>v.toFixed(2));
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); for(let g=0;g<=sA.gens;g++){const x=f.x(g),y=f.y(traj[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
-  // half-life line
-  if(halfLife<sA.gens){ctx.strokeStyle="#caa04a"; ctx.lineWidth=1; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(f.x(halfLife),f.pad.t); ctx.lineTo(f.x(halfLife),f.pad.t+f.H); ctx.stroke(); ctx.moveTo(f.pad.l, f.y(H0/2)); ctx.lineTo(f.x(halfLife), f.y(H0/2)); ctx.stroke(); ctx.setLineDash([]);}
-}
-["A_NIn","A_gIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="A_NIn"){sA.Ne=v; document.getElementById("A_NOut").textContent=v; document.getElementById("cA_Ne").textContent=v; highlightByDataLine("codeA","Ne");} else {sA.gens=v; document.getElementById("A_gOut").textContent=v; document.getElementById("cA_g").textContent=v; highlightByDataLine("codeA","gens");} drawStageA(); if(id==="A_NIn") bumpExplore("A");}));
-document.getElementById("A_download").addEventListener("click",()=>{downloadText("lesson11_stageA.R",`Ne <- ${sA.Ne}; gens <- ${sA.gens}; H0 <- 0.5
-H <- H0 * (1 - 1/(2*Ne))^(0:gens)
-plot(0:gens, H, type="l", ylim=c(0, H0))
-`);});
-wirePrediction("A","predA",["qA1"],["N"],"controlsA"); drawStageA();
+/* ====== the closing game ============================================
+   No stage ends on a typed answer. A round is dealt, the student sets
+   one slider, locks, and the same population is dealt six more times.
+   Three landed rounds clears it. Only the first lock is recorded, so a
+   miss costs nothing but another round. */
+function wireGame(id, cfg) {
+  const need = cfg.need || 3;
+  const el = k => document.getElementById(id + k);
+  const rng = mulberry32(pageSeed("l11g" + id, 1, 99999));
+  const st = { n: 0, hits: 0, scored: false, cleared: false, round: null, val: null };
+  const f = cfg.field;
+  function setVal(v) { st.val = v; el("_g0").value = String(v); el("_g0Out").value = f.fmt(v); }
+  el("_g0").addEventListener("input", ev => { setVal(parseFloat(ev.target.value)); bump(id); });
 
-const sB = { Nbot:50, dur:50 };
-function drawStageB() {
-  const Npre=1000, gens=800, tBot=200; const H=new Array(gens+1); H[0]=0.5;
-  for(let g=1;g<=gens;g++){const Ne=(g>=tBot && g<tBot+sB.dur)?sB.Nbot:Npre; H[g]=H[g-1]*(1-1/(2*Ne));}
-  const Hpre=H[tBot], Hpost=H[tBot+sB.dur]; const loss=(Hpre-Hpost)/Hpre;
-  document.getElementById("B_Nbot").textContent=sB.Nbot; document.getElementById("B_dur").textContent=sB.dur; document.getElementById("B_loss").textContent=(100*loss).toFixed(1)+"%";
-  const cv=document.getElementById("plotB"); const {ctx,W,H:HH}=setupCanvas(cv); ctx.clearRect(0,0,W,HH);
-  const pad={l:50,r:12,t:18,b:38}; const f=makeFrame(pad,W,HH,0,gens,0,0.5);
-  drawAxes(ctx,f,"generation","heterozygosity",5,4,v=>v.toFixed(0),v=>v.toFixed(2));
-  // shade bottleneck
-  ctx.fillStyle="rgba(178,58,72,0.12)"; ctx.fillRect(f.x(tBot),f.pad.t,f.x(tBot+sB.dur)-f.x(tBot),f.H);
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.beginPath(); for(let g=0;g<=gens;g++){const x=f.x(g),y=f.y(H[g]); if(g===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
-  ctx.fillStyle="#b23a48"; ctx.font="11px ui-monospace"; ctx.textAlign="left"; ctx.fillText("bottleneck Nₑ="+sB.Nbot, f.x(tBot)+5, f.pad.t+12);
-}
-["B_NbotIn","B_durIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="B_NbotIn"){sB.Nbot=v; document.getElementById("B_NbotOut").textContent=v; document.getElementById("cB_Nb").textContent=v;} else {sB.dur=v; document.getElementById("B_durOut").textContent=v; document.getElementById("cB_d").textContent=v;} drawStageB(); bumpExplore("B");}));
-document.getElementById("B_download").addEventListener("click",()=>{downloadText("lesson11_stageB.R",`Ne_pre <- 1000; Ne_bot <- ${sB.Nbot}; dur <- ${sB.dur}
-gens <- 800; t_bot <- 200; H <- numeric(gens+1); H[1] <- 0.5
-for (g in 1:gens) { Ne <- if (g >= t_bot && g < t_bot+dur) Ne_bot else Ne_pre; H[g+1] <- H[g] * (1 - 1/(2*Ne)) }
-plot(H, type="l")
-`);});
-wirePrediction("B","predB",["qB1"],["longer"],"controlsB"); drawStageB();
-
-const sC = { trueN:200, noise:0.01, seed:42 };
-function drawStageC() {
-  const rng=mulberry32(sC.seed); const gens=100; const Hobs=new Array(gens+1); Hobs[0]=0.5;
-  for(let g=1;g<=gens;g++){const H_true=0.5*Math.pow(1-1/(2*sC.trueN),g); Hobs[g]=Math.max(0, H_true + (rng()-0.5)*2*sC.noise);}
-  const Ne_grid=[]; for(let n=10;n<=2000;n+=10) Ne_grid.push(n);
-  const ssr=Ne_grid.map(N=>{let s=0; for(let g=0;g<=gens;g++){const Hp=0.5*Math.pow(1-1/(2*N),g); s+=(Hobs[g]-Hp)**2;} return s;});
-  const minIdx=ssr.indexOf(Math.min(...ssr)); const bestN=Ne_grid[minIdx];
-  const minSSR=ssr[minIdx]; const thresh=minSSR*1.5;
-  let loN=Ne_grid[0], hiN=Ne_grid[Ne_grid.length-1];
-  for(let i=minIdx; i>=0; i--){if(ssr[i]>thresh){loN=Ne_grid[i+1]||Ne_grid[i]; break;}}
-  for(let i=minIdx; i<ssr.length; i++){if(ssr[i]>thresh){hiN=Ne_grid[i-1]||Ne_grid[i]; break;}}
-  document.getElementById("C_trueN").textContent=sC.trueN; document.getElementById("C_bestN").textContent=bestN; document.getElementById("C_ci").textContent="("+loN+", "+hiN+")";
-  const cv=document.getElementById("plotC"); const {ctx,W,H}=setupCanvas(cv); ctx.clearRect(0,0,W,H);
-  const pad={l:60,r:12,t:18,b:38}; const f=makeFrame(pad,W,H,Math.max(10,bestN*0.3),Math.min(2000,bestN*3),0,Math.max(...ssr));
-  drawAxes(ctx,f,"candidate Nₑ","SSR",6,4,v=>v.toFixed(0),v=>v.toFixed(3));
-  ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2; ctx.beginPath(); for(let i=0;i<Ne_grid.length;i++){const x=f.x(Ne_grid[i]),y=f.y(ssr[i]); if(i===0||Ne_grid[i]<f.xMin) {if(Ne_grid[i]>=f.xMin) ctx.moveTo(x,y); continue;} if(Ne_grid[i]>f.xMax) break; ctx.lineTo(x,y);} ctx.stroke();
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(f.x(bestN),f.pad.t); ctx.lineTo(f.x(bestN),f.pad.t+f.H); ctx.stroke(); ctx.setLineDash([]);
-}
-["C_trueIn","C_noiseIn","C_seedIn"].forEach(id=>document.getElementById(id).addEventListener("input",(e)=>{const v=+e.target.value; if(id==="C_trueIn"){sC.trueN=v; document.getElementById("C_trueOut").textContent=v;} if(id==="C_noiseIn"){sC.noise=v; document.getElementById("C_noiseOut").textContent=v.toFixed(3); bumpExplore("C");} if(id==="C_seedIn"){sC.seed=v; document.getElementById("C_seedOut").textContent=v;} drawStageC();}));
-document.getElementById("C_download").addEventListener("click",()=>{downloadText("lesson11_stageC.R",`set.seed(${sC.seed}); true_Ne <- ${sC.trueN}; noise <- ${sC.noise}
-gens <- 100; Hobs <- 0.5 * (1 - 1/(2*true_Ne))^(0:gens) + runif(gens+1, -noise, noise)
-Ne_grid <- seq(10, 2000, 10)
-ssr <- sapply(Ne_grid, function(N) sum((Hobs - 0.5*(1-1/(2*N))^(0:gens))^2))
-Ne_grid[which.min(ssr)]
-`);});
-wirePrediction("C","predC",["qC1"],["wide"],"controlsC"); drawStageC();
-
-const sD = { seed:42, data:null };
-async function loadFSJ() {
-  try { const r=await fetch("../../data/clean/fsj_allele_freq_subset.json"); sD.data=await r.json(); }
-  catch(e){ sD.data=null; }
-  drawStageD();
-}
-function drawStageD() {
-  let yrs=[], H=[];
-  if (sD.data && Array.isArray(sD.data)) {
-    // Group by year if data has columns year, p
-    const byYear={}; for(const r of sD.data){const y=+r.year; if(isFinite(y)){const p=(r.freq_total==null)?NaN:+r.freq_total; if(isFinite(p)){if(!byYear[y]) byYear[y]=[]; byYear[y].push(2*p*(1-p));}}}
-    for(const y in byYear){yrs.push(+y); H.push(byYear[y].reduce((a,b)=>a+b,0)/byYear[y].length);}
-    const order=yrs.map((_,i)=>i).sort((a,b)=>yrs[a]-yrs[b]); yrs=order.map(i=>yrs[i]); H=order.map(i=>H[i]);
+  function deal() {
+    st.round = cfg.round(rng, st.n);
+    el("_gprompt").innerHTML = st.round.prompt;
+    setVal(st.round.start != null ? st.round.start : f.start);
+    el("_gflip").innerHTML = "";
+    el("_glock").disabled = false;
+    el("_gnext").disabled = true;
+    drawStrips(id + "_gstrip", null);
   }
-  if (!yrs.length) {
-    // Fallback: synthetic FSJ-like trajectory with a bottleneck around year 1990
-    const rng=mulberry32(sD.seed);
-    for(let y=1980;y<=2024;y++) yrs.push(y);
-    H[0]=0.32; for(let i=1;i<yrs.length;i++){const t=yrs[i]; const Ne=(t>=1990 && t<2005)?60:600; H[i]=H[i-1]*(1-1/(2*Ne)) + (rng()-0.5)*0.005;}
-  }
-  // One-epoch fit
-  const NeGrid=[]; for(let n=20;n<=5000;n+=20) NeGrid.push(n);
-  const t0=yrs[0]; const ssr1=NeGrid.map(N=>{let s=0; for(let i=0;i<H.length;i++){const Hp=H[0]*Math.pow(1-1/(2*N), yrs[i]-t0); s+=(H[i]-Hp)**2;} return s;});
-  const bestN1=NeGrid[ssr1.indexOf(Math.min(...ssr1))];
-  // Two-epoch fit (search over bottleneck Ne and timing — limited grid for speed)
-  let bestN2={pre:1000,bot:50,start:1990,dur:10,ssr:Infinity};
-  for(const Npre of [400,800,1500,3000]) for(const Nbot of [20,50,100,200]) for(const tStart of [yrs[Math.floor(yrs.length/5)], yrs[Math.floor(yrs.length/3)], yrs[Math.floor(yrs.length/2)]]) for(const dur of [5,10,20]) {
-    let s=0; let h=H[0];
-    for(let i=1;i<H.length;i++){const t=yrs[i]; const Ne=(t>=tStart && t<tStart+dur)?Nbot:Npre; h*=(1-1/(2*Ne)); s+=(H[i]-h)**2;}
-    if(s<bestN2.ssr) bestN2={pre:Npre,bot:Nbot,start:tStart,dur,ssr:s};
-  }
-  const dSSR=Math.min(...ssr1)-bestN2.ssr;
-  document.getElementById("D_Ne1").textContent=bestN1;
-  document.getElementById("D_Ne2").textContent="pre="+bestN2.pre+" / bot="+bestN2.bot+" @ "+bestN2.start;
-  document.getElementById("D_dSSR").textContent=dSSR.toFixed(5)+" "+(dSSR>0?"(2-epoch fits better)":"(no improvement)");
-  const cv=document.getElementById("plotD"); const {ctx,W,H:HH}=setupCanvas(cv); ctx.clearRect(0,0,W,HH);
-  const pad={l:60,r:12,t:18,b:38}; const yMin=Math.min(...H)*0.95, yMax=Math.max(...H)*1.05;
-  const f=makeFrame(pad,W,HH,yrs[0],yrs[yrs.length-1],yMin,yMax);
-  drawAxes(ctx,f,"year","mean heterozygosity",5,4,v=>v.toFixed(0),v=>v.toFixed(3));
-  // Synthetic envelope: 5 stochastic trajectories under the fitted 1-epoch Nₑ.
-  // Lets the student see whether the FSJ residuals are inside or outside the
-  // noise envelope expected from drift alone at the fitted Nₑ.
-  const envRng = mulberry32(sD.seed + 1009);
-  const noiseSD = 0.004;
-  for (let rep = 0; rep < 5; rep++) {
-    ctx.strokeStyle = "rgba(47,107,143,0.25)"; ctx.lineWidth = 1;
-    ctx.beginPath();
-    let h = H[0]; ctx.moveTo(f.x(yrs[0]), f.y(h));
-    for (let i = 1; i < yrs.length; i++) {
-      const dt = yrs[i] - yrs[i-1];
-      h *= Math.pow(1 - 1/(2*bestN1), dt);
-      // Add Gaussian noise approximated from two uniform draws.
-      const n = (envRng() + envRng() - 1) * noiseSD;
-      const v = h + n;
-      ctx.lineTo(f.x(yrs[i]), f.y(v));
+  el("_gnext").addEventListener("click", () => { if (!st.cleared) deal(); });
+  el("_glock").addEventListener("click", () => {
+    if (st.cleared || !st.round) return;
+    const r = st.round, v = st.val;
+    const res = cfg.judge ? cfg.judge(v, r) : { ok: Math.abs(v - r.truth) <= r.tol };
+    if (res.skip) { el("_gflip").innerHTML = '<span class="off">not yet</span> &middot; ' + res.msg; return; }
+    drawStrips(id + "_gstrip", [{ label: f.label, min: f.min, max: f.max, fmt: f.fmt,
+                                  truth: r.truth, tol: r.tol, you: v, values: r.values }]);
+    st.n++;
+    if (res.ok) st.hits++;
+    el("_gtally").textContent = st.hits + " of " + need + " landed";
+    el("_gtally").classList.toggle("on", st.hits >= need);
+    hint(cfg.task, st.hits + " of " + need + " landed");
+    el("_gflip").innerHTML = (res.ok ? '<span class="ok">landed</span>' : '<span class="off">missed</span>')
+      + " &middot; " + (res.msg || (res.ok ? r.right(v) : r.wrong(v)));
+    el("_glock").disabled = true;
+    el("_gnext").disabled = false;
+    if (!st.scored) { st.scored = true; record(cfg.bit, res.ok); }
+    if (st.hits >= need) {
+      st.cleared = true;
+      el("_gnext").disabled = true;
+      markTask(id, cfg.task);
+      const vd = el("_verdict");
+      vd.className = "verdict shown right";
+      vd.innerHTML = cfg.done;
+      checkStageDone(id);
     }
-    ctx.stroke();
-  }
-  // observed points
-  ctx.fillStyle="#333"; for(let i=0;i<yrs.length;i++){ctx.beginPath(); ctx.arc(f.x(yrs[i]),f.y(H[i]),3,0,2*Math.PI); ctx.fill();}
-  // one-epoch fit (mean trajectory, bolded)
-  ctx.strokeStyle="#2f6b8f"; ctx.lineWidth=2.4; ctx.beginPath(); for(let i=0;i<yrs.length;i++){const Hp=H[0]*Math.pow(1-1/(2*bestN1),yrs[i]-yrs[0]); const x=f.x(yrs[i]),y=f.y(Hp); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
-  // two-epoch fit
-  ctx.strokeStyle="#b23a48"; ctx.lineWidth=2; ctx.setLineDash([4,3]); ctx.beginPath();
-  let h=H[0]; ctx.moveTo(f.x(yrs[0]),f.y(h));
-  for(let i=1;i<yrs.length;i++){const t=yrs[i]; const Ne=(t>=bestN2.start && t<bestN2.start+bestN2.dur)?bestN2.bot:bestN2.pre; h*=(1-1/(2*Ne)); ctx.lineTo(f.x(t),f.y(h));}
-  ctx.stroke(); ctx.setLineDash([]);
-  ctx.fillStyle="#333"; ctx.font="11px ui-monospace"; ctx.textAlign="right";
-  ctx.fillText("blue = 1-epoch fit (faint = 5 noise replicates) · red = 2-epoch", f.pad.l+f.W-6, f.pad.t+12);
+  });
+  deal();
+  // `round` is exposed so the bar checks in scripts/check_lesson11_numbers.js
+  // deal rounds against the shipped config rather than a copy of it.
+  return { show: () => document.getElementById("numq" + id).classList.add("shown"), state: st, round: cfg.round };
 }
-document.getElementById("D_seedIn").addEventListener("input",(e)=>{sD.seed=+e.target.value; document.getElementById("D_seedOut").textContent=sD.seed; drawStageD();});
-document.getElementById("D_refit").addEventListener("click",()=>{drawStageD(); bumpExplore("D");});
-document.getElementById("D_download").addEventListener("click",()=>{downloadText("lesson11_stageD.R",`fsj <- read.csv("data/clean/fsj_allele_freq_subset.csv")
-H <- tapply(2*fsj$freq_total*(1-fsj$freq_total), fsj$year, mean)
-yrs <- as.numeric(names(H))
-Ne_grid <- seq(20, 5000, 20)
-ssr <- sapply(Ne_grid, function(N) { Hp <- H[1] * (1 - 1/(2*N))^(yrs - yrs[1]); sum((H - Hp)^2) })
-Ne_grid[which.min(ssr)]
-`);});
-wirePrediction("D","predD",["qD1"],["inside"],"controlsD"); loadFSJ();
 
-Score.init({moduleId:"lesson11", version:4, scaffold:4, mountNamePrompt:"#score-name", mountFinalCode:"#score-final", onReady: () => { const s = document.getElementById("stageA"); if (s) s.classList.remove("stage-locked"); const t = document.getElementById("tocA"); if (t) t.classList.remove("locked"); }});
+/* ====== the committed estimate ======================================
+   One slider, one lock, before the thing is run. Built from script and
+   dropped in above the task list, so the markup carries no half-panel
+   for a widget that only makes sense once its stage is open. Recorded on
+   the first attempt; a miss never shuts a door. */
+function mountLock(stage, cfg) {
+  const host = document.getElementById("tasks" + stage).closest(".panel");
+  const p = document.createElement("div");
+  p.className = "panel";
+  p.innerHTML =
+    '<h3>' + cfg.title + '</h3>' +
+    '<div class="gm">' +
+      '<div class="gm-prompt">' + cfg.prompt + '</div>' +
+      '<div class="controls">' +
+        '<div class="row"><label for="' + stage + '_lk">' + cfg.label + '</label>' +
+        '<input type="range" id="' + stage + '_lk" min="' + cfg.min + '" max="' + cfg.max +
+        '" step="' + cfg.step + '" value="' + cfg.start + '" /><output id="' + stage + '_lkOut"></output></div>' +
+        '<div class="buttons"><button id="' + stage + '_lkGo" class="accent">' + (cfg.button || "Lock it in") + '</button></div>' +
+      '</div>' +
+      '<div class="flip" id="' + stage + '_lkFlip"></div>' +
+      '<canvas id="' + stage + '_lkStrip" width="520" height="70" style="display:none;"></canvas>' +
+    '</div>';
+  host.insertAdjacentElement("beforebegin", p);
+  const inp = document.getElementById(stage + "_lk"), out = document.getElementById(stage + "_lkOut");
+  const go = document.getElementById(stage + "_lkGo"), flip = document.getElementById(stage + "_lkFlip");
+  let val = parseFloat(inp.value), done = false;
+  const paint = () => { out.value = cfg.fmt(val); };
+  paint();
+  inp.addEventListener("input", ev => { val = parseFloat(ev.target.value); paint(); bump(stage); });
+  go.addEventListener("click", () => {
+    if (done) return;
+    const r = cfg.truth();
+    if (r == null) { flip.innerHTML = '<span class="off">not yet</span> &middot; ' + (cfg.notReady || "run it once first"); return; }
+    const ok = Math.abs(val - r.truth) <= r.tol;
+    drawStrips(stage + "_lkStrip", [{ label: cfg.label, min: cfg.min, max: cfg.max, fmt: cfg.fmt,
+                                      truth: r.truth, tol: r.tol, you: val, values: r.values }]);
+    flip.innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>')
+                   + " &middot; " + (ok ? cfg.right(r) : cfg.wrong(r));
+    done = true; go.disabled = true; inp.disabled = true;
+    record(cfg.bit, ok);
+    markTask(stage, cfg.task);
+    hint(cfg.task, ok ? "landed" : "locked in");
+    checkStageDone(stage);
+  });
+  return { locked: () => done };
+}
+
+/* ====== a small framed plot ==========================================
+   sim.js's makeFrame pads against the whole canvas, which cannot stack
+   two panels in one element. This one takes a box. */
+function box(px, py, pw, ph, xMin, xMax, yMin, yMax) {
+  return { px, py, pw, ph, xMin, xMax, yMin, yMax,
+           x: v => px + (v - xMin) / (xMax - xMin) * pw,
+           y: v => py + ph - (v - yMin) / (yMax - yMin) * ph };
+}
+function axes(ctx, f, xLab, yLab, yFmt, xFmt) {
+  yFmt = yFmt || (v => v.toFixed(1)); xFmt = xFmt || (v => String(Math.round(v)));
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.px, f.py); ctx.lineTo(f.px, f.py + f.ph); ctx.lineTo(f.px + f.pw, f.py + f.ph); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) { const v = f.yMin + (f.yMax - f.yMin) * i / 4; ctx.fillText(yFmt(v), f.px - 5, f.y(v)); }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i <= 5; i++) { const v = f.xMin + (f.xMax - f.xMin) * i / 5; ctx.fillText(xFmt(v), f.x(v), f.py + f.ph + 4); }
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
+  if (xLab) { ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(xLab, f.px + f.pw / 2, f.py + f.ph + 18); }
+  if (yLab) { ctx.save(); ctx.translate(f.px - 36, f.py + f.ph / 2); ctx.rotate(-Math.PI / 2);
+              ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(yLab, 0, 0); ctx.restore(); }
+}
+function line(ctx, f, ys, colour, width, dash, x0) {
+  ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = width || 2;
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  ys.forEach((v, i) => { const X = f.x((x0 || 0) + i), Y = f.y(v); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+  ctx.stroke(); ctx.restore();
+}
+/* Least squares slope of log y on t, turned into "the even pond that
+   loses variety at this rate". The whole lesson's arithmetic is checked
+   against this rather than the other way round. */
+function neFromDecay(H) {
+  // Only the range where there is still variety to lose. Past about 5% of
+  // the starting value the average is a few unfixed ponds and its log is
+  // mostly noise, which drags the fitted slope shallow and reads as a
+  // bigger population than the one that produced it.
+  const floor = 0.05 * H[0];
+  let sx = 0, sy = 0, sxx = 0, sxy = 0, n = 0;
+  for (let t = 0; t < H.length; t++) {
+    if (H[t] > floor) { const y = Math.log(H[t]); sx += t; sy += y; sxx += t * t; sxy += t * y; n++; }
+  }
+  if (n < 4) return null;
+  const b = (n * sxy - sx * sy) / (n * sxx - sx * sx);
+  if (!(b < 0)) return null;
+  return -1 / (2 * b);
+}
+
+
+/* =====================================================================
+   STAGE A — the gap, and the frequencies that did not move.
+   ===================================================================== */
+const A = { N: 400, f: 0, p0: 0.5, a: null, sib: null, gen: 0,
+            hist: [], best: 0, game: null, serial: 0, rng: null };
+
+function A_fresh() {
+  A.serial++;
+  A.rng = mulberry32(pageSeed("l11A", 1, 99999) + A.serial * 7919 + Math.round(A.p0 * 100));
+  A.a = new Uint8Array(2 * A.N);
+  for (let i = 0; i < 2 * A.N; i++) A.a[i] = A.rng() < A.p0 ? 1 : 0;
+  A.sib = new Int32Array(A.N).fill(-1);
+  A.gen = 0;
+  A.hist = [A_stats()];
+}
+/* Everything the stage reports, counted off the pond as it stands. `He`
+   is what the pairing would have produced if partners were drawn at
+   random -- which is the whole comparison, and is computed from the
+   pond's OWN frequency, so it moves when the frequency does. */
+function A_stats() {
+  let het = 0, k = 0, aa = 0, bb = 0;
+  for (let i = 0; i < A.N; i++) {
+    const x = A.a[2 * i], y = A.a[2 * i + 1];
+    k += x + y;
+    if (x !== y) het++; else if (x === 0) aa++; else bb++;
+  }
+  const p = k / (2 * A.N), Ho = het / A.N, He = 2 * p * (1 - p);
+  return { p, Ho, He, F: He > 1e-9 ? 1 - Ho / He : 0, aa, het, bb,
+           eAa: A.N * (1 - p) * (1 - p), eHet: A.N * He, eBb: A.N * p * p };
+}
+/* One generation. Pairs breed two chicks apiece, so the next generation
+   has sibships in it and "a partner who is a relative" means something. */
+function A_step() {
+  const na = new Uint8Array(2 * A.N), ns = new Int32Array(A.N).fill(-1);
+  for (let pair = 0; pair < A.N / 2; pair++) {
+    const m = Math.floor(A.rng() * A.N);
+    let d;
+    if (A.rng() < A.f && A.sib[m] >= 0) d = A.sib[m];
+    else { do { d = Math.floor(A.rng() * A.N); } while (d === m); }
+    const k0 = 2 * pair, k1 = 2 * pair + 1;
+    for (const k of [k0, k1]) {
+      na[2 * k]     = A.a[2 * m + (A.rng() < 0.5 ? 0 : 1)];
+      na[2 * k + 1] = A.a[2 * d + (A.rng() < 0.5 ? 0 : 1)];
+    }
+    ns[k0] = k1; ns[k1] = k0;
+  }
+  A.a = na; A.sib = ns; A.gen++;
+  const st = A_stats();
+  A.hist.push(st);
+  A_checkGate(st);
+}
+function A_checkGate(st) {
+  if (taskDone("A", "A1")) return;
+  const drift = Math.abs(st.p - A.p0);
+  if (st.F > A.best && drift <= 0.03) A.best = st.F;
+  hint("A1", "gap so far: " + f2(A.best) + " (the dark version has moved " + f2(drift) + ")");
+  if (A.best >= 0.20) {
+    markTask("A", "A1"); hint("A1", "landed at a gap of " + f2(A.best));
+    if (A.game) A.game.show();
+    checkStageDone("A");
+  }
+}
+function A_drawPond() {
+  const cv = document.getElementById("A_pond");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const cols = 40, rows = Math.ceil(A.N / cols);
+  const cw = W / cols, ch = H / rows, r = Math.min(cw, ch) * 0.40;
+  for (let i = 0; i < A.N; i++) {
+    const x = (i % cols + 0.5) * cw, y = (Math.floor(i / cols) + 0.5) * ch;
+    const l = A.a[2 * i], rr = A.a[2 * i + 1];
+    ctx.fillStyle = l ? DARK : PALE;
+    ctx.beginPath(); ctx.arc(x, y, r, Math.PI / 2, 1.5 * Math.PI); ctx.fill();
+    ctx.fillStyle = rr ? DARK : PALE;
+    ctx.beginPath(); ctx.arc(x, y, r, 1.5 * Math.PI, 2.5 * Math.PI); ctx.fill();
+    if (l !== rr) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke(); }
+  }
+}
+function A_drawBars() {
+  const cv = document.getElementById("A_bars");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const st = A_stats();
+  const obs = [st.aa, st.het, st.bb], exp = [st.eAa, st.eHet, st.eBb];
+  const top = Math.max(...obs, ...exp) * 1.15 + 1;
+  const names = ["both pale", "two-tone", "both dark"];
+  const f = box(52, 18, W - 74, H - 54, 0, 6, 0, top);
+  axes(ctx, f, null, "individuals", v => v.toFixed(0), () => "");
+  const bw = f.pw / 7;
+  for (let i = 0; i < 3; i++) {
+    const xo = f.px + (i * 2 + 0.55) * bw, xe = xo + bw * 0.9;
+    const ho = obs[i] / top * f.ph, he = exp[i] / top * f.ph;
+    ctx.fillStyle = i === 1 ? DARK : (i === 0 ? PALE : "#8a7ab0");
+    ctx.fillRect(xo, f.py + f.ph - ho, bw * 0.85, ho);
+    ctx.fillStyle = "rgba(0,0,0,0)"; ctx.strokeStyle = MUTED; ctx.lineWidth = 1.6;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(xe, f.py + f.ph - he, bw * 0.85, he);
+    ctx.setLineDash([]);
+    ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(names[i], xo + bw * 0.9, f.py + f.ph + 5);
+    ctx.fillStyle = "#1d1d1b"; ctx.font = "11px ui-monospace, Menlo, monospace";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(obs[i].toFixed(0), xo + bw * 0.42, f.py + f.ph - ho - 2);
+    ctx.fillStyle = MUTED;
+    ctx.fillText(exp[i].toFixed(0), xe + bw * 0.42, f.py + f.ph - he - 2);
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "right"; ctx.textBaseline = "top";
+  ctx.fillText("solid: counted    dashed: if partners were drawn at random", f.px + f.pw, 2);
+}
+function A_drawTraj() {
+  const cv = document.getElementById("A_traj");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const g = Math.max(15, A.hist.length - 1);
+  const f = box(52, 14, W - 74, H - 50, 0, g, 0, 1);
+  axes(ctx, f, "generation", null, v => v.toFixed(2));
+  line(ctx, f, A.hist.map(s => s.p), DARK, 2.4);
+  line(ctx, f, A.hist.map(s => s.Ho), BLUE, 2);
+  line(ctx, f, A.hist.map(s => s.He), MUTED, 1.4, [5, 4]);
+  ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = DARK; ctx.fillText("how common dark is", f.px + 6, f.y(A.hist[A.hist.length - 1].p) - 12);
+  ctx.fillStyle = BLUE; ctx.fillText("two-tone, counted", f.px + 6, f.y(A.hist[A.hist.length - 1].Ho) + 12);
+}
+function A_readouts() {
+  const st = A_stats();
+  document.getElementById("A_pondRead").innerHTML =
+    '<span class="label">generation</span> <b>' + A.gen + '</b> &nbsp;|&nbsp; <span class="label">two-tone:</span> <b>' + st.het +
+    '</b> of ' + A.N + ' &nbsp;|&nbsp; <span class="label">both pale:</span> <b>' + st.aa +
+    '</b> &nbsp;|&nbsp; <span class="label">both dark:</span> <b>' + st.bb + '</b>';
+  document.getElementById("A_barsRead").innerHTML =
+    '<span class="label">counted two-tone:</span> <b>' + f3(st.Ho) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">if partners were at random:</span> <b>' + f3(st.He) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">the gap between them:</span> <b class="big">' + f3(st.F) + '</b>';
+  document.getElementById("A_read").innerHTML =
+    '<span class="label">how common dark is now:</span> <b>' + f3(st.p) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">it started at</span> <b>' + f2(A.p0) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">it has moved</span> <b>' + f3(Math.abs(st.p - A.p0)) + '</b>';
+}
+function A_paint() { A_drawPond(); A_drawBars(); A_drawTraj(); A_readouts(); }
+
+/* The measured behaviour of a pond at a given setting, over several fresh
+   builds. A single pond is not the number. */
+function A_measure(p0, f, gens, reps) {
+  const rng = mulberry32(pageSeed("l11Am", 1, 99999) + Math.round(p0 * 100) * 31 + Math.round(f * 100) + gens);
+  const out = [];
+  for (let r = 0; r < reps; r++) {
+    const N = A.N;
+    let a = new Uint8Array(2 * N), sib = new Int32Array(N).fill(-1);
+    for (let i = 0; i < 2 * N; i++) a[i] = rng() < p0 ? 1 : 0;
+    for (let t = 0; t < gens; t++) {
+      const na = new Uint8Array(2 * N), ns = new Int32Array(N).fill(-1);
+      for (let pair = 0; pair < N / 2; pair++) {
+        const m = Math.floor(rng() * N);
+        let d;
+        if (rng() < f && sib[m] >= 0) d = sib[m];
+        else { do { d = Math.floor(rng() * N); } while (d === m); }
+        const k0 = 2 * pair, k1 = 2 * pair + 1;
+        for (const k of [k0, k1]) {
+          na[2 * k]     = a[2 * m + (rng() < 0.5 ? 0 : 1)];
+          na[2 * k + 1] = a[2 * d + (rng() < 0.5 ? 0 : 1)];
+        }
+        ns[k0] = k1; ns[k1] = k0;
+      }
+      a = na; sib = ns;
+    }
+    let het = 0, k = 0;
+    for (let i = 0; i < N; i++) { const x = a[2 * i], y = a[2 * i + 1]; k += x + y; if (x !== y) het++; }
+    const p = k / (2 * N), Ho = het / N, He = 2 * p * (1 - p);
+    out.push({ p, Ho, He, het, F: He > 1e-9 ? 1 - Ho / He : 0 });
+  }
+  return out;
+}
+
+function A_wire() {
+  document.getElementById("A_f").addEventListener("input", e => {
+    A.f = +e.target.value; document.getElementById("A_fOut").value = f2(A.f);
+    document.getElementById("cA_f").textContent = f2(A.f); highlightByDataLine("codeA", "f"); bump("A");
+  });
+  document.getElementById("A_p").addEventListener("input", e => {
+    A.p0 = +e.target.value; document.getElementById("A_pOut").value = f2(A.p0);
+    document.getElementById("cA_p").textContent = f2(A.p0); highlightByDataLine("codeA", "p");
+    A_fresh(); A_paint(); bump("A");
+  });
+  document.getElementById("A_step").addEventListener("click", () => { A_step(); A_paint(); bump("A"); });
+  document.getElementById("A_run").addEventListener("click", () => { for (let i = 0; i < 15; i++) A_step(); A_paint(); bump("A"); });
+  document.getElementById("A_reset").addEventListener("click", () => { A_fresh(); A_paint(); bump("A"); });
+  document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson11_stageA.R", A_RCODE()));
+
+  mountLock("A", {
+    title: "Before you look at the dashed bars", task: "A2", bit: BIT.A2,
+    prompt: "The pond as it stands has the frequency you can read off it. If every partner had been drawn from the whole pond at random, " +
+            "how many of the <b>400</b> would have come out <b>two-tone</b>?",
+    label: "two-tone, if at random", min: 0, max: 400, step: 5, start: 100, fmt: v => v.toFixed(0) + " of 400",
+    notReady: "breed the pond at least one generation first",
+    truth: () => {
+      if (A.gen < 1) return null;
+      const st = A_stats();
+      const m = A_measure(A.p0, 0, Math.max(1, A.gen), 6);
+      return { truth: A.N * st.He, tol: Math.max(15, 0.08 * A.N * st.He), values: m.map(x => x.het) };
+    },
+    right: r => "about " + r.truth.toFixed(0) + ". That is what the frequency on the screen buys you, and it is not what you counted.",
+    wrong: r => "about " + r.truth.toFixed(0) + " — two times the frequency times one minus the frequency, times the four hundred birds."
+  });
+
+  A.game = wireGame("A", {
+    task: "A3", bit: BIT.A3, field: { label: "the gap is", min: -0.2, max: 1, start: 0, fmt: f2 },
+    round: (rng, n) => {
+      // three classes in rotation: no gap, some gap, a wide gap
+      const cls = n % 3;
+      const p0 = [0.25, 0.4, 0.5, 0.65][Math.floor(rng() * 4)];
+      const f = cls === 0 ? 0 : (cls === 1 ? [0.35, 0.5][Math.floor(rng() * 2)] : [0.85, 1][Math.floor(rng() * 2)]);
+      const gens = [6, 10][Math.floor(rng() * 2)];
+      const m = A_measure(p0, f, gens, 13);
+      const truth = mean(m.map(x => x.F));
+      const one = m[0];
+      return { p0, f, gens, truth, tol: Math.max(0.09, 0.3 * Math.abs(truth)), values: m.slice(1, 7).map(x => x.F),
+        prompt: "A pond of four hundred, bred " + gens + " generations. This is what is in it now: <b>" +
+                Math.round(A.N - one.het - Math.round(A.N * (1 - one.p) * (1 - one.p))) + "</b> both dark, <b>" +
+                one.het + "</b> two-tone, <b>" +
+                Math.round(A.N - one.het - (A.N - one.het - Math.round(A.N * (1 - one.p) * (1 - one.p)))) +
+                "</b> both pale. The dark version is at <b>" + f3(one.p) + "</b>.",
+        right: () => "the gap is " + f3(truth) + ".",
+        wrong: () => "the gap is " + f3(truth) + ". Two-tone came in at " + f3(one.Ho) + " against the " + f3(one.He) + " that random pairing would have given." };
+    },
+    done: "Three landed. In every one of those ponds the frequency of dark was whatever it was, and the gap was a separate fact about how the copies had been put together."
+  });
+}
+function A_RCODE() {
+  return "# Lesson 11, Stage A -- the gap between counted and random pairing\n" +
+    "p <- " + f2(A.p0) + "\nf <- " + f2(A.f) + "\n\n" +
+    "Ho <- mean(a != b)          # two-tone, counted\n" +
+    "p  <- mean(c(a, b))         # and the frequency they imply\n" +
+    "He <- 2 * p * (1 - p)       # what random pairing would have given\n\n" +
+    "1 - Ho / He                 # the gap\n";
+}
+
+/* =====================================================================
+   STAGE B — an ancestor of everyone, genes in hardly anyone.
+
+   Fifty-two birds. Three founder pairs raise three chicks each; the
+   fourth raises one, that one chick has one chick, and that grandchild
+   has one chick who is the parent of every bird in the bottom row. So
+   all eight founders are genealogical ancestors of all fourteen, and two
+   of them get a copy down there about a quarter of the time.
+   ===================================================================== */
+const B_PED = (function () {
+  const ped = [];
+  for (let i = 0; i < 8; i++) ped.push({ dam: -1, sire: -1, row: 0 });
+  const kids = (a, b, k) => { const o = [];
+    for (let i = 0; i < k; i++) { o.push(ped.length); ped.push({ dam: a, sire: b, row: Math.max(ped[a].row, ped[b].row) + 1 }); }
+    return o; };
+  const f1 = kids(0, 1, 3), f2 = kids(2, 3, 3), f3 = kids(4, 5, 3), f4 = kids(6, 7, 1);
+  const g1 = kids(f1[0], f2[0], 3), g2 = kids(f2[1], f3[0], 3), g3 = kids(f3[1], f1[1], 3);
+  const gF = kids(f4[0], f1[2], 1);
+  const h1 = kids(g1[0], g2[0], 2), h2 = kids(g2[1], g3[0], 2), h3 = kids(g3[1], g1[1], 2),
+        h4 = kids(g1[2], g2[2], 2), h5 = kids(g3[2], g2[0], 1);
+  const hF = kids(gF[0], h1[0], 1);
+  const mid = [h1[1], h2[0], h2[1], h3[0], h3[1], h4[0], h4[1]];
+  let bottom = [];
+  for (const m of mid) bottom = bottom.concat(kids(hF[0], m, 2));
+  return { ped, bottom, funnel: [f4[0], gF[0], hF[0]] };
+})();
+const B_HUES = ["#2a78d6", "#eb6834", "#1baf7a", "#4a3aa7", "#c0392b", "#8e7cc3", "#d4a017", "#0f7b8a"];
+const B = { copies: null, drops: 0, tally: new Array(8).fill(0), sel: -1, game: null, rng: null,
+            sheep: null, sheepRuns: null };
+
+/* Which founder a copy id belongs to. Founders are first in birth order,
+   so the id halves straight back to an index. */
+const B_founderOf = id => id >> 1;
+/* Genealogical ancestry, computed once. */
+const B_GENEA = (function () {
+  const out = new Array(8).fill(0);
+  for (const b of B_PED.bottom) {
+    const seen = new Set();
+    const go = j => { for (const q of [B_PED.ped[j].dam, B_PED.ped[j].sire]) if (q >= 0 && !seen.has(q)) { seen.add(q); go(q); } };
+    go(b);
+    for (let f = 0; f < 8; f++) if (seen.has(f)) out[f]++;
+  }
+  return out;
+})();
+function B_drop(rng) {
+  const ped = B_PED.ped, a = new Int16Array(ped.length * 2);
+  for (let i = 0; i < ped.length; i++) {
+    if (ped[i].dam < 0) { a[2 * i] = 2 * i; a[2 * i + 1] = 2 * i + 1; }
+    else {
+      a[2 * i]     = a[2 * ped[i].dam  + (rng() < 0.5 ? 0 : 1)];
+      a[2 * i + 1] = a[2 * ped[i].sire + (rng() < 0.5 ? 0 : 1)];
+    }
+  }
+  return a;
+}
+function B_bottomCopies(a) {
+  const s = new Set();
+  for (const b of B_PED.bottom) { s.add(a[2 * b]); s.add(a[2 * b + 1]); }
+  return s;
+}
+function B_runOne() {
+  B.copies = B_drop(B.rng);
+  const seen = B_bottomCopies(B.copies);
+  B.drops++;
+  for (let f = 0; f < 8; f++) if (seen.has(2 * f) || seen.has(2 * f + 1)) B.tally[f]++;
+  B.lastSurv = seen.size;
+  B_checkGate();
+}
+function B_runMany(k) { for (let i = 0; i < k; i++) B_runOne(); }
+function B_checkGate() {
+  if (taskDone("B", "B2")) return;
+  if (B.sel >= 0 && B.drops >= 50) {
+    const rate = B.tally[B.sel] / B.drops;
+    if (B_GENEA[B.sel] === B_PED.bottom.length && rate < 0.5) {
+      markTask("B", "B2");
+      hint("B2", "founder " + (B.sel + 1) + ": an ancestor of all " + B_PED.bottom.length +
+                 ", a copy down there in " + (100 * rate).toFixed(0) + "% of " + B.drops + " drops");
+      if (B.game) B.game.show();
+      checkStageDone("B");
+      return;
+    }
+  }
+  hint("B2", B.drops < 50 ? "keep dropping — " + B.drops + " so far"
+       : (B.sel < 0 ? "click a founder in the table" : "founder " + (B.sel + 1) + " is not the one"));
+}
+function B_layout() {
+  const ped = B_PED.ped, rows = Math.max(...ped.map(p => p.row)) + 1;
+  const byRow = []; for (let r = 0; r < rows; r++) byRow.push([]);
+  ped.forEach((p, i) => byRow[p.row].push(i));
+  return { rows, byRow };
+}
+function B_drawPed() {
+  const cv = document.getElementById("B_ped");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const { rows, byRow } = B_layout();
+  const padT = 16, padB = 22, rowH = (H - padT - padB) / (rows - 1);
+  const pos = new Array(B_PED.ped.length);
+  byRow.forEach((ids, r) => {
+    const n = ids.length, gap = (W - 44) / (n + 1);
+    ids.forEach((id, i) => { pos[id] = { x: 22 + gap * (i + 1), y: padT + r * rowH }; });
+  });
+  ctx.strokeStyle = "#ddd9cd"; ctx.lineWidth = 1;
+  B_PED.ped.forEach((p, i) => {
+    if (p.dam < 0) return;
+    for (const q of [p.dam, p.sire]) {
+      ctx.beginPath(); ctx.moveTo(pos[q].x, pos[q].y + 7); ctx.lineTo(pos[i].x, pos[i].y - 7); ctx.stroke();
+    }
+  });
+  const R = 7;
+  B_PED.ped.forEach((p, i) => {
+    const { x, y } = pos[i];
+    const l = B.copies ? B.copies[2 * i] : 2 * i, rr = B.copies ? B.copies[2 * i + 1] : 2 * i + 1;
+    const hue = c => B_HUES[B_founderOf(c) % 8];
+    const lit = B.sel < 0 || B_founderOf(l) === B.sel || B_founderOf(rr) === B.sel;
+    ctx.globalAlpha = lit ? 1 : 0.18;
+    ctx.fillStyle = hue(l);
+    ctx.beginPath(); ctx.arc(x, y, R, Math.PI / 2, 1.5 * Math.PI); ctx.fill();
+    ctx.fillStyle = hue(rr);
+    ctx.beginPath(); ctx.arc(x, y, R, 1.5 * Math.PI, 2.5 * Math.PI); ctx.fill();
+    ctx.globalAlpha = 1;
+    if (B_PED.bottom.indexOf(i) >= 0) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, y, R + 1.5, 0, 6.2832); ctx.stroke(); }
+    if (B_PED.funnel.indexOf(i) >= 0) { ctx.strokeStyle = HOT; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, R + 4, 0, 6.2832); ctx.stroke(); }
+  });
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("the eight founders", 22, 2);
+  ctx.textBaseline = "bottom";
+  ctx.fillText("the fourteen birds alive now", 22, H - 4);
+}
+function B_drawBars() {
+  const cv = document.getElementById("B_bars");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = box(58, 16, W - 80, H - 50, -0.5, 7.5, 0, 1);
+  axes(ctx, f, "founder", "drops with a copy left", v => (100 * v).toFixed(0) + "%", v => (v + 1).toFixed(0));
+  const bw = f.pw / 8;
+  for (let i = 0; i < 8; i++) {
+    const v = B.drops ? B.tally[i] / B.drops : 0;
+    ctx.fillStyle = B.sel === i ? "#1d1d1b" : B_HUES[i];
+    ctx.globalAlpha = B.sel < 0 || B.sel === i ? 1 : 0.3;
+    ctx.fillRect(f.px + i * bw + bw * 0.16, f.py + f.ph - v * f.ph, bw * 0.68, v * f.ph);
+    ctx.globalAlpha = 1;
+    if (B.drops) {
+      ctx.fillStyle = "#1d1d1b"; ctx.font = "11px ui-monospace, Menlo, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+      ctx.fillText((100 * v).toFixed(0), f.px + i * bw + bw * 0.5, f.py + f.ph - v * f.ph - 2);
+    }
+  }
+}
+function B_table() {
+  const tb = document.querySelector("#B_table tbody");
+  let h = "";
+  for (let i = 0; i < 8; i++) {
+    const rate = B.drops ? (100 * B.tally[i] / B.drops).toFixed(0) + "%" : "—";
+    h += '<tr class="' + (B.sel === i ? "sel" : "") + '" data-f="' + i + '" style="cursor:pointer">' +
+         '<td><span class="chip" style="background:' + B_HUES[i] + '"></span>founder ' + (i + 1) + '</td>' +
+         '<td class="n">' + B_GENEA[i] + ' of ' + B_PED.bottom.length + '</td>' +
+         '<td class="n">' + rate + '</td></tr>';
+  }
+  tb.innerHTML = h;
+  tb.querySelectorAll("tr").forEach(tr => tr.addEventListener("click", () => {
+    B.sel = B.sel === +tr.dataset.f ? -1 : +tr.dataset.f;
+    B_paint(); bump("B");
+  }));
+}
+function B_readouts() {
+  document.getElementById("B_pedRead").innerHTML = B.copies
+    ? '<span class="label">one drop · of the sixteen founder copies,</span> <b class="big">' + B.lastSurv +
+      '</b> <span class="label">are left in the bottom row</span>'
+    : '<span class="label">sixteen copies on the eight founders, one colour apiece</span>';
+  document.getElementById("B_read").innerHTML = B.drops
+    ? '<span class="label">drops so far:</span> <b>' + B.drops + '</b>'
+    : '<span class="label">nothing dropped yet</span>';
+}
+function B_paint() { B_drawPed(); B_drawBars(); B_table(); B_readouts(); }
+
+function B_wire() {
+  B.rng = mulberry32(pageSeed("l11B", 1, 99999));
+  document.getElementById("B_one").addEventListener("click", () => { B_runOne(); B_paint(); bump("B"); });
+  document.getElementById("B_many").addEventListener("click", () => { B_runMany(200); B_paint(); bump("B"); });
+  document.getElementById("B_reset").addEventListener("click", () => {
+    B.drops = 0; B.tally = new Array(8).fill(0); B.copies = null; B_paint(); bump("B");
+  });
+  document.getElementById("B_dl").addEventListener("click", () => downloadText("lesson11_stageB.R", B_RCODE()));
+
+  mountLock("B", {
+    title: "Before you drop it", task: "B1", bit: BIT.B1,
+    prompt: "Sixteen copies go in at the top, one on each side of each of the eight founders, all sixteen different. " +
+            "Every one of the eight is an ancestor of every bird in the bottom row. How many of the <b>sixteen copies</b> are still there at the bottom?",
+    label: "copies left at the bottom", min: 0, max: 16, step: 1, start: 16, fmt: v => v.toFixed(0) + " of 16",
+    truth: () => {
+      const rng = mulberry32(pageSeed("l11Bm", 1, 99999));
+      const out = []; for (let r = 0; r < 200; r++) out.push(B_bottomCopies(B_drop(rng)).size);
+      return { truth: mean(out), tol: 1.8, values: out.slice(0, 6) };
+    },
+    right: r => "about " + r.truth.toFixed(1) + " of the sixteen. The other half are gone, and nobody died.",
+    wrong: r => "about " + r.truth.toFixed(1) + " of the sixteen. Being an ancestor of a bird is not the same as being in it."
+  });
+
+  B.game = wireGame("B", {
+    task: "B3", bit: BIT.B3, field: { label: "out of 100 drops", min: 0, max: 100, start: 50, fmt: v => v.toFixed(0) },
+    round: (rng, n) => {
+      // one funnelled founder, then two ordinary ones, so no constant clears
+      const cls = n % 3;
+      const f = cls === 0 ? [6, 7][Math.floor(rng() * 2)] : [0, 1, 2, 3, 4, 5][Math.floor(rng() * 6)];
+      const m = mulberry32(pageSeed("l11Bg", 1, 99999) + f * 101 + n);
+      const batch = () => { let k = 0;
+        for (let i = 0; i < 100; i++) { const s = B_bottomCopies(B_drop(m)); if (s.has(2 * f) || s.has(2 * f + 1)) k++; }
+        return k; };
+      const six = []; for (let r = 0; r < 6; r++) six.push(batch());
+      const many = []; for (let r = 0; r < 6; r++) many.push(batch());
+      const truth = mean(six.concat(many));
+      return { founder: f, truth, tol: Math.max(6, 0.12 * truth), values: six,
+        prompt: "<b>Founder " + (f + 1) + "</b> is an ancestor of <b>" + B_GENEA[f] + " of the " + B_PED.bottom.length +
+                "</b> birds in the bottom row. Out of a hundred drops, in how many does it still have a copy down there?",
+        right: () => "about " + truth.toFixed(0) + " of the hundred.",
+        wrong: () => "about " + truth.toFixed(0) + " of the hundred. Being an ancestor of all fourteen buys you nothing here." };
+    },
+    done: "Three landed. Every founder in that tree is an ancestor of every bird at the bottom of it, and they do not all have the same chance of being in one."
+  });
+}
+function B_RCODE() {
+  return "# Lesson 11, Stage B -- gene dropping down a fixed tree\n" +
+    "a <- integer(2 * nrow(ped))\n" +
+    "for (i in seq_len(nrow(ped))) {\n" +
+    "  if (is.na(ped$dam[i])) { a[2*i-1] <- 2*i-1; a[2*i] <- 2*i }\n" +
+    "  else {\n" +
+    "    a[2*i-1] <- a[2*ped$dam[i]  - rbinom(1,1,.5)]\n" +
+    "    a[2*i  ] <- a[2*ped$sire[i] - rbinom(1,1,.5)]\n  }\n}\n\n" +
+    "length(unique(a[c(2*bottom-1, 2*bottom)]))   # copies left at the bottom\n";
+}
+
+/* =====================================================================
+   STAGE C — two numbers that are not the same number.
+
+   Kinship down the pedigree and 1 - Ho/He are both called F in the
+   literature and they measure different things. Kinship rises under drift
+   alone: it asks how much of the founders' variety has been lost. The
+   count asks whether THIS generation's two-tone birds are fewer than
+   THIS generation's own frequencies would give, and the frequencies have
+   already drifted -- so under random mating it sits at zero however small
+   the pond is. They are computed separately, drawn separately and never
+   averaged, because the difference between them is the stage.
+
+   scripts/check_lesson11_numbers.js caught an earlier build of this stage
+   asserting that the two agree. They do not. Do not re-fuse them.
+   ===================================================================== */
+const C = { N: 40, k: 0, gens: 14, run: null, sel: null, best: 0, game: null };
+const C_LOCI = 30;
+
+/* Run it and keep the per-generation record the picture and the readouts
+   both need. Written as its own pass rather than folded into C_breed so
+   the two routes to the number stay visibly separate. */
+function C_run(nOverride) {
+  const N = nOverride ? nOverride.N : C.N, k = nOverride ? nOverride.k : C.k,
+        gens = nOverride ? nOverride.gens : C.gens;
+  const rng = mulberry32(pageSeed("l11C", 1, 99999) + N * 31 + Math.round(k * 100) + gens + (C.run ? C.run.serial + 1 : 0));
+  let K = []; for (let i = 0; i < N; i++) { K.push(new Float64Array(N)); K[i][i] = 0.5; }
+  let loci = []; for (let l = 0; l < C_LOCI; l++) {
+    const a = new Uint8Array(2 * N);
+    for (let i = 0; i < 2 * N; i++) a[i] = i < N ? 1 : 0;
+    for (let i = 2 * N - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); const t = a[i]; a[i] = a[j]; a[j] = t; }
+    loci.push(a);
+  }
+  const hist = [], Fped = [], Fcount = [];
+  for (let t = 0; t < gens; t++) {
+    const par = [];
+    for (let c = 0; c < N; c++) {
+      const a = Math.floor(rng() * N);
+      let b;
+      if (rng() < k) { let best = -1, bv = -1;
+        for (let j = 0; j < N; j++) if (j !== a && K[a][j] > bv) { bv = K[a][j]; best = j; }
+        b = best;
+      } else { do { b = Math.floor(rng() * N); } while (b === a); }
+      par.push([a, b]);
+    }
+    // route one, read off the pedigree before the matrix is replaced
+    Fped.push(mean(par.map(([a, b]) => K[a][b])));
+    const K2 = []; for (let i = 0; i < N; i++) K2.push(new Float64Array(N));
+    for (let i = 0; i < N; i++) for (let j = i; j < N; j++) {
+      const [ai, bi] = par[i], [aj, bj] = par[j];
+      const v = i === j ? 0.5 * (1 + K[ai][bi])
+                        : 0.25 * (K[ai][aj] + K[ai][bj] + K[bi][aj] + K[bi][bj]);
+      K2[i][j] = v; K2[j][i] = v;
+    }
+    const nl = [];
+    for (let l = 0; l < C_LOCI; l++) {
+      const src = loci[l], dst = new Uint8Array(2 * N);
+      for (let c = 0; c < N; c++) {
+        const [a, b] = par[c];
+        dst[2 * c]     = src[2 * a + (rng() < 0.5 ? 0 : 1)];
+        dst[2 * c + 1] = src[2 * b + (rng() < 0.5 ? 0 : 1)];
+      }
+      nl.push(dst);
+    }
+    loci = nl; K = K2; hist.push(par);
+    // route two, counted off the birds exactly as in Stage A
+    let Ho = 0, He = 0;
+    for (let l = 0; l < C_LOCI; l++) {
+      let h = 0, s = 0;
+      for (let c = 0; c < N; c++) { if (loci[l][2 * c] !== loci[l][2 * c + 1]) h++; s += loci[l][2 * c] + loci[l][2 * c + 1]; }
+      const p = s / (2 * N);
+      Ho += h / N; He += 2 * p * (1 - p);
+    }
+    Fcount.push(He > 1e-9 ? 1 - Ho / He : 0);
+  }
+  const run = { N, k, gens, hist, Fped, Fcount, serial: (C.run ? C.run.serial + 1 : 0) };
+  if (!nOverride) { C.run = run; C.sel = null; C_pick(); C_checkGate(); }
+  return run;
+}
+/* The generations back to the first bird a mated pair have in common. */
+function C_mrca(run, i) {
+  const g = run.gens - 1;
+  const [a, b] = run.hist[g][i];
+  let A = new Set([a]), Bs = new Set([b]);
+  for (let d = 1; d <= g; d++) {
+    for (const s of [A, Bs]) if (s.size === 0) return null;
+    for (const x of A) if (Bs.has(x)) return d;
+    const nA = new Set(), nB = new Set();
+    const up = (set, out) => { for (const x of set) { const p = run.hist[g - d]; if (!p) return; out.add(p[x][0]); out.add(p[x][1]); } };
+    if (g - d < 0) return null;
+    up(A, nA); up(Bs, nB);
+    A = nA; Bs = nB;
+  }
+  return null;
+}
+/* Pick a pair to highlight, preferring a shallow meeting. Every pair in a
+   pond this size meets somewhere; a pair that meets two generations back
+   draws a picture you can follow, and the button is there for anyone who
+   wants to see a deeper one. */
+function C_pick() {
+  if (!C.run) return;
+  let best = -1, bestD = 1e9;
+  for (let t = 0; t < 12; t++) {
+    const i = Math.floor(Math.random() * C.run.N);
+    const d = C_mrca(C.run, i);
+    if (d != null && d < bestD) { bestD = d; best = i; }
+    if (bestD <= 2) break;
+  }
+  C.sel = best >= 0 ? best : Math.floor(Math.random() * C.run.N);
+  C.selDepth = C_mrca(C.run, C.sel);
+}
+function C_checkGate() {
+  if (taskDone("C", "C1") || !C.run) return;
+  const F = C.run.Fcount[C.run.gens - 1];
+  if (C.run.N >= 40 && F > C.best) C.best = F;
+  hint("C1", "gap so far: " + f2(C.best) + (C.run.N < 40 ? " · that pond is under 40 breeders" : ""));
+  if (C.best > 0.35) {
+    markTask("C", "C1"); hint("C1", "landed at " + f2(C.best) + " with " + C.run.N + " breeders");
+    if (C.game) C.game.show();
+    checkStageDone("C");
+  }
+}
+function C_drawPed() {
+  const cv = document.getElementById("C_ped");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!C.run) { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("breed the pond", W / 2, H / 2); return; }
+  const run = C.run, show = Math.min(10, run.gens);
+  const first = run.gens - show;
+  const N = run.N, padT = 18, padB = 20;
+  const rowH = (H - padT - padB) / show;
+  const X = i => 24 + (W - 48) * (N === 1 ? 0.5 : i / (N - 1));
+  const Y = g => padT + (g - first) * rowH;
+  // Background parentage, only for the rows close enough to read. Every
+  // generation back doubles the number of lines, so drawing the whole tree
+  // fills the panel with noise and hides the one thing it is for.
+  ctx.strokeStyle = "#eceae2"; ctx.lineWidth = 0.7;
+  const bgFrom = Math.max(first + 1, run.gens - 5);
+  for (let g = bgFrom; g < run.gens; g++) {
+    const par = run.hist[g];
+    for (let i = 0; i < N; i++) for (const q of par[i]) {
+      ctx.beginPath(); ctx.moveTo(X(q), Y(g - 1) + 4); ctx.lineTo(X(i), Y(g) - 4); ctx.stroke();
+    }
+  }
+  // The highlighted pair, traced back only as far as the generation where
+  // the two ancestries first touch. Past that point every bird in the pond
+  // is on both sides and the picture stops saying anything.
+  if (C.sel != null) {
+    const g = run.gens - 1;
+    const stop = Math.min(C.selDepth || show, show - 1, 6);
+    let sets = [new Set([run.hist[g][C.sel][0]]), new Set([run.hist[g][C.sel][1]])];
+    const cols = [HOT, BLUE];
+    for (let d = 0; d < stop; d++) {
+      const gg = g - 1 - d;
+      if (gg < first) break;
+      const next = [new Set(), new Set()];
+      for (let sI = 0; sI < 2; sI++) {
+        ctx.strokeStyle = cols[sI]; ctx.lineWidth = 1.4;
+        // fade with depth: the near generations are the ones a reader can
+        // follow, and the far ones are "everybody", which the readout says
+        // in words anyway
+        ctx.globalAlpha = Math.max(0.16, 0.9 - 0.15 * d);
+        for (const x of sets[sI]) {
+          if (run.hist[gg]) for (const q of run.hist[gg][x]) {
+            next[sI].add(q);
+            ctx.beginPath(); ctx.moveTo(X(q), Y(gg - 1) + 4); ctx.lineTo(X(x), Y(gg) - 4); ctx.stroke();
+          }
+        }
+        ctx.globalAlpha = 1;
+      }
+      // the birds that are on both sides: this is the meeting
+      for (const x of next[0]) if (next[1].has(x)) {
+        ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.arc(X(x), Y(gg - 1), 7, 0, 6.2832); ctx.stroke();
+      }
+      sets = next;
+    }
+  }
+  for (let g = first; g < run.gens; g++) {
+    for (let i = 0; i < N; i++) {
+      const isSel = (g === run.gens - 1 && (i === C.sel));
+      const isPar = (g === run.gens - 2 && C.sel != null && run.hist[run.gens - 1][C.sel].indexOf(i) >= 0);
+      ctx.fillStyle = isSel ? "#1d1d1b" : (isPar ? HOT : "#b9b4a4");
+      ctx.beginPath(); ctx.arc(X(i), Y(g), isSel || isPar ? 4.5 : 2.6, 0, 6.2832); ctx.fill();
+    }
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("generation " + (first + 1), 4, padT - 12);
+  ctx.textBaseline = "bottom"; ctx.fillText("the pond now", 4, H - 4);
+}
+function C_drawTraj() {
+  const cv = document.getElementById("C_traj");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const g = C.run ? C.run.gens : C.gens;
+  const f = box(52, 14, W - 74, H - 50, 1, g, 0, 1);
+  axes(ctx, f, "generation", "the gap", v => v.toFixed(2));
+  if (!C.run) return;
+  line(ctx, f, C.run.Fped, DARK, 2.4, null, 1);
+  line(ctx, f, C.run.Fcount, BLUE, 1.8, [5, 4], 1);
+  if (C.ref && C.ref.gens === C.run.gens && C.ref.N === C.run.N) line(ctx, f, C.ref.Fped, "#c7c4bb", 1.6, null, 1);
+  ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = DARK; ctx.fillText("the founders' variety that is gone", f.px + 6, f.y(C.run.Fped[C.run.gens - 1]) - 12);
+  ctx.fillStyle = BLUE; ctx.fillText("the gap", f.px + 6, f.y(C.run.Fcount[C.run.gens - 1]) + 12);
+}
+function C_readouts() {
+  if (!C.run) {
+    document.getElementById("C_pedRead").innerHTML = '<span class="label">nothing bred yet</span>';
+    document.getElementById("C_read").innerHTML = '<span class="label">—</span>';
+    return;
+  }
+  const run = C.run, F = run.Fped[run.gens - 1], Fc = run.Fcount[run.gens - 1];
+  const depths = [];
+  for (let i = 0; i < Math.min(run.N, 30); i++) { const d = C_mrca(run, i); if (d) depths.push(d); }
+  document.getElementById("C_pedRead").innerHTML =
+    '<span class="label">the highlighted pair share an ancestor</span> <b class="big">' +
+    (C.selDepth ? C.selDepth : "more than " + Math.min(10, run.gens)) +
+    '</b> <span class="label">generations back</span>' +
+    (depths.length ? ' &nbsp;|&nbsp; <span class="label">across the pond the average is</span> <b>' + mean(depths).toFixed(1) + '</b>' : '');
+  document.getElementById("C_read").innerHTML =
+    '<span class="label">the gap, counted off the two-tone birds:</span> <b class="big">' + f3(Fc) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">the founders\' variety that is gone:</span> <b>' + f3(F) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">' + run.N + ' breeders, drifting like</span> <b>' + (run.N / (1 + F)).toFixed(1) + '</b>';
+}
+function C_paint() { C_drawPed(); C_drawTraj(); C_readouts(); }
+
+function C_wire() {
+  const bind = (id, key, out, fmt, codeId) => {
+    document.getElementById(id).addEventListener("input", e => {
+      C[key] = +e.target.value; document.getElementById(out).value = fmt(C[key]);
+      const c = document.getElementById(codeId); if (c) c.textContent = fmt(C[key]);
+      highlightByDataLine("codeC", key); bump("C");
+    });
+  };
+  bind("C_N", "N", "C_NOut", v => v.toFixed(0), "cC_N");
+  bind("C_k", "k", "C_kOut", f2, "cC_k");
+  bind("C_gens", "gens", "C_gensOut", v => v.toFixed(0), "cC_gens");
+  document.getElementById("C_run").addEventListener("click", () => {
+    C.ref = C_run({ N: C.N, k: 0, gens: C.gens });
+    C_run(); C_paint(); bump("C");
+  });
+  document.getElementById("C_pick").addEventListener("click", () => { C_pick(); C_paint(); bump("C"); });
+  document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson11_stageC.R", C_RCODE()));
+
+  mountLock("C", {
+    title: "Before you set it", task: "C2", bit: BIT.C2,
+    prompt: "A pond of <b>thirty</b> breeders. Partners are drawn from the whole pond at random — nobody is choosing a relative, ever. " +
+            "Twenty generations of that, in a pond that small. What is <b>the gap</b> at the end?",
+    label: "the gap is", min: 0, max: 1, step: 0.01, start: 0.3, fmt: f2,
+    truth: () => {
+      const out = [], lost = [];
+      for (let r = 0; r < 8; r++) { const run = C_run({ N: 30, k: 0, gens: 20 }); out.push(run.Fcount[19]); lost.push(run.Fped[19]); }
+      C.lockLost = mean(lost);
+      return { truth: mean(out), tol: 0.10, values: out.slice(0, 6) };
+    },
+    right: r => "about " + f2(r.truth) + " — nothing. Meanwhile " + f2(C.lockLost) +
+                " of the founders' variety went missing out of that pond, and the count could not see any of it: it compares this generation's two-tone birds against this generation's own frequencies, and the frequencies had already moved.",
+    wrong: r => "about " + f2(r.truth) + " — nothing at all. The pond really did lose " + f2(C.lockLost) +
+                " of the founders' variety, and the gap cannot see it, because the frequencies it compares against have drifted too."
+  });
+
+  C.game = wireGame("C", {
+    task: "C3", bit: BIT.C3, field: { label: "the gap is", min: 0, max: 1, start: 0.2, fmt: f2 },
+    round: (rng, n) => {
+      // the knob is the only thing the gap answers to, so it is the only
+      // thing the three classes move
+      const cls = n % 3;
+      let N, k, gens;
+      if (cls === 0)      { N = [30, 60][Math.floor(rng() * 2)]; k = 0;    gens = [10, 20][Math.floor(rng() * 2)]; }
+      else if (cls === 1) { N = [40, 60][Math.floor(rng() * 2)]; k = [0.4, 0.5][Math.floor(rng() * 2)]; gens = [12, 18][Math.floor(rng() * 2)]; }
+      else                { N = [40, 50][Math.floor(rng() * 2)]; k = [0.9, 1][Math.floor(rng() * 2)]; gens = [12, 18][Math.floor(rng() * 2)]; }
+      const out = []; for (let r = 0; r < 7; r++) out.push(C_run({ N, k, gens }).Fcount[gens - 1]);
+      const truth = mean(out);
+      return { N, k, gens, truth, tol: Math.max(0.07, 0.25 * truth), values: out.slice(0, 6),
+        prompt: "A pond of <b>" + N + "</b> breeders, bred <b>" + gens + "</b> generations. A partner is the closest relative available <b>" +
+                (100 * k).toFixed(0) + "%</b> of the time and anyone in the pond the rest. What is the gap at the end?",
+        right: () => "the gap comes to " + f2(truth) + ".",
+        wrong: () => "the gap comes to " + f2(truth) + ". The headcount and the number of generations drain the variety; only the knob opens the gap." };
+    },
+    done: "Three landed. The headcount emptied those ponds out and the gap never noticed. The gap only ever answered to who was paired with whom."
+  });
+  C_run();
+}
+function C_RCODE() {
+  return "# Lesson 11, Stage C -- two routes to the same number\n" +
+    "N <- " + C.N + "; k <- " + f2(C.k) + "; gens <- " + C.gens + "\n\n" +
+    "# how much of the founders' variety is gone\n" +
+    "K[i,j] <- 0.25 * (K[di,dj] + K[di,sj] + K[si,dj] + K[si,sj])\n" +
+    "K[i,i] <- 0.5 * (1 + K[dam[i], sire[i]])\n" +
+    "F      <- mean(K[cbind(dam, sire)])\n\n" +
+    "# the gap, counted off the birds\n" +
+    "1 - mean(a != b) / (2 * p * (1 - p))\n\n" +
+    "N / (1 + F)     # and what that is worth as a headcount\n";
+}
+
+/* =====================================================================
+   STAGE D — which of the two is doing the damage.
+
+   A broken copy does nothing on its own. Two of them at the same place
+   in the same chick is the thing that matters. Relatedness does not
+   create broken copies; it raises the chance that the two a chick gets
+   are the same broken copy, inherited from the same recent ancestor.
+   The genome-size knob is what separates the two causes: it collapses
+   the unrelated pair's risk and leaves the brother-and-sister pair's
+   almost exactly where it was.
+   ===================================================================== */
+const D = { rel: "none", load: 5, L: 200, run: null, sweep: null, game: null };
+
+function D_makeParents(rng, rel, load, L) {
+  const mk = () => { const s = new Set(); while (s.size < Math.min(load, L)) s.add(Math.floor(rng() * L)); return s; };
+  const gam = (a, b) => { const o = new Set();
+    for (const x of a) if (rng() < 0.5) o.add(x);
+    for (const x of b) if (rng() < 0.5) o.add(x);
+    return o; };
+  if (load === 0) return { P1: [new Set(), new Set()], P2: [new Set(), new Set()] };
+  if (rel === "sibs") { const A = mk(), B = mk(), C2 = mk(), D2 = mk();
+    return { P1: [gam(A, B), gam(C2, D2)], P2: [gam(A, B), gam(C2, D2)] }; }
+  if (rel === "cousins") { const A = mk(), B = mk();
+    const u1 = gam(A, B), u2 = gam(A, B);
+    return { P1: [gam(u1, mk()), gam(mk(), mk())], P2: [gam(u2, mk()), gam(mk(), mk())] }; }
+  return { P1: [mk(), mk()], P2: [mk(), mk()] };
+}
+function D_clutch(rng, rel, load, L, n) {
+  const { P1, P2 } = D_makeParents(rng, rel, load, L);
+  const gam = pr => { const o = new Set();
+    for (const x of pr[0]) if (rng() < 0.5) o.add(x);
+    for (const x of pr[1]) if (rng() < 0.5) o.add(x);
+    return o; };
+  const kids = [];
+  for (let k = 0; k < n; k++) {
+    const x = gam(P1), y = gam(P2);
+    let hit = false; for (const v of x) if (y.has(v)) { hit = true; break; }
+    kids.push(hit ? 1 : 0);
+  }
+  const shared = new Set();
+  const all1 = new Set([...P1[0], ...P1[1]]), all2 = new Set([...P2[0], ...P2[1]]);
+  for (const v of all1) if (all2.has(v)) shared.add(v);
+  return { kids, P1, P2, shared, lost: kids.reduce((a, b) => a + b, 0) };
+}
+function D_run() {
+  const rng = mulberry32(pageSeed("l11D", 1, 99999) + D.load * 71 + D.L + D.rel.length * 13 + (D.run ? D.run.serial + 1 : 0));
+  D.run = D_clutch(rng, D.rel, D.load, D.L, 100);
+  D.run.serial = (D.run ? 0 : 0);
+  D.run.rel = D.rel; D.run.load = D.load; D.run.L = D.L;
+  D_checkGate();
+}
+function D_sweepRun() {
+  const rng = mulberry32(pageSeed("l11Ds", 1, 99999) + D.load);
+  const rels = ["none", "cousins", "sibs"], Ls = [100, 2000, 20000];
+  const g = [];
+  for (const rel of rels) { const row = [];
+    for (const L of Ls) { const v = []; for (let r = 0; r < 30; r++) v.push(D_clutch(rng, rel, D.load, L, 40).lost / 40);
+      row.push(100 * mean(v)); }
+    g.push(row); }
+  D.sweep = { g, rels, Ls, load: D.load };
+  D_checkGate();
+}
+function D_checkGate() {
+  if (!D.run) return;
+  const r = D.run;
+  if (!taskDone("D", "D1")) {
+    hint("D1", r.rel === "sibs" ? "brother and sister: " + r.lost + " of 100 did not hatch" : "that pair is not brother and sister");
+    if (r.rel === "sibs" && r.lost === 0) { markTask("D", "D1"); hint("D1", "a hundred chicks, none lost, and they are siblings"); checkStageDone("D"); }
+  }
+  if (!taskDone("D", "D2")) {
+    hint("D2", r.rel === "none" ? "unrelated: " + r.lost + " of 100 did not hatch" : "that pair is related");
+    if (r.rel === "none" && r.lost >= 20) { markTask("D", "D2"); hint("D2", r.lost + " of 100 lost, and the parents are unrelated"); checkStageDone("D"); }
+  }
+}
+function D_drawPair() {
+  const cv = document.getElementById("D_pair");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!D.run) { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("have a hundred chicks", W / 2, H / 2); return; }
+  const r = D.run, L = r.L;
+  const names = ["parent one, copy a", "parent one, copy b", "parent two, copy a", "parent two, copy b"];
+  const strips = [r.P1[0], r.P1[1], r.P2[0], r.P2[1]];
+  const x0 = 130, x1 = W - 20, rowH = (H - 26) / 4;
+  for (let i = 0; i < 4; i++) {
+    const y = 12 + i * rowH;
+    ctx.fillStyle = "#f3f1ea"; ctx.fillRect(x0, y + rowH * 0.18, x1 - x0, rowH * 0.5);
+    ctx.strokeStyle = "#e2e0d9"; ctx.strokeRect(x0, y + rowH * 0.18, x1 - x0, rowH * 0.5);
+    for (const v of strips[i]) {
+      const x = x0 + (x1 - x0) * (v / L);
+      ctx.fillStyle = r.shared.has(v) ? HOT : "#6b6b68";
+      ctx.fillRect(x - 1.4, y + rowH * 0.18, 2.8, rowH * 0.5);
+    }
+    ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(names[i], x0 - 8, y + rowH * 0.43);
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("each tick is a broken copy · red where both parents are broken at the same place", x0, H - 1);
+}
+function D_drawKids() {
+  const cv = document.getElementById("D_kids");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!D.run) return;
+  const cols = 20, cw = (W - 40) / cols, ch = 40;
+  for (let i = 0; i < 100; i++) {
+    const x = 20 + (i % cols + 0.5) * cw, y = 26 + Math.floor(i / cols) * ch;
+    if (D.run.kids[i]) { ctx.fillStyle = HOT; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x - 4, y - 4); ctx.lineTo(x + 4, y + 4); ctx.moveTo(x + 4, y - 4); ctx.lineTo(x - 4, y + 4); ctx.stroke(); }
+    else { ctx.strokeStyle = "#bdb8a4"; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(x, y, 9, 0, 6.2832); ctx.stroke(); }
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("a hundred chicks", 20, 2);
+}
+function D_drawGrid() {
+  const cv = document.getElementById("D_grid");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!D.sweep) { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("run all nine combinations", W / 2, H / 2); return; }
+  const s = D.sweep, x0 = 150, y0 = 34, cw = (W - x0 - 20) / 3, chh = (H - y0 - 24) / 3;
+  const lab = { none: "no relation", cousins: "first cousins", sibs: "brother and sister" };
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText(s.Ls[i].toLocaleString() + " places", x0 + (i + 0.5) * cw, y0 - 6);
+    ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(lab[s.rels[i]], x0 - 8, y0 + (i + 0.5) * chh);
+    for (let j = 0; j < 3; j++) {
+      const v = s.g[i][j];
+      ctx.fillStyle = "rgba(178,58,72," + (0.08 + 0.85 * v / 100).toFixed(3) + ")";
+      ctx.fillRect(x0 + j * cw + 2, y0 + i * chh + 2, cw - 4, chh - 4);
+      ctx.fillStyle = v > 55 ? "#fff" : "#1d1d1b"; ctx.font = "13px ui-monospace, Menlo, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(v.toFixed(0) + "%", x0 + (j + 0.5) * cw, y0 + (i + 0.5) * chh);
+    }
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("chicks that do not hatch, at " + s.load + " broken copies per founding genome", 4, 2);
+}
+function D_readouts() {
+  document.getElementById("D_pairRead").innerHTML = D.run
+    ? '<span class="label">places broken in both parents:</span> <b>' + D.run.shared.size + '</b>' +
+      ' &nbsp;|&nbsp; <span class="label">out of</span> <b>' + D.run.L.toLocaleString() + '</b> <span class="label">places</span>'
+    : '<span class="label">—</span>';
+  document.getElementById("D_read").innerHTML = D.run
+    ? '<span class="label">did not hatch:</span> <b class="big">' + D.run.lost + '</b> <span class="label">of 100</span>'
+    : '<span class="label">—</span>';
+  document.getElementById("D_gridRead").innerHTML = D.sweep
+    ? '<span class="label">read across a row, then down a column</span>'
+    : '<span class="label">—</span>';
+}
+function D_paint() { D_drawPair(); D_drawKids(); D_drawGrid(); D_readouts(); }
+
+function D_wire() {
+  document.querySelectorAll("#D_rel button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("#D_rel button").forEach(b => b.classList.remove("on"));
+      btn.classList.add("on"); D.rel = btn.dataset.rel; D_run(); D_paint(); bump("D");
+    });
+  });
+  document.getElementById("D_load").addEventListener("input", e => {
+    D.load = +e.target.value; document.getElementById("D_loadOut").value = D.load;
+    document.getElementById("cD_load").textContent = D.load; highlightByDataLine("codeD", "load");
+    D_run(); D_paint(); bump("D");
+  });
+  document.getElementById("D_L").addEventListener("input", e => {
+    D.L = +e.target.value; document.getElementById("D_LOut").value = D.L.toLocaleString();
+    document.getElementById("cD_L").textContent = D.L; highlightByDataLine("codeD", "L");
+    D_run(); D_paint(); bump("D");
+  });
+  document.getElementById("D_run").addEventListener("click", () => { D_run(); D_paint(); bump("D"); });
+  document.getElementById("D_sweep").addEventListener("click", () => { D_sweepRun(); D_paint(); bump("D"); });
+  document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson11_stageD.R", D_RCODE()));
+
+  mountLock("D", {
+    title: "Before you set it", task: "D3", bit: BIT.D3,
+    prompt: "A <b>brother and sister</b>, each founding genome carrying <b>five</b> broken copies, in a genome with <b>twenty thousand</b> places in it — " +
+            "a hundred times more room than the setting you have been using. Out of a hundred chicks, how many do not hatch?",
+    label: "chicks that do not hatch", min: 0, max: 100, step: 1, start: 20, fmt: v => v.toFixed(0) + " of 100",
+    truth: () => {
+      const rng = mulberry32(pageSeed("l11Dm", 1, 99999));
+      const out = []; for (let r = 0; r < 10; r++) out.push(D_clutch(rng, "sibs", 5, 20000, 100).lost);
+      return { truth: mean(out), tol: Math.max(8, 0.14 * mean(out)), values: out.slice(0, 6) };
+    },
+    right: r => "about " + r.truth.toFixed(0) + " of the hundred. All that extra room did nothing for them.",
+    wrong: r => "about " + r.truth.toFixed(0) + " of the hundred. The room helps two strangers avoid each other. It does nothing for two people who got their copies from the same grandparents."
+  });
+
+  D.game = wireGame("D", {
+    task: "D4", bit: BIT.D4, field: { label: "chicks that do not hatch", min: 0, max: 100, start: 20, fmt: v => v.toFixed(0) },
+    round: (rng, n) => {
+      const cls = n % 3;
+      let rel, load, L;
+      if (cls === 0)      { rel = "sibs";    load = [3, 5, 8][Math.floor(rng() * 3)];  L = [2000, 20000][Math.floor(rng() * 2)]; }
+      else if (cls === 1) { rel = "none";    load = [4, 6, 8][Math.floor(rng() * 3)];  L = [60, 100][Math.floor(rng() * 2)]; }
+      else                { rel = "cousins"; load = [2, 4][Math.floor(rng() * 2)];     L = [2000, 20000][Math.floor(rng() * 2)]; }
+      const m = mulberry32(pageSeed("l11Dg", 1, 99999) + load * 37 + L + n);
+      const six = []; for (let r = 0; r < 6; r++) six.push(D_clutch(m, rel, load, L, 100).lost);
+      const many = []; for (let r = 0; r < 8; r++) many.push(D_clutch(m, rel, load, L, 100).lost);
+      const truth = mean(six.concat(many));
+      const nm = { none: "two birds with no relation to each other", cousins: "two first cousins", sibs: "a brother and a sister" };
+      return { rel, load, L, truth, tol: Math.max(9, 0.15 * truth), values: six,
+        prompt: nm[rel] + ", each founding genome carrying <b>" + load + "</b> broken copies, in a genome of <b>" +
+                L.toLocaleString() + "</b> places. Out of a hundred chicks, how many do not hatch?",
+        right: () => "about " + truth.toFixed(0) + " of the hundred.",
+        wrong: () => "about " + truth.toFixed(0) + " of the hundred. Both knobs matter, and neither one of them is the relatedness on its own." };
+    },
+    done: "Three landed. Set the broken copies to zero and the closest pair on the page loses nothing. The relatedness never made a broken copy; it only ever found one twice."
+  });
+  D_run();
+}
+function D_RCODE() {
+  return "# Lesson 11, Stage D -- the same broken place from both sides\n" +
+    "L <- " + D.L + "; load <- " + D.load + "\n" +
+    "mk  <- function() sample(L, load)\n" +
+    "gam <- function(x, y) c(x[runif(length(x)) < .5], y[runif(length(y)) < .5])\n\n" +
+    "chick <- function() length(intersect(gam(P1a,P1b), gam(P2a,P2b))) > 0\n" +
+    "mean(replicate(100, chick()))\n";
+}
+
+/* =====================================================================
+   STAGE E — the same walk, run backwards.
+   ===================================================================== */
+const E = { N: 50, mu: 0, one: null, walks: null, game: null };
+
+/* Two copies in one bird, walked back a generation at a time until they
+   are one copy. Returns the depth and the path, so the picture is the
+   same object the histogram is built out of. */
+function E_walkOne(rng, N, cap) {
+  const path = [];
+  let a = 0, b = 1;
+  for (let t = 1; t <= cap; t++) {
+    a = Math.floor(rng() * 2 * N); b = Math.floor(rng() * 2 * N);
+    path.push([a, b]);
+    if (a === b) return { depth: t, path };
+  }
+  return { depth: cap, path, capped: true };
+}
+function E_batch(rng, N, mu, k) {
+  const d = [], het = [];
+  const cap = Math.max(200, 60 * N);
+  for (let i = 0; i < k; i++) {
+    const w = E_walkOne(rng, N, cap);
+    d.push(w.depth);
+    het.push(rng() < 1 - Math.exp(-2 * mu * w.depth) ? 1 : 0);
+  }
+  return { d, mean: mean(d), het: mean(het) };
+}
+function E_run() {
+  const rng = mulberry32(pageSeed("l11E", 1, 99999) + E.N * 17 + Math.round(E.mu * 100000) + (E.walks ? E.walks.serial + 1 : 0));
+  const b = E_batch(rng, E.N, E.mu, 500);
+  b.N = E.N; b.mu = E.mu; b.serial = (E.walks ? E.walks.serial + 1 : 0);
+  E.walks = b;
+  E_checkGate();
+}
+function E_one() {
+  const rng = mulberry32(pageSeed("l11Ew", 1, 99999) + E.N + Math.round(Math.random() * 1e6));
+  E.one = E_walkOne(rng, E.N, Math.max(200, 60 * E.N));
+  E.one.marks = [];
+  for (let t = 0; t < E.one.depth; t++) {
+    if (rng() < E.mu) E.one.marks.push([t, 0]);
+    if (rng() < E.mu) E.one.marks.push([t, 1]);
+  }
+}
+function E_checkGate() {
+  if (taskDone("E", "E1") || !E.walks) return;
+  const m = E.walks.mean;
+  hint("E1", "a pond of " + E.walks.N + " meets " + m.toFixed(0) + " generations back");
+  if (m >= 180 && m <= 220) {
+    markTask("E", "E1"); hint("E1", "a pond of " + E.walks.N + " meets " + m.toFixed(0) + " generations back");
+    if (E.game) E.game.show();
+    checkStageDone("E");
+  }
+}
+function E_drawWalk() {
+  const cv = document.getElementById("E_walk");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!E.one) { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("walk one pair back", W / 2, H / 2); return; }
+  const w = E.one, show = Math.min(w.depth, 36);
+  const first = w.depth - show;          // the last `show` steps before they meet
+  const padT = 20, padB = 26;
+  const rowH = (H - padT - padB) / show;
+  const X = pos => 40 + (W - 70) * (pos / (2 * E.N));
+  const Y = t => H - padB - (t - first) * rowH;
+  ctx.strokeStyle = "#f0eee5"; ctx.lineWidth = 1;
+  for (let t = first; t < w.depth; t++) {
+    ctx.beginPath(); ctx.moveTo(34, Y(t)); ctx.lineTo(W - 22, Y(t)); ctx.stroke();
+  }
+  const seg = (t0, t1, i, col) => {
+    const p0 = t0 < 0 ? (i === 0 ? 0 : 1) : w.path[t0][i], p1 = w.path[t1][i];
+    ctx.strokeStyle = col; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(p0), Y(t0)); ctx.lineTo(X(p1), Y(t1)); ctx.stroke();
+  };
+  for (let t = Math.max(first, 0); t < w.depth; t++) {
+    for (let i = 0; i < 2; i++) seg(t - 1, t, i, i === 0 ? HOT : BLUE);
+  }
+  for (let t = Math.max(first, 0); t < w.depth; t++) {
+    for (let i = 0; i < 2; i++) {
+      ctx.fillStyle = (t === w.depth - 1) ? "#1d1d1b" : (i === 0 ? HOT : BLUE);
+      ctx.beginPath(); ctx.arc(X(w.path[t][i]), Y(t), t === w.depth - 1 ? 5.5 : 3, 0, 6.2832); ctx.fill();
+    }
+  }
+  for (const [t, i] of (w.marks || [])) {
+    if (t < first || t >= w.depth) continue;
+    const p = w.path[t][i];
+    ctx.save(); ctx.translate(X(p), Y(t)); ctx.rotate(Math.PI / 4);
+    ctx.fillStyle = "#1d1d1b"; ctx.fillRect(-3.4, -3.4, 6.8, 6.8); ctx.restore();
+  }
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("one bird, two copies", 4, H - 8);
+  ctx.textBaseline = "top";
+  ctx.fillText(w.depth > show ? ("generation " + (first + 1) + " back — " + (w.depth - show) + " more below the edge")
+                              : "the bird they both came from", 4, 4);
+}
+function E_drawHist() {
+  const cv = document.getElementById("E_hist");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!E.walks) { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("walk 500 pairs back", W / 2, H / 2); return; }
+  const d = E.walks.d, top = quantile(d, 0.97);
+  const nb = 26, bins = new Array(nb).fill(0);
+  for (const v of d) bins[clamp(Math.floor(v / top * (nb - 1)), 0, nb - 1)]++;
+  const f = box(52, 14, W - 74, H - 52, 0, top, 0, Math.max(...bins) * 1.1);
+  axes(ctx, f, "generations back to the bird they both came from", "how many of the 500", v => v.toFixed(0),
+       v => v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(0));
+  const bw = f.pw / nb;
+  for (let i = 0; i < nb; i++) {
+    const h = bins[i] / (Math.max(...bins) * 1.1) * f.ph;
+    ctx.fillStyle = "rgba(85,64,126,0.72)";
+    ctx.fillRect(f.px + i * bw + 1, f.py + f.ph - h, bw - 2, h);
+  }
+  const m = E.walks.mean;
+  ctx.strokeStyle = GREEN; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x(clamp(m, 0, top)), f.py); ctx.lineTo(f.x(clamp(m, 0, top)), f.py + f.ph); ctx.stroke();
+  ctx.fillStyle = GREEN; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("average " + m.toFixed(0), f.x(clamp(m, 0, top)) + 4, f.py + 2);
+}
+function E_readouts() {
+  document.getElementById("E_walkRead").innerHTML = E.one
+    ? '<span class="label">this pair met</span> <b class="big">' + E.one.depth + '</b> <span class="label">generations back</span>' +
+      (E.mu > 0 ? ' &nbsp;|&nbsp; <span class="label">marks on the path:</span> <b>' + (E.one.marks || []).length + '</b>' : '')
+    : '<span class="label">—</span>';
+  document.getElementById("E_read").innerHTML = E.walks
+    ? '<span class="label">500 pairs, average</span> <b class="big">' + E.walks.mean.toFixed(0) +
+      '</b> <span class="label">generations back · shortest</span> <b>' + Math.min(...E.walks.d) +
+      '</b><span class="label">, longest</span> <b>' + Math.max(...E.walks.d) + '</b>' +
+      (E.mu > 0 ? ' &nbsp;|&nbsp; <span class="label">two-tone:</span> <b>' + f3(E.walks.het) + '</b>' : '')
+    : '<span class="label">—</span>';
+}
+function E_paint() { E_drawWalk(); E_drawHist(); E_readouts(); }
+
+function E_wire() {
+  document.getElementById("E_N").addEventListener("input", e => {
+    E.N = +e.target.value; document.getElementById("E_NOut").value = E.N;
+    document.getElementById("cE_N").textContent = E.N; highlightByDataLine("codeE", "N");
+    E.one = null; E.walks = null; E_paint(); bump("E");
+  });
+  document.getElementById("E_mu").addEventListener("input", e => {
+    E.mu = +e.target.value; document.getElementById("E_muOut").value = E.mu.toFixed(4);
+    document.getElementById("cE_mu").textContent = E.mu.toFixed(4); highlightByDataLine("codeE", "mu");
+    E.walks = null; if (E.one) E_one(); E_paint(); bump("E");
+  });
+  document.getElementById("E_one").addEventListener("click", () => { E_one(); E_paint(); bump("E"); });
+  document.getElementById("E_run").addEventListener("click", () => { E_run(); E_paint(); bump("E"); });
+  document.getElementById("E_dl").addEventListener("click", () => downloadText("lesson11_stageE.R", E_RCODE()));
+
+  mountLock("E", {
+    title: "Before you run it", task: "E2", bit: BIT.E2,
+    prompt: "A pond of <b>fifty</b> breeders that has been a pond of fifty forever. Take one bird and the two copies of one gene it is carrying. " +
+            "How many generations back is the bird they both came from?",
+    label: "generations back", min: 1, max: 400, step: 1, start: 50, fmt: v => v.toFixed(0),
+    truth: () => {
+      const rng = mulberry32(pageSeed("l11Em", 1, 99999));
+      const out = []; for (let r = 0; r < 6; r++) out.push(E_batch(rng, 50, 0, 300).mean);
+      return { truth: mean(out), tol: Math.max(18, 0.2 * mean(out)), values: out };
+    },
+    right: r => "about " + r.truth.toFixed(0) + " generations, which is twice the fifty. And look at the spread on the histogram: some pairs met last week and some have not met in a thousand years.",
+    wrong: r => "about " + r.truth.toFixed(0) + " generations — twice the headcount, not the headcount."
+  });
+
+  E.game = wireGame("E", {
+    task: "E3", bit: BIT.E3, field: { label: "two-tone at this gene", min: 0, max: 1, start: 0.3, fmt: f2 },
+    round: (rng, n) => {
+      const cls = n % 3;
+      let N, mu;
+      if (cls === 0)      { N = [15, 25][Math.floor(rng() * 2)];   mu = [0.002, 0.004][Math.floor(rng() * 2)]; }
+      else if (cls === 1) { N = [80, 120][Math.floor(rng() * 2)];  mu = [0.002, 0.003][Math.floor(rng() * 2)]; }
+      else                { N = [150, 250][Math.floor(rng() * 2)]; mu = [0.008, 0.012][Math.floor(rng() * 2)]; }
+      const m = mulberry32(pageSeed("l11Eg", 1, 99999) + N * 13 + Math.round(mu * 100000) + n);
+      const six = []; for (let r = 0; r < 6; r++) six.push(E_batch(m, N, mu, 500).het);
+      const many = []; for (let r = 0; r < 6; r++) many.push(E_batch(m, N, mu, 500).het);
+      const truth = mean(six.concat(many));
+      return { N, mu, truth, tol: Math.max(0.07, 0.16 * truth), values: six,
+        prompt: "A pond of <b>" + N + "</b> breeders, marks landing at <b>" + mu.toFixed(4) +
+                "</b> per copy per generation. What fraction of the birds come out two-tone at this gene?",
+        right: () => "about " + f3(truth) + ".",
+        wrong: () => "about " + f3(truth) + ". The two copies meet about " + (2 * N) + " generations back, and every generation of that is two chances for a mark." };
+    },
+    done: "Three landed. Two numbers went in — how big the pond is and how often a mark lands — and one number came out. Which means that if you can measure the two-tone rate and you know the marking rate, there is only one thing left to solve for."
+  });
+}
+function E_RCODE() {
+  return "# Lesson 11, Stage E -- the walk, run backwards\n" +
+    "N <- " + E.N + "; mu <- " + E.mu.toFixed(4) + "\n\n" +
+    "meet <- function(N) { t <- 0\n" +
+    "  repeat { t <- t + 1\n" +
+    "    if (sample(2*N, 1) == sample(2*N, 1)) return(t) } }\n\n" +
+    "t <- replicate(500, meet(N))\n" +
+    "mean(t)                              # how far back\n" +
+    "mean(runif(500) < 1 - exp(-2*mu*t))  # and how many come out two-tone\n";
+}
+
+/* =====================================================================
+   REAL DATA — two panels. One is a pedigree nobody made up; the other
+   has no file at all, because the measurement it rests on goes the other
+   way round and the only honest thing to hand a student is the two
+   published numbers and the arithmetic of the stage.
+   ===================================================================== */
+const REAL = { sheep: null };
+async function grab(url) {
+  try { const r = await fetch(url); if (!r.ok) return null; return await r.json(); }
+  catch (e) { return null; }
+}
+
+/* ---- Stage B: Ram Mountain ------------------------------------------ */
+const SHEEP = { ped: null, finals: null, eligible: null, runs: [], kept: [], nobody: [], done: false };
+
+function B_sheepPrep() {
+  const ped = REAL.sheep.ped;
+  SHEEP.ped = ped;
+  SHEEP.finals = ped.filter(r => r.cohort != null && r.cohort >= 2005).map(r => r.i);
+  // which founders were even in a position to have a shot at that cohort
+  const anc = new Set();
+  const seen = new Uint8Array(ped.length);
+  const stack = SHEEP.finals.slice();
+  while (stack.length) {
+    const j = stack.pop();
+    for (const q of [ped[j].dam, ped[j].sire]) if (q >= 0 && !seen[q]) { seen[q] = 1; stack.push(q); }
+  }
+  SHEEP.eligible = [];
+  for (let i = 0; i < ped.length; i++) if (seen[i] && ped[i].dam < 0 && ped[i].sire < 0) SHEEP.eligible.push(i);
+}
+/* The same coin as the little tree. A sheep with both parents missing is a
+   founder and gets two new copies of its own. A sheep with one parent in
+   the file and one missing inherits on the known side and takes its other
+   copy from an animal nobody identified -- given a negative id, so it can
+   never be counted as a founder copy that survived. */
+function B_sheepDrop(rng) {
+  const ped = SHEEP.ped, n = ped.length;
+  const a = new Int32Array(2 * n);
+  let unknown = -1;
+  for (let i = 0; i < n; i++) {
+    const d = ped[i].dam, s = ped[i].sire;
+    if (d < 0 && s < 0) { a[2 * i] = 2 * i; a[2 * i + 1] = 2 * i + 1; continue; }
+    a[2 * i]     = d >= 0 ? a[2 * d + (rng() < 0.5 ? 0 : 1)] : unknown--;
+    a[2 * i + 1] = s >= 0 ? a[2 * s + (rng() < 0.5 ? 0 : 1)] : unknown--;
+  }
+  const seen = new Set();
+  for (const f of SHEEP.finals) { seen.add(a[2 * f]); seen.add(a[2 * f + 1]); }
+  let kept = 0, copies = 0, fromNobody = 0;
+  for (const f of SHEEP.eligible) if (seen.has(2 * f) || seen.has(2 * f + 1)) kept++;
+  for (const c of seen) { if (c < 0) fromNobody++; else copies++; }
+  return { kept, copies, fromNobody, distinct: seen.size };
+}
+function B_sheepRun(k) {
+  const rng = mulberry32(pageSeed("l11Bs", 1, 99999) + SHEEP.runs.length);
+  for (let i = 0; i < k; i++) { const r = B_sheepDrop(rng);
+    SHEEP.runs.push(r.copies); SHEEP.kept.push(r.kept); SHEEP.nobody.push(r.fromNobody); }
+}
+function B_drawSheep() {
+  const cv = document.getElementById("B_sheep");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!SHEEP.runs.length) {
+    ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("drop it down the pedigree", W / 2, H / 2);
+    document.getElementById("B_sheepRead").innerHTML =
+      '<span class="label">' + SHEEP.ped.length.toLocaleString() + ' sheep · <b>' + SHEEP.eligible.length +
+      '</b> founders had a shot at the <b>' + SHEEP.finals.length + '</b> lambs born 2005 or later</span>';
+    return;
+  }
+  const top = Math.max(...SHEEP.runs), lo = Math.min(...SHEEP.runs);
+  const span = Math.max(6, top - lo + 4);
+  const f = box(52, 16, W - 74, H - 52, lo - 2, lo - 2 + span, 0, 1);
+  const bins = new Array(span).fill(0);
+  for (const v of SHEEP.runs) bins[clamp(v - (lo - 2), 0, span - 1)]++;
+  const mx = Math.max(...bins);
+  axes(ctx, f, "founder copies still in the 2005-and-later lambs", "drops", v => (v * mx).toFixed(0), v => v.toFixed(0));
+  const bw = f.pw / span;
+  for (let i = 0; i < span; i++) {
+    const h = bins[i] / mx * f.ph;
+    ctx.fillStyle = "rgba(85,64,126,0.75)";
+    ctx.fillRect(f.px + i * bw + 1, f.py + f.ph - h, bw - 2, h);
+  }
+  const m = mean(SHEEP.runs);
+  ctx.strokeStyle = GREEN; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(f.x(m), f.py); ctx.lineTo(f.x(m), f.py + f.ph); ctx.stroke();
+  document.getElementById("B_sheepRead").innerHTML =
+    '<span class="label">' + SHEEP.runs.length + ' drops · of the</span> <b>' + (2 * SHEEP.eligible.length) +
+    '</b> <span class="label">founder copies,</span> <b class="big">' + m.toFixed(1) +
+    '</b> <span class="label">are still in the 2005-and-later lambs · of the</span> <b>' + SHEEP.eligible.length +
+    '</b> <span class="label">founders themselves,</span> <b>' + mean(SHEEP.kept).toFixed(1) +
+    '</b> <span class="label">have anything left · and</span> <b>' + mean(SHEEP.nobody).toFixed(0) +
+    '</b> <span class="label">of the copies down there came from an animal nobody identified</span>';
+}
+function B_wireSheep() {
+  B_sheepPrep();
+  document.getElementById("B_srun").addEventListener("click", () => { B_sheepRun(200); B_drawSheep(); bump("B"); });
+  const g0 = document.getElementById("B_sg0");
+  g0.max = String(2 * SHEEP.eligible.length);
+  g0.value = String(SHEEP.eligible.length);
+  document.getElementById("B_sg0Out").value = g0.value;
+  g0.addEventListener("input", e => { document.getElementById("B_sg0Out").value = e.target.value; bump("B"); });
+  document.getElementById("B_slock").addEventListener("click", () => {
+    if (SHEEP.done) return;
+    if (SHEEP.runs.length < 50) {
+      document.getElementById("B_sflip").innerHTML = '<span class="off">not yet</span> &middot; drop it down the pedigree first';
+      return;
+    }
+    const truth = mean(SHEEP.runs), you = +g0.value, tol = Math.max(4, 0.25 * truth);
+    const ok = Math.abs(you - truth) <= tol;
+    drawStrips("B_sstrip", [{ label: "founder copies still there", min: 0, max: +g0.max, fmt: v => v.toFixed(0),
+                             truth, tol, you, values: SHEEP.runs.slice(0, 6) }]);
+    document.getElementById("B_sflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +
+      " &middot; " + (2 * SHEEP.eligible.length) + " founder copies went in and about " + truth.toFixed(0) +
+      " are still there, in real sheep somebody caught and marked for forty years. On top of that, about " +
+      mean(SHEEP.nobody).toFixed(0) + " of the copies in that cohort came from an animal nobody ever identified.";
+    SHEEP.done = true;
+    document.getElementById("B_slock").disabled = true; g0.disabled = true;
+    record(BIT.B4, ok);
+    markTask("B", "B4"); hint("B4", ok ? "landed" : "locked in");
+    RealNeeded.B = false;
+    checkStageDone("B");
+  });
+  B_drawSheep();
+}
+
+/* ---- Stage E: running it backwards ---------------------------------- */
+/* Two published measurements, neither of them a headcount:
+     - two copies of the same stretch in one person differ at about one
+       base in a thousand (1000 Genomes Project Consortium 2015);
+     - new marks land at about 1.25 per 100,000,000 bases per generation
+       (Roach et al. 2010; Kong et al. 2012; Scally 2016 reviews the range).
+   The stage's own arithmetic is the only thing between them and the
+   answer, and there is no file to fetch because the number this panel is
+   asking for was never measured directly. */
+const HUMAN = { H: 0.001, MU: 1.25e-8, done: false };
+const humanHet = N => 4 * N * HUMAN.MU / (1 + 4 * N * HUMAN.MU);
+const humanTruth = () => HUMAN.H / ((1 - HUMAN.H) * 4 * HUMAN.MU);
+
+function E_drawReal() {
+  const cv = document.getElementById("E_real");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const N = +document.getElementById("E_rn").value;
+  const f = box(58, 16, W - 78, H - 52, Math.log10(500), Math.log10(60000), 0, 0.0025);
+  axes(ctx, f, "breeders in the pond", "two copies in one person differ this often",
+       v => (v * 1000).toFixed(1) + "/1k", v => Math.round(Math.pow(10, v)).toLocaleString());
+  ctx.strokeStyle = DARK; ctx.lineWidth = 2.4; ctx.beginPath();
+  for (let i = 0; i <= 200; i++) {
+    const lx = f.xMin + (f.xMax - f.xMin) * i / 200, n = Math.pow(10, lx);
+    const X = f.x(lx), Y = f.y(clamp(humanHet(n), 0, f.yMax));
+    i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y);
+  }
+  ctx.stroke();
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.setLineDash([5, 4]);
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(HUMAN.H)); ctx.lineTo(f.px + f.pw, f.y(HUMAN.H)); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+  ctx.fillText("one base in a thousand, measured", f.px + 6, f.y(HUMAN.H) - 3);
+  const lx = Math.log10(clamp(N, 500, 60000));
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 1.8; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(f.x(lx), f.py); ctx.lineTo(f.x(lx), f.py + f.ph); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = BLUE;
+  ctx.beginPath(); ctx.arc(f.x(lx), f.y(clamp(humanHet(N), 0, f.yMax)), 4.5, 0, 6.2832); ctx.fill();
+  document.getElementById("E_realRead").innerHTML =
+    '<span class="label">a pond of</span> <b>' + N.toLocaleString() + '</b> <span class="label">gives</span> <b>' +
+    (1000 * humanHet(N)).toFixed(2) + '</b> <span class="label">differences per thousand bases · the measured value is</span> <b>' +
+    (1000 * HUMAN.H).toFixed(2) + '</b>' +
+    ' &nbsp;|&nbsp; <span class="label">two copies meet</span> <b>' + (2 * N).toLocaleString() + '</b> <span class="label">generations back</span>';
+}
+function E_wireReal() {
+  document.getElementById("E_rn").addEventListener("input", e => {
+    document.getElementById("E_rnOut").value = (+e.target.value).toLocaleString(); E_drawReal(); bump("E");
+  });
+  document.getElementById("E_rlock").addEventListener("click", () => {
+    if (HUMAN.done) return;
+    const truth = humanTruth(), you = +document.getElementById("E_rn").value, tol = 4000;
+    const ok = Math.abs(you - truth) <= tol;
+    drawStrips("E_rstrip", [{ label: "breeders in the pond", min: 500, max: 60000, fmt: v => Math.round(v).toLocaleString(),
+                             truth, tol, you, values: null }]);
+    document.getElementById("E_rflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +
+      " &middot; about " + Math.round(truth).toLocaleString() + ". There are eight billion people. The two-tone rate in their genomes says the pond has been running at about " +
+      Math.round(truth / 1000) + " thousand, and the two copies of any gene you are carrying met about " +
+      Math.round(2 * truth / 1000) + " thousand generations ago.";
+    HUMAN.done = true;
+    document.getElementById("E_rlock").disabled = true;
+    document.getElementById("E_rn").disabled = true;
+    record(BIT.E4, ok);
+    markTask("E", "E4"); hint("E4", ok ? "landed" : "locked in");
+    RealNeeded.E = false;
+    checkStageDone("E");
+  });
+  E_drawReal();
+}
+
+(async function loadReal() {
+  const sheep = await grab("../../data/clean/bighorn_genedrop.json");
+  REAL.sheep = sheep;
+  if (sheep && sheep.ped) { RealNeeded.B = true; B_wireSheep(); }
+  else realOffline("B", "B_sheepRead", "the Ram Mountain pedigree");
+})();
+// no fetch for this one -- the two numbers it rests on are printed on the page
+RealNeeded.E = true;
+E_wireReal();
+
+/* ====== bring it up ================================================== */
+document.addEventListener("score:bypass", () => {
+  for (const K of ["A", "B", "C", "D", "E"]) {
+    Gates[K].open = true;
+    const sec = document.getElementById("stage" + K);
+    if (sec) sec.classList.remove("stage-locked");
+    const t = document.getElementById("toc" + K); if (t) t.classList.remove("locked");
+  }
+  [A.game, B.game, C.game, D.game, E.game].forEach(g => g && g.show());
+});
+
+A_fresh(); A_wire(); A_paint();
+B_wire(); B_paint();
+C_wire(); C_paint();
+D_wire(); D_paint();
+E_wire(); E_paint();
+
+Score.init({
+  moduleId: "lesson11",
+  version: 5,
+  scaffold: 12,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+  }
+});
 </script>
 </body>
 </html>
