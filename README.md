@@ -1,23 +1,31 @@
 # BIO 202 — Evolution simulations
 
 Interactive homework for a conceptual evolution course (Coe College). Each lesson
-is a self-contained HTML page: progressive locked stages, a prediction gate before
-any control unlocks, canvas simulations, a live R code panel, and a submission code
-the student pastes back for the instructor to decode.
+is a self-contained HTML page: progressive stages that unlock by being *solved*,
+canvas simulations, a live R code panel, and a submission code the student pastes
+back for the instructor to decode.
 
-The course is **one fixed sequence taken in order**. Each unit drills a single
-reasoning move until it is the student's own; the biology is the delivery vehicle.
-The design commitments — intuition before vocabulary, read-then-predict-then-touch,
-derive-don't-hand-over, one move across many datasets — are spelled out in
-[`structurephilosophy.md`](structurephilosophy.md). Course content is grounded in
+The subject is evolution as **differential reproduction of units with transmissible
+characteristics**, and the forces that move the frequency of those characteristics.
+Causal inference is the point; regression modelling is the primary tool; the split
+between the stochastic and deterministic parts of a model is the throughline. The
+students have no maths or statistics background, and no vocabulary is taught —
+they get there by manipulating models and reading displays, with the prose kept
+thin. All of that is in [`structurephilosophy.md`](structurephilosophy.md), which
+is short and worth reading before anything else here. Course content is grounded in
 [`docs/2026_lecture_detail.tex`](docs/2026_lecture_detail.tex).
+
+**Lessons 1–9 are the model form** — revised, reviewed and used. 10–11 were rebuilt
+2026-09-17. **Everything from 12 up is a nebulous draft**: content, order, number
+and structure are all in doubt, and no document in this repo describing one is a
+commitment.
 
 ## Layout
 
 ```
 index.html                    landing page (lessons + scaffolds + explorer)
 LOCKS.txt                     the release gate: one row per page, x = locked
-app/lessons/lessonN.html      29 lessons, in sequence
+app/lessons/lessonN.html      30 lessons, in file-number order
 app/scaffolds/sNN_*.html      27 guess-and-check drills
 app/interactives/descent.html pedigree explorer (unscored)
 app/assets/score.js           the submission-code library (name -> opaque passcode)
@@ -29,20 +37,23 @@ data/clean/*.csv              real datasets used in the "real data" stages
 
 ## Start here
 
-- [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) — **the single notes-and-memory file.** Current state, the three recurring threads the lessons exist to build, the live rules, the old→new unit map, and the directives that are void.
+- [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) — **the single notes-and-memory file.** Current state, the live rules, and — in §7 — the long list of directives that read as binding and are void.
 - [`docs/WORK_ORDER.md`](docs/WORK_ORDER.md) — the prioritized next round of edits.
-- [`docs/LESSON_ATLAS.md`](docs/LESSON_ATLAS.md) — stage-by-stage description of the shipped lessons.
+- [`docs/LESSON_ATLAS.md`](docs/LESSON_ATLAS.md) — stage-by-stage description of the shipped lessons. **Stale**; trustworthy only for lessons 10 and 11.
 
-## The design/validation framework
+## The checks
 
-The philosophy is not self-enforcing, so it is backed by machine checks:
+**Writing decisions belong to the author.** The machine checks only catch things
+you cannot see by opening the page; nothing here gates prose, vocabulary or lesson
+design. That is deliberate — the guardrails that used to do so were keyed to a
+sequence the course had stopped following, and they outranked JM.
 
-- [`structurephilosophy.md`](structurephilosophy.md) — the 47-unit sequence and why the shape is the shape.
-- [`ledger.json`](ledger.json) — the vocabulary ratchet: each term is banned until the unit that unlocks it (or forever). A 20-name budget across the course.
-- [`scripts/check_lessons.py`](scripts/check_lessons.py) — **the gate.** Applies the vocabulary ratchet at each lesson's true sequence position, plus the giveaway-phrase ban, title-names-no-term, front/back-matter and submission wiring, to the shipped lesson HTML. It also checks the release gate: every page has a `LOCKS.txt` row and loads `lock.js`.
+- [`scripts/check_lessons.py`](scripts/check_lessons.py) — **the gate**, and it is structural only: scoring slots that nothing writes, helpers nothing defines, a missing `score.js`/`Score.init`/`sim.js`, an empty `<h1>`, and the release gate (every page has a `LOCKS.txt` row and loads `lock.js`). It runs on every lesson file, including new numbers. Exit 0 iff clean.
+- `--style` and `--terms` are **reports, not gates.** `--style` flags giveaway phrases and prose jargon; `--terms` says where each term in [`ledger.json`](ledger.json) is first named, in lesson-number order. Since no vocabulary is taught at all, every line `--terms` prints for student-facing prose is something to look at.
+- [`ledger.json`](ledger.json) — a term list and two phrase lists, feeding those two reports. **Nothing in it blocks anything**, and it no longer carries course length, term budgets, naming delays, per-arc minute budgets or per-term unlock units; all of those were struck on 2026-09-17.
 - [`scripts/test_codec.py`](scripts/test_codec.py) — pins the Python decoder to the JavaScript one that mints the codes.
 
-The judgment-level checks that a machine cannot run — the four adversarial passes —
+The judgment-level checks a machine cannot run — the four adversarial passes —
 are in [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) §4.
 
 > The former `BUILD_CONTRACT.md` and `validate.py` governed a `units/*.json` spec
@@ -52,7 +63,7 @@ are in [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) §4.
 Check every lesson:
 
 ```
-python3 scripts/check_lessons.py          # all 29; exits 0 when clean
+python3 scripts/check_lessons.py          # all 30; exits 0 when clean
 python3 scripts/check_lessons.py app/lessons/lesson7.html   # one lesson
 ```
 

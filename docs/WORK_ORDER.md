@@ -1,5 +1,64 @@
 # Work order — next edit round
 
+> **Re-read against the rewritten `structurephilosophy.md`, 2026-09-17.** Four
+> things below changed meaning that day:
+>
+> - **Lessons 1–9 are the model form; 10–11 are current; everything from 12 up is
+>   a nebulous draft — content, order, number and structure all in doubt** (JM).
+>   Every item below about a lesson numbered 12 or higher is therefore a note
+>   about what a file currently contains, not a commitment to fix it in place. Do
+>   not spend a pass polishing one.
+> - **The 47-unit sequence, the five arcs and their minute budgets are void.**
+>   Items below that reason about "Arc 2's framing" or an arc boundary are
+>   reasoning about a structure that no longer exists; they are kept because the
+>   *content* question inside each one is usually still real. `PROJECT_NOTES.md`
+>   §3 and §7.
+> - **The stage-shape ruling (was P0-5) is closed.** The six roles are retired,
+>   organization is free to vary, and gate-on-solving is the rule. Removed below.
+> - **Vocabulary got stricter, not looser**: no vocabulary is taught at all, the
+>   naming-after-the-fact panel is retired, and the only legal home for jargon is
+>   the R code panel. Any item below that talks about where a term "unlocks" is
+>   void. `PROJECT_NOTES.md` §4.
+
+**Lesson 10 revised against JM's design notes — 2026-09-17 (second pass).**
+His notes, and what each became:
+
+- *"Dragging interactive in Part E is great. Instead of a slider, the graph
+  should be wider & dragging should occur directly on the graph."* — the `E_s`
+  slider is gone. The scatter has its own full-width row and the red line is
+  dragged directly. **One thing had to change to make that work and it is worth
+  knowing:** across the whole usable range of `s` the true line's endpoint moves
+  0.182 offspring, which on an axis holding raw counts of 0–9 is **six pixels**.
+  Nobody can grab six pixels. So the panel is now two frames — left, the three
+  genotype classes and their average offspring on a band zoomed around 2, which
+  is where the line lives and what you drag; right, the 200 breeders at natural
+  scale with the same line over them, so the zoom is honestly labelled. The
+  slider had been hiding the fact that the quantity being set is tiny next to
+  the cloud it is drawn on.
+- *"The 'Play it Through' animation for Part C is fantastic... Kind of a
+  'bowling' approach."* — built as `wireBowling(stage, cfg)` and used in **A, B,
+  C and D**. Set the conditions, hit roll, the controls lock, the run animates,
+  and it reports hit or miss at the end. Written general (target text, predicate,
+  frame painter, hit count) so the next lesson takes the helper. **Extract to
+  `sim.js` at the third caller.** The pattern is recorded as a live rule in
+  `PROJECT_NOTES.md` §4 because JM asked for it "in this & subsequent lessons".
+- *"Part A's walkthrough is great. The middle graph is unneeded."* — the
+  share-against-copies scatter is gone from A; the pond and the frequency line
+  now sit together, which is what the roll needs.
+- *"terms like 'allele' should be freely used throughout"* — done across the
+  lesson. This is consistent with the vocabulary rule, which permits exactly the
+  biological terms an introductory student already has.
+- *"Turning Part A into a game where they need to get one allele to extinction
+  within X generations 5 times to progress"* — built: 30 generations, five
+  landed rolls. Measured: 8 breeders flat lands 85% of rolls, 40 breeders at
+  spread 2.6 lands 78%, and **300 breeders flat lands 0%** — so the default pond
+  cannot walk it and the student has to find the setting.
+
+**Still owed on this pass.** Stage A's closing game and stage B/D's committed
+estimates were left on their existing wording; the roll replaced their *gates*,
+not their questions. Worth a read-through for register now that the stage shape
+around them has changed.
+
 **Lessons 10 and 11 rebuilt from scratch — 2026-09-17.** JM asked for a total
 overhaul of both, aimed at three things: what causes drift, what makes it go
 faster or slower, and laying foundations for drift–selection balance, neutral
@@ -56,8 +115,10 @@ this round measured: `Ne = 1/Σp²`, H decaying at `1/(2Ne)`, half-life `1.386N`
 coalescent depth `2N`, and `4Nμ/(1+4Nμ)`.
 
 **`priceTerms` keeps `cov` and `within` separately named and never sums them.**
-`structurephilosophy.md` is explicit that the scatter around a fitted line and
-the change within a lineage share a shape and not an identity. A shared engine
+The rule is that the scatter around a fitted line and the change within a lineage
+share a shape and not an identity. It used to live in `structurephilosophy.md`
+§"The one thing underneath all of it"; that section was struck 2026-09-17 and the
+rule moved verbatim to `PROJECT_NOTES.md` §1, which is now the citation. A shared engine
 is exactly where those two would quietly fuse into one "leftover", so the two
 terms are split from day one even in lessons where only one is live.
 
@@ -249,10 +310,13 @@ read and changed in one place instead of being welded into markup and JavaScript
 in [`COPY_FRAMEWORK_PLAN.md`](COPY_FRAMEWORK_PLAN.md); JM asked to pick it up the weekend of
 6–7 September or the week after. The one thing that must not be skipped is ordering: the
 gate strips `<script>`, so `check_lessons.py` has to learn to read the copy block *before*
-any lesson migrates, or the vocabulary ratchet goes silently blind.
+any lesson migrates, or `--style` and `--terms` go silently blind. *(Written when those
+were hard failures rather than reports — see the banner on `COPY_FRAMEWORK_PLAN.md`. The
+ordering still matters; the stake is smaller.)*
 
-**Status 2026-08-24.** Arcs 4 and 5 are built out. All 29 lessons now carry a
-working interactive with a prediction gate and at least one scored checkpoint;
+**Status 2026-08-24**, in the vocabulary of the time. The back half is built out. All
+lessons then shipped carried a working interactive with a prediction gate and at least one
+scored checkpoint;
 `scripts/check_lessons.py` is green. What remains is content review, not
 construction — which is the point at which the prose and question wording want
 your passes rather than more building.
@@ -298,7 +362,9 @@ Two things to rule on:
 
 **Deferred, and waiting on you.**
 
-0c. **Arc 2's framing versus its new opener.** Lesson 8's rebuild of 2026-09-03 made it
+0c. **The 8–9 boundary, and the displaced Mendel material.** *(Written as an
+   "Arc 2 framing" question; arcs are void as of 2026-09-17, so read it as a
+   question about lessons 8, 9 and 10 in sequence.)* Lesson 8's rebuild of 2026-09-03 made it
    the heritability lesson, which is where you asked heritability to be defined. That
    displaced Mendel — the 3:1 and 9:3:3:1 ratios, the pile of 1,000 honest experimenters,
    and Fisher's complaint — to
@@ -313,10 +379,12 @@ Two things to rule on:
    plays with heritability as a knob and never defines it, per your ruling. The old
    Lesson 7 — the Galton parent–offspring build, four stages of it — is archived at
    `_reference/retired/lessons/lesson7_galton_heritability_2026-09-03.html` and is the
-   material for that definition. Note the ledger still pins the `heritability` unlock to
-   unit L8, which is `lesson7.html`; if the definition lands in `lesson8.html` (unit L9,
-   seq 14) the unlock should move with it. Either seat passes the gate today, so this is
-   tidiness, not breakage.
+   material for that definition. **The ledger-unlock half of this item is void as of
+   2026-09-17** — per-term unlock units are gone from `ledger.json`, and the live rule
+   is that no vocabulary is taught anywhere. What survives is the content question:
+   if heritability is played with as a knob in 7 and never defined, is anything owed
+   in 8, and can it be owed without naming it? `lesson9.html` is the precedent for
+   "yes, and without the name".
 
 0. **Lesson 6's displaced content.** The rebuild of 2026-09-03 replaced the old
    Lesson 6 ("same biology, four different verdicts": non-transitive
@@ -329,8 +397,9 @@ Two things to rule on:
 1. **The plain-language question pass.** Wording across all lessons still carries
    notation and, in places, options that explain themselves. Hold until content
    settles, then sweep once against the options-state-what-never-why rule.
-2. **The stage-shape ruling.** Six roles in `structurephilosophy.md` versus the
-   shipped A–E stages; both vocabularies are still in circulation.
+2. ~~**The stage-shape ruling.**~~ **Closed 2026-09-17.** The six roles are
+   retired with the document that specified them; organization is free to vary, in
+   service of the goals in `PROJECT_NOTES.md` §1. A/B/C/D/E is lettering.
 3. **Thread B's early rung.** The dichotomy still arrives late, in tree
    territory. S26 poses it but the biology-free version is still owed.
 4. **Regenerate `docs/LESSON_ATLAS.md`.** It is banner-flagged as stale and
@@ -415,10 +484,66 @@ a sample of the target register.
 
 ---
 
+## Found 2026-09-17 — `check_lesson11_numbers.js` fails intermittently on correct code
+
+**Not a lesson bug, and not caused by the Lesson 10 work** (`lesson11.html` was not
+touched). At least **two** of its bars fail some of the time and pass the rest, which
+means the script cannot currently be used as a pass/fail gate:
+
+**Measured: 2 failures in 5 conclusive runs** (a sixth produced no output at all,
+probably a Chrome launch hiccup — worth knowing the harness does that). Two *different*
+bars failed, so it is not one bad check:
+
+- **"A only the packaging moves"** — asserts a null (non-random mating moves the
+  packaging, not the allele frequency) against a fixed tolerance of `0.03`, averaging
+  **12 replicates**. Seen failing at 0.491 vs 0.546, and again at 0.482 vs 0.568 — a
+  difference of 0.086 against a 0.03 bar.
+- **"C the gap does not answer to the headcount"** — seen failing with *"a pond of 80
+  gives 0.011, a pond of 20 gives -0.102"*.
+
+Both are null-assertions with a fixed tolerance and a small replicate count, which is
+the shape that produces this. **The fix is to measure the sampling distribution of each
+statistic and set the replicate count from it**, rather than to loosen the tolerance —
+loosening makes the bar stop testing the thing.
+
+Raising A's replicate count from 12 to 200 was tried and is deliberately **not** in the
+tree. The one suggestive data point: across the six runs, A failed only on a run using
+the original 12, while the runs at 200 failed on C instead. That is consistent with the
+under-powering diagnosis but it is n≈1 and the runs straddled the revert, so it is a
+lead, not a result. Do the whole script in one pass with the variance actually measured.
+
+Run it a few times before trusting a green result.
+
+---
+
+## Opened 2026-09-17 by the philosophy rewrite
+
+- **Individuality and hierarchical selection are now named destinations.**
+  `structurephilosophy.md` ends on *"Price's equation and the ideas of species,
+  hierarchical selection, and individuality."* Two weeks earlier the scope ladder
+  was cut from Lesson 10 as *"about what counts as an individual, not about
+  drift"* — a correct call about that lesson, which now leaves content owed
+  somewhere else. The code is in git history and the fuller build specs are in
+  `_reference/retired/lessons/`. **Decide where it goes; do not rebuild it into a
+  drift lesson.**
+- **Shared assets are a stated primary design focus, not an efficiency.** That
+  raises the priority of `app/assets/pop.js` above where the entry at the top of
+  this file left it. The "extract at the third caller" rule still holds — three
+  working instances give an API and designing one from zero gives a guess — but
+  the third caller is now something to go looking for rather than something to
+  wait for.
+- **The `--terms` report has three hits inside the revised lessons**: `mean`
+  (lesson 2), `95% interval` (lesson 5), `heritability` (lesson 7). Under the
+  no-vocabulary rule each is a thing to look at. They sit in JM-owned, released
+  lessons, so they are reported, not edited. **Ask before touching.**
+
+---
+
 ## What to cut
 
 - Four duplicate scaffolds (s04, s05, s06, s13)
-- Four Arc 5 lessons (27, 28, 29 into L26; 32, 33 into L34)
+- The four folded back-half lessons (27, 28, 29 into 26; 32, 33 into 34 — written
+  as "Arc 5" before arcs were void; the folding is done, the numbering gaps remain)
 - Anolis, from three builds down to one
 
 That is the focus, and it comes out of the existing pile rather than out of new

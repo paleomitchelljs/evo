@@ -25,9 +25,13 @@ Removed 2026-09-03 on JM's call. Writing decisions belong to the author.
 Two things survive as opt-in reporting, neither of which blocks anything:
   --style   flags giveaway phrases and jargon in prose. Useful to whoever is
             drafting; advisory, never a failure.
-  --terms   says where each ledger term first appears, computed from the shipped
-            lessons rather than from a map that has to be kept in sync. This is
-            the thing worth having when you reorder the course.
+  --terms   says where each ledger term first appears, read straight off the
+            shipped lessons in file-number order. Nothing to keep in sync. This
+            is the thing worth having when you reorder the course, and the only
+            surviving trace of the vocabulary rule -- which as of 2026-09-17 is
+            "no vocabulary is taught at all", so every line it prints for a
+            student-facing string is a thing to look at rather than a budget to
+            spend.
 
 Usage:  python3 scripts/check_lessons.py [--style] [--terms] [lesson paths...]
 
@@ -39,49 +43,13 @@ import json, sys, re, glob, os, html
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-# --- lesson file -> (unit id, seq). Consulted ONLY by --terms, and only to
-# order the report. It no longer decides whether a lesson gets checked: a file
-# missing from here used to be skipped entirely, structural checks and all.
-# structurephilosophy.md inserts new L3 (the flat-guess rung) and several drills/
-# checkpoints; the 34 HTML lessons carry every "L" unit's content with an offset.
-LESSON_UNIT = {
-    1:  ("L1", 1),  2:  ("L2", 2),  3:  ("L4", 4),  4:  ("L5", 5),
-    5:  ("L6", 7),  6:  ("L7", 9),  7:  ("L8", 12), 8:  ("L9", 14),
-    # lesson9 is the old lesson8b (meiosis by hand), renumbered 2026-09-15. Like
-    # lesson6b it carries no "L" unit of its own, so it has no row here and the
-    # --terms report simply does not order it.
-    #
-    # Renumbered again 2026-09-16, everything from 12 up moving down one. The
-    # old lesson10 (the baseline where nothing is happening) was absorbed into
-    # lesson9, and the old lesson11 (Wright-Fisher trajectories) was replaced by
-    # the new lesson10, which is drift built as differential reproduction with
-    # no trait attached. Both are archived under _reference/retired/lessons/.
-    # The unit ids below are notes, not gates, and are already stale against the
-    # sequence the course actually follows -- they only order the --terms report.
-    10: ("L11", 16), 11: ("L12", 17), 12: ("L13", 18),
-    13: ("L14", 19), 14: ("L15", 21), 15: ("L16", 23), 16: ("L17", 24),
-    17: ("L18", 26), 18: ("L19", 27), 19: ("L20", 29), 20: ("L21", 31),
-    21: ("L22", 32), 22: ("L23", 33), 23: ("L24", 34), 24: ("L25", 35),
-    25: ("L26", 37), 26: ("L27", 38),
-    # The old 27/28/29 (gene->chromosome, ->genome, ->cell) were folded into
-    # what is now lesson26 stage D, and the old 32/33 (lineage, off-DNA) into
-    # what is now lesson34 stage B, 2026-08-24. Their unit ids stay in UNIT_SEQ;
-    # only the lesson files are gone, which is why 27/28/29 and 32/33 have no
-    # rows.
-    30: ("L31", 43), 31: ("L32", 44),
-    34: ("L35", 47),
-}
-
-# The full 47-unit id->seq table, so ledger unlock ids resolve to positions even
-# for units (drills, rungs, checkpoints) that have no HTML lesson.
-UNIT_SEQ = {
-    "L1":1,"L2":2,"L3":3,"L4":4,"L5":5,"S-weld":6,"L6":7,"L7a":8,"L7":9,
-    "S-single":10,"L8a":11,"L8":12,"C1":13,"L9":14,"L10":15,"L11":16,"L12":17,
-    "L13":18,"L14":19,"C2":20,"L15":21,"L16a":22,"L16":23,"L17":24,"S-cond":25,
-    "L18":26,"L19":27,"L19a":28,"L20":29,"C3":30,"L21":31,"L22":32,"L23":33,
-    "L24":34,"L25":35,"S-agree":36,"L26":37,"L27":38,"L27b":39,"L28":40,"L29":41,
-    "L30":42,"L31":43,"L32":44,"L33":45,"L34":46,"L35":47,
-}
+# The 47-unit sequence that used to live here -- LESSON_UNIT and UNIT_SEQ,
+# mapping each lesson file to an "L"/"S"/"C" unit id and a position from 1 to 47
+# -- was struck on 2026-09-17 when `structurephilosophy.md` was rewritten and
+# stopped describing a fixed unit sequence at all. It ordered nothing but the
+# --terms report, it went stale with every renumber, and it named units that
+# have no file and never will. The report now orders by lesson number, which is
+# the only sequence the course actually has. The old map is in git history.
 
 # Surface strings the voice notes ban from prose regardless of ledger position.
 # These are style/jargon smells; they warn rather than fail (many are also
@@ -119,13 +87,12 @@ def load_ledger():
 
 
 def term_rows(ledger):
-    """(surface, canonical, unlock_seq or None) for every term + alias."""
+    """(surface, canonical) for every term + alias. Longest surface first, so a
+    multi-word term matches before one of its own words does."""
     rows = []
     for term, meta in ledger["terms"].items():
-        uid = meta.get("unlock")
-        useq = None if uid is None else UNIT_SEQ.get(uid, -1)
         for surface in [term] + list(meta.get("aliases", [])):
-            rows.append((surface, term, useq))
+            rows.append((surface, term))
     rows.sort(key=lambda r: -len(r[0]))
     return rows
 
@@ -315,8 +282,8 @@ def bit_map_faults(raw):
 
 
 def check_file(path, ledger, rows, style=False):
-    """Structural checks. These run on every lesson page, whether or not it has
-    a position in LESSON_UNIT -- a new lesson is exactly when they matter most."""
+    """Structural checks. These run on every lesson page, including one that has
+    never been seen before -- a new lesson is exactly when they matter most."""
     fails, warns = [], []
     raw = open(path, encoding="utf-8").read()
     prose, title = extract(raw)
@@ -364,16 +331,13 @@ def check_file(path, ledger, rows, style=False):
         for j_ in PROSE_JARGON:
             if j_ and j_ in prose_low:
                 warns.append(f"style: prose jargon '{j_}'")
-        for surface, canon, useq in rows:
+        for surface, canon in rows:
             if len(surface.strip()) <= 1:
                 continue
             if word_hit(surface, prose_norm):
                 warns.append(f"style: names '{surface}' in prose (fine -- noting it)")
 
-    m = re.match(r"lesson(\d+)\.html", os.path.basename(path))
-    n = int(m.group(1)) if m else None
-    meta = LESSON_UNIT.get(n) if n is not None else None
-    return fails, warns, meta
+    return fails, warns
 
 
 def terms_report(rows):
@@ -388,7 +352,7 @@ def terms_report(rows):
         n = int(re.search(r"lesson(\d+)", p).group(1))
         prose, _ = extract(open(p, encoding="utf-8").read())
         hay = " " + norm(prose) + " "
-        for surface, canon, _u in rows:
+        for surface, canon in rows:
             if len(surface.strip()) <= 1 or canon in seen:
                 continue
             if word_hit(surface, hay):
@@ -490,10 +454,8 @@ def main(argv):
         )
     total_fail = 0
     for p in paths:
-        fails, warns, meta = check_file(p, ledger, rows, style=style)
+        fails, warns = check_file(p, ledger, rows, style=style)
         tag = os.path.basename(p)
-        if meta:
-            tag += f"  [{meta[0]} seq {meta[1]}]"
         if not fails and not warns:
             print(f"OK   {tag}")
             continue

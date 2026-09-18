@@ -47,16 +47,23 @@ check("slots declared match slots written",
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
-  // the A2 gate: 0.12 in one generation, holding 100 breeders. Only the
-  // spread can do it; a flat pond gets there by luck about once in a blue moon.
-  const tryRun = (N, cv) => { A.N = N; A.cv = cv; A.best = 0; A_fresh();
-    for (let i = 0; i < 25; i++) A_step(); return A.best; };
-  const hot = [], cold = [];
-  for (let r = 0; r < 6; r++) { hot.push(tryRun(100, 2.6)); cold.push(tryRun(100, 0)); }
-  check("A2 gate clearable", hot.filter(v => v > 0.12).length >= 5,
-        "spread 2.6 cleared " + hot.filter(v=>v>0.12).length + "/6 (best " + Math.max(...hot).toFixed(3) + ")");
-  check("A2 gate not cleared flat", cold.filter(v => v > 0.12).length <= 1,
-        "spread 0 cleared " + cold.filter(v=>v>0.12).length + "/6 (best " + Math.max(...cold).toFixed(3) + ")");
+  /* A2 is now a roll: drive one allele out inside A_ROLL_GENS generations,
+     five times. Three things have to hold, and none is visible on screen.
+     A roll is scored by A_fixed() after at most A_ROLL_GENS steps. */
+  const rollOnce = (N, cv) => {
+    A.N = N; A.cv = cv; A_fresh();
+    for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+    return A_fixed();
+  };
+  const rate = (N, cv, k) => { let h = 0; for (let r = 0; r < k; r++) if (rollOnce(N, cv)) h++; return h / k; };
+  const easy = rate(8, 0, 40), spread = rate(40, 2.6, 40), hard = rate(300, 0, 20);
+  check("A2 roll clearable", easy >= 0.5,
+        "8 breeders, flat: lands " + (100*easy).toFixed(0) + "% of rolls (5 needed, so ~" +
+        (easy>0 ? (5/easy).toFixed(0) : "inf") + " rolls)");
+  check("A2 roll clearable by spread too", spread >= 0.25,
+        "40 breeders, spread 2.6: lands " + (100*spread).toFixed(0) + "% of rolls");
+  check("A2 roll not a gimme", hard <= 0.05,
+        "300 breeders, flat: lands " + (100*hard).toFixed(0) + "% -- the default pond must not walk it");
 
   // A1: "nobody is left out" is the misconception, and it must miss.
   const m = A_measure(100, 0, 5), pct = 100 * m.childless / 100;
@@ -78,12 +85,12 @@ check("slots declared match slots written",
 {
   const rngB = mulberry32(99);
   const inh = B_batch(rngB, 10, 300, true, 20);
-  check("B2 gate clearable", inh.fixed === 20, "10 breeders, 300 generations: " + inh.fixed + "/20 down to one colour");
+  check("B2 roll clearable", inh.fixed === 20, "10 breeders, 300 generations: " + inh.fixed + "/20 down to one allele");
   const fr = B_batch(rngB, 10, 300, false, 60);
   check("B3 observation holds", fr.touched === 0,
         "60 fresh-start ponds x 300 generations at N=10: " + fr.touched + " ever reached a wall");
   check("B3 variety holds up", fr.H[300] > 0.45, "variety after 300 generations: " + fr.H[300].toFixed(3) + " of 0.500");
-  check("B2 not clearable fresh", B_batch(rngB, 10, 300, false, 20).fixed === 0, "the other setting fixes nothing");
+  check("B2 roll not clearable fresh", B_batch(rngB, 10, 300, false, 20).fixed === 0, "the other setting fixes nothing");
 
   // the distance grows with the root of the generations, not with them
   const d = g => { const r = []; for (let i = 0; i < 60; i++) r.push(Math.abs(B_runOne(rngB, 100, g, true)[g] - 0.5)); return mn(r); };
@@ -104,10 +111,23 @@ check("slots declared match slots written",
   check("C1 half-life is 1.4 x the headcount", worst < 0.15,
         rows.map(([N,h]) => N + "->" + h.toFixed(1) + " (want " + (1.386*N).toFixed(0) + ")").join("  "));
 
-  C.N = 8; C_run(); const small = C.runs.one[20];
-  C.N = 25; C_run(); const big = C.runs.one[20];
-  check("C2 gate clearable", small > 53, "8 breeders: " + small + " of 107 by generation 20");
-  check("C2 gate needs a small pond", big <= 53, "25 breeders: " + big + " of 107 by generation 20");
+  /* C2 is now a roll: every one of the 107 ponds on a wall by generation
+     60, three times. It has to be reachable at a small headcount and out
+     of reach at a large one, or the target teaches nothing about size. */
+  const allFixedRate = (N, k) => { let h = 0; C.N = N; for (let r = 0; r < k; r++) { C_run(); if (C_allFixed()) h++; } return h / k; };
+  const curve = [4, 5, 6, 7, 8, 10, 12, 16, 25, 40].map(N => [N, allFixedRate(N, 12)]);
+  const best = curve.reduce((a, b) => b[1] > a[1] ? b : a);
+  const partial = curve.filter(r => r[1] > 0 && r[1] < 1);
+  const big = curve.filter(r => r[0] >= 16).every(r => r[1] === 0);
+  check("C2 roll clearable at all", best[1] >= 0.5,
+        "best is " + best[0] + " breeders at " + (100*best[1]).toFixed(0) + "% of rolls -- 3 needed, so ~" +
+        (3/best[1]).toFixed(0) + " rolls");
+  check("C2 roll out of reach when big", big,
+        "16+ breeders never land it: " + curve.filter(r=>r[0]>=16).map(r=>r[0]+"->"+(100*r[1]).toFixed(0)+"%").join(" "));
+  check("C2 roll has a real middle", partial.length >= 2,
+        "graded, not a cliff: " + curve.map(r => r[0]+"->"+(100*r[1]).toFixed(0)+"%").join(" "));
+  check("C2 the reachable headcount is on the slider", best[0] >= 4 && best[0] <= 60,
+        "C_N runs 4..60 and the target wants " + best[0]);
 
   const rng = mulberry32(606), iv = [];
   for (let n = 0; n < 3; n++) { const r = C.game.round(rng, n); iv.push([r.truth - r.tol, r.truth + r.tol]); }

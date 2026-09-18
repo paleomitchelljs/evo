@@ -3,6 +3,21 @@
 **Status: deferred.** Written 2026-09-02, to be picked up the weekend of 6–7 September
 or the week after. Nothing here is built yet.
 
+> **Read §4 and §7.4 with a correction, as of 2026-09-17.** This plan was written when
+> `check_lessons.py` still ran a vocabulary ratchet and giveaway checks as **hard
+> failures**, and §4's argument — "move copy into a JSON block and the gate goes blind"
+> — rests on that. It no longer holds as written: the ratchet was retired 2026-09-03,
+> and prose checks are now advisory `--style` / `--terms` reports that block nothing.
+>
+> The §4 conclusion survives with a smaller stake. Going blind to 1,825 strings still
+> makes both reports useless, and the **structural** checks (undefined helpers, declared-
+> but-unwritten scoring slots, `LOCKS.txt` coverage) are the real hard failures and do
+> not read prose at all — so nothing silently stops *failing*, it stops *reporting*.
+> Teach `extract()` about `#copy` anyway, and keep the three new hard failures proposed
+> there, which are structural and are the valuable half. §7.4's "live ratchet" is now a
+> live **report**; under the current rule — no vocabulary taught at all — a warn-while-
+> typing term check is arguably worth more than it was, not less. `PROJECT_NOTES.md` §4.
+
 "Copy" means the student-facing words — the advertising sense, nothing to do with
 duplicates. The goal is that every word a student reads lives in one addressable place
 per lesson, instead of being welded into markup and JavaScript across a 1,000–1,400 line
@@ -85,17 +100,20 @@ existing invariant.
 for tag in ("script", "style", "pre", "code", "template", "head"):
 ```
 
-So the moment copy moves into a JSON script block, **the vocabulary ratchet, the
-giveaway-phrase check and the front/back-matter checks go blind to all 1,825 strings** and
-keep reporting `0 hard failures`. That is the worst possible failure: a safety net that
-silently stops catching.
+So the moment copy moves into a JSON script block, **the prose reports go blind to all
+1,825 strings** and keep printing nothing. *(As written in September 2026 this said "the
+vocabulary ratchet, the giveaway-phrase check and the front/back-matter checks" and called
+it a hard failure going silent. Those were retired as failures on 2026-09-03 and are now
+`--style` / `--terms` reports — see the banner at the top. The point still stands for the
+reports, and the structural hard failures never read prose.)*
 
 **Therefore the gate is changed first, before a single lesson is migrated.**
 
 Changes to `check_lessons.py`:
 
 - `extract()` additionally parses `#copy` and appends every string value to the prose it
-  checks. Everything downstream — ratchet, giveaways, jargon warnings — then works unchanged.
+  checks. Everything downstream — `--terms`, giveaways, jargon warnings — then works
+  unchanged.
 - New hard failure: a page that has `data-copy` attributes but no parseable `#copy` block.
 - New hard failure: a `data-copy` key with no entry, or an entry no key uses (catches drift
   in both directions).
@@ -158,8 +176,10 @@ Deferred separately, and only worth building after §2–3 exist:
    provenance is automatic. Build the index from `git show HEAD:quotes/*.yaml` in
    `quoteable` — never write there, and HEAD parses cleanly even when the working tree does
    not.
-4. **Live ratchet.** `ledger.json` already ships, so the banned-term and giveaway checks
-   reimplement in ~100 lines of JS and warn while typing instead of at commit.
+4. **Live term report.** `ledger.json` already ships, so the term and giveaway checks
+   reimplement in ~100 lines of JS and warn while typing instead of at commit. *(Called a
+   "live ratchet" when written; nothing ratchets any more, and the rule it would serve is
+   now "no vocabulary at all" rather than "not yet".)*
 
 ## 8. Not in scope
 

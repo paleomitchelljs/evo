@@ -1,5 +1,14 @@
 # BIO 202 — Lesson Atlas
 
+> **The whole frame this atlas is built on was struck on 2026-09-17.** It is
+> organized into five Arcs; arcs are void. It describes lessons 12 and up in
+> confident detail; JM's ruling that day is that **everything from 12 up is a
+> nebulous draft — content, order, number and structure all in doubt.** Read
+> every section below lesson 12 as a description of a file, never as a
+> description of the course. `structurephilosophy.md` and `PROJECT_NOTES.md` §1
+> are the current statement of what the lessons are for; §3 there explains the
+> unit ids and arc names that appear throughout this file.
+>
 > **Stale as of 2026-08-24, and the numbering below is now wrong as well.**
 > This atlas has not been regenerated since the Arc 5 collapse and the scoring
 > work. Known divergences from the repo:
@@ -26,7 +35,9 @@
 >   **Lesson 27 stage A** on the slopes carried from scaffold S25.
 >
 > `docs/PROJECT_NOTES.md` §2 is the accurate statement of what exists.
-> Regenerate this file after the next content pass rather than patching it.
+> Regenerate this file after the next content pass rather than patching it — and
+> when regenerating, drop the arc headings and order by lesson number, which is
+> the only sequence the course has.
 
 Every lesson as it currently stands, part by part. For each part: what the interactive
 actually does, what intuition it is built to produce, and what it hands to the next part.

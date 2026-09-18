@@ -56,6 +56,7 @@
   .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
   .controls input[type=range] { width:100%; }
   .controls .row.off { opacity:0.38; pointer-events:none; }
+  .controls .dragnote { font-size:12.5px; color:var(--muted); font-style:italic; }
   .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
   .controls button:disabled { background:#bbb; cursor:not-allowed; }
@@ -67,6 +68,29 @@
   .toggle input { width:15px; height:15px; }
 
   canvas.plot { width:100%; height:auto; display:block; background:#fff; }
+  canvas.plot.draggable { cursor:ns-resize; touch-action:none; }
+  /* setupCanvas pins an inline px width; max-width lets it shrink anyway */
+  .wide-plot canvas.plot { max-width:100%; }
+  .wide-plot { margin-bottom:16px; }
+  canvas.plot.dragging { cursor:grabbing; }
+
+  /* ---- the bowling roll: set it, play it, watch it, find out ---------
+     While a roll is in the air every control on the stage is inert. That
+     is the whole point of the analogy -- you cannot steer the ball once
+     it has left your hand, and a stochastic process is only felt as one
+     if you have to sit and watch it land. */
+  .controls.rolling { opacity:0.42; pointer-events:none; }
+  .rollbar { margin-top:10px; padding:9px 12px; border-radius:4px; background:#f3efe2;
+             border-left:3px solid #bdb8a4; font-size:13px; line-height:1.5; }
+  .rollbar.live { border-left-color:var(--accent); background:#eef3e6; }
+  .rollbar.hit  { border-left-color:#6f8a4a; background:#e4efd4; color:#2e4410; }
+  .rollbar.miss { border-left-color:#b23a48; background:#f7e7e9; color:#6e1f28; }
+  .rollbar .goal { font-weight:600; }
+  .rollpips { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; align-items:center; }
+  .rollpips i { width:13px; height:13px; border-radius:50%; border:1.6px solid #bdb8a4; display:inline-block; }
+  .rollpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
+  .rollpips i.miss { background:#e3d4d6; border-color:#c99; }
+  .rollpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
   .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
   .readout .label { color:var(--muted); }
   .readout b { font-weight:600; }
@@ -164,11 +188,11 @@
         <p>In the big population, one lightning strike had a 0.005% effect. The smaller population has a 0.5% effect. On its own, that one lightning strike is not going to change much. But it's not literally zero effect. And that one lightning strike is not the only random thing that's going to happen to my population, whether it's 10,000 or 100.</p>
       </div>
       <ul class="setup">
-        <li>One pond. Every dot is a breeder. Two versions of one gene, pale and dark.</li>
+        <li>One pond. Every dot is a breeder. One gene, two alleles — pale and dark. A breeder carries two copies, so it is pale, mixed, or dark.</li>
         <li>Every breeder gets a share of the next generation. The shares always average two offspring apiece and the headcount never changes.</li>
-        <li>The spread slider changes how unevenly those shares get handed out. It changes nothing else — not the average, not the headcount, not the colours.</li>
-        <li>Nothing on this screen knows what colour a breeder is.</li>
-        <li>The middle panel plots every breeder's share against the copies of dark it carries, and fits a line through them.</li>
+        <li>The spread slider changes how unevenly those shares get handed out. It changes nothing else — not the average, not the headcount, not the alleles.</li>
+        <li>Nothing on this screen knows which allele a breeder is carrying.</li>
+        <li>The dots are the pond. The line underneath is the frequency of the dark allele, generation by generation. Watch them together.</li>
       </ul>
     </div>
   </div>
@@ -180,11 +204,7 @@
         <div class="readout" id="A_pondRead"></div>
       </div>
       <div class="panel">
-        <canvas id="A_scat" class="plot" width="640" height="240"></canvas>
-        <div class="readout" id="A_scatRead"></div>
-      </div>
-      <div class="panel">
-        <canvas id="A_traj" class="plot" width="640" height="240"></canvas>
+        <canvas id="A_traj" class="plot" width="640" height="300"></canvas>
         <div class="readout" id="A_read"></div>
       </div>
     </div>
@@ -192,28 +212,30 @@
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="A_controls">
-          <div class="row" data-line="N"><label for="A_N">breeders in the pond</label><input type="range" id="A_N" min="20" max="400" step="10" value="100" /><output id="A_NOut">100</output></div>
+          <div class="row" data-line="N"><label for="A_N">breeders in the pond</label><input type="range" id="A_N" min="4" max="400" step="2" value="100" /><output id="A_NOut">100</output></div>
           <div class="row" data-line="cv"><label for="A_cv">spread of the shares</label><input type="range" id="A_cv" min="0" max="3" step="0.1" value="0" /><output id="A_cvOut">0.0</output></div>
           <div class="buttons">
+            <button id="A_roll" class="accent">Roll it</button>
             <button id="A_step" class="secondary">One generation</button>
-            <button id="A_run" class="accent">Run 25 generations</button>
             <button id="A_reset" class="ghost">Fresh pond</button>
             <button id="A_dl" class="ghost">Download .R</button>
           </div>
         </div>
+        <div class="rollbar" id="A_rollbar"></div>
+        <div class="rollpips" id="A_rollpips"></div>
       </div>
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
           <li data-task="A1">Say how many breeders will leave nothing behind, before you run it. <span class="hint"><span id="A1_now">run one generation first</span></span></li>
-          <li data-task="A2">Hold at least 100 breeders and move the dark version's frequency more than 0.12 in a single generation. <span class="hint"><span id="A2_now">biggest single-generation move so far: —</span></span></li>
+          <li data-task="A2">Drive one allele out of the pond inside 30 generations — five times. <span class="hint"><span id="A2_now">0 of 5 landed</span></span></li>
           <li data-task="A3">Clear the three rounds below. <span class="hint"><span id="A3_now">0 of 3 landed</span></span></li>
         </ul>
         <!-- VOICE (banner): 202_lec11_04, which states the stage's point. -->
         <div class="solved-banner" id="solvedA">Anything that increases differential reproduction makes evolution go faster. It makes things change more over time. Regardless of whether it covaries with traits. Whether the differential reproduction covaries with fitness or not, we call it drift or selection — but at a more abstract level, it doesn't matter. The more differential the reproduction, the more important evolutionary processes are to shaping the frequency of heritable things. Stage B is open.</div>
       </div>
       <div class="panel numq" id="numqA">
-        <div class="q">Three rounds. Each deals a pond you have not seen and runs it one generation. You do not get to say which way the dark version moves. Say <b>how far</b> it moves. Lock it in and the same pond is dealt six more times.</div>
+        <div class="q">Three rounds. Each deals a pond you have not seen and runs it one generation. You do not get to say which way the dark allele moves. Say <b>how far</b> it moves. Lock it in and the same pond is dealt six more times.</div>
         <div class="gm">
           <div class="gm-prompt" id="A_gprompt">—</div>
           <div class="controls">
@@ -231,7 +253,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line"><span class="com"># one pond. every breeder gets a share of the next generation.</span></span><span class="line" data-line="N">N  &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="cv">cv &lt;- <span class="num" id="cA_cv">0</span>            <span class="com"># spread of the shares, mean fixed at 1</span></span><span class="line">w  &lt;- <span class="kw">if</span> (cv == <span class="num">0</span>) <span class="fn">rep</span>(<span class="num">1</span>, N) <span class="kw">else</span> <span class="fn">rgamma</span>(N, shape = <span class="num">1</span>/cv^<span class="num">2</span>, scale = cv^<span class="num">2</span>)</span><span class="line">p  &lt;- w / <span class="fn">sum</span>(w)        <span class="com"># nothing here looks at colour</span></span><span class="line"></span><span class="line"><span class="com"># each of the N offspring draws two parents with those shares</span></span><span class="line">mo &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line">fa &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line"></span><span class="line"><span class="com"># breeders that left nothing</span></span><span class="line"><span class="fn">sum</span>(<span class="fn">tabulate</span>(<span class="fn">c</span>(mo, fa), nbins = N) == <span class="num">0</span>)</span><span class="line"></span><span class="line"><span class="com"># the share plotted against the copies of dark it carries</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">tabulate</span>(<span class="fn">c</span>(mo, fa), nbins = N) ~ dark))[<span class="num">2</span>]</span></pre>
+<pre class="code" id="codeA"><span class="line"><span class="com"># one pond. every breeder gets a share of the next generation.</span></span><span class="line" data-line="N">N  &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="cv">cv &lt;- <span class="num" id="cA_cv">0</span>            <span class="com"># spread of the shares, mean fixed at 1</span></span><span class="line">w  &lt;- <span class="kw">if</span> (cv == <span class="num">0</span>) <span class="fn">rep</span>(<span class="num">1</span>, N) <span class="kw">else</span> <span class="fn">rgamma</span>(N, shape = <span class="num">1</span>/cv^<span class="num">2</span>, scale = cv^<span class="num">2</span>)</span><span class="line">p  &lt;- w / <span class="fn">sum</span>(w)        <span class="com"># nothing here looks at colour</span></span><span class="line"></span><span class="line"><span class="com"># each of the N offspring draws two parents with those shares</span></span><span class="line">mo &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line">fa &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line"></span><span class="line"><span class="com"># breeders that left nothing</span></span><span class="line"><span class="fn">sum</span>(<span class="fn">tabulate</span>(<span class="fn">c</span>(mo, fa), nbins = N) == <span class="num">0</span>)</span><span class="line"></span><span class="line"><span class="com"># the frequency of the dark allele after they breed</span></span><span class="line"><span class="fn">mean</span>(kid)</span></pre>
       </div>
     </div>
   </div>
@@ -289,18 +311,20 @@
           <div class="row" data-line="N"><label for="B_N">breeders in each pond</label><input type="range" id="B_N" min="10" max="200" step="5" value="50" /><output id="B_NOut">50</output></div>
           <div class="row" data-line="gens"><label for="B_gens">generations</label><input type="range" id="B_gens" min="25" max="300" step="25" value="100" /><output id="B_gensOut">100</output></div>
           <div class="buttons">
-            <button id="B_run" class="accent">Run 20 ponds</button>
+            <button id="B_roll" class="accent">Roll 20 ponds</button>
             <button id="B_clear" class="ghost">Clear the grey</button>
             <button id="B_dl" class="ghost">Download .R</button>
           </div>
         </div>
+        <div class="rollbar" id="B_rollbar"></div>
+        <div class="rollpips" id="B_rollpips"></div>
       </div>
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Say how many of the 20 ponds will still carry both colours at the end, before you run it. <span class="hint"><span id="B1_now">run it once first</span></span></li>
-          <li data-task="B2">Get every one of the 20 ponds down to one colour. <span class="hint"><span id="B2_now">best so far: —</span></span></li>
-          <li data-task="B3">Run the other setting three times, at 150 generations or more. <span class="hint"><span id="B3_now">0 of 3 runs</span></span></li>
+          <li data-task="B1">Say how many of the 20 ponds will still carry both alleles at the end, before you roll it. <span class="hint"><span id="B1_now">roll it once first</span></span></li>
+          <li data-task="B2">Roll every one of the 20 ponds down to a single allele — twice. <span class="hint"><span id="B2_now">0 of 2 landed</span></span></li>
+          <li data-task="B3">Roll the other setting three times, at 150 generations or more. <span class="hint"><span id="B3_now">0 of 3 rolls</span></span></li>
           <li data-task="B4">Clear the three rounds below. <span class="hint"><span id="B4_now">0 of 3 landed</span></span></li>
         </ul>
         <!-- VOICE (banner): the conclusion half of JM's dictated passage, which
@@ -346,13 +370,13 @@
       <div class="voice">
         <p>We know the frequency of an allele is going to change over time. And if it is neutral then we know it's not going to be selected for. So how is it going to change? Is it going to consistently go up, consistently go down? It'll probably be random. And what happens if it randomly goes to zero? Can it come back from that, or is it gone forever? It's gone.</p>
         <p>It's not that there's no reason for it to disappear. There is nothing <i>keeping it around</i>, because it is not being selected for. There's nothing holding it around. There's nothing maintaining that variation.</p>
-        <p>Only two variables: the size of the system, and the frequency of one version in it. That's what tells us the time until something goes extinct. Bigger population makes it take longer. Your frequency being higher doesn't mean you're going to win — it just means you've got a better shot than the versions at lower frequency.</p>
+        <p>Only two variables: the size of the system, and the frequency of one allele in it. That's what tells us the time until something goes extinct. Bigger population makes it take longer. Your frequency being higher doesn't mean you're going to win — it just means you've got a better shot than the alleles at lower frequency.</p>
       </div>
       <ul class="setup">
         <li>A hundred and seven ponds, every one of them the same size, every one starting half pale and half dark.</li>
-        <li>The tall panel is a tally of where the 107 ponds sit. Drag the generation slider to move through the run.</li>
-        <li>The bar at the far left counts ponds with no dark left. The bar at the far right counts ponds with nothing but dark.</li>
-        <li>Variety is how often two copies pulled at random out of one pond turn out to be different ones. It starts at 0.50 and is averaged over all 107.</li>
+        <li>The tall panel is a tally of where the 107 ponds sit. Set the size, roll it, and watch the pile come apart. The controls lock while it plays.</li>
+        <li>The bar at the far left counts ponds with no dark allele left. The bar at the far right counts ponds with no pale allele left.</li>
+        <li>Variety is how often two alleles pulled at random out of one pond turn out to be different ones. It starts at 0.50 and is averaged over all 107.</li>
         <li>Nothing is selected anywhere in this stage. The only thing happening is who happens to breed.</li>
       </ul>
     </div>
@@ -376,30 +400,31 @@
           <div class="row" data-line="N"><label for="C_N">breeders in each pond</label><input type="range" id="C_N" min="4" max="60" step="1" value="25" /><output id="C_NOut">25</output></div>
           <div class="row"><label for="C_gen">generation on screen</label><input type="range" id="C_gen" min="0" max="60" step="1" value="0" /><output id="C_genOut">0</output></div>
           <div class="buttons">
-            <button id="C_run" class="accent">Run 107 ponds for 60 generations</button>
-            <button id="C_play" class="secondary">Play it through</button>
+            <button id="C_roll" class="accent">Roll it</button>
             <button id="C_dl" class="ghost">Download .R</button>
           </div>
         </div>
+        <div class="rollbar" id="C_rollbar"></div>
+        <div class="rollpips" id="C_rollpips"></div>
       </div>
       <div class="panel">
         <h3>To open Stage D</h3>
         <ul class="tasks" id="tasksC">
           <li data-task="C1">Say how many generations it takes to lose half the variety, before you run it. <span class="hint"><span id="C1_now">run it once first</span></span></li>
-          <li data-task="C2">Get more than half the 107 ponds down to one colour inside 20 generations. <span class="hint"><span id="C2_now">best so far: —</span></span></li>
+          <li data-task="C2">Roll the 107 ponds all the way apart — nothing left in the middle — three times. <span class="hint"><span id="C2_now">0 of 3 landed</span></span></li>
           <li data-task="C3">Clear the three rounds below. <span class="hint"><span id="C3_now">0 of 3 landed</span></span></li>
-          <li data-task="C4">Say how many of Buri's 107 bottles had one colour left after nineteen generations. <span class="hint"><span id="C4_now">not yet</span></span></li>
+          <li data-task="C4">Say how many of Buri's 107 bottles had one allele left after nineteen generations. <span class="hint"><span id="C4_now">not yet</span></span></li>
         </ul>
         <!-- VOICE (banner): 202_lec09_04 spliced with the closing half of
              202_lec11_02. Between them they state the stage's conclusion. -->
         <div class="solved-banner" id="solvedC">We have what are called absorbing boundaries. Once I hit zero, the frequency of A is zero in perpetuity. That's just what happens. So I don't need as much sampling error as you'd expect to get big changes. Even if the sampling error is really small, if I let the thing run long enough, eventually I'm going to hit one or zero. And once I do, that variation is gone. Which is why the presence of heterozygosity means you haven't drifted everything to extinction. A heterozygote's existence says: this locus has not fallen yet. We still have variation here. We can still change frequencies. Stage D is open.</div>
       </div>
       <div class="panel numq" id="numqC">
-        <div class="q">Three rounds. Each deals 107 fresh ponds of a size you have not seen and runs them for a stated number of generations. How many of the 107 come out with one colour left? Lock it in and the page deals 107 more, six times over.</div>
+        <div class="q">Three rounds. Each deals 107 fresh ponds of a size you have not seen and runs them for a stated number of generations. How many of the 107 come out with one allele left? Lock it in and the page deals 107 more, six times over.</div>
         <div class="gm">
           <div class="gm-prompt" id="C_gprompt">—</div>
           <div class="controls">
-            <div class="row"><label for="C_g0">ponds with one colour left</label><input type="range" id="C_g0" min="0" max="107" step="1" value="30" /><output id="C_g0Out">30</output></div>
+            <div class="row"><label for="C_g0">ponds with one allele left</label><input type="range" id="C_g0" min="0" max="107" step="1" value="30" /><output id="C_g0Out">30</output></div>
             <div class="buttons">
               <button id="C_glock" class="accent">Lock in this estimate</button>
               <button id="C_gnext" class="secondary" disabled>Deal the next round</button>
@@ -413,7 +438,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># 107 ponds, same size, same start, nothing selected</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cC_N">25</span></span><span class="line">p &lt;- <span class="fn">rep</span>(<span class="num">0.5</span>, <span class="num">107</span>)</span><span class="line">H &lt;- <span class="fn">numeric</span>(<span class="num">61</span>); H[<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">60</span>) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">107</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  H[t+<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># ponds with one colour left</span></span><span class="line"><span class="fn">sum</span>(p == <span class="num">0</span> | p == <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># the fraction of the variety that goes missing each generation</span></span><span class="line"><span class="num">1</span> - <span class="fn">exp</span>(<span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">log</span>(H) ~ <span class="fn">seq_along</span>(H)))[<span class="num">2</span>])</span></pre>
+<pre class="code" id="codeC"><span class="line"><span class="com"># 107 ponds, same size, same start, nothing selected</span></span><span class="line" data-line="N">N &lt;- <span class="num" id="cC_N">25</span></span><span class="line">p &lt;- <span class="fn">rep</span>(<span class="num">0.5</span>, <span class="num">107</span>)</span><span class="line">H &lt;- <span class="fn">numeric</span>(<span class="num">61</span>); H[<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">60</span>) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">107</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  H[t+<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># ponds with one allele left</span></span><span class="line"><span class="fn">sum</span>(p == <span class="num">0</span> | p == <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># the fraction of the variety that goes missing each generation</span></span><span class="line"><span class="num">1</span> - <span class="fn">exp</span>(<span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">log</span>(H) ~ <span class="fn">seq_along</span>(H)))[<span class="num">2</span>])</span></pre>
       </div>
     </div>
   </div>
@@ -432,13 +457,13 @@
       <div>
         <ul class="setup" style="margin-top:0; padding-top:0; border-top:0;">
           <li>Peter Buri set up <b>107</b> separate bottles of <i>Drosophila</i> in 1956. Eight males and eight females in each one, sixteen flies, thirty-two copies of the gene, every bottle starting at half and half.</li>
-          <li>Every generation he counted the eye-colour versions in all 107 bottles and drew sixteen new flies at random to start the next one.</li>
+          <li>Every generation he counted the eye-colour alleles in all 107 bottles and drew sixteen new flies at random to start the next one.</li>
           <li>Nineteen generations. Nobody was selecting anything. The bars are what he counted.</li>
-          <li>Drag through his generations, then say how many bottles have one colour left at the end.</li>
+          <li>Drag through his generations, then say how many bottles have one allele left at the end.</li>
         </ul>
         <div class="controls" style="margin-top:12px;">
           <div class="row"><label for="C_bgen">Buri's generation</label><input type="range" id="C_bgen" min="0" max="19" step="1" value="0" /><output id="C_bgenOut">0</output></div>
-          <div class="row"><label for="C_bg0">bottles with one colour left</label><input type="range" id="C_bg0" min="0" max="107" step="1" value="20" /><output id="C_bg0Out">20</output></div>
+          <div class="row"><label for="C_bg0">bottles with one allele left</label><input type="range" id="C_bg0" min="0" max="107" step="1" value="20" /><output id="C_bg0Out">20</output></div>
           <div class="buttons">
             <button id="C_block" class="accent">Lock it in</button>
           </div>
@@ -467,7 +492,7 @@
         <p>You have an absorbing boundary at zero, which matters a lot in biological things. And if you're dealing with fluctuations where there's an asymmetric value to low versus high, the downs matter a lot more, because the downs are the limiting step.</p>
       </div>
       <ul class="setup">
-        <li>Three ways to shrink a system without removing a single body. Pick one with the buttons.</li>
+        <li>Three ways to shrink a system without removing a single body. Pick one with the buttons, set it, then roll it. The controls lock while it plays.</li>
         <li>Uneven shares — a hundred breeders, but the offspring get divided up unevenly.</li>
         <li>A lopsided lek — a hundred birds, and you choose how many of them breed as males. Nobody dies and the headcount never moves.</li>
         <li>A bust — a hundred birds most years, crashing to a number you set for a stretch you set, once every ten generations.</li>
@@ -508,15 +533,17 @@
           <div class="row off" data-line="depth" id="D_rowDepth"><label for="D_depth">the bust goes down to</label><input type="range" id="D_depth" min="2" max="100" step="1" value="100" /><output id="D_depthOut">100</output></div>
           <div class="row off" data-line="dur" id="D_rowDur"><label for="D_dur">and lasts this many of every ten</label><input type="range" id="D_dur" min="0" max="5" step="1" value="0" /><output id="D_durOut">0</output></div>
           <div class="buttons">
-            <button id="D_run" class="accent">Run 120 generations</button>
+            <button id="D_roll" class="accent">Roll 120 generations</button>
             <button id="D_dl" class="ghost">Download .R</button>
           </div>
         </div>
+        <div class="rollbar" id="D_rollbar"></div>
+        <div class="rollpips" id="D_rollpips"></div>
       </div>
       <div class="panel">
         <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Hold a hundred bodies and get the pond drifting like ten or fewer — by each of the three routes. <span class="hint"><span id="D1_now">0 of 3 routes</span></span></li>
+          <li data-task="D1">Hold a hundred bodies and roll the pond down to drifting like ten or fewer — once by each of the three routes. <span class="hint"><span id="D1_now">0 of 3 routes</span></span></li>
           <li data-task="D2">Say what one breeding male out of a hundred birds is worth, before you set it. <span class="hint"><span id="D2_now">not yet</span></span></li>
           <li data-task="D3">Clear the three rounds below. <span class="hint"><span id="D3_now">0 of 3 landed</span></span></li>
           <li data-task="D4">Say what the Isle Royale wolf record is worth as an evenly-breeding population. <span class="hint"><span id="D4_now">not yet</span></span></li>
@@ -595,21 +622,28 @@
         <p>Streakiness begs for an explanation in our brains, and you have to resist that tendency. Streakiness does not always beg for an explanation. We invented statistics to say: this streak — this requires an explanation. This streak — this does not.</p>
       </div>
       <ul class="setup">
-        <li>The same pond as Stage A, with one thing added: the dark version now buys its carrier a share.</li>
-        <li>The slider is how much. Zero is Stage A exactly.</li>
-        <li>The top panel plots every breeder's share against the copies of dark it carries. The red line is what the slider is set to. The dark line is what you would fit to this one generation.</li>
-        <li>Two ponds run underneath — five hundred breeders and twenty — with the same advantage in both. Forty ponds of each. A filled dot is a pond that ended with nothing but dark in it.</li>
-        <li>Every pond runs until one colour is gone.</li>
+        <li>The same pond as Stage A, with one thing added: the dark allele now buys its carrier a share.</li>
+        <li><b>Drag the red line on the top panel</b> to say how much. Flat is Stage A exactly.</li>
+        <li>The left half of the top panel is zoomed in on the average offspring of each of the three kinds of breeder. That is where the red line is, and where you drag it. The dashed line is what you would fit to this one generation — you do not control that one.</li>
+        <li>The right half is the same line drawn over the 200 breeders themselves, at the scale they are actually spread over.</li>
+        <li>Two ponds run underneath — five hundred breeders and twenty — with the same advantage in both. Forty ponds of each. A filled dot is a pond that ended with nothing but the dark allele in it.</li>
+        <li>Every pond runs until one allele is gone.</li>
       </ul>
+    </div>
+  </div>
+
+  <!-- The scatter gets the full width of the stage and the drag happens on
+       it directly. JM, 2026-09-17: "the graph should be wider & dragging
+       should occur directly on the graph." -->
+  <div class="stage-body">
+    <div class="panel wide-plot">
+      <canvas id="E_scat" class="plot draggable" width="1200" height="420"></canvas>
+      <div class="readout" id="E_scatRead"></div>
     </div>
   </div>
 
   <div class="stage-body grid">
     <div class="col">
-      <div class="panel">
-        <canvas id="E_scat" class="plot" width="680" height="260"></canvas>
-        <div class="readout" id="E_scatRead"></div>
-      </div>
       <div class="panel">
         <canvas id="E_counts" class="plot" width="680" height="280"></canvas>
         <div class="readout" id="E_read"></div>
@@ -619,7 +653,11 @@
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="E_controls">
-          <div class="row" data-line="s"><label for="E_s">what one copy of dark is worth</label><input type="range" id="E_s" min="0" max="0.1" step="0.001" value="0" /><output id="E_sOut">0.000</output></div>
+          <div class="row" data-line="s">
+            <label>what one copy of the dark allele is worth</label>
+            <span class="dragnote">drag the red line on the panel above</span>
+            <output id="E_sOut">0.000</output>
+          </div>
           <div class="buttons">
             <button id="E_run" class="accent">Run 40 ponds of each size</button>
             <button id="E_redraw" class="secondary">Redraw the generation</button>
@@ -630,9 +668,9 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksE">
-          <li data-task="E1">Find an advantage that nearly always wins in the pond of five hundred and comes out a coin flip in the pond of twenty. <span class="hint"><span id="E1_now">not yet</span></span></li>
+          <li data-task="E1">Drag out an advantage that nearly always wins in the pond of five hundred and comes out a coin flip in the pond of twenty. <span class="hint"><span id="E1_now">not yet</span></span></li>
           <li data-task="E2">Then find one big enough to nearly always win in the pond of twenty too. <span class="hint"><span id="E2_now">not yet</span></span></li>
-          <li data-task="E3">Say what a 2% advantage is worth in a pond of twenty, before you set it. <span class="hint"><span id="E3_now">not yet</span></span></li>
+          <li data-task="E3">Say what a 2% advantage is worth in a pond of twenty, before you drag it there. <span class="hint"><span id="E3_now">not yet</span></span></li>
           <li data-task="E4">Clear the three rounds below. <span class="hint"><span id="E4_now">0 of 3 landed</span></span></li>
           <li data-task="E5">Say how far apart twelve populations of one clone end up after fifty thousand generations. <span class="hint"><span id="E5_now">not yet</span></span></li>
         </ul>
@@ -660,7 +698,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line"><span class="com"># the share a breeder gets, as a line through what it carries</span></span><span class="line" data-line="s">s &lt;- <span class="num" id="cE_s">0</span>          <span class="com"># what one copy of dark is worth</span></span><span class="line">w &lt;- <span class="num">1</span> + s * dark + e     <span class="com"># dark is 0, 1 or 2. e is the leftover</span></span><span class="line"></span><span class="line"><span class="com"># the slope you would fit to one generation of it</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(w ~ dark))[<span class="num">2</span>]</span><span class="line"></span><span class="line"><span class="com"># one pond, run until one colour is gone</span></span><span class="line">run &lt;- <span class="kw">function</span>(N, s, p = <span class="num">0.5</span>) {</span><span class="line">  <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) {</span><span class="line">    pp &lt;- p * (<span class="num">1</span> + s + s*p) / (<span class="num">1</span> + <span class="num">2</span>*s*p)</span><span class="line">    p  &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*N, pp) / (<span class="num">2</span>*N)</span><span class="line">  }</span><span class="line">  p</span><span class="line">}</span><span class="line"><span class="fn">sum</span>(<span class="fn">replicate</span>(<span class="num">40</span>, <span class="fn">run</span>(N, s)))</span></pre>
+<pre class="code" id="codeE"><span class="line"><span class="com"># the share a breeder gets, as a line through what it carries</span></span><span class="line" data-line="s">s &lt;- <span class="num" id="cE_s">0</span>          <span class="com"># what one copy of dark is worth</span></span><span class="line">w &lt;- <span class="num">1</span> + s * dark + e     <span class="com"># dark is 0, 1 or 2. e is the leftover</span></span><span class="line"></span><span class="line"><span class="com"># the slope you would fit to one generation of it</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(w ~ dark))[<span class="num">2</span>]</span><span class="line"></span><span class="line"><span class="com"># one pond, run until one allele is gone</span></span><span class="line">run &lt;- <span class="kw">function</span>(N, s, p = <span class="num">0.5</span>) {</span><span class="line">  <span class="kw">while</span> (p &gt; <span class="num">0</span> &amp;&amp; p &lt; <span class="num">1</span>) {</span><span class="line">    pp &lt;- p * (<span class="num">1</span> + s + s*p) / (<span class="num">1</span> + <span class="num">2</span>*s*p)</span><span class="line">    p  &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*N, pp) / (<span class="num">2</span>*N)</span><span class="line">  }</span><span class="line">  p</span><span class="line">}</span><span class="line"><span class="fn">sum</span>(<span class="fn">replicate</span>(<span class="num">40</span>, <span class="fn">run</span>(N, s)))</span></pre>
       </div>
     </div>
   </div>
@@ -734,8 +772,9 @@
    Price terms are computed separately and never summed into one
    "leftover", because the scatter around a fitted line and the change
    within a lineage are the same shape and not the same object --
-   structurephilosophy.md is explicit about that and a shared engine is
-   exactly where the two would quietly fuse.
+   docs/PROJECT_NOTES.md section 1 is explicit about that (the rule used to
+   live in structurephilosophy.md, which was rewritten 2026-09-17) and a
+   shared engine is exactly where the two would quietly fuse.
 
    Every number on screen is measured off the simulator, never asserted.
    The checks are in scripts/check_lesson10_numbers.js, which drives this
@@ -997,6 +1036,104 @@ function drawStrips(cvId, strips) {
   });
 }
 
+/* ====== the bowling roll ============================================
+   JM, 2026-09-17: "Having them set conditions at the start, hit 'play',
+   watch it progress, and then see if they hit some target would be a
+   fantastic core kind of question. Kind of a 'bowling' approach."
+
+   The shape, and why each piece is there:
+
+     the student is told the target       -- they are aiming, not fiddling
+     they set the conditions, live        -- the setting is the claim
+     they hit play and the controls LOCK  -- you cannot steer a thrown ball
+     the run animates, generation by gen  -- the watching is the lesson
+     it reports hit or miss at the end    -- the verdict comes after, not during
+     N hits to clear, not one             -- one hit is luck; five is a claim
+
+   What this buys over a slider that redraws instantly: the student feels
+   the process as stochastic instead of reading that it is. The same
+   setting rolled twice does different things, and they have to sit
+   through both. That is the visceral half of drift and it cannot be got
+   from a summary statistic.
+
+   Written general on purpose -- the caller supplies the target text, the
+   predicate, the frame painter and the hit count, and nothing in here
+   knows anything about ponds. Third caller extracts it to sim.js.
+
+   cfg: { task, need, goal, controls, start(), frame(i), frames, done(),
+          hit(), sayHit(), sayMiss(), after() }                        */
+function wireBowling(stage, cfg) {
+  const need = cfg.need || 5;
+  const el = k => document.getElementById(stage + k);
+  const st = { hits: 0, rolls: [], rolling: false, timer: 0, cleared: false };
+
+  const bar = el("_rollbar"), pips = el("_rollpips");
+  const btn = el("_roll"), ctrls = document.getElementById(stage + "_controls");
+
+  function paintPips() {
+    if (!pips) return;
+    let h = "";
+    for (let i = 0; i < Math.max(need, st.rolls.length); i++) {
+      const r = st.rolls[i];
+      h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : "") + '"></i>';
+    }
+    h += "<span>" + st.hits + " of " + need + " landed</span>";
+    pips.innerHTML = h;
+  }
+  function say(cls, html) { if (bar) { bar.className = "rollbar" + (cls ? " " + cls : ""); bar.innerHTML = html; } }
+
+  function idle() {
+    say("", '<span class="goal">' + cfg.goal + "</span><br>Set it up, then roll.");
+    paintPips();
+  }
+
+  function finish(ok) {
+    st.rolling = false;
+    if (ctrls) ctrls.classList.remove("rolling");
+    if (btn) { btn.disabled = false; btn.textContent = cfg.rollAgain || "Roll again"; }
+    st.rolls.push(ok);
+    if (ok) st.hits++;
+    say(ok ? "hit" : "miss", (ok ? "<b>Landed it.</b> " : "<b>Missed.</b> ") +
+        (ok ? cfg.sayHit() : cfg.sayMiss()));
+    paintPips();
+    if (cfg.after) cfg.after(ok);
+    if (st.hits >= need && !st.cleared) {
+      st.cleared = true;
+      markTask(stage, cfg.task);
+      hint(cfg.task, "landed " + need + " of them");
+      if (cfg.onCleared) cfg.onCleared();
+      checkStageDone(stage);
+    } else {
+      hint(cfg.task, st.hits + " of " + need + " landed");
+    }
+  }
+
+  function roll() {
+    if (st.rolling) return;
+    st.rolling = true;
+    if (ctrls) ctrls.classList.add("rolling");
+    if (btn) { btn.disabled = true; btn.textContent = "rolling\u2026"; }
+    cfg.start();
+    let i = 0;
+    const total = cfg.frames();
+    say("live", '<span class="goal">' + cfg.goal + "</span><br>Rolling\u2026 watch it.");
+    st.timer = setInterval(() => {
+      i++;
+      const done = cfg.frame(i) || i >= total;
+      if (done) {
+        clearInterval(st.timer); st.timer = 0;
+        if (cfg.done) cfg.done();
+        finish(!!cfg.hit());
+      }
+    }, cfg.ms || 80);
+    bump(stage);
+  }
+
+  if (btn) btn.addEventListener("click", roll);
+  idle();
+  return { idle, rolling: () => st.rolling, hits: () => st.hits };
+}
+
 /* ====== the closing game ============================================
    No stage ends on a typed answer. A round is dealt, the student sets
    one slider, locks, and the same population is dealt six more times.
@@ -1152,7 +1289,8 @@ function neFromDecay(H) {
 /* =====================================================================
    STAGE A — differential reproduction with nothing attached to it.
    ===================================================================== */
-const A = { N: 100, cv: 0, gen: 0, pop: null, counts: null, shares: null,
+const A_ROLL_GENS = 30;
+const A = { N: 100, cv: 0, gen: 0, pop: null, counts: null, shares: null, roll: null,
             traj: [], best: 0, game: null, rng: null, serial: 0 };
 
 function A_fresh() {
@@ -1173,18 +1311,12 @@ function A_step() {
   const after = popFreq(A.pop);
   A.lastMove = after - before;
   A.traj.push(after);
-  if (A.N >= 100 && Math.abs(A.lastMove) > A.best) A.best = Math.abs(A.lastMove);
   A_checkGate();
 }
-function A_checkGate() {
-  hint("A2", A.best > 0 ? "biggest single-generation move so far: " + f3(A.best) : "biggest single-generation move so far: —");
-  if (A.best > 0.12 && !taskDone("A", "A2")) {
-    markTask("A", "A2");
-    hint("A2", "landed at " + f3(A.best));
-    if (A.game) A.game.show();
-    checkStageDone("A");
-  }
-}
+/* Stage A's gate is the roll, wired in A_wire via wireBowling. Nothing
+   here to check per step any more -- the verdict comes at the end of a
+   roll, not continuously, which is the point of the pattern. */
+function A_checkGate() {}
 /* The committed estimate and the closing game both need the same thing:
    the typical behaviour of this pond, measured over several fresh draws
    rather than read off the one on screen. A single run is not the number. */
@@ -1222,44 +1354,35 @@ function A_drawPond() {
     ctx.globalAlpha = 1;
   }
 }
-function A_drawScat() {
-  const cv = document.getElementById("A_scat");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const maxC = Math.max(4, Math.max.apply(null, Array.from(A.counts)) + 1);
-  const f = box(52, 14, W - 74, H - 52, -0.4, 2.4, 0, maxC);
-  axes(ctx, f, "copies of dark this breeder carries", "offspring it left", v => v.toFixed(0), v => v.toFixed(0));
-  if (A.gen === 0) {
-    ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("run a generation", f.px + f.pw / 2, f.py + f.ph / 2);
-    return;
-  }
-  const xs = [], ys = [];
-  const jr = mulberry32(12345);
-  for (let i = 0; i < A.N; i++) {
-    const k = darkCopies(A.pop, i);   // the genotype that BRED, read off the parents
-    xs.push(k); ys.push(A.counts[i]);
-    ctx.fillStyle = k === 0 ? PALE : (k === 1 ? MID : DARK);
-    ctx.globalAlpha = 0.75;
-    ctx.beginPath(); ctx.arc(f.x(k + (jr() - 0.5) * 0.55), f.y(A.counts[i] + (jr() - 0.5) * 0.4), 3.1, 0, 6.2832); ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  const b = olsSlope(xs, ys);
-  const mx = mean(xs), my = mean(ys);
-  ctx.strokeStyle = "#333"; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(f.x(-0.4), f.y(my + b * (-0.4 - mx))); ctx.lineTo(f.x(2.4), f.y(my + b * (2.4 - mx))); ctx.stroke();
-  A.slope = b;
-}
 function A_drawTraj() {
   const cv = document.getElementById("A_traj");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const g = Math.max(25, A.traj.length - 1);
+  const g = Math.max(A_ROLL_GENS, A.traj.length - 1);
   const f = box(52, 14, W - 74, H - 52, 0, g, 0, 1);
-  axes(ctx, f, "generation", "frequency of dark", v => v.toFixed(2));
+  axes(ctx, f, "generation", "frequency of the dark allele", v => v.toFixed(2));
+  // the two absorbing walls. Touch either and the roll is over.
+  ctx.strokeStyle = "#cfcbbd"; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(0)); ctx.lineTo(f.px + f.pw, f.y(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(1)); ctx.lineTo(f.px + f.pw, f.y(1)); ctx.stroke();
+  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("dark gone", f.px + 4, f.y(0) - 3);
+  ctx.textBaseline = "top"; ctx.fillText("pale gone", f.px + 4, f.y(1) + 3);
   ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(f.px, f.y(0.5)); ctx.lineTo(f.px + f.pw, f.y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(0.5)); ctx.lineTo(f.px + f.pw, f.y(0.5)); ctx.stroke();
+  // the deadline the roll is aimed at
+  if (A_ROLL_GENS <= g) {
+    ctx.strokeStyle = "rgba(178,58,72,0.55)"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(f.x(A_ROLL_GENS), f.py); ctx.lineTo(f.x(A_ROLL_GENS), f.py + f.ph); ctx.stroke();
+  }
+  ctx.setLineDash([]);
   line(ctx, f, A.traj, DARK, 2);
+  // where it is right now, so a paused frame reads
+  const last = A.traj[A.traj.length - 1];
+  if (A.traj.length > 1) {
+    ctx.fillStyle = (last === 0 || last === 1) ? HOT : DARK;
+    ctx.beginPath(); ctx.arc(f.x(A.traj.length - 1), f.y(last), 4, 0, 6.2832); ctx.fill();
+  }
 }
 function A_readouts() {
   let zero = 0; for (let i = 0; i < A.N; i++) if (A.counts[i] === 0) zero++;
@@ -1269,17 +1392,15 @@ function A_readouts() {
     : '<span class="label">generation</span> <b>' + A.gen + '</b> &nbsp;|&nbsp; <span class="label">left nothing behind:</span> <b>' + zero +
       '</b> of ' + A.N + ' &nbsp;|&nbsp; <span class="label">biggest brood:</span> <b>' +
       Math.max.apply(null, Array.from(A.counts)) + '</b>';
-  document.getElementById("A_scatRead").innerHTML = A.gen === 0 ? '<span class="label">—</span>'
-    : '<span class="label">the line through this generation has a slope of</span> <b>' + (A.slope >= 0 ? "+" : "") + f3(A.slope) +
-      '</b> <span class="label">offspring per copy of dark</span>';
   document.getElementById("A_read").innerHTML =
-    '<span class="label">frequency of dark:</span> <b>' + f3(p) + '</b>' +
+    '<span class="label">frequency of the dark allele:</span> <b>' + f3(p) + '</b>' +
     (A.lastMove == null ? "" : ' &nbsp;|&nbsp; <span class="label">it moved</span> <b>' + (A.lastMove >= 0 ? "+" : "") + f3(A.lastMove) + '</b>') +
     ' &nbsp;|&nbsp; <span class="label">variety:</span> <b>' + f3(variety(p)) + '</b>' +
     ' &nbsp;|&nbsp; <span class="label">really in the game:</span> <b class="big">' +
       (A.gen === 0 ? "—" : reallyInTheGame(A.shares).toFixed(1)) + '</b> <span class="label">of ' + A.N + '</span>';
 }
-function A_paint() { A_drawPond(); A_drawScat(); A_drawTraj(); A_readouts(); }
+function A_paint() { A_drawPond(); A_drawTraj(); A_readouts(); }
+const A_fixed = () => { const p = popFreq(A.pop); return p === 0 || p === 1; };
 
 function A_wire() {
   const N = document.getElementById("A_N"), cvI = document.getElementById("A_cv");
@@ -1288,7 +1409,6 @@ function A_wire() {
   cvI.addEventListener("input", e => { A.cv = +e.target.value; document.getElementById("A_cvOut").value = A.cv.toFixed(1);
     document.getElementById("cA_cv").textContent = A.cv.toFixed(1); highlightByDataLine("codeA", "cv"); A_paint(); bump("A"); });
   document.getElementById("A_step").addEventListener("click", () => { A_step(); A_paint(); bump("A"); });
-  document.getElementById("A_run").addEventListener("click", () => { for (let i = 0; i < 25; i++) A_step(); A_paint(); bump("A"); });
   document.getElementById("A_reset").addEventListener("click", () => { A_fresh(); A_paint(); bump("A"); });
   document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson10_stageA.R", A_RCODE()));
 
@@ -1307,6 +1427,32 @@ function A_wire() {
     wrong: r => "it is " + r.truth.toFixed(0) + "%. Every breeder had the same chance; that is not the same as every breeder getting a turn."
   });
 
+  /* The roll. Five extinctions inside thirty generations, and the only
+     way to get there is to bring the pond down or the spread up -- which
+     is the stage's point, arrived at by aiming rather than by being told.
+     A hundred breeders breeding evenly will not do it in thirty, and the
+     student finds that out by failing at it a few times. */
+  A.roll = wireBowling("A", {
+    task: "A2", need: 5, ms: 70,
+    goal: "Drive one allele out of the pond — pale or dark, either counts — inside " + A_ROLL_GENS + " generations.",
+    rollAgain: "Roll again",
+    start: () => { A_fresh(); A_paint(); },
+    frames: () => A_ROLL_GENS,
+    frame: () => { A_step(); A_paint(); return A_fixed(); },
+    hit: A_fixed,
+    sayHit: () => {
+      const p = popFreq(A.pop);
+      return "the " + (p === 0 ? "dark" : "pale") + " allele is gone at generation " + A.gen +
+             ", and it is not coming back. " + A.N + " breeders, spread " + A.cv.toFixed(1) + ".";
+    },
+    sayMiss: () => {
+      const p = popFreq(A.pop);
+      return "still at " + f3(p) + " after " + A_ROLL_GENS + " generations. Nothing was pushing it either way — " +
+             "it simply did not get there this time.";
+    },
+    onCleared: () => { if (A.game) A.game.show(); }
+  });
+
   A.game = wireGame("A", {
     task: "A3", bit: BIT.A3, field: { label: "it moves about this far", min: 0, max: 0.25, start: 0.05, fmt: f3 },
     round: (rng, n) => {
@@ -1319,7 +1465,7 @@ function A_wire() {
       const m = A_measure(N, cv, 40);
       return { N, cv, truth: m.move, tol: Math.max(0.012, 0.35 * m.move), values: m.movesRaw.slice(0, 6),
         prompt: "A pond of <b>" + N + "</b> breeders, with the shares spread by <b>" + cv.toFixed(1) +
-                "</b>. Nothing here looks at colour. One generation goes by. How far does the frequency of dark move?",
+                "</b>. Nothing here looks at colour. One generation goes by. How far does the frequency of the dark allele move?",
         right: () => "the typical move is " + f3(m.move) + ". Six more generations of the same pond are on the strip — note which side of the start they land on.",
         wrong: () => "the typical move is " + f3(m.move) + ". Really in the game: " + m.ne.toFixed(1) + " of " + N + "." };
     },
@@ -1352,7 +1498,8 @@ function A_RCODE() {
    migration.
    ===================================================================== */
 const B = { N: 50, gens: 100, rule: "inherit", runs: { inherit: null, fresh: null },
-            freshRuns: 0, freshTouched: 0, bestFixed: -1, game: null, lock: null };
+            freshRuns: 0, freshTouched: 0, bestFixed: -1, game: null, lock: null,
+            roll: null, showTo: null };
 
 function B_runOne(rng, N, gens, inherited) {
   const p0 = 0.5; let p = p0;
@@ -1377,25 +1524,23 @@ function B_run() {
   const r = B_batch(rng, B.N, B.gens, B.rule === "inherit", 20);
   r.N = B.N; r.gens = B.gens;
   B.runs[B.rule] = r;
-  if (B.rule === "fresh") {
-    if (B.gens >= 150) {
-      B.freshRuns++;
-      B.freshTouched += r.touched;
-      hint("B3", B.freshRuns + " of 3 runs · " + (B.freshRuns * 20) + " ponds, " + B.freshTouched + " of them ever reached one colour");
-      if (B.freshRuns >= 3 && !taskDone("B", "B3")) { markTask("B", "B3"); checkStageDone("B"); }
-    } else {
-      hint("B3", B.freshRuns + " of 3 runs · that one was only " + B.gens + " generations, and the task asks for 150");
-    }
+}
+/* The B3 leg is not a target you aim at -- it is "go and watch the other
+   setting refuse to do this", three times. Counted at the end of a roll
+   rather than continuously, same as every other verdict on the page. */
+function B_afterRoll() {
+  const r = B.runs[B.rule];
+  if (B.rule !== "fresh" || !r) return;
+  if (B.gens >= 150) {
+    B.freshRuns++;
+    B.freshTouched += r.touched;
+    hint("B3", B.freshRuns + " of 3 rolls · " + (B.freshRuns * 20) + " ponds, " + B.freshTouched + " of them ever reached one allele");
+    if (B.freshRuns >= 3 && !taskDone("B", "B3")) { markTask("B", "B3"); checkStageDone("B"); }
   } else {
-    if (r.fixed > B.bestFixed) B.bestFixed = r.fixed;
-    hint("B2", "best so far: " + B.bestFixed + " of 20 down to one colour");
-    if (r.fixed >= 20 && !taskDone("B", "B2")) {
-      markTask("B", "B2"); hint("B2", "all 20, at " + B.N + " breeders over " + B.gens + " generations");
-      if (B.game) B.game.show();
-      checkStageDone("B");
-    }
+    hint("B3", B.freshRuns + " of 3 rolls · that one was only " + B.gens + " generations, and the task asks for 150");
   }
 }
+const B_allFixed = () => { const r = B.runs[B.rule]; return !!r && r.fixed >= 20; };
 
 function B_drawTraj() {
   const cv = document.getElementById("B_traj");
@@ -1414,6 +1559,13 @@ function B_drawTraj() {
     ctx.globalAlpha = 1;
   }
   const cur = B.runs[B.rule];
+  const upto = B.showTo;
+  if (cur && upto != null) {
+    for (const P of cur.P) line(ctx, f, P.slice(0, upto + 1), B.rule === "inherit" ? DARK : BLUE, 1.4);
+    ctx.strokeStyle = "rgba(178,58,72,0.5)"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(f.x(upto), f.py); ctx.lineTo(f.x(upto), f.py + f.ph); ctx.stroke();
+    return;
+  }
   if (!cur || cur.gens !== g) {
     ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
     ctx.fillText("run 20 ponds", f.px + f.pw / 2, f.py + f.ph / 2);
@@ -1445,7 +1597,7 @@ function B_readouts() {
     : "Each generation's parents are drawn from the pond the run started with. Chance still happens every generation; nothing carries it forward.";
   document.getElementById("B_read").innerHTML = !cur || cur.gens !== B.gens
     ? '<span class="label">nothing run at this setting yet</span>'
-    : '<span class="label">after ' + cur.gens + ' generations:</span> <b>' + cur.fixed + '</b> of 20 <span class="label">ponds down to one colour</span>' +
+    : '<span class="label">after ' + cur.gens + ' generations:</span> <b>' + cur.fixed + '</b> of 20 <span class="label">ponds down to one allele</span>' +
       ' &nbsp;|&nbsp; <span class="label">ever touched a wall:</span> <b>' + cur.touched + '</b>' +
       ' &nbsp;|&nbsp; <span class="label">typical distance from the start:</span> <b class="big">' + f3(cur.dist) + '</b>';
   const inh = B.runs.inherit, fr = B.runs.fresh;
@@ -1470,7 +1622,35 @@ function B_wire() {
     document.getElementById("cB_N").textContent = B.N; highlightByDataLine("codeB", "N"); B_paint(); bump("B"); });
   G.addEventListener("input", e => { B.gens = +e.target.value; document.getElementById("B_gensOut").value = B.gens;
     document.getElementById("cB_gens").textContent = B.gens; highlightByDataLine("codeB", "gens"); B_paint(); bump("B"); });
-  document.getElementById("B_run").addEventListener("click", () => { B_run(); B_paint(); bump("B"); });
+  /* The roll. All twenty ponds onto a wall, twice. Reachable under
+     "the generation before this one" by shrinking the pond or running it
+     longer, and unreachable under "the pond you started with" at any
+     setting -- which is the whole stage, arrived at by trying. */
+  B.roll = wireBowling("B", {
+    task: "B2", need: 2, ms: 28,
+    goal: "Roll all 20 ponds down to a single allele.",
+    rollAgain: "Roll again",
+    start: () => { B_run(); B.showTo = 0; B_paint(); },
+    frames: () => 60,
+    frame: i => {
+      B.showTo = Math.round(B.gens * i / 60);
+      B_paint();
+      return false;
+    },
+    done: () => { B.showTo = null; B_paint(); },
+    hit: B_allFixed,
+    sayHit: () => "all 20 ponds are on a wall — " + B.N + " breeders, " + B.gens + " generations, parents from " +
+                  (B.rule === "inherit" ? "the generation before" : "the pond you started with") + ".",
+    sayMiss: () => {
+      const r = B.runs[B.rule];
+      return (20 - (r ? r.fixed : 0)) + " of the 20 still carry both alleles. " +
+             (B.rule === "fresh"
+               ? "Under this setting the error does not carry: every generation is drawn from the pond you started with."
+               : "Smaller ponds, or longer to run in.");
+    },
+    after: B_afterRoll,
+    onCleared: () => { if (B.game) B.game.show(); }
+  });
   document.getElementById("B_clear").addEventListener("click", () => { B.runs.inherit = null; B.runs.fresh = null; B_paint(); bump("B"); });
   document.getElementById("B_dl").addEventListener("click", () => downloadText("lesson10_stageB.R", B_RCODE()));
 
@@ -1529,7 +1709,12 @@ function B_RCODE() {
 /* =====================================================================
    STAGE C — 107 ponds, and the two walls.
    ===================================================================== */
-const C = { N: 25, gen: 0, runs: null, best: -1, game: null, playing: 0,
+/* The roll's target: every one of the 107 ponds has hit a wall, so the
+   tally is two spikes and nothing in between. That is "full bimodality"
+   without the phrase -- the student is told "nothing left in the middle"
+   and watches the middle empty out. Reachable at small N inside 60
+   generations and flatly unreachable at large N, which is the point. */
+const C = { N: 25, gen: 0, runs: null, best: -1, game: null, roll: null,
             buri: null, buriGen: 0 };
 
 function C_run() {
@@ -1546,19 +1731,9 @@ function C_run() {
   C.gen = 0;
   document.getElementById("C_gen").value = 0;
   document.getElementById("C_genOut").value = 0;
-  C_checkGate();
 }
-function C_checkGate() {
-  if (!C.runs) return;
-  const at20 = C.runs.one[20];
-  if (at20 > C.best) C.best = at20;
-  hint("C2", "best so far: " + C.best + " of 107 down to one colour by generation 20");
-  if (at20 > 53 && !taskDone("C", "C2")) {
-    markTask("C", "C2"); hint("C2", at20 + " of 107 by generation 20, at " + C.runs.N + " breeders");
-    if (C.game) C.game.show();
-    checkStageDone("C");
-  }
-}
+/* Every pond against a wall: the tally has two spikes and an empty middle. */
+const C_allFixed = () => !!C.runs && C.runs.one[60] === 107;
 /* The generations it takes to lose half the variety, measured off 400
    fresh ponds rather than off the 107 on screen -- a single batch of 107
    crosses the halfway line several generations early or late. */
@@ -1661,20 +1836,6 @@ function C_wire() {
   document.getElementById("C_gen").addEventListener("input", e => {
     C.gen = +e.target.value; document.getElementById("C_genOut").value = C.gen; C_paint(); bump("C");
   });
-  document.getElementById("C_run").addEventListener("click", () => { C_run(); C_paint(); bump("C"); });
-  document.getElementById("C_play").addEventListener("click", () => {
-    if (!C.runs) C_run();
-    if (C.playing) { clearInterval(C.playing); C.playing = 0; }
-    C.gen = 0;
-    C.playing = setInterval(() => {
-      C.gen++;
-      if (C.gen >= 60) { C.gen = 60; clearInterval(C.playing); C.playing = 0; }
-      document.getElementById("C_gen").value = C.gen;
-      document.getElementById("C_genOut").value = C.gen;
-      C_paint();
-    }, 90);
-    bump("C");
-  });
   document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson10_stageC.R", C_RCODE()));
 
   mountLock("C", {
@@ -1692,8 +1853,36 @@ function C_wire() {
     wrong: r => "it takes about " + r.truth.toFixed(0) + " generations — roughly 1.4 times the headcount."
   });
 
+  /* The roll. Nothing left in the middle, three times. At 25 breeders
+     that is a coin flip over 60 generations; at 60 it is out of reach and
+     at 8 it is close to certain. So the student finds the headcount by
+     aiming at the picture, and the picture is the sampling distribution
+     coming apart. */
+  C.roll = wireBowling("C", {
+    task: "C2", need: 3, ms: 75,
+    goal: "Roll all 107 ponds onto a wall inside 60 generations — two spikes, nothing left in the middle.",
+    rollAgain: "Roll again",
+    start: () => { C_run(); C_paint(); },
+    frames: () => 60,
+    frame: i => {
+      C.gen = i;
+      document.getElementById("C_gen").value = C.gen;
+      document.getElementById("C_genOut").value = C.gen;
+      C_paint();
+      return false;
+    },
+    hit: C_allFixed,
+    sayHit: () => "all 107 ponds are against a wall at " + C.runs.N + " breeders. Every one of them started at exactly one half.",
+    sayMiss: () => {
+      const left = 107 - C.runs.one[60];
+      return left + " of the 107 still have both alleles after 60 generations, at " + C.runs.N +
+             " breeders. The middle empties faster in a smaller pond.";
+    },
+    onCleared: () => { if (C.game) C.game.show(); }
+  });
+
   C.game = wireGame("C", {
-    task: "C3", bit: BIT.C3, field: { label: "ponds with one colour left", min: 0, max: 107, start: 30, fmt: v => v.toFixed(0) },
+    task: "C3", bit: BIT.C3, field: { label: "ponds with one allele left", min: 0, max: 107, start: 30, fmt: v => v.toFixed(0) },
     round: (rng, n) => {
       // few, many, most -- so no constant answer clears three rounds
       const cls = n % 3;
@@ -1710,7 +1899,7 @@ function C_wire() {
       const truth = mean(many);
       return { N, G, truth, tol: Math.max(6, 0.22 * truth), values: six,
         prompt: "A hundred and seven fresh ponds of <b>" + N + "</b> breeders, run <b>" + G +
-                "</b> generations from half and half. Nothing is selected. How many come out with one colour left?",
+                "</b> generations from half and half. Nothing is selected. How many come out with one allele left?",
         right: () => "about " + truth.toFixed(0) + " of the 107. Six more batches of 107 are on the strip.",
         wrong: () => "about " + truth.toFixed(0) + " of the 107. Half the variety goes in about " + (1.386 * N).toFixed(0) + " generations at this headcount." };
     },
@@ -1721,7 +1910,7 @@ function C_RCODE() {
   return "# Lesson 10, Stage C -- 107 ponds and the two walls\n" +
     "N <- " + C.N + "\np <- rep(0.5, 107)\nH <- numeric(61); H[1] <- mean(2*p*(1-p))\n\n" +
     "for (t in 1:60) {\n  p <- rbinom(107, 2*N, p) / (2*N)\n  H[t+1] <- mean(2*p*(1-p))\n}\n\n" +
-    "sum(p == 0 | p == 1)                      # ponds with one colour left\n" +
+    "sum(p == 0 | p == 1)                      # ponds with one allele left\n" +
     "1 - exp(coef(lm(log(H) ~ seq_along(H)))[2])   # variety lost per generation\n";
 }
 
@@ -1735,7 +1924,8 @@ function C_RCODE() {
    decay rather than asserted from its formula.
    ===================================================================== */
 const D = { route: "spread", cv: 0, males: 50, depth: 100, dur: 0,
-            run: null, hit: { spread: false, lek: false, bust: false }, game: null };
+            run: null, hit: { spread: false, lek: false, bust: false }, game: null,
+            roll: null, showTo: null };
 
 const D_HIGH = 100;
 function D_sizes() {
@@ -1812,17 +2002,25 @@ function D_run() {
   D.run.route = D.route;
   D.run.formula = D_formula();
 }
-function D_checkGate() {
+/* The verdict comes at the end of a roll, not continuously: the student
+   sets the route up, watches the variety curve fall away from the grey
+   hundred-breeder line, and only then finds out whether it fell far
+   enough. Three routes, one landed roll each. */
+function D_rollVerdict() {
   const v = D_formula();
-  if (v <= 10 && !D.hit[D.route]) D.hit[D.route] = true;
+  const ok = v <= 10;
+  if (ok && !D.hit[D.route]) D.hit[D.route] = true;
   const n = ["spread", "lek", "bust"].filter(k => D.hit[k]).length;
-  hint("D1", n + " of 3 routes" + (n < 3 ? " · this one is drifting like " + v.toFixed(1) : ""));
   if (n >= 3 && !taskDone("D", "D1")) {
     markTask("D", "D1"); hint("D1", "all three routes");
     if (D.game) D.game.show();
     checkStageDone("D");
+  } else {
+    hint("D1", n + " of 3 routes");
   }
+  return ok;
 }
+function D_checkGate() {}
 /* What fraction of a hundred breeders leaves nothing behind at the current
    spread. Measured, like everything else on this page. */
 function D_childless() {
@@ -1889,9 +2087,16 @@ function D_drawDecay() {
   axes(ctx, f, "generation", "variety", v => v.toFixed(2));
   const ref = []; for (let t = 0; t <= 120; t++) ref.push(0.5 * Math.pow(1 - 1 / (2 * D_HIGH), t));
   line(ctx, f, ref, "#c7c4bb", 1.8, [5, 4]);
-  if (D.run) line(ctx, f, D.run.V, DARK, 2.4);
+  if (D.run) {
+    const upto = D.showTo == null ? D.run.V.length - 1 : D.showTo;
+    line(ctx, f, D.run.V.slice(0, upto + 1), DARK, 2.4);
+    if (D.showTo != null) {
+      ctx.strokeStyle = "rgba(178,58,72,0.5)"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(f.x(upto), f.py); ctx.lineTo(f.x(upto), f.py + f.ph); ctx.stroke();
+    }
+  }
   else { ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
-         ctx.fillText("run 120 generations", f.px + f.pw / 2, f.py + f.ph / 2); }
+         ctx.fillText("roll 120 generations", f.px + f.pw / 2, f.py + f.ph / 2); }
 }
 function D_drawBars() {
   const cv = document.getElementById("D_bars");
@@ -1963,7 +2168,29 @@ function D_wire() {
   bindD("D_males", "males", "D_malesOut", v => v.toFixed(0), "cD_males");
   bindD("D_depth", "depth", "D_depthOut", v => v.toFixed(0), "cD_depth");
   bindD("D_dur", "dur", "D_durOut", v => v.toFixed(0), "cD_dur");
-  document.getElementById("D_run").addEventListener("click", () => { D_run(); D_paint(); bump("D"); });
+  /* The roll. Same target through three different doors: get a hundred
+     bodies drifting like ten or fewer. Each route reaches it at a wildly
+     different setting, which is the stage -- the headcount is not the
+     number that matters. */
+  const ROUTE_NAME = { spread: "uneven shares", lek: "a lopsided lek", bust: "a bust" };
+  D.roll = wireBowling("D", {
+    task: "D1", need: 3, ms: 26,
+    goal: "Keep all 100 bodies, and roll this pond down to drifting like 10 or fewer. Once by each of the three routes.",
+    rollAgain: "Roll again",
+    start: () => { D_run(); D.showTo = 0; D_paint(); },
+    frames: () => 60,
+    frame: i => { D.showTo = Math.round(120 * i / 60); D_paint(); return false; },
+    done: () => { D.showTo = null; D_paint(); },
+    hit: () => D_rollVerdict(),
+    sayHit: () => {
+      const n = ["spread", "lek", "bust"].filter(k => D.hit[k]).length;
+      return "a hundred bodies drifting like " + D_formula().toFixed(1) + ", by " + ROUTE_NAME[D.route] +
+             ". " + n + " of the three routes landed.";
+    },
+    sayMiss: () => "this one is drifting like " + D_formula().toFixed(1) +
+                   " — still too close to the hundred bodies actually in it. Push " + ROUTE_NAME[D.route] + " harder.",
+    onCleared: () => { if (D.game) D.game.show(); }
+  });
   document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson10_stageD.R", D_RCODE()));
 
   mountLock("D", {
@@ -2027,7 +2254,9 @@ function D_RCODE() {
    page is Stage A. `s` is the slope; the leftover is what Stages A to D
    have been about the whole time.
    ===================================================================== */
-const E = { s: 0, big: null, small: null, scat: null, game: null };
+const E = { s: 0, big: null, small: null, scat: null, game: null,
+            frame: null, canvasH: 0, dragging: false, touched: false };
+const E_S_MAX = 0.1;
 const E_BIG = 500, E_SMALL = 20, E_REPS = 40;
 
 function E_fixCount(rng, N, s, reps) {
@@ -2083,33 +2312,115 @@ function E_checkGate() {
     }
   }
 }
+/* Stage E's drag surface.
+
+   THE PROBLEM THIS SOLVES. The true line is y(k) = 2(1 + s*k)/(1 + s):
+   two offspring on average, tilted by what one copy of the dark allele is
+   worth. Across the whole usable range of s -- 0 to 0.1 -- the end of that
+   line moves 0.182 offspring. On an axis that has to hold raw counts of
+   0 to 9 that is SIX PIXELS. Nobody can grab six pixels, and a slider was
+   hiding the fact that the quantity being set is tiny next to the thing it
+   is drawn on top of.
+
+   So the canvas holds two frames:
+
+     left  -- the three genotype classes and their AVERAGE offspring, on an
+              axis zoomed to a band around 2. This is what the line actually
+              passes through, it is where the tilt is legible, and it is the
+              surface you drag. The whiskers are the standard error of each
+              class mean, which is why the dashed fitted line wanders.
+     right -- the 200 individual breeders at natural scale, so the dots and
+              the line stay on screen together and the zoom above is honestly
+              labelled as a zoom.
+
+   The band is adaptive so the class means never clip: it opens up to hold
+   whatever this generation actually produced. */
 function E_drawScat() {
   const cv = document.getElementById("E_scat");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   if (!E.scat) E_redraw();
   const sc = E.scat;
+
+  // class means and their standard errors, off this generation
+  const cls = [[], [], []];
+  for (let i = 0; i < sc.n; i++) cls[sc.dark[i]].push(sc.counts[i]);
+  const mu = cls.map(c => c.length ? mean(c) : null);
+  const se = cls.map(c => {
+    if (c.length < 2) return 0;
+    const m = mean(c);
+    let v = 0; for (const x of c) v += (x - m) * (x - m);
+    return Math.sqrt(v / (c.length - 1) / c.length);
+  });
+  const tl = k => 2 * (1 + E.s * k) / (1 + E.s);
+
+  // the zoom band: wide enough for the line and for the noisy class means
+  let half = 0.34;
+  for (let k = 0; k < 3; k++) {
+    if (mu[k] != null) half = Math.max(half, Math.abs(mu[k] - 2) + se[k] + 0.06);
+    half = Math.max(half, Math.abs(tl(k) - 2) + 0.06);
+  }
+
+  const gap = 34, leftW = Math.round((W - gap) * 0.62);
+  const f = box(56, 16, leftW - 78, H - 56, -0.35, 2.35, 2 - half, 2 + half);
+  E.frame = f;
+  axes(ctx, f, "copies of the dark allele this breeder carries", "average offspring for that class",
+       v => v.toFixed(2), v => v.toFixed(0));
+
+  // the no-advantage reference: flat at two offspring apiece
+  ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(2)); ctx.lineTo(f.px + f.pw, f.y(2)); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
+  ctx.textAlign = "right"; ctx.textBaseline = "bottom"; ctx.fillText("flat", f.px + f.pw - 2, f.y(2) - 3);
+
+  // the line you would fit to the 200 individuals -- you do not control this
+  const bf = olsSlope(sc.dark, sc.counts), mx = mean(sc.dark), my = mean(sc.counts);
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1.8; ctx.setLineDash([6, 4]);
+  ctx.beginPath(); ctx.moveTo(f.x(-0.35), f.y(my + bf * (-0.35 - mx))); ctx.lineTo(f.x(2.35), f.y(my + bf * (2.35 - mx))); ctx.stroke();
+  ctx.setLineDash([]);
+  E.fitted = bf / 2;
+
+  // the class means, with the spread of the mean itself
+  for (let k = 0; k < 3; k++) {
+    if (mu[k] == null) continue;
+    ctx.strokeStyle = "#8a8778"; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(f.x(k), f.y(mu[k] - se[k])); ctx.lineTo(f.x(k), f.y(mu[k] + se[k])); ctx.stroke();
+    ctx.fillStyle = k === 0 ? PALE : (k === 1 ? MID : DARK);
+    ctx.strokeStyle = "#5a574c"; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(f.x(k), f.y(mu[k]), 6.5, 0, 6.2832); ctx.fill(); ctx.stroke();
+  }
+
+  // the true line -- the thing you drag
+  ctx.strokeStyle = HOT; ctx.lineWidth = E.dragging ? 4.2 : 3.2;
+  ctx.beginPath(); ctx.moveTo(f.x(-0.35), f.y(tl(-0.35))); ctx.lineTo(f.x(2.35), f.y(tl(2.35))); ctx.stroke();
+  ctx.fillStyle = HOT;
+  for (const k of [0, 2]) { ctx.beginPath(); ctx.arc(f.x(k), f.y(tl(k)), E.dragging ? 7 : 5.5, 0, 6.2832); ctx.fill(); }
+  if (!E.touched) {
+    ctx.fillStyle = HOT; ctx.font = "600 12px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "bottom";
+    ctx.fillText("drag this line", f.x(1), f.y(tl(1)) - 14);
+  }
+
+  /* ---- right frame: the 200 breeders at natural scale ------------------ */
   const top = Math.max(6, Math.max.apply(null, sc.counts) + 1);
-  const f = box(52, 14, W - 74, H - 52, -0.4, 2.4, 0, top);
-  axes(ctx, f, "copies of dark this breeder carries", "offspring it left", v => v.toFixed(0), v => v.toFixed(0));
+  const g = box(leftW + gap + 42, 16, W - leftW - gap - 64, H - 56, -0.4, 2.4, 0, top);
+  axes(ctx, g, "copies of the dark allele", "offspring it left", v => v.toFixed(0), v => v.toFixed(0));
   const jr = mulberry32(777);
   for (let i = 0; i < sc.n; i++) {
     const k = sc.dark[i];
     ctx.fillStyle = k === 0 ? PALE : (k === 1 ? MID : DARK);
-    ctx.globalAlpha = 0.6;
-    ctx.beginPath(); ctx.arc(f.x(k + (jr() - 0.5) * 0.6), f.y(sc.counts[i] + (jr() - 0.5) * 0.5), 3, 0, 6.2832); ctx.fill();
+    ctx.globalAlpha = 0.55;
+    ctx.beginPath(); ctx.arc(g.x(k + (jr() - 0.5) * 0.6), g.y(sc.counts[i] + (jr() - 0.5) * 0.5), 3, 0, 6.2832); ctx.fill();
   }
   ctx.globalAlpha = 1;
-  // the true line: 2 offspring on average, tilted by what dark is worth
-  ctx.strokeStyle = HOT; ctx.lineWidth = 2.2;
-  const tl = k => 2 * (1 + E.s * k) / (1 + E.s);
-  ctx.beginPath(); ctx.moveTo(f.x(-0.4), f.y(tl(-0.4))); ctx.lineTo(f.x(2.4), f.y(tl(2.4))); ctx.stroke();
-  // the line you would fit to this one generation
-  const b = olsSlope(sc.dark, sc.counts), mx = mean(sc.dark), my = mean(sc.counts);
-  ctx.strokeStyle = "#333"; ctx.lineWidth = 2; ctx.setLineDash([6, 4]);
-  ctx.beginPath(); ctx.moveTo(f.x(-0.4), f.y(my + b * (-0.4 - mx))); ctx.lineTo(f.x(2.4), f.y(my + b * (2.4 - mx))); ctx.stroke();
-  ctx.setLineDash([]);
-  E.fitted = b / 2;
+  ctx.strokeStyle = HOT; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(g.x(-0.4), g.y(tl(-0.4))); ctx.lineTo(g.x(2.4), g.y(tl(2.4))); ctx.stroke();
+  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("the same line, at the scale the breeders are actually spread over", g.px + g.pw / 2, 2);
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillStyle = MUTED;
+  ctx.fillText("zoomed \u2014 the band is " + (2 * half).toFixed(2) + " offspring tall", f.px + f.pw / 2, 2);
 }
 function E_drawCounts() {
   const cv = document.getElementById("E_counts");
@@ -2136,10 +2447,10 @@ function E_drawCounts() {
 }
 function E_readouts() {
   document.getElementById("E_scatRead").innerHTML =
-    '<span class="label">the slider says one copy of dark is worth</span> <b>' + (E.s >= 0 ? "+" : "") + f3(E.s) +
-    '</b> &nbsp;|&nbsp; <span class="label">the line you can fit to this generation says</span> <b>' +
+    '<span class="label">the red line you dragged says one copy of the dark allele is worth</span> <b>' + (E.s >= 0 ? "+" : "") + f3(E.s) +
+    '</b> &nbsp;|&nbsp; <span class="label">the dashed line fitted to this one generation says</span> <b>' +
     (E.fitted >= 0 ? "+" : "") + f3(E.fitted || 0) + '</b>' +
-    ' &nbsp;|&nbsp; <span class="label">200 breeders, one generation</span>';
+    ' &nbsp;|&nbsp; <span class="label">200 breeders</span>';
   const b = E.big ? E.big.reduce((x, y) => x + y, 0) : null, s = E.small ? E.small.reduce((x, y) => x + y, 0) : null;
   document.getElementById("E_read").innerHTML = E.big
     ? '<span class="label">ended all dark —</span> <b>' + b + '</b> <span class="label">of 40 in the big pond,</span> <b class="big">' + s +
@@ -2148,12 +2459,77 @@ function E_readouts() {
 }
 function E_paint() { E_drawScat(); E_drawCounts(); E_readouts(); }
 
+/* Set `s` from a pointer position on the scatter. The red line is pinned
+   at the pond's mean, so dragging it is really dragging its slope: read
+   the y the pointer is at, turn it back into a per-copy advantage, and
+   clamp. Inverts the same map E_drawScat draws with, which is why that
+   function parks its frame on E.frame.
+
+   JM, 2026-09-17: "Instead of a slider, the graph should be wider &
+   dragging should occur directly on the graph." */
+function E_sFromPointer(ev) {
+  const cv = document.getElementById("E_scat"), f = E.frame;
+  if (!f) return null;
+  const r = cv.getBoundingClientRect();
+  if (!r.width || !r.height) return null;
+  const pt = (ev.touches && ev.touches[0]) || ev;
+  // setupCanvas draws in CSS pixels and caches that size on the element;
+  // getBoundingClientRect is the size it actually ended up on screen.
+  const cssW = +cv.dataset.cssW || cv.width, cssH = +cv.dataset.cssH || cv.height;
+  const px = (pt.clientX - r.left) * (cssW / r.width);
+  const py = (pt.clientY - r.top) * (cssH / r.height);
+  // where the pointer is in data coordinates
+  // only the left frame is the drag surface; the right one is context
+  if (px > f.px + f.pw + 20) return null;
+  const k = clamp(f.xMin + (px - f.px) / f.pw * (f.xMax - f.xMin), 0.15, f.xMax);
+  const yWant = f.yMin + (1 - (py - f.py) / f.ph) * (f.yMax - f.yMin);
+  // the drawn line is y(k) = 2(1 + s*k)/(1 + s), pinned to 2 offspring on
+  // average. Solve it for s at the k the pointer is over.
+  const denom = 2 * k - yWant;
+  const sv = Math.abs(denom) < 1e-9 ? E_S_MAX : (yWant - 2) / denom;
+  return Number.isFinite(sv) ? clamp(sv, 0, E_S_MAX) : null;
+}
+function E_setS(v, redraw) {
+  E.s = v;
+  document.getElementById("E_sOut").value = f3(E.s);
+  document.getElementById("cE_s").textContent = f3(E.s);
+  highlightByDataLine("codeE", "s");
+  E.big = null; E.small = null;
+  if (redraw) E_redraw();
+  E_paint();
+}
+function E_wireDrag() {
+  const cv = document.getElementById("E_scat");
+  let moved = false;
+  const down = ev => {
+    E.dragging = true; E.touched = true; moved = false;
+    cv.classList.add("dragging");
+    const v = E_sFromPointer(ev); if (v != null) E_setS(v, false);
+    ev.preventDefault();
+  };
+  const move = ev => {
+    if (!E.dragging) return;
+    moved = true;
+    const v = E_sFromPointer(ev); if (v != null) E_setS(v, false);
+    ev.preventDefault();
+  };
+  const up = () => {
+    if (!E.dragging) return;
+    E.dragging = false; cv.classList.remove("dragging");
+    // redraw the generation once, at the end -- redrawing every frame
+    // makes the cloud boil and hides the line you are trying to place
+    E_redraw(); E_paint(); if (moved) bump("E");
+  };
+  cv.addEventListener("mousedown", down);
+  window.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", up);
+  cv.addEventListener("touchstart", down, { passive: false });
+  window.addEventListener("touchmove", move, { passive: false });
+  window.addEventListener("touchend", up);
+}
+
 function E_wire() {
-  document.getElementById("E_s").addEventListener("input", e => {
-    E.s = +e.target.value; document.getElementById("E_sOut").value = f3(E.s);
-    document.getElementById("cE_s").textContent = f3(E.s); highlightByDataLine("codeE", "s");
-    E.big = null; E.small = null; E_redraw(); E_paint(); bump("E");
-  });
+  E_wireDrag();
   document.getElementById("E_run").addEventListener("click", () => { E_run(); E_paint(); bump("E"); });
   document.getElementById("E_redraw").addEventListener("click", () => { E.scat = null; E_redraw(); E_paint(); bump("E"); });
   document.getElementById("E_dl").addEventListener("click", () => downloadText("lesson10_stageE.R", E_RCODE()));
@@ -2161,7 +2537,7 @@ function E_wire() {
   mountLock("E", {
     title: "Before you set it", task: "E3", bit: BIT.E3,
     prompt: "One copy of dark is worth <b>2%</b> — a real advantage, in every pond, every generation, forever. The pond holds <b>twenty</b> breeders. " +
-            "Out of forty such ponds, how many end up with nothing but dark left in them?",
+            "Out of forty such ponds, how many end up with nothing but the dark allele left in them?",
     label: "ponds ending all dark", min: 0, max: 40, step: 1, start: 20, fmt: v => v.toFixed(0) + " of 40",
     truth: () => {
       const rng = mulberry32(pageSeed("l10Em", 1, 99999));
@@ -2274,7 +2650,7 @@ function C_wireBuri() {
     for (let r = 0; r < 6; r++) { let k = 0;
       for (let i = 0; i < 107; i++) { let p = 0.5; for (let g = 0; g < 19; g++) p = breedFreq(rng, p, 16, 0); if (p === 0 || p === 1) k++; }
       six.push(k); }
-    drawStrips("C_bstrip", [{ label: "bottles with one colour left", min: 0, max: 107, fmt: v => v.toFixed(0),
+    drawStrips("C_bstrip", [{ label: "bottles with one allele left", min: 0, max: 107, fmt: v => v.toFixed(0),
                              truth, tol: 4, you, values: six }]);
     const simMean = mean(six);
     document.getElementById("C_bflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +

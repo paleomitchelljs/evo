@@ -18,59 +18,130 @@ written anywhere below this line predate that change and are one too high from
 
 **Read order for anyone — human or agent — picking this up:**
 
-1. `structurephilosophy.md` — why, and the 47-unit sequence. Canonical.
+1. `structurephilosophy.md` — what the lessons are for. Canonical, and short.
+   Rewritten 2026-09-17: it no longer describes a fixed sequence of units, arcs,
+   minute budgets or stage roles. What it describes is the goal and the method.
 2. this file — what is true right now, what the live rules are, what was retired.
 3. `docs/WORK_ORDER.md` — what to do next.
 4. `docs/LESSON_ATLAS.md` — stage-by-stage description of the shipped lessons.
-5. `docs/2026_lecture_detail.tex` — the actual course content the lessons serve.
+   Stale, and reliable only for 10 and 11.
+5. `docs/2026_lecture_detail.tex` — the course content the lessons draw on.
+
+**How finished a lesson is, before you read anything else about it** (JM,
+2026-09-17):
+
+| lessons | status | how to treat it |
+|---|---|---|
+| **1–9** | revised, used, reviewed by JM directly | the model form. Copy 8 and 9 for voice, gating, question shape, layout. |
+| **10–11** | rebuilt 2026-09-17, in progress | current, and the reference for the shared-operator pattern. |
+| **12 and up** | *nebulous drafts* | **content, order, number and structure are all in doubt.** Never flag overlap with one. Never take one as precedent. Descriptions of them anywhere in this repo are provisional. |
+
+That table outranks every inventory below it. Where this file or the atlas
+describes a lesson above 11 in confident detail, the detail is what the file
+happened to contain, not a commitment.
 
 ---
 
 ## 1. What the lessons are for
 
-The lessons build intuition for the concepts that **recur across topics**. They do
-not cover the lecture list, and are not expected to. A lecture topic with no lesson
-is not a defect; a recurring reasoning move with no lesson is.
+**Rewritten 2026-09-17** against the new `structurephilosophy.md` and JM's ruling
+on how to read it. The three-thread frame that stood here before — Thread A the
+slope, Thread B the ledger, Thread C the discipline — is no longer the thing to
+appraise or plan against. See §7. Its *content* is still real and still recurs;
+it just is not the organizing axis any more.
 
-Three things recur. Everything in the sequence is one of them, or scaffolding for
-one of them.
+The structure has two layers, and they are not the same kind of thing.
 
-### Thread A — the slope
+### The conceptual goals
 
-One number → one number plus a group → one number plus a rate → the rate is a
-covariance → the covariance is the change in the average.
+Evolution as **(1) differential reproduction of (2) units with (3) transmissible
+characteristics**, and the forces that move the frequency of those characteristics
+— Vellend's "evolutionary soundboard": each process is a fader that can be pushed
+up or down, no single one of them is the explanation, and any real case is a mix.
+Every lesson is in service of one of those processes, or is building the capacity
+for a later lesson that is.
 
-Regression, R², heritability, the breeder's equation, F_ST and Hamilton's *r* are
-the same object seen at different scales. The lecture says so outright in four
-places: "ANOVA is literally a linear regression" (`2026_lecture_detail.tex:2695`),
-"h² is literally an R²" (`:2473`), "*r* = regression of recipient genotype on
-helper's" (`:3654`), "Breeder's: structurally a regression" (`:2166`).
+The far end the sequence is aiming at, stated in `structurephilosophy.md`:
+students with **no math or statistics background** and only introductory biology
+who can nonetheless reason about **Price's equation, species, hierarchical
+selection, and individuality**.
 
-`structurephilosophy.md` §"The one thing underneath all of it" is this thread, and
-carries two cautions that must survive every revision:
+Two consequences worth stating, because both have already been decided against
+once in this repo:
 
-- **The "leftover" is not one object.** Early on it is cross-sectional scatter
-  around a line. In the final identity it is within-lineage change across a round.
-  These share a *shape*, not an identity. Engineer recognition of the shape. Never
-  let a build imply the residual around a line *is* the transmission term.
+- **Individuality and hierarchical selection are named destinations, not
+  optional capstones.** The scope ladder cut from Lesson 10 on 2026-09-17 —
+  *"it is about what counts as an individual, not about drift"* — was a correct
+  call about that lesson and leaves owed content behind it. Tracked in
+  `docs/WORK_ORDER.md`.
+- **A lecture topic with no lesson is still not a defect.** That ruling (JM,
+  2026-08-24) survives intact. The lessons build reasoning that recurs across
+  topics; they do not cover the lecture list.
+
+### The implementation
+
+**Model structure, and interaction with models and graphs.** Causal inference is
+the point and detailed regression modelling is the primary tool. The throughline
+is the split between the **stochastic and the deterministic part**, and how a
+model is **built, fit, and evaluated**.
+
+Operationally that means: the student manipulates a model and reads a display;
+the display is the argument; the prose is thin. Activities require interaction
+and interpretation of the graph, and direct manipulation wherever it is possible.
+Embracing uncertainty and determining causal effects are goals in their own right,
+not side effects.
+
+**Shared assets and interactives are a primary design focus**, not an efficiency.
+A lesson that reuses an interactive the student already solved is how "build on
+each other in sequence, and foreshadow one another where possible" actually
+happens. `app/assets/sim.js`, `paths.js`, `score.js` and the generation operator
+in lessons 10 and 11 are the current instances. This raises the value of
+extraction: see §5 on `pop.js`.
+
+### The organization is free to vary, and stepping stones are the point
+
+There is no required lesson shape, no required stage count, no fixed unit
+sequence. JM, 2026-09-17: *"The organization of each activity and lesson should
+be relatively free to vary but should always be in service of those goals, or
+building up to later activities that are."* A lesson justifies itself by naming
+which process it serves, or which later activity it is building the capacity for
+— not by conforming to a template.
+
+**"Building up to" is a first-class justification, not a weaker one.** JM,
+2026-09-17: *"individual lessons are free to serve as stepping stones towards the
+goals of the project — not every lesson needs to focus on individuality (say) but
+it is necessary to understand the base mechanics of probability, statistics, and
+evolution to get there."*
+
+So: **a lesson that teaches base mechanics — probability, statistics, the
+mechanics of evolution — and never touches a named destination is doing exactly
+what it should.** The destinations (Price's equation, species, hierarchical
+selection, individuality) are what the sequence arrives at, not a checklist each
+lesson answers to. Asking "where is individuality in this lesson?" of a lesson on
+sampling error is the wrong question.
+
+The failure mode this rules out is the opposite one: a lesson that is neither a
+destination nor groundwork for one — a reasoning move that goes nowhere the
+course is headed. That is the thing to catch, and it is rare.
+
+### Two cautions that must survive every revision
+
+These lived in `structurephilosophy.md` §"The one thing underneath all of it",
+which no longer exists. They are preserved here because they are load-bearing for
+Price's equation, which is still a stated destination, and because live code
+depends on them (`priceTerms` in lessons 10 and 11).
+
+- **The "leftover" is not one object.** In a fitted line it is cross-sectional
+  scatter around the line — variation the slope did not explain. In the identity
+  it is within-lineage change across a round — what each unit did after it was
+  measured. These share a *shape*, not an identity. Engineer recognition of the
+  shape. **Never let a build imply that the residual around a line *is* the
+  transmission term.** This is why `priceTerms` names `cov` and `within`
+  separately and never sums them.
 - **The slope picks up a weighting.** An ordinary best-fit slope weights every
   point equally; the slope in the identity weights each point by how much it
-  reproduces. That weighting cannot appear from nowhere at the end. Unit [22]
-  (L16a) exists solely to build it by hand, and shipped 2026-08-24 as
-  `app/scaffolds/s25_counting_weights.html`. It is not yet welded to L15 or L26
-  — see WORK_ORDER P0-2.
-
-### Thread B — the ledger
-
-Every feature was inherited or invented. Heritability, mutation-as-the-act-of-not-
-inheriting, IBD vs IBS, homology vs homoplasy, and the chopstick fallacy are one
-question at five scales. The lecture's appendix calls it "the master ledger behind
-almost everything." Currently the thinnest of the three in the build.
-
-### Thread C — the discipline
-
-A pattern is not its own explanation. Shuffled pile, default-to-drift,
-what-you-see-is-what-didn't-die. Well served except the survivorship leg.
+  reproduces. That weighting cannot appear from nowhere at the end. The
+  hand-built version is `app/scaffolds/s25_counting_weights.html`.
 
 ---
 
@@ -171,132 +242,209 @@ absent, because students will skip things. Live hand-offs are listed in
 structure only: scoring slots that nothing writes, helpers nothing defines, missing
 `score.js`/`Score.init`/`sim.js`, an empty `<h1>`, and LOCKS.txt coverage — every
 one of them a failure you cannot see by opening the page. Add `--style` for
-advisory prose notes, `--terms` for the vocabulary report.
+advisory prose notes, `--terms` for the vocabulary report (§4 — the target is zero).
 
 **It no longer skips lessons it does not recognise.** Until 2026-09-03 a lesson
-whose number was absent from `LESSON_UNIT` returned before any check ran, so a new
+whose number was absent from the unit map returned before any check ran, so a new
 lesson got nothing — the checks switched off exactly when the sequence was being
 edited. Verified after the change: a deliberately broken `lesson77.html` now
 reports its empty `<h1>`, its missing `score.js` and its undefined helper, where
-before it reported none of them.
+before it reported none of them. The unit map itself was struck on 2026-09-17
+(§3); the script no longer carries a sequence at all.
 
-Arc 4/5 are less empty than the atlas implies: six scaffolds (s14, s16, s17, s18,
-s19, s20) cover skeleton content outright. Real outstanding builds ≈ 8–9, not 15.
+The back half is less empty than the atlas implies: six scaffolds (s14, s16, s17,
+s18, s19, s20) cover skeleton content outright. Real outstanding builds ≈ 8–9, not
+15 — though with lessons 12 and up all in doubt, that is a count of files rather
+than of work.
 
 ---
 
-## 3. The old→new unit map
+## 3. Unit ids — struck, and how to read old notes that still use them
 
-The shipped lesson files carry the 47-unit sequence with an offset. This map is the
-Rosetta stone for the whole project and previously existed only as a Python dict at
-`scripts/check_lessons.py:36-47`. The vocabulary ratchet is checked at the **new**
-position, so e.g. lesson14 is unit L14 at seq 19 and may use a term that unlocks
-earlier in the sequence than its own file number suggests.
+**The 47-unit sequence is gone as of 2026-09-17.** `structurephilosophy.md` no
+longer describes one; `ledger.json` no longer carries `course_length`,
+`term_budget`, `min_prior_runs_before_naming`, `arc_budgets_minutes` or per-term
+`unlock` ids; `check_lessons.py` no longer carries `LESSON_UNIT` or `UNIT_SEQ`.
+The old map is in git history and nowhere else.
 
-**Renumbered 2026-09-15.** `lesson8b` became `lesson9` and everything above it moved
-up one. One side effect worth knowing: from `lesson10` up, the file number and the
-unit number now agree, which they did not before. Two files carry no unit of their
-own and so have no row below — `lesson6b` (fit on half the record, score on the
-other half) and `lesson9` (meiosis by hand, the old `lesson8b`).
+**The only sequence the course has is the lesson file numbers.** `LOCKS.txt` is
+the authoritative list of what exists.
 
-| file | unit | seq | | file | unit | seq | | file | unit | seq |
-|---|---|---|---|---|---|---|---|---|---|---|
-| lesson1 | L1 | 1 | | lesson14 | L14 | 19 | | lesson26 | L26 | 37 |
-| lesson2 | L2 | 2 | | lesson15 | L15 | 21 | | lesson27 | L27 | 38 |
-| lesson3 | L4 | 4 | | lesson16 | L16 | 23 | | lesson28 | L28 | 40 |
-| lesson4 | L5 | 5 | | lesson17 | L17 | 24 | | lesson29 | L29 | 41 |
-| lesson5 | L6 | 7 | | lesson18 | L18 | 26 | | lesson30 | L30 | 42 |
-| lesson6 | L7 | 9 | | lesson19 | L19 | 27 | | lesson31 | L31 | 43 |
-| lesson7 | L8 | 12 | | lesson20 | L20 | 29 | | lesson32 | L32 | 44 |
-| lesson8 | L9 | 14 | | lesson21 | L21 | 31 | | lesson33 | L33 | 45 |
-| lesson10 | L10 | 15 | | lesson22 | L22 | 32 | | lesson34 | L34 | 46 |
-| lesson11 | L11 | 16 | | lesson23 | L23 | 33 | | lesson35 | L35 | 47 |
-| lesson12 | L12 | 17 | | lesson24 | L24 | 34 | | | | |
-| lesson13 | L13 | 18 | | lesson25 | L25 | 35 | | | | |
+A lot of writing in this repo predates that. Three vocabularies are in old notes
+and none of them is live:
 
-**Sequence units with no lesson file.** These are real gaps in the design, not
-bookkeeping:
+- **`L7`, `L16a`, `S-weld`, `C1`, "seq 22"** — unit ids and positions in the
+  47-unit sequence. Void. A note saying "lesson7 is L8 at seq 12" is saying
+  nothing about the course as it stands.
+- **"Arc 1" through "Arc 5"** — five groups with minute budgets. Void as budgets
+  and as a design unit. `docs/LESSON_ATLAS.md` is still physically organized by
+  them, which is one reason it needs regenerating rather than patching.
+- **Lesson numbers written before 2026-09-16** — one too high from 12 up. See the
+  banner at the top of this file.
 
-- **[3] L3** — the flat guess (inserted rung)
-- **[8] L7a** — hold the effect fixed, move only n
-- **[11] L8a** — two dots from the same parent are not two independent readings
-- **[22] L16a** — the weighting. **Built 2026-08-24** as `s25_counting_weights`,
-  following the established rung-as-scaffold pattern; promote it to a full unit
-  when the Arc 5 collapse renumbers the lesson files.
-- **[28] L19a** — rotate the diagram at its hinges (partly covered by lesson19 A)
-- **[39] L27b** — the nesting step; pries apart the two meanings of "leftover"
-- **Checkpoints C1, C2, C3** — never built
+**What is real and still matters from that history**, because submission codes
+ride on it:
 
-**Arc 5 was collapsed 2026-08-24.** Seven transitions with an identical
-A/B/C/D shape became four lessons: **26** (the identity; stage D now runs the
-diagnostic at gene→chromosome, gene→genome and genome→cell as three cases of one
-instrument), **30** (cell→individual, the only working simulator in the arc),
-**31** (individual→superorganism), **34** (capstone; stage B runs the same
-diagnostic above the individual and then off DNA entirely). The five folded files
-are in `_reference/retired/lessons/` and still hold the fullest build specs.
-Lesson numbering now has gaps — deliberate, since module ids carry the submission
-codes. Renumber in one sweep or not at all.
+- **Renumbered 2026-09-15.** `lesson8b` became `lesson9`; everything above moved
+  up one.
+- **Renumbered 2026-09-16.** The old Lesson 10 was absorbed into Lesson 9 and the
+  old Lesson 11 replaced; 12→11 … 27→26, 31→30, 32→31, 35→34.
+- **Nothing released was touched by either.** Lessons 1–8 and 6b keep their names
+  and their submission codes; everything from 9 up was still `x` in `LOCKS.txt`.
+- **The gaps at 27/28/29 and 32/33 have no file.** They are leftovers of the Arc 5
+  collapse of 2026-08-24, when seven transitions with an identical A/B/C/D shape
+  became four lessons (now 26, 30, 31, 34). The five folded files are in
+  `_reference/retired/lessons/` and still hold the fullest build specs for that
+  material. Given that everything above 11 is a nebulous draft, treat the gaps as
+  numbering slack rather than as design slots owed a build.
+- **Module ids carry the submission codes.** Renumber in one sweep or not at all.
 
-**The four `S-` drills are the scaffolds:** [6] S-weld = s23, [10] S-single = s22,
-[25] S-cond = s21, [36] S-agree = s24. Their placement in the sequence is
-deliberate; do not relocate them to fill other gaps.
+**Design work that was owed under the old sequence and is still owed as
+content**, stripped of its unit ids — each of these is a gap in reasoning, not a
+missing file number:
+
+- the flat guess, before any line is fitted (old L3)
+- hold the effect fixed and move only the sample size (old L7a)
+- two measurements from the same parent are not two independent readings (old L8a)
+- the early, biology-free statement of inherited-or-invented (old Thread B rung)
+- the nesting step that pries apart the two meanings of "leftover" (old L27b)
+- **the copy-count weighting — built**, as `app/scaffolds/s25_counting_weights.html`
 
 ---
 
 ## 4. Live rules
 
 Everything here is enforced, currently followed, and consistent with the goals in
-§1. Rules that are *not* on this list are not rules (see §8).
+§1. Rules that are *not* on this list are not rules (see §7). Revised 2026-09-17
+against the rewritten `structurephilosophy.md`.
 
-**The vocabulary ratchet is retired as a rule (2026-09-03, JM's call).** It used
-to be enforced: `ledger.json` gave every term an unlock unit, naming a term early
-was a hard failure, and `unlock: null` meant banned forever. Two problems killed
-it. It was keyed to a 47-unit sequence the course is no longer following, and it
-was a guardrail an agent had written on itself that outranked the author — if JM
-asked for a lesson using a term the file forbade, the honest move was to write the
-lesson, not to contort the prose around a linter.
+### Vocabulary — the rule got stricter, not looser
 
-What survives is a **report, not a rule**: `check_lessons.py --terms` says where
-each term is first named, computed from the shipped lessons rather than from a map
-that has to be kept in sync. Run it when reordering. `ledger.json` stays as the
-term list that report reads; its `unlock` ids are now notes, not gates, and are
-stale until somebody re-keys them to the real sequence.
+**No vocabulary is taught in the lessons at all.** Not early, not late, not after
+the fact. Jargon is avoided in student-facing prose wherever it can be; where it
+cannot, the only terms allowed are **biological ones an introductory student
+already has** — meiosis, allele, gene, locus, and their near neighbours.
 
-**Show, don't tell is still the rule** — it is just JM's rule now, held by
-judgement and by `--style`, rather than by a blocking regex.
+Two things that used to be legal are not:
 
-**Show, don't tell.** The one-line version of each unit's point is the answer key,
+- **The naming-after-the-fact panel is retired** (JM, 2026-09-17). The `s19`
+  pattern — a panel unlocking after the doing to say "what you just did has a
+  name" — is gone. There is no position in a lesson where naming a statistical or
+  population-genetic term is the right move.
+- **The 20-name budget is gone**, along with the ratchet it belonged to. It is not
+  a budget to spend down. The target is zero.
+
+**Still legal: technical names inside the R code panel.** That is where jargon
+goes to be legal, and the reason is that the panel is real code — a variable has
+to be called something. The rule binds prose, UI, labels, titles, option text,
+axis captions and stage headers. It does not bind `<pre class="code">`.
+
+**Precedent, not exception:** `lesson9.html` teaches p²/2pq and a three-allele
+locus with the words *Hardy*, *Weinberg* and *equilibrium* appearing zero times.
+That is the standard, and it is JM's own 2026-09-14 ruling.
+
+`check_lessons.py --terms` reports where each term is first named, in lesson-number
+order, read off the shipped pages. It blocks nothing and never did. Under this rule
+every line it prints for a student-facing string is something to look at. As of
+2026-09-17 it prints `mean` at lesson 2, `95% interval` at lesson 5 and
+`heritability` at lesson 7 — inside the revised, JM-owned lessons, so they are
+reported here rather than edited.
+
+### Gating and shape
+
+**Gate on solving, not on predicting.** (JM, 2026-09-01; confirmed by the
+2026-09-17 rewrite.) Controls are live the moment a stage opens. A stage opens the
+next one by being *solved* — the student lands a target the interactive sets. The
+old rule here, *"read, then predict, then touch; controls stay locked until a
+prediction is recorded,"* is **void**. Interactives are harder on purpose: tighter
+tolerances, more knobs, real search.
+
+**The bowling pattern — set it, play it, watch it, find out.** (JM, 2026-09-17,
+from the Lesson 10 Part C review: *"Having them set conditions at the start, hit
+'play', watch it progress, and then see if they hit some target ... would be a
+fantastic core kind of question. Kind of a 'bowling' approach."*) The shape:
+
+1. The student is told the target — full bimodality, an allele extinct inside X
+   generations, whatever the system's target is.
+2. They set the conditions with the controls live.
+3. They hit **play**.
+4. **The controls lock while it plays**, and the animation runs generation by
+   generation. They watch. They cannot steer it mid-roll — that is the whole
+   point of the bowling analogy.
+5. At the end it reports whether they hit the target.
+6. Repeat until they land it the required number of times.
+
+**This is a core question shape, to be used widely in this lesson and
+subsequent ones** — not a one-off for Lesson 10. What it buys over a slider that
+redraws instantly is a visceral feel for a stochastic process: the same setting
+played twice gives different rolls, and the student feels the unpredictability
+rather than reading it off a summary. Requiring *several* successes is what makes
+that land — one success is luck, five is a claim about the setting.
+
+Implemented in `lesson10.html` as `wireBowling(stage, cfg)`, written general
+(target predicate, success count, per-frame painter) so the next lesson takes the
+helper rather than the idea. **Extract to `sim.js` at the third caller.**
+
+**Closing questions are lock-in-and-resample games.** Scored on the first lock
+only; a miss never shuts a door. The interactive solve is the gate, the question
+is the record. `wirePrediction` → `wireNumeric` → the games, in that order of
+supersession; lessons 5–19 still carry older patterns and have not been converted.
+
+**There is no required stage shape.** The six roles — orient, predict, act,
+rebuild, real, break — are **retired** (JM, 2026-09-17) along with the document
+that specified them. The shipped A/B/C/D/E lettering is just lettering. The
+long-running "stage shape needs a ruling" flag is **closed**: organization is free
+to vary, in service of the goals in §1.
+
+**The break still earns its place, as a habit rather than a slot.** A clean
+intuition that never meets the case that breaks it has not been tested, and some
+control should accept a nonsensical setting so the model can be watched falling
+over. What is gone is the requirement that this be a terminal stage naming a
+forward unit by index — there are no unit indices any more.
+
+### Prose and questions
+
+**Show, don't tell.** The one-line version of a lesson's point is the answer key,
 never on-screen text, in any paraphrase. No "what you'll do" front matter. No
 takeaway printed at the bottom. Telling a student where to look is telling them
-what they'll see.
+what they will see. Held by judgement and by `--style`, not by a blocking check.
 
-**Options state WHAT, never WHY.** *(from the applied de-telegraph pass,
-2026-06-06)* Every prediction option is a bare competing claim. Strip every clause
-that explains, justifies or defines — anything after an em-dash that reads as a
-justification goes. Distractors are the common misreadings, stated flat. Target
-mean option length 4–7 words. **Never touch a correct-answer `value=` token or a
-`correct:` index** — the scoring bits ride on them.
+**Text is extremely light.** `structurephilosophy.md`: *"Text should be extremely
+light, with a focus on discovery through engagement with the data, models, and
+diagrams."* When a paragraph and a display say the same thing, the paragraph goes.
+
+**Options state WHAT, never WHY.** Every option is a bare competing claim. Strip
+every clause that explains, justifies or defines. Distractors are the common
+misreadings, stated flat. Target mean option length 4–7 words. **Never touch a
+correct-answer `value=` token or a `correct:` index** — the scoring bits ride on
+them.
 
 **Titles name the move, never the term.**
 
-**Read, then predict, then touch.** Controls stay locked until a prediction is
-recorded. A prediction you can slink away from is not a prediction.
-
 **The code panel is always visible** and every unlocked control maps to a line. A
-slider with no line is a spell. Technical names are allowed to live in the code
-panel — that is where jargon goes to be legal.
+slider with no line is a spell.
+
+**Prefer manipulating the graph over manipulating a slider beside it.** (JM,
+2026-09-17, on Lesson 10 Part E: *"Instead of a slider, the graph should be wider
+& dragging should occur directly on the graph."*) `structurephilosophy.md` asks
+for *"direct manipulation where possible"* — a slider that sets a line's slope is
+one level of indirection away from dragging the line. Where a control has an
+obvious geometric meaning on a display, put the control on the display and give
+the display the width the slider was taking. The code panel still gets its line;
+the dragged value still writes to it.
 
 **Anchor quotes stay.** Lecture quotes are the voice of the thing and survive every
-overhaul. But a quote must be load-bearing for the stage it sits on; keyword-matched
+overhaul. A quote must be load-bearing for the stage it sits on; keyword-matched
 decoration is worse than no quote. No inline editorial glosses inside a quote.
-
-**Naming after the fact.** When a move finally gets a name, it lands in a panel that
-unlocks *after* the doing — the `s19` pattern ("what you just did has a name").
-Never before.
 
 **One move, many datasets; the last one is unscaffolded.** The final dataset is the
 measurement, and it must not be the famous one — a canonical set is a feature in the
 scaffolded stage and worthless as the transfer test.
+
+**Real data alongside the simulation is wanted.** (JM, 2026-09-17.) Check
+`data/SOURCES.md` before concluding a lesson has no real anchor.
+
+### The two structural failures the gate exists to catch
 
 **Never call a helper nothing defines.** The gate fails any lesson that calls a
 function absent from the lesson, `sim.js` and `score.js`, and any lesson that
@@ -309,40 +457,31 @@ lesson13 and lesson19 were both silently dead for a while.
 valid code whose answer bits are all zero, so every student decodes as having got
 every checkpoint wrong.
 
-**The break opens a door.** Every clean intuition ends on the case that breaks it,
-and the break names the forward unit that handles it. Some stage must accept a
-nonsensical setting so the model can be watched falling over.
-
 ### The four adversarial passes
 
 Preserved from the retired build contract because they are the useful half of it.
-Run against the lesson HTML, not against a JSON spec.
+Run against the lesson HTML, not against a JSON spec. Passes A and B were re-cut
+2026-09-17: both used to be run against the 47-unit sequence, which no longer
+exists.
 
-- **Pass A — the cold novice.** Reconstruct the exact vocabulary available at this
-  position: every ledger term whose unlock unit has a lower seq, and nothing else.
-  Read every on-screen string as a student with that list. Name every token they
-  cannot parse. Each one is an edit or a new rung — those are the only two
-  outcomes. "They'll pick it up from context" is not an outcome.
-- **Pass B — licensing.** For each step, name the earlier unit that licenses it, by
-  index — not "builds on regression" but *unit 4, the leftovers the student drew by
-  hand*. A step with no license gets a rung inserted, the unit moved later, or the
-  step cut. Inventing the license is not a fix.
+- **Pass A — the cold novice.** Read every on-screen string as a student with no
+  math or statistics background and one introductory biology course. Name every
+  token they cannot parse. Each one is an edit — under the current vocabulary rule
+  there is no "unlock it later" outcome, and "they'll pick it up from context" was
+  never one.
+- **Pass B — licensing.** For each step, name the earlier *lesson* that licenses
+  it, by file — not "builds on regression" but *lesson 4, the leftovers the student
+  drew by hand*. A step with no license gets a rung built, the step cut, or the
+  lesson moved. Inventing the license is not a fix. For lessons 12 and up, where
+  order is in doubt, this pass reports rather than blocks.
 - **Pass C — the giveaway.** Hunt every sentence that states, hints or paraphrases
-  the takeaway. The checker catches verbatim aphorisms, 70% paraphrases and the
-  giveaway-phrase list; it cannot catch the sentence that structurally hands over
-  the point without reusing a word. That is this pass.
+  the point. `--style` catches the giveaway-phrase list; it cannot catch the
+  sentence that structurally hands over the point without reusing a word. That is
+  this pass.
 - **Pass D — transfer.** Take the last, unscaffolded dataset. Can a student get
   through it by pattern-matching the previous screen without running the move? If
   yes it measures nothing. Two known failure shapes: the famous dataset, and one
   subject wearing two names (two height datasets are one dataset).
-
-### Stage shape — unresolved, needs a ruling
-
-`structurephilosophy.md` specifies six roles: `orient, predict, act, rebuild, real,
-break`. The shipped lessons use A/B/C/D/E stages that do not map cleanly onto them.
-Both vocabularies are currently in circulation, which means the next agent either
-enforces a shape that breaks working lessons or ignores the scaffolding entirely.
-**Decide before the next build round.** See WORK_ORDER P0-5.
 
 ---
 
@@ -369,10 +508,12 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
     `4Nμ/(1+4Nμ)`. Extract `app/assets/pop.js` when a third lesson wants the
     operator, with those as its test suite — not before.
   - **Keep the two Price terms separately named even where only one is live.**
-    `structurephilosophy.md` forbids implying that the scatter around a fitted
-    line *is* the transmission term. A shared engine is exactly where the two
-    would fuse into one "leftover", so `priceTerms` returns `cov` and `within`
-    and never sums them.
+    §1's first caution forbids implying that the scatter around a fitted line
+    *is* the transmission term. (It used to live in `structurephilosophy.md`
+    §"The one thing underneath all of it"; that section was struck 2026-09-17
+    and the rule moved to §1 of this file, unchanged.) A shared engine is
+    exactly where the two would fuse into one "leftover", so `priceTerms`
+    returns `cov` and `within` and never sums them.
   - **A bar check that only tests one round misses the constant answer.** The
     two checker scripts now test that no single number clears three rounds of
     any closing game, by taking the three round classes' tolerance bands and
@@ -635,6 +776,7 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   (2026-05-18, 31 chapters, 131 KB). `README.md` pointed at the older one.
   **Fixed.** The outline is kept but should not be used as the content reference.
 - `structurephilosophy.md` §Enforcement claimed `validate.py` is the gate.
+  (That section, and the rest of the long version, were struck 2026-09-17.)
   **Fixed** — it now points at `scripts/check_lessons.py`.
 - `lesson35.html` Stage D calls back to a Lesson 1 framing that was never built.
 - Stray literal markdown renders on the page in `lesson15.html`, `lesson23.html`,
@@ -650,7 +792,8 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
   `lesson21`, `lesson31` and `lesson35` are built out and still score once. Adding
   checkpoints is lesson-design work, not wiring — the slots have to attach to
   predictions worth scoring.
-- **`index.html` undersells Arc 4/5.** Units 4 and 5 are still captioned
+- **`index.html` undersells the back half.** Its last two groups are still
+  captioned
   "outlines (text ready, simulators pending)". `lesson21` (5 canvases, no TODOs),
   `lesson27`, `lesson31`, `lesson32` and `lesson35` are built; only 22–26 still
   match the caption.
@@ -666,6 +809,48 @@ enforces a shape that breaks working lessons or ignores the scaffolding entirely
 
 These contradicted the goals in §1 or the live rules in §4. Recorded so they do not
 get reintroduced by someone reading an old file.
+
+### Retired 2026-09-17, when `structurephilosophy.md` was rewritten
+
+These were live until that day. Every one of them is written down somewhere in
+this repo in confident, binding-sounding prose, which is why they are listed.
+
+**The 47-unit sequence, the five arcs, and the per-arc minute budgets.** **Void.**
+There is no fixed unit sequence. The lesson file numbers are the sequence. Unit
+ids (`L7`, `L16a`, `S-weld`, `C1`) name nothing. The "forty-seven units at fifteen
+to thirty minutes is roughly fifteen hours" cost argument and the
+`arc_budgets_minutes` enforcement it justified are both gone. See §3.
+
+**The six stage roles — orient, predict, act, rebuild, real, break.** **Void as a
+required shape.** Organization is free to vary. The long-standing "both
+vocabularies are in circulation, needs a ruling" flag is closed by this, in JM's
+favour: the shipped lessons win, and their A–E lettering is lettering, not roles.
+
+**"Read, then predict, then touch" / the prediction gate.** **Void.** Superseded
+2026-09-01 by gate-on-solving and never removed from this file until now. Any
+document still describing a lesson as locking controls until a prediction is
+recorded is describing the old shape — `README.md` said this until 2026-09-17.
+
+**The 20-name term budget, `min_prior_runs_before_naming: 3`, and per-term
+`unlock` ids.** **Void**, and now physically absent from `ledger.json`. The rule
+they implemented — a term becomes available at its unit — is replaced by a
+stricter one: no vocabulary is taught at all. §4.
+
+**The naming-after-the-fact panel (the `s19` "what you just did has a name"
+pattern).** **Void.** It was the last legal way to name a term and it is not legal
+any more.
+
+**The three threads — A the slope, B the ledger, C the discipline — as the frame
+to appraise and plan against.** **Retired as a frame**, not as content. The moves
+are still real and still recur; the soundboard processes are the conceptual goal
+and model structure is the implementation (§1). Do not write "this piece serves no
+thread" as a criticism, and do not plan an arc to fill a thread. §9 keeps the old
+table as an inventory of what each piece does, with that caveat.
+
+**"The break names the forward unit that handles it, by index."** **Void as
+stated** — there are no indices. The habit survives; see §4.
+
+### Retired earlier
 
 **"Options should carry an embedded rationale."** From
 `notes/question_rewrites_review.md`: *"Most options now carry a brief embedded
@@ -696,8 +881,9 @@ The third commitment from that set — **aggregate class predictions and show th
 in the next lecture** — is live and its infrastructure exists at
 `instructor/aggregate.html`.
 
-**"~30 minutes per lesson, 30 lessons."** From `lesson_plan_30.md`. **Void** —
-superseded by 47 units at 15–30 minutes with per-arc budgets in `ledger.json`.
+**"~30 minutes per lesson, 30 lessons."** From `lesson_plan_30.md`. **Void**, but
+so is the 47-unit-with-per-arc-budgets scheme that superseded it. There is no
+per-lesson or per-arc time budget of any kind right now.
 
 **Stale inventories.** `HOMEWORK_REVIEW.md` reports 19 wired lessons and 20
 scaffolds; it is 34 and 24. `persona_feedback_2026_05_12.md` walks
@@ -723,7 +909,7 @@ that directory records why each was retired and what absorbed it.
 | `docs/reviews/VOICE_NOTES_OVERHAUL.md` | applied; style rules → §4 |
 | `docs/ideas/homework-proposals.md` | all four proposals built (L3 E, L4 C, s22, L10) |
 | `docs/ideas/evolution_course_conceptual_map.md` | superseded by the lecture tex's own "Recurring Through-Lines" appendix |
-| `notes/lesson_plan_30.md` | 30-lesson plan superseded by the 47-unit sequence |
+| `notes/lesson_plan_30.md` | 30-lesson plan; superseded by the 47-unit sequence, which is itself void (§7) |
 | `notes/lesson1andahalf.txt` | the P-value lesson it proposes was built as lesson6 |
 | `notes/persona_feedback_2026_05_12.md` | applied; refers to a dead file layout |
 | `notes/question_rewrites_review.md` | **carries a void directive** — see §7 |
@@ -738,13 +924,24 @@ a separate skill), `_reference/notes_old_ideas/` (already archived),
 
 ---
 
-## 9. Thread map — what each piece is for
+## 9. Piece inventory — the one line each piece exists to produce
 
-Which of the three threads each shipped piece serves, and the one line it exists
-to produce. **A** = the slope, **B** = the ledger (inherited or invented),
-**C** = the discipline (a pattern is not its own explanation). A piece with no
-thread is doing groundwork rather than carrying an argument, which is fine — but
-a whole arc of them is a warning.
+**This is an inventory, not a standard.** The three threads it is keyed to were
+retired as the planning frame on 2026-09-17 (§7). The letters are left in because
+re-deriving them costs more than they cost to ignore, and because they are an
+accurate description of what the shipped pieces happen to do: **A** = the slope,
+**B** = inherited or invented, **C** = a pattern is not its own explanation.
+
+**Do not plan against this table.** A piece that carries no letter is not
+deficient, an arc of them is not a warning, and "Thread B is thin" is no longer a
+reason to build anything. Plan against §1: which soundboard process does this
+serve, or which later activity is it building the capacity for.
+
+**Everything at lesson 12 and above in this table is a nebulous draft.** The
+one-line descriptions there say what the file currently contains, not what the
+course intends. The final paragraph of this section, which reasons about thread
+coverage across the sequence, is kept as a record of how the project used to be
+appraised and should not be acted on.
 
 | | Piece | Thread | What it is for |
 |---|---|---|---|
@@ -793,11 +990,14 @@ a whole arc of them is a warning.
 | L31 | **A** | the same engine at individual→superorganism; what two workers share sets how much colonies differ |
 | | L34 | **A**, **B**, C | the cascade side by side, then above the individual and off DNA |
 
-**What this table shows.** Thread A now runs unbroken from L3 to L26 with two
-welds carrying the student's own numbers. Thread C is dense through Arcs 1–2 and
-has its survivorship leg at S27. **Thread B is still the thin one** — L7, S26,
-L18, L19, S13, S15, S19 — and everything in it except S26 arrives late, in tree
-territory. The early, biology-free statement of the dichotomy is still owed.
+**What this table showed, under the retired frame** (kept as a record, not as a
+to-do): Thread A ran unbroken from L3 to L26 with two welds carrying the student's
+own numbers; Thread C was dense early and got its survivorship leg at S27; Thread
+B was thin — L7, S26, L18, L19, S13, S15, S19 — with everything except S26
+arriving late, in tree territory. The one item worth keeping out of that is a
+content gap rather than a coverage score: **the early, biology-free statement of
+inherited-or-invented is still owed**, and "transmissible characteristics" is
+clause (3) of the definition in §1, so it has a live reason to exist.
 
 **Placement note on S26.** It poses the dichotomy before any tree is on screen
 (the first question is answerable only with "you cannot tell from the two of them
