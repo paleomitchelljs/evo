@@ -954,7 +954,15 @@ function wireNumeric(id, opts) {
     show: () => box.classList.add("shown"),
     landed: () => landed,
     // another round has been run: open the question back up
-    rearm: () => { if (!landed) { btn.disabled = false; input.disabled = false; } }
+    rearm: () => { if (!landed) { btn.disabled = false; input.disabled = false; } },
+    /* A phased question (Stage B, Stage C) replaces the prompt in place and
+       carries on using this same input. The next phase is a NEW question, so
+       the landed flag from the previous one must not survive into it --
+       otherwise a wrong answer on phase 2 shuts the input and rearm() then
+       refuses to reopen it, because it still believes the question was
+       already answered correctly. That was a hard lock: the student had no
+       way back in short of reloading the page. Fixed 2026-09-17. */
+    nextPhase: () => { landed = false; }
   };
 }
 
@@ -3445,6 +3453,9 @@ function buildLab(K, cfg) {
           at++;
           const ph = phases[at];
           document.querySelector("#numq" + K + "1 .q").innerHTML = ph.prompt;
+          // the new phase is a new question -- clear the previous phase's
+          // landed flag so a miss on this one can still be re-armed
+          q.nextPhase();
           pending = true;
           now.textContent = "round " + at + " of " + phases.length + " done — run the next one";
           apply(ph);
