@@ -140,6 +140,7 @@ JS_GLOBALS = {
     "setTimeout","setInterval","clearTimeout","clearInterval","requestAnimationFrame",
     "fetch","alert","console","document","window","navigator","localStorage","performance",
     "structuredClone","queueMicrotask","TextEncoder","TextDecoder","Uint8Array","Float64Array",
+    "getComputedStyle","matchMedia","ResizeObserver",
     "Event","CustomEvent","Image","FileReader","Worker","Intl","AbortController",
     "Int32Array","ArrayBuffer","DataView","crypto","atob","btoa","escape","unescape",
     # the rest of the typed-array family. Three of them were already listed and

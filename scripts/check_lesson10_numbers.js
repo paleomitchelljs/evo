@@ -65,11 +65,26 @@ check("slots declared match slots written",
   check("A2 roll not a gimme", hard <= 0.05,
         "300 breeders, flat: lands " + (100*hard).toFixed(0) + "% -- the default pond must not walk it");
 
-  // A1: "nobody is left out" is the misconception, and it must miss.
-  const m = A_measure(100, 0, 5), pct = 100 * m.childless / 100;
-  const tol = Math.max(5, 0.15 * pct);
-  check("A1 truth", pct > 8 && pct < 20, "a flat pond leaves " + pct.toFixed(0) + "% of breeders with nothing");
-  check("A1 rejects zero", Math.abs(0 - pct) > tol, "0% is " + (pct/tol).toFixed(1) + " tolerances out");
+  /* A1 is now two calls in one card, made before the controls open:
+     the average brood, and how many individuals leave none at all. The
+     first is fixed by construction and the second is the misconception --
+     "everyone gets a turn" -- so it has to reject zero. */
+  const m = A_measure(100, 0, 8);
+  check("A1 the average brood is exactly two", Math.abs(m.brood - 2) < 1e-9,
+        "measured " + m.brood.toFixed(4) + " offspring per individual");
+  check("A1 the average brood never moves", m.broodRaw.every(v => Math.abs(v - 2) < 1e-9),
+        "all " + m.broodRaw.length + " draws sit on 2.00");
+  const spreadBrood = A_measure(100, 2.5, 8);
+  check("A1 the average holds when the shares are made uneven",
+        Math.abs(spreadBrood.brood - 2) < 1e-9,
+        "expected offspring differing by 2.5 still averages " + spreadBrood.brood.toFixed(4));
+  const tol = Math.max(4, 0.2 * m.childless);
+  check("A1 truth", m.childless > 8 && m.childless < 20,
+        "a flat pond of 100 leaves " + m.childless.toFixed(1) + " individuals with nothing");
+  check("A1 rejects zero", Math.abs(0 - m.childless) > tol,
+        "0 is " + (m.childless/tol).toFixed(1) + " tolerances out");
+  check("A1 rejects 'hardly any'", Math.abs(2 - m.childless) > tol,
+        "2 of 100 is " + ((m.childless-2)/tol).toFixed(1) + " tolerances out");
 
   // A3: no constant answer clears three rounds.
   const rng = mulberry32(4242), iv = [];
@@ -79,6 +94,12 @@ check("slots declared match slots written",
         "three rounds: " + iv.map(v=>"["+v[0].toFixed(3)+","+v[1].toFixed(3)+"]").join(" "));
   const zeroClears = iv.filter(v => 0 >= v[0] && 0 <= v[1]).length;
   check("A3 rejects 'it does not move'", zeroClears === 0, zeroClears + " of 3 rounds would accept 0.000");
+  // the round is drawn on the trajectory panel, so it has to carry the
+  // signed generations that panel fans out
+  const r0 = A.game.round(mulberry32(99), 0);
+  check("A3 round carries the fan", Array.isArray(r0.signed) && r0.signed.length === 7 &&
+        r0.signed.some(v => v < 0) !== r0.signed.every(v => v < 0),
+        "seven signed one-generation moves, both directions present");
 }
 
 /* ---- B. the error is inherited ----------------------------------------- */

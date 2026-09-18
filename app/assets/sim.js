@@ -291,3 +291,78 @@ function seedSatisfying(label, test, tries, min, max) {
                " tries; using the first draw. Is the test too strict?");
   return first;
 }
+
+/* ====== buildArrows: the causal-model widget =========================
+   Fixed nodes, and one clickable arrow per cause on offer. Drawing an
+   arrow is what turns on the slider it pays for, so the count of numbers
+   in the model is visible on the page rather than asserted in the text.
+
+   Lifted verbatim from lesson6.html on 2026-09-18, at the fourth caller
+   (lesson6, lesson6b, lesson7, lesson10). The three older pages still
+   carry their own copy and shadow this one -- they were not touched.
+
+   spec: { width, height, hint,
+           nodes: { id: {x,y,w,h,label, rate?, unobserved?, junction?, hidden?} },
+           arrows: [ {id, from, to, hidden?, nohead?} ],
+           fixed:  [ {from, to, nohead?} ] }
+   ==================================================================== */
+function buildArrows(mountId, spec, onToggle) {
+  const mount = document.getElementById(mountId);
+  const W = spec.width || 520, H = spec.height || 150;
+  const parts = [];
+  parts.push(`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`);
+  const hidden = {};
+  for (const a of spec.arrows) if (a.hidden) hidden[a.id] = true;
+  for (const a of spec.arrows.concat(spec.fixed || [])) {
+    const f = spec.nodes[a.from], t = spec.nodes[a.to];
+    const x1 = f.x + f.w/2, y1 = f.y + f.h/2, x2 = t.x + t.w/2, y2 = t.y + t.h/2;
+    const dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx+dy*dy) || 1;
+    const ux = dx/len, uy = dy/len;
+    // A line feeding a junction carries no arrowhead and runs right up to the
+    // dot: the several of them are one flow, and the single arrow leaving the
+    // junction is what points at the answer.
+    const head = !a.nohead;
+    const sx = x1 + ux*(f.w/2+4), sy = y1 + uy*(f.h/2+4);
+    const pad = head ? t.w/2 + 12 : t.w/2 + 1;
+    const ex = x2 - ux*pad, ey = y2 - uy*pad;
+    const px = -uy, py = ux;
+    parts.push(`<g class="ar${a.id ? "" : " fixed on"}${a.id && hidden[a.id] ? " hid" : ""}"${a.id ? ` data-arrow="${a.id}"` : ""}>` +
+      `<path d="M ${sx} ${sy} L ${ex} ${ey}" />` +
+      (head ? `<polygon points="${ex+ux*11},${ey+uy*11} ${ex+px*5},${ey+py*5} ${ex-px*5},${ey-py*5}" />` : "") +
+      `<rect x="${(sx+ex)/2-40}" y="${(sy+ey)/2-14}" width="80" height="28" fill="transparent" /></g>`);
+  }
+  for (const id in spec.nodes) {
+    const n = spec.nodes[id];
+    if (n.junction) {
+      parts.push(`<g class="nd jn"><circle cx="${n.x+n.w/2}" cy="${n.y+n.h/2}" r="${n.w/2}" /></g>`);
+      continue;
+    }
+    parts.push(`<g class="nd ${n.rate ? "rate" : ""}${n.unobserved ? " unobs" : ""}${n.hidden ? " hid" : ""}"${n.id ? ` data-node="${n.id}"` : ` data-node="${id}"`}><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="5" />` +
+      `<text x="${n.x+n.w/2}" y="${n.y+n.h/2+4}">${n.label}</text></g>`);
+  }
+  parts.push(`</svg><div class="hint">${spec.hint || ""}</div>`);
+  mount.innerHTML = parts.join("");
+  const state = {};
+  for (const a of spec.arrows) state[a.id] = false;
+  mount.querySelectorAll("[data-arrow]").forEach(g => {
+    g.addEventListener("click", () => {
+      if (g.classList.contains("locked")) return;
+      const id = g.dataset.arrow;
+      state[id] = !state[id];
+      // One decision can be drawn as several segments -- a path through a
+      // variable nobody measured is still one arrow to the student.
+      mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("on", state[id]));
+      onToggle(id, state[id], state);
+    });
+  });
+  return {
+    state,
+    set: (id, on) => {
+      state[id] = on;
+      mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("on", on));
+    },
+    lock: (id, on) => { mount.querySelectorAll(`[data-arrow="${id}"]`).forEach(el => el.classList.toggle("locked", on)); },
+    reveal: id => { mount.querySelectorAll(`[data-arrow="${id}"], [data-node="${id}"]`).forEach(el => el.classList.remove("hid")); },
+    count: () => { let n = 0; for (const k in state) if (state[k]) n++; return n; }
+  };
+}
