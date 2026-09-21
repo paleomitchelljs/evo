@@ -80,6 +80,10 @@
      it has left your hand, and a stochastic process is only felt as one
      if you have to sit and watch it land. */
   .controls.rolling { opacity:0.42; pointer-events:none; }
+  /* A roll bar with nothing to say takes no room -- Stage A wires its roll
+     before the ten rounds hand the controls over, so it sits empty for a
+     while. */
+  .rollbar:empty, .rollpips:empty { display:none; }
   .rollbar { margin-top:10px; padding:9px 12px; border-radius:4px; background:#f3efe2;
              border-left:3px solid #bdb8a4; font-size:13px; line-height:1.5; }
   .rollbar.live { border-left-color:var(--accent); background:#eef3e6; }
@@ -130,6 +134,22 @@
   .callpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
   .callpips i.miss { background:#e3d4d6; border-color:#c99; }
   .callpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
+
+  /* ---- the dealt round's parameter table ------------------------------
+     JM, 2026-09-21: "There is WAY too much text in the prediction box. It
+     should be a short, flat table." Three facts about the pond on offer,
+     and then the two things being called. Nothing else is in the card. */
+  table.dealt { border-collapse:collapse; width:100%; font:13px -apple-system,sans-serif; margin-bottom:10px; }
+  table.dealt th { text-align:left; font-weight:400; color:var(--muted); padding:3px 0; width:58%; }
+  table.dealt td { text-align:right; font:13px ui-monospace,Menlo,monospace; font-weight:600;
+                   font-variant-numeric:tabular-nums; padding:3px 0; }
+  table.dealt tr + tr th, table.dealt tr + tr td { border-top:1px solid #f2f0e8; }
+  .roundpips { display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .roundpips i { width:11px; height:11px; border-radius:50%; border:1.5px solid #ddd9cc; display:inline-block; }
+  .roundpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
+  .roundpips i.miss { background:#e3d4d6; border-color:#c99; }
+  .roundpips i.now { border-color:var(--accent); border-width:2px; }
+  .roundpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
 
   .numq { display:none; }
   .numq.shown { display:block; }
@@ -245,7 +265,8 @@
       <ul class="setup">
         <li>One pond. Every dot is an individual. One gene, two alleles — yellow and purple. An individual carries two copies, so it is yellow, mixed, or purple.</li>
         <li>Every individual gets a share of the next generation. The shares always average two offspring apiece and the headcount never changes.</li>
-        <li>The second slider changes how unevenly those shares get handed out — how much individuals differ in the number of offspring they are expected to leave. It changes nothing else: not the average, not the headcount, not the alleles.</li>
+        <li>Ten ponds are dealt to you first. You are told what each one starts at and how many individuals it holds, and nothing else. Then the controls are yours.</li>
+        <li>The second control changes how unevenly those shares get handed out — how much individuals differ in the number of offspring they are expected to leave. It changes nothing else: not the average, not the headcount, not the alleles.</li>
         <li>Nothing on this screen knows which allele an individual is carrying.</li>
         <li>The dots are the pond. The line underneath is the frequency of the purple allele, generation by generation. Watch them together.</li>
       </ul>
@@ -271,23 +292,6 @@
       <div class="panel predict" id="predA">
         <h3 id="predA_h">Predict</h3>
         <div class="pred-slot" id="predA_slot"></div>
-        <div class="numq" id="numqA">
-        <div class="q">Three rounds. Each one sets the pond above to something you have not seen and holds the controls there. You do not get to say which way the purple allele moves. Say <b>how far</b> it moves in one generation. Lock it in and seven single generations of that same pond are drawn on the plot above.</div>
-        <div class="gm">
-          <div class="gm-prompt" id="A_gprompt">—</div>
-          <div class="controls">
-            <div class="row"><label for="A_g0">it moves about this far</label><input type="range" id="A_g0" min="0" max="0.25" step="0.005" value="0.05" /><output id="A_g0Out">0.050</output></div>
-            <div class="buttons">
-              <button id="A_glock" class="accent">Lock in this estimate</button>
-              <button id="A_gnext" class="secondary" disabled>Deal the next round</button>
-              <span class="tally-pill" id="A_gtally">0 of 3 landed</span>
-            </div>
-          </div>
-          <div class="flip" id="A_gflip"></div>
-          <canvas id="A_gstrip" width="520" height="70" style="display:none;"></canvas>
-        </div>
-        <div class="verdict" id="A_verdict"></div>
-        </div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
@@ -307,9 +311,8 @@
       <div class="panel">
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="A1">Call the average number of offspring, and how many individuals leave none at all — before anything runs. <span class="hint"><span id="A1_now">the controls are shut until you do</span></span></li>
-          <li data-task="A2">Call each roll, and drive one allele extinct inside 30 generations — five times. <span class="hint"><span id="A2_now">0 of 5 landed</span></span></li>
-          <li data-task="A3">Clear the three rounds in the card above. <span class="hint"><span id="A3_now">0 of 3 landed</span></span></li>
+          <li data-task="A1">Call ten ponds in the card above — where each one ends, and how far off you expect to be. <span class="hint"><span id="A1_now">round 1 of 10</span></span></li>
+          <li data-task="A2">Then take the controls and drive one allele extinct inside 30 generations — five times. <span class="hint"><span id="A2_now">the controls open after the ten rounds</span></span></li>
         </ul>
         <!-- VOICE (banner): 202_lec11_04, which states the stage's point. -->
         <div class="solved-banner" id="solvedA">Anything that increases differential reproduction makes evolution go faster. It makes things change more over time. Regardless of whether it covaries with traits. Whether the differential reproduction covaries with fitness or not, we call it drift or selection — but at a more abstract level, it doesn't matter. The more differential the reproduction, the more important evolutionary processes are to shaping the frequency of heritable things. Stage B is open.</div>
@@ -907,7 +910,7 @@ window.addEventListener("resize", () => {
 function repaintAll() {
   [A_paint, B_paint, C_paint, D_paint, E_paint].forEach(f => { try { f(); } catch (e) {} });
   if (REAL.buriHist) { try { C_drawBuri(); } catch (e) {} }
-  if (REAL.wolf)     { try { D_drawWolf(); } catch (e) {} }
+  { try { D_drawWolf(); } catch (e) {} }   // the wolves are inlined, not fetched
   if (REAL.ltee)     { try { E_drawLtee(); } catch (e) {} }
 }
 
@@ -1047,11 +1050,11 @@ const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
 /* Named one per slot rather than as an array, so check_lessons.py's
    slot-coverage pass can see that every declared slot is written -- it
    reads `name: <integer>` and an array of indices is invisible to it. */
-const BIT = { A1:0,  A3:1,
-              B1:2,  B4:3,
-              C1:4,  C3:5,  C4:6,
-              D2:7,  D3:8,  D4:9,
-              E3:10, E4:11, E5:12 };
+const BIT = { A1:0,
+              B1:1,  B4:2,
+              C1:3,  C3:4,  C4:5,
+              D2:6,  D3:7,  D4:8,
+              E3:9,  E4:10, E5:11 };
 /* A stage with a real-data panel waits for the panel too, unless the
    fetch failed -- in which case realOffline() releases the wait rather
    than stranding the student behind a file. */
@@ -1291,16 +1294,18 @@ function wireGame(id, cfg) {
     const r = st.round, v = st.val;
     const res = cfg.judge ? cfg.judge(v, r) : { ok: Math.abs(v - r.truth) <= r.tol };
     if (res.skip) { el("_gflip").innerHTML = '<span class="off">not yet</span> &middot; ' + res.msg; return; }
-    if (cfg.reveal) cfg.reveal(r, v);
-    else drawStrips(id + "_gstrip", [{ label: f.label, min: f.min, max: f.max, fmt: f.fmt,
+    drawStrips(id + "_gstrip", [{ label: f.label, min: f.min, max: f.max, fmt: f.fmt,
                                   truth: r.truth, tol: r.tol, you: v, values: r.values }]);
+    // a stage that stages its round on its own panels runs the thing HERE and
+    // not at deal time: dealing the round and running it in the same breath
+    // puts the answer on the plot before the student has been asked for it
+    if (cfg.reveal) cfg.reveal(r, v);
     st.n++;
     if (res.ok) st.hits++;
     el("_gtally").textContent = st.hits + " of " + need + " landed";
     el("_gtally").classList.toggle("on", st.hits >= need);
     hint(cfg.task, st.hits + " of " + need + " landed");
-    el("_gflip").innerHTML = (res.ok ? '<span class="ok">landed</span>' : '<span class="off">missed</span>')
-      + " &middot; " + (res.msg || (res.ok ? r.right(v) : r.wrong(v)));
+    el("_gflip").innerHTML = res.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
     el("_glock").disabled = true;
     el("_gnext").disabled = false;
     if (!st.scored) { st.scored = true; record(cfg.bit, res.ok); }
@@ -1367,8 +1372,7 @@ function mountLock(stage, cfg) {
     const ok = Math.abs(val - r.truth) <= r.tol;
     drawStrips(stage + "_lkStrip", [{ label: cfg.label, min: cfg.min, max: cfg.max, fmt: cfg.fmt,
                                       truth: r.truth, tol: r.tol, you: val, values: r.values }]);
-    flip.innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>')
-                   + " &middot; " + (ok ? cfg.right(r) : cfg.wrong(r));
+    flip.innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
     done = true; go.disabled = true; inp.disabled = true;
     record(cfg.bit, ok);
     markTask(stage, cfg.task);
@@ -1430,17 +1434,18 @@ function neFromDecay(H) {
    STAGE A — differential reproduction with nothing attached to it.
    ===================================================================== */
 const A_ROLL_GENS = 30;
-const A = { N: 100, cv: 0, gen: 0, pop: null, counts: null, shares: null, roll: null,
-            traj: [], best: 0, game: null, rng: null, serial: 0,
-            // the Predict card's own state: which phase it is in, the call
-            // it is holding for the next roll, and the fan the closing
-            // rounds draw on the trajectory panel
-            call: null, mode: "free", fan: null, open: false };
+const A_ROUNDS = 10;
+const A = { N: 100, cv: 0, p0: 0.5, gen: 0, pop: null, counts: null, shares: null, roll: null,
+            traj: [], rng: null, serial: 0,
+            // the Predict card's own state. `round` is the pond currently on
+            // offer and the two calls being made about it; `mode` is "round"
+            // while the card owns the pond and "free" once the ten are done.
+            rounds: null, round: null, mode: "round", open: false, game: null };
 
 function A_fresh() {
   A.serial++;
-  A.rng = mulberry32(pageSeed("l10A", 1, 99999) + A.serial * 7919 + A.N);
-  A.pop = makePop(A.rng, A.N, 0.5);
+  A.rng = mulberry32(pageSeed("l10A", 1, 99999) + A.serial * 7919 + A.N + Math.round(A.p0 * 1000));
+  A.pop = makePop(A.rng, A.N, A.p0);
   A.counts = new Int32Array(A.N);
   A.shares = new Float64Array(A.N).fill(1);
   A.gen = 0; A.traj = [popFreq(A.pop)]; A.lastMove = null;
@@ -1455,12 +1460,7 @@ function A_step() {
   const after = popFreq(A.pop);
   A.lastMove = after - before;
   A.traj.push(after);
-  A_checkGate();
 }
-/* Stage A's gate is the roll, wired in A_wire via wireBowling. Nothing
-   here to check per step any more -- the verdict comes at the end of a
-   roll, not continuously, which is the point of the pattern. */
-function A_checkGate() {}
 /* The committed estimate and the closing game both need the same thing:
    the typical behaviour of this pond, measured over several fresh draws
    rather than read off the one on screen. A single run is not the number. */
@@ -1484,6 +1484,21 @@ function A_measure(N, cv, reps) {
            brood: mean(broods), broodRaw: broods, signedRaw: signed,
            move: mean(moves), movesRaw: moves, ne: mean(nes) };
 }
+/* How wrong you should expect to be about ONE pond of this size, started
+   here, after this many generations. Measured, not derived: the walls at 0
+   and 1 bend the closed form and a pond of twelve spends a lot of its time
+   against one. This is the number the honest band on the plot is drawn
+   from, and the number the student is being asked for. */
+function A_typical(N, p0, gens, reps) {
+  const rng = mulberry32(pageSeed("l10At", 1, 99999) + N * 31 + Math.round(p0 * 1000) * 7 + gens);
+  const errs = [];
+  for (let r = 0; r < reps; r++) {
+    let p = p0;
+    for (let g = 0; g < gens; g++) p = breedFreq(rng, p, N, 0);
+    errs.push(Math.abs(p - p0));
+  }
+  return { miss: mean(errs), raw: errs };
+}
 function A_drawPond() {
   const cv = document.getElementById("A_pond");
   const { ctx, W, H } = setupCanvas(cv);
@@ -1502,92 +1517,65 @@ function A_drawPond() {
     ctx.globalAlpha = 1;
   }
 }
-/* The closing rounds are drawn on this panel rather than on a strip of
-   their own -- JM, 2026-09-18: "I would like this to just use the same
-   graph as above." Same axes, same meaning, zoomed: one generation of a
-   pond moves the frequency by a few hundredths, and on an axis that runs
-   0 to 1 that is a couple of pixels. The zoom is stated on the panel, the
-   way Stage E states its own. */
-function A_drawFan() {
-  const cv = document.getElementById("A_traj");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const fan = A.fan, p0 = fan.p0;
-  let half = Math.max.apply(null, fan.moves.map(Math.abs));
-  half = Math.max(half * 1.25, (fan.you || 0) * 1.4, fan.truth * 1.6, 0.01);
-  // only two generations exist here, so the x axis gets two labels drawn by
-  // hand rather than axes()'s six; the y axis needs three decimals, which
-  // leaves no room for a rotated label, so it goes in the caption instead
-  const f = box(64, 30, W - 96, H - 58, 0, 1, p0 - half, p0 + half);
-  axes(ctx, f, "generation", null, v => v.toFixed(3), () => "");
-  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("0", f.x(0), f.py + f.ph + 4);
-  ctx.fillText("1", f.x(1), f.py + f.ph + 4);
-  // where it started, and the two claims about where it lands
-  ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(f.px, f.y(p0)); ctx.lineTo(f.px + f.pw, f.y(p0)); ctx.stroke();
-  ctx.setLineDash([]);
-  if (fan.you != null) {
-    ctx.fillStyle = "rgba(178,58,72,0.13)";
-    ctx.fillRect(f.px, f.y(p0 + fan.you), f.pw, Math.abs(f.y(p0 - fan.you) - f.y(p0 + fan.you)));
-    ctx.strokeStyle = HOT; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
-    for (const d of [fan.you, -fan.you]) {
-      ctx.beginPath(); ctx.moveTo(f.px, f.y(p0 + d)); ctx.lineTo(f.px + f.pw, f.y(p0 + d)); ctx.stroke();
-    }
-    ctx.setLineDash([]);
-    ctx.fillStyle = HOT; ctx.font = "10px -apple-system, sans-serif";
-    ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-    ctx.fillText("you said " + f3(fan.you), f.px + 4, f.y(p0 + fan.you) - 3);
-  }
-  if (fan.shown) {
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 1.8;
-    for (const d of [fan.truth, -fan.truth]) {
-      ctx.beginPath(); ctx.moveTo(f.px, f.y(p0 + d)); ctx.lineTo(f.px + f.pw, f.y(p0 + d)); ctx.stroke();
-    }
-    ctx.fillStyle = GREEN; ctx.font = "10px -apple-system, sans-serif";
-    ctx.textAlign = "right"; ctx.textBaseline = "top";
-    ctx.fillText("typically " + f3(fan.truth), f.px + f.pw - 4, f.y(p0 - fan.truth) + 3);
-    // the seven generations themselves
-    fan.moves.forEach((d, i) => {
-      ctx.strokeStyle = i === 0 ? PURPLE : "rgba(85,64,126,0.55)";
-      ctx.lineWidth = i === 0 ? 2.4 : 1.6;
-      ctx.beginPath(); ctx.moveTo(f.x(0), f.y(p0)); ctx.lineTo(f.x(1), f.y(p0 + d)); ctx.stroke();
-      ctx.fillStyle = i === 0 ? PURPLE : "rgba(85,64,126,0.55)";
-      ctx.beginPath(); ctx.arc(f.x(1), f.y(p0 + d), i === 0 ? 4 : 3, 0, 6.2832); ctx.fill();
-    });
-  }
-  ctx.fillStyle = PURPLE; ctx.beginPath(); ctx.arc(f.x(0), f.y(p0), 4, 0, 6.2832); ctx.fill();
-  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("frequency of the purple allele, zoomed \u2014 this panel is " +
-               (2 * half).toFixed(3) + " tall, not 1.000", f.px + f.pw / 2, 6);
-}
+/* The trajectory panel is where both sliders live. There is no separate
+   picture of a prediction anywhere on the page: the line you set IS the
+   line drawn across the plot, and the miss you allow yourself IS the band
+   around it. JM, 2026-09-21: "Each prediction should be a slider that
+   controls a visual on the graph." */
 function A_drawTraj() {
-  if (A.mode === "game" && A.fan) { A_drawFan(); return; }
-  const cv = document.getElementById("A_traj");
-  const { ctx, W, H } = setupCanvas(cv);
+  const cvEl = document.getElementById("A_traj");
+  const { ctx, W, H } = setupCanvas(cvEl);
   ctx.clearRect(0, 0, W, H);
-  const g = Math.max(A_ROLL_GENS, A.traj.length - 1);
+  const rd = A.round;
+  const g = rd ? rd.gens : Math.max(A_ROLL_GENS, A.traj.length - 1);
   const f = box(52, 14, W - 74, H - 52, 0, g, 0, 1);
   axes(ctx, f, "generation", "frequency of the purple allele", v => v.toFixed(2));
-  // the two absorbing walls. Touch either and the roll is over.
+  // the two absorbing walls. Touch either and it is over.
   ctx.strokeStyle = "#cfcbbd"; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(f.px, f.y(0)); ctx.lineTo(f.px + f.pw, f.y(0)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(f.px, f.y(1)); ctx.lineTo(f.px + f.pw, f.y(1)); ctx.stroke();
   ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
   ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("purple extinct", f.px + 4, f.y(0) - 3);
   ctx.textBaseline = "top"; ctx.fillText("yellow extinct", f.px + 4, f.y(1) + 3);
+  // where it started
+  const p0 = rd ? rd.p0 : 0.5;
   ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(f.px, f.y(0.5)); ctx.lineTo(f.px + f.pw, f.y(0.5)); ctx.stroke();
-  // the deadline the roll is aimed at
-  if (A_ROLL_GENS <= g) {
+  ctx.beginPath(); ctx.moveTo(f.px, f.y(p0)); ctx.lineTo(f.px + f.pw, f.y(p0)); ctx.stroke();
+  ctx.setLineDash([]);
+  if (rd) {
+    // what they are claiming: a band of "this far off" around a line at
+    // "it ends here", both drawn right across the plot so the width of the
+    // claim is as visible as its middle
+    const lo = clamp(rd.you - rd.err, 0, 1), hi = clamp(rd.you + rd.err, 0, 1);
+    ctx.fillStyle = "rgba(178,58,72,0.10)";
+    ctx.fillRect(f.px, f.y(hi), f.pw, f.y(lo) - f.y(hi));
+    ctx.strokeStyle = "rgba(178,58,72,0.55)"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.2;
+    for (const v of [lo, hi]) { ctx.beginPath(); ctx.moveTo(f.px, f.y(v)); ctx.lineTo(f.px + f.pw, f.y(v)); ctx.stroke(); }
+    ctx.setLineDash([]);
+    ctx.strokeStyle = HOT; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(f.px, f.y(rd.you)); ctx.lineTo(f.px + f.pw, f.y(rd.you)); ctx.stroke();
+    ctx.fillStyle = HOT; ctx.font = "10px -apple-system, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("you: " + f2(rd.you) + " ± " + f2(rd.err), f.px + f.pw - 4, f.y(rd.you) - 3);
+    // and, once it has run, how far off one pond of this size typically is
+    if (rd.shown && rd.typical != null) {
+      ctx.strokeStyle = GREEN; ctx.lineWidth = 1.6;
+      for (const d of [rd.typical, -rd.typical]) {
+        const v = clamp(p0 + d, 0, 1);
+        ctx.beginPath(); ctx.moveTo(f.px, f.y(v)); ctx.lineTo(f.px + f.pw, f.y(v)); ctx.stroke();
+      }
+      ctx.fillStyle = GREEN; ctx.font = "10px -apple-system, sans-serif";
+      ctx.textAlign = "left"; ctx.textBaseline = "top";
+      ctx.fillText("a pond this size is typically off by " + f2(rd.typical),
+                   f.px + 4, f.y(clamp(p0 - rd.typical, 0, 1)) + 3);
+    }
+  } else if (A_ROLL_GENS <= g) {
+    // the deadline the roll is aimed at
     ctx.strokeStyle = "rgba(178,58,72,0.55)"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
     ctx.beginPath(); ctx.moveTo(f.x(A_ROLL_GENS), f.py); ctx.lineTo(f.x(A_ROLL_GENS), f.py + f.ph); ctx.stroke();
+    ctx.setLineDash([]);
   }
-  ctx.setLineDash([]);
   line(ctx, f, A.traj, PURPLE, 2);
-  // where it is right now, so a paused frame reads
   const last = A.traj[A.traj.length - 1];
   if (A.traj.length > 1) {
     ctx.fillStyle = (last === 0 || last === 1) ? HOT : PURPLE;
@@ -1595,16 +1583,6 @@ function A_drawTraj() {
   }
 }
 function A_readouts() {
-  if (A.mode === "game" && A.fan) {
-    document.getElementById("A_pondRead").innerHTML =
-      '<span class="label">the pond this round deals:</span> <b>' + A.N +
-      '</b> <span class="label">individuals, expected offspring differing by</span> <b>' + A.cv.toFixed(1) + '</b>';
-    document.getElementById("A_read").innerHTML = A.fan.shown
-      ? '<span class="label">seven single generations of that pond \u2014 typical move:</span> <b class="big">' + f3(A.fan.truth) +
-        '</b>' + (A.fan.you != null ? ' &nbsp;|&nbsp; <span class="label">you said</span> <b>' + f3(A.fan.you) + '</b>' : '')
-      : '<span class="label">set your estimate in the card above, then lock it in to see what this pond actually does</span>';
-    return;
-  }
   let zero = 0; for (let i = 0; i < A.N; i++) if (A.counts[i] === 0) zero++;
   const p = popFreq(A.pop);
   document.getElementById("A_pondRead").innerHTML = A.gen === 0
@@ -1612,212 +1590,201 @@ function A_readouts() {
     : '<span class="label">generation</span> <b>' + A.gen + '</b> &nbsp;|&nbsp; <span class="label">left nothing behind:</span> <b>' + zero +
       '</b> of ' + A.N + ' &nbsp;|&nbsp; <span class="label">biggest brood:</span> <b>' +
       Math.max.apply(null, Array.from(A.counts)) + '</b>';
+  const rd = A.round;
   document.getElementById("A_read").innerHTML =
     '<span class="label">frequency of the purple allele:</span> <b>' + f3(p) + '</b>' +
-    (A.lastMove == null ? "" : ' &nbsp;|&nbsp; <span class="label">it moved</span> <b>' + (A.lastMove >= 0 ? "+" : "") + f3(A.lastMove) + '</b>') +
-    ' &nbsp;|&nbsp; <span class="label">variety:</span> <b>' + f3(variety(p)) + '</b>' +
-    ' &nbsp;|&nbsp; <span class="label">really in the game:</span> <b class="big">' +
-      (A.gen === 0 ? "—" : reallyInTheGame(A.shares).toFixed(1)) + '</b> <span class="label">of ' + A.N + '</span>';
+    (rd ? ' &nbsp;|&nbsp; <span class="label">started at</span> <b>' + f2(rd.p0) + '</b>' +
+          (A.gen > 0 ? ' &nbsp;|&nbsp; <span class="label">off by</span> <b class="big">' + f3(Math.abs(p - rd.p0)) + '</b>' : '')
+        : (A.lastMove == null ? "" : ' &nbsp;|&nbsp; <span class="label">it moved</span> <b>' + (A.lastMove >= 0 ? "+" : "") + f3(A.lastMove) + '</b>') +
+          ' &nbsp;|&nbsp; <span class="label">variety:</span> <b>' + f3(variety(p)) + '</b>' +
+          ' &nbsp;|&nbsp; <span class="label">really in the game:</span> <b class="big">' +
+            (A.gen === 0 ? "—" : reallyInTheGame(A.shares).toFixed(1)) + '</b> <span class="label">of ' + A.N + '</span>');
 }
 function A_paint() { A_drawPond(); A_drawTraj(); A_readouts(); }
 const A_fixed = () => { const p = popFreq(A.pop); return p === 0 || p === 1; };
 
-/* ====== Stage A's Predict card =======================================
-   JM, 2026-09-18: "I'd like that to be a box that says predict. Below it,
-   the controls. They make the prediction and they lock it in, then the
-   controls open up, and they run the thing. I would like what they
-   predict, the card itself, to change after each run."
-
-   So the card holds three predictions in sequence, each replacing the one
-   before it:
-
-     1  before anything runs at all, with the controls shut -- how many
-        offspring an individual leaves on average, and how many leave
-        none. The first is exactly two and never moves whatever you do;
-        the second is about one in seven. Asking for both in one breath is
-        the point of asking at all: the average is the fixed thing, and
-        the fixed thing is not the thing that matters.
-     2  one call per roll, re-dealt after every roll -- does an allele go
-        extinct inside thirty generations, and which one. You do not get
-        to roll without saying what you expect.
-     3  the three closing rounds, drawn on the trajectory panel above.
-
-   Nothing here is a multiple-choice gate on the way in: 1 and 3 are
-   graded and never shut a door, 2 is not graded at all.               */
 function A_openControls() {
   A.open = true;
   const c = document.getElementById("A_controls");
   if (c) c.classList.remove("pending");
-  const n = document.getElementById("A_ctrlNote");
-  if (n) n.textContent = "";
 }
-function A_shutControls(why) {
+function A_shutControls() {
   const c = document.getElementById("A_controls");
   if (c) c.classList.add("pending");
-  const n = document.getElementById("A_ctrlNote");
-  if (n) n.textContent = why;
 }
 
-/* --- 1. the two numbers, before anything has run --------------------- */
-function A_mountFirst() {
-  document.getElementById("predA_h").textContent = "Predict — before anything runs";
-  document.getElementById("predA_slot").innerHTML =
-    '<div class="gm">' +
-      '<div class="gm-prompt">The pond below holds <b>' + A.N + '</b> individuals, and every one of them is ' +
-        '<b>equally likely</b> to be a parent. One generation is about to go by. Call it first — the controls ' +
-        'open once you have.</div>' +
-      '<div class="controls">' +
-        '<div class="row"><label for="A_p1a">offspring per individual, on average</label>' +
-          '<input type="range" id="A_p1a" min="0" max="6" step="0.1" value="0" /><output id="A_p1aOut">0.0</output></div>' +
-        '<div class="row"><label for="A_p1b">individuals that leave none at all</label>' +
-          '<input type="range" id="A_p1b" min="0" max="' + A.N + '" step="1" value="0" />' +
-          '<output id="A_p1bOut">0 of ' + A.N + '</output></div>' +
-        '<div class="buttons"><button id="A_p1go" class="accent">Lock both in</button></div>' +
-      '</div>' +
-      '<div class="flip" id="A_p1flip"></div>' +
-      '<canvas id="A_p1strip" width="520" height="128" style="display:none;"></canvas>' +
-      '<div class="buttons" id="A_p1after"></div>' +
-    '</div>';
-  const a = document.getElementById("A_p1a"), b = document.getElementById("A_p1b");
-  a.addEventListener("input", e => { document.getElementById("A_p1aOut").value = (+e.target.value).toFixed(1); bump("A"); });
-  b.addEventListener("input", e => { document.getElementById("A_p1bOut").value = e.target.value + " of " + A.N; bump("A"); });
-  let done = false;
-  document.getElementById("A_p1go").addEventListener("click", () => {
-    if (done) return;
-    done = true;
-    const va = +a.value, vb = +b.value;
-    const m = A_measure(A.N, A.cv, 8);
-    const tolA = 0.15, tolB = Math.max(4, 0.2 * m.childless);
-    const okA = Math.abs(va - m.brood) <= tolA, okB = Math.abs(vb - m.childless) <= tolB;
-    drawStrips("A_p1strip", [
-      { label: "offspring per individual, on average", min: 0, max: 6, fmt: f2,
-        truth: m.brood, tol: tolA, you: va, values: m.broodRaw.slice(0, 6) },
-      { label: "individuals that leave none at all", min: 0, max: A.N, fmt: v => v.toFixed(0),
-        truth: m.childless, tol: tolB, you: vb, values: m.childlessRaw.slice(0, 6) }
-    ]);
-    document.getElementById("A_p1flip").innerHTML =
-      (okA ? '<span class="ok">the average: landed</span>' : '<span class="off">the average: missed</span>') +
-      ' &middot; it is <b>' + m.brood.toFixed(2) + '</b> apiece, and it is that in every pond on this page. ' +
-      'The headcount does not change, so the shares have to come out to it whatever you do to them.<br>' +
-      (okB ? '<span class="ok">the ones with none: landed</span>' : '<span class="off">the ones with none: missed</span>') +
-      ' &middot; <b>' + m.childless.toFixed(0) + '</b> of the ' + A.N + ' leave nothing at all. ' +
-      'Equally likely is not the same as equal.';
-    a.disabled = true; b.disabled = true;
-    document.getElementById("A_p1go").disabled = true;
-    record(BIT.A1, okB);
-    markTask("A", "A1");
-    hint("A1", okA && okB ? "both landed" : "locked in");
-    A_openControls();
-    document.getElementById("A_roll").disabled = true;
-    document.getElementById("A_ctrlNote").textContent =
-      "Try the pond out. Rolling opens once you have taken the next prediction.";
-    document.getElementById("A_p1after").innerHTML =
-      '<button id="A_p1next" class="secondary">Next prediction</button>';
-    document.getElementById("A_p1next").addEventListener("click", () => A.call.enter());
-    checkStageDone("A");
-  });
-  A_shutControls("The controls open once you have locked in the prediction above.");
-}
+/* ====== Stage A's Predict card =======================================
+   JM, 2026-09-21. The card holds one thing and holds it ten times:
 
-/* --- 2. one call per roll -------------------------------------------- */
-function A_mountCall() {
-  const st = { will: null, which: null, locked: false, right: 0, n: 0, live: false };
-  const rollBtn = document.getElementById("A_roll");
+     "The students should, at first, be shown the relevant parameters
+      (starting frequency & population size). Each simulated animation
+      then runs when they hit go, and their predictions are evaluated.
+      These predictions are not scored. A new set of starting frequencies
+      & population sizes are shown & they predict again. Repeat 10 times."
 
-  function paintPicks() {
-    document.querySelectorAll("#A_cwill button").forEach(b =>
-      b.classList.toggle("on", b.dataset.will === st.will));
-    document.querySelectorAll("#A_cwhich button").forEach(b => {
-      b.classList.toggle("on", b.dataset.which === st.which);
-      b.disabled = st.locked || st.will === "no";
-    });
-    document.getElementById("A_cgo").disabled = st.locked || st.will == null ||
-      (st.will === "yes" && st.which == null);
-  }
+   Two calls per round, each one a slider that moves something on the
+   plot: where it ends up, and how far off they expect to be. The second
+   is deliberately Lesson 5 and 6's quantity -- an average error, a
+   typical miss -- rather than a confidence percentage, on JM's ruling:
+   "this builds on earlier lessons (4-6)."
+
+   WHY THE MIDDLE IS THE EASY HALF AND THE WIDTH IS THE STAGE. The honest
+   answer for where it ends up is always where it started; nothing on this
+   page knows which allele it is looking at, so there is no other answer to
+   give. All the information is in the second slider, and it moves by a
+   factor of ten across the ponds that get dealt. A student who has
+   understood the stage sets the first slider once and spends the rest of
+   the ten rounds on the second.
+
+   WHAT IS RECORDED. Not the rounds. One bit, taken in silence at the end:
+   did the last five land more often than the first five. Getting a round
+   wrong costs nothing, and there is nothing on screen that says a bit is
+   being taken -- which is the point, because a student who knows they are
+   being marked on improvement can produce improvement by throwing the
+   first five.                                                          */
+const A_CLASSES = [
+  // small and late, big and early, and a middling one -- so the honest miss
+  // moves by a factor of ten across the ten rounds and no single band clears
+  // them all. Checked for exactly that in check_lesson10_numbers.js.
+  { N: [10, 14, 18],    p0: [0.30, 0.50, 0.70] },
+  { N: [240, 320, 400], p0: [0.25, 0.50, 0.75] },
+  { N: [45, 60, 80],    p0: [0.35, 0.50, 0.65] }
+];
+function A_mountRounds() {
+  const rng = mulberry32(pageSeed("l10Ar", 1, 99999));
+  const st = { n: 0, hits: [], running: false, timer: 0, done: false };
+
+  function el(id) { return document.getElementById(id); }
   function paintPips() {
-    document.getElementById("A_cpips").innerHTML =
-      '<span>' + st.right + " of " + st.n + " calls right</span>";
+    let h = "";
+    for (let i = 0; i < A_ROUNDS; i++) {
+      const r = st.hits[i];
+      h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : (i === st.n ? "now" : "")) + '"></i>';
+    }
+    const landed = st.hits.filter(Boolean).length;
+    if (st.hits.length) h += "<span>" + landed + " of " + st.hits.length + " landed</span>";
+    el("A_rpips").innerHTML = h;
+  }
+  function paintTable() {
+    const rd = A.round;
+    el("A_rtab").innerHTML =
+      "<tr><th>round</th><td>" + (st.n + 1) + " of " + A_ROUNDS + "</td></tr>" +
+      "<tr><th>the pond starts at</th><td>" + f2(rd.p0) + "</td></tr>" +
+      "<tr><th>and holds</th><td>" + rd.N + "</td></tr>" +
+      "<tr><th>generations</th><td>" + rd.gens + "</td></tr>";
+  }
+  function syncSliders() {
+    const rd = A.round;
+    el("A_rend").value = String(rd.you); el("A_rendOut").value = f2(rd.you);
+    el("A_rerr").value = String(rd.err); el("A_rerrOut").value = f2(rd.err);
   }
   function deal() {
-    st.will = null; st.which = null; st.locked = false;
-    document.getElementById("A_cprompt").innerHTML =
-      "Set the pond below however you like. Then say what it will do — <b>before</b> you roll it.";
-    document.getElementById("A_cflip").innerHTML = "";
-    rollBtn.disabled = true;
-    A_openControls();
-    paintPicks();
+    const cls = A_CLASSES[st.n % A_CLASSES.length];
+    const N = cls.N[Math.floor(rng() * cls.N.length)];
+    const p0 = cls.p0[Math.floor(rng() * cls.p0.length)];
+    // the two calls carry over from the round before, so a student who has
+    // worked out what the middle should be sets it once
+    const prev = A.round;
+    A.round = { p0, N, gens: A_ROLL_GENS, you: prev ? prev.you : 0.50,
+                err: prev ? prev.err : 0.10, shown: false, typical: null };
+    A.N = N; A.p0 = p0; A.cv = 0;
+    el("A_N").value = String(N); el("A_NOut").value = N;
+    el("A_cv").value = "0"; el("A_cvOut").value = "0.0";
+    el("cA_N").textContent = N; el("cA_cv").textContent = "0";
+    A_fresh();
+    // 2N alleles do not always divide by the asked-for fraction -- a pond of
+    // fourteen cannot start at 0.30. The pond that was actually built is what
+    // gets shown, what the band is drawn around, and what the miss is measured
+    // from; the asked-for number is never displayed.
+    A.round.p0 = A.p0 = popFreq(A.pop);
+    el("A_rgo").disabled = false; el("A_rnext").disabled = true;
+    el("A_rend").disabled = false; el("A_rerr").disabled = false;
+    el("A_rflip").innerHTML = "";
+    paintTable(); syncSliders(); paintPips(); A_paint();
   }
-  function enter() {
-    st.live = true;
-    document.getElementById("predA_h").textContent = "Predict — call the roll";
-    document.getElementById("predA_slot").innerHTML =
-      '<div class="gm">' +
-        '<div class="gm-prompt" id="A_cprompt"></div>' +
-        '<div class="pickq">Is an allele extinct inside ' + A_ROLL_GENS + ' generations?</div>' +
-        '<div class="picks" id="A_cwill">' +
-          '<button data-will="yes">yes, one goes extinct</button>' +
-          '<button data-will="no">no, both survive</button>' +
-        '</div>' +
-        '<div class="pickq">Which one goes?</div>' +
-        '<div class="picks" id="A_cwhich">' +
-          '<button data-which="yellow"><span class="swatch" style="background:' + YELLOW + '"></span>the yellow allele</button>' +
-          '<button data-which="purple"><span class="swatch" style="background:' + PURPLE + '"></span>the purple allele</button>' +
-        '</div>' +
-        '<div class="buttons"><button id="A_cgo" class="accent">Lock in the call</button></div>' +
-        '<div class="flip" id="A_cflip"></div>' +
-        '<div class="callpips" id="A_cpips"></div>' +
-      '</div>';
-    document.getElementById("A_cwill").addEventListener("click", ev => {
-      const b = ev.target.closest("button"); if (!b || st.locked) return;
-      st.will = b.dataset.will;
-      if (st.will === "no") st.which = null;
-      paintPicks(); bump("A");
-    });
-    document.getElementById("A_cwhich").addEventListener("click", ev => {
-      const b = ev.target.closest("button"); if (!b || st.locked || st.will === "no") return;
-      st.which = b.dataset.which; paintPicks(); bump("A");
-    });
-    document.getElementById("A_cgo").addEventListener("click", () => {
-      if (st.locked) return;
-      st.locked = true;
-      // the claim was about the pond as it stood, so the pond stops moving
-      A_shutControls("Called. The controls are shut until the roll is in.");
-      rollBtn.disabled = false;
-      document.getElementById("A_cflip").innerHTML =
-        '<span class="label">called — now roll it.</span>';
-      paintPicks(); bump("A");
-    });
-    deal();
-    paintPips();
+  function go() {
+    if (st.running || !A.round) return;
+    st.running = true;
+    el("A_rgo").disabled = true;
+    el("A_rend").disabled = true; el("A_rerr").disabled = true;
+    st.timer = setInterval(() => {
+      A_step(); A_paint();
+      if (A.gen >= A.round.gens || A_fixed()) { clearInterval(st.timer); st.timer = 0; land(); }
+    }, 70);
+    bump("A");
   }
-  /* Read off what the roll actually did and mark the call. Not recorded:
-     the point is to have committed, and half of these are coin flips. */
-  function afterRoll() {
-    if (!st.live || !st.locked) return;
-    const p = popFreq(A.pop);
-    const out = (p === 0 || p === 1) ? (p === 0 ? "purple" : "yellow") : null;
-    const ok = st.will === "no" ? out === null : out !== null && out === st.which;
-    st.n++; if (ok) st.right++;
-    const said = st.will === "no" ? "both would survive" : "the " + st.which + " allele would go";
-    const got = out === null
-      ? "both are still in the pond after " + A_ROLL_GENS + " generations"
-      : "the " + out + " allele went extinct at generation " + A.gen;
-    document.getElementById("A_cflip").innerHTML =
-      (ok ? '<span class="ok">called it</span>' : '<span class="off">missed it</span>') +
-      " &middot; you said " + said + "; " + got + ".";
-    paintPips();
-    const flip = document.getElementById("A_cflip").innerHTML;
-    deal();
-    document.getElementById("A_cflip").innerHTML = flip +
-      "<br><span class=\"label\">next roll — call it again.</span>";
+  function land() {
+    st.running = false;
+    const rd = A.round, got = popFreq(A.pop);
+    rd.typical = A_typical(rd.N, rd.p0, rd.gens, 160).miss;
+    rd.shown = true;
+    const ok = Math.abs(got - rd.you) <= rd.err;
+    st.hits.push(ok);
+    el("A_rflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
+    paintPips(); A_paint();
+    st.n++;
+    if (st.n >= A_ROUNDS) finish();
+    else el("A_rnext").disabled = false;
   }
-  return { enter, afterRoll, state: st };
+  /* The silent bit. Nothing on screen mentions it. */
+  function finish() {
+    st.done = true;
+    const first = st.hits.slice(0, 5).filter(Boolean).length;
+    const last = st.hits.slice(5, 10).filter(Boolean).length;
+    record(BIT.A1, last > first);
+    markTask("A", "A1");
+    hint("A1", st.hits.filter(Boolean).length + " of " + A_ROUNDS + " landed");
+    el("A_rgo").disabled = true; el("A_rnext").disabled = true;
+    el("A_rend").disabled = true; el("A_rerr").disabled = true;
+    // the pond is theirs now
+    A.round = null; A.mode = "free";
+    A.N = 100; A.p0 = 0.5; A.cv = 0;
+    el("A_N").value = "100"; el("A_NOut").value = "100";
+    el("cA_N").textContent = "100";
+    A_fresh(); A_openControls(); A_paint();
+    document.getElementById("A_roll").disabled = false;
+    hint("A2", "0 of 5 landed");
+    if (A.roll) A.roll.idle();
+    checkStageDone("A");
+  }
+
+  document.getElementById("predA_h").textContent = "Predict";
+  document.getElementById("predA_slot").innerHTML =
+    '<table class="dealt" id="A_rtab"></table>' +
+    '<div class="controls">' +
+      '<div class="row"><label for="A_rend">it ends up at</label>' +
+        '<input type="range" id="A_rend" min="0" max="1" step="0.01" value="0.50" /><output id="A_rendOut">0.50</output></div>' +
+      '<div class="row"><label for="A_rerr">you expect to be off by</label>' +
+        '<input type="range" id="A_rerr" min="0.01" max="0.50" step="0.01" value="0.10" /><output id="A_rerrOut">0.10</output></div>' +
+      '<div class="buttons">' +
+        '<button id="A_rgo" class="accent">Go</button>' +
+        '<button id="A_rnext" class="secondary" disabled>Next pond</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="flip" id="A_rflip"></div>' +
+    '<div class="roundpips" id="A_rpips"></div>';
+
+  document.getElementById("A_rend").addEventListener("input", e => {
+    if (!A.round) return; A.round.you = +e.target.value;
+    document.getElementById("A_rendOut").value = f2(A.round.you); A_drawTraj(); bump("A");
+  });
+  document.getElementById("A_rerr").addEventListener("input", e => {
+    if (!A.round) return; A.round.err = +e.target.value;
+    document.getElementById("A_rerrOut").value = f2(A.round.err); A_drawTraj(); bump("A");
+  });
+  document.getElementById("A_rgo").addEventListener("click", go);
+  document.getElementById("A_rnext").addEventListener("click", () => { if (!st.done) deal(); });
+
+  A_shutControls();
+  deal();
+  /* Study Mode opens every gate at once; it wants the controls reachable
+     rather than held by a round that nobody is going to play. */
+  function show() { if (!st.done) finish(); }
+  return { show, state: st, deal, classes: A_CLASSES };
 }
 
 function A_wire() {
   const N = document.getElementById("A_N"), cvI = document.getElementById("A_cv");
-  document.getElementById("A_controls").insertAdjacentHTML("afterend",
-    '<div class="pred-note" id="A_ctrlNote"></div>');
   N.addEventListener("input", e => { A.N = +e.target.value; document.getElementById("A_NOut").value = A.N;
     document.getElementById("cA_N").textContent = A.N; highlightByDataLine("codeA", "N"); A_fresh(); A_paint(); bump("A"); });
   cvI.addEventListener("input", e => { A.cv = +e.target.value; document.getElementById("A_cvOut").value = A.cv.toFixed(1);
@@ -1826,14 +1793,15 @@ function A_wire() {
   document.getElementById("A_reset").addEventListener("click", () => { A_fresh(); A_paint(); bump("A"); });
   document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson10_stageA.R", A_RCODE()));
 
-  A.call = A_mountCall();
-  A_mountFirst();
-
   /* The roll. Five extinctions inside thirty generations, and the only
      way to get there is to bring the pond down or the differences up --
      which is the stage's point, arrived at by aiming rather than by being
      told. A hundred individuals breeding evenly will not do it in thirty,
      and the student finds that out by failing at it a few times. */
+  /* The roll is wired now but says nothing yet: its target is not the
+     student's problem until the ten rounds are behind them, and a goal you
+     cannot act on reads as a goal you have failed. A_mountRounds calls
+     A.roll.idle() when it hands the controls over. */
   A.roll = wireBowling("A", {
     task: "A2", need: 5, ms: 70,
     goal: "Drive one allele extinct — yellow or purple, either counts — inside " + A_ROLL_GENS + " generations.",
@@ -1851,57 +1819,16 @@ function A_wire() {
       const p = popFreq(A.pop);
       return "still at " + f3(p) + " after " + A_ROLL_GENS + " generations. Nothing was pushing it either way — " +
              "it simply did not get there this time.";
-    },
-    after: () => A.call.afterRoll(),
-    onCleared: () => { if (A.game) { A.call.state.live = false; A.game.show(); } }
+    }
   });
+  document.getElementById("A_roll").disabled = true;
+  document.getElementById("A_rollbar").innerHTML = "";
+  document.getElementById("A_rollbar").className = "rollbar";
+  document.getElementById("A_rollpips").innerHTML = "";
 
-  A.game = wireGame("A", {
-    task: "A3", bit: BIT.A3, field: { label: "it moves about this far", min: 0, max: 0.25, start: 0.05, fmt: f3 },
-    round: (rng, n) => {
-      // three classes in rotation, so no constant answer clears three rounds
-      const cls = n % 3;
-      let N, cv;
-      if (cls === 0)      { N = [200, 300, 400][Math.floor(rng() * 3)]; cv = [0, 0.3][Math.floor(rng() * 2)]; }
-      else if (cls === 1) { N = [80, 120][Math.floor(rng() * 2)];       cv = [1.0, 1.4][Math.floor(rng() * 2)]; }
-      else                { N = [30, 50][Math.floor(rng() * 2)];        cv = [2.2, 3.0][Math.floor(rng() * 2)]; }
-      const m = A_measure(N, cv, 40);
-      return { N, cv, truth: m.move, tol: Math.max(0.012, 0.35 * m.move), values: m.movesRaw.slice(0, 6),
-        signed: m.signedRaw.slice(0, 7),
-        prompt: "The pond above is now <b>" + N + "</b> individuals, with expected offspring differing by <b>" + cv.toFixed(1) +
-                "</b>, and the controls are held there. Nothing here looks at colour. One generation goes by. " +
-                "How far does the frequency of the purple allele move?",
-        right: () => "the typical move is " + f3(m.move) + ". Seven single generations of that same pond are drawn above — note which side of the start they land on.",
-        wrong: () => "the typical move is " + f3(m.move) + ". Really in the game: " + m.ne.toFixed(1) + " of " + N + "." };
-    },
-    /* The round is dealt onto the panels rather than described in words:
-       the pond above becomes the pond being asked about, and the
-       trajectory plot becomes the answer sheet. The controls are held at
-       the dealt setting -- this round is not theirs to set. */
-    onDeal: r => {
-      A.mode = "game";
-      A.N = r.N; A.cv = r.cv;
-      const nI = document.getElementById("A_N"), cI = document.getElementById("A_cv");
-      nI.value = String(A.N); document.getElementById("A_NOut").value = A.N;
-      cI.value = String(A.cv); document.getElementById("A_cvOut").value = A.cv.toFixed(1);
-      document.getElementById("cA_N").textContent = A.N;
-      document.getElementById("cA_cv").textContent = A.cv.toFixed(1);
-      A_fresh();
-      A.fan = { p0: popFreq(A.pop), moves: r.signed, truth: r.truth, you: null, shown: false };
-      A_shutControls("This round deals the pond. The controls come back when the three are cleared.");
-      document.getElementById("A_roll").disabled = true;
-      A_paint();
-    },
-    reveal: (r, v) => { A.fan.you = v; A.fan.shown = true; A_paint(); },
-    onCleared: () => {
-      A.mode = "free"; A.fan = null;
-      A_openControls();
-      document.getElementById("A_roll").disabled = false;
-      A_fresh(); A_paint();
-    },
-    done: "Three landed. You were never asked which way it would go, because that is the one thing about it nobody can tell you."
-  });
+  A.game = A_mountRounds();
 }
+
 function A_RCODE() {
   return "# Lesson 10, Stage A -- differential reproduction with nothing attached\n" +
     "N  <- " + A.N + "\ncv <- " + A.cv.toFixed(1) + "\n\n" +
@@ -2096,9 +2023,7 @@ function B_wire() {
       const outs = [];
       for (let r = 0; r < 5; r++) outs.push(20 - B_batch(rng, B.N, B.gens, true, 20).fixed);
       return { truth: mean(outs), tol: Math.max(2.5, 0.2 * mean(outs)), values: outs };
-    },
-    right: r => "about " + r.truth.toFixed(1) + " of the twenty. Five more batches of twenty are on the strip.",
-    wrong: r => "about " + r.truth.toFixed(1) + " of the twenty still carry both."
+    }
   });
 
   B.game = wireGame("B", {
@@ -2119,9 +2044,7 @@ function B_wire() {
       }
       return { N, G, truth, tol: Math.max(0.02, 0.3 * truth), values: six,
         prompt: "A pond of <b>" + N + "</b> individuals, parents drawn from the generation before, run for <b>" + G +
-                "</b> generations from a half-and-half start. How far from 0.500 does a typical pond end up?",
-        right: () => "a typical pond ends " + f3(truth) + " from where it started.",
-        wrong: () => "a typical pond ends " + f3(truth) + " from where it started. Four times the generations is not four times the distance." };
+                "</b> generations from a half-and-half start. How far from 0.500 does a typical pond end up?" };
     },
     done: "Three landed. Ten generations, forty, a hundred and fifty — and the distance did not grow in step with them. It grows with the square root, and then it stops growing, because there is nowhere past the wall to go."
   });
@@ -2278,9 +2201,7 @@ function C_wire() {
       if (h == null) return null;
       return { truth: h, tol: Math.max(2.5, 0.2 * h), values: null };
     },
-    notReady: "that pond is too big to halve inside the run — bring the headcount down",
-    right: r => "it takes about " + r.truth.toFixed(0) + " generations. That is roughly 1.4 times the headcount, and it is the only thing the headcount sets.",
-    wrong: r => "it takes about " + r.truth.toFixed(0) + " generations — roughly 1.4 times the headcount."
+    notReady: "that pond is too big to halve inside the run — bring the headcount down"
   });
 
   /* The roll. Nothing left in the middle, three times. At 25 individuals
@@ -2329,9 +2250,7 @@ function C_wire() {
       const truth = mean(many);
       return { N, G, truth, tol: Math.max(6, 0.22 * truth), values: six,
         prompt: "A hundred and seven fresh ponds of <b>" + N + "</b> individuals, run <b>" + G +
-                "</b> generations from half and half. Nothing is selected. How many come out with one allele left?",
-        right: () => "about " + truth.toFixed(0) + " of the 107. Six more batches of 107 are on the strip.",
-        wrong: () => "about " + truth.toFixed(0) + " of the 107. Half the variety goes in about " + (1.386 * N).toFixed(0) + " generations at this headcount." };
+                "</b> generations from half and half. Nothing is selected. How many come out with one allele left?" };
     },
     done: "Three landed. Nothing was pushing any of those ponds anywhere. They emptied out anyway, because nothing was holding them full."
   });
@@ -2397,7 +2316,7 @@ const D_L6 = { b: 0.260, d: 0.200, h: 0.60, bad: [1976, 1996] };
 
 const D = { b: D_L6.b, d: D_L6.d, h: D_L6.h, bad: { 1976: true, 1996: true },
             runs: null, showTo: null, frame: null,
-            game: null, lock: null, roll: null, mode: "free", dealt: null };
+            game: null, lock: null, roll: null, mode: "free", dealt: null, revealed: false };
 
 /* Lesson 6's model, unchanged, with one difference: the floor is two
    moose rather than one. A herd of one cannot breed, and letting the line
@@ -2528,9 +2447,14 @@ function D_readouts() {
     : '<span class="label">average</span> <b>' + avg.toFixed(0) + '</b> <span class="label">moose · smallest winter</span> <b>' +
       lowest.toFixed(0) + '</b> &nbsp;|&nbsp; <span class="label">marked winters:</span> <b>' + Object.keys(D.bad).length +
       '</b> &nbsp;|&nbsp; <span class="label">off the counted record by</span> <b>' + D_miss(sizes).toFixed(0) + '</b> <span class="label">moose</span>';
-  const bits = ['<span class="label">what the record is worth to a gene — the arithmetic says</span> <b class="big">' +
-                formula.toFixed(0) + '</b>'];
-  if (D.runs) {
+  // in a dealt round the arithmetic IS the answer, so it is not on the page
+  // until the estimate is locked in
+  const hide = D.mode === "game" && !D.revealed;
+  const bits = hide
+    ? ['<span class="label">lock in your estimate to run the forty herds along this record</span>']
+    : ['<span class="label">what the record is worth to a gene — the arithmetic says</span> <b class="big">' +
+       formula.toFixed(0) + '</b>'];
+  if (D.runs && !hide) {
     const k = D_outside(D.runs), inWin = k >= D_WANT_LO && k <= D_WANT_HI;
     if (D.runs.measured) bits.push('<span class="label">' + D_BIG + ' herds of it measure</span> <b>' + D.runs.measured.toFixed(0) + '</b>');
     bits.push('<span class="label">ended outside 0.35–0.65:</span> <b class="' + (inWin ? "ok" : "") + '">' + k +
@@ -2605,9 +2529,7 @@ function D_wire() {
       const t = D_dist(P);
       return { truth: t, tol: Math.max(0.015, 0.3 * t),
                values: [0, 1, 2, 3, 4, 5].map(i => D_dist(P.slice(i * 30, i * 30 + 30))) };
-    },
-    right: r => "a typical herd ends " + f3(r.truth) + " from where it started. A thousand moose is a lot of moose, and forty-two winters is not very long.",
-    wrong: r => "a typical herd ends " + f3(r.truth) + " from where it started. The record barely dips, so there is nothing here to squeeze the gene."
+    }
   });
 
   /* The roll. A window rather than a floor: the student has to bend the
@@ -2666,24 +2588,24 @@ function D_wire() {
       for (let r = 0; r < 6; r++) vals.push(D_measuredN(D_runHerds(sizes, D_BIG, pageSeed("l10Dg", 1, 99999) + n * 131 + r * 17)));
       return { sizes, truth, tol: Math.max(12, 0.25 * truth), values: vals,
         prompt: says + " It is drawn on the plot above. What evenly-sized herd — the same number of moose every winter — " +
-                "would let the gene wander as far as that record does?",
-        right: () => "it is worth " + truth.toFixed(0) + ". Add up one over each winter, not the winters.",
-        wrong: () => "it is worth " + truth.toFixed(0) + ", against an average of " + mean(sizes).toFixed(0) +
-                     ". The winters it spent small count for far more than the winters it spent large." };
+                "would let the gene wander as far as that record does?" };
     },
     onDeal: r => {
-      D.mode = "game"; D.dealt = r;
-      const sd = pageSeed("l10Dd", 1, 99999) + Math.round(r.truth);
-      D.runs = D_runHerds(r.sizes, D_HERDS, sd);
-      D.runs.sizes = r.sizes;
-      D.runs.measured = D_measuredN(D_runHerds(r.sizes, D_BIG, sd + 7919));
-      D.showTo = null;
+      D.mode = "game"; D.dealt = r; D.revealed = false;
+      D.runs = null; D.showTo = null;
       document.getElementById("D_controls").classList.add("pending");
       document.getElementById("D_roll").disabled = true;
       D_paint();
     },
+    reveal: r => {
+      const sd = pageSeed("l10Dd", 1, 99999) + Math.round(r.truth);
+      D.runs = D_runHerds(r.sizes, D_HERDS, sd);
+      D.runs.sizes = r.sizes;
+      D.runs.measured = D_measuredN(D_runHerds(r.sizes, D_BIG, sd + 7919));
+      D.revealed = true; D.showTo = null; D_paint();
+    },
     onCleared: () => {
-      D.mode = "free"; D.dealt = null; D.runs = null;
+      D.mode = "free"; D.dealt = null; D.runs = null; D.revealed = false;
       document.getElementById("D_controls").classList.remove("pending");
       document.getElementById("D_roll").disabled = false;
       D_paint();
@@ -2752,7 +2674,7 @@ function herdStep(rng, pop, n, males, cv, s) {
 const E = { N: 100, depth: 100, males: 50, cv: 0,
             on: { N: false, bust: false, sex: false, spread: false },
             dag: null, rung: 0, runs: null, pic: null, showTo: null,
-            game: null, lock: null, roll: null, mode: "free", dealt: null };
+            game: null, lock: null, roll: null, mode: "free", dealt: null, revealed: false };
 
 /* The ladder. Rung 1 lets the headcount move and nothing else, because
    "make it smaller" is the answer everybody already has. From rung 2 the
@@ -2765,17 +2687,19 @@ const E = { N: 100, depth: 100, males: 50, cv: 0,
    it is reachable with the arrows on offer, and it is NOT reachable with
    the arrows of the rung below. */
 const E_RUNGS = [
-  { need: 30, gives: "N",
-    text: "Get <b>30</b> of the forty herds to lose an allele in sixty generations. You may move the headcount, and nothing else.",
+  { lo: 14, hi: 20, gives: "N",
+    text: "Get <b>between 14 and 20</b> of the forty herds to lose an allele in sixty generations. " +
+          "You may move the headcount, and nothing else.",
     next: "Now put the hundred bodies back — they stay back — and take the crash instead." },
-  { need: 10, gives: "bust", holdN: true,
-    text: "A hundred bodies, held there. Get <b>10</b> of the forty to lose an allele, using the crash.",
-    next: "Keep the crash. Here is the sex ratio." },
-  { need: 22, gives: "sex", holdN: true,
-    text: "Still a hundred bodies. Get <b>22</b> of the forty, with the crash and the sex ratio.",
-    next: "Keep both. Here is how uneven the offspring are." },
-  { need: 32, gives: "spread", holdN: true,
-    text: "Still a hundred bodies. Get <b>32</b> of the forty, with all four arrows to hand.",
+  { lo: 22, gives: "bust", holdN: true,
+    text: "A hundred bodies, held there. Get <b>22</b> of the forty to lose an allele, using the crash.",
+    next: "Keep the crash — but it cannot go below 40 from here. Here is the sex ratio." },
+  { lo: 30, gives: "sex", holdN: true, floors: { depth: 40 },
+    text: "Still a hundred bodies, and the crash stops at <b>40</b>. Get <b>30</b> of the forty, with the sex ratio to hand.",
+    next: "Keep both — and at least 25 of them breed as males from here. Here is how uneven the broods are." },
+  { lo: 32, gives: "spread", holdN: true, floors: { depth: 40, males: 25 },
+    text: "Still a hundred bodies, the crash no deeper than <b>40</b>, at least <b>25</b> of them breeding as males. " +
+          "Get <b>32</b> of the forty, with all four arrows to hand.",
     next: "" }
 ];
 
@@ -2915,11 +2839,16 @@ function E_drawPic() {
 function E_readouts() {
   const cfg = E.runs ? E.runs.cfg : E_cfg();
   const drawn = ["N", "bust", "sex", "spread"].filter(k => E.on[k]).length;
-  const bits = ['<span class="label">arrows drawn:</span> <b>' + drawn + '</b>',
-                '<span class="label">bodies:</span> <b>' + cfg.N + '</b>',
-                '<span class="label">the four of them come to an even herd of</span> <b class="big">' +
-                  E_formula(cfg).toFixed(1) + '</b>'];
-  if (E.runs) bits.push('<span class="label">lost an allele:</span> <b>' + E_gone(E.runs) + '</b> <span class="label">of ' + E_HERDS + '</span>');
+  const hide = E.mode === "game" && !E.revealed;
+  const bits = hide
+    ? ['<span class="label">arrows drawn:</span> <b>' + drawn + '</b>',
+       '<span class="label">bodies:</span> <b>' + cfg.N + '</b>',
+       '<span class="label">lock in your estimate to run the forty herds</span>']
+    : ['<span class="label">arrows drawn:</span> <b>' + drawn + '</b>',
+       '<span class="label">bodies:</span> <b>' + cfg.N + '</b>',
+       '<span class="label">the four of them come to an even herd of</span> <b class="big">' +
+         E_formula(cfg).toFixed(1) + '</b>'];
+  if (E.runs && !hide) bits.push('<span class="label">lost an allele:</span> <b>' + E_gone(E.runs) + '</b> <span class="label">of ' + E_HERDS + '</span>');
   document.getElementById("E_read").innerHTML = bits.join(" &nbsp;|&nbsp; ");
   document.getElementById("E_picRead").innerHTML = E.pic
     ? '<span class="label">of the</span> <b>' + E.pic.n + '</b> <span class="label">bodies,</span> <b>' + E.pic.zero +
@@ -2994,6 +2923,22 @@ function E_advance() {
     E.on.N = false; E.dag.set("N", false); E.dag.lock("N", true);
     E.runs = null; E.pic = null;
   }
+  /* A rung that takes the cheap route away does it on the slider, not in a
+     rule: the crash simply cannot be dragged below forty any more. Without
+     this the ladder is decoration -- a crash alone reaches 35 of the forty,
+     so rungs 3 and 4 would both be clearable with rung 2's arrow. */
+  if (r.floors) {
+    const inputs = { depth: "E_depth", males: "E_males" };
+    for (const k in r.floors) {
+      const el = document.getElementById(inputs[k]);
+      el.min = String(r.floors[k]);
+      if (E[k] < r.floors[k]) {
+        E[k] = r.floors[k]; el.value = String(E[k]);
+        document.getElementById(inputs[k] + "Out").value = String(E[k]);
+      }
+      E.runs = null; E.pic = null;
+    }
+  }
   hint("E2", "rung " + (E.rung + 1) + " of " + E_RUNGS.length);
   E_syncRows(); E_syncCode(); E_paint();
 }
@@ -3038,9 +2983,7 @@ function E_wire() {
       const outs = [];
       for (let r = 0; r < 6; r++) outs.push(E_gone(E_batch({ N: 100, depth: null, males: null, cv: 0 }, 40, pageSeed("l10Em", 1, 99999) + r * 7919)));
       return { truth: mean(outs), tol: 5, values: outs };
-    },
-    right: r => "about " + r.truth.toFixed(0) + " of the forty. A hundred bodies is a long way from safe, and it is also a long way from doomed.",
-    wrong: r => "about " + r.truth.toFixed(0) + " of the forty. Sixty generations at a hundred bodies is not long enough to take many of them all the way to a wall — which is why the rest of this stage is about making a hundred bodies behave like far fewer."
+    }
   });
 
   /* The ladder, rolled. Four landed rolls, one per rung, and a rung is
@@ -3053,16 +2996,20 @@ function E_wire() {
     frames: () => E_GENS,
     frame: i => { E.showTo = i; E_paint(); return false; },
     done: () => { E.showTo = null; E_paint(); },
-    hit: () => E_gone(E.runs) >= E_RUNGS[Math.min(E.rung, E_RUNGS.length - 1)].need,
+    hit: () => { const r = E_RUNGS[Math.min(E.rung, E_RUNGS.length - 1)];
+                 const k = E_gone(E.runs);
+                 return k >= r.lo && k <= (r.hi == null ? E_HERDS : r.hi); },
     sayHit: () => {
       const r = E_RUNGS[Math.min(E.rung, E_RUNGS.length - 1)];
-      return E_gone(E.runs) + " of the forty lost an allele, against " + r.need + " asked for. " +
+      return E_gone(E.runs) + " of the forty lost an allele. " +
              "A hundred bodies behaving like " + E_formula(E.runs.cfg).toFixed(1) + ". " + (r.next || "");
     },
     sayMiss: () => {
       const r = E_RUNGS[Math.min(E.rung, E_RUNGS.length - 1)];
-      return E_gone(E.runs) + " of the forty, against " + r.need + " asked for. Right now the arrows you have drawn come to " +
-             E_formula(E.runs.cfg).toFixed(1) + " — push that down and the fraction follows it.";
+      const k = E_gone(E.runs), want = r.hi == null ? "at least " + r.lo : r.lo + " to " + r.hi;
+      return k + " of the forty, against " + want + " asked for. Right now the arrows you have drawn come to " +
+             E_formula(E.runs.cfg).toFixed(1) + " — " + (k < r.lo ? "push that down" : "let that back up") +
+             " and the fraction follows it.";
     },
     after: ok => { if (ok) E_advance(); },
     onCleared: () => { if (E.game) E.game.show(); }
@@ -3071,32 +3018,31 @@ function E_wire() {
   E.game = wireGame("E", {
     task: "E3", bit: BIT.E4, field: { label: "herds that lost an allele", min: 0, max: 40, start: 20, fmt: v => v.toFixed(0) },
     round: (rng, n) => {
-      // three classes in rotation, so no constant answer clears three rounds
+      /* Three classes in rotation, measured to land near 9, 21 and 33 of the
+         forty, so that no constant answer clears three -- and in particular
+         neither "none of them" nor "all of them" clears any. */
       const cls = n % 3;
       let cfg, says;
       if (cls === 0) {
-        const N = [160, 220, 300][Math.floor(rng() * 3)];
+        const N = [50, 60, 70][Math.floor(rng() * 3)];
         cfg = { N, depth: null, males: null, cv: 0 };
         says = "One arrow: <b>" + N + "</b> bodies, and nothing else claimed.";
       } else if (cls === 1) {
-        const males = [12, 18, 24][Math.floor(rng() * 3)];
-        cfg = { N: 100, depth: null, males, cv: 0 };
-        says = "One arrow: a hundred bodies, of which <b>" + males + "</b> breed as males.";
+        const depth = [10, 12][Math.floor(rng() * 2)];
+        cfg = { N: 100, depth, males: null, cv: 0 };
+        says = "One arrow: a hundred bodies that crash to <b>" + depth + "</b> for three generations in every ten.";
       } else {
-        const depth = [10, 16, 22][Math.floor(rng() * 3)];
-        const cvv = [1.2, 1.6, 2.0][Math.floor(rng() * 3)];
-        cfg = { N: 100, depth, males: null, cv: cvv };
-        says = "Two arrows: a hundred bodies that crash to <b>" + depth + "</b> for three generations in every ten, " +
+        const males = [12, 16][Math.floor(rng() * 2)];
+        const cvv = [1.2, 1.6][Math.floor(rng() * 2)];
+        cfg = { N: 100, depth: null, males, cv: cvv };
+        says = "Two arrows: a hundred bodies of which <b>" + males + "</b> breed as males, " +
                "and broods spread by <b>" + cvv.toFixed(1) + "</b>.";
       }
       const outs = [];
       for (let r = 0; r < 6; r++) outs.push(E_gone(E_batch(cfg, 40, pageSeed("l10Eg", 1, 99999) + n * 313 + r * 101)));
       const truth = mean(outs);
-      return { cfg, truth, tol: Math.max(4, 0.25 * truth), values: outs,
-        prompt: says + " Sixty generations, forty herds, nothing selected. How many come out with one allele left?",
-        right: () => "about " + truth.toFixed(0) + " of the forty. That model is worth an even herd of " + E_formula(cfg).toFixed(1) + ".",
-        wrong: () => "about " + truth.toFixed(0) + " of the forty. That model is worth an even herd of " + E_formula(cfg).toFixed(1) +
-                     ", and it is the arrows that are drawn, not the bodies, that set it." };
+      return { cfg, truth, tol: Math.max(3.5, 0.18 * truth), values: outs,
+        prompt: says + " Sixty generations, forty herds, nothing selected. How many come out with one allele left?" };
     },
     onDeal: r => {
       E.mode = "game"; E.dealt = r;
@@ -3106,16 +3052,20 @@ function E_wire() {
       if (r.cfg.depth != null) E.dag.set("bust", true);
       if (r.cfg.males != null) E.dag.set("sex", true);
       if (r.cfg.cv) E.dag.set("spread", true);
-      E.runs = E_batch(r.cfg, E_HERDS, pageSeed("l10Ed", 1, 99999) + Math.round(r.truth * 13) + r.cfg.N);
-      E.runs.cfg = r.cfg;
+      E.runs = null; E.revealed = false;
       E.pic = E_onePic(r.cfg);
       E.showTo = null;
       document.getElementById("E_controls").classList.add("pending");
       document.getElementById("E_roll").disabled = true;
       E_syncRows(); E_paint();
     },
+    reveal: r => {
+      E.runs = E_batch(r.cfg, E_HERDS, pageSeed("l10Ed", 1, 99999) + Math.round(r.truth * 13) + r.cfg.N);
+      E.runs.cfg = r.cfg;
+      E.revealed = true; E.showTo = null; E_paint();
+    },
     onCleared: () => {
-      E.mode = "free"; E.dealt = null; E.runs = null; E.pic = null;
+      E.mode = "free"; E.dealt = null; E.runs = null; E.pic = null; E.revealed = false;
       for (const k of ["N", "bust", "sex", "spread"]) E.dag.set(k, E.on[k]);
       document.getElementById("E_controls").classList.remove("pending");
       document.getElementById("E_roll").disabled = false;
@@ -3223,9 +3173,11 @@ function C_wireBuri() {
     drawStrips("C_bstrip", [{ label: "bottles with one allele left", min: 0, max: 107, fmt: v => v.toFixed(0),
                              truth, tol: 4, you, values: six }]);
     const simMean = mean(six);
-    document.getElementById("C_bflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +
-      " &middot; " + truth + " of his 107 bottles had one colour left after nineteen generations. The blue dots are 107 simulated bottles of sixteen flies, six times over: they only get to " +
-      simMean.toFixed(0) + ". Sixteen flies was the count. It was not the number.";
+    document.getElementById("C_bflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
+    // the finding belongs on the panel, not in the answer box
+    document.getElementById("C_buriRead").innerHTML +=
+      ' &nbsp;|&nbsp; <span class="label">bottles with one colour left:</span> <b class="big">' + truth +
+      '</b> <span class="label">of 107 &middot; 107 simulated bottles of sixteen flies reach</span> <b>' + simMean.toFixed(0) + '</b>';
     done = true;
     document.getElementById("C_block").disabled = true; g0.disabled = true;
     record(BIT.C4, ok);
@@ -3282,9 +3234,10 @@ function D_wireWolf() {
     const ok = Math.abs(you - truth) <= tol;
     drawStrips("D_wstrip", [{ label: "an even population of", min: 2, max: 40, fmt: v => v.toFixed(1),
                              truth, tol, you, values: null }]);
-    document.getElementById("D_wflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +
-      " &middot; the wolves averaged " + am.toFixed(1) + " animals over those winters and drifted like " + truth.toFixed(1) +
-      ". Add up one over each winter, not the winters.";
+    document.getElementById("D_wflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
+    document.getElementById("D_wolfRead").innerHTML +=
+      ' &nbsp;|&nbsp; <span class="label">averaged</span> <b>' + am.toFixed(1) +
+      '</b> <span class="label">wolves &middot; drifts like</span> <b class="big">' + truth.toFixed(1) + '</b>';
     done = true;
     document.getElementById("D_wlock").disabled = true; g0.disabled = true;
     record(BIT.D4, ok);
@@ -3363,10 +3316,7 @@ function E_wireLtee() {
     const vals = gens.map(g => { const v = E_lteeAt(g).map(r => r.mean_fitness); return v.length > 1 ? sd(v) : 0; }).filter(v => v > 0);
     drawStrips("E_lstrip", [{ label: "the twelve are spread this far", min: 0, max: 0.4, fmt: f2,
                              truth, tol, you, values: vals.slice(0, 6) }]);
-    document.getElementById("E_lflip").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') +
-      " &middot; at generation " + E.lteeNear + " the twelve are spread " + truth.toFixed(3) +
-      (E.lteeSe ? ", against a repeat-measurement bar of " + E.lteeSe.toFixed(3) : "") +
-      ". One clone, one flask, one food. They all went up, and no two of them went up the same amount.";
+    document.getElementById("E_lflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
     done = true;
     document.getElementById("E_llock").disabled = true; g0.disabled = true;
     record(BIT.E5, ok);
@@ -3408,8 +3358,8 @@ E_wire(); E_paint();
 
 Score.init({
   moduleId: "lesson10",
-  version: 3,
-  scaffold: 13,
+  version: 4,
+  scaffold: 12,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {

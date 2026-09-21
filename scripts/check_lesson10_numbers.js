@@ -43,15 +43,14 @@ const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 check("page loaded", !!(A && A.pop && B && C && D && E && typeof Score !== "undefined"),
       "every stage object and Score are defined");
 check("slots declared match slots written",
-      Object.keys(BIT).length === 13, Object.keys(BIT).length + " named bits");
+      Object.keys(BIT).length === 12, Object.keys(BIT).length + " named bits");
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
-  /* A2 is now a roll: drive one allele out inside A_ROLL_GENS generations,
-     five times. Three things have to hold, and none is visible on screen.
-     A roll is scored by A_fixed() after at most A_ROLL_GENS steps. */
+  /* A2 is a roll: drive one allele out inside A_ROLL_GENS generations, five
+     times. Three things have to hold and none of them is visible on screen. */
   const rollOnce = (N, cv) => {
-    A.N = N; A.cv = cv; A_fresh();
+    A.N = N; A.cv = cv; A.p0 = 0.5; A.round = null; A_fresh();
     for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
     return A_fixed();
   };
@@ -65,41 +64,75 @@ check("slots declared match slots written",
   check("A2 roll not a gimme", hard <= 0.05,
         "300 breeders, flat: lands " + (100*hard).toFixed(0) + "% -- the default pond must not walk it");
 
-  /* A1 is now two calls in one card, made before the controls open:
-     the average brood, and how many individuals leave none at all. The
-     first is fixed by construction and the second is the misconception --
-     "everyone gets a turn" -- so it has to reject zero. */
-  const m = A_measure(100, 0, 8);
-  check("A1 the average brood is exactly two", Math.abs(m.brood - 2) < 1e-9,
-        "measured " + m.brood.toFixed(4) + " offspring per individual");
-  check("A1 the average brood never moves", m.broodRaw.every(v => Math.abs(v - 2) < 1e-9),
-        "all " + m.broodRaw.length + " draws sit on 2.00");
-  const spreadBrood = A_measure(100, 2.5, 8);
-  check("A1 the average holds when the shares are made uneven",
-        Math.abs(spreadBrood.brood - 2) < 1e-9,
-        "expected offspring differing by 2.5 still averages " + spreadBrood.brood.toFixed(4));
-  const tol = Math.max(4, 0.2 * m.childless);
-  check("A1 truth", m.childless > 8 && m.childless < 20,
-        "a flat pond of 100 leaves " + m.childless.toFixed(1) + " individuals with nothing");
-  check("A1 rejects zero", Math.abs(0 - m.childless) > tol,
-        "0 is " + (m.childless/tol).toFixed(1) + " tolerances out");
-  check("A1 rejects 'hardly any'", Math.abs(2 - m.childless) > tol,
-        "2 of 100 is " + ((m.childless-2)/tol).toFixed(1) + " tolerances out");
+  /* A1 is the ten dealt rounds. The student calls where the pond ends and
+     how far off they expect to be, and the whole stage lives in the second
+     number: the first has one honest answer (where it started) in every
+     round, and the second moves by a large factor between the classes.
 
-  // A3: no constant answer clears three rounds.
-  const rng = mulberry32(4242), iv = [];
-  for (let n = 0; n < 3; n++) { const r = A.game.round(rng, n); iv.push([r.truth - r.tol, r.truth + r.tol]); }
-  const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("A3 no constant clears", lo > hi,
-        "three rounds: " + iv.map(v=>"["+v[0].toFixed(3)+","+v[1].toFixed(3)+"]").join(" "));
-  const zeroClears = iv.filter(v => 0 >= v[0] && 0 <= v[1]).length;
-  check("A3 rejects 'it does not move'", zeroClears === 0, zeroClears + " of 3 rounds would accept 0.000");
-  // the round is drawn on the trajectory panel, so it has to carry the
-  // signed generations that panel fans out
-  const r0 = A.game.round(mulberry32(99), 0);
-  check("A3 round carries the fan", Array.isArray(r0.signed) && r0.signed.length === 7 &&
-        r0.signed.some(v => v < 0) !== r0.signed.every(v => v < 0),
-        "seven signed one-generation moves, both directions present");
+     So the checks are:
+       - the middle really is unbiased, in every class, or the first slider
+         is a trick question;
+       - the honest miss moves enough between classes that one width cannot
+         be right for all of them;
+       - every honest miss is reachable on the slider that asks for it;
+       - the widest band always lands and the narrowest almost never does,
+         which is what makes the silent last-five-vs-first-five bit
+         ungameable in either direction;
+       - A_typical, which draws the green band, agrees with Stage A's own
+         operator rather than with a formula. */
+  const cls = A.game.classes;
+  const REPS = 400;
+  const prof = cls.map((c, ci) => {
+    const N = c.N[1], p0 = c.p0[1];
+    const t = A_typical(N, p0, A_ROLL_GENS, REPS);
+    const signed = [];
+    const rng = mulberry32(9001 + ci * 77);
+    for (let r = 0; r < REPS; r++) { let p = p0; for (let g = 0; g < A_ROLL_GENS; g++) p = breedFreq(rng, p, N, 0); signed.push(p - p0); }
+    return { N, p0, miss: t.miss, raw: t.raw, bias: mn(signed), se: Math.sqrt(mn(signed.map(v=>v*v))/REPS) };
+  });
+  check("A1 the middle is unbiased in every class",
+        prof.every(r => Math.abs(r.bias) < 3 * r.se),
+        prof.map(r => "N=" + r.N + " drifts " + (r.bias>=0?"+":"") + r.bias.toFixed(4) + " (3se " + (3*r.se).toFixed(4) + ")").join("  "));
+  const misses = prof.map(r => r.miss);
+  check("A1 the honest miss moves across the classes",
+        Math.max(...misses) / Math.min(...misses) >= 3,
+        prof.map(r => "N=" + r.N + " -> " + r.miss.toFixed(3)).join("  ") +
+        "  (x" + (Math.max(...misses)/Math.min(...misses)).toFixed(1) + ")");
+  // every member of every class, not just the middle one: a pond that could be
+  // dealt whose honest answer is off the end of the slider is unanswerable
+  const all = [];
+  for (const c of cls) for (const N of c.N) for (const p0 of c.p0) all.push([N, p0, A_typical(N, p0, A_ROLL_GENS, 120).miss]);
+  const off = all.filter(r => r[2] < 0.01 || r[2] > 0.50);
+  check("A1 every honest miss is on the slider", off.length === 0,
+        "slider runs 0.01..0.50; " + all.length + " ponds can be dealt, spanning " +
+        Math.min(...all.map(r=>r[2])).toFixed(3) + " to " + Math.max(...all.map(r=>r[2])).toFixed(3) +
+        (off.length ? "  OFF: " + off.map(r=>"N="+r[0]+" p0="+r[1]+" -> "+r[2].toFixed(3)).join(", ") : ""));
+  const hitRate = (err, r) => r.raw.filter(v => v <= err).length / r.raw.length;
+  const wide = prof.map(r => hitRate(0.50, r)), narrow = prof.map(r => hitRate(0.01, r));
+  check("A1 the widest band always lands", wide.every(v => v === 1),
+        "err=0.50 hits " + wide.map(v=>(100*v).toFixed(0)+"%").join("/") +
+        " -- so first five and last five tie and the silent bit stays false");
+  check("A1 the narrowest band hardly ever lands", narrow.every(v => v <= 0.25),
+        "err=0.01 hits " + narrow.map(v=>(100*v).toFixed(0)+"%").join("/"));
+  /* The honest band is drawn from A_typical, which runs breedFreq. The pond
+     on screen runs makePool+breed. They must be the same process. */
+  const simMiss = (N, p0, reps) => {
+    const errs = [];
+    for (let r = 0; r < reps; r++) {
+      A.N = N; A.cv = 0; A.p0 = p0; A.round = null; A_fresh();
+      const start = popFreq(A.pop);
+      for (let g = 0; g < A_ROLL_GENS; g++) A_step();
+      errs.push(Math.abs(popFreq(A.pop) - start));
+    }
+    return mn(errs);
+  };
+  const cmp = cls.map(c => { const N = c.N[1], p0 = c.p0[1];
+    return [N, simMiss(N, p0, 120), A_typical(N, p0, A_ROLL_GENS, REPS).miss]; });
+  check("A1 the green band matches the pond on screen",
+        cmp.every(r => Math.abs(r[1] - r[2]) / r[2] < 0.22),
+        cmp.map(r => "N=" + r[0] + " pond " + r[1].toFixed(3) + " vs band " + r[2].toFixed(3)).join("  "));
+  check("A1 all three classes are dealt inside ten rounds", cls.length === 3 && A_ROUNDS >= 9,
+        A_ROUNDS + " rounds over " + cls.length + " classes in rotation");
 }
 
 /* ---- B. the error is inherited ----------------------------------------- */
@@ -126,11 +159,20 @@ check("slots declared match slots written",
 
 /* ---- C. 107 ponds and the two walls ------------------------------------ */
 {
+  /* C_halfLife reads the crossing off 400 replicates, so it carries real
+     sampling noise: measured over 24 seeds it is unbiased but its spread is
+     about 5-6% of the answer at every headcount, which means a single draw
+     sits outside 15% roughly one run in twenty. A bar that fails one run in
+     twenty teaches nothing, so the per-headcount window is 20% -- still far
+     inside anything a wrong constant would produce -- and the AVERAGE across
+     the four is held to 8%, which is the sharp half of the check. */
   const hl = N => C_halfLife(N);
   const rows = [8, 16, 25, 50].map(N => [N, hl(N)]);
-  const worst = rows.map(([N, h]) => Math.abs(h - 1.386 * N) / (1.386 * N)).reduce((a,b)=>Math.max(a,b),0);
-  check("C1 half-life is 1.4 x the headcount", worst < 0.15,
-        rows.map(([N,h]) => N + "->" + h.toFixed(1) + " (want " + (1.386*N).toFixed(0) + ")").join("  "));
+  const errs = rows.map(([N, h]) => Math.abs(h - 1.386 * N) / (1.386 * N));
+  const worst = errs.reduce((a,b)=>Math.max(a,b),0), avg = mn(errs);
+  check("C1 half-life is 1.4 x the headcount", worst < 0.20 && avg < 0.08,
+        rows.map(([N,h]) => N + "->" + h.toFixed(1) + " (want " + (1.386*N).toFixed(0) + ")").join("  ") +
+        "  worst " + (100*worst).toFixed(1) + "%, average " + (100*avg).toFixed(1) + "%");
 
   /* C2 is now a roll: every one of the 107 ponds on a wall by generation
      60, three times. It has to be reachable at a small headcount and out
@@ -168,46 +210,95 @@ check("slots declared match slots written",
   } else check("C4 Buri loaded", false, "buri_fly.json did not arrive");
 }
 
-/* ---- D. three routes to a smaller system -------------------------------- */
+/* ---- D. the Lesson 6 record, with a gene walking it --------------------- */
 {
-  const set = (route, cfg) => { D.route = route; if (cfg.cv != null) D.cv = cfg.cv;
-    if (cfg.males != null) D.males = cfg.males; if (cfg.depth != null) D.depth = cfg.depth;
-    if (cfg.dur != null) D.dur = cfg.dur; return D_formula(); };
-  const dSpread = set("spread", { cv: 4 }), dLek = set("lek", { males: 2 }), dBust = set("bust", { depth: 2, dur: 3 });
-  check("D1 spread route reaches 10", dSpread <= 10, "cv 4 -> " + dSpread.toFixed(1));
-  check("D1 lek route reaches 10", dLek <= 10, "2 breeding males -> " + dLek.toFixed(1));
-  check("D1 bust route reaches 10", dBust <= 10, "crash to 2 for 3 of every 10 -> " + dBust.toFixed(1));
-  check("D1 not cleared at the default", (set("spread", { cv: 0 }) > 10) && (set("lek", { males: 50 }) > 10)
-        && (set("bust", { depth: 100, dur: 0 }) > 10), "every route starts above the bar");
+  /* The apparatus is Lesson 6's: one birth rate, one death rate, one extra
+     death rate for a marked winter. The claim the stage makes is that what
+     a record is worth to a gene is the sum of one-over-each-winter and not
+     the average of the winters. Nothing on the page asserts that; it comes
+     out of forty herds. So the first thing to check is that the arithmetic
+     printed beside the measurement agrees with the measurement. */
+  const put = (b, d, h, bad) => { D.b = b; D.d = d; D.h = h; D.bad = {};
+                                  for (const y of bad) D.bad[y] = true; D.mode = "free"; D.dealt = null; };
+  put(0.260, 0.200, 0.60, [1976, 1996]);
+  const l6 = D_sizes(D.b, D.d, D.h, D.bad);
+  check("D the Lesson 6 model still fits the record", D_miss(l6) < 200,
+        "it sits " + D_miss(l6).toFixed(0) + " moose off the counted record");
 
-  // the arithmetic against the simulator, which is the claim the stage makes
-  const rng = mulberry32(555), rows = [];
-  for (const [route, cfg] of [["spread", { cv: 2 }], ["lek", { males: 5 }], ["bust", { depth: 10, dur: 1, sizes: null }]]) {
-    if (route === "bust") { cfg.sizes = []; for (let t = 0; t < 10; t++) cfg.sizes.push(t < 1 ? 10 : 100); }
-    const b = D_batch(rng, route, cfg, 40);
-    D.route = route; if (cfg.cv != null) D.cv = cfg.cv; if (cfg.males != null) D.males = cfg.males;
-    if (route === "bust") { D.depth = 10; D.dur = 1; }
-    const f = D_formula(route);
-    rows.push([route, b.ne, f, Math.abs(b.ne - f) / f]);
+  const agree = [];
+  for (const sizes of [new Array(42).fill(700),
+                       (() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })(),
+                       (() => { const a = new Array(42).fill(900); for (let i = 11; i < 31; i++) a[i] = 58; return a; })()]) {
+    const f = acrossGenerations(sizes);
+    const m = D_measuredN(D_runHerds(sizes, 400, 4242 + Math.round(f)));
+    agree.push([f, m, Math.abs(m - f) / f]);
   }
-  check("D arithmetic matches the simulator", rows.every(r => r[3] < 0.22),
-        rows.map(r => r[0] + " measured " + r[1].toFixed(1) + " vs " + r[2].toFixed(1)).join("  "));
+  check("D the arithmetic matches the forty herds", agree.every(r => r[2] < 0.25),
+        agree.map(r => "says " + r[0].toFixed(0) + ", herds measure " + r[1].toFixed(0)).join("  "));
+  check("D a crash is worth far less than its own average",
+        agree[1][0] < 0.5 * mn((() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })()),
+        "900 with a three-winter crash to 18 averages " +
+        mn((() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })()).toFixed(0) +
+        " and is worth " + agree[1][0].toFixed(0));
 
-  D.route = "lek"; D.males = 1;
-  const one = D_batch(mulberry32(77), "lek", { males: 1 }, 30).ne;
-  const tol = Math.max(2.2, 0.35 * one);
-  check("D2 truth", one > 2 && one < 8, "one breeding male out of a hundred drifts like " + one.toFixed(1));
-  check("D2 rejects the headcount", Math.abs(100 - one) > tol && Math.abs(50 - one) > tol,
-        "100 and 50 both miss a truth of " + one.toFixed(1));
+  /* D1, the committed estimate: on the record as Lesson 6 left it, a typical
+     herd barely moves. The misconception is that forty-two winters of a
+     thousand moose does something to a gene, so the bar has to reject 0.25
+     and 0.50 -- the two answers a student who has not looked gives. */
+  put(0.260, 0.200, 0.60, [1976, 1996]);
+  const P0 = D_runHerds(D_sizes(D.b, D.d, D.h, D.bad), 200, 1959);
+  const t1 = D_dist(P0), tol1 = Math.max(0.015, 0.3 * t1);
+  check("D1 truth", t1 > 0 && t1 < 0.12, "a typical herd ends " + t1.toFixed(3) + " from where it started");
+  check("D1 rejects 'it wanders a long way'", Math.abs(0.25 - t1) > tol1 && Math.abs(0.50 - t1) > tol1,
+        "0.25 and 0.50 both miss a truth of " + t1.toFixed(3) + " (tol " + tol1.toFixed(3) + ")");
 
+  /* D2 is the roll, and its target is a WINDOW: between 12 and 24 of the
+     forty outside 0.35-0.65. Two-sided on purpose -- doing nothing
+     undershoots and flattening the herd overshoots, so aiming is the skill.
+     Both of those have to be true or the window is decoration. */
+  const outsideFor = (b, d, h, bad, k) => { put(b, d, h, bad);
+    return D_outside(D_runHerds(D_sizes(D.b, D.d, D.h, D.bad), D_HERDS, 7000 + k)); };
+  const doNothing = [0,1,2,3].map(k => outsideFor(0.260, 0.200, 0.60, [], k));
+  check("D2 doing nothing undershoots the window", doNothing.every(v => v < D_WANT_LO),
+        "no marked winters: " + doNothing.join("/") + " of 40 outside, window is " + D_WANT_LO + "-" + D_WANT_HI);
+  const flatten = [0,1,2,3].map(k => outsideFor(0.0, 0.60, 0.80, MOOSE_Y.slice(0, -1), k));
+  check("D2 flattening the herd overshoots it", flatten.every(v => v > D_WANT_HI),
+        "every winter marked, deaths at 0.60: " + flatten.join("/") + " of 40 outside");
+  /* And somewhere in between it is landable. Swept rather than asserted:
+     the window corresponds to a record worth roughly 50 to 240 moose, and
+     there are two routes into it -- lean on the death rate, or mark a
+     handful of winters and leave the rates alone. Both are checked, because
+     a window only one route reaches is a window with one answer. */
+  const landed = [];
+  for (const d of [0.255, 0.26, 0.265, 0.27, 0.275, 0.28, 0.285])
+    if ([0,1,2,3,4].map(k => outsideFor(0.260, d, 0.60, [1976, 1996], k))
+                   .filter(v => v >= D_WANT_LO && v <= D_WANT_HI).length >= 3)
+      landed.push("deaths " + d.toFixed(3) + " on the Lesson 6 winters");
+  for (const n of [3, 4, 5, 6]) {
+    const bad = []; for (let i = 0; i < n; i++) bad.push(1970 + i * 4);
+    if ([0,1,2,3,4].map(k => outsideFor(0.260, 0.200, 0.60, bad, k))
+                   .filter(v => v >= D_WANT_LO && v <= D_WANT_HI).length >= 3)
+      landed.push(n + " deep winters, rates left alone");
+  }
+  check("D2 the window is landable, by more than one route", landed.length >= 2,
+        landed.length ? landed.join(" ;  ") : "nothing in the swept range landed 3 of 5 rolls");
+  put(0.260, 0.200, 0.60, [1976, 1996]);
+
+  /* D3, the closing rounds. Three classes in rotation; no constant clears
+     three, and in particular the plain average of the record does not. */
   const rg = mulberry32(808), iv = [];
-  for (let n = 0; n < 3; n++) { const r = D.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, r.route]); }
-  check("D3 rejects the headcount", iv.every(v => 100 > v[1]),
-        "rounds: " + iv.map(v => v[2] + " " + v[0].toFixed(0) + "-" + v[1].toFixed(0)).join(", "));
+  for (let n = 0; n < 3; n++) { const r = D.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, mn(r.sizes)]); }
   const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("D3 no constant clears", lo > hi, "common interval " + (lo > hi ? "empty" : "[" + lo.toFixed(0) + "," + hi.toFixed(0) + "]"));
+  check("D3 no constant clears", lo > hi,
+        "three rounds: " + iv.map(v=>"["+v[0].toFixed(0)+","+v[1].toFixed(0)+"]").join(" "));
+  const avgClears = iv.filter(v => v[2] >= v[0] && v[2] <= v[1]).length;
+  check("D3 the plain average clears at most the steady round", avgClears <= 1,
+        "the record's own average clears " + avgClears + " of 3: " +
+        iv.map(v => "avg " + v[2].toFixed(0) + " vs [" + v[0].toFixed(0) + "," + v[1].toFixed(0) + "]").join("  "));
 
-  if (REAL.wolf) {
+  /* D4, the wolves: the plain average must miss at every window the slider
+     reaches, or the panel is making a claim the record does not support. */
+  {
     let worst = null;
     for (let y = 1959; y <= 2000; y++) {
       document.getElementById("D_wy").value = String(y);
@@ -219,38 +310,125 @@ check("slots declared match slots written",
     const c = D_wolfWindow().map(x => x[1]);
     check("D4 the plain average misses, at every window", worst === null,
           worst || ("1959 on: average " + mn(c).toFixed(1) + ", drifts like " + acrossGenerations(c).toFixed(1)));
-  } else check("D4 wolves loaded", false, "isle_royale.json did not arrive");
+  }
 }
 
-/* ---- E. the slope and the scatter --------------------------------------- */
+/* ---- E. four arrows into one junction ----------------------------------- */
 {
-  const rng = mulberry32(2026);
-  const at = s => [E_fixCount(rng, 500, s, 40), E_fixCount(rng, 20, s, 40)];
-  const win = [], none = at(0), lots = at(0.1);
-  for (const s of [0.002, 0.004, 0.006, 0.01, 0.02]) { const [b, sm] = at(s);
-    if (b >= 37 && sm >= 16 && sm <= 27) win.push(s); }
-  check("E1 gate clearable", win.length >= 3, "cleared at s = " + win.map(v=>v.toFixed(3)).join(", "));
-  check("E1 rejects no advantage", !(none[0] >= 37), "s=0 gives " + none[0] + "/40 in the big pond");
-  check("E1 rejects a huge advantage", !(lots[1] >= 16 && lots[1] <= 27), "s=0.1 gives " + lots[1] + "/40 in the small pond");
-  const e2 = []; for (let r = 0; r < 6; r++) e2.push(E_fixCount(rng, 20, 0.06, 40));
-  check("E2 gate clearable", e2.filter(v => v >= 33).length >= 5,
-        "s=0.06 in the pond of twenty: " + e2.join("/") + " of 40, bar is 33");
-  const e2b = []; for (let r = 0; r < 6; r++) e2b.push(E_fixCount(rng, 20, 0.02, 40));
-  check("E2 needs more than E1's answer", e2b.filter(v => v >= 33).length === 0,
-        "the E1 answer (s=0.02) gives " + e2b.join("/") + ", none of them 33");
+  /* The stage's claim is that three of the four causes shrink a herd
+     WITHOUT taking a body off the island, and that what they come to
+     together is a product. E_formula prints that product; E_batch runs the
+     herds. They have to agree, or the stage is asserting arithmetic the
+     simulation does not produce. Ne is read back out of the spread of end
+     frequencies, the same way Stage D does it, rather than compared against
+     a second formula. */
+  const neOf = (cfg, k, seed) => {
+    const P = E_batch(cfg, k, seed);
+    const T = P[0].length - 1;
+    const v = mn(P.map(t => { const d = t[T] - 0.5; return d * d; }));
+    const r = Math.min(Math.max(1 - v / 0.25, 1e-12), 1 - 1e-12);
+    return 1 / (2 * (1 - Math.pow(r, 1 / T)));
+  };
+  const rows = [
+    ["bodies only",  { N: 24,  depth: null, males: null, cv: 0 }],
+    ["a crash",      { N: 100, depth: 10,   males: null, cv: 0 }],
+    ["a lopsided lek", { N: 100, depth: null, males: 6,  cv: 0 }],
+    ["uneven broods",  { N: 100, depth: null, males: null, cv: 1.8 }]
+  ].map(([name, cfg]) => [name, E_formula(cfg), neOf(cfg, 300, 2026 + cfg.N)]);
+  check("E the four-way arithmetic matches the herds",
+        rows.every(r => Math.abs(r[2] - r[1]) / r[1] < 0.30),
+        rows.map(r => r[0] + ": says " + r[1].toFixed(1) + ", herds measure " + r[2].toFixed(1)).join("  "));
+  check("E three of the four shrink it with a hundred bodies on the island",
+        rows.slice(1).every(r => r[1] < 60),
+        rows.slice(1).map(r => r[0] + " -> " + r[1].toFixed(1) + " of 100").join("  "));
 
-  const e3 = []; for (let r = 0; r < 8; r++) e3.push(E_fixCount(rng, 20, 0.02, 40));
-  const t3 = mn(e3);
-  check("E3 truth", t3 > 22 && t3 < 34, "a 2% advantage in a pond of twenty wins " + t3.toFixed(1) + " of 40");
-  check("E3 rejects 'it always wins'", Math.abs(40 - t3) > 5, "40 of 40 is " + (Math.abs(40-t3)/5).toFixed(1) + " tolerances out");
+  /* The ladder. Every rung has to be REACHABLE with the arrows it has been
+     handed, and OUT OF REACH with the arrows of the rung below it. The
+     second half is what the per-rung slider floors buy: a crash alone
+     reaches 35 of the forty, so without a floor on it rungs 3 and 4 are
+     both clearable with rung 2's arrow and handing over an arrow means
+     nothing. The floors are read off E_RUNGS rather than restated here. */
+  const bestIn = (sweep, k, seed) => {
+    let hi = -1, at = null;
+    for (const cfg of sweep) {
+      const g = E_gone(E_batch(Object.assign({}, base, cfg), k, seed));
+      if (g > hi) { hi = g; at = cfg; }
+    }
+    return { hi, at };
+  };
+  const reps = (cfg, k, n) => { const v = []; for (let r = 0; r < n; r++) v.push(E_gone(E_batch(Object.assign({}, base, cfg), k, 12000 + r * 7919))); return v; };
+  const lands = (cfg, rung, n) => reps(cfg, E_HERDS, n)
+        .filter(v => v >= rung.lo && v <= (rung.hi == null ? E_HERDS : rung.hi)).length;
+  const base = { N: 100, depth: null, males: null, cv: 0 };
+  const floorOf = (i, k) => { for (let r = 1; r <= i; r++) { const f = E_RUNGS[r].floors; if (f && f[k] != null) return f[k]; } return null; };
 
+  // rung 1 -- the headcount, and only the headcount
+  {
+    const R = E_RUNGS[0];
+    const best = [24, 28, 32, 36].map(N => [N, lands({ N }, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
+    check("E rung 1 landable", best[1] >= 4,
+          "N=" + best[0] + " lands " + best[1] + " of 6 rolls in " + R.lo + "-" + R.hi);
+    check("E rung 1 not already cleared", lands({}, R, 4) === 0,
+          "a hundred bodies, no arrows: " + reps({}, E_HERDS, 4).join("/") + " of " + E_HERDS);
+    check("E rung 1 is two-sided", lands({ N: 6 }, R, 4) === 0 && lands({ N: 300 }, R, 4) === 0,
+          "bottoming the slider gives " + reps({ N: 6 }, E_HERDS, 3).join("/") +
+          " and topping it gives " + reps({ N: 300 }, E_HERDS, 3).join("/"));
+  }
+  // rung 2 -- bodies pinned at a hundred, the crash handed over
+  {
+    const R = E_RUNGS[1];
+    const best = [4, 6, 8, 10].map(d => [d, lands({ depth: d }, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
+    check("E rung 2 landable on the crash", best[1] >= 4,
+          "depth=" + best[0] + " lands " + best[1] + " of 6 rolls at " + R.lo + "+");
+    check("E rung 2 needs the crash", lands({}, R, 4) === 0,
+          "no arrows at a hundred bodies: " + reps({}, E_HERDS, 4).join("/"));
+  }
+  // rungs 3 and 4 -- each one is handed an arrow and loses the cheap route
+  for (const idx of [2, 3]) {
+    const R = E_RUNGS[idx], dFloor = floorOf(idx, "depth"), mFloor = floorOf(idx, "males");
+    const sweepD = [dFloor, dFloor + 10, dFloor + 20].map(depth => ({ depth }));
+    const sweepM = idx === 2 ? [2, 3, 5, 8].map(males => ({ males }))
+                             : [mFloor, mFloor + 5, mFloor + 15].map(males => ({ males }));
+    const sweepC = idx === 2 ? [{}] : [{ cv: 1.2 }, { cv: 1.6 }, { cv: 2.0 }];
+    const withNew = [];
+    for (const a of sweepD) for (const b of sweepM) for (const c of sweepC)
+      withNew.push(Object.assign({}, a, b, c));
+    const bn = withNew.map(c => [c, lands(c, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
+    check("E rung " + (idx + 1) + " landable with its new arrow", bn[1] >= 4,
+          JSON.stringify(bn[0]) + " lands " + bn[1] + " of 6 rolls at " + R.lo + "+");
+    // the same settings with the new arrow rubbed out
+    const without = withNew.map(c => { const d = Object.assign({}, c);
+      if (idx === 2) delete d.males; else delete d.cv; return d; });
+    const bw = bestIn(without, E_HERDS, 4242);
+    check("E rung " + (idx + 1) + " out of reach without it", bw.hi < R.lo,
+          "best without the new arrow: " + bw.hi + " of " + E_HERDS + " (" + JSON.stringify(bw.at) + "), rung asks " + R.lo);
+  }
+
+  /* E1, the committed estimate, taken before a single arrow is drawn. The
+     two answers a student who has not looked gives are "none of them" and
+     "all of them", and the bar has to reject both. */
+  const e1 = [];
+  for (let r = 0; r < 6; r++) e1.push(E_gone(E_batch(base, 40, 5000 + r * 7919)));
+  const t1 = mn(e1);
+  check("E1 truth", t1 >= 0 && t1 < 6,
+        "a hundred bodies, sixty generations, nothing drawn: " + t1.toFixed(1) + " of 40 lose an allele");
+  check("E1 rejects the two answers a student gives without looking",
+        Math.abs(20 - t1) > 5 && Math.abs(40 - t1) > 5,
+        "20 and 40 both miss " + t1.toFixed(1) + " by more than the tolerance of 5");
+  check("E1 is worth asking -- the ladder moves it a long way",
+        mn([0,1,2].map(r => E_gone(E_batch(Object.assign({}, base, { depth: 40, males: 25, cv: 2 }), 40, 8000 + r * 131)))) > t1 + 20,
+        "the same hundred bodies with three arrows drawn lose far more");
+
+  /* E3, the closing rounds: three classes, no constant clears three, and
+     the misconception -- that the headcount is the number -- clears none. */
   const rg = mulberry32(1234), iv = [];
-  for (let n = 0; n < 3; n++) { const r = E.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, r.N, r.s]); }
+  for (let n = 0; n < 3; n++) { const r = E.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, r.cfg]); }
   const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
   check("E4 no constant clears", lo > hi,
-        "rounds: " + iv.map(v => "N=" + v[2] + " s=" + v[3].toFixed(3) + " [" + v[0].toFixed(0) + "," + v[1].toFixed(0) + "]").join("  "));
-  check("E4 rejects 'the advantage always wins'", iv.filter(v => 40 >= v[0] && 40 <= v[1]).length <= 1,
-        "40 clears " + iv.filter(v => 40 >= v[0] && 40 <= v[1]).length + " of 3 rounds");
+        "rounds: " + iv.map(v => "[" + v[0].toFixed(0) + "," + v[1].toFixed(0) + "]").join("  "));
+  check("E4 rejects 'they all lose one' and 'none of them'",
+        iv.filter(v => 40 >= v[0] && 40 <= v[1]).length === 0 && iv.filter(v => 0 >= v[0] && 0 <= v[1]).length === 0,
+        "40 of 40 clears " + iv.filter(v => 40 >= v[0] && 40 <= v[1]).length + " of 3 rounds");
 
   if (REAL.ltee) {
     document.getElementById("E_lg").value = "50000"; E_drawLtee();

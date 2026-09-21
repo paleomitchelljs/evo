@@ -20,6 +20,74 @@
 >   the R code panel. Any item below that talks about where a term "unlocks" is
 >   void. `PROJECT_NOTES.md` §4.
 
+**Every lesson gets a prep document before it is edited — 2026-09-21.** JM:
+*"I would like a 'lesson{NN}_overhaul.md' file to be made that helps speed up
+resuming edits to documents. Basically a clean hand-off document of what needs
+to be done, a general plan of how to do it, and a status for each item. It
+should be very bare-bones to maintain context, but should be generated before
+diving into each lesson."* They live in `docs/overhauls/`, one per lesson,
+against `docs/overhauls/_TEMPLATE.md`. The first is
+`docs/overhauls/lesson10_overhaul.md`. **Write one before the first edit, not
+after**; a session that opens a lesson file without one has skipped a step.
+Lessons 1–9 are treated as overhauled and need none unless JM reopens one;
+12 and up are vague ideas and a prep doc for one would be fiction.
+
+**Lesson 10 Stage A rebuilt, D and E verified — 2026-09-21.**
+
+- **Stage A's Predict card is ten dealt rounds.** JM: *"There is WAY too much
+  text in the prediction box. It should be a short, flat table."* Four rows of
+  parameters the student is given (round, where the pond starts, how many it
+  holds, how many generations) and two sliders: **where it ends up** and **how
+  far off you expect to be**. Both draw on the trajectory plot — a line and a
+  band around it — because *"each prediction should be a slider that controls
+  a visual on the graph."* Hit Go, the run animates, the answer box says
+  **correct** or **incorrect** and nothing else. Ten rounds, the parameters
+  dealt every time.
+- **The second slider is an expected error, not a confidence.** JM:
+  *"Have the students predict it in the form of their expected error (eg how
+  wrong they expect to be on average) as this builds on earlier lessons
+  (4-6)."* So it is Lesson 5's *average error* and Lesson 6's *typical miss*
+  in the same currency, and the honest answer is measured off the simulator
+  and drawn on the plot in green after the run.
+- **The rounds are not scored. One bit is, in silence:** did the last five
+  land more often than the first five. JM: *"Whether they were correct or not
+  is recorded but is not part of the percent grade at the end."* Nothing on
+  screen mentions it, which is deliberate — a student who knows they are
+  marked on improvement can manufacture improvement by throwing the first
+  five. Measured: the widest band lands 100% of rounds in every class and the
+  narrowest lands 3–8%, so neither extreme produces an improvement.
+- **The middle is the easy half and the width is the stage.** The honest
+  answer for where it ends is always where it started — nothing on the page
+  knows which allele it is looking at. All the information is in the second
+  slider, which moves by a factor of 4.2 across the classes dealt (0.088 at
+  320 individuals, 0.367 at 14).
+- **The extinction roll survives, after the rounds rather than before.** The
+  controls are shut while the rounds own the pond and open when the ten are
+  done; then it is the old bar, five landed rolls inside thirty generations.
+  The stage is done when both tick. **The two-number opener (average brood /
+  how many leave none) and the three-round "how far does it move" game are
+  gone**, and `BIT` is twelve slots rather than thirteen — `version: 4`,
+  `scaffold: 12`. The decoder is generic; there was no table to update.
+- **Answer boxes say correct or incorrect and nothing else.** JM, on the old
+  Stage A verdict: *"'Three landed. You were never asked which way it would
+  go…' is strictly wrong — we explicitly asked them to predict which would go
+  extinct. Answer boxes (Correct/Incorrect) should not have explanatory
+  text."* Applied to every `mountLock` and `wireGame` verdict on the page;
+  the evidence is the result strip and the plot. **Where a real-data panel's
+  verdict was carrying the finding**, the finding moved to the panel's own
+  readout rather than being deleted — Buri's 58 of 107 against 25 simulated,
+  and the wolves' average of 21.1 against a drift of 12.7, are both still on
+  screen, just not inside the answer box.
+- **D and E were already what JM asked for; what was missing was that nothing
+  had checked them.** `check_lesson10_numbers.js` still drove the retired D
+  and E and threw `D_formula is not defined`. Rewriting it found four real
+  defects — the dealt rounds printing their own answers, E's ladder being
+  walkable without the arrows it hands over, two of E's three round classes
+  answering near zero, and a pre-existing one-in-twenty flake in C1. All four
+  are written up in `docs/overhauls/lesson10_overhaul.md`.
+
+---
+
 **Lesson 10 revised against JM's design notes — 2026-09-17 (second pass).**
 His notes, and what each became:
 
