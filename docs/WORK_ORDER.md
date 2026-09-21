@@ -32,6 +32,78 @@ after**; a session that opens a lesson file without one has skipped a step.
 Lessons 1–9 are treated as overhauled and need none unless JM reopens one;
 12 and up are vague ideas and a prep doc for one would be fiction.
 
+**Lesson 10, second pass on A and a rebuild of B and C — 2026-09-21.** From
+JM's dictated notes. One idea runs through all of it: *"I don't like these text
+predictions. The predict [card] should just be controlled by the controls and
+it should manifest as the plot ... the controls set the simulation up, then
+they hit go, and the simulation runs and it shows them if their prediction
+landed or not."* A prediction is now a picture the student builds with the
+controls, in all three stages.
+
+- **Stage A's card became a distribution.** The expected-error slider draws a
+  **density curve on the right-hand axis** rather than a band across the plot:
+  *"so that they are actually looking at a distribution instead of a set line
+  in a band ... they shift the mean and the variation of it."* The curve is
+  normal with `sigma = e * sqrt(pi/2)`, so a stated error of `e` is a curve
+  whose own average miss is exactly `e`. After the run the truth appears
+  beside it as a **histogram**, not a curve — a small population piles its
+  endpoints on the two walls and a smooth curve would hide the spikes.
+- **Relabelled throughout**: round → population, "the pond starts at" →
+  starting allele frequency, "and holds" → population size, the two sliders →
+  predicted final frequency and expected error, "Next pond" → New population.
+- **Two exceptions to the bare verdict, and only two.** A wrong answer gets a
+  standing note that the size and starting frequency change every time; and a
+  claim that excludes nothing reads **"correct, but too uncertain"** — tested
+  by whether the interval covers 0 to 1, not by whether the slider hit its
+  stop.
+- **The extinction roll can no longer be gamed** by bottoming both sliders and
+  re-rolling: a landed roll **spends its setting**, and a later roll at a spent
+  setting says an allele went and refuses to count it. Measured: well over
+  eight distinct settings land 5+ of 12, so the rule costs a slider move and
+  nothing else. The unevenness slider now stops at 2.0 — JM: it "can get too
+  high". **The yellow/purple call is back** before each roll, ungraded and
+  never recorded, because committing to a coin flip and watching it come up
+  wrong is the only way the stage's claim lands.
+- **Stage B is ten target spreads.** The committed estimate is gone. A target
+  is the *shape* of the end histogram, stated as the two numbers that pin a
+  shape down — the average distance of the twenty from 0.50, and how many have
+  lost an allele — and the twenty endpoints are drawn as a **histogram on the
+  right-hand axis**, revealed when the run finishes. Five practice, five that
+  count. **Target 5 is reachable only with the uninherited switch**: measured,
+  it has zero inherited settings and thirty-five uninherited ones, because at
+  300 generations the tightest the inherited rule gets is 0.32 away with six
+  populations gone, at the top of the headcount slider. JM asked for exactly
+  that: *"One of them should only be achievable with [the uninherited setting],
+  where the variation doesn't really change [over] time."*
+- **Stage C is ten target shapes.** The card draws the histogram to aim at and
+  the student sets size and generations to reproduce it. Buri is now the
+  **framing at the top** and the counted-flies panel is gone, on JM's
+  instruction; the tally's ends are relabelled **purple extinct** / **yellow
+  extinct**; and "generation on screen" became a real generations control.
+- **Stage C could not be judged by comparing the two pictures, and that is
+  worth knowing before anyone tries it again.** 107 populations over 21 bins
+  carries a same-setting distance of 0.13–0.17, as large as the gap between
+  neighbouring targets — so a tolerance wide enough to accept a correct answer
+  accepts the wrong shape, and a setting between two targets clears both.
+  Measured at 9, 11, 15 and 21 bins; it fails at all of them, and widening the
+  ladder does not help because past "mostly fixed" the distribution stops
+  changing. **The picture is shown and matched; the verdict is taken on the
+  same two numbers Stage B uses**, both printed on the card. Under that judge
+  the five shapes are disjoint, each accepts its own setting 18–20 times in 20,
+  each is reachable by 93–318 settings, and no setting on either slider clears
+  two shapes.
+- **Scoring is nine slots now** (`version: 5`, `scaffold: 9`): A, B and C
+  record one bit each — A's on whether the last five calls beat the first five,
+  B's on the five that count, C's on the ten shapes — and D and E are
+  unchanged. Stage C's half-life estimate went with its card, and
+  `C_halfLife` went with it.
+- **`C1 half-life`, a pre-existing one-in-twenty flake, is fixed** as part of
+  the same pass: the estimator is unbiased but its spread is 5–6% of the
+  answer, so the per-headcount window is 20% and the average of the four is
+  held to 8%.
+
+---
+
 **Lesson 10 Stage A rebuilt, D and E verified — 2026-09-21.**
 
 - **Stage A's Predict card is ten dealt rounds.** JM: *"There is WAY too much

@@ -1,8 +1,8 @@
 # Lesson 10 — overhaul
 
-**File** · `app/lessons/lesson10.html` (`version: 4`, `scaffold: 12`)
+**File** · `app/lessons/lesson10.html` (`version: 5`, `scaffold: 9`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · done — 2026-09-21. Both checks green; stage A, D and E driven in headless Chrome.
+**Status** · rounds 1 and 2 done — 2026-09-21. Both check suites green; A, B and C driven end to end in headless Chrome.
 **Last touched** · 2026-09-21
 
 ## What the lesson is
@@ -19,9 +19,9 @@ argument in `breed()`.
 
 ## Stages as they stand
 
-    A  one pond, shares handed out unevenly, nothing looking at colour
-    B  the switch: inherited pool vs. fresh pool
-    C  107 ponds and the two walls           + real data: Buri 1956
+    A  one population, shares handed out unevenly, nothing looking at colour
+    B  the switch: inherited pool vs. fresh pool — ten target spreads
+    C  107 populations and the two walls — ten target shapes  (Buri is the framing, not a panel)
     D  the Lesson 6 moose model, with a gene walking its line   + real data: Isle Royale wolves
     E  four arrows into one junction: bodies, crash, sex ratio, brood spread  + real data: LTEE
 
@@ -31,7 +31,7 @@ check script still tested the *retired* D/E and threw `D_formula is not
 defined`, so nothing in either stage had ever been verified. Writing the
 checks found four real defects, listed below.
 
-## Items
+## Items — round 1 (done)
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
@@ -44,6 +44,117 @@ checks found four real defects, listed below.
 | 7 | — | `BIT` 13 → 12 slots, `scaffold: 12`, `version: 4`. Decoder is generic; no per-lesson table to update. | done |
 | 8 | D/E | Rewrite the stale halves of `check_lesson10_numbers.js` against the shipped D (moose record) and E (four arrows). Add checks for A's ten rounds. | done |
 | 9 | — | Run both check scripts; smoke-test the page in a browser. | done |
+
+## Items — round 2, from JM's dictated notes 2026-09-21
+
+The shape of every ask in this round is the same, and it is worth stating once
+because it is what most of the work is: **a prediction is a picture the student
+builds with the controls, not a number they type.** JM: *"I don't like these
+text predictions. The predict [card] should just be controlled by the controls
+and it should manifest as the plot ... The controls set the simulation up, then
+they hit go, and the simulation runs and it shows them if their prediction
+landed or not."* So A's band becomes a density curve on the right axis, B's
+target becomes a spread to hit, and C's target becomes a histogram shape to
+match.
+
+### Stage A
+
+| # | What | Status |
+|---|------|--------|
+| A1 | Replace the intro prose with JM's dictated passage: evolution needs a unit and a population; selected means the trait influences its own transmission; unequal transmission for *any* reason changes the frequency; smaller populations fluctuate harder. | done |
+| A2 | Rewrite the setup bullets to his three: what a dot is and the three genotypes · they reproduce at random, watch them · what the two tasks are. | done |
+| A3 | **The two sliders draw a vertical density curve on the right-hand axis**, not a line and a band. *"I would rather [it] be a histogram rendered on the right y axis, so that they are actually looking at a distribution instead of a set line in a band ... they shift the mean and the variation of it."* | done |
+| A4 | Labels: round → **population** · "the pond starts at" → **starting allele frequency** · "and holds" → **population size** · sliders → **predicted final frequency** / **expected error** · "Next pond" → **New population**. | done |
+| A5 | Two exceptions to the bare verdict, and only these two: on **incorrect**, a standing note that the population size and starting frequency change every time; and a max-width band reads **"correct, but too uncertain"**. | done |
+| A6 | The extinction roll can be gamed by bottoming both sliders and re-rolling. A landed roll must use a **setting not already used** — a different number of individuals, or a different combination of the two. | done |
+| A7 | The offspring-unevenness slider "can get too high" — cap it. | done |
+| A8 | **Put the yellow/purple call back** before each roll. Ungraded and never recorded, and the student is not told so. | done |
+| A9 | Task text: 1 *"Predict the final allele frequency for 10 populations."* 2 *"Set population parameters to drive one allele extinct inside 30 generations."* | done |
+
+### Stage B
+
+| # | What | Status |
+|---|------|--------|
+| B1 | New prose: A watched one population drift from different starting points; B watches several drift apart from the same one. Each generation inherits the noise of the one before, which is what makes a single population look like it is being pushed. The switch is inherited vs. not; the uninherited setting is where migration arrives in a few weeks. | done |
+| B2 | Rewrite the bullets. | done |
+| B3 | **A histogram of where the 20 ended up, on the right-hand axis**, revealed at the end of the run alongside the trajectory lines. | done |
+| B4 | Drop the committed estimate entirely. The card becomes: the populations all start at 0.5 — use the controls to hit a **target spread**. | done |
+| B5 | Ten rounds. **The first five are practice; the last five are scored.** | done |
+| B6 | Targets are named by the shape they produce: everything fixed at one end or the other, and roughly normal with nothing extinct after ~300 generations. A variety of them. | done |
+| B7 | **One target must be reachable only with the uninherited switch** — the setting where the spread stops growing with time. | done |
+| B8 | Keep 20 populations. JM considered raising it and said no. | done |
+
+### Stage C
+
+| # | What | Status |
+|---|------|--------|
+| C1 | New prose: the classic 107-bottle experiment as framing, then *"drift destroys variation"* — an allele that randomly hits zero is gone forever, nothing maintains variation, the system collapses to one allele, and the time it takes is a function of only the starting frequency and the population size. | done |
+| C2 | Rewrite the bullets. | done |
+| C3 | **The predict card shows a target histogram and the student matches it with the controls.** Ten targets, ranging from both spikes (everything fixed) to still roughly normal. Judged on general shape, not exactly — *"the correct/mismatch because of the randomness, not to get it exactly right, but if they got the general shape."* | done |
+| C4 | Histogram labels → **purple extinct** / **yellow extinct**. | done |
+| C5 | **Drop the Buri real-data panel.** *"Just ditch the actual 'flies somebody actually counted' data — just have that be the framing at the top."* Buri survives as the opening prose. | done |
+
+### Cross-cutting
+
+| # | What | Status |
+|---|------|--------|
+| X1 | `BIT` and `scaffold` change again as A's, B's and C's recorded items move. Bump `version`. | done |
+| X2 | Rewrite the A, B and C halves of `check_lesson10_numbers.js` against the new games, and re-measure every target. | done |
+
+### One contradiction in the dictation, and how it was read
+
+The third setup bullet says *"First, you will run the population 10 times,
+trying to drive one allele extinct ... Then you will try and predict the end
+frequency."* The task list dictated a few sentences later says step one is
+*"Predict the final allele frequency for 10 populations"* and step two is
+*"Set population parameters to drive one allele extinct."* **Taken as
+predict-first**, which is what the numbered task list says, what the stage
+already does, and the only order in which the card can deal the population
+rather than the student setting it. The bullet was rewritten to match. Say the
+word and it flips.
+
+
+## What round 2 measured, and the two things it had to design around
+
+- **Stage A's expected-error slider is a real distribution, not a band.** The
+  curve drawn on the right axis is normal with `sigma = e * sqrt(pi/2)`, so a
+  stated error of `e` is a curve whose own average miss is exactly `e`. The
+  truth beside it is a **histogram**, not a curve, because a small population
+  piles its endpoints against the two walls and a smooth curve hides the two
+  spikes that are the point.
+- **Stage B's five targets, measured.** `dist` is the average distance of the
+  twenty endpoints from 0.50. Reachable settings, counted over the whole of
+  both sliders: target 1 (everything fixed) 46, target 2 (spread, one or two
+  gone) 115, target 3 (about half fixed) 144, target 4 (tight pile, nothing
+  lost) 39, target 5 (300 generations, nothing extinct) 35. **Target 5 has
+  zero inherited settings and thirty-five uninherited ones** — at 300
+  generations the tightest the inherited rule gets is 0.32 away with six
+  populations gone, at the top of the headcount slider. That is the switch
+  earning its place.
+- **Stage C could not be judged by comparing the two pictures, and that took
+  three passes to establish.** 107 populations over 21 bins gives a
+  same-setting distance of 0.13–0.17, which is as large as the gap between
+  neighbouring targets: a tolerance wide enough to accept a correct answer
+  accepts the wrong shape, and a setting sitting between two targets clears
+  both. Measured at 9, 11, 15 and 21 bins; it fails at all of them, and
+  widening the ladder does not save it because past "mostly fixed" the
+  distribution stops changing (two settings an order of magnitude apart in
+  generations-over-headcount sit 0.02 apart).
+  **So the picture is what is shown and matched, and the verdict is taken on
+  the two numbers that pin a picture of this kind down** — how many of the 107
+  have lost an allele, and how far from 0.500 they sit on average. Both are
+  printed on the card. Under that judge the five shapes are disjoint (tightest
+  pair separated by 1.25 tolerance-box widths), every shape accepts its own
+  setting 18–20 times out of 20, each is reachable by 93–318 settings, and no
+  setting anywhere on the two sliders clears two shapes.
+- **Stage A's roll is no longer gameable by bottoming both sliders.** A landed
+  roll spends its `(individuals, unevenness)` setting; a later roll at a spent
+  setting reports that an allele went and refuses to count it. Measured: well
+  over eight distinct settings land 5+ times in 12, so the rule costs nothing
+  but a slider move.
+- **The unevenness slider now stops at 2.0** (was 3.0), on JM's note that it
+  "can get too high".
+
 
 ## What the checks found once they ran (2026-09-21)
 

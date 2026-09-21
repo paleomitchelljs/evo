@@ -43,7 +43,7 @@ const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 check("page loaded", !!(A && A.pop && B && C && D && E && typeof Score !== "undefined"),
       "every stage object and Score are defined");
 check("slots declared match slots written",
-      Object.keys(BIT).length === 12, Object.keys(BIT).length + " named bits");
+      Object.keys(BIT).length === 9, Object.keys(BIT).length + " named bits");
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
@@ -133,81 +133,180 @@ check("slots declared match slots written",
         cmp.map(r => "N=" + r[0] + " pond " + r[1].toFixed(3) + " vs band " + r[2].toFixed(3)).join("  "));
   check("A1 all three classes are dealt inside ten rounds", cls.length === 3 && A_ROUNDS >= 9,
         A_ROUNDS + " rounds over " + cls.length + " classes in rotation");
+  /* Every population that can be dealt has to be answerable on the two
+     sliders it is answered with -- the middle as well as the width. */
+  const offMid = [];
+  for (const c of cls) for (const p0 of c.p0) if (p0 < 0 || p0 > 1) offMid.push(p0);
+  check("A1 every starting frequency is on the first slider", offMid.length === 0,
+        "slider runs 0..1; classes start at " + [...new Set(cls.flatMap(c => c.p0))].sort().join(", "));
+
+  /* A2's anti-gaming rule: a landed roll spends its setting. The check is
+     that the rule is actually enforced by the predicate rather than only
+     described in the goal text. */
+  A.used = {}; A.N = 6; A.cv = 0; A.p0 = 0.5; A.round = null;
+  const key = A_settingKey();
+  A.used[key] = true;
+  A_fresh(); for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+  const spentBlocks = A_fixed() ? !A.roll.hitNow() : null;
+  check("A2 a spent setting cannot land again", spentBlocks === true || spentBlocks === null,
+        spentBlocks === null ? "the probe roll did not fix; rule untested this run"
+                             : "an allele went at " + key + " and the roll refused to count it");
+  A.used = {};
+  A_fresh(); for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+  check("A2 a fresh setting still lands", !A_fixed() || A.roll.hitNow() === true,
+        "at " + A_settingKey() + " with nothing spent, a fixed run counts");
+
+  /* Five distinct settings have to exist that each land often enough to be
+     worth trying -- otherwise "a landed setting is spent" turns a five-roll
+     gate into a grind. Both sliders count towards distinctness, which is
+     what the rule says, so both are swept. */
+  const landable = [];
+  for (const N of [4, 6, 8, 10, 12, 16, 20, 30]) for (const cv of [0, 1.0, 2.0]) {
+    let h = 0;
+    for (let r = 0; r < 12; r++) { A.N = N; A.cv = cv; A.p0 = 0.5; A.round = null; A_fresh();
+      for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+      if (A_fixed()) h++; }
+    if (h >= 5) landable.push(N + "@" + cv.toFixed(1) + " (" + h + "/12)");
+  }
+  check("A2 plenty of distinct settings land often enough to be worth rolling", landable.length >= 8,
+        landable.length + " settings land 5+ of 12: " + landable.slice(0, 8).join(", ") +
+        (landable.length > 8 ? " ..." : ""));
+  A.used = {};
 }
 
 /* ---- B. the error is inherited ----------------------------------------- */
 {
   const rngB = mulberry32(99);
+  /* The stage's one observation, unchanged: the error compounds only when it
+     is inherited, and the per-generation randomness is identical either way. */
   const inh = B_batch(rngB, 10, 300, true, 20);
-  check("B2 roll clearable", inh.fixed === 20, "10 breeders, 300 generations: " + inh.fixed + "/20 down to one allele");
+  check("B the inherited rule fixes everything", inh.fixed === 20,
+        "10 individuals, 300 generations: " + inh.fixed + "/20 down to one allele");
   const fr = B_batch(rngB, 10, 300, false, 60);
-  check("B3 observation holds", fr.touched === 0,
-        "60 fresh-start ponds x 300 generations at N=10: " + fr.touched + " ever reached a wall");
-  check("B3 variety holds up", fr.H[300] > 0.45, "variety after 300 generations: " + fr.H[300].toFixed(3) + " of 0.500");
-  check("B2 roll not clearable fresh", B_batch(rngB, 10, 300, false, 20).fixed === 0, "the other setting fixes nothing");
+  check("B the uninherited rule fixes nothing", fr.touched === 0,
+        "60 uninherited populations x 300 generations at N=10: " + fr.touched + " ever reached a wall");
+  check("B and it keeps its variety", fr.H[300] > 0.45,
+        "variety after 300 generations: " + fr.H[300].toFixed(3) + " of 0.500");
 
   // the distance grows with the root of the generations, not with them
   const d = g => { const r = []; for (let i = 0; i < 60; i++) r.push(Math.abs(B_runOne(rngB, 100, g, true)[g] - 0.5)); return mn(r); };
   const d10 = d(10), d40 = d(40), d150 = d(150);
-  check("B4 sublinear in generations", d150 < 3 * d40 && d40 < 3 * d10,
+  check("B sublinear in generations", d150 < 3 * d40 && d40 < 3 * d10,
         "10 gen " + d10.toFixed(3) + " -> 40 gen " + d40.toFixed(3) + " -> 150 gen " + d150.toFixed(3));
-  const rng = mulberry32(31337), iv = [];
-  for (let n = 0; n < 3; n++) { const r = B.game.round(rng, n); iv.push([r.truth - r.tol, r.truth + r.tol]); }
-  const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("B4 no constant clears", lo > hi, "three rounds: " + iv.map(v=>"["+v[0].toFixed(3)+","+v[1].toFixed(3)+"]").join(" "));
+
+  /* THE TEN TARGETS. Three things have to hold of each one and none of them
+     is visible on the page:
+       - it is reachable on the sliders the student actually has;
+       - it is not reachable by leaving the controls where the last target
+         left them, or the ten rounds are one round played ten times;
+       - and target 5 is reachable ONLY with the uninherited switch, which is
+         the only reason the switch is a control rather than a demonstration.
+     The slider ranges are read off the page, not restated here. */
+  const sN = []; { const el = document.getElementById("B_N");
+    for (let v = +el.min; v <= +el.max; v += +el.step) sN.push(v); }
+  const sG = []; { const el = document.getElementById("B_gens");
+    for (let v = +el.min; v <= +el.max; v += +el.step) sG.push(v); }
+  const lands = (tg, N, G, inhFlag, k) => { let h = 0;
+    for (let r = 0; r < k; r++) { const b = B_batch(mulberry32(4000 + r * 7919 + N * 13 + G), N, G, inhFlag, 20);
+      b.gens = G; if (B_judge(tg, b).ok) h++; }
+    return h; };
+  const winners = B_TARGETS.map(tg => { const w = { inh: [], fresh: [] };
+    for (const inhFlag of [true, false]) for (const N of sN) for (const G of sG) {
+      if (tg.gensMin && G < tg.gensMin) continue;
+      if (lands(tg, N, G, inhFlag, 5) >= 3) w[inhFlag ? "inh" : "fresh"].push(N + "/" + G);
+    }
+    return w; });
+  winners.forEach((w, i) => {
+    const total = w.inh.length + w.fresh.length;
+    check("B target " + (i + 1) + " is reachable", total >= 5,
+          total + " settings land 3 of 5 rolls  [inherited " + w.inh.length + ", uninherited " + w.fresh.length +
+          "]  e.g. " + (w.inh.concat(w.fresh)).slice(0, 3).join(" "));
+  });
+  check("B the 300-generation target needs the switch",
+        winners[4].inh.length === 0 && winners[4].fresh.length > 0,
+        "target 5: " + winners[4].inh.length + " inherited settings, " + winners[4].fresh.length + " uninherited");
+  // no single setting clears more than one target
+  let overlap = null;
+  for (const inhFlag of [true, false]) for (const N of [10, 25, 50, 100, 150, 200]) for (const G of [25, 100, 200, 300]) {
+    const cleared = B_TARGETS.map((tg, i) => lands(tg, N, G, inhFlag, 5) >= 3 ? i + 1 : 0).filter(Boolean);
+    if (cleared.length > 1) overlap = (inhFlag ? "inh" : "fresh") + " N=" + N + " G=" + G + " clears targets " + cleared.join(",");
+  }
+  check("B no one setting clears two targets", overlap === null,
+        overlap || "every sampled setting clears at most one of the five");
 }
 
-/* ---- C. 107 ponds and the two walls ------------------------------------ */
+/* ---- C. 107 populations and a shape to match ---------------------------- */
 {
-  /* C_halfLife reads the crossing off 400 replicates, so it carries real
-     sampling noise: measured over 24 seeds it is unbiased but its spread is
-     about 5-6% of the answer at every headcount, which means a single draw
-     sits outside 15% roughly one run in twenty. A bar that fails one run in
-     twenty teaches nothing, so the per-headcount window is 20% -- still far
-     inside anything a wrong constant would produce -- and the AVERAGE across
-     the four is held to 8%, which is the sharp half of the check. */
-  const hl = N => C_halfLife(N);
-  const rows = [8, 16, 25, 50].map(N => [N, hl(N)]);
-  const errs = rows.map(([N, h]) => Math.abs(h - 1.386 * N) / (1.386 * N));
-  const worst = errs.reduce((a,b)=>Math.max(a,b),0), avg = mn(errs);
-  check("C1 half-life is 1.4 x the headcount", worst < 0.20 && avg < 0.08,
-        rows.map(([N,h]) => N + "->" + h.toFixed(1) + " (want " + (1.386*N).toFixed(0) + ")").join("  ") +
-        "  worst " + (100*worst).toFixed(1) + "%, average " + (100*avg).toFixed(1) + "%");
+  /* The stage shows a picture and asks for a picture, and takes its verdict
+     on the two numbers that pin a picture of this kind down. Three things
+     have to hold, and none of them is visible on the page:
 
-  /* C2 is now a roll: every one of the 107 ponds on a wall by generation
-     60, three times. It has to be reachable at a small headcount and out
-     of reach at a large one, or the target teaches nothing about size. */
-  const allFixedRate = (N, k) => { let h = 0; C.N = N; for (let r = 0; r < k; r++) { C_run(); if (C_allFixed()) h++; } return h / k; };
-  const curve = [4, 5, 6, 7, 8, 10, 12, 16, 25, 40].map(N => [N, allFixedRate(N, 12)]);
-  const best = curve.reduce((a, b) => b[1] > a[1] ? b : a);
-  const partial = curve.filter(r => r[1] > 0 && r[1] < 1);
-  const big = curve.filter(r => r[0] >= 16).every(r => r[1] === 0);
-  check("C2 roll clearable at all", best[1] >= 0.5,
-        "best is " + best[0] + " breeders at " + (100*best[1]).toFixed(0) + "% of rolls -- 3 needed, so ~" +
-        (3/best[1]).toFixed(0) + " rolls");
-  check("C2 roll out of reach when big", big,
-        "16+ breeders never land it: " + curve.filter(r=>r[0]>=16).map(r=>r[0]+"->"+(100*r[1]).toFixed(0)+"%").join(" "));
-  check("C2 roll has a real middle", partial.length >= 2,
-        "graded, not a cliff: " + curve.map(r => r[0]+"->"+(100*r[1]).toFixed(0)+"%").join(" "));
-  check("C2 the reachable headcount is on the slider", best[0] >= 4 && best[0] <= 60,
-        "C_N runs 4..60 and the target wants " + best[0]);
+       - the SAME setting, run again, lands inside the tolerance, or a
+         correct answer is marked wrong by sampling noise alone;
+       - no setting clears two different shapes, or the ten rounds collapse
+         into one round played ten times;
+       - every shape is reachable by a spread of settings rather than a
+         single point, because the shape is a function of generations over
+         headcount and that has to show up as a curve of answers.
 
-  const rng = mulberry32(606), iv = [];
-  for (let n = 0; n < 3; n++) { const r = C.game.round(rng, n); iv.push([r.truth - r.tol, r.truth + r.tol]); }
-  const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("C3 no constant clears", lo > hi, "three rounds: " + iv.map(v=>"["+v[0].toFixed(0)+","+v[1].toFixed(0)+"]").join(" "));
-  check("C3 rejects 'none of them'", iv.filter(v => 0 >= v[0]).length === 0, "0 would clear " + iv.filter(v => 0 >= v[0]).length + " of 3");
+     The slider ranges are read off the page rather than restated here, so a
+     range that gets edited is a range that gets re-checked. */
+  const shp = t => C.game.shapeFor(t);
+  const ends = (N, G, rng) => C_ends(N, G, rng);
 
-  if (REAL.buriHist) {
-    const truth = C_buriTruth();
-    check("C4 Buri's number", truth === 58, truth + " of 107 bottles had one colour left at generation 19");
-    const r2 = mulberry32(1956), sim = [];
-    for (let b = 0; b < 6; b++) { let k = 0;
-      for (let i = 0; i < 107; i++) { let p = 0.5; for (let g = 0; g < 19; g++) p = breedFreq(r2, p, 16, 0); if (p === 0 || p === 1) k++; }
-      sim.push(k); }
-    check("C4 the census misses", mn(sim) < truth - 4,
-          "107 simulated bottles of sixteen flies reach " + mn(sim).toFixed(0) + ", his reached " + truth);
-  } else check("C4 Buri loaded", false, "buri_fly.json did not arrive");
+  C_TARGETS.forEach((t, i) => {
+    const rng = mulberry32(999 + t.N * 7 + t.gens);
+    let h = 0;
+    for (let r = 0; r < 20; r++) if (C_matches(C_feat(ends(t.N, t.gens, rng)), shp(t).feat)) h++;
+    check("C shape " + (i + 1) + " accepts its own setting", h >= 18,
+          "lands " + h + " of 20 replays at N=" + t.N + " gens=" + t.gens);
+  });
+
+  let overlap = null, tightest = 99, tpair = "";
+  for (let i = 0; i < C_TARGETS.length; i++) for (let j = i + 1; j < C_TARGETS.length; j++) {
+    const a = shp(C_TARGETS[i]).feat, b = shp(C_TARGETS[j]).feat;
+    const df = Math.abs(a.fx - b.fx) / (2 * C_FT), dm = Math.abs(a.mad - b.mad) / (2 * C_MT);
+    const sep = Math.max(df, dm);
+    if (sep <= 1) overlap = "shapes " + (i + 1) + " and " + (j + 1) + " overlap";
+    if (sep < tightest) { tightest = sep; tpair = (i + 1) + " and " + (j + 1); }
+  }
+  check("C every pair of shapes is disjoint", overlap === null,
+        overlap || ("tightest pair is " + tpair + ", separated by " + tightest.toFixed(2) +
+                    " times the width of a tolerance box"));
+
+  const sN = []; { const el = document.getElementById("C_N");
+    for (let v = +el.min; v <= +el.max; v += +el.step) sN.push(v); }
+  const sG = []; { const el = document.getElementById("C_gens");
+    for (let v = +el.min; v <= +el.max; v += +el.step) sG.push(v); }
+  const reach = C_TARGETS.map(t => { const w = [];
+    for (const N of sN) for (const G of sG) {
+      const rng = mulberry32(2100 + N * 13 + G); let h = 0;
+      for (let r = 0; r < 4; r++) if (C_matches(C_feat(ends(N, G, rng)), shp(t).feat)) h++;
+      if (h >= 3) w.push(N + "/" + G);
+    }
+    return w; });
+  reach.forEach((w, i) => check("C shape " + (i + 1) + " is reachable", w.length >= 20,
+        w.length + " settings land 3 of 4  e.g. " + w.slice(0, 4).join(" ")));
+  check("C no shape lives only at the bottom of a slider",
+        reach.every(w => new Set(w.map(k => k.split("/")[1])).size >= 2),
+        reach.map((w, i) => "#" + (i + 1) + " generations: " +
+          [...new Set(w.map(k => +k.split("/")[1]))].sort((a, b) => a - b).slice(0, 4).join(",")).join("  "));
+
+  let bothAt = null;
+  for (const N of sN) for (const G of sG) {
+    const rng = mulberry32(3300 + N * 7 + G);
+    const f = C_feat(ends(N, G, rng));
+    const cleared = C_TARGETS.map((t, i) => C_matches(f, shp(t).feat) ? i + 1 : 0).filter(Boolean);
+    if (cleared.length > 1) bothAt = "N=" + N + " gens=" + G + " clears shapes " + cleared.join(",");
+  }
+  check("C no one setting clears two shapes", bothAt === null,
+        bothAt || "every setting on the two sliders clears at most one of the five");
+
+  check("C each shape is dealt twice and never twice running",
+        C_ORDER.length === C_ROUNDS &&
+        [0,1,2,3,4].every(k => C_ORDER.filter(v => v === k).length === 2) &&
+        C_ORDER.every((v, i) => i === 0 || v !== C_ORDER[i - 1]),
+        "order " + C_ORDER.join(""));
 }
 
 /* ---- D. the Lesson 6 record, with a gene walking it --------------------- */
