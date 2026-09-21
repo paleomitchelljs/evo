@@ -143,7 +143,7 @@ function highlightByDataLine(codeId, key) {
  * asks the student to read that structure off the screen. Those generators
  * impose their structure by construction rather than by luck, but they are
  * called out at their definitions so the choice is visible rather than
- * accidental. See PROJECT_NOTES.
+ * accidental.
  * ========================================================================= */
 
 /* One 32-bit draw per page load. Everything else on the page hangs off it, so

@@ -231,7 +231,7 @@ turned out to cost.
 
 ## Do not
 
-- Do not re-fuse `cov` and `within` in `priceTerms`. PROJECT_NOTES §1.
+- Do not re-fuse `cov` and `within` in `priceTerms`. `docs/WORK_ORDER.md`.
 - Do not extract the core operator to `pop.js` yet — third caller, not second.
 - Do not retry the FSJ deposit for 10E. Its year-to-year variance is *below*
   binomial, because the cohorts overlap. WORK_ORDER says why.

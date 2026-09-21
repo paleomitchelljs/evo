@@ -37,9 +37,10 @@ data/clean/*.csv              real datasets used in the "real data" stages
 
 ## Start here
 
-- [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) — **the single notes-and-memory file.** Current state, the live rules, and — in §7 — the long list of directives that read as binding and are void.
-- [`docs/WORK_ORDER.md`](docs/WORK_ORDER.md) — the prioritized next round of edits.
-- [`docs/LESSON_ATLAS.md`](docs/LESSON_ATLAS.md) — stage-by-stage description of the shipped lessons. **Stale**; trustworthy only for lessons 10 and 11.
+- [`structurephilosophy.md`](structurephilosophy.md) — seventeen lines, JM's, canonical. Read it first.
+- [`docs/LESSON_STYLE.md`](docs/LESSON_STYLE.md) — how these lessons are actually built, read off lessons 1–10. Suggestions, not rules.
+- [`docs/WORK_ORDER.md`](docs/WORK_ORDER.md) — standing warnings and pinned constants. Traps and numbers, no design rules.
+- [`docs/overhauls/`](docs/overhauls/) — one prep document per lesson, written before the first edit.
 
 ## The checks
 
@@ -53,12 +54,8 @@ sequence the course had stopped following, and they outranked JM.
 - [`ledger.json`](ledger.json) — a term list and two phrase lists, feeding those two reports. **Nothing in it blocks anything**, and it no longer carries course length, term budgets, naming delays, per-arc minute budgets or per-term unlock units; all of those were struck on 2026-09-17.
 - [`scripts/test_codec.py`](scripts/test_codec.py) — pins the Python decoder to the JavaScript one that mints the codes.
 
-The judgment-level checks a machine cannot run — the four adversarial passes —
-are in [`docs/PROJECT_NOTES.md`](docs/PROJECT_NOTES.md) §4.
-
-> The former `BUILD_CONTRACT.md` and `validate.py` governed a `units/*.json` spec
-> layer that was never built. Both are retired to `_reference/retired/`; their live
-> rules moved into `docs/PROJECT_NOTES.md`.
+The judgment-level checks a machine cannot run are in
+[`docs/LESSON_STYLE.md`](docs/LESSON_STYLE.md) §14.
 
 Check every lesson:
 
