@@ -137,7 +137,7 @@
 
   /* ---- the dealt round's parameter table ------------------------------
      JM, 2026-09-21: "There is WAY too much text in the prediction box. It
-     should be a short, flat table." Three facts about the pond on offer,
+     should be a short, flat table." Three facts about the population on offer,
      and then the two things being called. Nothing else is in the card. */
   table.dealt { border-collapse:collapse; width:100%; font:13px -apple-system,sans-serif; margin-bottom:10px; }
   table.dealt th { text-align:left; font-weight:400; color:var(--muted); padding:3px 0; width:58%; }
@@ -148,6 +148,8 @@
   .roundpips i { width:11px; height:11px; border-radius:50%; border:1.5px solid #ddd9cc; display:inline-block; }
   .roundpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
   .roundpips i.miss { background:#e3d4d6; border-color:#c99; }
+  /* a call that was right but far wider than it needed to be */
+  .roundpips i.wide { background:#f0e2c2; border-color:#c9a94e; }
   .roundpips i.now { border-color:var(--accent); border-width:2px; }
   .roundpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
 
@@ -259,12 +261,14 @@
       <div class="voice">
         <p>Evolution is the study of the change in the frequency of transmissible traits over time. As such it requires a unit, which can transmit traits, and a population — a group of those units. Because in order to be a frequency, it has to be what proportion of the units in there are transmitting or not transmitting those traits. That is an abstract way of saying that here the unit will usually be an organism, a transmissible trait will be an allele, and what we are concerned with are populations: groups of organisms transmitting their traits over time.</p>
         <p>Whether those traits influence their own transmission is an important distinction. If a trait influences its own transmission, we say it is selected — it can increase or decrease the probability that it is transmitted, which is what the direction of selection means. But an influence of the trait on whether it is transmitted is not necessary. Any time there is unequal transmission, any time some traits are transmitted more or less often for any reason, the frequency will change. And the smaller a population is, the more dramatically those fluctuations will vary.</p>
-        <p>Below you are going to run some simulations. You control the number of individuals in the population — imagine a pond, or a prairie, or some other enclosed space — and the unevenness of how much they replicate. If you put a zero for the differences in expected number of offspring, you are not saying they all reproduce evenly. You are saying they all have an equal likelihood of reproducing. For this activity the trait has no impact at all on whether it is transmitted. We are only looking at how populations drift from wherever they began to wherever they end up.</p>
+        <p>Below you are going to run some simulations. You control the number of individuals in the population — imagine a population, or a prairie, or some other enclosed space — and the unevenness of how much they replicate. If you put a zero for the differences in expected number of offspring, you are not saying they all reproduce evenly. You are saying they all have an equal likelihood of reproducing. For this activity the trait has no impact at all on whether it is transmitted. We are only looking at how populations drift from wherever they began to wherever they end up.</p>
       </div>
       <ul class="setup">
         <li>Top plot: each dot is an individual, coloured by its genotype. Two alleles, yellow and purple — so an individual is either yellow, purple, or a heterozygote, the brown colour in between.</li>
-        <li>Those dots reproduce at random. Your job is to watch what they do.</li>
-        <li>First you predict where ten populations end up, from the parameters you are shown. Then the controls are yours, and you drive one allele extinct — using a different setting every time.</li>
+        <li>The top plot shows the individuals in the population.</li>
+        <li>The bottom plot shows the frequency of an allele in the plot above it.</li>
+        <li>You will predict where an allele with a specific starting frequency will end up after a certain number of generations in a population of a particular size, using the sliders. Once you feel good about your prediction, hit <b>Go</b> and watch the population evolve. Repeat this ten times, trying to improve your accuracy — both getting the line to hit your target and keeping the target as narrow as the situation allows.</li>
+        <li>You will then try to drive one allele extinct five times, using different population sizes and different amounts of variation in offspring number. Try to predict which allele goes each time.</li>
       </ul>
     </div>
   </div>
@@ -272,7 +276,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <canvas id="A_pond" class="plot" width="640" height="170"></canvas>
+        <canvas id="A_population" class="plot" width="640" height="170"></canvas>
         <div class="readout" id="A_pondRead"></div>
       </div>
       <div class="panel">
@@ -281,7 +285,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line"><span class="com"># one pond. every individual gets a share of the next generation.</span></span><span class="line" data-line="N">N  &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="cv">cv &lt;- <span class="num" id="cA_cv">0</span>            <span class="com"># differences in expected number of offspring, mean fixed at 1</span></span><span class="line">w  &lt;- <span class="kw">if</span> (cv == <span class="num">0</span>) <span class="fn">rep</span>(<span class="num">1</span>, N) <span class="kw">else</span> <span class="fn">rgamma</span>(N, shape = <span class="num">1</span>/cv^<span class="num">2</span>, scale = cv^<span class="num">2</span>)</span><span class="line">p  &lt;- w / <span class="fn">sum</span>(w)        <span class="com"># nothing here looks at colour</span></span><span class="line"></span><span class="line"><span class="com"># each of the N offspring draws two parents with those shares</span></span><span class="line">mo &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line">fa &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line"></span><span class="line"><span class="com"># individuals that left nothing</span></span><span class="line"><span class="fn">sum</span>(<span class="fn">tabulate</span>(<span class="fn">c</span>(mo, fa), nbins = N) == <span class="num">0</span>)</span><span class="line"></span><span class="line"><span class="com"># the frequency of the purple allele after they breed</span></span><span class="line"><span class="fn">mean</span>(kid)</span></pre>
+<pre class="code" id="codeA"><span class="line"><span class="com"># one population. every individual gets a share of the next generation.</span></span><span class="line" data-line="N">N  &lt;- <span class="num" id="cA_N">100</span></span><span class="line" data-line="cv">cv &lt;- <span class="num" id="cA_cv">0</span>            <span class="com"># differences in expected number of offspring, mean fixed at 1</span></span><span class="line">w  &lt;- <span class="kw">if</span> (cv == <span class="num">0</span>) <span class="fn">rep</span>(<span class="num">1</span>, N) <span class="kw">else</span> <span class="fn">rgamma</span>(N, shape = <span class="num">1</span>/cv^<span class="num">2</span>, scale = cv^<span class="num">2</span>)</span><span class="line">p  &lt;- w / <span class="fn">sum</span>(w)        <span class="com"># nothing here looks at colour</span></span><span class="line"></span><span class="line"><span class="com"># each of the N offspring draws two parents with those shares</span></span><span class="line">mo &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line">fa &lt;- <span class="fn">sample</span>(N, N, replace = <span class="kw">TRUE</span>, prob = p)</span><span class="line"></span><span class="line"><span class="com"># individuals that left nothing</span></span><span class="line"><span class="fn">sum</span>(<span class="fn">tabulate</span>(<span class="fn">c</span>(mo, fa), nbins = N) == <span class="num">0</span>)</span><span class="line"></span><span class="line"><span class="com"># the frequency of the purple allele after they breed</span></span><span class="line"><span class="fn">mean</span>(kid)</span></pre>
       </div>
     </div>
     <div class="col">
@@ -292,12 +296,12 @@
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="A_controls">
-          <div class="row" data-line="N"><label for="A_N">individuals in the pond</label><input type="range" id="A_N" min="4" max="400" step="2" value="100" /><output id="A_NOut">100</output></div>
+          <div class="row" data-line="N"><label for="A_N">individuals in the population</label><input type="range" id="A_N" min="4" max="400" step="2" value="100" /><output id="A_NOut">100</output></div>
           <div class="row" data-line="cv"><label for="A_cv">differences in expected number of offspring</label><input type="range" id="A_cv" min="0" max="2" step="0.1" value="0" /><output id="A_cvOut">0.0</output></div>
           <div class="buttons">
             <button id="A_roll" class="accent">Roll it</button>
             <button id="A_step" class="secondary">One generation</button>
-            <button id="A_reset" class="ghost">Fresh pond</button>
+            <button id="A_reset" class="ghost">Fresh population</button>
             <button id="A_dl" class="ghost">Download .R</button>
           </div>
         </div>
@@ -335,11 +339,11 @@
         <p>Below you set the number of individuals and the number of generations, and try to hit a target.</p>
       </div>
       <ul class="setup">
-        <li>Twenty populations, run side by side. Every one starts at the same size and at a purple allele frequency of <b>0.50</b>.</li>
-        <li>Left plot: all twenty, generation by generation. Right-hand panel: where the twenty ended up, as a histogram — drawn once the run finishes.</li>
-        <li>The switch changes one thing: where each generation's parents come from. The amount of randomness per generation is identical either way.</li>
-        <li>Ten targets. The first five are practice and you can re-run them as often as you like. The last five count, and you get one run each.</li>
-        <li>Nothing is selected anywhere in this stage. The only thing happening is who happens to breed.</li>
+        <li>This time you have a single starting point and run <b>twenty</b> populations at once.</li>
+        <li>Your goal is to hit the target — not directly this time, but by having your twenty spread out to match the target at the end.</li>
+        <li>Five targets for practice, then five for real.</li>
+        <li>Hit <b>Next target</b> to move on. You are free to adjust the parameters and re-run a target as often as you like, to build an intuition before advancing.</li>
+        <li>The simulations are otherwise the same as in Part A — still nothing selected.</li>
       </ul>
     </div>
   </div>
@@ -356,7 +360,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeB"><span class="line"><span class="com"># the same pond, two rules for where the parents come from</span></span><span class="line" data-line="N">N     &lt;- <span class="num" id="cB_N">50</span></span><span class="line" data-line="gens">gens  &lt;- <span class="num" id="cB_gens">100</span></span><span class="line">g0    &lt;- <span class="fn">rep</span>(<span class="fn">c</span>(<span class="num">0</span>, <span class="num">1</span>), each = N)   <span class="com"># the pond you started with</span></span><span class="line">g     &lt;- g0</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  src &lt;- <span class="kw">if</span> (inherit) g <span class="kw">else</span> g0   <span class="com"># <- the whole switch</span></span><span class="line">  g   &lt;- <span class="fn">sample</span>(src, <span class="num">2</span>*N, replace = <span class="kw">TRUE</span>)</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># how far it ended up from where it started</span></span><span class="line"><span class="fn">abs</span>(<span class="fn">mean</span>(g) - <span class="fn">mean</span>(g0))</span><span class="line"></span><span class="line"><span class="com"># variety: two copies pulled at random, how often they differ</span></span><span class="line"><span class="num">2</span> * <span class="fn">mean</span>(g) * (<span class="num">1</span> - <span class="fn">mean</span>(g))</span></pre>
+<pre class="code" id="codeB"><span class="line"><span class="com"># the same population, two rules for where the parents come from</span></span><span class="line" data-line="N">N     &lt;- <span class="num" id="cB_N">50</span></span><span class="line" data-line="gens">gens  &lt;- <span class="num" id="cB_gens">100</span></span><span class="line">g0    &lt;- <span class="fn">rep</span>(<span class="fn">c</span>(<span class="num">0</span>, <span class="num">1</span>), each = N)   <span class="com"># the population you started with</span></span><span class="line">g     &lt;- g0</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  src &lt;- <span class="kw">if</span> (inherit) g <span class="kw">else</span> g0   <span class="com"># <- the whole switch</span></span><span class="line">  g   &lt;- <span class="fn">sample</span>(src, <span class="num">2</span>*N, replace = <span class="kw">TRUE</span>)</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># how far it ended up from where it started</span></span><span class="line"><span class="fn">abs</span>(<span class="fn">mean</span>(g) - <span class="fn">mean</span>(g0))</span><span class="line"></span><span class="line"><span class="com"># variety: two copies pulled at random, how often they differ</span></span><span class="line"><span class="num">2</span> * <span class="fn">mean</span>(g) * (<span class="num">1</span> - <span class="fn">mean</span>(g))</span></pre>
       </div>
     </div>
     <div class="col">
@@ -369,7 +373,7 @@
         <div class="sublab">where the parents come from</div>
         <div class="ruleswitch" id="B_rules">
           <button data-rule="inherit" class="on">the generation before this one</button>
-          <button data-rule="fresh">the pond you started with</button>
+          <button data-rule="fresh">the population you started with</button>
         </div>
         <div class="readout" id="B_ruleRead"></div>
         <div class="controls" id="B_controls">
@@ -408,17 +412,15 @@
            at the top rather than a panel at the bottom: the counted data was
            cut on his instruction and the experiment survives as the setup. -->
       <div class="voice">
-        <p>A classic experimental result. Somebody took a great many fruit flies and divided them into 107 bottles, each one holding a self-sustaining population. He then watched the frequency of one allele change over time in every one of those 107 bottles. Flies have short generation times, which made this feasible. He controlled how many flies made it into each new bottle. And because the gene showed up as a visible characteristic, he could track it in every bottle — generations before anybody could sequence anything.</p>
+        <p>Peter Buri took a great many fruit flies and divided them into 107 bottles, each one holding a self-sustaining population. He then watched the frequency of one allele change over time in every one of those 107 bottles. Flies have short generation times, which made this feasible. He controlled how many flies made it into each new bottle. And because the gene showed up as a visible characteristic, he could track it in every bottle — before anybody could sequence anything.</p>
         <p>Drift destroys variation. What happened in parts A and B is that you watched, over and over, different populations becoming more different from one another — because different alleles were going extinct. If an allele randomly goes to zero it is gone forever. And alleles will randomly go to zero, because in a pure drift scenario there is nothing keeping them around. With nothing maintaining that variation, the system inevitably collapses to one allele, no matter how many you begin with.</p>
         <p>The time it takes to collapse is, in a pure drift scenario, a function of only two things: the starting frequency of the allele, and the size of the population.</p>
         <p>You are going to simulate that experiment: 107 bottles, all the same size, all starting at the same frequency.</p>
       </div>
       <ul class="setup">
-        <li>A hundred and seven populations, every one the same size, every one starting half yellow and half purple.</li>
-        <li>The tall panel is a tally of where the 107 sit. The bar at the far left counts populations where the purple allele is extinct; the bar at the far right counts populations where the yellow allele is extinct.</li>
-        <li>You are shown a target shape. Set the size and the number of generations to make the 107 come out looking like it, then run them.</li>
-        <li>Ten shapes. Randomness means no run matches a target exactly — the general shape is what is being asked for.</li>
-        <li>Nothing is selected anywhere in this stage. The only thing happening is who happens to breed.</li>
+        <li>Based on a real experiment using <b>107</b> populations of identical size, with exactly half of all alleles yellow and the other half purple.</li>
+        <li>The predict panel shows what you want the end result to look like.</li>
+        <li>As before, set the simulation so that the end result matches the target as closely as you can.</li>
       </ul>
     </div>
   </div>
@@ -435,7 +437,7 @@
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># 107 ponds, same size, same start, nothing selected</span></span><span class="line" data-line="N">N    &lt;- <span class="num" id="cC_N">25</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cC_gens">60</span></span><span class="line">p &lt;- <span class="fn">rep</span>(<span class="num">0.5</span>, <span class="num">107</span>)</span><span class="line">H &lt;- <span class="fn">numeric</span>(gens+<span class="num">1</span>); H[<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">107</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  H[t+<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># ponds with one allele left</span></span><span class="line"><span class="fn">sum</span>(p == <span class="num">0</span> | p == <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># the fraction of the variety that goes missing each generation</span></span><span class="line"><span class="num">1</span> - <span class="fn">exp</span>(<span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">log</span>(H) ~ <span class="fn">seq_along</span>(H)))[<span class="num">2</span>])</span></pre>
+<pre class="code" id="codeC"><span class="line"><span class="com"># 107 populations, same size, same start, nothing selected</span></span><span class="line" data-line="N">N    &lt;- <span class="num" id="cC_N">25</span></span><span class="line" data-line="gens">gens &lt;- <span class="num" id="cC_gens">60</span></span><span class="line">p &lt;- <span class="fn">rep</span>(<span class="num">0.5</span>, <span class="num">107</span>)</span><span class="line">H &lt;- <span class="fn">numeric</span>(gens+<span class="num">1</span>); H[<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:gens) {</span><span class="line">  p &lt;- <span class="fn">rbinom</span>(<span class="num">107</span>, <span class="num">2</span>*N, p) / (<span class="num">2</span>*N)</span><span class="line">  H[t+<span class="num">1</span>] &lt;- <span class="fn">mean</span>(<span class="num">2</span>*p*(<span class="num">1</span>-p))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># populations with one allele left</span></span><span class="line"><span class="fn">sum</span>(p == <span class="num">0</span> | p == <span class="num">1</span>)</span><span class="line"></span><span class="line"><span class="com"># the fraction of the variety that goes missing each generation</span></span><span class="line"><span class="num">1</span> - <span class="fn">exp</span>(<span class="fn">coef</span>(<span class="fn">lm</span>(<span class="fn">log</span>(H) ~ <span class="fn">seq_along</span>(H)))[<span class="num">2</span>])</span></pre>
       </div>
     </div>
     <div class="col">
@@ -488,10 +490,11 @@
       </div>
       <ul class="setup">
         <li>Isle Royale moose, counted from the air every winter from <b>1959</b> to <b>2000</b>. You fitted this record in Lesson 6 — one birth rate, one death rate, and the winters that went wrong.</li>
-        <li>That model is already loaded: <b>1976</b> and <b>1996</b> marked, and it sits about 110 moose off the record. Click the top plot to mark a winter or unmark one.</li>
-        <li>New here: forty herds of one gene run along the line <i>your model</i> draws. However many moose the model says are alive in a winter is how many the gene lives in that winter.</li>
+        <li>Below the plots is <b>your model</b>: what you are claiming drives this herd. Click a dashed arrow to draw it, and the number it pays for switches on.</li>
+        <li>With the bad-winter arrow drawn, click the top plot to mark a winter as bad, or to unmark it.</li>
+        <li>Bottom plot: how much variety a gene still has, winter by winter, across 120 herds living in the herd <i>your model</i> draws. That is the rate the alleles are drifting.</li>
+        <li>The predict panel shows the drift curve you are aiming at, and sometimes a headcount the herd has to stay above while you hit it.</li>
         <li>Nothing on this screen knows which allele a moose is carrying. Nobody is selecting anything.</li>
-        <li>Top plot: the moose — counted in grey, modelled in colour, marked winters dropped as dashed lines. Bottom plot: the gene, forty herds, forty-two winters.</li>
       </ul>
     </div>
   </div>
@@ -499,49 +502,36 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <canvas id="D_moose" class="plot" width="680" height="280"></canvas>
+        <canvas id="D_moose" class="plot" width="680" height="260"></canvas>
         <div class="readout" id="D_mooseRead"></div>
       </div>
       <div class="panel">
-        <canvas id="D_freq" class="plot" width="680" height="280"></canvas>
+        <canvas id="D_var" class="plot" width="680" height="260"></canvas>
         <div class="readout" id="D_read"></div>
       </div>
       <div class="panel">
+        <h3>Your model — what drives this herd</h3>
+        <div id="D_dag" class="arrows"></div>
+      </div>
+      <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># the moose you fitted in Lesson 6, and a gene living in them</span></span><span class="line">d0 &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/isle_royale.csv"</span>)</span><span class="line">d0 &lt;- d0[d0$year &lt;= <span class="num">2000</span>, ]</span><span class="line"></span><span class="line" data-line="b">b   &lt;- <span class="num" id="cD_b">0.260</span></span><span class="line" data-line="d">d   &lt;- <span class="num" id="cD_d">0.200</span></span><span class="line" data-line="h">ex  &lt;- <span class="num" id="cD_h">0.60</span>          <span class="com"># extra deaths in a bad winter</span></span><span class="line">bad &lt;- <span class="fn">c</span>(<span class="num" id="cD_bad">1976, 1996</span>)</span><span class="line"></span><span class="line">N &lt;- <span class="fn">numeric</span>(<span class="fn">nrow</span>(d0)); N[<span class="num">1</span>] &lt;- d0$moose[<span class="num">1</span>]</span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">2</span>:<span class="fn">nrow</span>(d0)) {</span><span class="line">  dd   &lt;- d + <span class="fn">ifelse</span>(d0$year[t-<span class="num">1</span>] %in% bad, ex, <span class="num">0</span>)</span><span class="line">  N[t] &lt;- N[t-<span class="num">1</span>] * (<span class="num">1</span> + b - dd)</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># one gene, one herd, walking along that line</span></span><span class="line">p &lt;- <span class="num">0.5</span></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">2</span>:<span class="fn">length</span>(N)) p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*<span class="fn">round</span>(N[t]), p) / (<span class="num">2</span>*<span class="fn">round</span>(N[t]))</span><span class="line"></span><span class="line"><span class="com"># what the record is worth to a gene: add up one over each winter</span></span><span class="line"><span class="fn">length</span>(N) / <span class="fn">sum</span>(<span class="num">1</span>/N)</span></pre>
+<pre class="code" id="codeD"><span class="line"><span class="com"># the moose you fitted in Lesson 6, and a gene living in them</span></span><span class="line">d0 &lt;- <span class="fn">read.csv</span>(<span class="str">"data/clean/isle_royale.csv"</span>)</span><span class="line">d0 &lt;- d0[d0$year &lt;= <span class="num">2000</span>, ]</span><span class="line"></span><span class="line" data-line="b">b   &lt;- <span class="num" id="cD_b">0.260</span></span><span class="line" data-line="d">d   &lt;- <span class="num" id="cD_d">0.200</span></span><span class="line" data-line="h">ex  &lt;- <span class="num" id="cD_h">0.60</span>          <span class="com"># extra deaths in a bad winter</span></span><span class="line">bad &lt;- <span class="fn">c</span>(<span class="num" id="cD_bad">1976, 1996</span>)</span><span class="line"></span><span class="line">N &lt;- <span class="fn">numeric</span>(<span class="fn">nrow</span>(d0)); N[<span class="num">1</span>] &lt;- d0$moose[<span class="num">1</span>]</span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">2</span>:<span class="fn">nrow</span>(d0)) {</span><span class="line">  dd   &lt;- d + <span class="fn">ifelse</span>(d0$year[t-<span class="num">1</span>] %in% bad, ex, <span class="num">0</span>)</span><span class="line">  N[t] &lt;- <span class="fn">pmax</span>(<span class="num">2</span>, N[t-<span class="num">1</span>] * (<span class="num">1</span> + b - dd))</span><span class="line">}</span><span class="line"></span><span class="line"><span class="com"># variety left in a gene after walking that line</span></span><span class="line">herd &lt;- <span class="kw">function</span>() {</span><span class="line">  p &lt;- <span class="num">0.5</span></span><span class="line">  <span class="kw">for</span> (t <span class="kw">in</span> <span class="num">2</span>:<span class="fn">length</span>(N)) p &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, <span class="num">2</span>*<span class="fn">round</span>(N[t]), p) / (<span class="num">2</span>*<span class="fn">round</span>(N[t]))</span><span class="line">  <span class="num">2</span>*p*(<span class="num">1</span>-p)</span><span class="line">}</span><span class="line"><span class="fn">mean</span>(<span class="fn">replicate</span>(<span class="num">120</span>, <span class="fn">herd</span>()))</span><span class="line"></span><span class="line"><span class="com"># what the record is worth to a gene, against what it is worth to a census</span></span><span class="line"><span class="fn">length</span>(N) / <span class="fn">sum</span>(<span class="num">1</span>/N)</span><span class="line"><span class="fn">mean</span>(N)</span></pre>
       </div>
     </div>
     <div class="col">
       <div class="panel predict" id="predD">
         <h3 id="predD_h">Predict</h3>
         <div class="pred-slot" id="predD_slot"></div>
-        <div class="numq" id="numqD">
-        <div class="q">Three rounds. Each one draws a different herd record on the plot above and runs the gene along it. Say what <b>evenly-sized</b> herd — the same number of moose every winter — would let the gene wander as far as that record does.</div>
-        <div class="gm">
-          <div class="gm-prompt" id="D_gprompt">—</div>
-          <div class="controls">
-            <div class="row"><label for="D_g0">an even herd of this many</label><input type="range" id="D_g0" min="2" max="1200" step="2" value="400" /><output id="D_g0Out">400</output></div>
-            <div class="buttons">
-              <button id="D_glock" class="accent">Lock in this estimate</button>
-              <button id="D_gnext" class="secondary" disabled>Deal the next round</button>
-              <span class="tally-pill" id="D_gtally">0 of 3 landed</span>
-            </div>
-          </div>
-          <div class="flip" id="D_gflip"></div>
-          <canvas id="D_gstrip" width="520" height="70" style="display:none;"></canvas>
-        </div>
-        <div class="verdict" id="D_verdict"></div>
-        </div>
       </div>
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="D_controls">
-          <div class="row" data-line="b"><label for="D_b">births per moose per winter</label><input type="range" id="D_b" min="0" max="0.60" step="0.005" value="0.260" /><output id="D_bOut">0.260</output></div>
-          <div class="row" data-line="d"><label for="D_d">deaths per moose per winter</label><input type="range" id="D_d" min="0" max="0.60" step="0.005" value="0.200" /><output id="D_dOut">0.200</output></div>
-          <div class="row" data-line="h"><label for="D_h">extra deaths in a bad winter</label><input type="range" id="D_h" min="0" max="0.80" step="0.02" value="0.60" /><output id="D_hOut">0.60</output></div>
-          <div class="dragnote">click the top plot to mark a winter as bad, or to unmark it</div>
+          <div class="row muted" id="D_rowB" data-line="b"><label for="D_b">births per moose per winter</label><input type="range" id="D_b" min="0" max="0.60" step="0.005" value="0.260" disabled /><output id="D_bOut">0.260</output></div>
+          <div class="row muted" id="D_rowD" data-line="d"><label for="D_d">deaths per moose per winter</label><input type="range" id="D_d" min="0" max="0.60" step="0.005" value="0.200" disabled /><output id="D_dOut">0.200</output></div>
+          <div class="row muted" id="D_rowH" data-line="h"><label for="D_h">extra deaths in a bad winter</label><input type="range" id="D_h" min="0" max="0.80" step="0.02" value="0.60" disabled /><output id="D_hOut">0.60</output></div>
+          <div class="dragnote" id="D_marknote">draw the bad-winter arrow to start marking winters on the plot</div>
           <div class="buttons">
-            <button id="D_roll" class="accent">Run the forty herds</button>
+            <button id="D_roll" class="accent">Run the 120 herds</button>
             <button id="D_clear" class="ghost">Unmark every winter</button>
             <button id="D_l6" class="ghost">Back to the Lesson 6 model</button>
             <button id="D_dl" class="ghost">Download .R</button>
@@ -553,45 +543,10 @@
       <div class="panel">
         <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Say how far a typical herd ends up from where it started, on the record as it stands. <span class="hint"><span id="D1_now">before you change anything</span></span></li>
-          <li data-task="D2">Then bend the record until between 12 and 24 of the forty herds end outside 0.35–0.65 — three times. <span class="hint"><span id="D2_now">0 of 3 landed</span></span></li>
-          <li data-task="D3">Clear the three rounds in the card above. <span class="hint"><span id="D3_now">0 of 3 landed</span></span></li>
-          <li data-task="D4">Say what the whole Isle Royale wolf record is worth as an evenly-sized population. <span class="hint"><span id="D4_now">not yet</span></span></li>
+          <li data-task="D1">Match six drift curves with the moose model. <span class="hint"><span id="D1_now">curve 1 of 6</span></span></li>
         </ul>
         <!-- VOICE (banner): 461_lec09_07, which is the stage's conclusion. -->
         <div class="solved-banner" id="solvedD">And for pretty much every population we look at, the effective population size is smaller than the census. So drift is always stronger than it seems. It is not the average that does it. A herd that sat at a thousand for forty winters and one that averaged a thousand by crashing to fifty for six of them are not the same herd to a gene, and the one that crashed is worth a fraction of its own average. The downs are the limiting step. Stage E is open.</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ===== real data: Isle Royale wolves ============================
-       Sixty-one winters of wolves counted from the air, the whole record
-       rather than the moose window. The plain average and the thing drift
-       actually adds up are two different numbers, and on the wolves they
-       are a long way apart. -->
-  <div class="panel realdata" id="realD">
-    <h3>Now the predators on the same island, one winter at a time</h3>
-    <div class="rd-grid">
-      <div>
-        <canvas id="D_wolf" class="plot" width="700" height="290"></canvas>
-        <div class="readout" id="D_wolfRead"></div>
-      </div>
-      <div>
-        <ul class="setup" style="margin-top:0; padding-top:0; border-top:0;">
-          <li>The same island, the same flights. Wolves counted every winter since <b>1959</b> — the whole record this time, not the moose window.</li>
-          <li>These are counts of the whole population, not estimates from a sample. The wolves do what the moose never quite do: they crash, and they stay down.</li>
-          <li>Drag the start year to look at any stretch of the record.</li>
-          <li>Then say what evenly-sized population would let a gene wander as far as this record does.</li>
-        </ul>
-        <div class="controls" style="margin-top:12px;">
-          <div class="row"><label for="D_wy">start the record at</label><input type="range" id="D_wy" min="1959" max="2000" step="1" value="1959" /><output id="D_wyOut">1959</output></div>
-          <div class="row"><label for="D_wg0">an even population of</label><input type="range" id="D_wg0" min="2" max="40" step="0.5" value="20" /><output id="D_wg0Out">20.0</output></div>
-          <div class="buttons">
-            <button id="D_wlock" class="accent">Lock it in</button>
-          </div>
-        </div>
-        <div class="flip" id="D_wflip"></div>
-        <canvas id="D_wstrip" width="520" height="70" style="display:none;"></canvas>
       </div>
     </div>
   </div>
@@ -653,7 +608,7 @@
             <div class="buttons">
               <button id="E_glock" class="accent">Lock in this estimate</button>
               <button id="E_gnext" class="secondary" disabled>Deal the next round</button>
-              <span class="tally-pill" id="E_gtally">0 of 3 landed</span>
+              <span class="tally-pill" id="E_gtally">0 of 3 done</span>
             </div>
           </div>
           <div class="flip" id="E_gflip"></div>
@@ -683,7 +638,7 @@
         <ul class="tasks" id="tasksE">
           <li data-task="E1">Say how many of the forty end with one allele extinct with no arrow drawn at all. <span class="hint"><span id="E1_now">before you draw anything</span></span></li>
           <li data-task="E2">Then clear the four rungs — each one asks for more of the forty than the last, and each one hands you another arrow. <span class="hint"><span id="E2_now">rung 1 of 4</span></span></li>
-          <li data-task="E3">Clear the three rounds in the card above. <span class="hint"><span id="E3_now">0 of 3 landed</span></span></li>
+          <li data-task="E3">Clear the three rounds in the card above. <span class="hint"><span id="E3_now">0 of 3 done</span></span></li>
           <li data-task="E4">Say how far apart twelve populations of one clone end up after fifty thousand generations. <span class="hint"><span id="E4_now">not yet</span></span></li>
         </ul>
         <!-- VOICE (banner): the outcome half of 202_lec11_03 spliced with the
@@ -835,7 +790,6 @@ window.addEventListener("resize", () => {
 });
 function repaintAll() {
   [A_paint, B_paint, C_paint, D_paint, E_paint].forEach(f => { try { f(); } catch (e) {} });
-  { try { D_drawWolf(); } catch (e) {} }   // the wolves are inlined, not fetched
   if (REAL.ltee)     { try { E_drawLtee(); } catch (e) {} }
 }
 
@@ -856,7 +810,7 @@ function rgamma(rng, k, th) {
 const gshare = (rng, cv) => cv <= 0 ? 1 : rgamma(rng, 1 / (cv * cv), cv * cv);
 
 /* sim.js's rbinom loops n times, which is fine for a bottle of flies and
-   far too slow for 40 ponds of 500 run to fixation. Shadowed here with a
+   far too slow for 40 populations of 500 run to fixation. Shadowed here with a
    normal approximation above 60 trials; below that the exact loop. */
 function rbinomFast(rng, n, p) {
   if (p <= 0) return 0;
@@ -942,7 +896,7 @@ function breed(rng, pools, n, copy, counts) {
 
 /* The same operator with the genotypes integrated out. Legal exactly when
    every share depends on the allele and nothing else, which is true of
-   stages B, C and E -- and it is the difference between 40 ponds of 500
+   stages B, C and E -- and it is the difference between 40 populations of 500
    running in a blink and running for a minute. `s` is what one copy of
    purple is worth; s = 0 is drift alone. */
 function breedFreq(rng, p, n, s) {
@@ -978,8 +932,8 @@ const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
 const BIT = { A1:0,
               B1:1,
               C1:2,
-              D2:3,  D3:4,  D4:5,
-              E3:6,  E4:7,  E5:8 };
+              D1:3,
+              E3:4,  E4:5,  E5:6 };
 /* A stage with a real-data panel waits for the panel too, unless the
    fetch failed -- in which case realOffline() releases the wait rather
    than stranding the student behind a file. */
@@ -1109,7 +1063,7 @@ function drawStrips(cvId, strips) {
 
    Written general on purpose -- the caller supplies the target text, the
    predicate, the frame painter and the hit count, and nothing in here
-   knows anything about ponds. Third caller extracts it to sim.js.
+   knows anything about populations. Third caller extracts it to sim.js.
 
    cfg: { task, need, goal, controls, start(), frame(i), frames, done(),
           hit(), sayHit(), sayMiss(), after() }                        */
@@ -1128,7 +1082,7 @@ function wireBowling(stage, cfg) {
       const r = st.rolls[i];
       h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : "") + '"></i>';
     }
-    h += "<span>" + st.hits + " of " + need + " landed</span>";
+    h += "<span>" + st.hits + " of " + need + " done</span>";
     pips.innerHTML = h;
   }
   function say(cls, html) { if (bar) { bar.className = "rollbar" + (cls ? " " + cls : ""); bar.innerHTML = html; } }
@@ -1144,18 +1098,18 @@ function wireBowling(stage, cfg) {
     if (btn) { btn.disabled = false; btn.textContent = cfg.rollAgain || "Roll again"; }
     st.rolls.push(ok);
     if (ok) st.hits++;
-    say(ok ? "hit" : "miss", (ok ? "<b>Landed it.</b> " : "<b>Missed.</b> ") +
+    say(ok ? "hit" : "miss", (ok ? "<b>Done.</b> " : "<b>Missed.</b> ") +
         (ok ? cfg.sayHit() : cfg.sayMiss()));
     paintPips();
     if (cfg.after) cfg.after(ok);
     if (st.hits >= need && !st.cleared) {
       st.cleared = true;
       markTask(stage, cfg.task);
-      hint(cfg.task, "landed " + need + " of them");
+      hint(cfg.task, "done " + need + " of them");
       if (cfg.onCleared) cfg.onCleared();
       checkStageDone(stage);
     } else {
-      hint(cfg.task, st.hits + " of " + need + " landed");
+      hint(cfg.task, st.hits + " of " + need + " done");
     }
   }
 
@@ -1230,9 +1184,9 @@ function wireGame(id, cfg) {
     if (cfg.reveal) cfg.reveal(r, v);
     st.n++;
     if (res.ok) st.hits++;
-    el("_gtally").textContent = st.hits + " of " + need + " landed";
+    el("_gtally").textContent = st.hits + " of " + need + " done";
     el("_gtally").classList.toggle("on", st.hits >= need);
-    hint(cfg.task, st.hits + " of " + need + " landed");
+    hint(cfg.task, st.hits + " of " + need + " done");
     el("_gflip").innerHTML = res.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
     el("_glock").disabled = true;
     el("_gnext").disabled = false;
@@ -1304,7 +1258,7 @@ function mountLock(stage, cfg) {
     done = true; go.disabled = true; inp.disabled = true;
     record(cfg.bit, ok);
     markTask(stage, cfg.task);
-    hint(cfg.task, ok ? "landed" : "locked in");
+    hint(cfg.task, ok ? "done" : "locked in");
     checkStageDone(stage);
   });
   return { locked: () => done };
@@ -1339,12 +1293,12 @@ function line(ctx, f, ys, colour, width, dash, x0) {
   ys.forEach((v, i) => { const X = f.x((x0 || 0) + i), Y = f.y(v); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
   ctx.stroke(); ctx.restore();
 }
-/* Least squares slope of log y on t, turned into "the even pond that
+/* Least squares slope of log y on t, turned into "the even population that
    loses variety at this rate". The whole lesson's arithmetic is checked
    against this rather than the other way round. */
 function neFromDecay(H) {
   // Only the range where there is still variety to lose. Past about 5% of
-  // the starting value the average is a few unfixed ponds and its log is
+  // the starting value the average is a few unfixed populations and its log is
   // mostly noise, which drags the fitted slope shallow and reads as a
   // bigger population than the one that produced it.
   const floor = 0.05 * H[0];
@@ -1365,9 +1319,9 @@ const A_ROLL_GENS = 30;
 const A_ROUNDS = 10;
 const A = { N: 100, cv: 0, p0: 0.5, gen: 0, pop: null, counts: null, shares: null, roll: null,
             traj: [], rng: null, serial: 0,
-            // the Predict card's own state. `round` is the pond currently on
+            // the Predict card's own state. `round` is the population currently on
             // offer and the two calls being made about it; `mode` is "round"
-            // while the card owns the pond and "free" once the ten are done.
+            // while the card owns the population and "free" once the ten are done.
             rounds: null, round: null, mode: "round", open: false, game: null,
             // JM, 2026-09-21: the roll "can be gamed by just setting both
             // sliders to 0 and hitting roll again. It should require them to
@@ -1395,7 +1349,7 @@ function A_step() {
   A.traj.push(after);
 }
 /* The committed estimate and the closing game both need the same thing:
-   the typical behaviour of this pond, measured over several fresh draws
+   the typical behaviour of this population, measured over several fresh draws
    rather than read off the one on screen. A single run is not the number. */
 function A_measure(N, cv, reps) {
   const rng = mulberry32(pageSeed("l10Am", 1, 99999) + N * 7 + Math.round(cv * 10));
@@ -1417,9 +1371,9 @@ function A_measure(N, cv, reps) {
            brood: mean(broods), broodRaw: broods, signedRaw: signed,
            move: mean(moves), movesRaw: moves, ne: mean(nes) };
 }
-/* How wrong you should expect to be about ONE pond of this size, started
+/* How wrong you should expect to be about ONE population of this size, started
    here, after this many generations. Measured, not derived: the walls at 0
-   and 1 bend the closed form and a pond of twelve spends a lot of its time
+   and 1 bend the closed form and a population of twelve spends a lot of its time
    against one. This is the number the honest band on the plot is drawn
    from, and the number the student is being asked for. */
 function A_typical(N, p0, gens, reps) {
@@ -1452,51 +1406,8 @@ function A_typical(N, p0, gens, reps) {
    The truth is drawn as a HISTOGRAM rather than a curve, and deliberately:
    a small population piles its endpoints against the two walls, and a
    smooth curve would hide the two spikes that are the whole point. */
-const MAD_TO_SD = Math.sqrt(Math.PI / 2);        // 1.2533
-function A_drawDensity(ctx, f, x0, w, rd) {
-  const sd = Math.max(1e-4, rd.err * MAD_TO_SD);
-  const pdf = y => Math.exp(-0.5 * ((y - rd.you) / sd) * ((y - rd.you) / sd)) / (sd * 2.5066);
-  // both curves share one scale, so a hairline claim really does read as a
-  // spike and a lazy one as a flat smear. Capped, or a hairline flattens the
-  // truth into the axis.
-  let hist = null, peakT = 0;
-  if (rd.shown && rd.ends) {
-    const B = 26; hist = new Array(B).fill(0);
-    for (const v of rd.ends) hist[Math.min(B - 1, Math.floor(v * B))]++;
-    const dens = hist.map(c => c / rd.ends.length * B);
-    peakT = Math.max.apply(null, dens);
-    hist = dens;
-  }
-  const scale = Math.min(Math.max(pdf(rd.you), peakT), 12);
-  const X = d => x0 + Math.min(1, d / scale) * w;
-  ctx.save();
-  if (hist) {
-    const B = hist.length;
-    ctx.fillStyle = "rgba(74,122,42,0.22)"; ctx.strokeStyle = GREEN; ctx.lineWidth = 1;
-    for (let b = 0; b < B; b++) {
-      if (hist[b] <= 0) continue;
-      const yTop = f.y((b + 1) / B), yBot = f.y(b / B);
-      ctx.fillRect(x0, yTop, X(hist[b]) - x0, yBot - yTop);
-      ctx.strokeRect(x0 + 0.5, yTop + 0.5, Math.max(0, X(hist[b]) - x0 - 1), Math.max(0, yBot - yTop - 1));
-    }
-  }
-  ctx.beginPath();
-  for (let i = 0; i <= 120; i++) { const y = i / 120, px = X(pdf(y)), py = f.y(y);
-    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-  ctx.lineTo(x0, f.y(1)); ctx.lineTo(x0, f.y(0)); ctx.closePath();
-  ctx.fillStyle = "rgba(178,58,72,0.13)"; ctx.fill();
-  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8;
-  ctx.beginPath();
-  for (let i = 0; i <= 120; i++) { const y = i / 120, px = X(pdf(y)), py = f.y(y);
-    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-  ctx.stroke();
-  ctx.restore();
-  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText(rd.shown ? "yours \u00b7 actual" : "your call", x0 + w / 2, f.py + f.ph + 4);
-}
-function A_drawPond() {
-  const cv = document.getElementById("A_pond");
+function A_drawPopulation() {
+  const cv = document.getElementById("A_population");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const cols = Math.ceil(Math.sqrt(A.N * (W / H)));
@@ -1513,11 +1424,92 @@ function A_drawPond() {
     ctx.globalAlpha = 1;
   }
 }
-/* The trajectory panel is where both sliders live. There is no separate
-   picture of a prediction anywhere on the page: the line you set IS the
-   line drawn across the plot, and the miss you allow yourself IS the band
-   around it. JM, 2026-09-21: "Each prediction should be a slider that
-   controls a visual on the graph." */
+const MAD_TO_SD = Math.sqrt(Math.PI / 2);        // 1.2533
+/* A COARSE BUT HONEST NORMAL TAIL, so the curve can be absorbed at the walls
+   without pulling in a library. Abramowitz & Stegun 7.1.26; good to 1.5e-7. */
+function normCdf(z) {
+  const t = 1 / (1 + 0.2316419 * Math.abs(z));
+  const d = 0.3989422804014327 * Math.exp(-z * z / 2);
+  const p = d * t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 +
+            t * (-1.821255978 + t * 1.330274429))));
+  return z >= 0 ? 1 - p : p;
+}
+/* ---- the density strip -------------------------------------------------
+   Two sliders, one curve, drawn vertically against the same frequency axis
+   the trajectory uses. The first slides it; the second fattens it.
+
+   WHAT THE SECOND SLIDER IS. An expected error -- how far off you expect to
+   be on average -- which is Lesson 5's average error and Lesson 6's typical
+   miss in the same currency. For a normal curve the mean absolute deviation
+   is sigma * sqrt(2/pi), so a stated error of e is drawn with
+   sigma = e * 1.2533 and its own average miss is exactly e. The number the
+   student sets is the number the picture means.
+
+   THE WALLS ABSORB, AND THAT IS THE POINT OF DRAWING IT THIS WAY. JM,
+   2026-09-21: "is there a way to modify it so that they properly absorb the
+   density & create a spike of height at the boundaries proportional to the
+   probability?" A frequency cannot be below 0 or above 1, and a population
+   that reaches either stops there -- so the tails are not clipped off, they
+   are PILED ONTO the two walls. The spike at zero carries every bit of
+   probability the curve put below zero, the spike at one carries everything
+   above one, and the three pieces sum to one. A student who slides a wide
+   band up against a wall sees the mass arrive there rather than vanish,
+   which is the shape the process actually has.
+
+   THE BAND IS WHAT IS JUDGED. It is shaded across the strip so the claim
+   being tested is visible, and it is the same +/- the second slider sets. */
+const A_SPIKE_W = 1 / 22;                        // the width a wall spike is drawn at
+function A_bandOf(rd) {
+  return { lo: clamp(rd.you - rd.err, 0, 1), hi: clamp(rd.you + rd.err, 0, 1) };
+}
+function A_drawDensity(ctx, f, x0, w, rd) {
+  const sd = Math.max(1e-4, rd.err * MAD_TO_SD);
+  const z = v => (v - rd.you) / sd;
+  const pdf = y => Math.exp(-0.5 * z(y) * z(y)) / (sd * 2.5066);
+  // the two absorbed masses, drawn as spikes of equivalent density
+  const mLo = normCdf(z(0)), mHi = 1 - normCdf(z(1));
+  const sLo = mLo / A_SPIKE_W, sHi = mHi / A_SPIKE_W;
+  const scale = Math.min(Math.max(pdf(clamp(rd.you, 0, 1)), sLo, sHi), 14);
+  const X = d => x0 + Math.min(1, d / scale) * w;
+  const band = A_bandOf(rd);
+
+  ctx.save();
+  // the band being judged, behind everything
+  ctx.fillStyle = "rgba(178,58,72,0.10)";
+  ctx.fillRect(x0, f.y(band.hi), w, f.y(band.lo) - f.y(band.hi));
+  ctx.strokeStyle = "rgba(178,58,72,0.45)"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+  for (const v of [band.lo, band.hi]) {
+    ctx.beginPath(); ctx.moveTo(x0 - 5, f.y(v)); ctx.lineTo(x0 + w, f.y(v)); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // the interior curve, filled back to the axis
+  const yTop = Math.min(1, Math.max(0, 1)), yBot = 0;
+  ctx.beginPath();
+  ctx.moveTo(x0, f.y(yBot));
+  for (let i = 0; i <= 120; i++) { const y = yBot + (yTop - yBot) * i / 120; ctx.lineTo(X(pdf(y)), f.y(y)); }
+  ctx.lineTo(x0, f.y(yTop)); ctx.closePath();
+  ctx.fillStyle = "rgba(178,58,72,0.16)"; ctx.fill();
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  for (let i = 0; i <= 120; i++) { const y = yBot + (yTop - yBot) * i / 120;
+    const px = X(pdf(y)), py = f.y(y); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  ctx.stroke();
+  // and the two absorbed spikes, solid so they read as mass rather than curve
+  ctx.fillStyle = "rgba(178,58,72,0.55)";
+  if (mLo > 0.004) ctx.fillRect(x0, f.y(A_SPIKE_W), X(sLo) - x0, f.y(0) - f.y(A_SPIKE_W));
+  if (mHi > 0.004) ctx.fillRect(x0, f.y(1), X(sHi) - x0, f.y(1 - A_SPIKE_W) - f.y(1));
+  ctx.restore();
+
+  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  ctx.fillText("your call", x0 + w / 2, f.py + f.ph + 4);
+  if (mLo > 0.02 || mHi > 0.02) {
+    ctx.font = "9px ui-monospace, Menlo, monospace"; ctx.fillStyle = "rgba(178,58,72,0.9)";
+    ctx.textAlign = "left";
+    if (mLo > 0.02) { ctx.textBaseline = "bottom"; ctx.fillText((100 * mLo).toFixed(0) + "%", x0 + 2, f.y(0) - 2); }
+    if (mHi > 0.02) { ctx.textBaseline = "top";    ctx.fillText((100 * mHi).toFixed(0) + "%", x0 + 2, f.y(1) + 2); }
+  }
+}
 function A_drawTraj() {
   const cvEl = document.getElementById("A_traj");
   const { ctx, W, H } = setupCanvas(cvEl);
@@ -1569,7 +1561,7 @@ function A_readouts() {
   let zero = 0; for (let i = 0; i < A.N; i++) if (A.counts[i] === 0) zero++;
   const p = popFreq(A.pop);
   document.getElementById("A_pondRead").innerHTML = A.gen === 0
-    ? '<span class="label">a fresh pond of</span> <b>' + A.N + '</b> <span class="label">individuals · nothing has bred yet</span>'
+    ? '<span class="label">a fresh population of</span> <b>' + A.N + '</b> <span class="label">individuals · nothing has bred yet</span>'
     : '<span class="label">generation</span> <b>' + A.gen + '</b> &nbsp;|&nbsp; <span class="label">left nothing behind:</span> <b>' + zero +
       '</b> of ' + A.N + ' &nbsp;|&nbsp; <span class="label">biggest brood:</span> <b>' +
       Math.max.apply(null, Array.from(A.counts)) + '</b>';
@@ -1583,7 +1575,7 @@ function A_readouts() {
           ' &nbsp;|&nbsp; <span class="label">really in the game:</span> <b class="big">' +
             (A.gen === 0 ? "—" : reallyInTheGame(A.shares).toFixed(1)) + '</b> <span class="label">of ' + A.N + '</span>');
 }
-function A_paint() { A_drawPond(); A_drawTraj(); A_readouts(); }
+function A_paint() { A_drawPopulation(); A_drawTraj(); A_readouts(); }
 const A_fixed = () => { const p = popFreq(A.pop); return p === 0 || p === 1; };
 const A_settingKey = () => A.N + "|" + A.cv.toFixed(1);
 
@@ -1616,7 +1608,7 @@ function A_shutControls() {
    answer for where it ends up is always where it started; nothing on this
    page knows which allele it is looking at, so there is no other answer to
    give. All the information is in the second slider, and it moves by a
-   factor of ten across the ponds that get dealt. A student who has
+   factor of ten across the populations that get dealt. A student who has
    understood the stage sets the first slider once and spends the rest of
    the ten rounds on the second.
 
@@ -1643,10 +1635,10 @@ function A_mountRounds() {
     let h = "";
     for (let i = 0; i < A_ROUNDS; i++) {
       const r = st.hits[i];
-      h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : (i === st.n ? "now" : "")) + '"></i>';
+      h += '<i class="' + (r === true ? "hit" : r === "wide" ? "wide" : r === false ? "miss" : (i === st.n ? "now" : "")) + '"></i>';
     }
-    const landed = st.hits.filter(Boolean).length;
-    if (st.hits.length) h += "<span>" + landed + " of " + st.hits.length + " landed</span>";
+    const done = st.hits.filter(v => v === true || v === "wide").length;
+    if (st.hits.length) h += "<span>" + done + " of " + st.hits.length + " done</span>";
     el("A_rpips").innerHTML = h;
   }
   function paintTable() {
@@ -1670,7 +1662,7 @@ function A_mountRounds() {
     // has worked out what the middle should be sets it once
     const prev = A.round;
     A.round = { p0, N, gens: A_ROLL_GENS, you: prev ? prev.you : 0.50,
-                err: prev ? prev.err : 0.10, shown: false, typical: null, ends: null };
+                err: prev ? prev.err : 0.10, shown: false, typical: null };
     A.N = N; A.p0 = p0; A.cv = 0;
     el("A_N").value = String(N); el("A_NOut").value = N;
     el("A_cv").value = "0"; el("A_cvOut").value = "0.0";
@@ -1700,17 +1692,19 @@ function A_mountRounds() {
   function land() {
     st.running = false;
     const rd = A.round, got = popFreq(A.pop);
-    const t = A_typical(rd.N, rd.p0, rd.gens, 300);
-    rd.typical = t.miss; rd.ends = t.ends; rd.shown = true;
+    const t = A_typical(rd.N, rd.p0, rd.gens, 200);
+    rd.typical = t.miss; rd.shown = true;
     const ok = Math.abs(got - rd.you) <= rd.err;
-    /* Two exceptions to the bare verdict, and only two. JM, 2026-09-21:
-       "if they set the slider all the way, such that everything is possible,
-       it should say correct but too uncertain" -- so the test is whether the
-       claim excluded anything at all, not whether the slider hit its stop. */
-    const vacuous = rd.you - rd.err <= 0 && rd.you + rd.err >= 1;
-    st.hits.push(ok);
+    /* The one exception to the bare verdict. A band can be right by being
+       enormous, so a call more than twice as wide as the honest miss for this
+       population is told so. JM, 2026-09-21: "some penalty for having an
+       over-wide band would be good." The penalty is that it does not count
+       towards the silent record -- the pip stays amber. Nothing on screen
+       says that, because the record is silent. */
+    const tooWide = rd.err > 2 * Math.max(0.02, rd.typical);
+    st.hits.push(ok && !tooWide ? true : (ok ? "wide" : false));
     el("A_rflip").innerHTML = ok
-      ? (vacuous ? '<span class="ok">correct</span>, but too uncertain'
+      ? (tooWide ? '<span class="ok">correct</span>, but too uncertain'
                  : '<span class="ok">correct</span>')
       : '<span class="off">incorrect</span>';
     // ... and a standing note the first time one is missed, because the thing
@@ -1727,18 +1721,19 @@ function A_mountRounds() {
   /* The silent bit. Nothing on screen mentions it. */
   function finish() {
     st.done = true;
-    const first = st.hits.slice(0, 5).filter(Boolean).length;
-    const last = st.hits.slice(5, 10).filter(Boolean).length;
+    const clean = v => v === true;          // right AND not absurdly wide
+    const first = st.hits.slice(0, 5).filter(clean).length;
+    const last = st.hits.slice(5, 10).filter(clean).length;
     record(BIT.A1, last > first);
     markTask("A", "A1");
-    hint("A1", st.hits.filter(Boolean).length + " of " + A_ROUNDS + " landed");
+    hint("A1", st.hits.filter(v => v === true || v === "wide").length + " of " + A_ROUNDS + " done");
     // the population is theirs now
     A.round = null; A.mode = "free";
     A.N = 100; A.p0 = 0.5; A.cv = 0;
     el("A_N").value = "100"; el("A_NOut").value = "100";
     el("cA_N").textContent = "100";
     A_fresh(); A_openControls(); A_paint();
-    hint("A2", "0 of 5 landed");
+    hint("A2", "0 of 5 done");
     if (A.roll) A.roll.idle();
     A.call.enter();
     checkStageDone("A");
@@ -1864,7 +1859,7 @@ function A_wire() {
   document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson10_stageA.R", A_RCODE()));
 
   /* The roll. Five extinctions inside thirty generations, and the only
-     way to get there is to bring the pond down or the differences up --
+     way to get there is to bring the population down or the differences up --
      which is the stage's point, arrived at by aiming rather than by being
      told. A hundred individuals breeding evenly will not do it in thirty,
      and the student finds that out by failing at it a few times. */
@@ -1892,10 +1887,17 @@ function A_wire() {
              ". " + A.N + " individuals, expected offspring differing by " + A.cv.toFixed(1) +
              " — that setting is spent, so move one of them.";
     },
+    onCleared: () => {
+      const st = A.call.state;
+      const bar = document.getElementById("A_rollbar");
+      if (bar) bar.innerHTML += "<br>You called which allele would go " + st.n + " times and were right " +
+        st.right + ". Nothing on this screen ever knew which one it was going to be — the call was a coin flip, " +
+        "the same coin you flipped ten at a time in Lesson 1.";
+    },
     sayMiss: () => {
       const p = popFreq(A.pop);
       if (A.repeat) return "an allele went, but " + A.N + " individuals at " + A.cv.toFixed(1) +
-                           " has already landed. Move the population size or the unevenness and roll that.";
+                           " has already been done. Move the population size or the unevenness and roll that.";
       return "still at " + f3(p) + " after " + A_ROLL_GENS + " generations. Nothing was pushing it either way — " +
              "it simply did not get there this time.";
     },
@@ -1928,7 +1930,7 @@ function A_RCODE() {
    STAGE B — where the next generation's parents come from.
 
    The same operator as A, with one argument moved. Under "inherit" the
-   pool is the generation that just bred. Under "fresh" it is the pond
+   pool is the generation that just bred. Under "fresh" it is the population
    the run started with, every generation, forever. The per-generation
    randomness is identical; only the pool differs. That one argument is
    the whole difference between a walk that compounds and a wobble that
@@ -1972,28 +1974,35 @@ function B_run() {
 function B_drawEnds(ctx, f, x0, w, ends, tg) {
   const B_BINS = 22;
   const hist = new Array(B_BINS).fill(0);
-  for (const v of ends) hist[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
-  const peak = Math.max(1, Math.max.apply(null, hist));
-  ctx.fillStyle = "rgba(85,64,126,0.28)"; ctx.strokeStyle = PURPLE; ctx.lineWidth = 1;
-  for (let b = 0; b < B_BINS; b++) {
-    if (!hist[b]) continue;
-    const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS);
-    const bw = hist[b] / peak * w;
-    ctx.fillRect(x0, yTop, bw, yBot - yTop);
-    ctx.strokeRect(x0 + 0.5, yTop + 0.5, Math.max(0, bw - 1), Math.max(0, yBot - yTop - 1));
-  }
-  // the target, as the two places the average endpoint is being asked to sit
-  if (tg) {
-    ctx.strokeStyle = GREEN; ctx.lineWidth = 1.4; ctx.setLineDash([4, 3]);
-    for (const d of [tg.dist, -tg.dist]) {
-      const y = f.y(clamp(0.5 + d, 0, 1));
-      ctx.beginPath(); ctx.moveTo(x0 - 6, y); ctx.lineTo(x0 + w, y); ctx.stroke();
+  if (ends) for (const v of ends) hist[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
+  const mine = ends ? hist.map(v => v / ends.length) : null;
+  const want = tg ? B_targetShape(tg) : null;
+  const peak = Math.max(0.08, Math.max.apply(null, (mine || []).concat(want || [])));
+  // the target first, as a filled ghost -- this is the thing being aimed at
+  if (want) {
+    ctx.fillStyle = "rgba(74,122,42,0.22)"; ctx.strokeStyle = "rgba(74,122,42,0.75)"; ctx.lineWidth = 1;
+    for (let b = 0; b < B_BINS; b++) {
+      if (want[b] <= 0) continue;
+      const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS), bw = want[b] / peak * w;
+      ctx.fillRect(x0, yTop, bw, yBot - yTop);
+      ctx.strokeRect(x0 + 0.5, yTop + 0.5, Math.max(0, bw - 1), Math.max(0, yBot - yTop - 1));
     }
-    ctx.setLineDash([]);
+  }
+  // then where the twenty actually went, outlined over it
+  if (mine) {
+    ctx.strokeStyle = PURPLE; ctx.lineWidth = 2;
+    for (let b = 0; b < B_BINS; b++) {
+      if (!mine[b]) continue;
+      const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS), bw = mine[b] / peak * w;
+      ctx.beginPath();
+      ctx.moveTo(x0, yTop); ctx.lineTo(x0 + bw, yTop);
+      ctx.lineTo(x0 + bw, yBot); ctx.lineTo(x0, yBot);
+      ctx.stroke();
+    }
   }
   ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
   ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("where they ended", x0 + w / 2, f.py + f.ph + 4);
+  ctx.fillText(mine ? "target \u00b7 yours" : "target", x0 + w / 2, f.py + f.ph + 4);
 }
 function B_drawTraj() {
   const cv = document.getElementById("B_traj");
@@ -2001,12 +2010,24 @@ function B_drawTraj() {
   ctx.clearRect(0, 0, W, H);
   const g = B.gens;
   const cur0 = B.runs[B.rule];
-  const showHist = !!(cur0 && cur0.gens === g && B.showTo == null && B.revealed);
+  // the target is on screen from the moment it is dealt, so the student aims
+  // at a picture; the result is outlined over it once a run has finished
+  const liveTg = B.game && !B.game.state.done ? B_target(B.game.state.n) : null;
+  const haveEnds = !!(cur0 && cur0.gens === g && B.showTo == null && B.revealed);
+  const showHist = !!liveTg || haveEnds;
   const stripW = showHist ? 104 : 0;
   const f = box(52, 14, W - 74 - stripW, H - 52, 0, g, 0, 1);
   axes(ctx, f, "generation", "frequency of the purple allele", v => v.toFixed(2));
   ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(f.px, f.y(0.5)); ctx.lineTo(f.px + f.pw, f.y(0.5)); ctx.stroke(); ctx.setLineDash([]);
+  // the strip is painted before the trajectories, because the two early
+  // returns below (mid-animation, and nothing-run-yet) must not lose the target
+  if (showHist) {
+    const x0 = f.px + f.pw + 10, w = stripW - 20;
+    ctx.strokeStyle = "#e8e6dd"; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x0, f.py); ctx.lineTo(x0, f.py + f.ph); ctx.stroke();
+    B_drawEnds(ctx, f, x0, w, haveEnds ? cur0.ends : null, liveTg);
+  }
   const other = B.rule === "inherit" ? "fresh" : "inherit";
   const ghost = B.runs[other];
   if (ghost && ghost.gens === g) {
@@ -2024,7 +2045,7 @@ function B_drawTraj() {
   }
   if (!cur || cur.gens !== g) {
     ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif"; ctx.textAlign = "center";
-    ctx.fillText("run 20 ponds", f.px + f.pw / 2, f.py + f.ph / 2);
+    ctx.fillText("run 20 populations", f.px + f.pw / 2, f.py + f.ph / 2);
     return;
   }
   ctx.globalAlpha = 0.72;
@@ -2034,13 +2055,6 @@ function B_drawTraj() {
   ctx.strokeStyle = "rgba(178,58,72,0.55)"; ctx.lineWidth = 2;
   ctx.beginPath(); ctx.moveTo(f.px, f.y(0)); ctx.lineTo(f.px + f.pw, f.y(0)); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(f.px, f.y(1)); ctx.lineTo(f.px + f.pw, f.y(1)); ctx.stroke();
-  if (showHist) {
-    const x0 = f.px + f.pw + 10, w = stripW - 20;
-    ctx.strokeStyle = "#e8e6dd"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(x0, f.py); ctx.lineTo(x0, f.py + f.ph); ctx.stroke();
-    B_drawEnds(ctx, f, x0, w, cur.ends,
-               B.game && !B.game.state.done ? B_target(B.game.state.n) : null);
-  }
 }
 function B_drawVar() {
   const cv = document.getElementById("B_var");
@@ -2057,7 +2071,7 @@ function B_readouts() {
   const cur = B.runs[B.rule];
   document.getElementById("B_ruleRead").innerHTML = B.rule === "inherit"
     ? "Each generation's parents are the generation that just bred. Whatever happened by chance last time is where this one starts."
-    : "Each generation's parents are drawn from the pond the run started with. Chance still happens every generation; nothing carries it forward.";
+    : "Each generation's parents are drawn from the population the run started with. Chance still happens every generation, but the changes aren't passed on (inherited).";
   document.getElementById("B_read").innerHTML = !cur || cur.gens !== B.gens || !B.revealed
     ? '<span class="label">set it up and run the twenty</span>'
     : '<span class="label">after ' + cur.gens + ' generations:</span> <span class="label">average distance from 0.50</span> <b class="big">' +
@@ -2066,7 +2080,7 @@ function B_readouts() {
   const inh = B.runs.inherit, fr = B.runs.fresh;
   const bits = [];
   if (inh && inh.gens === B.gens) bits.push('<span style="color:' + PURPLE + '">■</span> from the generation before: variety ends at <b>' + f3(inh.H[B.gens]) + '</b>');
-  if (fr && fr.gens === B.gens) bits.push('<span style="color:' + BLUE + '">■</span> from the pond you started with: variety ends at <b>' + f3(fr.H[B.gens]) + '</b>');
+  if (fr && fr.gens === B.gens) bits.push('<span style="color:' + BLUE + '">■</span> from the population you started with: variety ends at <b>' + f3(fr.H[B.gens]) + '</b>');
   document.getElementById("B_varRead").innerHTML = bits.length ? bits.join(" &nbsp;|&nbsp; ") : '<span class="label">both start at 0.500</span>';
 }
 function B_paint() { B_drawTraj(); B_drawVar(); B_readouts(); }
@@ -2080,7 +2094,7 @@ function B_paint() { B_drawTraj(); B_drawVar(); B_readouts(); }
    numbers that pin a shape down: how far from 0.500 the twenty sit on
    average, and how many of them have lost an allele altogether. Both are
    judged, because either one alone admits shapes that are not the target --
-   a pile at 0.5 with two fixed ponds and a broad smear with two fixed ponds
+   a pile at 0.5 with two fixed populations and a broad smear with two fixed populations
    have the same fixed count and nothing else in common.
 
    Every number below is measured off B_batch, not derived; the sweep is in
@@ -2089,25 +2103,47 @@ function B_paint() { B_drawTraj(); B_drawVar(); B_readouts(); }
 
    TARGET 5 IS THE ONE THAT MATTERS. Three hundred generations with nothing
    extinct is impossible while the error is inherited -- at 300 generations
-   the tightest the inherited rule gets is 0.32 away with six ponds gone, at
+   the tightest the inherited rule gets is 0.32 away with six populations gone, at
    the top of the headcount slider. It is reachable in one move, and the move
    is the switch. JM: "One of them should only be achievable with [the
    uninherited setting], where the variation doesn't really change [over]
    time."                                                                 */
 const B_ROUNDS = 10, B_PRACTICE = 5;
 const B_TARGETS = [
-  { dist: 0.50, dTol: 0.02, fixed: 20, fTol: 1,
+  { dist: 0.50, dTol: 0.02, fixed: 20, fTol: 1, ref: { N: 10,  G: 150, inh: true },
     shape: "two spikes and nothing in between — every population has lost an allele" },
-  { dist: 0.22, dTol: 0.06, fixed: 1,  fTol: 2,
+  { dist: 0.22, dTol: 0.06, fixed: 1,  fTol: 2, ref: { N: 35,  G: 25,  inh: true },
     shape: "spread right across the range, with only one or two gone" },
-  { dist: 0.37, dTol: 0.07, fixed: 10, fTol: 4,
-    shape: "about half of them piled on the walls, the rest spread between" },
-  { dist: 0.10, dTol: 0.03, fixed: 0,  fTol: 0,
-    shape: "a tight pile around where they started, nothing lost at all" },
-  { dist: 0.05, dTol: 0.03, fixed: 0,  fTol: 0, gensMin: 300,
-    shape: "three hundred generations gone by, and still a tight pile with nothing extinct" }
+  { dist: 0.37, dTol: 0.07, fixed: 10, fTol: 4, ref: { N: 20,  G: 50,  inh: true },
+    shape: "about half of them against the walls, the rest spread between" },
+  { dist: 0.10, dTol: 0.03, fixed: 0,  fTol: 0, ref: { N: 115, G: 25,  inh: true },
+    shape: "a tight cluster around where they started, nothing lost at all" },
+  { dist: 0.05, dTol: 0.03, fixed: 0,  fTol: 0, gensMin: 300, ref: { N: 25, G: 300, inh: false },
+    shape: "three hundred generations gone by, and still a tight cluster with nothing extinct" }
 ];
 const B_target = n => B_TARGETS[n % B_TARGETS.length];
+/* The target, as a picture. JM, 2026-09-21: "we should show the target on the
+   graph using the right-side histograms from the other parts ... hitting a
+   visual target is likely easier than reading the raw numbers."
+
+   The shape is generated by running the target's own reference setting many
+   times, so it is what the target actually looks like rather than a drawing of
+   what it ought to look like. The verdict is still taken on the two numbers --
+   a histogram distance over twenty runs is far too noisy to judge with -- but
+   the student aims at the picture and reads the numbers only if they want to. */
+function B_targetShape(tg) {
+  if (tg.pic) return tg.pic;
+  const rng = mulberry32(pageSeed("l10Bt", 1, 99999) + tg.ref.N * 131 + tg.ref.G);
+  const B_BINS = 22, acc = new Array(B_BINS).fill(0);
+  const REPS = 25;
+  for (let r = 0; r < REPS; r++) {
+    const b = B_batch(rng, tg.ref.N, tg.ref.G, tg.ref.inh, 20);
+    for (const v of b.ends) acc[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
+  }
+  const tot = REPS * 20;
+  tg.pic = acc.map(v => v / tot);
+  return tg.pic;
+}
 const B_judge = (tg, r) => {
   if (tg.gensMin && r.gens < tg.gensMin) return { ok: false, why: "gens" };
   if (Math.abs(r.dist - tg.dist) > tg.dTol) return { ok: false, why: "dist" };
@@ -2204,7 +2240,7 @@ function B_mountTargets() {
     el("B_roll").disabled = false;
     el("B_tnext").disabled = true;
     el("predB_h").textContent = "Predict — done";
-    el("B_tshape").textContent = "The controls are yours. Nothing else is being marked.";
+    el("B_tshape").textContent = "Feel free to practice with the controls to build intuition.";
     checkStageDone("B");
   }
 
@@ -2254,9 +2290,9 @@ function B_RCODE() {
 }
 
 /* =====================================================================
-   STAGE C — 107 ponds, and the two walls.
+   STAGE C — 107 populations, and the two walls.
    ===================================================================== */
-/* The roll's target: every one of the 107 ponds has hit a wall, so the
+/* The roll's target: every one of the 107 populations has hit a wall, so the
    tally is two spikes and nothing in between. That is "full bimodality"
    without the phrase -- the student is told "nothing left in the middle"
    and watches the middle empty out. Reachable at small N inside 60
@@ -2444,7 +2480,7 @@ function C_targetShape(N, gens, reps, seed) {
    target stops being reachable or stops being distinguishable. */
 const C_TARGETS = [
   { N: 60, gens: 10,
-    shape: "one pile where they all started, and not one population has lost an allele" },
+    shape: "a single tall bar where they all started, and not one population has lost an allele" },
   { N: 30, gens: 25,
     shape: "spread well out from the middle, with only a handful gone" },
   { N: 25, gens: 45,
@@ -2570,7 +2606,7 @@ function C_mountShapes() {
     el("C_roll").disabled = false;
     el("C_tnext").disabled = true;
     el("predC_h").textContent = "Predict — done";
-    el("C_tshape").textContent = "The controls are yours. Nothing else is being marked.";
+    el("C_tshape").textContent = "Feel free to practice with the controls to build intuition.";
     checkStageDone("C");
   }
 
@@ -2603,15 +2639,15 @@ function C_wire() {
   C.game = C_mountShapes();
 }
 function C_RCODE() {
-  return "# Lesson 10, Stage C -- 107 ponds and the two walls\n" +
+  return "# Lesson 10, Stage C -- 107 populations and the two walls\n" +
     "N <- " + C.N + "\np <- rep(0.5, 107)\nH <- numeric(61); H[1] <- mean(2*p*(1-p))\n\n" +
     "for (t in 1:60) {\n  p <- rbinom(107, 2*N, p) / (2*N)\n  H[t+1] <- mean(2*p*(1-p))\n}\n\n" +
-    "sum(p == 0 | p == 1)                      # ponds with one allele left\n" +
+    "sum(p == 0 | p == 1)                      # populations with one allele left\n" +
     "1 - exp(coef(lm(log(H) ~ seq_along(H)))[2])   # variety lost per generation\n";
 }
 
 /* =====================================================================
-   ISLE ROYALE — the counted record, inlined.
+   ISLE ROYALE — the counted moose record, inlined.
 
    Stage D runs a gene along this record rather than along a slider, so it
    must not depend on a fetch: a page opened from a file:// URL, or a
@@ -2620,7 +2656,6 @@ function C_RCODE() {
    reads data/clean/isle_royale.csv, which is where these came from.
 
    MOOSE: 42 winters, 1959-2000 -- the window Lesson 6 fits.
-   WOLF:  61 winters, 1959-2019 -- the whole record.
    ===================================================================== */
 const MOOSE_Y0 = 1959;
 const MOOSE = [
@@ -2628,47 +2663,47 @@ const MOOSE = [
             1215, 1203, 1139, 1070, 949, 845, 857, 788, 767, 780, 830, 927, 976, 1014,
             1046, 1116, 1260, 1315, 1496, 1697, 1784, 2017, 2117, 2398, 900, 925, 997, 1031];
 const MOOSE_Y = MOOSE.map((_, i) => MOOSE_Y0 + i);
-const WOLF_Y0 = 1959;
-const WOLF = [
-            20, 22, 22, 23, 20, 26, 28, 26, 22, 22, 17, 18, 20, 23,
-            24, 31, 41, 44, 34, 40, 43, 50, 30, 14, 23, 24, 22, 20,
-            16, 12, 12, 15, 12, 12, 13, 17, 16, 22, 24, 14, 25, 29,
-            19, 17, 19, 29, 30, 30, 21, 23, 24, 19, 16, 9, 8, 9,
-            3, 2, 2, 2, 15];
-const WOLF_Y = WOLF.map((_, i) => WOLF_Y0 + i);
 
 /* =====================================================================
-   STAGE D — the record you already fitted, with a gene in it.
+   STAGE D — the record you already fitted, and the rate it drifts at.
 
-   JM, 2026-09-18: "the moose data from an earlier lesson (6?) already
-   have them label 'two bad years' and have static birth/death rate
-   models. We should use that as part D to add in the idea of population
-   busts, and simulate allele frequencies along it so they can see."
+   JM, 2026-09-21: "The goal is to illustrate how a population bottleneck
+   causes the population to have a low effective population size ... the
+   target & the bottom graph should both relate to how fast the alleles are
+   drifting ... show how changes in the population model (specifically 'bad
+   years') drive the rate of drift more than the absolute change would
+   expect. I also think having the DAG for moose would be better than the
+   sliders."
 
-   So the apparatus is Lesson 6's Stage D verbatim -- one birth rate, one
-   death rate, one extra death rate for a bad winter, and the winters
-   picked by clicking the plot -- and the new thing is that the line it
-   draws is the population a gene lives in, winter by winter.
+   So: Lesson 6's apparatus, driven by a diagram instead of three bare
+   sliders, and the thing being matched is a DRIFT CURVE rather than a
+   number.
 
-   The arithmetic being taught is that a record is worth its harmonic
-   mean and not its average, and the stage is built so that nothing
-   asserts it: the herds are run by binomial sampling at N(t), and the
-   equivalent headcount is read back out of the spread they end at. The
-   formula sits beside the measurement in the readout. If they ever stop
-   agreeing, the formula is wrong, not the simulation.
+   THE MEASUREMENT THE STAGE IS BUILT ON. At a matched average of about 265
+   moose, the two ways of getting there are worth wildly different amounts
+   to a gene:
+
+       smooth decay (deaths 0.300)   average 263, worth 207, variety 0.457
+       six deep winters              average 269, worth  65, variety 0.372
+       eight deep winters            average 212, worth  24, variety 0.210
+
+   and the smooth route cannot reach 0.37 at all while the average stays
+   above 250 -- swept over every death rate, the closest it comes is 0.449.
+   That is why two of the three targets carry a floor on the average: it
+   forbids the answer "make the whole herd smaller" and leaves only the
+   answer the stage is about.
    ===================================================================== */
-const D_HERDS = 40, D_LO = 0.35, D_HI = 0.65;
-const D_WANT_LO = 12, D_WANT_HI = 24;          // the window the roll aims at
+const D_HERDS = 120;
 const D_L6 = { b: 0.260, d: 0.200, h: 0.60, bad: [1976, 1996] };
 
 const D = { b: D_L6.b, d: D_L6.d, h: D_L6.h, bad: { 1976: true, 1996: true },
-            runs: null, showTo: null, frame: null,
-            game: null, lock: null, roll: null, mode: "free", dealt: null, revealed: false };
+            on: { b: false, d: false, bad: false },
+            dag: null, curve: null, frame: null, game: null, revealed: false,
+            mode: "free", dealt: null, serial: 0 };
 
-/* Lesson 6's model, unchanged, with one difference: the floor is two
-   moose rather than one. A herd of one cannot breed, and letting the line
-   touch 1 fixes the gene for an arithmetic reason rather than a
-   biological one. */
+/* Lesson 6's model, unchanged, with one difference: the floor is two moose
+   rather than one. A herd of one cannot breed, and letting the line touch 1
+   fixes the gene for an arithmetic reason rather than a biological one. */
 function D_sizes(b, d, h, bad) {
   const out = [MOOSE[0]];
   for (let i = 1; i < MOOSE_Y.length; i++) {
@@ -2677,49 +2712,79 @@ function D_sizes(b, d, h, bad) {
   }
   return out;
 }
-const D_model = () => D.mode === "game" && D.dealt ? D.dealt.sizes : D_sizes(D.b, D.d, D.h, D.bad);
+/* An arrow that has not been drawn contributes its Lesson 6 default and
+   cannot be moved; drawing it is what hands over the number. */
+const D_cfg = () => ({ b: D.on.b ? D.b : D_L6.b,
+                       d: D.on.d ? D.d : D_L6.d,
+                       h: D.on.bad ? D.h : 0,
+                       bad: D.on.bad ? D.bad : {} });
+function D_model() {
+  if (D.mode === "game" && D.dealt && D.dealt.sizes) return D.dealt.sizes;
+  const c = D_cfg();
+  return D_sizes(c.b, c.d, c.h, c.bad);
+}
 function D_miss(sizes) {
   let t = 0; for (let i = 0; i < MOOSE.length; i++) t += Math.abs(sizes[i] - MOOSE[i]);
   return t / MOOSE.length;
 }
-/* Forty herds walking the record. breedFreq is legal here -- nothing in
-   this stage depends on a genotype, only on how many moose are alive in a
-   winter -- and the harmonic mean is not built into it. It comes out. */
+/* The variety curve: how much of a gene's variety survives, winter by
+   winter, averaged over many herds walking the line the model draws.
+   breedFreq is legal here -- nothing in this stage depends on a genotype,
+   only on how many moose are alive in a winter. */
+function D_varCurve(sizes, k, seed) {
+  const P = D_runHerds(sizes, k, seed);
+  const H = [];
+  for (let t = 0; t < sizes.length; t++) H.push(mean(P.map(r => variety(r[t]))));
+  return H;
+}
 function D_runHerds(sizes, k, seed) {
   const rng = mulberry32(seed);
   const P = [];
   for (let i = 0; i < k; i++) {
     const t = [0.5]; let p = 0.5;
-    for (let g = 1; g < sizes.length; g++) {
-      p = breedFreq(rng, p, Math.max(2, Math.round(sizes[g])), 0);
-      t.push(p);
-    }
+    for (let g = 1; g < sizes.length; g++) { p = breedFreq(rng, p, Math.max(2, Math.round(sizes[g])), 0); t.push(p); }
     P.push(t);
   }
   return P;
 }
-const D_ends = P => P.map(t => t[t.length - 1]);
-const D_outside = P => D_ends(P).filter(p => p < D_LO || p > D_HI).length;
-const D_dist = P => mean(D_ends(P).map(p => Math.abs(p - 0.5)));
-/* The even herd this record is worth, read back off the herds rather than
-   off the formula. After T generations a constant herd of N has
-   var(p) = 0.25 * (1 - (1 - 1/(2N))^T); measuring var(p) across the forty
-   and solving that for N gives the equivalent headcount without running a
-   second simulation to compare against. */
-function D_measuredN(P) {
-  const T = P[0].length - 1;
-  const v = mean(D_ends(P).map(p => (p - 0.5) * (p - 0.5)));
-  const r = clamp(1 - v / 0.25, 1e-12, 1 - 1e-12);
-  return 1 / (2 * (1 - Math.pow(r, 1 / T)));
-}
-const D_BIG = 300;
-function D_run(seedBump) {
+function D_run(bump) {
   const sizes = D_model();
-  const seed = pageSeed("l10D", 1, 99999) + Math.round(D.b * 1000) * 7 + Math.round(D.d * 1000) * 3 +
-               Math.round(D.h * 100) * 31 + Object.keys(D.bad).length * 911 + (seedBump || 0);
-  D.runs = D_runHerds(sizes, D_HERDS, seed);
-  D.runs.sizes = sizes;
-  D.runs.measured = D_measuredN(D_runHerds(sizes, D_BIG, seed + 7919));
+  D.serial++;
+  const seed = pageSeed("l10D", 1, 99999) + Math.round(sizes[sizes.length - 1]) * 7 +
+               Object.keys(D.bad).length * 911 + D.serial * 13 + (bump || 0);
+  D.curve = D_varCurve(sizes, D_HERDS, seed);
+  D.curve.sizes = sizes;
+}
+
+/* ---- the three curves to match ---------------------------------------
+   Each is generated by running a reference model, so it is what that model
+   actually produces rather than a drawing of what it ought to. Two of them
+   carry `minAvg`, which is the whole stage: you may not hit the target by
+   shrinking the herd. Re-derived in scripts/check_lesson10_numbers.js. */
+const D_TARGETS = [
+  { ref: { b: 0.260, d: 0.200, h: 0.60, bad: [1968, 1972, 1976] }, tol: 0.040,
+    say: "A gentle slope — the gene still has most of its variety after forty-two winters." },
+  { ref: { b: 0.260, d: 0.200, h: 0.60, bad: [1968, 1972, 1976, 1980, 1984, 1988] }, tol: 0.040, minAvg: 250,
+    say: "Steeper, and the herd still has to average at least <b>250</b> moose across the record." },
+  { ref: { b: 0.260, d: 0.200, h: 0.60, bad: [1966, 1970, 1974, 1978, 1982, 1986, 1990, 1994] }, tol: 0.045, minAvg: 200,
+    say: "Steeper still, with the herd averaging at least <b>200</b>. Making the whole herd smaller will not get you here." }
+];
+const D_ORDER = [0, 1, 2, 0, 2, 1];
+const D_ROUNDS = D_ORDER.length;
+function D_refSizes(t) {
+  const bad = {}; for (const y of t.ref.bad) bad[y] = true;
+  return D_sizes(t.ref.b, t.ref.d, t.ref.h, bad);
+}
+function D_targetCurve(t) {
+  if (!t.pic) {
+    const sz = D_refSizes(t);
+    const seed = pageSeed("l10Dt", 1, 99999) + t.ref.bad.length * 131;
+    const runs = [0, 1, 2, 3].map(r => D_varCurve(sz, 120, seed + r * 7919));
+    t.pic = runs[0].map((_, i) => mean(runs.map(c => c[i])));
+    t.pic.endVar = t.pic[t.pic.length - 1];
+    t.pic.avg = mean(sz);
+  }
+  return t.pic;
 }
 
 function D_drawMoose() {
@@ -2731,9 +2796,9 @@ function D_drawMoose() {
   const f = box(58, 16, W - 80, H - 54, MOOSE_Y[0], MOOSE_Y[MOOSE_Y.length - 1], 0, top);
   D.frame = f;
   axes(ctx, f, "winter", "moose on the island", v => (v / 1000).toFixed(1) + "k");
-  // the winters the student has marked, dropped behind everything
+  const cfg = D_cfg();
   if (D.mode !== "game") {
-    for (const y in D.bad) {
+    for (const y in cfg.bad) {
       const x = f.x(+y);
       ctx.strokeStyle = "rgba(178,58,72,0.75)"; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
       ctx.beginPath(); ctx.moveTo(x, f.py + 12); ctx.lineTo(x, f.py + f.ph); ctx.stroke();
@@ -2741,86 +2806,90 @@ function D_drawMoose() {
       ctx.fillStyle = HOT; ctx.font = "10px ui-monospace, Menlo, monospace";
       ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(y, x, f.py + 1);
     }
-    // the counted record, which the model is being held against
     line(ctx, f, MOOSE, "#bdb8a4", 2, null, MOOSE_Y[0]);
-    MOOSE.forEach((v, i) => {
-      ctx.fillStyle = "#bdb8a4";
-      ctx.beginPath(); ctx.arc(f.x(MOOSE_Y[i]), f.y(v), 2.2, 0, 6.2832); ctx.fill();
-    });
+    MOOSE.forEach((v, i) => { ctx.fillStyle = "#bdb8a4";
+      ctx.beginPath(); ctx.arc(f.x(MOOSE_Y[i]), f.y(v), 2.2, 0, 6.2832); ctx.fill(); });
   }
   line(ctx, f, sizes.map(v => Math.min(v, top)), PURPLE, 2.4, null, MOOSE_Y[0]);
-  // where the line is relative to the frame, so a flattened one still reads
   ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
   ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.fillText(D.mode === "game" ? "the herd this round deals"
                                  : "grey: counted    purple: your model", f.px + 6, f.py + 2);
 }
-function D_drawFreq() {
-  const cv = document.getElementById("D_freq");
+/* The rate the alleles are drifting, with the curve being aimed at drawn
+   behind it. This is the whole of what the stage asks the student to move. */
+function D_drawVar() {
+  const cv = document.getElementById("D_var");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const T = MOOSE_Y.length - 1;
-  const f = box(58, 16, W - 80, H - 54, 0, T, 0, 1);
-  axes(ctx, f, "winters from 1959", "frequency of the purple allele", v => v.toFixed(2));
-  // the band the roll is aimed at
-  ctx.fillStyle = "rgba(74,122,42,0.09)";
-  ctx.fillRect(f.px, f.y(D_HI), f.pw, f.y(D_LO) - f.y(D_HI));
-  ctx.strokeStyle = "rgba(74,122,42,0.55)"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.2;
-  for (const v of [D_LO, D_HI]) { ctx.beginPath(); ctx.moveTo(f.px, f.y(v)); ctx.lineTo(f.px + f.pw, f.y(v)); ctx.stroke(); }
-  ctx.setLineDash([]);
-  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
-  ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ctx.fillText("0.35 – 0.65", f.px + 5, f.y(0.5));
-  if (!D.runs) {
+  const f = box(58, 16, W - 80, H - 54, 0, T, 0, 0.52);
+  axes(ctx, f, "winters from 1959", "variety left in the gene", v => v.toFixed(2));
+  const tg = D.game && !D.game.state.done ? D_TARGETS[D_ORDER[Math.min(D.game.state.n, D_ORDER.length - 1)]] : null;
+  if (tg) {
+    const want = D_targetCurve(tg);
+    ctx.save();
+    ctx.strokeStyle = GREEN; ctx.lineWidth = 2.6; ctx.globalAlpha = 0.5;
+    line(ctx, f, want, GREEN, 2.6, null, 0);
+    ctx.globalAlpha = 1;
+    // the tolerance the endpoint is judged inside
+    const y1 = f.y(clamp(want.endVar + tg.tol, 0, 0.52)), y2 = f.y(clamp(want.endVar - tg.tol, 0, 0.52));
+    ctx.fillStyle = "rgba(74,122,42,0.16)";
+    ctx.fillRect(f.x(T) - 22, y1, 26, y2 - y1);
+    ctx.restore();
+    ctx.fillStyle = GREEN; ctx.font = "10px -apple-system, sans-serif";
+    ctx.textAlign = "right"; ctx.textBaseline = "bottom";
+    ctx.fillText("the curve to match", f.px + f.pw - 26, f.y(want[Math.round(T * 0.55)]) - 4);
+  }
+  if (!D.curve) {
     ctx.fillStyle = MUTED; ctx.font = "12px -apple-system, sans-serif";
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText("run the forty herds", f.px + f.pw / 2, f.py + f.ph / 2);
+    ctx.fillText("draw a model, then run the herds", f.px + f.pw / 2, f.py + f.ph / 2);
     return;
   }
-  const upto = D.showTo == null ? T : D.showTo;
-  for (const t of D.runs) {
-    const end = t[Math.min(upto, T)];
-    const out = upto >= T && (end < D_LO || end > D_HI);
-    line(ctx, f, t.slice(0, upto + 1), out ? "rgba(178,58,72,0.75)" : "rgba(85,64,126,0.42)", out ? 1.8 : 1.2, null, 0);
-  }
+  line(ctx, f, D.curve, PURPLE, 2.4, null, 0);
+  ctx.fillStyle = PURPLE;
+  ctx.beginPath(); ctx.arc(f.x(T), f.y(D.curve[T]), 4, 0, 6.2832); ctx.fill();
 }
 function D_readouts() {
   const sizes = D_model();
   const avg = mean(sizes), lowest = Math.min.apply(null, sizes);
-  const formula = acrossGenerations(sizes);
-  document.getElementById("D_mooseRead").innerHTML = D.mode === "game"
-    ? '<span class="label">average</span> <b>' + avg.toFixed(0) + '</b> <span class="label">moose · smallest winter</span> <b>' +
-      lowest.toFixed(0) + '</b> <span class="label">· forty-two winters</span>'
-    : '<span class="label">average</span> <b>' + avg.toFixed(0) + '</b> <span class="label">moose · smallest winter</span> <b>' +
-      lowest.toFixed(0) + '</b> &nbsp;|&nbsp; <span class="label">marked winters:</span> <b>' + Object.keys(D.bad).length +
-      '</b> &nbsp;|&nbsp; <span class="label">off the counted record by</span> <b>' + D_miss(sizes).toFixed(0) + '</b> <span class="label">moose</span>';
-  // in a dealt round the arithmetic IS the answer, so it is not on the page
-  // until the estimate is locked in
-  const hide = D.mode === "game" && !D.revealed;
-  const bits = hide
-    ? ['<span class="label">lock in your estimate to run the forty herds along this record</span>']
-    : ['<span class="label">what the record is worth to a gene — the arithmetic says</span> <b class="big">' +
-       formula.toFixed(0) + '</b>'];
-  if (D.runs && !hide) {
-    const k = D_outside(D.runs), inWin = k >= D_WANT_LO && k <= D_WANT_HI;
-    if (D.runs.measured) bits.push('<span class="label">' + D_BIG + ' herds of it measure</span> <b>' + D.runs.measured.toFixed(0) + '</b>');
-    bits.push('<span class="label">ended outside 0.35–0.65:</span> <b class="' + (inWin ? "ok" : "") + '">' + k +
-              '</b> <span class="label">of ' + D_HERDS + '</span>');
-    bits.push('<span class="label">typical distance from 0.500:</span> <b>' + f3(D_dist(D.runs)) + '</b>');
-  }
+  const worth = acrossGenerations(sizes);
+  document.getElementById("D_mooseRead").innerHTML =
+    '<span class="label">average</span> <b>' + avg.toFixed(0) + '</b> <span class="label">moose · smallest winter</span> <b>' +
+    lowest.toFixed(0) + '</b> &nbsp;|&nbsp; <span class="label">marked winters:</span> <b>' + Object.keys(D_cfg().bad).length +
+    '</b>' + (D.mode === "game" ? "" :
+      ' &nbsp;|&nbsp; <span class="label">off the counted record by</span> <b>' + D_miss(sizes).toFixed(0) + '</b> <span class="label">moose</span>');
+  const bits = ['<span class="label">what the record is worth to a gene:</span> <b class="big">' + worth.toFixed(0) +
+                '</b> <span class="label">against a census of ' + avg.toFixed(0) + '</span>'];
+  if (D.curve) bits.push('<span class="label">variety left after ' + (MOOSE_Y.length - 1) + ' winters:</span> <b class="big">' +
+                         f3(D.curve[D.curve.length - 1]) + '</b> <span class="label">of 0.500</span>');
   document.getElementById("D_read").innerHTML = bits.join(" &nbsp;|&nbsp; ");
 }
-function D_syncCode() {
-  document.getElementById("cD_b").textContent = D.b.toFixed(3);
-  document.getElementById("cD_d").textContent = D.d.toFixed(3);
-  document.getElementById("cD_h").textContent = D.h.toFixed(2);
-  document.getElementById("cD_bad").textContent = Object.keys(D.bad).sort().join(", ");
+function D_syncRows() {
+  const rows = { b: "D_rowB", d: "D_rowD", bad: "D_rowH" };
+  const inputs = { b: "D_b", d: "D_d", bad: "D_h" };
+  for (const k in rows) {
+    document.getElementById(rows[k]).classList.toggle("muted", !D.on[k]);
+    document.getElementById(inputs[k]).disabled = !D.on[k] || D.mode === "game";
+  }
+  document.getElementById("D_marknote").textContent = D.on.bad
+    ? "click the top plot to mark a winter as bad, or to unmark it"
+    : "draw the bad-winter arrow to start marking winters on the plot";
 }
-function D_paint() { D_drawMoose(); D_drawFreq(); D_readouts(); }
+function D_syncCode() {
+  const c = D_cfg();
+  document.getElementById("cD_b").textContent = c.b.toFixed(3);
+  document.getElementById("cD_d").textContent = c.d.toFixed(3);
+  document.getElementById("cD_h").textContent = c.h.toFixed(2);
+  document.getElementById("cD_bad").textContent = Object.keys(c.bad).sort().join(", ") || "—";
+}
+function D_paint() { D_drawMoose(); D_drawVar(); D_readouts(); }
 
-/* Clicking the plot marks a winter, exactly as it does in Lesson 6. */
+/* Clicking the plot marks a winter, exactly as it does in Lesson 6 -- but
+   only once the arrow that pays for it has been drawn. */
 function D_markAt(ev) {
-  if (D.mode === "game") return;
+  if (D.mode === "game" || !D.on.bad) return;
   const f = D.frame; if (!f) return;
   const cv = ev.currentTarget, rect = cv.getBoundingClientRect();
   if (!rect.width) return;
@@ -2829,23 +2898,136 @@ function D_markAt(ev) {
   if (x < f.px - 8 || x > f.px + f.pw + 8) return;
   const v = f.xMin + (x - f.px) / f.pw * (f.xMax - f.xMin);
   let best = null, bestD = Infinity;
-  for (const y of MOOSE_Y.slice(0, -1)) {
-    const dd = Math.abs(y - v);
-    if (dd < bestD) { bestD = dd; best = y; }
-  }
+  for (const y of MOOSE_Y.slice(0, -1)) { const dd = Math.abs(y - v); if (dd < bestD) { bestD = dd; best = y; } }
   if (best === null || bestD > 1.2) return;
   if (D.bad[best]) delete D.bad[best]; else D.bad[best] = true;
-  D.runs = null; D_syncCode(); D_paint(); bump("D");
+  D.curve = null; D.revealed = false; D_syncCode(); D_paint(); bump("D");
+}
+
+/* The diagram. Three causes into one junction, the junction into how many
+   moose are alive, and that into how fast the gene drifts. The last arrow
+   is the stage: nothing the student draws points at the gene directly. */
+const D_DAG = {
+  width: 560, height: 210,
+  hint: "Click a dashed arrow to draw it. A drawn arrow switches on the number it pays for; an arrow you have not drawn holds its Lesson 6 value and cannot be moved.",
+  nodes: {
+    n1:  { x:   4, y:  10, w: 130, h: 34, label: "births per winter", rate: true },
+    n2:  { x: 150, y:  10, w: 130, h: 34, label: "deaths per winter", rate: true },
+    n3:  { x: 296, y:  10, w: 150, h: 34, label: "a winter that went wrong", rate: true },
+    jn:  { x: 268, y:  86, w:  14, h: 14, junction: true },
+    who: { x: 176, y: 120, w: 200, h: 34, label: "moose alive that winter" },
+    far: { x: 176, y: 176, w: 200, h: 30, label: "how fast the gene drifts" }
+  },
+  arrows: [
+    { id: "b",   from: "n1", to: "jn", nohead: true },
+    { id: "d",   from: "n2", to: "jn", nohead: true },
+    { id: "bad", from: "n3", to: "jn", nohead: true }
+  ],
+  fixed: [ { from: "jn", to: "who" }, { from: "who", to: "far" } ]
+};
+
+function D_mountCurves() {
+  const st = { n: 0, hits: [], rolling: false, timer: 0, ran: false, done: false };
+  const el = id => document.getElementById(id);
+  const target = () => D_TARGETS[D_ORDER[Math.min(st.n, D_ORDER.length - 1)]];
+
+  function paintPips() {
+    let h = "";
+    for (let i = 0; i < D_ROUNDS; i++) { const r = st.hits[i];
+      h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : (i === st.n ? "now" : "")) + '"></i>'; }
+    if (st.hits.length) h += "<span>" + st.hits.filter(Boolean).length + " of " + st.hits.length + " done</span>";
+    el("D_tpips").innerHTML = h;
+  }
+  function paintCard() {
+    const t = target(), want = D_targetCurve(t);
+    el("D_ttab").innerHTML =
+      "<tr><th>curve</th><td>" + (st.n + 1) + " of " + D_ROUNDS + "</td></tr>" +
+      "<tr><th>herds run</th><td>" + D_HERDS + "</td></tr>" +
+      "<tr><th>variety left at the end</th><td>" + f2(want.endVar) + " &plusmn; " + f2(t.tol) + "</td></tr>" +
+      (t.minAvg ? "<tr><th>herd must average at least</th><td>" + t.minAvg + "</td></tr>" : "");
+    el("D_tsay").innerHTML = t.say;
+    el("D_tnext").disabled = !st.ran;
+    el("D_tnext").textContent = st.n >= D_ROUNDS - 1 ? "Finish" : "Next curve";
+  }
+  function deal() {
+    st.ran = false;
+    D.curve = null; D.revealed = false;
+    el("D_tflip").innerHTML = "";
+    el("D_roll").disabled = false;
+    paintCard(); paintPips(); D_paint();
+    hint("D1", "curve " + (st.n + 1) + " of " + D_ROUNDS);
+  }
+  function run() {
+    if (st.rolling) return;
+    st.rolling = true;
+    el("D_roll").disabled = true; el("D_tnext").disabled = true;
+    document.getElementById("D_controls").classList.add("rolling");
+    D_run();
+    st.rolling = false;
+    document.getElementById("D_controls").classList.remove("rolling");
+    land();
+    bump("D");
+  }
+  function land() {
+    const t = target(), want = D_targetCurve(t);
+    const sizes = D_model(), avg = mean(sizes);
+    const got = D.curve[D.curve.length - 1];
+    const close = Math.abs(got - want.endVar) <= t.tol;
+    const kept = !t.minAvg || avg >= t.minAvg;
+    const ok = close && kept;
+    st.ran = true; st.hits.push(ok);
+    D.revealed = true;
+    el("D_tflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
+    el("D_roll").disabled = true;
+    paintPips(); paintCard(); D_paint();
+  }
+  function next() {
+    if (!st.ran) return;
+    st.n++;
+    if (st.n >= D_ROUNDS) { finish(); return; }
+    deal();
+  }
+  function finish() {
+    st.done = true;
+    const got = st.hits.filter(Boolean).length;
+    record(BIT.D1, got >= 4);
+    markTask("D", "D1");
+    hint("D1", got + " of " + D_ROUNDS + " done");
+    el("D_roll").disabled = false;
+    el("D_tnext").disabled = true;
+    el("predD_h").textContent = "Predict — done";
+    el("D_tsay").textContent = "Feel free to practice with the controls to build intuition.";
+    D_paint();
+    checkStageDone("D");
+  }
+
+  el("predD_slot").innerHTML =
+    '<table class="dealt" id="D_ttab"></table>' +
+    '<div class="gm-prompt" id="D_tsay" style="margin-top:8px;"></div>' +
+    '<div class="buttons" style="margin-top:10px;"><button id="D_tnext" class="secondary" disabled>Next curve</button></div>' +
+    '<div class="flip" id="D_tflip"></div>' +
+    '<div class="roundpips" id="D_tpips"></div>';
+  el("D_tnext").addEventListener("click", next);
+  el("D_roll").addEventListener("click", run);
+  deal();
+  function show() { if (!st.done) { st.n = D_ROUNDS; finish(); } }
+  return { show, state: st, run, next, targets: D_TARGETS, curveOf: D_targetCurve };
 }
 
 function D_wire() {
-  const ids = [["D_b", "b", 3], ["D_d", "d", 3], ["D_h", "h", 2]];
-  for (const [id, k, dec] of ids) {
+  D.dag = buildArrows("D_dag", D_DAG, (id, on) => {
+    D.on[id] = on;
+    if (id === "bad" && !on) { D.bad = {}; }
+    D.curve = null; D.revealed = false;
+    D_syncRows(); D_syncCode(); D_paint(); bump("D");
+  });
+  const rows = [["D_b", "b", 3], ["D_d", "d", 3], ["D_h", "h", 2]];
+  for (const [id, k, dec] of rows) {
     document.getElementById(id).addEventListener("input", e => {
       D[k] = +e.target.value;
       document.getElementById(id + "Out").value = D[k].toFixed(dec);
-      highlightByDataLine("codeD", k);
-      D.runs = null; D_syncCode(); D_paint(); bump("D");
+      highlightByDataLine("codeD", k === "h" ? "h" : k);
+      D.curve = null; D.revealed = false; D_syncCode(); D_paint(); bump("D");
     });
   }
   const plot = document.getElementById("D_moose");
@@ -2853,115 +3035,23 @@ function D_wire() {
   plot.style.cursor = "crosshair";
   document.getElementById("D_clear").addEventListener("click", () => {
     if (D.mode === "game") return;
-    D.bad = {}; D.runs = null; D_syncCode(); D_paint(); bump("D");
+    D.bad = {}; D.curve = null; D.revealed = false; D_syncCode(); D_paint(); bump("D");
   });
   document.getElementById("D_l6").addEventListener("click", () => {
-    if (D.mode === "game") return;
+    D.on.b = D.on.d = D.on.bad = true;
+    ["b", "d", "bad"].forEach(k => D.dag.set(k, true));
     D.b = D_L6.b; D.d = D_L6.d; D.h = D_L6.h;
     D.bad = {}; for (const y of D_L6.bad) D.bad[y] = true;
     document.getElementById("D_b").value = String(D.b); document.getElementById("D_bOut").value = D.b.toFixed(3);
     document.getElementById("D_d").value = String(D.d); document.getElementById("D_dOut").value = D.d.toFixed(3);
     document.getElementById("D_h").value = String(D.h); document.getElementById("D_hOut").value = D.h.toFixed(2);
-    D.runs = null; D_syncCode(); D_paint(); bump("D");
+    D.curve = null; D.revealed = false; D_syncRows(); D_syncCode(); D_paint(); bump("D");
   });
   document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson10_stageD.R", D_RCODE()));
-
-  D.lock = mountLock("D", {
-    title: "Predict — before you change anything", task: "D1", bit: BIT.D2,
-    prompt: "The record is sitting where you left it in Lesson 6: <b>1976</b> and <b>1996</b> marked, about a thousand moose in an average winter, " +
-            "forty-two winters of it. Forty herds, one gene, nothing selected. How far from <b>0.500</b> does a typical herd end up?",
-    label: "a typical herd ends this far away", min: 0, max: 0.5, step: 0.005, start: 0.25, fmt: f3,
-    truth: () => {
-      const P = D_runHerds(D_model(), 200, pageSeed("l10Dm", 1, 99999));
-      const t = D_dist(P);
-      return { truth: t, tol: Math.max(0.015, 0.3 * t),
-               values: [0, 1, 2, 3, 4, 5].map(i => D_dist(P.slice(i * 30, i * 30 + 30))) };
-    }
-  });
-
-  /* The roll. A window rather than a floor: the student has to bend the
-     record until the gene wanders a stated amount, and cranking every
-     winter to catastrophe overshoots exactly as badly as doing nothing.
-     Aiming is the skill; the bar being two-sided is what makes it one. */
-  D.roll = wireBowling("D", {
-    task: "D2", need: 3, ms: 55,
-    goal: "Bend the record until between <b>" + D_WANT_LO + "</b> and <b>" + D_WANT_HI + "</b> of the forty herds end outside 0.35–0.65.",
-    rollAgain: "Run them again",
-    start: () => { D_run(D.roll ? D.roll.hits() * 7 + 1 : 1); D.showTo = 0; D_paint(); },
-    frames: () => MOOSE_Y.length - 1,
-    frame: i => { D.showTo = i; D_paint(); return false; },
-    done: () => { D.showTo = null; D_paint(); },
-    hit: () => { const k = D_outside(D.runs); return k >= D_WANT_LO && k <= D_WANT_HI; },
-    sayHit: () => {
-      const k = D_outside(D.runs);
-      return k + " of the forty ended outside the band. Average " + mean(D_model()).toFixed(0) +
-             " moose, smallest winter " + Math.min.apply(null, D_model()).toFixed(0) +
-             " — and to a gene the whole record is worth " + acrossGenerations(D_model()).toFixed(0) + ".";
-    },
-    sayMiss: () => {
-      const k = D_outside(D.runs);
-      return k < D_WANT_LO
-        ? k + " of the forty. Not enough. One bad winter is a blip — it is how long it stays down that does it."
-        : k + " of the forty. Too many. You have flattened the herd; back the crash off or shorten it.";
-    },
-    onCleared: () => { if (D.game) D.game.show(); }
-  });
-
-  D.game = wireGame("D", {
-    task: "D3", bit: BIT.D3, field: { label: "an even herd of this many", min: 2, max: 1200, start: 400, fmt: v => v.toFixed(0) },
-    round: (rng, n) => {
-      // three classes: a steady herd, a short deep crash, a long slump.
-      // Their bands cannot overlap, so no constant answer clears three.
-      const cls = n % 3;
-      const T = MOOSE_Y.length;
-      let sizes, says;
-      if (cls === 0) {
-        const lvl = [520, 700, 880][Math.floor(rng() * 3)];
-        sizes = new Array(T).fill(lvl);
-        says = "A herd that sat at <b>" + lvl + "</b> every winter for forty-two winters.";
-      } else if (cls === 1) {
-        const lo = [12, 18, 24][Math.floor(rng() * 3)];
-        sizes = new Array(T).fill(900);
-        for (let i = 20; i < 23; i++) sizes[i] = lo;
-        says = "A herd of <b>900</b> that crashed to <b>" + lo + "</b> for three winters and came straight back.";
-      } else {
-        const lo = [44, 58, 70][Math.floor(rng() * 3)];
-        sizes = new Array(T).fill(900);
-        for (let i = 11; i < 31; i++) sizes[i] = lo;
-        says = "A herd of <b>900</b> that fell to <b>" + lo + "</b> and stayed there for twenty winters.";
-      }
-      const truth = acrossGenerations(sizes);
-      const vals = [];
-      for (let r = 0; r < 6; r++) vals.push(D_measuredN(D_runHerds(sizes, D_BIG, pageSeed("l10Dg", 1, 99999) + n * 131 + r * 17)));
-      return { sizes, truth, tol: Math.max(12, 0.25 * truth), values: vals,
-        prompt: says + " It is drawn on the plot above. What evenly-sized herd — the same number of moose every winter — " +
-                "would let the gene wander as far as that record does?" };
-    },
-    onDeal: r => {
-      D.mode = "game"; D.dealt = r; D.revealed = false;
-      D.runs = null; D.showTo = null;
-      document.getElementById("D_controls").classList.add("pending");
-      document.getElementById("D_roll").disabled = true;
-      D_paint();
-    },
-    reveal: r => {
-      const sd = pageSeed("l10Dd", 1, 99999) + Math.round(r.truth);
-      D.runs = D_runHerds(r.sizes, D_HERDS, sd);
-      D.runs.sizes = r.sizes;
-      D.runs.measured = D_measuredN(D_runHerds(r.sizes, D_BIG, sd + 7919));
-      D.revealed = true; D.showTo = null; D_paint();
-    },
-    onCleared: () => {
-      D.mode = "free"; D.dealt = null; D.runs = null; D.revealed = false;
-      document.getElementById("D_controls").classList.remove("pending");
-      document.getElementById("D_roll").disabled = false;
-      D_paint();
-    },
-    done: "Three landed. None of the three is worth its own average, and the one that spent twenty winters small is worth the least of all — the arithmetic adds up one over each winter, so a small winter counts for a lot and a large one barely counts at all."
-  });
-
-  D_wireWolf();
+  D_syncRows(); D_syncCode();
+  D.game = D_mountCurves();
 }
+
 function D_RCODE() {
   return "# Lesson 10, Stage D -- the record you fitted in Lesson 6, with a gene in it\n" +
     'd0 <- read.csv("data/clean/isle_royale.csv")\nd0 <- d0[d0$year <= 2000, ]\n\n' +
@@ -3418,7 +3508,7 @@ function E_wire() {
       document.getElementById("E_roll").disabled = false;
       E_syncRows(); E_paint();
     },
-    done: "Three landed. Not one of those models took a body off the island, and every one of them left the gene in a herd far smaller than the one you could count."
+    done: "Three done. Not one of those models took a body off the island, and every one of them left the gene in a herd far smaller than the one you could count."
   });
 
   E_syncRows(); E_syncCode();
@@ -3458,66 +3548,6 @@ async function grab(url) {
 }
 
 /* ---- Stage D: Isle Royale ------------------------------------------- */
-function D_wolfWindow() {
-  const y0 = +document.getElementById("D_wy").value;
-  const out = [];
-  for (let i = 0; i < WOLF.length; i++) if (WOLF_Y[i] >= y0) out.push([WOLF_Y[i], WOLF[i]]);
-  return out;
-}
-function D_drawWolf() {
-  const cv = document.getElementById("D_wolf");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const all = WOLF.map((v, i) => ({ year: WOLF_Y[i], wolves: v }));
-  const y0 = +document.getElementById("D_wy").value;
-  const f = box(52, 14, W - 70, H - 48, WOLF_Y[0], WOLF_Y[WOLF_Y.length - 1], 0, 60);
-  axes(ctx, f, "winter", "wolves counted", v => v.toFixed(0), v => v.toFixed(0));
-  ctx.fillStyle = "rgba(47,107,143,0.10)";
-  ctx.fillRect(f.x(y0), f.py, f.x(WOLF_Y[WOLF_Y.length - 1]) - f.x(y0), f.ph);
-  ctx.strokeStyle = "#c7c4bb"; ctx.lineWidth = 1.6; ctx.beginPath();
-  all.forEach((r, i) => { const X = f.x(r.year), Y = f.y(r.wolves); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
-  ctx.stroke();
-  ctx.strokeStyle = PURPLE; ctx.lineWidth = 2.2; ctx.beginPath();
-  const win = all.filter(r => r.year >= y0);
-  win.forEach((r, i) => { const X = f.x(r.year), Y = f.y(r.wolves); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
-  ctx.stroke();
-  for (const r of win) { ctx.fillStyle = r.wolves <= 5 ? HOT : PURPLE;
-    ctx.beginPath(); ctx.arc(f.x(r.year), f.y(r.wolves), 2.8, 0, 6.2832); ctx.fill(); }
-  const counts = win.map(r => r.wolves);
-  const am = mean(counts), hm = acrossGenerations(counts);
-  document.getElementById("D_wolfRead").innerHTML =
-    '<span class="label">' + win.length + ' winters from ' + y0 + '</span> &nbsp;|&nbsp; <span class="label">plain average:</span> <b>' + am.toFixed(1) +
-    '</b> &nbsp;|&nbsp; <span class="label">lowest count:</span> <b>' + Math.min.apply(null, counts) + '</b>';
-}
-function D_wireWolf() {
-  document.getElementById("D_wy").addEventListener("input", e => {
-    document.getElementById("D_wyOut").value = e.target.value; D_drawWolf(); bump("D");
-  });
-  const g0 = document.getElementById("D_wg0");
-  g0.addEventListener("input", e => { document.getElementById("D_wg0Out").value = (+e.target.value).toFixed(1); bump("D"); });
-  let done = false;
-  document.getElementById("D_wlock").addEventListener("click", () => {
-    if (done) return;
-    const counts = D_wolfWindow().map(x => x[1]);
-    const truth = acrossGenerations(counts), am = mean(counts), you = +g0.value;
-    const tol = Math.max(1.2, 0.1 * truth);
-    const ok = Math.abs(you - truth) <= tol;
-    drawStrips("D_wstrip", [{ label: "an even population of", min: 2, max: 40, fmt: v => v.toFixed(1),
-                             truth, tol, you, values: null }]);
-    document.getElementById("D_wflip").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
-    document.getElementById("D_wolfRead").innerHTML +=
-      ' &nbsp;|&nbsp; <span class="label">averaged</span> <b>' + am.toFixed(1) +
-      '</b> <span class="label">wolves &middot; drifts like</span> <b class="big">' + truth.toFixed(1) + '</b>';
-    done = true;
-    document.getElementById("D_wlock").disabled = true; g0.disabled = true;
-    record(BIT.D4, ok);
-    markTask("D", "D4"); hint("D4", ok ? "landed" : "locked in");
-    checkStageDone("D");
-  });
-  D_drawWolf();
-}
-
-/* ---- Stage E: the long-term lines ----------------------------------- */
 function E_lteeAt(gen) {
   const rows = REAL.ltee.filter(r => r.generation === gen && r.mean_fitness != null);
   return rows;
@@ -3590,7 +3620,7 @@ function E_wireLtee() {
     done = true;
     document.getElementById("E_llock").disabled = true; g0.disabled = true;
     record(BIT.E5, ok);
-    markTask("E", "E4"); hint("E4", ok ? "landed" : "locked in");
+    markTask("E", "E4"); hint("E4", ok ? "done" : "locked in");
     RealNeeded.E = false;
     checkStageDone("E");
   });
@@ -3623,8 +3653,8 @@ E_wire(); E_paint();
 
 Score.init({
   moduleId: "lesson10",
-  version: 5,
-  scaffold: 9,
+  version: 6,
+  scaffold: 7,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {

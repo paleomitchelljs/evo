@@ -1,8 +1,8 @@
 # Lesson 10 — overhaul
 
-**File** · `app/lessons/lesson10.html` (`version: 5`, `scaffold: 9`)
+**File** · `app/lessons/lesson10.html` (`version: 6`, `scaffold: 7`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · rounds 1 and 2 done — 2026-09-21. Both check suites green; A, B and C driven end to end in headless Chrome.
+**Status** · rounds 1–3 done — 2026-09-21. Both check suites green; A, B, C and D driven end to end in headless Chrome.
 **Last touched** · 2026-09-21
 
 ## What the lesson is
@@ -19,10 +19,10 @@ argument in `breed()`.
 
 ## Stages as they stand
 
-    A  one population, shares handed out unevenly, nothing looking at colour
+    A  one population, nothing looking at colour — ten calls, then five extinctions
     B  the switch: inherited pool vs. fresh pool — ten target spreads
     C  107 populations and the two walls — ten target shapes  (Buri is the framing, not a panel)
-    D  the Lesson 6 moose model, with a gene walking its line   + real data: Isle Royale wolves
+    D  the Lesson 6 moose model, driven by a diagram — six drift curves to match
     E  four arrows into one junction: bodies, crash, sex ratio, brood spread  + real data: LTEE
 
 D and E were rebuilt 2026-09-18 to JM's brief and were structurally what he
@@ -112,6 +112,82 @@ predict-first**, which is what the numbered task list says, what the stage
 already does, and the only order in which the card can deal the population
 rather than the student setting it. The bullet was rewritten to match. Say the
 word and it flips.
+
+
+## Items — round 3, 2026-09-21
+
+### Stage A
+
+| # | What | Status |
+|---|------|--------|
+| A10 | Bullets 2 and 3 become plain statements of what each plot is; two new bullets describe the two tasks in the student's own order. | done |
+| A11 | After the roll unlocks, say that **which** allele went was a coin flip — a callback to Lesson 1. | done |
+| A12 | Cut the green truth histogram. The density curve is the only thing in the strip. | done |
+| A13 | **The density has to absorb.** Mass below 0 and above 1 piles into spikes at the two walls, proportional to the probability absorbed — the curve should behave the way the process does. | done |
+| A14 | **Draw the target band inside the strip**, and penalise an over-wide one: a hit inside the band registers, but a band much wider than the honest miss reads as too uncertain. | done |
+| A15 | "landed" → "been done" throughout. | done |
+
+### Stage B
+
+| # | What | Status |
+|---|------|--------|
+| B9 | Bullets replaced with JM's five. | done |
+| B10 | "pond" → "population" everywhere in the lesson. | done |
+| B11 | "nothing carries it forward" → "but the changes aren't passed on (inherited)". | done |
+| B12 | **Show the target as a ghost histogram in the right-hand strip**, the same strip the result uses — a visual target beats reading two numbers. Keep the result histogram over it. | done |
+
+### Stage C
+
+| # | What | Status |
+|---|------|--------|
+| C6 | Drop "A classic experimental result."; name Buri; "before anyone could sequence anything". | done |
+| C7 | Bullets replaced with JM's three. | done |
+| C8 | Do not use the word "pile". | done |
+| C9 | The finished-card line becomes "Feel free to practice with the controls to build intuition". | done |
+
+### Stage D — rebuilt
+
+| # | What | Status |
+|---|------|--------|
+| D5 | **Cut the wolves panel entirely**, and the committed estimate and number game with it. | done |
+| D6 | **The sliders become a DAG**, in the Lesson 6 / Stage E idiom — draw an arrow, the number it pays for switches on. | done |
+| D7 | **The bottom plot becomes the rate of drift**, not the frequency trajectories: variety falling across the 42 winters. | done |
+| D8 | **The target is visual** — a decay curve to match, drawn in the same panel. | done |
+| D9 | The point to engineer: **a bad winter costs far more drift than its size suggests.** A target that has to be hit *while the herd still averages a stated headcount* forces the bad-winter route and forbids just decaying the whole herd. | done |
+| X3 | Bits again: A, B, C, D one each; E keeps three. Bump `version`, set `scaffold`. | done |
+
+
+## What round 3 measured
+
+**Stage D's whole argument, in one measurement.** At a matched average of about
+265 moose, the two ways of getting there are worth very different amounts to a
+gene:
+
+    smooth decay (deaths 0.300)   average 263, worth 207, variety left 0.457
+    six deep winters              average 269, worth  65, variety left 0.372
+    eight deep winters            average 212, worth  24, variety left 0.210
+
+Swept over every death rate the slider reaches, the smooth route **cannot** get
+variety below 0.42 while the average stays above 250 — so two of the three
+target curves carry a floor on the average, which forbids "make the whole herd
+smaller" and leaves only the answer the stage is about. Curve 2 asks for 0.365
+± 0.04 with the average above 250; the best smooth decay manages 0.448.
+
+**Stage A's density now conserves probability.** The curve is normal with
+`sigma = e·sqrt(pi/2)`, and whatever it puts past 0 or 1 is piled onto that wall
+rather than clipped: measured, the three pieces sum to 1.0000 at every setting
+tried, and a call of 0.95 ± 0.30 puts 45% of its mass on the top wall.
+
+**The over-wide penalty is live in two of the three classes, and that is
+correct.** A band more than twice the honest miss reads as too uncertain and
+does not count towards the silent record. In the smallest class the honest miss
+is already 0.38 against a slider that stops at 0.50, so there is no room above
+it to be wasteful in — a wide call about a population of fourteen *is* the
+honest call.
+
+**Stage B's targets are now pictures**, generated by running each target's own
+reference setting 25 times, and every reference setting is checked to actually
+land the target it illustrates.
 
 
 ## What round 2 measured, and the two things it had to design around

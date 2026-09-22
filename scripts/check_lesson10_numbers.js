@@ -43,7 +43,7 @@ const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 check("page loaded", !!(A && A.pop && B && C && D && E && typeof Score !== "undefined"),
       "every stage object and Score are defined");
 check("slots declared match slots written",
-      Object.keys(BIT).length === 9, Object.keys(BIT).length + " named bits");
+      Object.keys(BIT).length === 7, Object.keys(BIT).length + " named bits");
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
@@ -128,11 +128,53 @@ check("slots declared match slots written",
   };
   const cmp = cls.map(c => { const N = c.N[1], p0 = c.p0[1];
     return [N, simMiss(N, p0, 120), A_typical(N, p0, A_ROLL_GENS, REPS).miss]; });
-  check("A1 the green band matches the pond on screen",
+  check("A1 the honest miss matches the population on screen",
         cmp.every(r => Math.abs(r[1] - r[2]) / r[2] < 0.22),
         cmp.map(r => "N=" + r[0] + " pond " + r[1].toFixed(3) + " vs band " + r[2].toFixed(3)).join("  "));
   check("A1 all three classes are dealt inside ten rounds", cls.length === 3 && A_ROUNDS >= 9,
         A_ROUNDS + " rounds over " + cls.length + " classes in rotation");
+
+  /* The density absorbs at the walls: whatever the curve puts past 0 or 1 is
+     piled onto the wall rather than clipped off, so the three pieces have to
+     sum to one however the sliders are set. */
+  const massOf = (you, err) => {
+    const sd = Math.max(1e-4, err * MAD_TO_SD);
+    const z = v => (v - you) / sd;
+    const lo = normCdf(z(0)), hi = 1 - normCdf(z(1));
+    // interior by the trapezium rule over the same grid the painter uses
+    let mid = 0; const n = 2000;
+    for (let i = 0; i < n; i++) { const y = (i + 0.5) / n;
+      mid += Math.exp(-0.5 * z(y) * z(y)) / (sd * 2.5066) / n; }
+    return { lo, hi, mid, tot: lo + hi + mid };
+  };
+  const cases = [[0.50, 0.10], [0.50, 0.50], [0.05, 0.30], [0.95, 0.30], [0.30, 0.02]];
+  const sums = cases.map(([y, e]) => massOf(y, e).tot);
+  check("A the density conserves its probability at the walls",
+        sums.every(v => Math.abs(v - 1) < 0.01),
+        cases.map(([y, e], i) => y + "±" + e + " -> " + sums[i].toFixed(4)).join("  "));
+  const pinned = massOf(0.95, 0.30);
+  check("A a call pushed against a wall piles mass onto it",
+        pinned.hi > 0.25,
+        "0.95 ± 0.30 puts " + (100 * pinned.hi).toFixed(0) + "% on the top wall and " +
+        (100 * pinned.lo).toFixed(0) + "% on the bottom");
+
+  /* The over-wide penalty has to be reachable and has to bite: the honest
+     miss must sit inside the slider's range at half its top, or "twice the
+     honest miss" is wider than the slider can go and the penalty is dead. */
+  const wideCases = cls.map(c => { const N = c.N[1], p0 = c.p0[1];
+    const m = A_typical(N, p0, A_ROLL_GENS, 200).miss;
+    return [N, m, 2 * Math.max(0.02, m)]; });
+  /* The penalty fires when a band is more than twice as wide as the honest
+     miss. In the smallest class the honest miss is already close to the top
+     of the slider, so there is no room above it to be wasteful in -- which is
+     correct, not a defect: a wide call about a population of fourteen IS the
+     honest call. What has to hold is that the penalty is live where there is
+     room, and that the slider can express the honest answer everywhere. */
+  const withRoom = wideCases.filter(r => r[2] < 0.50);
+  check("A the over-wide penalty is live where there is room to be wasteful",
+        withRoom.length >= 2 && wideCases.every(r => r[1] < 0.50),
+        wideCases.map(r => "N=" + r[0] + " honest " + r[1].toFixed(3) +
+          (r[2] < 0.50 ? ", penalty above " + r[2].toFixed(3) : ", no room on the slider (correctly)")).join("  "));
   /* Every population that can be dealt has to be answerable on the two
      sliders it is answered with -- the middle as well as the width. */
   const offMid = [];
@@ -222,6 +264,15 @@ check("slots declared match slots written",
           total + " settings land 3 of 5 rolls  [inherited " + w.inh.length + ", uninherited " + w.fresh.length +
           "]  e.g. " + (w.inh.concat(w.fresh)).slice(0, 3).join(" "));
   });
+  // every target's reference setting -- the one its picture is drawn from --
+  // must be a setting that actually lands that target
+  const refOk = B_TARGETS.map((tg, i) => {
+    const r = tg.ref;
+    return [i + 1, lands(tg, r.N, r.G, r.inh, 5), (r.inh ? "inh" : "fresh") + " " + r.N + "/" + r.G];
+  });
+  check("B every target's picture is drawn from a setting that lands it",
+        refOk.every(r => r[1] >= 3),
+        refOk.map(r => "#" + r[0] + " " + r[2] + " lands " + r[1] + "/5").join("  "));
   check("B the 300-generation target needs the switch",
         winners[4].inh.length === 0 && winners[4].fresh.length > 0,
         "target 5: " + winners[4].inh.length + " inherited settings, " + winners[4].fresh.length + " uninherited");
@@ -309,107 +360,83 @@ check("slots declared match slots written",
         "order " + C_ORDER.join(""));
 }
 
-/* ---- D. the Lesson 6 record, with a gene walking it --------------------- */
+/* ---- D. the record you fitted, and the rate it drifts at ---------------- */
 {
-  /* The apparatus is Lesson 6's: one birth rate, one death rate, one extra
-     death rate for a marked winter. The claim the stage makes is that what
-     a record is worth to a gene is the sum of one-over-each-winter and not
-     the average of the winters. Nothing on the page asserts that; it comes
-     out of forty herds. So the first thing to check is that the arithmetic
-     printed beside the measurement agrees with the measurement. */
-  const put = (b, d, h, bad) => { D.b = b; D.d = d; D.h = h; D.bad = {};
-                                  for (const y of bad) D.bad[y] = true; D.mode = "free"; D.dealt = null; };
+  /* The claim the stage makes is that a bad winter costs a gene far more than
+     its size suggests, and the way it makes that claim is a floor on the
+     average headcount: two of the three curves must be matched while the herd
+     still averages a stated number, which forbids the answer "make the whole
+     herd smaller". Three things have to hold and none is visible on screen:
+
+       - each curve is reachable, with its floor respected;
+       - the smooth route CANNOT reach the two floored curves at any death
+         rate on the slider -- this is the whole stage, and it is swept;
+       - the same setting run again lands inside the tolerance.            */
+  const put = (b, d, h, bad) => { D.on.b = D.on.d = D.on.bad = true;
+    D.b = b; D.d = d; D.h = h; D.bad = {}; for (const y of bad) D.bad[y] = true;
+    D.mode = "free"; D.dealt = null; };
+  const endVar = (sizes, k, seed) => {
+    const P = D_runHerds(sizes, k, seed);
+    const t = sizes.length - 1;
+    return mn(P.map(r => 2 * r[t] * (1 - r[t])));
+  };
+  const sizesNow = () => D_sizes(D.b, D.d, D.h, D.bad);
+
   put(0.260, 0.200, 0.60, [1976, 1996]);
-  const l6 = D_sizes(D.b, D.d, D.h, D.bad);
-  check("D the Lesson 6 model still fits the record", D_miss(l6) < 200,
-        "it sits " + D_miss(l6).toFixed(0) + " moose off the counted record");
+  check("D the Lesson 6 model still fits the record", D_miss(sizesNow()) < 200,
+        "it sits " + D_miss(sizesNow()).toFixed(0) + " moose off the counted record");
 
-  const agree = [];
-  for (const sizes of [new Array(42).fill(700),
-                       (() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })(),
-                       (() => { const a = new Array(42).fill(900); for (let i = 11; i < 31; i++) a[i] = 58; return a; })()]) {
-    const f = acrossGenerations(sizes);
-    const m = D_measuredN(D_runHerds(sizes, 400, 4242 + Math.round(f)));
-    agree.push([f, m, Math.abs(m - f) / f]);
-  }
-  check("D the arithmetic matches the forty herds", agree.every(r => r[2] < 0.25),
-        agree.map(r => "says " + r[0].toFixed(0) + ", herds measure " + r[1].toFixed(0)).join("  "));
-  check("D a crash is worth far less than its own average",
-        agree[1][0] < 0.5 * mn((() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })()),
-        "900 with a three-winter crash to 18 averages " +
-        mn((() => { const a = new Array(42).fill(900); for (let i = 20; i < 23; i++) a[i] = 18; return a; })()).toFixed(0) +
-        " and is worth " + agree[1][0].toFixed(0));
+  D_TARGETS.forEach((t, i) => {
+    const want = D_targetCurve(t);
+    const r = t.ref;
+    put(r.b, r.d, r.h, r.bad);
+    const sz = sizesNow(), avg = mn(sz);
+    const hits = [0, 1, 2, 3, 4].map(k => endVar(sz, D_HERDS, 6000 + k * 7919))
+                                .filter(v => Math.abs(v - want.endVar) <= t.tol).length;
+    check("D curve " + (i + 1) + " is reachable and keeps its floor",
+          hits >= 4 && (!t.minAvg || avg >= t.minAvg),
+          "its own model lands " + hits + "/5, ends at " + want.endVar.toFixed(3) +
+          " ± " + t.tol + ", averages " + avg.toFixed(0) +
+          (t.minAvg ? " against a floor of " + t.minAvg : " with no floor"));
+  });
 
-  /* D1, the committed estimate: on the record as Lesson 6 left it, a typical
-     herd barely moves. The misconception is that forty-two winters of a
-     thousand moose does something to a gene, so the bar has to reject 0.25
-     and 0.50 -- the two answers a student who has not looked gives. */
-  put(0.260, 0.200, 0.60, [1976, 1996]);
-  const P0 = D_runHerds(D_sizes(D.b, D.d, D.h, D.bad), 200, 1959);
-  const t1 = D_dist(P0), tol1 = Math.max(0.015, 0.3 * t1);
-  check("D1 truth", t1 > 0 && t1 < 0.12, "a typical herd ends " + t1.toFixed(3) + " from where it started");
-  check("D1 rejects 'it wanders a long way'", Math.abs(0.25 - t1) > tol1 && Math.abs(0.50 - t1) > tol1,
-        "0.25 and 0.50 both miss a truth of " + t1.toFixed(3) + " (tol " + tol1.toFixed(3) + ")");
-
-  /* D2 is the roll, and its target is a WINDOW: between 12 and 24 of the
-     forty outside 0.35-0.65. Two-sided on purpose -- doing nothing
-     undershoots and flattening the herd overshoots, so aiming is the skill.
-     Both of those have to be true or the window is decoration. */
-  const outsideFor = (b, d, h, bad, k) => { put(b, d, h, bad);
-    return D_outside(D_runHerds(D_sizes(D.b, D.d, D.h, D.bad), D_HERDS, 7000 + k)); };
-  const doNothing = [0,1,2,3].map(k => outsideFor(0.260, 0.200, 0.60, [], k));
-  check("D2 doing nothing undershoots the window", doNothing.every(v => v < D_WANT_LO),
-        "no marked winters: " + doNothing.join("/") + " of 40 outside, window is " + D_WANT_LO + "-" + D_WANT_HI);
-  const flatten = [0,1,2,3].map(k => outsideFor(0.0, 0.60, 0.80, MOOSE_Y.slice(0, -1), k));
-  check("D2 flattening the herd overshoots it", flatten.every(v => v > D_WANT_HI),
-        "every winter marked, deaths at 0.60: " + flatten.join("/") + " of 40 outside");
-  /* And somewhere in between it is landable. Swept rather than asserted:
-     the window corresponds to a record worth roughly 50 to 240 moose, and
-     there are two routes into it -- lean on the death rate, or mark a
-     handful of winters and leave the rates alone. Both are checked, because
-     a window only one route reaches is a window with one answer. */
-  const landed = [];
-  for (const d of [0.255, 0.26, 0.265, 0.27, 0.275, 0.28, 0.285])
-    if ([0,1,2,3,4].map(k => outsideFor(0.260, d, 0.60, [1976, 1996], k))
-                   .filter(v => v >= D_WANT_LO && v <= D_WANT_HI).length >= 3)
-      landed.push("deaths " + d.toFixed(3) + " on the Lesson 6 winters");
-  for (const n of [3, 4, 5, 6]) {
-    const bad = []; for (let i = 0; i < n; i++) bad.push(1970 + i * 4);
-    if ([0,1,2,3,4].map(k => outsideFor(0.260, 0.200, 0.60, bad, k))
-                   .filter(v => v >= D_WANT_LO && v <= D_WANT_HI).length >= 3)
-      landed.push(n + " deep winters, rates left alone");
-  }
-  check("D2 the window is landable, by more than one route", landed.length >= 2,
-        landed.length ? landed.join(" ;  ") : "nothing in the swept range landed 3 of 5 rolls");
-  put(0.260, 0.200, 0.60, [1976, 1996]);
-
-  /* D3, the closing rounds. Three classes in rotation; no constant clears
-     three, and in particular the plain average of the record does not. */
-  const rg = mulberry32(808), iv = [];
-  for (let n = 0; n < 3; n++) { const r = D.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, mn(r.sizes)]); }
-  const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("D3 no constant clears", lo > hi,
-        "three rounds: " + iv.map(v=>"["+v[0].toFixed(0)+","+v[1].toFixed(0)+"]").join(" "));
-  const avgClears = iv.filter(v => v[2] >= v[0] && v[2] <= v[1]).length;
-  check("D3 the plain average clears at most the steady round", avgClears <= 1,
-        "the record's own average clears " + avgClears + " of 3: " +
-        iv.map(v => "avg " + v[2].toFixed(0) + " vs [" + v[0].toFixed(0) + "," + v[1].toFixed(0) + "]").join("  "));
-
-  /* D4, the wolves: the plain average must miss at every window the slider
-     reaches, or the panel is making a claim the record does not support. */
-  {
-    let worst = null;
-    for (let y = 1959; y <= 2000; y++) {
-      document.getElementById("D_wy").value = String(y);
-      const c = D_wolfWindow().map(x => x[1]);
-      const hm = acrossGenerations(c), am = mn(c), t = Math.max(1.2, 0.1 * hm);
-      if (Math.abs(am - hm) <= t) worst = "at " + y + " the plain average " + am.toFixed(1) + " lands on " + hm.toFixed(1);
+  // the sweep that makes the stage mean something
+  const sliderD = []; { const el = document.getElementById("D_d");
+    for (let v = +el.min; v <= +el.max; v += +el.step) sliderD.push(v); }
+  D_TARGETS.forEach((t, i) => {
+    if (!t.minAvg) return;
+    const want = D_targetCurve(t);
+    let best = null;
+    for (const d of sliderD) {
+      put(0.260, d, 0.60, []);                       // no bad winters at all
+      const sz = sizesNow(), avg = mn(sz);
+      if (avg < t.minAvg) continue;
+      const v = mn([0, 1].map(k => endVar(sz, D_HERDS, 7000 + k * 7919)));
+      if (best === null || Math.abs(v - want.endVar) < Math.abs(best[1] - want.endVar)) best = [d, v, avg];
     }
-    document.getElementById("D_wy").value = "1959";
-    const c = D_wolfWindow().map(x => x[1]);
-    check("D4 the plain average misses, at every window", worst === null,
-          worst || ("1959 on: average " + mn(c).toFixed(1) + ", drifts like " + acrossGenerations(c).toFixed(1)));
-  }
+    check("D curve " + (i + 1) + " is out of reach without bad winters",
+          best === null || Math.abs(best[1] - want.endVar) > t.tol,
+          best === null ? "no death rate keeps the average above " + t.minAvg
+                        : "best smooth decay is d=" + best[0].toFixed(3) + " -> " + best[1].toFixed(3) +
+                          " (average " + best[2].toFixed(0) + "), wanted " + want.endVar.toFixed(3) + " ± " + t.tol);
+  });
+
+  // and the contrast the stage exists to show, stated as one line
+  put(0.260, 0.300, 0.60, []);              const smooth = sizesNow();
+  put(0.260, 0.200, 0.60, [1968, 1972, 1976, 1980, 1984, 1988]); const bumpy = sizesNow();
+  check("D a bad winter costs more than its size suggests",
+        acrossGenerations(bumpy) < 0.5 * acrossGenerations(smooth) &&
+        Math.abs(mn(bumpy) - mn(smooth)) / mn(smooth) < 0.25,
+        "smooth: average " + mn(smooth).toFixed(0) + ", worth " + acrossGenerations(smooth).toFixed(0) +
+        "  |  six bad winters: average " + mn(bumpy).toFixed(0) + ", worth " + acrossGenerations(bumpy).toFixed(0));
+
+  check("D each curve is dealt twice and never twice running",
+        D_ORDER.length === D_ROUNDS &&
+        [0,1,2].every(k => D_ORDER.filter(v => v === k).length === 2) &&
+        D_ORDER.every((v, i) => i === 0 || v !== D_ORDER[i - 1]),
+        "order " + D_ORDER.join(""));
+
+  put(0.260, 0.200, 0.60, [1976, 1996]);
 }
 
 /* ---- E. four arrows into one junction ----------------------------------- */
