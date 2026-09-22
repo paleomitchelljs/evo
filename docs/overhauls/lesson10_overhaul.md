@@ -479,3 +479,116 @@ read as too uncertain: the best width lands a clean hit 44% of the time against
   It failed about one run in six. Now 40 replays with the bar at 32.
 - `D a big herd does not pass by being big` tested for exactly zero over six
   reps. Now 8 reps with a 25% ceiling.
+
+---
+
+## 2026-09-22 — Stage D rebuilt on an individual-based herd (JM)
+
+### What JM asked for
+
+- bottom-panel axes are wrong: y-ticks all read "1", x-ticks read years as percentages
+- "bad winter" deaths are almost exclusively males
+- a strong Vk (variance in offspring count) on the males
+- non-overlapping generations: moose born in year N are the only ones breeding in year N+1
+- all three assumptions **silent** — no new prose, they exist to add variance
+- one driftier line per attempt, not a line averaged over many runs
+- new intro prose (dictated), two bullets, and a batch of relabelling:
+  "run" → "attempt", "the record runs" → "observed range of moose N",
+  "your steady herd" → "steady herd with effective rate of drift",
+  control "moose in your steady herd" → "effective number of moose"
+
+### Status
+
+- [x] axis-formatter swap — `axes(ctx, f, xLab, yLab, yFmt, xFmt)` is y-first and
+      Stage D passed them x-first. Invisible on the top plot, where both
+      formatters happened to be `toFixed(0)`; fatal on the bottom one.
+- [x] axis range fitted to the run
+- [x] individual-based operator — `D_herdRun`, ~26ms for the record at 40
+      loci, 290ms worst case (3000 moose, 200 loci)
+- [x] copy pass — intro, bullets, predict card, control label, task line
+- [x] recalibrate: `D_TOL` 0.6% -> 0.8%, new `D_HITS = 2`, nine Stage D checks
+      rewritten. `node scripts/check_lesson10_numbers.js` -> 56 checks, all pass
+- [x] plot key pinned to the corner instead of hung off each line's endpoint,
+      which collided precisely when the student had the answer right
+
+### Why the axis range had to move too
+
+`h0 * 0.80 .. h0 * 1.01` is a fixed fraction of the starting heterozygosity and
+knows nothing about how far the run actually goes. Measured on the shipped page
+at the answer, 120 loci, 4 alleles:
+
+    curves span 0.7345..0.7500  =  20px of a 208px panel
+    the 0.6% tolerance being judged  =  5.9px
+
+Fitted to the run (18% padding, floor 0.0015) it is 153px of 208, and the
+tolerance is 43px. Checked across 5–200 loci, 2/4/8 alleles, herds of 50–3000,
+and at three points during the draw animation: stable, no duplicate ticks, no
+curve outside the frame.
+
+### Why the answer stops being the harmonic mean
+
+The old operator ran `loci` **independent** binomial drifts and averaged them,
+so the curve was smooth and the size that matched was the harmonic mean of the
+census, 926. An individual-based herd puts every locus on one shared pedigree:
+the males who happen to sire many calves pass all of their loci at once, so the
+loci stop being replicates and the line stays ragged however many you follow.
+
+Measured consequences, `MALE_RISK = 8`, siring weights `Exp(1)^2`:
+
+- the 1996 crash (2398 → 900) leaves a breeding pool of about **47 males to 853
+  females** — Ne from the sex ratio alone is ~178 against a census of 900
+- the record loses about **8%** of its heterozygotes over 42 winters, against
+  2–3% under the old operator. This is what makes JM's "the rate of drift is
+  quite high comparatively" true.
+- the loci slider still earns its place but now hits a floor: run-to-run sd of
+  the decay falls 2.64% → 1.22% → 0.86% at 5, 40 and 160 loci, and stops there.
+  That floor is the pedigree, and it is the driftiness JM asked for.
+
+### Where I departed from the dictation, and why
+
+JM's card text was "You have 5 tries to find the rate that matches" — one
+landing attempt of five. **That gate is walked by the misconception.**
+Measured, 16 simulated students, 120 loci, `D_TOL = 0.8%`:
+
+    N        P(>=1 of 5 lands)   P(>=2 of 5 lands)
+    ~790           ~88%                 60%
+    926            ~80%                 35%
+    1056 (the plain average)  ~58%      19%
+
+At one-of-five the plain average of the census clears the gate more than half
+the time, which is the thing `check_lesson10_numbers.js` exists to stop. So
+the gate is **two of five**, and the card says so rather than claiming five
+tries and quietly wanting two. `D_HITS` is the knob if JM would rather have
+one-of-five and a tighter tolerance — but a tolerance tight enough to shut
+out 1056 at one attempt also shuts out the right answer most of the time,
+because the record's own pedigree noise (sd 0.9% of decay at 120 loci) is the
+floor and it does not shrink with loci.
+
+### Copy dropped, for JM to restore in a line if he wants it
+
+Following the dictated spec literally, four bullets and two lecture quotes
+came out of the intro:
+
+- "Each locus starts with every allele equally common, and **nothing on this
+  screen knows which allele a moose is carrying**" — the only place the stage
+  said out loud that this is drift and not selection
+- the two plot-key bullets (grey = the record, purple = your herd) — the plots
+  now label their own lines instead
+- "Over forty-two winters a herd this size loses only a few percent … more
+  loci average that noise down" — no longer true as written, and the student
+  now has no hint that the loci slider helps
+- 202_lec11_07 (the absorbing boundary, the downs are the limiting step) and
+  the streaky-randomness quote
+
+Kept: "Anything that makes some individuals reproduce more than others makes
+evolution faster" — it is the silent Vk assumption in JM's own voice without
+naming it.
+
+### Harness bug found in passing
+
+`check_lesson10_numbers.js` returned its whole report through `document.title`.
+Chrome caps that, and once the Stage D messages grew the cap ate the **entire
+Stage A block**: 45 checks ran, 29 were reported, and the run still printed a
+tidy summary. The report now comes back in a `<pre>` that `--dump-dom` returns
+whole, and the runner fails if the number of reported checks does not match the
+number declared in the file.

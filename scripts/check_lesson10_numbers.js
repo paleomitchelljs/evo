@@ -36,8 +36,8 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const INNER = `
 const L=[], say=s=>L.push(s);
-let bad = 0;
-const check = (name, ok, detail) => { if (!ok) bad++; say((ok?"ok   ":"FAIL ") + name + "  " + detail); };
+let bad = 0, ran = 0;
+const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FAIL ") + name + "  " + detail); };
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 
 /* ---- 0. the page came up at all ---------------------------------------- */
@@ -504,71 +504,173 @@ check("slots declared match slots written",
 
 /* ---- D. how big a steady herd drifts like this one ---------------------- */
 {
-  /* JM, 2026-09-22 rebuilt this stage: the student sizes a steady herd and
-     matches its heterozygosity decay to the counted record's. Four things
-     have to hold and none is visible on screen:
+  /* JM rebuilt this stage twice on 2026-09-22. The second rebuild replaced
+     the operator: the herd is individuals now, generations do not overlap,
+     a bad winter kills males, and males vary wildly in how many calves they
+     sire. Those assumptions are silent on the page, so every one of them has
+     to be pinned here or a later edit drops one without anything going red.
 
-       - the record actually identifies a size, rather than accepting
-         anything large;
-       - the size it identifies is the harmonic mean, not the plain average;
-       - the loci slider is the difference between a matchable curve and one
-         that is mostly noise;
+     What has to hold, none of it visible by opening the page:
+
+       - the record identifies a herd size, rather than accepting anything;
+       - the size it identifies is BELOW the harmonic mean of the census --
+         the old stage taught that the answer was the harmonic mean, and the
+         male-biased crash is exactly what makes that no longer true;
+       - the plain average does not clear the gate;
+       - the loci all ride one pedigree, so more of them do NOT average the
+         noise away the way independent loci would. This is the driftiness
+         JM asked for, and it is the thing a well-meaning refactor would
+         quietly undo;
+       - the herd drifts far faster than an ideal population of the same
+         size, which is what the closing banner claims;
        - and the alleles slider does not move the bar, because the verdict is
-         taken on the decay rather than on the level. */
-  const gapAt = (N, loci, k, reps) => {
-    const out = [];
-    for (let r = 0; r < reps; r++) {
-      D.N = N; D.loci = loci; D.alleles = k; D.serial = r * 37 + N;
-      D_run();
-      out.push(D_decay(D.you) - D_decay(D.moose));
-    }
-    return out;
-  };
-  const passRate = (N, loci, k, reps) => gapAt(N, loci, k, reps).filter(g => Math.abs(g) <= D_TOL).length / reps;
+         taken on the decay rather than on the level.
 
+     Every "student" here is a fresh record seed, because the page draws the
+     record once per student and the answer shifts a little with it. A bar
+     that only holds for the average student is not a bar. */
+  const recDecay  = (loci, k, seed) => D_decay(D_herdRun(mulberry32(seed), MOOSE, loci, k));
+  const herdDecay = (N, loci, k, seed) =>
+    D_decay(D_herdRun(mulberry32(seed), new Array(MOOSE.length).fill(N), loci, k));
+  /* P(at least D_HITS of D_RUNS attempts land) for a herd whose single-attempt
+     hit rate is p -- the gate the student actually faces. */
+  const pGate = p => {
+    let s = 0;
+    for (let i = D_HITS; i <= D_RUNS; i++) {
+      let c = 1; for (let j = 0; j < i; j++) c = c * (D_RUNS - j) / (j + 1);
+      s += c * Math.pow(p, i) * Math.pow(1 - p, D_RUNS - i);
+    }
+    return s;
+  };
+  /* one student, one record; their herd resampled att times */
+  const gateAt = (N, loci, k, student, att) => {
+    const rec = recDecay(loci, k, 4000 + student * 7919);
+    let hit = 0;
+    for (let a = 0; a < att; a++)
+      if (Math.abs(herdDecay(N, loci, k, 90001 + student * 104729 + a * 131) - rec) <= D_TOL) hit++;
+    return pGate(hit / att);
+  };
+  const meanGate = (N, loci, k, students, att) => {
+    let s = 0; for (let i = 0; i < students; i++) s += gateAt(N, loci, k, i, att);
+    return s / students;
+  };
+
+  /* -- the record pins a size, and it is not "anything big" -------------- */
+  const LOCI = 120;
   const band = [];
-  for (const N of [100, 300, 600, 850, 1056, 1400, 1800, 3000]) band.push([N, passRate(N, 40, 4, 6)]);
+  for (const N of [300, 500, 700, 800, 926, 1056, 1400, 2200, 3000])
+    band.push([N, meanGate(N, LOCI, 4, 4, 10)]);
   const inBand = band.filter(r => r[1] >= 0.5).map(r => r[0]);
   check("D the record identifies a herd size", inBand.length >= 1 && inBand.length <= 4,
-        "of " + band.length + " sizes swept, " + inBand.length + " pass half their runs: " +
-        band.map(r => r[0] + ":" + (100*r[1]).toFixed(0) + "%").join(" "));
-  const big = [1800, 3000].map(N => passRate(N, 40, 4, 8));
-  check("D a big herd does not pass by being big", big.every(r => r <= 0.25),
-        "1800 and 3000 moose land " + big.map(r => (100*r).toFixed(0) + "%").join(" and ") +
-        " of runs, so the answer is a size rather than a ceiling");
-  check("D the default setting is not the answer", passRate(500, 40, 4, 6) <= 0.2,
-        "the herd the stage opens on (500) lands " + (100*passRate(500, 40, 4, 6)).toFixed(0) + "% of runs");
+        "of " + band.length + " sizes swept, " + inBand.length + " clear the gate half the time: " +
+        band.map(r => r[0] + ":" + (100 * r[1]).toFixed(0) + "%").join(" "));
+  const big = band.filter(r => r[0] >= 2200).map(r => r[1]);
+  check("D a big herd does not pass by being big", big.every(r => r <= 0.2),
+        "2200 and 3000 moose clear " + big.map(r => (100 * r).toFixed(0) + "%").join(" and ") +
+        " of the time, so the answer is a size rather than a ceiling");
+  check("D the default setting is not the answer", meanGate(500, LOCI, 4, 4, 10) <= 0.25,
+        "the herd the stage opens on (500) clears " +
+        (100 * meanGate(500, LOCI, 4, 4, 10)).toFixed(0) + "% of the time");
+  check("D the plain average does not clear the gate", meanGate(1056, LOCI, 4, 6, 12) <= 0.4,
+        "the plain average of the census (" + D_ARITH.toFixed(0) + ") clears " +
+        (100 * meanGate(1056, LOCI, 4, 6, 12)).toFixed(0) + "% of the time");
 
-  const atHarm = mn(gapAt(Math.round(D_HARM), 120, 4, 8));
-  const atArith = mn(gapAt(Math.round(D_ARITH), 120, 4, 8));
-  check("D the answer is the harmonic mean, not the plain average",
-        Math.abs(atHarm) < Math.abs(atArith),
-        "harmonic " + D_HARM.toFixed(0) + " sits " + (100*atHarm).toFixed(2) +
-        "% from the record; the plain average " + D_ARITH.toFixed(0) + " sits " + (100*atArith).toFixed(2) + "%");
+  /* -- the answer is BELOW the harmonic mean ----------------------------- */
+  {
+    const reps = 10;
+    let rec = 0; for (let r = 0; r < reps; r++) rec += recDecay(LOCI, 4, 4000 + r * 7919);
+    rec /= reps;
+    const at = N => { let s = 0; for (let r = 0; r < reps; r++) s += herdDecay(N, LOCI, 4, 6000 + r * 7919); return s / reps; };
+    /* walk down from the harmonic mean until the herd drifts as fast as the
+       record; re-derived here rather than pasted, so a drifting bar is caught
+       rather than enshrined. */
+    let ans = null, prev = null;
+    for (const N of [1400, 1200, 1056, 926, 850, 800, 750, 700, 600, 500]) {
+      const d = at(N);
+      if (prev && prev[1] <= rec && d >= rec) { const f = (rec - prev[1]) / (d - prev[1]); ans = prev[0] + f * (N - prev[0]); break; }
+      prev = [N, d];
+    }
+    check("D the answer sits below the harmonic mean of the census",
+          ans !== null && ans < D_HARM,
+          "the record loses " + (100 * rec).toFixed(2) + "% and the herd that loses the same is ~" +
+          (ans === null ? "off the sweep" : ans.toFixed(0)) + ", against a harmonic mean of " +
+          D_HARM.toFixed(0) + " and a plain average of " + D_ARITH.toFixed(0));
+  }
 
-  const few = passRate(Math.round(D_HARM), 5, 4, 8), many = passRate(Math.round(D_HARM), 160, 4, 8);
-  check("D the loci slider is worth having", many >= few + 0.3,
-        "at the right herd size, 5 loci land " + (100*few).toFixed(0) + "% of runs and 160 loci land " +
-        (100*many).toFixed(0) + "%");
+  /* -- the loci share one pedigree --------------------------------------- */
+  {
+    const sdOf = (loci, reps) => {
+      const v = []; for (let r = 0; r < reps; r++) v.push(recDecay(loci, 4, 300 + r * 7919));
+      const m = mn(v);
+      return Math.sqrt(v.reduce((s, x) => s + (x - m) * (x - m), 0) / (v.length - 1));
+    };
+    const s10 = sdOf(10, 12), s160 = sdOf(160, 12);
+    /* independent loci would shrink the sd by sqrt(160/10) = 4. A shared
+       pedigree puts a floor under it. If this ever passes 3.2 the loci have
+       come unstuck from each other and the line has gone smooth again. */
+    check("D every locus rides one pedigree", s160 > 0 && s10 / s160 < 3.2,
+          "run-to-run sd of the decay is " + (100 * s10).toFixed(2) + "% at 10 loci and " +
+          (100 * s160).toFixed(2) + "% at 160 -- a factor of " + (s10 / s160).toFixed(2) +
+          ", against the 4.0 independent loci would give");
+    check("D the loci slider is still worth having", s10 / s160 > 1.3,
+          "more loci do cut the noise, by a factor of " + (s10 / s160).toFixed(2));
+  }
 
-  const byK = [2, 4, 8].map(k => mn(gapAt(Math.round(D_HARM), 120, k, 6)));
-  check("D the alleles slider does not move the bar", byK.every(g => Math.abs(g) <= D_TOL),
-        "at the right herd size the decay gap is " + byK.map(g => (100*g).toFixed(2) + "%").join(" / ") +
-        " for 2, 4 and 8 alleles");
+  /* -- drift is far stronger than the headcount suggests ------------------ */
+  {
+    const reps = 10;
+    let rec = 0; for (let r = 0; r < reps; r++) rec += recDecay(LOCI, 4, 7100 + r * 7919);
+    rec /= reps;
+    /* an ideal population held at the harmonic mean of the census, in closed
+       form: no sexes, no Vk, one gene copy sampled per parent slot */
+    const ideal = 1 - Math.pow(1 - 1 / (2 * D_HARM), MOOSE.length - 1);
+    check("D drift is far stronger than the census suggests", rec > 2 * ideal,
+          "the record loses " + (100 * rec).toFixed(2) + "% where an ideal herd of " +
+          D_HARM.toFixed(0) + " would lose " + (100 * ideal).toFixed(2) +
+          "% -- a factor of " + (rec / ideal).toFixed(1));
+  }
+
+  /* -- the alleles slider does not move the bar -------------------------- */
+  {
+    const byK = [2, 4, 8].map(k => {
+      const reps = 8;
+      let rec = 0, you = 0;
+      for (let r = 0; r < reps; r++) { rec += recDecay(LOCI, k, 8100 + r * 7919); you += herdDecay(800, LOCI, k, 8600 + r * 7919); }
+      return (you - rec) / reps;
+    });
+    check("D the alleles slider does not move the bar", byK.every(g => Math.abs(g) <= D_TOL),
+          "at a herd of 800 the decay gap is " + byK.map(g => (100 * g).toFixed(2) + "%").join(" / ") +
+          " for 2, 4 and 8 alleles");
+  }
 }
 
+
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
+/* The count goes back with the report so the runner can tell a clean run from
+   a truncated one. This used to be invisible: the report came home through
+   document.title, Chrome capped it, and a whole stage's worth of checks went
+   missing while the summary still read clean. */
+say("RAN " + ran);
 L.join(" ;; ");
 `;
 
+/* The result comes back in a <pre>, not in document.title: Chrome caps the
+   title, and when the Stage D messages grew the cap silently ate the whole
+   Stage A block -- 45 checks ran and 29 were reported, with nothing saying
+   so. --dump-dom returns the outer document whole, so the <pre> has no cap.
+   The title is kept as a one-word sentinel for "did the eval even land". */
 const probe = `<!doctype html><meta charset="utf-8"><title>pending</title>
 <iframe id="f" src="http://127.0.0.1:${PORT}/app/lessons/lesson10.html?preview=1" width="1500" height="1000"></iframe>
+<pre id="out"></pre>
 <script>
 const SRC = ${JSON.stringify(INNER)};
 document.getElementById("f").addEventListener("load", () => setTimeout(() => {
   const w = document.getElementById("f").contentWindow;
-  try { document.title = String(w.eval(SRC)); }
-  catch (e) { document.title = "THREW " + e.message + " @ " + (e.stack||"").split("\\n")[1]; }
+  let res;
+  try { res = String(w.eval(SRC)); }
+  catch (e) { res = "THREW " + e.message + " @ " + (e.stack||"").split("\\n")[1]; }
+  document.getElementById("out").textContent = res;
+  document.title = "done";
 }, 4000));
 </script>`;
 
@@ -583,10 +685,18 @@ setTimeout(() => {
   const r = spawnSync(CHROME, ["--headless=new", "--disable-gpu", "--virtual-time-budget=600000",
                                "--dump-dom", `http://127.0.0.1:${PORT}/_check_l10.html`],
                       { encoding: "utf8", maxBuffer: 1 << 28 });
-  const m = /<title>([\s\S]*?)<\/title>/.exec(r.stdout || "");
+  const m = /<pre id="out">([\s\S]*?)<\/pre>/.exec(r.stdout || "");
   if (!m) { console.error("no result -- is Chrome at " + CHROME + " ?"); cleanup(); process.exit(2); }
   const text = m[1].replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
-  for (const linefeed of text.split(" ;; ")) console.log(linefeed);
+  const lines = text.split(" ;; ");
+  for (const linefeed of lines) console.log(linefeed);
+  const reported = lines.filter(l => /^(ok|FAIL)\s/.test(l)).length;
+  const ranLine = /^RAN (\d+)$/.exec((lines.find(l => /^RAN \d+$/.test(l)) || ""));
+  if (!ranLine || +ranLine[1] !== reported) {
+    console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported +
+                " came back -- the report was truncated");
+    cleanup(); process.exit(1);
+  }
   cleanup();
   process.exit(/ALL BARS PASS/.test(text) ? 0 : 1);
 }, 1800);
