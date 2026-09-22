@@ -14,10 +14,11 @@
  *   3. the truth it is judged against sits inside its own band relative to
  *      the re-runs the student is shown.
  *
- * A fourth thing, specific to the closing games: no CONSTANT answer may
- * clear three rounds. Each game's three round classes are checked for an
- * empty common interval, so a student who locks the same number every time
- * cannot pass by finding the average.
+ * A fourth thing, specific to the closing games: no single setting may
+ * clear two different targets, so a student cannot park the controls and
+ * let the randomness hand them the ladder.
+ *
+ * Stage E was cut on 2026-09-21 and its half of this file went with it.
  *
  * It drives the shipped page rather than a copy of its arithmetic: the
  * checks run inside a same-origin iframe against the page's own functions,
@@ -40,10 +41,10 @@ const check = (name, ok, detail) => { if (!ok) bad++; say((ok?"ok   ":"FAIL ") +
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 
 /* ---- 0. the page came up at all ---------------------------------------- */
-check("page loaded", !!(A && A.pop && B && C && D && E && typeof Score !== "undefined"),
+check("page loaded", !!(A && A.pop && B && C && D && typeof Score !== "undefined"),
       "every stage object and Score are defined");
 check("slots declared match slots written",
-      Object.keys(BIT).length === 7, Object.keys(BIT).length + " named bits");
+      Object.keys(BIT).length === 4, Object.keys(BIT).length + " named bits");
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
@@ -353,6 +354,17 @@ check("slots declared match slots written",
   check("C no one setting clears two shapes", bothAt === null,
         bothAt || "every setting on the two sliders clears at most one of the five");
 
+  /* Same switch, same rule: practice is free and costs nothing. */
+  {
+    const g = C.game, before = g.state.hits.length, n0 = g.state.n;
+    document.getElementById("C_practice").checked = true;
+    g.run({ now: true });
+    check("C a practice run costs no round",
+          g.state.hits.length === before && g.state.n === n0 && g.state.ran === false,
+          "tally " + before + " -> " + g.state.hits.length + ", still on shape " + (g.state.n + 1));
+    document.getElementById("C_practice").checked = false;
+  }
+
   check("C each shape is dealt twice and never twice running",
         C_ORDER.length === C_ROUNDS &&
         [0,1,2,3,4].every(k => C_ORDER.filter(v => v === k).length === 2) &&
@@ -393,11 +405,12 @@ check("slots declared match slots written",
     const sz = sizesNow(), avg = mn(sz);
     const hits = [0, 1, 2, 3, 4].map(k => endVar(sz, D_HERDS, 6000 + k * 7919))
                                 .filter(v => Math.abs(v - want.endVar) <= t.tol).length;
-    check("D curve " + (i + 1) + " is reachable and keeps its floor",
-          hits >= 4 && (!t.minAvg || avg >= t.minAvg),
+    check("D curve " + (i + 1) + " is reachable and keeps its bounds",
+          hits >= 4 && (!t.minAvg || avg >= t.minAvg) && (!t.maxAvg || avg <= t.maxAvg),
           "its own model lands " + hits + "/5, ends at " + want.endVar.toFixed(3) +
           " ± " + t.tol + ", averages " + avg.toFixed(0) +
-          (t.minAvg ? " against a floor of " + t.minAvg : " with no floor"));
+          (t.minAvg ? " against a floor of " + t.minAvg
+                    : t.maxAvg ? " against a ceiling of " + t.maxAvg : " unbounded"));
   });
 
   // the sweep that makes the stage mean something
@@ -436,136 +449,77 @@ check("slots declared match slots written",
         D_ORDER.every((v, i) => i === 0 || v !== D_ORDER[i - 1]),
         "order " + D_ORDER.join(""));
 
-  put(0.260, 0.200, 0.60, [1976, 1996]);
-}
+  /* Drawing nothing at all must clear no curve. It used to clear curve 1:
+     with no arrows the herd grows without bound, and 0.493 sat inside a
+     window centred on 0.463. Curve 1 now carries a ceiling on the average,
+     which is what this bar defends. */
+  {
+    D.on.b = D.on.d = D.on.bad = false; D.bad = {};
+    const sz = D_model(), avg = mn(sz);
+    const v = mn([0, 1, 2].map(k => endVar(sz, D_HERDS, 9100 + k * 7919)));
+    const clears = D_TARGETS.filter(t => {
+      const w = D_targetCurve(t);
+      return Math.abs(v - w.endVar) <= t.tol &&
+             (!t.minAvg || avg >= t.minAvg) && (!t.maxAvg || avg <= t.maxAvg);
+    }).length;
+    check("D drawing nothing clears no curve", clears === 0,
+          "no arrows: averages " + avg.toFixed(0) + ", ends at " + v.toFixed(3) +
+          " -- clears " + clears + " of " + D_TARGETS.length);
+    D.on.b = D.on.d = D.on.bad = true;
+  }
 
-/* ---- E. four arrows into one junction ----------------------------------- */
-{
-  /* The stage's claim is that three of the four causes shrink a herd
-     WITHOUT taking a body off the island, and that what they come to
-     together is a product. E_formula prints that product; E_batch runs the
-     herds. They have to agree, or the stage is asserting arithmetic the
-     simulation does not produce. Ne is read back out of the spread of end
-     frequencies, the same way Stage D does it, rather than compared against
-     a second formula. */
-  const neOf = (cfg, k, seed) => {
-    const P = E_batch(cfg, k, seed);
-    const T = P[0].length - 1;
-    const v = mn(P.map(t => { const d = t[T] - 0.5; return d * d; }));
-    const r = Math.min(Math.max(1 - v / 0.25, 1e-12), 1 - 1e-12);
-    return 1 / (2 * (1 - Math.pow(r, 1 / T)));
-  };
-  const rows = [
-    ["bodies only",  { N: 24,  depth: null, males: null, cv: 0 }],
-    ["a crash",      { N: 100, depth: 10,   males: null, cv: 0 }],
-    ["a lopsided lek", { N: 100, depth: null, males: 6,  cv: 0 }],
-    ["uneven broods",  { N: 100, depth: null, males: null, cv: 1.8 }]
-  ].map(([name, cfg]) => [name, E_formula(cfg), neOf(cfg, 300, 2026 + cfg.N)]);
-  check("E the four-way arithmetic matches the herds",
-        rows.every(r => Math.abs(r[2] - r[1]) / r[1] < 0.30),
-        rows.map(r => r[0] + ": says " + r[1].toFixed(1) + ", herds measure " + r[2].toFixed(1)).join("  "));
-  check("E three of the four shrink it with a hundred bodies on the island",
-        rows.slice(1).every(r => r[1] < 60),
-        rows.slice(1).map(r => r[0] + " -> " + r[1].toFixed(1) + " of 100").join("  "));
+  /* Clicking a winter on the top plot is the only way to reach the answer
+     the stage is about, and it was silently swallowing clicks: the old snap
+     window was 1.2 years wide on a 13-pixel year. Every x inside the frame
+     must now land on a winter, and a click with the arrow undrawn must
+     change nothing rather than throw. */
+  {
+    const cv = document.getElementById("D_moose");
+    D_paint();
+    const f = D.frame, rect = cv.getBoundingClientRect();
+    const fitW = +cv.dataset.fitW || +cv.dataset.cssW || cv.width;
+    const at = px => ({ currentTarget: cv,
+                        clientX: rect.left + px * (rect.width / fitW),
+                        clientY: rect.top + (f.py + f.ph / 2) * (rect.width / fitW) });
+    let snapped = 0, tried = 0;
+    for (let px = f.px + 1; px < f.px + f.pw; px += 3) { tried++; if (D_winterAt(at(px)) !== null) snapped++; }
+    check("D every click inside the plot lands on a winter", snapped === tried,
+          snapped + " of " + tried + " x-positions across the frame snap to a winter");
 
-  /* The ladder. Every rung has to be REACHABLE with the arrows it has been
-     handed, and OUT OF REACH with the arrows of the rung below it. The
-     second half is what the per-rung slider floors buy: a crash alone
-     reaches 35 of the forty, so without a floor on it rungs 3 and 4 are
-     both clearable with rung 2's arrow and handing over an arrow means
-     nothing. The floors are read off E_RUNGS rather than restated here. */
-  const bestIn = (sweep, k, seed) => {
-    let hi = -1, at = null;
-    for (const cfg of sweep) {
-      const g = E_gone(E_batch(Object.assign({}, base, cfg), k, seed));
-      if (g > hi) { hi = g; at = cfg; }
+    D.on.bad = false; D.bad = {};
+    D_markAt(at(f.px + f.pw / 2));
+    check("D a click with the arrow undrawn marks nothing", Object.keys(D.bad).length === 0,
+          "the harsh-winter arrow gates the marking, and the note nudges instead of nothing happening");
+
+    D.on.bad = true; D.bad = {};
+    const years = [];
+    for (let k = 0; k < 6; k++) {
+      const px = f.px + f.pw * (0.1 + 0.15 * k);
+      D_markAt(at(px));
+      years.push(Object.keys(D.bad).length);
     }
-    return { hi, at };
-  };
-  const reps = (cfg, k, n) => { const v = []; for (let r = 0; r < n; r++) v.push(E_gone(E_batch(Object.assign({}, base, cfg), k, 12000 + r * 7919))); return v; };
-  const lands = (cfg, rung, n) => reps(cfg, E_HERDS, n)
-        .filter(v => v >= rung.lo && v <= (rung.hi == null ? E_HERDS : rung.hi)).length;
-  const base = { N: 100, depth: null, males: null, cv: 0 };
-  const floorOf = (i, k) => { for (let r = 1; r <= i; r++) { const f = E_RUNGS[r].floors; if (f && f[k] != null) return f[k]; } return null; };
+    check("D six clicks mark six different winters",
+          years.join(",") === "1,2,3,4,5,6", "after each click the count was " + years.join(", "));
+    const one = Object.keys(D.bad)[0];
+    D_markAt(at(f.x(+one)));
+    check("D clicking a marked winter unmarks it", Object.keys(D.bad).length === 5,
+          "clicking " + one + " again left " + Object.keys(D.bad).length + " marked");
+  }
 
-  // rung 1 -- the headcount, and only the headcount
+  /* The practice switch must not consume a round, and must not be able to
+     hand the student a pass -- a practice run is judged and shown but never
+     pushed onto the tally. */
   {
-    const R = E_RUNGS[0];
-    const best = [24, 28, 32, 36].map(N => [N, lands({ N }, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
-    check("E rung 1 landable", best[1] >= 4,
-          "N=" + best[0] + " lands " + best[1] + " of 6 rolls in " + R.lo + "-" + R.hi);
-    check("E rung 1 not already cleared", lands({}, R, 4) === 0,
-          "a hundred bodies, no arrows: " + reps({}, E_HERDS, 4).join("/") + " of " + E_HERDS);
-    check("E rung 1 is two-sided", lands({ N: 6 }, R, 4) === 0 && lands({ N: 300 }, R, 4) === 0,
-          "bottoming the slider gives " + reps({ N: 6 }, E_HERDS, 3).join("/") +
-          " and topping it gives " + reps({ N: 300 }, E_HERDS, 3).join("/"));
-  }
-  // rung 2 -- bodies pinned at a hundred, the crash handed over
-  {
-    const R = E_RUNGS[1];
-    const best = [4, 6, 8, 10].map(d => [d, lands({ depth: d }, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
-    check("E rung 2 landable on the crash", best[1] >= 4,
-          "depth=" + best[0] + " lands " + best[1] + " of 6 rolls at " + R.lo + "+");
-    check("E rung 2 needs the crash", lands({}, R, 4) === 0,
-          "no arrows at a hundred bodies: " + reps({}, E_HERDS, 4).join("/"));
-  }
-  // rungs 3 and 4 -- each one is handed an arrow and loses the cheap route
-  for (const idx of [2, 3]) {
-    const R = E_RUNGS[idx], dFloor = floorOf(idx, "depth"), mFloor = floorOf(idx, "males");
-    const sweepD = [dFloor, dFloor + 10, dFloor + 20].map(depth => ({ depth }));
-    const sweepM = idx === 2 ? [2, 3, 5, 8].map(males => ({ males }))
-                             : [mFloor, mFloor + 5, mFloor + 15].map(males => ({ males }));
-    const sweepC = idx === 2 ? [{}] : [{ cv: 1.2 }, { cv: 1.6 }, { cv: 2.0 }];
-    const withNew = [];
-    for (const a of sweepD) for (const b of sweepM) for (const c of sweepC)
-      withNew.push(Object.assign({}, a, b, c));
-    const bn = withNew.map(c => [c, lands(c, R, 6)]).reduce((a, b) => b[1] > a[1] ? b : a);
-    check("E rung " + (idx + 1) + " landable with its new arrow", bn[1] >= 4,
-          JSON.stringify(bn[0]) + " lands " + bn[1] + " of 6 rolls at " + R.lo + "+");
-    // the same settings with the new arrow rubbed out
-    const without = withNew.map(c => { const d = Object.assign({}, c);
-      if (idx === 2) delete d.males; else delete d.cv; return d; });
-    const bw = bestIn(without, E_HERDS, 4242);
-    check("E rung " + (idx + 1) + " out of reach without it", bw.hi < R.lo,
-          "best without the new arrow: " + bw.hi + " of " + E_HERDS + " (" + JSON.stringify(bw.at) + "), rung asks " + R.lo);
+    const g = D.game, before = g.state.hits.length, n0 = g.state.n;
+    document.getElementById("D_practice").checked = true;
+    g.run({ now: true });
+    check("D a practice run costs no round",
+          g.state.hits.length === before && g.state.n === n0 && g.state.ran === false,
+          "tally " + before + " -> " + g.state.hits.length + ", still on curve " + (g.state.n + 1));
+    document.getElementById("D_practice").checked = false;
   }
 
-  /* E1, the committed estimate, taken before a single arrow is drawn. The
-     two answers a student who has not looked gives are "none of them" and
-     "all of them", and the bar has to reject both. */
-  const e1 = [];
-  for (let r = 0; r < 6; r++) e1.push(E_gone(E_batch(base, 40, 5000 + r * 7919)));
-  const t1 = mn(e1);
-  check("E1 truth", t1 >= 0 && t1 < 6,
-        "a hundred bodies, sixty generations, nothing drawn: " + t1.toFixed(1) + " of 40 lose an allele");
-  check("E1 rejects the two answers a student gives without looking",
-        Math.abs(20 - t1) > 5 && Math.abs(40 - t1) > 5,
-        "20 and 40 both miss " + t1.toFixed(1) + " by more than the tolerance of 5");
-  check("E1 is worth asking -- the ladder moves it a long way",
-        mn([0,1,2].map(r => E_gone(E_batch(Object.assign({}, base, { depth: 40, males: 25, cv: 2 }), 40, 8000 + r * 131)))) > t1 + 20,
-        "the same hundred bodies with three arrows drawn lose far more");
-
-  /* E3, the closing rounds: three classes, no constant clears three, and
-     the misconception -- that the headcount is the number -- clears none. */
-  const rg = mulberry32(1234), iv = [];
-  for (let n = 0; n < 3; n++) { const r = E.game.round(rg, n); iv.push([r.truth - r.tol, r.truth + r.tol, r.cfg]); }
-  const lo = Math.max(...iv.map(v=>v[0])), hi = Math.min(...iv.map(v=>v[1]));
-  check("E4 no constant clears", lo > hi,
-        "rounds: " + iv.map(v => "[" + v[0].toFixed(0) + "," + v[1].toFixed(0) + "]").join("  "));
-  check("E4 rejects 'they all lose one' and 'none of them'",
-        iv.filter(v => 40 >= v[0] && 40 <= v[1]).length === 0 && iv.filter(v => 0 >= v[0] && 0 <= v[1]).length === 0,
-        "40 of 40 clears " + iv.filter(v => 40 >= v[0] && 40 <= v[1]).length + " of 3 rounds");
-
-  if (REAL.ltee) {
-    document.getElementById("E_lg").value = "50000"; E_drawLtee();
-    const spread = E.lteeSpread, se = E.lteeSe, tol = Math.max(0.03, 0.25 * spread);
-    check("E5 the fan is real", spread > se + tol,
-          "spread " + spread.toFixed(3) + " against a repeat-measurement bar of " + se.toFixed(3));
-    document.getElementById("E_lg").value = "0"; E_drawLtee();
-    check("E5 they start as one clone", E.lteeSpread < 0.05,
-          "at generation 0 the twelve are spread " + E.lteeSpread.toFixed(3));
-    document.getElementById("E_lg").value = "50000"; E_drawLtee();
-  } else check("E5 the long-term lines loaded", false, "ltee_fitness_summary.json did not arrive");
+  put(0.260, 0.200, 0.60, [1976, 1996]);
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");

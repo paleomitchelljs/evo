@@ -1,15 +1,16 @@
 # Lesson 10 — overhaul
 
-**File** · `app/lessons/lesson10.html` (`version: 6`, `scaffold: 7`)
+**File** · `app/lessons/lesson10.html` (`version: 7`, `scaffold: 4`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · rounds 1–3 done — 2026-09-21. Both check suites green; A, B, C and D driven end to end in headless Chrome.
+**Status** · rounds 1–4 done — 2026-09-21. Both check suites green (bar checks run three times clean); A, B, C and D driven end to end in headless Chrome.
 **Last touched** · 2026-09-21
 
 ## What the lesson is
 
 Drift, whole: random differential reproduction with nothing attached, the fact
 that the error compounds because it is inherited, the two absorbing walls, and
-four ways to shrink a population without taking a body off the island.
+a counted record in which the bad years cost a gene far more than their size
+suggests.
 
 The thing to protect is **Stage B**: one switch decides whether the next
 generation's parents come from the generation before it or from the pond the run
@@ -23,13 +24,17 @@ argument in `breed()`.
     B  the switch: inherited pool vs. fresh pool — ten target spreads
     C  107 populations and the two walls — ten target shapes  (Buri is the framing, not a panel)
     D  the Lesson 6 moose model, driven by a diagram — six drift curves to match
-    E  four arrows into one junction: bodies, crash, sex ratio, brood spread  + real data: LTEE
 
-D and E were rebuilt 2026-09-18 to JM's brief and were structurally what he
-asked for, but the session ran out before the bar checks came with them: the
-check script still tested the *retired* D/E and threw `D_formula is not
-defined`, so nothing in either stage had ever been verified. Writing the
-checks found four real defects, listed below.
+**Stage E was cut on 2026-09-21**, on JM's instruction. It was the four-arrow
+junction (bodies, crash, sex ratio, brood spread) plus the LTEE panel, and it
+took `REAL`/`grab`/`realOffline` and three scoring bits with it. It is in git
+history; nothing in the page or the checks refers to it any more.
+
+D was rebuilt 2026-09-18 to JM's brief and was structurally what he asked for,
+but the session ran out before the bar checks came with it: the check script
+still tested the *retired* D and threw `D_formula is not defined`, so nothing
+in the stage had ever been verified. Writing the checks found four real
+defects, listed below; a second pass on 2026-09-21 found two more.
 
 ## Items — round 1 (done)
 
@@ -314,3 +319,52 @@ turned out to cost.
 - Do not add F_ST, migration, or a second population. One pool per parent slot
   is the whole API this lesson commits to.
 - Do not take Lessons 12+ as precedent for anything here.
+
+
+## Items — round 4, from JM's notes 2026-09-21 (second batch)
+
+JM, verbatim: *"Part C/D shouldn't say 'Feel free to practice with the
+controls' at the start — only at the end. The students aren't free to practice
+at the beginning unless we add a 'Practice' toggle somewhere — which is maybe a
+good idea."* · *"Part D: The clicking to mark a bad year doesn't seem to be
+working. Nor does an animation seem to run."* · *"'Winters that went wrong'
+should be simply 'harsh winters'."* · *"Why 'herds' and not 'populations' or
+'years'? What does 'herd must average at least' mean? Why 'variety left at the
+end' and not 'number of alleles' or something more direct?"* · *"Let's also go
+ahead and cut Part E."*
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| R1 | C, D | **A real practice switch.** A checkbox in the controls; ticked, the Run button reads *Practice run*, the verdict reads *practice run — this one did not count*, and the round is neither scored nor consumed. Closing the game ticks it on and says so. | done |
+| R2 | — | The bypass (`score:bypass`) calls every game's `show()`, which calls `finish()`, which is why the closing line was on every card **from the first paint** in JM's preview. It now reads "All ten shapes done. Practice is on now…" and the switch it names is genuinely on. | done |
+| R3 | D | **Marking a winter was swallowing clicks.** The snap window was ±1.2 years on a 13-pixel year, so two clicks in three did nothing and said nothing. Every x inside the frame now snaps to its nearest winter; a click with the arrow undrawn nudges the note instead of doing nothing; the winter under the pointer draws as a faint dashed line. | done |
+| R4 | D | **There was no animation at all** — `run()` computed and landed in one tick. The drift curve now draws winter by winter with the year in the corner, the same `setInterval` shape Stage C uses. `run({now:true})` is the checks' way past it. | done |
+| R5 | D | "a winter that went wrong" → **harsh winter**, everywhere: bullets, DAG node, slider, note, R panel, readout, download. | done |
+| R6 | D | "herds" → **populations** throughout (card, button, bullets, R). "herd must average at least" → **average moose, at least**. | done |
+| R7 | — | **"variety" is gone from every screen in the lesson.** The curve is the same 2p(1−p) it always was, now named for what it counts: **moose carrying one of each allele**, drawn as a percentage falling from 50%. Relabelled in A, B, C and D so one curve does not have two names two stages apart. | done |
+| R8 | D | Bullets rewritten: what each plot is, then what to do, then the two constraints. | done |
+| R9 | — | **Stage E cut.** Markup, script, TOC entry, `Gates`/`NEXT`/`BIT`/`RealNeeded`, `REAL`/`grab`/`realOffline`, the boot lines and the E half of the check script. `version: 7`, `scaffold: 4`. `NEXT.D = null`, so finishing D shows the done banner. | done |
+| R10 | D | **The gimme the new checks found**: with no arrows drawn the herd grows without bound, averages 2254 and ends at 0.493 — which sat inside curve 1's window. Two of the six rounds were free. Curve 1 now carries `maxAvg: 600`; its own reference averages 388. | done |
+
+### What round 4 measured
+
+- **Drawing nothing clears no curve.** No arrows: average 2254, ends at 0.493.
+  Against curve 1 (0.465 ± 0.04, ceiling 600), curve 2 (floor 250) and curve 3
+  (floor 200) that is 0 of 3. Before the ceiling it was 1 of 3, dealt twice.
+- **Every x inside the moose frame snaps to a winter**: 199 of 199 sampled
+  positions across the plot, against roughly two in three under the old ±1.2
+  year window.
+- **A practice run costs nothing**, in both stages: tally unchanged, round
+  unchanged, `ran` still false — so the Next button stays shut.
+- The three curves still land their own reference 4–5 times in 5, the two
+  floored curves are still out of reach for every death rate on the slider
+  (best smooth decay 0.448 and 0.420 against targets of 0.355 and 0.217), and
+  the bar suite passes three runs in a row.
+
+### Still open
+
+- Stage A's `Gates.A.done` stays false under bypass because A has a second
+  task (the extinction roll) that `show()` does not close. Harmless — bypass
+  opens every section anyway — but it is why the A pip does not tick.
+- `D.mode`/`D.dealt` are dead: nothing sets `mode` to `"game"` any more. Left
+  in place rather than pruned, because the checks' `put()` writes them.
