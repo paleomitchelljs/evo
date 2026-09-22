@@ -48,22 +48,47 @@ check("slots declared match slots written",
 
 /* ---- A. differential reproduction with nothing attached ---------------- */
 {
-  /* A2 is a roll: drive one allele out inside A_ROLL_GENS generations, five
-     times. Three things have to hold and none of them is visible on screen. */
-  const rollOnce = (N, cv) => {
-    A.N = N; A.cv = cv; A.p0 = 0.5; A.round = null; A_fresh();
-    for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+  /* A2 is a roll: drive one allele out, TEN times, each at a different
+     (population size, generations) pair. JM, 2026-09-22. The unevenness
+     slider stays on the page but is deliberately not part of what makes a
+     setting distinct, so it must not launder a spent setting.
+
+     Four things have to hold and none is visible on screen:
+       - at least ten settings actually land, or the task cannot be finished;
+       - the generations slider does something, or it is decoration;
+       - the default setting does not walk it;
+       - and unevenness does not change the spent-setting key. */
+  const rollOnce = (N, gens, cv) => {
+    A.N = N; A.gens = gens; A.cv = cv; A.p0 = 0.5; A.round = null; A_fresh();
+    for (let i = 0; i < gens; i++) { A_step(); if (A_fixed()) break; }
     return A_fixed();
   };
-  const rate = (N, cv, k) => { let h = 0; for (let r = 0; r < k; r++) if (rollOnce(N, cv)) h++; return h / k; };
-  const easy = rate(8, 0, 40), spread = rate(40, 2.6, 40), hard = rate(300, 0, 20);
-  check("A2 roll clearable", easy >= 0.5,
-        "8 breeders, flat: lands " + (100*easy).toFixed(0) + "% of rolls (5 needed, so ~" +
-        (easy>0 ? (5/easy).toFixed(0) : "inf") + " rolls)");
-  check("A2 roll clearable by spread too", spread >= 0.25,
-        "40 breeders, spread 2.6: lands " + (100*spread).toFixed(0) + "% of rolls");
-  check("A2 roll not a gimme", hard <= 0.05,
-        "300 breeders, flat: lands " + (100*hard).toFixed(0) + "% -- the default pond must not walk it");
+  const rate = (N, gens, cv, k) => { let h = 0; for (let r = 0; r < k; r++) if (rollOnce(N, gens, cv)) h++; return h / k; };
+
+  const landing = [];
+  for (const N of [4, 8, 16, 30, 60, 120, 240, 400])
+    for (const G of [10, 25, 50, 100, 150, 200])
+      if (rate(N, G, 0, 12) >= 0.5) landing.push(N + "/" + G);
+  check("A2 at least ten settings land the roll", landing.length >= 10,
+        landing.length + " of 48 sampled (size/generations) settings land 6 of 12 rolls  e.g. " +
+        landing.slice(0, 4).join(" "));
+
+  const short = rate(60, 25, 0, 40), long_ = rate(60, 200, 0, 40);
+  check("A2 the generations slider is worth having", long_ >= short + 0.25,
+        "60 individuals: " + (100*short).toFixed(0) + "% over 25 generations, " +
+        (100*long_).toFixed(0) + "% over 200 -- the slider has to move the answer");
+
+  const dflt = rate(100, 30, 0, 40);
+  check("A2 the default setting is not a gimme", dflt <= 0.10,
+        "100 individuals over 30 generations lands " + (100*dflt).toFixed(0) + "% -- a student must move something");
+
+  A.N = 20; A.gens = 40; A.cv = 0;   const k1 = A_settingKey();
+  A.cv = 2.0;                        const k2 = A_settingKey();
+  A.gens = 45;                       const k3 = A_settingKey();
+  A.N = 25; A.gens = 40;             const k4 = A_settingKey();
+  check("A2 a setting is (size, generations) and unevenness cannot launder it",
+        k1 === k2 && k1 !== k3 && k1 !== k4,
+        "cv 0 -> " + k1 + ", cv 2.0 -> " + k2 + ", +5 generations -> " + k3 + ", +5 individuals -> " + k4);
 
   /* A1 is the ten dealt rounds. The student calls where the pond ends and
      how far off they expect to be, and the whole stage lives in the second
@@ -186,34 +211,19 @@ check("slots declared match slots written",
   /* A2's anti-gaming rule: a landed roll spends its setting. The check is
      that the rule is actually enforced by the predicate rather than only
      described in the goal text. */
-  A.used = {}; A.N = 6; A.cv = 0; A.p0 = 0.5; A.round = null;
+  A.used = {}; A.N = 6; A.gens = 40; A.cv = 0; A.p0 = 0.5; A.round = null;
   const key = A_settingKey();
   A.used[key] = true;
-  A_fresh(); for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+  A_fresh(); for (let i = 0; i < A.gens; i++) { A_step(); if (A_fixed()) break; }
   const spentBlocks = A_fixed() ? !A.roll.hitNow() : null;
   check("A2 a spent setting cannot land again", spentBlocks === true || spentBlocks === null,
         spentBlocks === null ? "the probe roll did not fix; rule untested this run"
                              : "an allele went at " + key + " and the roll refused to count it");
   A.used = {};
-  A_fresh(); for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
+  A_fresh(); for (let i = 0; i < A.gens; i++) { A_step(); if (A_fixed()) break; }
   check("A2 a fresh setting still lands", !A_fixed() || A.roll.hitNow() === true,
         "at " + A_settingKey() + " with nothing spent, a fixed run counts");
 
-  /* Five distinct settings have to exist that each land often enough to be
-     worth trying -- otherwise "a landed setting is spent" turns a five-roll
-     gate into a grind. Both sliders count towards distinctness, which is
-     what the rule says, so both are swept. */
-  const landable = [];
-  for (const N of [4, 6, 8, 10, 12, 16, 20, 30]) for (const cv of [0, 1.0, 2.0]) {
-    let h = 0;
-    for (let r = 0; r < 12; r++) { A.N = N; A.cv = cv; A.p0 = 0.5; A.round = null; A_fresh();
-      for (let i = 0; i < A_ROLL_GENS; i++) { A_step(); if (A_fixed()) break; }
-      if (A_fixed()) h++; }
-    if (h >= 5) landable.push(N + "@" + cv.toFixed(1) + " (" + h + "/12)");
-  }
-  check("A2 plenty of distinct settings land often enough to be worth rolling", landable.length >= 8,
-        landable.length + " settings land 5+ of 12: " + landable.slice(0, 8).join(", ") +
-        (landable.length > 8 ? " ..." : ""));
   A.used = {};
 }
 
@@ -237,54 +247,111 @@ check("slots declared match slots written",
   check("B sublinear in generations", d150 < 3 * d40 && d40 < 3 * d10,
         "10 gen " + d10.toFixed(3) + " -> 40 gen " + d40.toFixed(3) + " -> 150 gen " + d150.toFixed(3));
 
-  /* THE TEN TARGETS. Three things have to hold of each one and none of them
-     is visible on the page:
-       - it is reachable on the sliders the student actually has;
-       - it is not reachable by leaving the controls where the last target
-         left them, or the ten rounds are one round played ten times;
-       - and target 5 is reachable ONLY with the uninherited switch, which is
-         the only reason the switch is a control rather than a demonstration.
-     The slider ranges are read off the page, not restated here. */
-  const sN = []; { const el = document.getElementById("B_N");
-    for (let v = +el.min; v <= +el.max; v += +el.step) sN.push(v); }
-  const sG = []; { const el = document.getElementById("B_gens");
-    for (let v = +el.min; v <= +el.max; v += +el.step) sG.push(v); }
-  const lands = (tg, N, G, inhFlag, k) => { let h = 0;
-    for (let r = 0; r < k; r++) { const b = B_batch(mulberry32(4000 + r * 7919 + N * 13 + G), N, G, inhFlag, 20);
-      b.gens = G; if (B_judge(tg, b).ok) h++; }
-    return h; };
-  const winners = B_TARGETS.map(tg => { const w = { inh: [], fresh: [] };
-    for (const inhFlag of [true, false]) for (const N of sN) for (const G of sG) {
-      if (tg.gensMin && G < tg.gensMin) continue;
-      if (lands(tg, N, G, inhFlag, 5) >= 3) w[inhFlag ? "inh" : "fresh"].push(N + "/" + G);
-    }
-    return w; });
-  winners.forEach((w, i) => {
-    const total = w.inh.length + w.fresh.length;
-    check("B target " + (i + 1) + " is reachable", total >= 5,
-          total + " settings land 3 of 5 rolls  [inherited " + w.inh.length + ", uninherited " + w.fresh.length +
-          "]  e.g. " + (w.inh.concat(w.fresh)).slice(0, 3).join(" "));
-  });
-  // every target's reference setting -- the one its picture is drawn from --
-  // must be a setting that actually lands that target
-  const refOk = B_TARGETS.map((tg, i) => {
-    const r = tg.ref;
-    return [i + 1, lands(tg, r.N, r.G, r.inh, 5), (r.inh ? "inh" : "fresh") + " " + r.N + "/" + r.G];
-  });
-  check("B every target's picture is drawn from a setting that lands it",
-        refOk.every(r => r[1] >= 3),
-        refOk.map(r => "#" + r[0] + " " + r[2] + " lands " + r[1] + "/5").join("  "));
-  check("B the 300-generation target needs the switch",
-        winners[4].inh.length === 0 && winners[4].fresh.length > 0,
-        "target 5: " + winners[4].inh.length + " inherited settings, " + winners[4].fresh.length + " uninherited");
-  // no single setting clears more than one target
-  let overlap = null;
-  for (const inhFlag of [true, false]) for (const N of [10, 25, 50, 100, 150, 200]) for (const G of [25, 100, 200, 300]) {
-    const cleared = B_TARGETS.map((tg, i) => lands(tg, N, G, inhFlag, 5) >= 3 ? i + 1 : 0).filter(Boolean);
-    if (cleared.length > 1) overlap = (inhFlag ? "inh" : "fresh") + " N=" + N + " G=" + G + " clears targets " + cleared.join(",");
+  /* THE TARGETS ARE NOW THE STUDENT'S OWN. JM, 2026-09-22: "In place of preset
+     targets ... the students set themselves 10 targets & run the controls until
+     they hit each", and explicitly no guard on what may be set. So the checks
+     change shape. There is no preset list to verify; what has to hold is:
+
+       - the slider means what it says -- the picture drawn for a target is
+         worth that target, measured off the picture;
+       - the tolerance is sized off the measured run-to-run wobble rather
+         than chosen, because twenty populations is a small sample;
+       - a decent share of the settable range is actually reachable, and the
+         part that is not is reported rather than discovered by a student;
+       - no single setting clears most of the range, or parking the controls
+         beats playing;
+       - and the inherited/uninherited switch still earns its place. */
+  const settable = []; { const el = document.getElementById("B_terr");
+    for (let v = +el.min; v <= +el.max + 1e-9; v += +el.step) settable.push(+v.toFixed(2)); }
+
+  const picOk = settable.every(d => Math.abs(B_targetDist(B_errForDist(d)) - d) < 0.005);
+  check("B the picture is worth what the slider says", picOk,
+        "every one of the " + settable.length + " settable targets draws a density whose own " +
+        "mean distance from 0.50 is within 0.005 of it");
+
+  // the run-to-run wobble the tolerance has to cover
+  const sdOf = a => { const m = a.reduce((x, y) => x + y, 0) / a.length;
+    return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / (a.length - 1)); };
+  let worstSd = 0, worstAt = "";
+  for (const inh of [true, false]) for (const N of [10, 50, 120, 200]) for (const G of [25, 100, 300]) {
+    const d = []; for (let r = 0; r < 30; r++) d.push(B_batch(mulberry32(91 + r * 7919 + N + G), N, G, inh, 20).dist);
+    const s = sdOf(d); if (s > worstSd) { worstSd = s; worstAt = (inh ? "inherited" : "uninherited") + " " + N + "/" + G; }
   }
-  check("B no one setting clears two targets", overlap === null,
-        overlap || "every sampled setting clears at most one of the five");
+  check("B the tolerance covers the run-to-run wobble", B_TOL >= worstSd,
+        "worst sd of dist over 20 populations is " + worstSd.toFixed(3) + " at " + worstAt +
+        "; tolerance is " + B_TOL + " (" + (B_TOL / worstSd).toFixed(1) + "x)");
+
+  // one pass over the settings, five batches each; every target is then judged
+  // against the same measurements rather than re-running the simulator per target
+  const grid = [];
+  for (const inh of [true, false]) for (const N of [10, 20, 40, 60, 100, 140, 200])
+    for (const G of [25, 50, 100, 150, 200, 300]) {
+      const d = []; for (let r = 0; r < 5; r++) d.push(B_batch(mulberry32(5000 + r * 7919 + N * 13 + G), N, G, inh, 20).dist);
+      grid.push({ inh, N, G, d });
+    }
+  const landsFor = (tgt, g) => g.d.filter(v => Math.abs(v - tgt) <= B_TOL).length >= 3;
+  const reach = settable.map(tgt => {
+    const w = grid.filter(g => landsFor(tgt, g));
+    return { tgt, n: w.length, inh: w.filter(g => g.inh).length, fresh: w.filter(g => !g.inh).length };
+  });
+  const unreachable = reach.filter(r => r.n === 0).map(r => r.tgt.toFixed(2));
+  check("B most of the settable range is reachable", unreachable.length <= settable.length * 0.4,
+        (settable.length - unreachable.length) + " of " + settable.length + " settable targets are landable" +
+        (unreachable.length ? "; not reachable on this grid: " + unreachable.join(" ") : ""));
+
+  let worstClear = 0, worstClearAt = "";
+  for (const g of grid) { const c = settable.filter(tgt => landsFor(tgt, g)).length;
+    if (c > worstClear) { worstClear = c; worstClearAt = (g.inh ? "inherited" : "uninherited") + " " + g.N + "/" + g.G; } }
+  check("B no one setting clears most of the range", worstClear <= settable.length * 0.35,
+        "the greediest setting (" + worstClearAt + ") clears " + worstClear + " of " + settable.length +
+        " settable targets");
+
+  const onlyFresh = reach.filter(r => r.n > 0 && r.inh === 0);
+  check("B the uninherited switch still earns its place", onlyFresh.length > 0,
+        onlyFresh.length + " targets are reachable only with the uninherited rule" +
+        (onlyFresh.length ? " (e.g. " + onlyFresh.slice(0, 4).map(r => r.tgt.toFixed(2)).join(" ") + ")" : ""));
+
+  /* THE RECORDED BIT IS "ten hits in B_TRIES_MAX tries or fewer". Ten is the
+     floor, so the bar has to be clearable by a student who aims and out of
+     reach for one who parks the controls and lets the randomness hand it over.
+     Both are played here against fresh batches rather than against the grid's
+     own samples, which would flatter the aiming strategy. */
+  const CAP = 20;
+  const playAimed = (seed) => {
+    let tries = 0, s = seed;
+    for (let k = 0; k < B_ROUNDS; k++) {
+      const tgt = settable[Math.floor((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648 * settable.length)];
+      const best = grid.slice().sort((a, b) =>
+        b.d.filter(v => Math.abs(v - tgt) <= B_TOL).length - a.d.filter(v => Math.abs(v - tgt) <= B_TOL).length)[0];
+      let hit = false;
+      for (let i = 0; i < CAP && !hit; i++) {
+        tries++;
+        hit = Math.abs(B_batch(mulberry32(seed * 31 + k * 7919 + i * 13), best.N, best.G, best.inh, 20).dist - tgt) <= B_TOL;
+      }
+    }
+    return tries;
+  };
+  const playParked = (seed, g) => {
+    let tries = 0, s = seed;
+    for (let k = 0; k < B_ROUNDS; k++) {
+      const tgt = settable[Math.floor((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648 * settable.length)];
+      let hit = false;
+      for (let i = 0; i < CAP && !hit; i++) {
+        tries++;
+        hit = Math.abs(B_batch(mulberry32(seed * 31 + k * 7919 + i * 13), g.N, g.G, g.inh, 20).dist - tgt) <= B_TOL;
+      }
+    }
+    return tries;
+  };
+  const aimed = [11, 23, 47, 91, 137].map(playAimed);
+  const parked = grid.find(g => g.inh && g.N === 60 && g.G === 100);
+  const flail = [11, 23, 47, 91, 137].map(s => playParked(s, parked));
+  const med = a => a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)];
+  check("B the tries bar is clearable by aiming", med(aimed) <= B_TRIES_MAX,
+        "a student who picks the right setting needs " + aimed.join("/") + " tries for ten targets (bar is " +
+        B_TRIES_MAX + ", floor is " + B_ROUNDS + ")");
+  check("B the tries bar is not free to a parked setting", med(flail) > B_TRIES_MAX,
+        "leaving the controls at inherited 60/100 for all ten costs " + flail.join("/") + " tries");
 }
 
 /* ---- C. 107 populations and a shape to match ---------------------------- */

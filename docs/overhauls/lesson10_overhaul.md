@@ -1,9 +1,9 @@
 # Lesson 10 — overhaul
 
-**File** · `app/lessons/lesson10.html` (`version: 7`, `scaffold: 4`)
+**File** · `app/lessons/lesson10.html` (`version: 9`, `scaffold: 4`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · rounds 1–4 done — 2026-09-21. Both check suites green (bar checks run three times clean); A, B, C and D driven end to end in headless Chrome.
-**Last touched** · 2026-09-21
+**Status** · rounds 1–5 done — 2026-09-22. Both check suites green (bar checks run eight times clean); A, B, C and D driven end to end in headless Chrome.
+**Last touched** · 2026-09-22
 
 ## What the lesson is
 
@@ -20,8 +20,9 @@ argument in `breed()`.
 
 ## Stages as they stand
 
-    A  one population, nothing looking at colour — ten calls, then five extinctions
-    B  the switch: inherited pool vs. fresh pool — ten target spreads
+    A  one population, nothing looking at colour — ten calls, then ten extinctions
+       at ten different (size, generations) settings
+    B  the switch: inherited pool vs. fresh pool — ten targets the student sets
     C  107 populations and the two walls — ten target shapes  (Buri is the framing, not a panel)
     D  the Lesson 6 moose model, driven by a diagram — six drift curves to match
 
@@ -368,3 +369,46 @@ ahead and cut Part E."*
   opens every section anyway — but it is why the A pip does not tick.
 - `D.mode`/`D.dealt` are dead: nothing sets `mode` to `"game"` any more. Left
   in place rather than pruned, because the checks' `put()` writes them.
+
+## Items — round 5, from JM 2026-09-22
+
+Text reductions, then a rebuild of both gates. `version: 8` (B's scoring rule
+changed; slot count still 4).
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| T1 | A | Cut "Every landed roll has to use a setting you have not landed with before." and "Set it up, then roll." from the roll bar. The rule still fires in `hit()`; `sayMiss` explains it when it costs a roll. | done |
+| T2 | A | Roll messages cut to the bare outcome. On clearing, the bar reads "Which allele went extinct was a coin flip, just like in Lesson 1. There was no way to predict what went extinct, but you could predict when." | done |
+| T3 | B | Solved banner replaced with the snowball/spread/speed version. | done |
+| A20 | A | **Generations slider** (10–200, default 30). `A_ROLL_GENS` stays the dealt rounds' length; `A.gens` is the roll's. `cfg.goal` may now be a function so the deadline text follows the slider. | done |
+| A21 | A | **Ten extinctions, not five.** A setting is `(size, generations)`; unevenness is on the page but deliberately not part of the key — JM: "don't force students to adjust that." | done |
+| B13 | B | **Preset targets cut.** The student sets all ten. Predict card is one slider plus **Lock target**; Controls are the simulation. `B_TARGETS`, `B_target`, `B_targetShape`, `B_PRACTICE` and the practice/counts split are gone. | done |
+| B14 | B | The target is drawn as an **absorbing density**, the same picture Stage A's card draws, in the target colour and without A's judged band. Reuses `normCdf`, `MAD_TO_SD`, `A_SPIKE_W`. | done |
+| B15 | B | The slider **is** the target distance; `B_errForDist` inverts `B_targetDist` by bisection so the number set is the number the picture means. | done |
+| B16 | B | **No guard**, on JM's call: repeated targets are allowed and a target nothing reaches is allowed. Unlimited retries. | done |
+| X4 | — | Two bugs found while checking this: the bypass force-finished every game, which hid B's and D's target entirely (`state.bypassed` now exempts them); and the target ghost was too faint to read, worst on the shape with mass in only 2 of 22 bins (every bin now gets a stub). | done |
+| B17 | B | **The recorded bit is "hit ten in 18 tries or fewer"** (JM). A try is a judged run against a target not yet hit, so exploring after a hit is free. The count is **never shown** — a student who knew would set ten trivial targets, and guards on what may be set were ruled out. `version: 9`. | done |
+| X5 | — | A and B halves of `check_lesson10_numbers.js` rewritten. Eight clean runs. | done |
+
+### What round 5 measured
+
+- **A2 is landable**: 20 of 48 sampled (size, generations) settings land 6 of 12 rolls, against 10 needed.
+- **The generations slider earns its place**: 60 individuals land 0% over 25 generations and 80% over 200.
+- **The default is not a gimme**: 100 individuals over 30 generations lands 0%.
+- **Unevenness cannot launder a spent setting**: `cv 0` and `cv 2.0` both key to `20|40`; +5 generations and +5 individuals both change it.
+- **B's slider means what it says**: all 47 settable targets draw a density whose own mean distance from 0.50 is within 0.005 of the number shown.
+- **B's tolerance is sized, not chosen**: worst run-to-run sd of `dist` over 20 populations is 0.042 (inherited 200/300); `B_TOL` is 0.05, 1.2× that. Retries are unlimited, so a tight bar costs clicks rather than progress.
+- **All 47 settable targets are reachable** on the sampled grid, and the greediest single setting clears only 10 of 47 — so parking the controls does not beat playing.
+- **The uninherited switch still earns its place**: 3 targets (0.02–0.04) are reachable only with it.
+
+**The tries bar, measured.** Floor is 10, bar is 18.
+
+    a student who picks the right setting   11 / 12 / 13 / 13 / 15 tries
+    controls parked at inherited 60/100     91 / 94 / 99 / 121 / 158 tries
+
+Both played against fresh batches rather than the grid's own samples, which
+would have flattered the aiming strategy.
+
+### Still open
+
+- Nothing. Round 5 is closed.

@@ -279,7 +279,7 @@
         <li>The top plot shows the individuals in the population.</li>
         <li>The bottom plot shows the frequency of an allele in the plot above it.</li>
         <li>You will predict where an allele with a specific starting frequency will end up after a certain number of generations in a population of a particular size, using the sliders. Once you feel good about your prediction, hit <b>Go</b> and watch the population evolve. Repeat this ten times, trying to improve your accuracy — both getting the line to hit your target and keeping the target as narrow as the situation allows.</li>
-        <li>You will then try to drive one allele extinct five times, using different population sizes and different amounts of variation in offspring number. Try to predict which allele goes each time.</li>
+        <li>You will then drive one allele extinct ten times over, each at a different population size and number of generations. Try to predict which allele goes each time.</li>
       </ul>
     </div>
   </div>
@@ -308,6 +308,7 @@
         <h3>Controls</h3>
         <div class="controls" id="A_controls">
           <div class="row" data-line="N"><label for="A_N">individuals in the population</label><input type="range" id="A_N" min="4" max="400" step="2" value="100" /><output id="A_NOut">100</output></div>
+          <div class="row"><label for="A_gens">generations</label><input type="range" id="A_gens" min="10" max="200" step="5" value="30" /><output id="A_gensOut">30</output></div>
           <div class="row" data-line="cv"><label for="A_cv">differences in expected number of offspring</label><input type="range" id="A_cv" min="0" max="2" step="0.1" value="0" /><output id="A_cvOut">0.0</output></div>
           <div class="buttons">
             <button id="A_roll" class="accent">Roll it</button>
@@ -323,7 +324,7 @@
         <h3>To open Stage B</h3>
         <ul class="tasks" id="tasksA">
           <li data-task="A1">Predict the final allele frequency for 10 populations. <span class="hint"><span id="A1_now">population 1 of 10</span></span></li>
-          <li data-task="A2">Set population parameters to drive one allele extinct inside 30 generations. <span class="hint"><span id="A2_now">the controls open after the ten populations</span></span></li>
+          <li data-task="A2">Drive one allele extinct ten times over, each at a different population size and number of generations. <span class="hint"><span id="A2_now">the controls open after the ten populations</span></span></li>
         </ul>
         <!-- VOICE (banner): 202_lec11_04, which states the stage's point. -->
         <div class="solved-banner" id="solvedA">Anything that increases differential reproduction makes evolution go faster. It makes things change more over time. Regardless of whether it covaries with traits. Whether the differential reproduction covaries with fitness or not, we call it drift or selection — but at a more abstract level, it doesn't matter. The more differential the reproduction, the more important evolutionary processes are to shaping the frequency of heritable things. Stage B is open.</div>
@@ -347,13 +348,13 @@
         <p>In part A we watched one population drift, over and over again, from different starting points. We can also watch several populations drift at the same time, from the same starting point, and see how far apart they get.</p>
         <p>A core feature of drift is that each generation inherits the random noise of the generation before it. That is what makes the frequency move in a way that looks, for any one population, like a trend — you could see it in part A, where an allele would climb or fall as though some force were driving it somewhere on purpose. Nothing was.</p>
         <p>The switch below decides whether that noise is inherited. On one setting the parents are drawn from the generation before, so the error accumulates. On the other, every generation is drawn from the frequency the run started at, so the same amount of chance happens every generation and none of it carries forward. That second setting is, roughly, what migration does, and migration comes in a few weeks.</p>
-        <p>Below you set the number of individuals and the number of generations, and try to hit a target.</p>
+        <p>Below you set yourself a target — how far apart the twenty end up — and then move the number of individuals, the number of generations and the switch until you hit it.</p>
       </div>
       <ul class="setup">
         <li>This time you have a single starting point and run <b>twenty</b> populations at once.</li>
-        <li>Your goal is to hit the target — not directly this time, but by having your twenty spread out to match the target at the end.</li>
-        <li>Five targets for practice, then five for real.</li>
-        <li>Hit <b>Next target</b> to move on. You are free to adjust the parameters and re-run a target as often as you like, to build an intuition before advancing.</li>
+        <li>You set the target yourself: shape the spread you think you can produce, then hit <b>Lock target</b>.</li>
+        <li>Then move the controls until the twenty land on it. Ten targets, and you can re-run one as often as you like.</li>
+        <li>Nothing stops you setting a target nothing reaches. Finding the edges is part of it.</li>
         <li>The simulations are otherwise the same as in Part A — still nothing selected.</li>
       </ul>
     </div>
@@ -402,11 +403,11 @@
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Match ten target spreads — five for practice, then five that count. <span class="hint"><span id="B1_now">practice 1 of 5</span></span></li>
+          <li data-task="B1">Set yourself ten targets and hit each one. <span class="hint"><span id="B1_now">0 of 10 hit</span></span></li>
         </ul>
         <!-- VOICE (banner): the conclusion half of JM's dictated passage, which
              names the mechanism outright. -->
-        <div class="solved-banner" id="solvedB">So the first thing is: the random error causes changes — but the random error itself is inherited. Because the random error we're referring to is random sampling error in the heritable variation. All the random effects in a generation get summed together at the next round of reproduction. That's how you get the effect we just saw, where the purple ones emerged triumphant and rose up out of nowhere. They increased through nothing other than the compounding of sampling error being inherited generation after generation. Stage C is open.</div>
+        <div class="solved-banner" id="solvedB">Random differences in reproduction produce changes in allele frequencies each generation &amp; those differences are inherited, leading to a &ldquo;snowball&rdquo; over time. The spread &mdash; the differences between populations &mdash; increases as they each snowball in different directions due to different histories. Predicting the speed at which alleles drift is possible even when what will go extinct isn&rsquo;t. Stage C is now open.</div>
       </div>
     </div>
   </div>
@@ -963,9 +964,11 @@ function wireBowling(stage, cfg) {
     pips.innerHTML = h;
   }
   function say(cls, html) { if (bar) { bar.className = "rollbar" + (cls ? " " + cls : ""); bar.innerHTML = html; } }
+  // A's goal names its generations slider, so it is re-read on every paint
+  const goalText = () => typeof cfg.goal === "function" ? cfg.goal() : cfg.goal;
 
   function idle() {
-    say("", '<span class="goal">' + cfg.goal + "</span><br>Set it up, then roll.");
+    say("", '<span class="goal">' + goalText() + "</span>");
     paintPips();
   }
 
@@ -998,7 +1001,7 @@ function wireBowling(stage, cfg) {
     cfg.start();
     let i = 0;
     const total = cfg.frames();
-    say("live", '<span class="goal">' + cfg.goal + "</span><br>Rolling\u2026 watch it.");
+    say("live", '<span class="goal">' + goalText() + "</span><br>Rolling\u2026 watch it.");
     st.timer = setInterval(() => {
       i++;
       const done = cfg.frame(i) || i >= total;
@@ -1204,6 +1207,10 @@ const A = { N: 100, cv: 0, p0: 0.5, gen: 0, pop: null, counts: null, shares: nul
             // sliders to 0 and hitting roll again. It should require them to
             // use different ... numbers of individuals, or a different
             // combination of the two." So a landed setting is spent.
+            // JM, 2026-09-22: the roll is now ten extinctions at ten different
+            // (population size, generations) settings. A_ROLL_GENS stays what the
+            // dealt prediction rounds run for; A.gens is what the roll runs for.
+            gens: A_ROLL_GENS,
             call: null, used: {}, repeat: false };
 
 function A_fresh() {
@@ -1392,7 +1399,7 @@ function A_drawTraj() {
   const { ctx, W, H } = setupCanvas(cvEl);
   ctx.clearRect(0, 0, W, H);
   const rd = A.round;
-  const g = rd ? rd.gens : Math.max(A_ROLL_GENS, A.traj.length - 1);
+  const g = rd ? rd.gens : Math.max(A.gens, A.traj.length - 1);
   // a dealt population gives up some of the plot's width to the distribution
   // the student is drawing against the same axis
   const stripW = rd ? 100 : 0;
@@ -1410,10 +1417,10 @@ function A_drawTraj() {
   ctx.strokeStyle = "#ddd"; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(f.px, f.y(p0)); ctx.lineTo(f.px + f.pw, f.y(p0)); ctx.stroke();
   ctx.setLineDash([]);
-  if (!rd && A_ROLL_GENS <= g) {
+  if (!rd && A.gens <= g) {
     // the deadline the roll is aimed at
     ctx.strokeStyle = "rgba(178,58,72,0.55)"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(f.x(A_ROLL_GENS), f.py); ctx.lineTo(f.x(A_ROLL_GENS), f.py + f.ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(f.x(A.gens), f.py); ctx.lineTo(f.x(A.gens), f.py + f.ph); ctx.stroke();
     ctx.setLineDash([]);
   }
   line(ctx, f, A.traj, PURPLE, 2);
@@ -1454,7 +1461,10 @@ function A_readouts() {
 }
 function A_paint() { A_drawPopulation(); A_drawTraj(); A_readouts(); }
 const A_fixed = () => { const p = popFreq(A.pop); return p === 0 || p === 1; };
-const A_settingKey = () => A.N + "|" + A.cv.toFixed(1);
+/* JM, 2026-09-22: "ten different extinctions for ten different ngen/popsize
+   settings ... keep the variance in offspring slider but don't force students
+   to adjust that." So unevenness is deliberately NOT part of the key. */
+const A_settingKey = () => A.N + "|" + A.gens;
 
 function A_openControls() {
   A.open = true;
@@ -1729,6 +1739,12 @@ function A_wire() {
   const N = document.getElementById("A_N"), cvI = document.getElementById("A_cv");
   N.addEventListener("input", e => { A.N = +e.target.value; document.getElementById("A_NOut").value = A.N;
     document.getElementById("cA_N").textContent = A.N; highlightByDataLine("codeA", "N"); A_fresh(); A_paint(); bump("A"); });
+  const gensI = document.getElementById("A_gens");
+  gensI.addEventListener("input", e => { A.gens = +e.target.value; document.getElementById("A_gensOut").value = A.gens;
+    A_paint(); bump("A");
+    // the roll bar belongs to task A2, which is shut until the ten dealt
+    // populations are behind the student -- so only refresh it once it is live
+    if (A.roll && !A.roll.rolling() && !document.getElementById("A_roll").disabled) A.roll.idle(); });
   cvI.addEventListener("input", e => { A.cv = +e.target.value; document.getElementById("A_cvOut").value = A.cv.toFixed(1);
     document.getElementById("cA_cv").textContent = A.cv.toFixed(1); highlightByDataLine("codeA", "cv"); A_paint(); bump("A"); });
   document.getElementById("A_step").addEventListener("click", () => { A_step(); A_paint(); bump("A"); });
@@ -1745,12 +1761,12 @@ function A_wire() {
      cannot act on reads as a goal you have failed. A_mountRounds calls
      A.roll.idle() when it hands the controls over. */
   A.roll = wireBowling("A", {
-    task: "A2", need: 5, ms: 70,
-    goal: "Drive one allele extinct — yellow or purple, either counts — inside " + A_ROLL_GENS +
-          " generations. Every landed roll has to use a setting you have not landed with before.",
+    task: "A2", need: 10, ms: 70,
+    goal: () => "Drive one allele extinct — yellow or purple, either counts — inside " + A.gens +
+          " generations.",
     rollAgain: "Roll again",
     start: () => { A_fresh(); A_paint(); },
-    frames: () => A_ROLL_GENS,
+    frames: () => A.gens,
     frame: () => { A_step(); A_paint(); return A_fixed(); },
     hit: () => {
       if (!A_fixed()) { A.repeat = false; return false; }
@@ -1761,21 +1777,18 @@ function A_wire() {
       const p = popFreq(A.pop);
       A.used[A_settingKey()] = true;
       return "the " + (p === 0 ? "purple" : "yellow") + " allele is extinct at generation " + A.gen +
-             ". " + A.N + " individuals, expected offspring differing by " + A.cv.toFixed(1) +
-             " — that setting is spent, so move one of them.";
+             ". " + A.N + " individuals over " + A.gens + " generations is spent.";
     },
     onCleared: () => {
-      const st = A.call.state;
       const bar = document.getElementById("A_rollbar");
-      if (bar) bar.innerHTML += "<br>You called which allele would go " + st.n + " times and were right " +
-        st.right + ". Nothing on this screen ever knew which one it was going to be — the call was a coin flip, " +
-        "the same coin you flipped ten at a time in Lesson 1.";
+      if (bar) bar.innerHTML = "Which allele went extinct was a coin flip, just like in Lesson 1. " +
+        "There was no way to predict what went extinct, but you could predict when.";
     },
     sayMiss: () => {
       const p = popFreq(A.pop);
-      if (A.repeat) return "an allele went, but " + A.N + " individuals at " + A.cv.toFixed(1) +
-                           " has already been done. Move the population size or the unevenness and roll that.";
-      return "still at " + f3(p) + " after " + A_ROLL_GENS + " generations. Nothing was pushing it either way — " +
+      if (A.repeat) return "an allele went, but " + A.N + " individuals over " + A.gens +
+                           " generations has already been done. Move the population size or the generations and roll that.";
+      return "still at " + f3(p) + " after " + A.gens + " generations. Nothing was pushing it either way — " +
              "it simply did not get there this time.";
     },
     after: () => A.call.afterRoll()
@@ -1848,38 +1861,79 @@ function B_run() {
    lines over time, and then at the final stage, on the right, the histogram
    is revealed."  Revealed, not live: while the run is playing there is no
    end for it to show. */
-function B_drawEnds(ctx, f, x0, w, ends, tg) {
+/* The target, as an absorbing density on the same frequency axis -- the same
+   picture Stage A's predict card draws, in the target colour and without A's
+   judged band. JM, 2026-09-22: "having the PREDICT be a set of controls to set
+   a target, and CONTROLS be the simulation to try and hit that target". */
+function B_drawTargetDensity(ctx, f, x0, w, err) {
+  const sd = Math.max(1e-4, err * MAD_TO_SD);
+  const z = v => (v - 0.5) / sd;
+  const pdf = y => Math.exp(-0.5 * z(y) * z(y)) / (sd * 2.5066);
+  const mLo = normCdf(z(0)), mHi = 1 - normCdf(z(1));
+  const sLo = mLo / A_SPIKE_W, sHi = mHi / A_SPIKE_W;
+  const scale = Math.min(Math.max(pdf(0.5), sLo, sHi), 14);
+  const X = d => x0 + Math.min(1, d / scale) * w;
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(x0, f.y(0));
+  for (let i = 0; i <= 120; i++) { const y = i / 120; ctx.lineTo(X(pdf(y)), f.y(y)); }
+  ctx.lineTo(x0, f.y(1)); ctx.closePath();
+  ctx.fillStyle = "rgba(74,122,42,0.30)"; ctx.fill();
+  ctx.strokeStyle = "rgba(74,122,42,0.95)"; ctx.lineWidth = 1.6;
+  ctx.beginPath();
+  for (let i = 0; i <= 120; i++) { const y = i / 120, px = X(pdf(y)), py = f.y(y);
+    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+  ctx.stroke();
+  // the walls absorb, exactly as they do on Stage A's card
+  ctx.fillStyle = "rgba(74,122,42,0.62)";
+  if (mLo > 0.004) ctx.fillRect(x0, f.y(A_SPIKE_W), X(sLo) - x0, f.y(0) - f.y(A_SPIKE_W));
+  if (mHi > 0.004) ctx.fillRect(x0, f.y(1), X(sHi) - x0, f.y(1 - A_SPIKE_W) - f.y(1));
+  ctx.restore();
+}
+/* What the drawn picture is worth, measured off the picture rather than
+   asserted: the mean distance from 0.50 of the absorbed density, which is the
+   same number the twenty endpoints are summarised by. The two walls carry
+   their absorbed mass at a distance of exactly 0.50. */
+/* The slider is the target distance itself, so the number the student sets is
+   the number the picture means. B_targetDist is monotone in err, so the curve
+   that produces a wanted distance is found by bisection. Measured: err has to
+   run well past 1 for the two walls to take most of the mass, which is why the
+   slider is not the sigma. */
+function B_errForDist(d) {
+  let lo = 1e-3, hi = 40;
+  for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (B_targetDist(m) < d) lo = m; else hi = m; }
+  return (lo + hi) / 2;
+}
+function B_targetDist(err) {
+  const sd = Math.max(1e-4, err * MAD_TO_SD);
+  const z = v => (v - 0.5) / sd;
+  const mLo = normCdf(z(0)), mHi = 1 - normCdf(z(1));
+  let m = (mLo + mHi) * 0.5, tot = mLo + mHi;
+  const K = 400;
+  for (let i = 0; i < K; i++) {
+    const y = (i + 0.5) / K;
+    const d = Math.exp(-0.5 * z(y) * z(y)) / (sd * 2.5066) / K;
+    m += d * Math.abs(y - 0.5); tot += d;
+  }
+  return m / tot;
+}
+/* Where the twenty ended up, binned against the same axis, outlined over the
+   target. Revealed, not live: while the run is playing there is no end yet. */
+function B_drawEnds(ctx, f, x0, w, ends) {
+  if (!ends) return;
   const B_BINS = 22;
   const hist = new Array(B_BINS).fill(0);
-  if (ends) for (const v of ends) hist[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
-  const mine = ends ? hist.map(v => v / ends.length) : null;
-  const want = tg ? B_targetShape(tg) : null;
-  const peak = Math.max(0.08, Math.max.apply(null, (mine || []).concat(want || [])));
-  // the target first, as a filled ghost -- this is the thing being aimed at
-  if (want) {
-    ctx.fillStyle = "rgba(74,122,42,0.22)"; ctx.strokeStyle = "rgba(74,122,42,0.75)"; ctx.lineWidth = 1;
-    for (let b = 0; b < B_BINS; b++) {
-      if (want[b] <= 0) continue;
-      const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS), bw = want[b] / peak * w;
-      ctx.fillRect(x0, yTop, bw, yBot - yTop);
-      ctx.strokeRect(x0 + 0.5, yTop + 0.5, Math.max(0, bw - 1), Math.max(0, yBot - yTop - 1));
-    }
+  for (const v of ends) hist[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
+  const mine = hist.map(v => v / ends.length);
+  const peak = Math.max(0.08, Math.max.apply(null, mine));
+  ctx.strokeStyle = PURPLE; ctx.lineWidth = 2;
+  for (let b = 0; b < B_BINS; b++) {
+    if (!mine[b]) continue;
+    const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS), bw = mine[b] / peak * w;
+    ctx.beginPath();
+    ctx.moveTo(x0, yTop); ctx.lineTo(x0 + bw, yTop);
+    ctx.lineTo(x0 + bw, yBot); ctx.lineTo(x0, yBot);
+    ctx.stroke();
   }
-  // then where the twenty actually went, outlined over it
-  if (mine) {
-    ctx.strokeStyle = PURPLE; ctx.lineWidth = 2;
-    for (let b = 0; b < B_BINS; b++) {
-      if (!mine[b]) continue;
-      const yTop = f.y((b + 1) / B_BINS), yBot = f.y(b / B_BINS), bw = mine[b] / peak * w;
-      ctx.beginPath();
-      ctx.moveTo(x0, yTop); ctx.lineTo(x0 + bw, yTop);
-      ctx.lineTo(x0 + bw, yBot); ctx.lineTo(x0, yBot);
-      ctx.stroke();
-    }
-  }
-  ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText(mine ? "target \u00b7 yours" : "target", x0 + w / 2, f.py + f.ph + 4);
 }
 function B_drawTraj() {
   const cv = document.getElementById("B_traj");
@@ -1889,9 +1943,9 @@ function B_drawTraj() {
   const cur0 = B.runs[B.rule];
   // the target is on screen from the moment it is dealt, so the student aims
   // at a picture; the result is outlined over it once a run has finished
-  const liveTg = B.game && !B.game.state.done ? B_target(B.game.state.n) : null;
+  const tgErr = B.game ? B.game.targetErr() : null;
   const haveEnds = !!(cur0 && cur0.gens === g && B.showTo == null && B.revealed);
-  const showHist = !!liveTg || haveEnds;
+  const showHist = tgErr != null || haveEnds;
   const stripW = showHist ? 104 : 0;
   const f = box(52, 14, W - 74 - stripW, H - 52, 0, g, 0, 1);
   axes(ctx, f, "generation", "frequency of the purple allele", v => v.toFixed(2));
@@ -1903,7 +1957,11 @@ function B_drawTraj() {
     const x0 = f.px + f.pw + 10, w = stripW - 20;
     ctx.strokeStyle = "#e8e6dd"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(x0, f.py); ctx.lineTo(x0, f.py + f.ph); ctx.stroke();
-    B_drawEnds(ctx, f, x0, w, haveEnds ? cur0.ends : null, liveTg);
+    if (tgErr != null) B_drawTargetDensity(ctx, f, x0, w, tgErr);
+    B_drawEnds(ctx, f, x0, w, haveEnds ? cur0.ends : null);
+    ctx.fillStyle = MUTED; ctx.font = "10px -apple-system, sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    ctx.fillText(haveEnds ? "target \u00b7 yours" : "target", x0 + w / 2, f.py + f.ph + 4);
   }
   const other = B.rule === "inherit" ? "fresh" : "inherit";
   const ghost = B.runs[other];
@@ -1985,97 +2043,82 @@ function B_paint() { B_drawTraj(); B_drawVar(); B_readouts(); }
    is the switch. JM: "One of them should only be achievable with [the
    uninherited setting], where the variation doesn't really change [over]
    time."                                                                 */
-const B_ROUNDS = 10, B_PRACTICE = 5;
-const B_TARGETS = [
-  { dist: 0.50, dTol: 0.02, fixed: 20, fTol: 1, ref: { N: 10,  G: 150, inh: true },
-    shape: "two spikes and nothing in between — every population has lost an allele" },
-  { dist: 0.22, dTol: 0.06, fixed: 1,  fTol: 2, ref: { N: 35,  G: 25,  inh: true },
-    shape: "spread right across the range, with only one or two gone" },
-  { dist: 0.37, dTol: 0.07, fixed: 10, fTol: 4, ref: { N: 20,  G: 50,  inh: true },
-    shape: "about half of them against the walls, the rest spread between" },
-  { dist: 0.10, dTol: 0.03, fixed: 0,  fTol: 0, ref: { N: 115, G: 25,  inh: true },
-    shape: "a tight cluster around where they started, nothing lost at all" },
-  { dist: 0.05, dTol: 0.03, fixed: 0,  fTol: 0, gensMin: 300, ref: { N: 25, G: 300, inh: false },
-    shape: "three hundred generations gone by, and still a tight cluster with nothing extinct" }
-];
-const B_target = n => B_TARGETS[n % B_TARGETS.length];
-/* The target, as a picture. JM, 2026-09-21: "we should show the target on the
-   graph using the right-side histograms from the other parts ... hitting a
-   visual target is likely easier than reading the raw numbers."
+const B_ROUNDS = 10;
+/* The tolerance a self-set target is judged on. Twenty populations is a small
+   sample, so `dist` wobbles from run to run at a fixed setting; the bar is
+   sized off that measured wobble in check_lesson10_numbers.js, not chosen. */
+const B_TOL = 0.05;   // 1.25x the worst measured run-to-run sd (0.040); retries are unlimited
+/* JM, 2026-09-22: the recorded bit is "hit 10 in 18 or fewer tries". Ten is the
+   floor, so this is eight misses across ten targets.
 
-   The shape is generated by running the target's own reference setting many
-   times, so it is what the target actually looks like rather than a drawing of
-   what it ought to look like. The verdict is still taken on the two numbers --
-   a histogram distance over twenty runs is far too noisy to judge with -- but
-   the student aims at the picture and reads the numbers only if they want to. */
-function B_targetShape(tg) {
-  if (tg.pic) return tg.pic;
-  const rng = mulberry32(pageSeed("l10Bt", 1, 99999) + tg.ref.N * 131 + tg.ref.G);
-  const B_BINS = 22, acc = new Array(B_BINS).fill(0);
-  const REPS = 25;
-  for (let r = 0; r < REPS; r++) {
-    const b = B_batch(rng, tg.ref.N, tg.ref.G, tg.ref.inh, 20);
-    for (const v of b.ends) acc[Math.min(B_BINS - 1, Math.floor(v * B_BINS))]++;
-  }
-  const tot = REPS * 20;
-  tg.pic = acc.map(v => v / tot);
-  return tg.pic;
-}
-const B_judge = (tg, r) => {
-  if (tg.gensMin && r.gens < tg.gensMin) return { ok: false, why: "gens" };
-  if (Math.abs(r.dist - tg.dist) > tg.dTol) return { ok: false, why: "dist" };
-  if (Math.abs(r.fixed - tg.fixed) > tg.fTol) return { ok: false, why: "fixed" };
-  return { ok: true };
-};
+   IT IS NEVER SHOWN. A student who knows they are marked on tries sets ten
+   trivial targets to save them, and JM ruled out guards on what may be set --
+   so the count stays off the screen, the same reasoning as Stage A's silent
+   last-five-vs-first-five bit. */
+const B_TRIES_MAX = 18;
+const B_judge = (target, r) => ({ ok: Math.abs(r.dist - target) <= B_TOL });
 
+/* JM, 2026-09-22: "In place of preset targets ... the students set themselves
+   10 targets & run the controls until they hit each. So a 'Lock target' button
+   instead of that." No guard on what they may set: a target nothing reaches is
+   a thing they are allowed to discover. */
 function B_mountTargets() {
-  const st = { n: 0, hits: [], rolling: false, timer: 0, ran: false, done: false };
+  const st = { n: 0, hits: [], rolling: false, timer: 0, ran: false, done: false,
+               dist: 0.25, locked: null, bypassed: false, tries: 0 };
   const el = id => document.getElementById(id);
 
   function paintPips() {
     let h = "";
     for (let i = 0; i < B_ROUNDS; i++) {
       const r = st.hits[i];
-      h += '<i class="' + (r === true ? "hit" : r === false ? "miss" : (i === st.n ? "now" : "")) +
-           '" style="' + (i === B_PRACTICE ? "margin-left:10px;" : "") + '"></i>';
+      h += '<i class="' + (r === true ? "hit" : (i === st.n && !st.done ? "now" : "")) + '"></i>';
     }
-    const scored = st.hits.slice(B_PRACTICE).filter(Boolean).length;
-    if (st.hits.length > B_PRACTICE) h += "<span>" + scored + " of " + (st.hits.length - B_PRACTICE) + " that count</span>";
+    h += "<span>" + st.hits.filter(Boolean).length + " of " + B_ROUNDS + " hit</span>";
     el("B_tpips").innerHTML = h;
   }
   function paintCard() {
-    const tg = B_target(st.n), practice = st.n < B_PRACTICE;
-    el("predB_h").textContent = practice ? "Predict — practice" : "Predict";
+    const locked = st.locked != null;
+    const shown = locked ? st.locked : st.dist;
+    el("predB_h").textContent = st.done ? "Predict — done" : "Predict";
     el("B_ttab").innerHTML =
-      "<tr><th>target</th><td>" + (st.n + 1) + " of " + B_ROUNDS + (practice ? " · practice" : " · counts") + "</td></tr>" +
+      "<tr><th>target</th><td>" + Math.min(st.n + 1, B_ROUNDS) + " of " + B_ROUNDS + "</td></tr>" +
       "<tr><th>they all start at</th><td>0.50</td></tr>" +
-      "<tr><th>average distance from 0.50</th><td>" + f2(tg.dist) + " &plusmn; " + f2(tg.dTol) + "</td></tr>" +
-      "<tr><th>populations that lost an allele</th><td>" + tg.fixed + (tg.fTol ? " &plusmn; " + tg.fTol : "") + "</td></tr>" +
-      (tg.gensMin ? "<tr><th>after at least</th><td>" + tg.gensMin + " generations</td></tr>" : "");
-    el("B_tshape").textContent = tg.shape;
-    el("B_tnext").disabled = practice ? !st.ran : !st.ran;
+      "<tr><th>average distance from 0.50</th><td>" + f2(shown) +
+        (locked ? " &plusmn; " + f2(B_TOL) : "") + "</td></tr>";
+    el("B_terrOut").value = f2(shown);
+    el("B_terr").disabled = locked || st.done;
+    el("B_tlock").disabled = locked || st.done;
+    el("B_tlock").textContent = locked ? "Target locked" : "Lock target";
+    el("B_tnext").disabled = st.done || st.hits[st.n] !== true;
     el("B_tnext").textContent = st.n >= B_ROUNDS - 1 ? "Finish" : "Next target";
+    el("B_roll").disabled = st.rolling || (!locked && !st.done);
+    document.getElementById("B_controls").classList.toggle("pending", !locked && !st.done);
+    document.querySelectorAll("#B_rules button").forEach(b => b.disabled = (!locked && !st.done) || st.rolling);
+    el("B_tshape").textContent = st.done
+      ? "All ten targets done. Keep playing with the controls if you like."
+      : locked ? "Now move the controls until the twenty land inside it."
+               : "Shape the spread you want the twenty to end up in, then lock it.";
   }
   function deal() {
-    st.ran = false;
+    st.ran = false; st.locked = null;
     B.runs = { inherit: null, fresh: null };
-    B.showTo = null;
+    B.showTo = null; B.revealed = false;
     el("B_tflip").innerHTML = "";
-    el("B_roll").disabled = false;
-    document.getElementById("B_controls").classList.remove("pending");
-    document.querySelectorAll("#B_rules button").forEach(b => b.disabled = false);
     paintCard(); paintPips(); B_paint();
-    hint("B1", st.n < B_PRACTICE ? "practice " + (st.n + 1) + " of " + B_PRACTICE
-                                 : (st.hits.slice(B_PRACTICE).filter(Boolean).length) + " of " + (st.n - B_PRACTICE) + " that count");
+    hint("B1", st.hits.filter(Boolean).length + " of " + B_ROUNDS + " hit");
   }
-  function run() {
-    if (st.rolling) return;
+  function lock() {
+    if (st.locked != null || st.done) return;
+    st.locked = st.dist;
+    paintCard(); B_paint(); bump("B");
+  }
+  function run(opts) {
+    if (st.rolling || st.locked == null && !st.done) return;
     st.rolling = true;
-    el("B_roll").disabled = true;
-    el("B_tnext").disabled = true;
+    paintCard();
     document.getElementById("B_controls").classList.add("rolling");
-    document.querySelectorAll("#B_rules button").forEach(b => b.disabled = true);
     B_run();
+    if (opts && opts.now) { B.showTo = null; land(); return; }
     B.showTo = 0;
     let i = 0;
     st.timer = setInterval(() => {
@@ -2090,48 +2133,55 @@ function B_mountTargets() {
     st.rolling = false;
     B.showTo = null;
     document.getElementById("B_controls").classList.remove("rolling");
-    document.querySelectorAll("#B_rules button").forEach(b => b.disabled = false);
-    const tg = B_target(st.n), r = B.runs[B.rule];
-    const v = B_judge(tg, r);
-    st.ran = true;
-    B.revealed = true;
-    const practice = st.n < B_PRACTICE;
-    if (!practice) { st.hits.push(v.ok); }
+    st.ran = true; B.revealed = true;
+    if (st.done || st.locked == null) { paintCard(); B_paint(); return; }
+    if (st.hits[st.n] !== true) st.tries++;
+    const v = B_judge(st.locked, B.runs[B.rule]);
+    if (v.ok) st.hits[st.n] = true;
     el("B_tflip").innerHTML = v.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>';
-    el("B_roll").disabled = practice ? false : true;
     paintPips(); paintCard(); B_paint();
   }
   function next() {
-    if (!st.ran) return;
-    if (st.n < B_PRACTICE) { st.hits.push(null); }
+    if (st.hits[st.n] !== true) return;
     st.n++;
     if (st.n >= B_ROUNDS) { finish(); return; }
     deal();
   }
   function finish() {
     st.done = true;
-    const scored = st.hits.slice(B_PRACTICE).filter(Boolean).length;
-    record(BIT.B1, scored >= 3);
+    record(BIT.B1, st.hits.filter(Boolean).length >= B_ROUNDS && st.tries <= B_TRIES_MAX);
     markTask("B", "B1");
-    hint("B1", scored + " of " + B_PRACTICE + " that count");
-    el("B_roll").disabled = false;
-    el("B_tnext").disabled = true;
-    el("predB_h").textContent = "Predict — done";
-    el("B_tshape").textContent = "All ten targets done. Keep playing with the controls if you like.";
+    hint("B1", st.hits.filter(Boolean).length + " of " + B_ROUNDS + " hit");
+    el("B_tflip").innerHTML = "";
+    paintCard(); paintPips();
     checkStageDone("B");
   }
 
   el("predB_slot").innerHTML =
     '<table class="dealt" id="B_ttab"></table>' +
+    '<div class="controls" style="margin-top:8px;">' +
+      '<div class="row"><label for="B_terr">how far from 0.50 they end up</label>' +
+      '<input type="range" id="B_terr" min="0.02" max="0.48" step="0.01" value="0.25" />' +
+      '<output id="B_terrOut">0.25</output></div></div>' +
     '<div class="gm-prompt" id="B_tshape" style="margin-top:8px;"></div>' +
-    '<div class="buttons" style="margin-top:10px;"><button id="B_tnext" class="secondary" disabled>Next target</button></div>' +
+    '<div class="buttons" style="margin-top:10px;">' +
+      '<button id="B_tlock" class="accent">Lock target</button>' +
+      '<button id="B_tnext" class="secondary" disabled>Next target</button></div>' +
     '<div class="flip" id="B_tflip"></div>' +
     '<div class="roundpips" id="B_tpips"></div>';
+  el("B_terr").addEventListener("input", e => {
+    st.dist = +e.target.value; paintCard(); B_paint(); bump("B");
+  });
+  el("B_tlock").addEventListener("click", lock);
   el("B_tnext").addEventListener("click", next);
-  el("B_roll").addEventListener("click", run);
+  el("B_roll").addEventListener("click", () => run());
   deal();
-  function show() { if (!st.done) { st.n = B_ROUNDS; finish(); } }
-  return { show, state: st, run, next, targets: B_TARGETS, judge: B_judge };
+  function show() { if (!st.done) { st.bypassed = true; st.n = B_ROUNDS; finish(); } }
+  // targetErr is what the strip draws: the live slider before a lock, the
+  // locked value after one, and nothing once the ten are behind the student.
+  const targetErr = () => (st.done && !st.bypassed) ? null
+                        : B_errForDist(st.locked != null ? st.locked : st.dist);
+  return { show, state: st, run, next, lock, targetErr, judge: B_judge };
 }
 
 function B_wire() {
@@ -2745,7 +2795,7 @@ function D_drawVar() {
   const T = MOOSE_Y.length - 1;
   const f = box(58, 16, W - 80, H - 54, 0, T, 0, 0.60);
   axes(ctx, f, "winters from 1959", "moose carrying one of each allele", pc);
-  const tg = D.game && !D.game.state.done ? D_TARGETS[D_ORDER[Math.min(D.game.state.n, D_ORDER.length - 1)]] : null;
+  const tg = D.game && (!D.game.state.done || D.game.state.bypassed) ? D_TARGETS[D_ORDER[Math.min(D.game.state.n, D_ORDER.length - 1)]] : null;
   if (tg) {
     const want = D_targetCurve(tg);
     ctx.save();
@@ -2988,7 +3038,7 @@ function D_mountCurves() {
   el("D_roll").addEventListener("click", run);
   el("D_practice").addEventListener("change", syncRollBtn);
   deal();
-  function show() { if (!st.done) { st.n = D_ROUNDS; finish(); } }
+  function show() { if (!st.done) { st.bypassed = true; st.n = D_ROUNDS; finish(); } }
   return { show, state: st, run, next, targets: D_TARGETS, curveOf: D_targetCurve };
 }
 
@@ -3067,7 +3117,7 @@ D_wire(); D_paint();
 
 Score.init({
   moduleId: "lesson10",
-  version: 7,
+  version: 9,
   scaffold: 4,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
