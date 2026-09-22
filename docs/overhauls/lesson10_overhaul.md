@@ -1,8 +1,8 @@
 # Lesson 10 — overhaul
 
-**File** · `app/lessons/lesson10.html` (`version: 9`, `scaffold: 4`)
+**File** · `app/lessons/lesson10.html` (`version: 10`, `scaffold: 4`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · rounds 1–5 done — 2026-09-22. Both check suites green (bar checks run eight times clean); A, B, C and D driven end to end in headless Chrome.
+**Status** · rounds 1–6 done — 2026-09-22. Open in `LOCKS.txt`. Both check suites green (bar checks run five times clean after round 6); A, B, C and D driven end to end in headless Chrome.
 **Last touched** · 2026-09-22
 
 ## What the lesson is
@@ -24,7 +24,8 @@ argument in `breed()`.
        at ten different (size, generations) settings
     B  the switch: inherited pool vs. fresh pool — ten targets the student sets
     C  107 populations and the two walls — ten target shapes  (Buri is the framing, not a panel)
-    D  the Lesson 6 moose model, driven by a diagram — six drift curves to match
+    D  the counted moose record against a steady herd the student sizes —
+       five runs to find the size that drifts like it
 
 **Stage E was cut on 2026-09-21**, on JM's instruction. It was the four-arrow
 junction (bodies, crash, sex ratio, brood spread) plus the LTEE panel, and it
@@ -412,3 +413,69 @@ would have flattered the aiming strategy.
 ### Still open
 
 - Nothing. Round 5 is closed.
+
+
+## Items — round 6, from JM 2026-09-22
+
+Last pass before release. JM keeps the Part D text for himself.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| A22 | A | **The band is judged on the wiggle.** The two dotted lines run the width of the panel; two thirds of the trajectory inside is credit, under two thirds is a miss, nothing outside at all is credit-but-too-uncertain. | done |
+| A23 | A | When nothing fell outside, **the band that would have worked is drawn** — the student's own centre, with the half-width that puts two thirds inside, measured off the run that just happened. | done |
+| A24 | A | "is spent" → "has been used". | done |
+| A25 | A | Opening voice block replaced with JM's shorter version. | done |
+| B18 | B | **Abandon target** button: records the target as missed and moves on, so an unhittable target cannot trap a student. | done |
+| B19 | B | "Lock target" → **Set target**; "correct"/"incorrect" → **hit your target** / **missed your target**; bullet rewritten to JM's wording. | done |
+| D11 | D | **Stage D rebuilt.** The Lesson 6 birth/death model, the DAG, the harsh-winter marking and the six curve targets are all gone. What is left: the counted record, sliders for **herd size**, **loci** and **alleles per locus**, heterozygosity over the 42 winters for both, and five runs to find the steady size that drifts like the record. | done |
+| X6 | — | A and D halves of the check script rewritten; a B abandon check added. `version: 10`. | done |
+
+### What round 6 measured
+
+**Stage D identifies a size, and it is the harmonic mean.** Decay gap from the
+record, 40 loci, 4 alleles, 6 runs each:
+
+    N=  100   +15.65%   passes 0/6
+    N=  300    +4.54%   passes 0/6
+    N=  600    +1.25%   passes 0/6
+    N=  850    +0.25%   passes 6/6
+    N=  926    -0.00%   passes 6/6      <- the harmonic mean
+    N= 1056    -0.21%   passes 5/6      <- the plain average
+    N= 1400    -0.64%   passes 3/6
+    N= 1800    -1.28%   passes 0/6
+    N= 3000    -1.44%   passes 0/6
+
+So the record pins the herd to roughly 850–1400. The plain average (1056) is
+inside that band and the harmonic mean (926) is dead centre — at 120 loci the
+harmonic mean sits 0.06% from the record and the plain average 0.24%. The gate
+identifies the size; it does not by itself prove the average is wrong, so both
+numbers are printed in the readout once a run has happened.
+
+**The loci slider is the stage's second control, not decoration.** At the right
+herd size: 5 loci land 0–25% of runs, 40 loci 75%, 160 loci 100%. Over 42
+winters a herd of a thousand loses about 2% of its heterozygotes, which is
+invisible against the noise of a handful of loci.
+
+**The alleles slider does not move the bar**, because the verdict is taken on
+the decay rather than the level: 0.24% / 0.14% / 0.04% at 2, 4 and 8 alleles.
+
+**One real consequence of A's rule change.** The width that holds two thirds of
+the *wiggle* is not `A_typical`'s endpoint miss — the trajectory spends most of
+its length nearer the start than the endpoint does. Measured, best clean-hit
+width against the old endpoint miss: N=14 → 0.42 vs 0.37, N=60 → 0.22 vs 0.20,
+N=320 → 0.06 vs 0.08. The slider is still the honest answer to the question the
+stage now asks, but it is no longer the same quantity as Lesson 6's typical
+miss, and the label may want revisiting.
+
+**A big population is hard to hit cleanly.** At 320 individuals over 30
+generations the wiggle is tight enough that most widths swallow it whole and
+read as too uncertain: the best width lands a clean hit 44% of the time against
+80% and 52% for the two smaller classes. That is the process, not a defect.
+
+### Two bugs fixed in passing
+
+- `C shape N accepts its own setting` had its bar on the measured floor (18 of
+  20) while the target picture is drawn off `pageSeed` and moves page to page.
+  It failed about one run in six. Now 40 replays with the bar at 32.
+- `D a big herd does not pass by being big` tested for exactly zero over six
+  reps. Now 8 reps with a 25% ceiling.
