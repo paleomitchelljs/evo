@@ -818,7 +818,16 @@ const BIT = { A1:0,
 
 function unlockNext(stage) {
   const nx = NEXT[stage];
-  if (!nx) { showDone(true); return; }
+  /* The last stage mints the code. Nothing did this between 2026-09-21,
+     when Stage E was cut and the re-mint guard below moved to Gates.D, and
+     2026-09-22: the done banner appeared saying "your completion code is
+     below" with nothing below it, and no error anywhere. Score.finish() has
+     to be called explicitly -- recordCheckpoint does not do it. */
+  if (!nx) {
+    showDone(true);
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+    return;
+  }
   const sec = document.getElementById("stage" + nx);
   if (sec && sec.classList.contains("stage-locked")) {
     sec.classList.remove("stage-locked");
