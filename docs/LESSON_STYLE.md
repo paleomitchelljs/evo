@@ -78,6 +78,9 @@ Everything else on the page is bare: labels, one-line bullets, numbers. If you
 find yourself writing a paragraph outside a voice block, the picture is doing
 too little.
 
+Never **land** or **knob** on screen (JM, 2026-09-23). Say hit, succeed, set,
+slider, toggle.
+
 ---
 
 ## 4. The setup bullets
@@ -103,7 +106,7 @@ Never open with what the student will learn.
 ## 5. How a stage moves
 
 Controls are live from the moment a stage opens. A stage opens the next one by
-being **solved** — the student lands a target the interactive sets, not a
+being **solved** — the student hits a target the interactive sets, not a
 prediction they type. The task list is the contract and is visible from the
 start; it is short, it is in the imperative, and its items are checkable by the
 page.
@@ -111,7 +114,7 @@ page.
 The verbs that recur, as a menu:
 
     bring a number under a bar          "typical miss under 65 birds"
-    land inside a window                "between 45 and 55", "inside ±0.4 kg"
+    get inside a window                 "between 45 and 55", "inside ±0.4 kg"
     hit a stated target                 "finish at exactly 200"
     find a configuration                "a population where the swap drops 0.60 to 0.25"
     draw an arrow, then use it          "with the rain arrow alone…"

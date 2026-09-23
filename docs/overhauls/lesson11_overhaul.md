@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · five stages; A, B, C, E rebuilt 2026-09-22; prose still owed
-**Last touched** · 2026-09-22 (round 2 done)
+**Status** · five stages; B and D rebuilt again 2026-09-23 (round 3); `version: 8`; prose still owed; locked
+**Last touched** · 2026-09-23 (round 3 done)
 
 ## What the lesson is
 
@@ -15,11 +15,12 @@ student** — see Rulings.
 ## Stages as they stand
 
     A  heterozygosity, and what inbreeding does to it   (updated old A)
-    B  F over time on a real herd: drift + bottlenecks  (new; old C's job,
-                                                         old lesson-10-D's data)
+    B  draw how many breed each generation; F runs underneath; match an
+       F curve                                        (rebuilt 2026-09-23)
     C  the pedigree: set a founder's two alleles by colour, drop them down
                                                         (old B, new mechanics)
-    D  set a pedigree's inbreeding, predict the F curve, run it, find out (new)
+    D  set breeders and how often a partner is a relative; match an F curve
+       whose shape says which cause made it           (rebuilt 2026-09-23)
     E  one founding pair traced down (descent.html's engine): F as the shaded
        share of a genome whose two copies come from one founder copy (new)
 
@@ -53,8 +54,19 @@ rescuing into a later lesson.
 | 19 | E | new Part E: descent framework, closed pedigree from one pair, no outsiders (no-migration ruling), no new mutations. Target = share of the bottom row's chromosomes whose two copies trace to the same founder copy; Go adds generations one at a time | done |
 | 20 | — | "A inbreeding does not push the allele frequency" fails on the unedited page: a 2-SE test on 8 fixed seeds. Widen to 30 runs, 3 SE | done |
 | 21 | — | `Score.init` version 7, scaffold 5; E1 bit; checks for E | done |
+| 22 | A | voice → JM's text: two distinct ancestors; inbreeding makes that **less likely** | done |
+| 23 | A | animation faster (260 ms a generation → ~90) | done |
+| 24 | A, B, C | **targets repeated**: `(seed + i*3) % 6` only ever reaches two values. Deal five distinct per student | done |
+| 25 | — | no "land"/"knob" on screen. Pips read "3 of 5 attempts, 2 successful hits" | done |
+| 26 | A | "dark allele" → "purple allele"; "pale/dark homozygote" → "yellow/purple" | done |
+| 27 | B | **rebuild.** No birth/death model. Student paints the population size across the top plot; F runs under it; target is an F curve; practice switch | done |
+| 28 | C | **Homozygous founders** button beside Random founders | done |
+| 29 | D | **rebuild.** Target is an F curve from a hidden (breeders, sib-mating) setting. Student sets both, runs, sees the run over the target. Result stays until Next target (it was wiped by the next deal). Practice switch | done |
+| 30 | — | checks for B and D rewritten; A/C/E distinct-target checks | done |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
+- JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
+- D's missing feedback was partly a bug: non-picture `mountRounds` deals the next round inside `submit()`, and `onDeal` clears `D.truth`. The comparison line was drawn and erased in one tick.
 - E drops `descent.html`'s outsiders: they are migration, which the 2026-09-17 ruling keeps out.
 
 ## Measured, 2026-09-22 round
@@ -67,6 +79,20 @@ rescuing into a later lesson.
 - Check "B two different herds reach the same F" failed 1 page load in 3 before this round touched B: it depends on the per-student bad years. Searched on a finer grid now.
 - Check "A inbreeding does not push the allele frequency" was 8 runs at 2 SE; widened to 30 runs at 3 SE (mean shift now −0.007 against a spread of 0.11).
 - Card pictures are 460 px: `setupCanvas` pins a canvas to its width attribute, it does not fill the panel.
+
+## Measured, 2026-09-23 round
+
+- A: the old deal `(seed + i*3) % 6` reaches two values of six. `dealDistinct` (seeded shuffle) now deals A, B, C and D. E keeps its three-target rotation.
+- B, one run vs its own shape's average: 0.013-0.029 RMS. `B_TOL` 0.05. Fifteen breeders for fifteen generations hit its own target 75-80%; now 25 for 20 (90%+).
+- B, crash two generations late still hits (100%); crash half as deep does not (0%). Timing forgiving, depth not.
+- B, 60 generations of F cannot hold six shapes 0.10 apart; the closest pair is ~0.085. Over 1,295 drawn headcounts, 0-2 clear two targets per page, none three. The check's bar is "none clears three, ≤1% clear two".
+- B, a zig-zag headcount can match a steady-line target inside 0.05 RMS (seen in a screenshot). RMS judges closeness, not shape; tightening it would fail the noise.
+- D, noise: 0.015-0.039 RMS at the five settings; own-setting hit 90-100% at `D_TOL` 0.05.
+- D, 1000/0.6 sat 0.068 from 100/0.5 and 142/0.5 cleared both: now 1000/0.5 (closest pair 0.099; 462-setting grid, none clears two).
+- D, the wrong cause cannot fake the shape: best size-only try at 1000/0.5 misses by 0.085; best relatives-only try at 60/0 by 0.098.
+- D, a run at 1000 breeders is ~100 ms (80 loci); big targets average 4 runs, small ones 24.
+- C, the reachability check only tried evenly spread colours and could not reach 5 or 6 on some trees (floor 7.6). Rare-colour founder sets (m of 16 copies) reach both.
+- C, Homozygous founders: F in the founders' row reads 1.0 (no heterozygotes), then drops below 0. Correct by the definition; flagged for JM.
 
 ## Rulings
 
