@@ -340,7 +340,7 @@ check("slots declared match slots written",
   });
   const unreachable = reach.filter(r => r.n === 0).map(r => r.tgt.toFixed(2));
   check("B most of the settable range is reachable", unreachable.length <= settable.length * 0.4,
-        (settable.length - unreachable.length) + " of " + settable.length + " settable targets are landable" +
+        (settable.length - unreachable.length) + " of " + settable.length + " settable targets are reachable" +
         (unreachable.length ? "; not reachable on this grid: " + unreachable.join(" ") : ""));
 
   let worstClear = 0, worstClearAt = "";
@@ -361,10 +361,17 @@ check("slots declared match slots written",
      Both are played here against fresh batches rather than against the grid's
      own samples, which would flatter the aiming strategy. */
   const CAP = 20;
+  /* The ten targets have to differ by B_GAP (JM, 2026-09-23), so both players
+     draw each target from what the targets already set leave open. */
+  const drawTarget = (s, used) => {
+    const free = settable.filter(t => B_clash(used, t) === undefined);
+    const tgt = free[Math.floor(s / 2147483648 * free.length)];
+    used.push(tgt); return tgt;
+  };
   const playAimed = (seed) => {
-    let tries = 0, s = seed;
+    let tries = 0, s = seed; const used = [];
     for (let k = 0; k < B_ROUNDS; k++) {
-      const tgt = settable[Math.floor((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648 * settable.length)];
+      const tgt = drawTarget(s = (s * 1103515245 + 12345) % 2147483648, used);
       const best = grid.slice().sort((a, b) =>
         b.d.filter(v => Math.abs(v - tgt) <= B_TOL).length - a.d.filter(v => Math.abs(v - tgt) <= B_TOL).length)[0];
       let hit = false;
@@ -376,9 +383,9 @@ check("slots declared match slots written",
     return tries;
   };
   const playParked = (seed, g) => {
-    let tries = 0, s = seed;
+    let tries = 0, s = seed; const used = [];
     for (let k = 0; k < B_ROUNDS; k++) {
-      const tgt = settable[Math.floor((s = (s * 1103515245 + 12345) % 2147483648) / 2147483648 * settable.length)];
+      const tgt = drawTarget(s = (s * 1103515245 + 12345) % 2147483648, used);
       let hit = false;
       for (let i = 0; i < CAP && !hit; i++) {
         tries++;
@@ -399,7 +406,58 @@ check("slots declared match slots written",
           canGiveUp && g.state.hits[before] === false && g.state.n === before + 1 && g.state.locked === null,
           "locked target " + (before + 1) + ", abandoned it: recorded as missed and moved to " +
           (g.state.n + 1) + " with the slider live again");
-    g.state.n = before; g.state.hits = []; g.state.locked = null; g.state.tries = 0;
+    g.state.n = before; g.state.hits = []; g.state.locked = null; g.state.tries = 0; g.state.set = [];
+  }
+
+  /* TEN DIFFERENT TARGETS. JM, 2026-09-23. A target within B_GAP of one
+     already set -- abandoned ones count -- cannot be set, and the button says
+     so by going dead while the card names the clash. Driven through the
+     slider's own input event, so the check sees what a student sees. */
+  {
+    const g = B.game, el = id => document.getElementById(id);
+    const slide = v => { el("B_terr").value = v; el("B_terr").dispatchEvent(new Event("input")); };
+    const step = +el("B_terr").step, gapSteps = Math.round(B_GAP / step);
+    const t0 = 0.25, inside = +(t0 + (gapSteps - 1) * step).toFixed(2), outside = +(t0 + gapSteps * step).toFixed(2);
+    slide(t0); g.lock(); el("B_tgiveup").click();
+    slide(t0);
+    const sameDead = el("B_tlock").disabled;
+    slide(inside);
+    const nearDead = el("B_tlock").disabled, named = /already set/.test(el("B_tshape").textContent);
+    g.lock(); const nearRefused = g.state.locked === null && g.state.set.length === 1;
+    slide(outside);
+    const farLive = !el("B_tlock").disabled;
+    g.lock(); const farTaken = g.state.locked === outside;
+    check("B ten targets have to be different",
+          sameDead && nearDead && named && nearRefused && farLive && farTaken,
+          "after " + t0.toFixed(2) + " (abandoned): " + t0.toFixed(2) + " refused " + sameDead + ", " +
+          inside.toFixed(2) + " refused " + (nearDead && nearRefused) + " and the card names the clash " + named +
+          ", " + outside.toFixed(2) + " accepted " + (farLive && farTaken));
+    g.state.n = 0; g.state.hits = []; g.state.locked = null; g.state.tries = 0; g.state.set = [];
+    slide(0.25);
+
+    /* The gap is the widest one that can never strand a student: nine set
+       targets must leave at least one slider stop open for the tenth. Counted
+       off the slider, and the next gap up is shown failing. */
+    const mid = settable[Math.floor(settable.length / 2)];
+    const ruledOut = gap => settable.filter(t => Math.round(Math.abs(t - mid) * 100) < Math.round(gap * 100)).length;
+    const r = ruledOut(B_GAP), rUp = ruledOut(B_GAP + step);
+    check("B the gap can never strand a student", (B_ROUNDS - 1) * r < settable.length &&
+          Math.ceil(settable.length / rUp) < B_ROUNDS,
+          "each target rules out " + r + " of " + settable.length + " stops, so nine rule out at most " +
+          (B_ROUNDS - 1) * r + "; at a gap of " + (B_GAP + step).toFixed(2) + " it is " + rUp +
+          " each and " + Math.ceil(settable.length / rUp) + " badly placed targets close the slider");
+
+    /* And the rule has to cost something: one parked setting serves only the
+       few targets it clears that are also B_GAP apart. Greedy from the bottom
+       is the most a set of points on a line can take at a fixed spacing. */
+    let most = 0, mostAt = "";
+    for (const gr of grid) {
+      let n = 0, last = -1;
+      for (const t of settable) if (landsFor(t, gr) && (last < 0 || Math.round((t - last) * 100) >= Math.round(B_GAP * 100))) { n++; last = t; }
+      if (n > most) { most = n; mostAt = (gr.inh ? "inherited" : "uninherited") + " " + gr.N + "/" + gr.G; }
+    }
+    check("B one setting serves only a few of the ten", most <= B_ROUNDS / 2,
+          "the most distinct targets any one setting clears is " + most + " (" + mostAt + ")");
   }
 
   const aimed = [11, 23, 47, 91, 137].map(playAimed);

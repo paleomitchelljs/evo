@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson10.html` (`version: 10`, `scaffold: 4`)
 **Checks** · `node scripts/check_lesson10_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · rounds 1–6 done — 2026-09-22. Open in `LOCKS.txt`. Both check suites green (bar checks run five times clean after round 6); A, B, C and D driven end to end in headless Chrome.
-**Last touched** · 2026-09-22
+**Status** · rounds 1–7 done — 2026-09-23. Released: open in `LOCKS.txt`. Both check suites green (bar checks run three times clean after round 7).
+**Last touched** · 2026-09-23
 
 ## What the lesson is
 
@@ -600,3 +600,24 @@ number declared in the file.
 - Intros and bullets: lightest touch. Dropped A's duplicate top-plot bullet;
   trimmed one A bullet, one B bullet, one D sentence, D's predict prompt.
 - Both check suites green after.
+
+## Items — round 7, from JM 2026-09-23 (release)
+
+JM: *"I hate the 'land' and 'knob' terminology."* Neither word on any screen.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| B20 | B | Drop the "average distance from 0.50 … ± 0.05" row from the predict table. | done |
+| B21 | B | **Ten different targets.** Reverses B16's no-guard ruling for repeats. A target must sit ≥ `B_GAP` (0.03) from every target already set (abandoned ones included). Set target goes dead and the card names the clash. Task line and bullet say "different". `version: 11`. | done |
+| B22 | B | "the twenty land inside it" → "Now set the controls so the twenty end up inside it." | done |
+| D12 | D | Card: "land 2 of them" → "succeed twice". | done |
+| D13 | D | Task: → "Find what constant-sized herd drifts as fast as the real fluctuating-size herd". | done |
+| X7 | — | Check script: aimed/parked players draw distinct targets; three new B checks. 59 checks, three clean runs; `check_lessons.py` clean. | done |
+
+### What round 7 measured
+
+- Why 0.03 and not "any different value": at ±0.05 tolerance, one run hits 0.25 and 0.26 alike. A 0.01 gap still lets one setting clear all ten.
+- 0.03 is the widest gap that never strands a student: each target rules out 5 of 47 stops, so nine rule out ≤ 45. At 0.04 it is 7 each; 7 badly placed targets close the slider.
+- One parked setting now serves at most **4** of the ten (inherited 10/25). Before: all ten.
+- Tries bar still clearable: aimed 12–15 tries (bar 18). Parked 60/100: 94–141.
+- "land" is gone from every visible string. What's left is comments and function names.

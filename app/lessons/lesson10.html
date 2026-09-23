@@ -352,7 +352,7 @@
       <ul class="setup">
         <li>This time you have a single starting point and run <b>twenty</b> populations at once.</li>
         <li>Set a target for how varied the final populations are, then adjust <b>Controls</b> to hit it.</li>
-        <li>Ten targets, and you can re-run one as often as you like.</li>
+        <li>Ten different targets, and you can re-run one as often as you like.</li>
         <li>Nothing stops you setting a target nothing reaches. <b>Abandon target</b> moves you on if you want out of one.</li>
         <li>The simulations are otherwise the same as in Part A — still nothing selected.</li>
       </ul>
@@ -402,7 +402,7 @@
       <div class="panel">
         <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="B1">Set yourself ten targets and hit each one. <span class="hint"><span id="B1_now">0 of 10 hit</span></span></li>
+          <li data-task="B1">Set yourself ten different targets and hit each one. <span class="hint"><span id="B1_now">0 of 10 hit</span></span></li>
         </ul>
         <!-- VOICE (banner): the conclusion half of JM's dictated passage, which
              names the mechanism outright. -->
@@ -549,7 +549,7 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Find the constant herd that drifts at the observed rate. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
+          <li data-task="D1">Find what constant-sized herd drifts as fast as the real fluctuating-size herd. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
         </ul>
         <!-- VOICE (banner): 461_lec09_07, which is the stage's conclusion. -->
         <div class="solved-banner" id="solvedD">For pretty much every population we look at, the effective population size is smaller than the census, so drift is always stronger than it seems. It is not the average that does it. The downs are the limiting step.</div>
@@ -2085,19 +2085,31 @@ const B_TOL = 0.05;   // 1.25x the worst measured run-to-run sd (0.040); retries
    floor, so this is eight misses across ten targets.
 
    IT IS NEVER SHOWN. A student who knows they are marked on tries sets ten
-   trivial targets to save them, and JM ruled out guards on what may be set --
+   easy targets to save them, and B_GAP stops repeats but not easy ones --
    so the count stays off the screen, the same reasoning as Stage A's silent
    last-five-vs-first-five bit. */
 const B_TRIES_MAX = 18;
 const B_judge = (target, r) => ({ ok: Math.abs(r.dist - target) <= B_TOL });
+/* JM, 2026-09-23: "the students have to set 10 different targets, as right now
+   you can just hit the same target 10 times." Different by one slider step is
+   still the same target -- against a tolerance of 0.05 one run hits 0.25 and
+   0.26 alike -- so a target has to sit B_GAP from every target already set,
+   abandoned ones included.
+
+   0.03 is the widest gap that can never strand a student: each set target
+   rules out 5 of the 47 slider stops, so nine rule out at most 45 and the
+   tenth always has somewhere to go. At 0.04 seven badly placed targets can
+   close the slider. Both are re-derived in check_lesson10_numbers.js. */
+const B_GAP = 0.03;
+const B_clash = (set, d) => set.find(t => Math.round(Math.abs(t - d) * 100) < Math.round(B_GAP * 100));
 
 /* JM, 2026-09-22: "In place of preset targets ... the students set themselves
    10 targets & run the controls until they hit each. So a 'Lock target' button
-   instead of that." No guard on what they may set: a target nothing reaches is
+   instead of that." The one guard is B_GAP: a target nothing reaches is still
    a thing they are allowed to discover. */
 function B_mountTargets() {
   const st = { n: 0, hits: [], rolling: false, timer: 0, ran: false, done: false,
-               dist: 0.25, locked: null, bypassed: false, tries: 0 };
+               dist: 0.25, locked: null, bypassed: false, tries: 0, set: [] };
   const el = id => document.getElementById(id);
 
   function paintPips() {
@@ -2112,15 +2124,14 @@ function B_mountTargets() {
   function paintCard() {
     const locked = st.locked != null;
     const shown = locked ? st.locked : st.dist;
+    const near = locked || st.done ? undefined : B_clash(st.set, st.dist);
     el("predB_h").textContent = st.done ? "Predict — done" : "Predict";
     el("B_ttab").innerHTML =
       "<tr><th>target</th><td>" + Math.min(st.n + 1, B_ROUNDS) + " of " + B_ROUNDS + "</td></tr>" +
-      "<tr><th>they all start at</th><td>0.50</td></tr>" +
-      "<tr><th>average distance from 0.50</th><td>" + f2(shown) +
-        (locked ? " &plusmn; " + f2(B_TOL) : "") + "</td></tr>";
+      "<tr><th>they all start at</th><td>0.50</td></tr>";
     el("B_terrOut").value = f2(shown);
     el("B_terr").disabled = locked || st.done;
-    el("B_tlock").disabled = locked || st.done;
+    el("B_tlock").disabled = locked || st.done || near !== undefined;
     el("B_tlock").textContent = locked ? "Target set" : "Set target";
     // JM, 2026-09-22: "sometimes you can end up with an unhittable target and
     // I don't want students to be locked in forever." Abandoning records the
@@ -2133,7 +2144,8 @@ function B_mountTargets() {
     document.querySelectorAll("#B_rules button").forEach(b => b.disabled = (!locked && !st.done) || st.rolling);
     el("B_tshape").textContent = st.done
       ? "All ten targets done. Keep playing with the controls if you like."
-      : locked ? "Now move the controls until the twenty land inside it."
+      : locked ? "Now set the controls so the twenty end up inside it."
+      : near !== undefined ? "Too close to " + f2(near) + ", a target you have already set. Each target has to differ from the others by at least " + f2(B_GAP) + "."
                : "Shape the spread you want the twenty to end up in, then set it.";
   }
   function deal() {
@@ -2145,8 +2157,8 @@ function B_mountTargets() {
     hint("B1", st.hits.filter(Boolean).length + " of " + B_ROUNDS + " hit");
   }
   function lock() {
-    if (st.locked != null || st.done) return;
-    st.locked = st.dist;
+    if (st.locked != null || st.done || B_clash(st.set, st.dist) !== undefined) return;
+    st.locked = st.dist; st.set.push(st.dist);
     paintCard(); B_paint(); bump("B");
   }
   function run(opts) {
@@ -2949,8 +2961,8 @@ function D_mountRuns() {
     el("D_tshape").textContent = st.done
       ? (D.matched ? "You found it. Keep playing with the controls if you like."
                    : "Five attempts done. Keep playing with the controls if you like.")
-      : "Find the constant population size that drifts as fast as the fluctuating moose. Five attempts; land " +
-        D_HITS + " of them.";
+      : "Find the constant population size that drifts as fast as the fluctuating moose. Five attempts; succeed " +
+        (D_HITS === 2 ? "twice" : D_HITS + " times") + ".";
     el("D_roll").disabled = st.running;
   }
   function run(opts) {
@@ -3040,7 +3052,7 @@ D_wire(); D_paint();
 
 Score.init({
   moduleId: "lesson10",
-  version: 10,
+  version: 11,
   scaffold: 4,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
