@@ -592,3 +592,11 @@ Stage A block**: 45 checks ran, 29 were reported, and the run still printed a
 tidy summary. The report now comes back in a `<pre>` that `--dump-dom` returns
 whole, and the runner fails if the number of reported checks does not match the
 number declared in the file.
+
+## 2026-09-22 — text pass (JM)
+
+- Answer cards (`solvedA`–`solvedD`) cut to ~⅓ length. Cutting only; sentences
+  are his, trimmed. `solvedA` no longer repeats D's intro paragraph.
+- Intros and bullets: lightest touch. Dropped A's duplicate top-plot bullet;
+  trimmed one A bullet, one B bullet, one D sentence, D's predict prompt.
+- Both check suites green after.

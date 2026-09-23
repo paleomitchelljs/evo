@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · drafts working, prose still owed
-**Last touched** · 2026-09-22
+**Status** · five stages; A, B, C, E rebuilt 2026-09-22; prose still owed
+**Last touched** · 2026-09-22 (round 2 done)
 
 ## What the lesson is
 
@@ -20,6 +20,8 @@ student** — see Rulings.
     C  the pedigree: set a founder's two alleles by colour, drop them down
                                                         (old B, new mechanics)
     D  set a pedigree's inbreeding, predict the F curve, run it, find out (new)
+    E  one founding pair traced down (descent.html's engine): F as the shaded
+       share of a genome whose two copies come from one founder copy (new)
 
 Retired: old D (inbreeding depression — load vs genome size) and old E (the
 coalescent walk backwards). Both are in git history. Old E's payload — two
@@ -41,9 +43,30 @@ rescuing into a later lesson.
 | 9 | D | deal a mating rule → draw the F curve → lock → run → verdict | done |
 | 10 | — | `check_lesson11_numbers.js` rewritten: 22 bars, all pass | done |
 | 11 | — | `Score.init` at version 6, scaffold 4, one bit per stage | done |
-| 12 | — | **prose pass** — every stage is at bare-minimum filler by design | todo |
+| 12 | — | **prose pass** — every stage is at bare-minimum filler by design | partial 2026-09-22: A/B/D bullets trimmed, solvedA rewritten off AA/aa |
 | 13 | — | decide whether the retired old-E payload (≈20,000 against eight billion) lands in a later lesson | todo |
 | 14 | C | the generated tree has no funnel; decide whether it wants one, and measure what it buys | todo |
+| 15 | A | bowling: card draws the target (heterozygotes if pairing were random vs wanted); Go → controls lock, 15 generations animate, verdict | done |
+| 16 | B | bowling: same two-bar picture against the founders; Go → herd and F reveal year by year, verdict | done |
+| 17 | C | bottom panel → each founder allele's frequency by generation + F by generation (15 drops faint, mean bold); target drawn in the card as a row of boxes | done |
+| 18 | — | "two-tone" → "heterozygote", "pond" → "population", "birds/chicks" → "individuals/offspring"; identifiers too | done |
+| 19 | E | new Part E: descent framework, closed pedigree from one pair, no outsiders (no-migration ruling), no new mutations. Target = share of the bottom row's chromosomes whose two copies trace to the same founder copy; Go adds generations one at a time | done |
+| 20 | — | "A inbreeding does not push the allele frequency" fails on the unedited page: a 2-SE test on 8 fixed seeds. Widen to 30 runs, 3 SE | done |
+| 21 | — | `Score.init` version 7, scaffold 5; E1 bit; checks for E | done |
+
+- JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
+- E drops `descent.html`'s outsiders: they are migration, which the 2026-09-17 ruling keeps out.
+
+## Measured, 2026-09-22 round
+
+- E, one chromosome per genome: bottom-row F wobbled ±0.10-0.19 run to run; unaimable. Four chromosomes, ~1 crossover each: ±0.05-0.10. That is why E's genome is four chromosomes end to end.
+- E, 200 runs a setting: two generations after the founders = F 0.25 whatever the settings; six generations = 0.40 (8 a generation, random partners) to 0.68 (2 a generation).
+- E targets were 0.40/0.52/0.64: the opening setting (4, 2 generations, 0.26 ± 0.07) landed 0.40 15% of the time. Moved to 0.44/0.56/0.68, generations slider to 7. Now 3%; best-setting hit rates 75/75/63%.
+- E shading vs the pedigree's own kinship F: no bias. 2000 runs a setting in a standalone copy: mean differences +0.003/+0.001/−0.001, all under 2 SE. The page check is paired, 40 runs, 3 SE; one load read −0.028 ± 0.010, which is chance at that size.
+- "A the knob runs one way" used 5 runs a setting and swapped f = 0 and 0.2 on one load in four; now 12.
+- Check "B two different herds reach the same F" failed 1 page load in 3 before this round touched B: it depends on the per-student bad years. Searched on a finer grid now.
+- Check "A inbreeding does not push the allele frequency" was 8 runs at 2 SE; widened to 30 runs at 3 SE (mean shift now −0.007 against a spread of 0.11).
+- Card pictures are 460 px: `setupCanvas` pins a canvas to its width attribute, it does not fill the panel.
 
 ## Rulings
 

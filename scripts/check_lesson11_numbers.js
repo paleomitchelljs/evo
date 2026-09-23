@@ -2,7 +2,7 @@
 /*
  * check_lesson11_numbers.js -- the bar checks for app/lessons/lesson11.html.
  *
- * Lesson 11 is four stochastic round games. None of their bars can be seen
+ * Lesson 11 is five stochastic round games. None of their bars can be seen
  * by opening the page, and three things have to be true of every one:
  *
  *   1. it is clearable by a student doing the intended thing;
@@ -35,19 +35,22 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && B && C && D && typeof Score !== "undefined"),
+check("page loaded", !!(A && B && C && D && E && typeof Score !== "undefined"),
       "every stage object and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 4,
-      Object.keys(BIT).length + " named bits, scaffold is 4");
+check("slots declared match slots written", Object.keys(BIT).length === 5,
+      Object.keys(BIT).length + " named bits, scaffold is 5");
 
 /* ---- A. the knob, and what it does to F -------------------------------- */
 {
   const Fat = (f, reps) => { const v = [];
     for (let r = 0; r < reps; r++) { A.f = f; A.p0 = 0.5; A.serial = r*17 + Math.round(f*100); A_fresh();
-      for (let g = 0; g < 15; g++) pondStep(A.rng, A.pond, f);
+      for (let g = 0; g < 15; g++) popStep(A.rng, A.pop, f);
       v.push(A_stats()); }
     return v; };
-  const sweep = [0, 0.2, 0.4, 0.6, 0.8, 1.0].map(f => [f, Fat(f, 5)]);
+  /* 12 runs a setting: at 5, one page load in a few swapped f = 0 and
+     f = 0.2 (0.06 against 0.02), because every load reseeds the page and
+     F at the low end moves by about 0.03 from run to run. */
+  const sweep = [0, 0.2, 0.4, 0.6, 0.8, 1.0].map(f => [f, Fat(f, 12)]);
   const means = sweep.map(s => mn(s[1].map(q => q.F)));
   let mono = true;
   for (let i = 1; i < means.length; i++) if (means[i] < means[i-1] - 0.02) mono = false;
@@ -56,10 +59,14 @@ check("slots declared match slots written", Object.keys(BIT).length === 4,
   check("A the knob is worth having", means[means.length-1] - means[0] > 0.6,
         "f = 0 lands " + means[0].toFixed(2) + " and f = 1 lands " + means[means.length-1].toFixed(2));
 
-  /* Inbreeding rearranges the genotypes; it does not push the allele. */
-  const flat = Fat(0.8, 8);
+  /* Inbreeding rearranges the genotypes; it does not push the allele. It
+     does shrink the population in the gene's eyes, so the frequency drifts
+     MORE from run to run -- the test is on the mean, over enough runs that
+     a 3-SE band is not tripped by the drift itself. It was 8 runs at 2 SE
+     until 2026-09-22 and failed on fixed seeds: -0.063 against 0.057. */
+  const NR = 30, flat = Fat(0.8, NR);
   const drift = mn(flat.map(q => q.p - 0.5)), spread = sdv(flat.map(q => q.p));
-  check("A inbreeding does not push the allele frequency", Math.abs(drift) < 2 * spread / Math.sqrt(8),
+  check("A inbreeding does not push the allele frequency", Math.abs(drift) < 3 * spread / Math.sqrt(NR),
         "at f = 0.8 the dark allele sits " + (drift >= 0 ? "+" : "") + drift.toFixed(3) +
         " from where it started (spread " + spread.toFixed(3) + "), while F climbs to " +
         mn(flat.map(q => q.F)).toFixed(2));
@@ -125,7 +132,16 @@ check("slots declared match slots written", Object.keys(BIT).length === 4,
   /* Two different routes to the same F -- the stage's silent point. SEARCHED
      for, not asserted: an earlier version of this check named a pair of
      settings and they turned out to land 0.20 and 0.12. */
-  const legalSettings = grid.map(g => {
+  /* Searched over a finer grid than the reach check uses. The bad years are
+     drawn per student, and on the coarse grid about one page load in three
+     found no pair at all (measured 2026-09-22: 1 of 3 runs failed); the
+     claim is about herds, not about one grid. */
+  const twinGrid = [];
+  for (const bd of [0, 0.1, 0.2, 0.3, 0.4])
+    for (const [b,d] of [[0.50,0.10],[0.45,0.20],[0.40,0.20],[0.40,0.25],[0.35,0.25],
+                         [0.35,0.28],[0.32,0.27],[0.30,0.27],[0.30,0.28],[0.30,0.285]])
+      twinGrid.push([b, d, bd]);
+  const legalSettings = twinGrid.map(g => {
     const rs = many(g[0], g[1], g[2], 3).filter(legal);
     return rs.length === 3 ? { g, F: mn(rs.map(q => q.F)), N: mn(rs.map(q => q.end)) } : null;
   }).filter(Boolean);
@@ -182,7 +198,7 @@ check("slots declared match slots written", Object.keys(BIT).length === 4,
   const one = []; for (let r = 0; r < 20; r++) { C.serial = r*31; C_drop(); one.push(C_bottomStats().het); }
   check("C one drop is not the number", sdv(one) > C_TOL,
         "the same tree and the same founders give " + mn(one).toFixed(1) + " ± " + sdv(one).toFixed(1) +
-        " two-tone birds over 20 drops, against a tolerance of " + C_TOL +
+        " heterozygotes over 20 drops, against a tolerance of " + C_TOL +
         " -- which is why the verdict is taken on " + C_DROPS + " of them");
   const avgs = []; for (let q = 0; q < 8; q++) { C.serial = q*137; avgs.push(C_dropMany()); }
   check("C averaging the drops makes the tolerance mean something", sdv(avgs) < C_TOL,
@@ -263,6 +279,57 @@ check("slots declared match slots written", Object.keys(BIT).length === 4,
   check("D each setting is dealt twice and never twice running",
         counts.filter(c => c >= 2).length >= 2 && !adjacent,
         "the five rounds deal settings " + seen.join(",") + " -- counts " + counts.join("/"));
+}
+
+/* ---- E. one founding pair, traced down --------------------------------- */
+{
+  const REPS = 40;
+  const runs = (n, g, f) => { const v = []; for (let r = 0; r < REPS; r++) { E.serial = 5000 + r * 13 + n * 101 + g * 17 + Math.round(f * 10); v.push(E_build(n, g, f)); } return v; };
+  const rate = (v, t) => v.filter(x => Math.abs(x - t) <= E_TOL).length / v.length;
+  const grid = [];
+  for (const n of [2, 3, 4, 6, 8]) for (const g of [2, 3, 4, 5, 6, 7]) for (const f of [0, 0.5, 1]) grid.push([n, g, f, runs(n, g, f)]);
+
+  /* the shaded share is the F the tree implies, measured two ways. Paired
+     per run and judged on the mean difference against 3 SE of it: a flat
+     0.03 bound tripped about one load in twenty at two a generation,
+     where one run's shading wobbles by 0.09. */
+  {
+    let fails = [], rep = [];
+    for (const [n, g, f] of [[4, 4, 0], [2, 6, 0], [8, 6, 1]]) {
+      const d = [];
+      for (let r = 0; r < REPS; r++) {
+        E.serial = 9000 + r * 7; const real = E_build(n, g, f);
+        const bot = E.rows[E.rows.length - 1];
+        d.push(real - bot.reduce((t, x) => t + E_kin(x.parents[0], x.parents[1]), 0) / bot.length);
+      }
+      const m = mn(d), se = sdv(d) / Math.sqrt(REPS);
+      rep.push("n" + n + "/g" + g + "/f" + f + " " + (m >= 0 ? "+" : "") + m.toFixed(3) + "±" + se.toFixed(3));
+      if (Math.abs(m) > 3 * se) fails.push(n);
+    }
+    check("E the shading is the pedigree's own F", fails.length === 0, "shaded minus pedigree F, mean ± SE: " + rep.join("  "));
+  }
+  const reach = E_TARGETS.map(t => { let best = 0, at = null;
+    for (const q of grid) { const h = rate(q[3], t); if (h > best) { best = h; at = q; } }
+    return [t, best, at]; });
+  check("E every target is reachable", reach.every(r => r[1] >= 0.5),
+        reach.map(r => r[0].toFixed(2) + "@n" + r[2][0] + "/g" + r[2][1] + "/f" + r[2][2] + ":" + (100 * r[1]).toFixed(0) + "%").join("  "));
+  const dflt = runs(4, 2, 0);
+  check("E the default setting is not an answer", E_TARGETS.every(t => rate(dflt, t) < 0.1),
+        "4 a generation, 2 generations lands F " + mn(dflt).toFixed(2) + " ± " + sdv(dflt).toFixed(2) +
+        "; best target hit " + (100 * Math.max(...E_TARGETS.map(t => rate(dflt, t)))).toFixed(0) + "%");
+  let greedy = 0, gp = "";
+  for (const q of grid) { const k = E_TARGETS.filter(t => rate(q[3], t) >= 0.5).length; if (k > greedy) { greedy = k; gp = "n" + q[0] + "/g" + q[1] + "/f" + q[2]; } }
+  check("E no one setting clears two targets", greedy <= 1,
+        "the greediest setting (" + gp + ") lands " + greedy + " of " + E_TARGETS.length + " targets half the time or better");
+  /* more than one route to a target: the stage's quiet point, searched for */
+  const routes = E_TARGETS.map(t => grid.filter(q => rate(q[3], t) >= 0.4).map(q => "n" + q[0] + "/g" + q[1] + "/f" + q[2]));
+  check("E each target has more than one route", routes.every(r => r.length >= 2),
+        routes.map((r, i) => E_TARGETS[i].toFixed(2) + ": " + r.slice(0, 4).join(" ")).join("  |  "));
+  const seen = E_ORDER.map(k => (k + E_ROT) % E_TARGETS.length);
+  let adj = false; for (let i = 1; i < seen.length; i++) if (seen[i] === seen[i - 1]) adj = true;
+  check("E targets repeat and never twice running", !adj && new Set(seen).size === E_TARGETS.length,
+        "the five rounds deal targets " + seen.map(k => E_TARGETS[k].toFixed(2)).join(", "));
+  E.serial = 0; E.n = 4; E.gens = 2; E.f = 0; E_reset();
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
