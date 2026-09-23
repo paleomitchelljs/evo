@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · five stages; B and D rebuilt again 2026-09-23 (round 3); `version: 8`; prose still owed; locked
-**Last touched** · 2026-09-23 (round 3 done)
+**Status** · five stages; B and D rebuilt again 2026-09-23 (round 3); C's tree redrawn as matings (round 4); `version: 8`; prose still owed; locked
+**Last touched** · 2026-09-23 (round 4 done)
 
 ## What the lesson is
 
@@ -63,11 +63,19 @@ rescuing into a later lesson.
 | 28 | C | **Homozygous founders** button beside Random founders | done |
 | 29 | D | **rebuild.** Target is an F curve from a hidden (breeders, sib-mating) setting. Student sets both, runs, sees the run over the target. Result stays until Next target (it was wiped by the next deal). Practice switch | done |
 | 30 | — | checks for B and D rewritten; A/C/E distinct-target checks | done |
+| 31 | C | **Homozygous founders** → every founder homozygous for the *same* allele (blue); student adds variety by clicking a founder | done |
+| 32 | C | F in a row with one allele is undefined (0/0): plot a gap, not 0; readout "—" | done |
+| 33 | C | **pedigree shows matings.** Tree was 0-4 partners per individual, a third of each row never bred, 32-40 crossing lines a generation, no mark for a mating: read as asexual. → monogamous couples; a mating dot per couple, sibship bar under it, children grouped beneath their parents | done |
+| 34 | D, A | slider label → "probability a mate is a full sibling" (the operator's rule: with chance f the partner is the first parent's full sib). A shares the operator and the label | done |
+| 35 | — | C checks re-run on the new tree; homozygous-founders check rewritten; pairs-once and one-page-readout checks added; "one drop" check moved to mid-range founders | done |
+| 36 | C | pedigree canvas 900 → 680 px: it was wider than its panel, so the right-hand family was cut off with no visible scrollbar on a Mac | done |
+| 37 | C | slider label "matings between relatives" could say what the rule is: "probability a mate is its closest relative" (parallel to D). Not asked; offered | todo |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
 - D's missing feedback was partly a bug: non-picture `mountRounds` deals the next round inside `submit()`, and `onDeal` clears `D.truth`. The comparison line was drawn and erased in one tick.
 - E drops `descent.html`'s outsiders: they are migration, which the 2026-09-17 ruling keeps out.
+- JM 2026-09-23 (round 4): C, *"I'd like the 'homozygous founders' button to put a single allele fixed at the top--that is, all founding individuals are homozygous for the same allele, and you can add diversity by clicking and manually editing."* C's tree: *"each individual in generation N seems to be connected to only a single individual in generation N-1...so where are the mates? ... It may require fixed pedigrees but I really love the target predict & the 'click to set genotype' and the visual of the alleles dropping down the pedigree."* D: *"'how often a partner is a relative': can we make this 'probability of related mates' or--if we're using a specific definition of related (cousins?) we could say that 'probability mate is a 2nd cousin or closer'"*.
 
 ## Measured, 2026-09-22 round
 
@@ -93,6 +101,15 @@ rescuing into a later lesson.
 - D, a run at 1000 breeders is ~100 ms (80 loci); big targets average 4 runs, small ones 24.
 - C, the reachability check only tried evenly spread colours and could not reach 5 or 6 on some trees (floor 7.6). Rare-colour founder sets (m of 16 copies) reach both.
 - C, Homozygous founders: F in the founders' row reads 1.0 (no heterozygotes), then drops below 0. Correct by the definition; flagged for JM.
+
+## Measured, 2026-09-23 round 4 (C's tree)
+
+- Old tree, one page: 0-4 partners per individual, 2-7 of each row never bred, the same pair mated twice (8 matings, 5 distinct pairs in row 0→1).
+- New rule: everyone above the bottom row pairs once. With chance f the partner is the closest relative still unpaired, otherwise one from the least-related quarter. Family sizes as even as the row allows (4 each from the founders, then 2, then 2-3).
+- Tree's own inbreeding, 40 trees a setting, 0 → 1 by 0.1: 0.063 0.071 0.083 0.082 0.124 0.140 0.171 0.225 0.264 0.363 **0.500** (was 0.13 → 0.35). Full-sib pairs 1% → 100%. At 1 the tree is eight closed full-sib lines.
+- **One tree a setting was not monotone on a page**: one page read 0.05 0.11 0.09 0.06 0.09 0.04 up the slider's bottom half. Two causes. (1) The two branches drew different numbers of random numbers, so one changed pairing reshuffled the rest; both draws now taken every time. (2) Even coupled, a changed pairing changes kinship for every later choice: 37 of 60 pages fell by >0.02 somewhere. **The page now shows the median of 15 trees** (`C_typicalPed`): 1 page in 60 falls by >0.02, largest 0.03. At 7 trees: 3/60, largest 0.047.
+- One drop, 200 drops per founder set in the target range: spread 2.2-3.1, within tolerance of its own mean 35-52% of the time. The check had read 1.5 against 1.5 because it sampled 20 drops at a founder set near the ceiling (15 of 20).
+- Reachability on the new tree: 5→4.9, 7→7.1, 9→8.9, 11→11.0, 13→12.9, 6→6.0.
 
 ## Rulings
 

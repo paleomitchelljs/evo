@@ -192,6 +192,21 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   check("C the inbreeding slider runs one way", mono,
         "the tree's own inbreeding, 6 trees per setting: " +
         pf.map((v, i) => v.toFixed(2) + "±" + sdv(runs[i]).toFixed(2)).join(" -> "));
+  /* The rule averaged over trees is one thing; the student sees ONE tree a
+     setting and its readout. Measured 2026-09-23: with one tree a setting,
+     37 of 60 pages fell by more than 0.02 somewhere up the slider. The page
+     now shows the median of C_CAND trees. Tested over 40 page seeds. */
+  {
+    const kk = [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+    let falls = 0, worst = 0;
+    for (let q = 0; q < 40; q++) {
+      const v = kk.map(k => C_pedF(C_typicalPed(20000 + q * 7919, k)));
+      let drop = 0; for (let i = 1; i < v.length; i++) drop = Math.max(drop, Math.max(...v.slice(0, i)) - v[i]);
+      if (drop > 0.02) falls++; worst = Math.max(worst, drop);
+    }
+    check("C one page's readout rises with the slider", falls <= 2 && worst <= 0.05,
+          falls + " of 40 pages fall by more than 0.02 anywhere up the slider; largest fall " + worst.toFixed(3));
+  }
   C_rebuild();
   check("C the inbreeding slider is worth having", pf[pf.length-1] - pf[0] > 0.2,
         "slider at 0 builds a tree at " + pf[0].toFixed(2) + ", at 1 " + pf[pf.length-1].toFixed(2));
@@ -199,12 +214,17 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   const setPool = (ncol, nhet) => {
     for (let i = 0; i < 8; i++) C.founders[i] = i < nhet ? [i%ncol, (i+1)%ncol] : [i%ncol, i%ncol];
   };
-  /* One drop is not the number. If it were, C_DROPS would be waste. */
-  C.inb = 0; C_rebuild(); setPool(4, 4);
-  const one = []; for (let r = 0; r < 20; r++) { C.serial = r*31; C_drop(); one.push(C_bottomStats().het); }
+  /* One drop is not the number. If it were, C_DROPS would be waste. Taken
+     at two colours, four heterozygous founders -- mid-range, where the
+     targets are. It was 20 drops at four colours, which sits near the
+     ceiling (15 of 20) where the spread is squeezed, and on the monogamous
+     tree of 2026-09-23 it read 1.5 against 1.5. Over 200 drops the spread
+     across the target range is 2.2-3.1. */
+  C.inb = 0; C_rebuild(); setPool(2, 4);
+  const one = []; for (let r = 0; r < 100; r++) { C.serial = r*31; C_drop(); one.push(C_bottomStats().het); }
   check("C one drop is not the number", sdv(one) > C_TOL,
         "the same tree and the same founders give " + mn(one).toFixed(1) + " ± " + sdv(one).toFixed(1) +
-        " heterozygotes over 20 drops, against a tolerance of " + C_TOL +
+        " heterozygotes over 100 drops, against a tolerance of " + C_TOL +
         " -- which is why the verdict is taken on " + C_DROPS + " of them");
   const avgs = []; for (let q = 0; q < 8; q++) { C.serial = q*137; avgs.push(C_dropMany()); }
   check("C averaging the drops makes the tolerance mean something", sdv(avgs) < C_TOL,
@@ -241,13 +261,27 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
         })(), "the colours in the founder pool move the bottom row further than the mating rule does");
   const pick = dealDistinct("l11Cr", C_TARGETS), dealt = [0, 1, 2, 3, 4].map(pick);
   check("C five different targets", new Set(dealt).size === 5, "the five rounds deal " + dealt.join(", "));
-  /* Homozygous founders: every founder two copies of one colour, each colour on two founders. */
+  /* Homozygous founders (JM, round 4): every founder two copies of the SAME
+     allele. Nothing varies, so F has nothing to measure in any row and must
+     come back empty, not 0. */
   C.serial = 11; C_homoFounders();
-  const cnt = [0, 0, 0, 0]; for (const [x, y] of C.founders) { cnt[x]++; cnt[y]++; }
-  check("C homozygous founders are homozygous, every colour a quarter",
-        C.founders.every(([x, y]) => x === y) && cnt.every(c => c === 4),
-        "founders " + C.founders.map(q => q.join("")).join(" ") + "; copies per colour " + cnt.join("/"));
-  C_randomFounders();
+  C.inb = 0; C_rebuild(); C_dropMany();
+  const oneAllele = C.founders.every(([x, y]) => x === 0 && y === 0);
+  const noF = C.traj.every(t => t.every(r => r.F === null));
+  check("C homozygous founders: one allele fixed across the top, F left undefined",
+        oneAllele && noF, "founders " + C.founders.map(q => q.join("")).join(" ") +
+        "; rows with an F: " + C.traj.reduce((a, t) => a + t.filter(r => r.F !== null).length, 0));
+  /* The tree is drawn as matings, so it has to BE matings: one partner each. */
+  let multi = 0, idle = 0;
+  for (const k of [0, 0.5, 1]) { C.inb = k; C_rebuild();
+    C.ped.couples.forEach((pairs, g) => {
+      const seen = pairs.flat();
+      if (new Set(seen).size !== seen.length) multi++;
+      idle += C.ped.rows[g].length - seen.length;
+    }); }
+  check("C every individual above the bottom row pairs once", multi === 0 && idle === 0,
+        multi + " rows with someone in two couples, " + idle + " individuals who never pair");
+  C.inb = 0; C_rebuild(); C_randomFounders();
 }
 
 /* ---- D. two causes, two shapes ------------------------------------------
