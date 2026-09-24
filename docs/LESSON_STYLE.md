@@ -190,7 +190,12 @@ inherit a feel rather than invent one.
   the text. `buildArrows` builds one; `paths.js` makes the arrow itself the
   slider on a graph the lesson has fixed.
 - **The roll** — set it, play it, watch it, find out. The only honest way to
-  show a stochastic process; a summary statistic cannot do it.
+  show a stochastic process; a summary statistic cannot do it. **Every roll
+  gets a practice switch** (JM, 2026-09-24: *"a default incorporation for all
+  of the 'bowling' style activities"*): a ticked run plays against the same
+  target and shows on the card, but is not scored and does not spend an
+  attempt, and it still runs while a scored result waits for the next target.
+  Lesson 11 has one on every stage.
 - **The replicate panel** — twenty or a hundred of the same run side by side,
   with the distribution of endpoints revealed when it finishes. Turns "it
   varies" into a shape.

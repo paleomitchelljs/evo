@@ -571,6 +571,43 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
         res.map(q => q.w + " px: " + (q.bad.length ? q.bad.join(" ") : "none over")).join("  |  "));
 }
 
+/* ---- a practice switch on every stage ------------------------------------
+   JM, 2026-09-24: "a 'practice' toggle for every part ... a default
+   incorporation for all of the 'bowling' style activities". Driven through
+   the real buttons and checkboxes. The runs animate on setInterval, so a
+   stand-in runs each one to its end at once. Last in the file: it spends
+   one scored attempt of every game. For each stage:
+     practice ticked  -> a run is shown and not scored;
+     unticked         -> a run is scored, and the card waits for Next;
+     waiting          -> Go is off, and a practice run is still allowed. */
+{
+  const realSI = window.setInterval, realCI = window.clearInterval;
+  let loop = false, stop = false;
+  window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
+  window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
+  const out = [], stages = { A, B, C, D, E };
+  try {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_drop"], ["D", "D_run"], ["E", "E_go"]]) {
+      const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
+      const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
+      const n0 = g.st.hits.length;
+      tick(true); btn.click();
+      const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(document.getElementById(S + "_tflip").textContent);
+      tick(false); btn.click();
+      const scored = g.st.hits.length === n0 + 1 && g.waiting();
+      const blocked = btn.disabled;
+      tick(true); btn.click();
+      const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
+      tick(false);
+      out.push({ S, ok: !!box && pracOk && scored && blocked && stillPrac,
+                 d: S + ": practice " + (pracOk ? "unscored" : "SCORED") + ", ticked off " + (scored ? "scored" : "NOT scored") +
+                    ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
+    }
+  } finally { window.setInterval = realSI; window.clearInterval = realCI; }
+  check("every stage has a practice switch that does not score", out.length === 5 && out.every(q => q.ok),
+        out.map(q => q.d).join("  |  "));
+}
+
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
 say("RAN " + ran);
 L.join(" ;; ");

@@ -242,6 +242,7 @@
         <li>Four hundred individuals, one locus, two alleles. Each individual is two halves, one per copy.</li>
         <li>Nothing dies and nothing is selected. The only control is who pairs with whom.</li>
         <li><b>F</b>: how far the heterozygote count falls short of what random pairing would give.</li>
+        <li>Tick <b>practice</b> for a run that does not count.</li>
       </ul>
     </div>
   </div>
@@ -275,6 +276,7 @@
         <div class="controls" id="A_controls">
           <div class="row" data-line="f"><label for="A_f">probability a mate is a full sibling</label><input type="range" id="A_f" min="0" max="1" step="0.05" value="0" /><output id="A_fOut">0.00</output></div>
           <div class="row" data-line="p"><label for="A_p">how common the purple allele is</label><input type="range" id="A_p" min="0.05" max="0.95" step="0.05" value="0.5" /><output id="A_pOut">0.50</output></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="A_run" class="accent">Go</button>
             <button id="A_dl" class="ghost">Download .R</button>
@@ -364,6 +366,7 @@
         <li>Drop it down: every offspring takes one copy from each parent, picked by a coin.</li>
         <li>The slider rebuilds the tree with more or fewer matings between relatives.</li>
         <li><b>Bottom plot</b>: how common each founder allele is in each generation, and F in each generation. Faint lines are single drops.</li>
+        <li>Tick <b>practice</b> for a drop that does not count.</li>
       </ul>
     </div>
   </div>
@@ -394,6 +397,7 @@
         <h3>Controls</h3>
         <div class="controls" id="C_controls">
           <div class="row"><label for="C_inb">matings between relatives</label><input type="range" id="C_inb" min="0" max="1" step="0.1" value="0" /><output id="C_inbOut">0.0</output></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a drop with this ticked does not count</label></div>
           <div class="buttons">
             <button id="C_drop" class="accent">Drop it down</button>
             <button id="C_rand" class="secondary">Random founders</button>
@@ -482,6 +486,7 @@
       <li>Shaded: where an individual's two alleles trace back to the same founder allele. The share shaded is <b>F</b>.</li>
       <li>Hover an individual to trace its ancestors. Click one, then hover another, to compare them.</li>
       <li><b>Bottom plots</b>: how many of the twelve dot alleles are left, and <b>π</b> — the average number of dots two genomes from that generation differ at. Faint lines are earlier runs.</li>
+      <li>Tick <b>practice</b> for a run that does not count.</li>
     </ul>
   </div>
 
@@ -515,6 +520,7 @@
             <div class="row"><label for="E_n">individuals per generation</label><input type="range" id="E_n" min="2" max="8" step="1" value="4" /><output id="E_nOut">4</output></div>
             <div class="row"><label for="E_g">generations after the founders</label><input type="range" id="E_g" min="2" max="7" step="1" value="2" /><output id="E_gOut">2</output></div>
             <div class="row"><label for="E_f">how often a partner is the closest relative</label><input type="range" id="E_f" min="0" max="1" step="0.1" value="0" /><output id="E_fOut">0.0</output></div>
+            <div class="practice-row"><input type="checkbox" id="E_practice" /><label for="E_practice">practice — a run with this ticked does not count</label></div>
             <div class="buttons">
               <button id="E_go" class="accent">Go</button>
             </div>
@@ -1198,21 +1204,32 @@ function A_stats() {
 /* Set it, throw it, watch it land. A fresh population at the student's
    frequency every throw, the controls off while it plays, the verdict at
    the end and not before. */
+/* The practice switch, B's and D's pattern (JM, 2026-09-24: "a 'practice'
+   toggle for every part ... a default incorporation for all of the 'bowling'
+   style activities"). A practice run is judged against the target and shown
+   on the card, and neither scored nor spent; it is allowed while a scored
+   result waits for Next target. Once the stage is done every run is practice. */
+const A_practising = () => !!(A.game && (A.game.st.done || document.getElementById("A_practice").checked));
+function A_syncGo() {
+  document.getElementById("A_run").textContent = A_practising() ? "Practice run" : "Go";
+  if (A.game && !A.running) A.game.repaint();
+}
 function A_go() {
-  if (A.running || A.game.waiting()) return;
+  const practice = A_practising();
+  if (A.running || (A.game.waiting() && !practice)) return;
   A_fresh(); A.ran = false; A.running = true;
   lockStage("A", true); A_paint();
   A.timer = setInterval(() => {
     popStep(A.rng, A.pop, A.f); A.gen++; A.hist.push(A_stats()); A_paint();
-    if (A.gen >= A_GENS) { clearInterval(A.timer); A.running = false; lockStage("A", false); A_land(); }
+    if (A.gen >= A_GENS) { clearInterval(A.timer); A.running = false; lockStage("A", false); A_land(practice); }
   }, A_TICK);
 }
-function A_land() {
+function A_land(practice) {
   A.ran = true;
   const st = A.hist[A.hist.length - 1], tg = A.game.current();
   const ok = Math.abs(st.F - tg.F) <= A_TOL;
-  A.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', st.F);
-  A_paint();
+  A.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', st.F, practice);
+  A_syncGo(); A_paint();
 }
 function A_drawPop() {
   const cv = document.getElementById("A_popn");
@@ -1322,14 +1339,16 @@ function A_wire() {
   bind("A_f", "A_fOut", "f");
   bind("A_p", "A_pOut", "p0");
   document.getElementById("A_run").addEventListener("click", A_go);
+  document.getElementById("A_practice").addEventListener("change", A_syncGo);
   document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson11_stageA.R", A_RCODE()));
   A.game = mountRounds("A", {
     deal: (() => { const pick = dealDistinct("l11Ar", A_TARGETS); return i => ({ F: pick(i) }); })(),
     picture: (cv, r, got) => drawShortfall(cv, r && r.F, A_TOL, got, "if pairing were random", "after 15 generations"),
-    go: "A_run",
+    go: "A_run", practising: () => A_practising(),
     prompt: () => "Leave this many heterozygotes after fifteen generations.",
     onDeal: () => { A_fresh(); A.ran = false; A_paint(); }
   });
+  A_syncGo();
 }
 
 /* =====================================================================
@@ -1450,12 +1469,21 @@ function B_drawPop() {
     ctx.beginPath(); ctx.moveTo(f.px + 1, y); ctx.lineTo(f.px + f.pw, y); ctx.stroke();
     ctx.fillStyle = "#333"; ctx.fillText(String(v), f.px - 5, y);
   }
-  ctx.fillStyle = "rgba(85,64,126,0.10)"; ctx.beginPath(); ctx.moveTo(f.x(0), f.y(Math.log(B_NMIN)));
-  for (let t = 0; t < B_G; t++) { const y = f.y(Math.log(B.census[t])); ctx.lineTo(f.x(t), y); ctx.lineTo(f.x(t + 1), y); }
-  ctx.lineTo(f.x(B_G), f.y(Math.log(B_NMIN))); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = DARK; ctx.lineWidth = 2; ctx.beginPath();
-  for (let t = 0; t < B_G; t++) { const y = f.y(Math.log(B.census[t])); t ? ctx.lineTo(f.x(t), y) : ctx.moveTo(f.x(t), y); ctx.lineTo(f.x(t + 1), y); }
+  /* One point per generation, joined by lines, the area under them shaded.
+     JM, 2026-09-24: "points connected by lines instead of the flat surface".
+     A point sits in the middle of its generation's column: the brush sets the
+     column under the pointer, so the point lands under the pointer, and the F
+     that generation produces (F[t+1]) sits directly below it. */
+  const xc = t => f.x(t + 0.5), yc = t => f.y(Math.log(B.census[t])), base = f.y(Math.log(B_NMIN));
+  ctx.fillStyle = "rgba(85,64,126,0.10)"; ctx.beginPath(); ctx.moveTo(xc(0), base);
+  for (let t = 0; t < B_G; t++) ctx.lineTo(xc(t), yc(t));
+  ctx.lineTo(xc(B_G - 1), base); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = DARK; ctx.lineWidth = 1.5; ctx.lineJoin = "round"; ctx.beginPath();
+  for (let t = 0; t < B_G; t++) t ? ctx.lineTo(xc(t), yc(t)) : ctx.moveTo(xc(t), yc(t));
   ctx.stroke();
+  const rad = clamp(f.pw / B_G * 0.24, 1.8, 2.8);
+  ctx.fillStyle = DARK;
+  for (let t = 0; t < B_G; t++) { ctx.beginPath(); ctx.arc(xc(t), yc(t), rad, 0, 6.2832); ctx.fill(); }
   if (B.showTo != null) {
     ctx.strokeStyle = "rgba(178,58,72,0.6)"; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(f.x(B.showTo), f.py); ctx.lineTo(f.x(B.showTo), f.py + f.ph); ctx.stroke();
@@ -2019,20 +2047,29 @@ function C_wire() {
     C.serial++; C_homoFounders(); C.al = null; C.dropped = false; C.spread = null; C.traj = null; C_paint(); bump("C");
   });
   document.getElementById("C_drop").addEventListener("click", () => {
-    if (C.game.waiting()) return;
+    const practice = C_practising();
+    if (C.game.waiting() && !practice) return;
     const avg = C_dropMany();
     const tg = C.game.current();
     const ok = Math.abs(avg - tg.het) <= C_TOL;
-    C.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', avg);
-    C_paint();
+    C.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', avg, practice);
+    C_syncGo(); C_paint();
   });
+  document.getElementById("C_practice").addEventListener("change", C_syncGo);
   document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson11_stageC.R", C_RCODE()));
   C.game = mountRounds("C", {
     deal: (() => { const pick = dealDistinct("l11Cr", C_TARGETS); return i => ({ het: pick(i) }); })(),
-    picture: C_drawTarget, pictureH: 90, go: "C_drop",
+    picture: C_drawTarget, pictureH: 90, go: "C_drop", practising: () => C_practising(),
     prompt: () => "Set the founders' alleles and how often the tree mates relatives, then drop it down.",
     onDeal: () => { C.al = null; C.spread = null; C.traj = null; if (C.ped) C_paint(); }
   });
+  C_syncGo();
+}
+/* the practice switch: see A_practising */
+const C_practising = () => !!(C.game && (C.game.st.done || document.getElementById("C_practice").checked));
+function C_syncGo() {
+  document.getElementById("C_drop").textContent = C_practising() ? "Practice drop" : "Drop it down";
+  if (C.game) C.game.repaint();
 }
 
 /* =====================================================================
@@ -2972,21 +3009,28 @@ function E_build(n, gens, f) {
   for (let g = 0; g < gens; g++) E_breed();
   return E_rowF(E.rows[E.rows.length - 1]);
 }
+/* the practice switch: see A_practising */
+const E_practising = () => !!(E.game && (E.game.st.done || document.getElementById("E_practice").checked));
+function E_syncGo() {
+  document.getElementById("E_go").textContent = E_practising() ? "Practice run" : "Go";
+  if (E.game && !E.running) E.game.repaint();
+}
 function E_go() {
-  if (E.running || E.game.waiting()) return;
+  const practice = E_practising();
+  if (E.running || (E.game.waiting() && !practice)) return;
   E_archive(); E_reset(); E.ran = false; E.running = true;
   lockStage("E", true); E_render();
   E.timer = setInterval(() => {
     E_breed(); E_render();
-    if (E.rows.length > E.gens) { clearInterval(E.timer); E.running = false; lockStage("E", false); E_land(); }
+    if (E.rows.length > E.gens) { clearInterval(E.timer); E.running = false; lockStage("E", false); E_land(practice); }
   }, E_TICK);
 }
-function E_land() {
+function E_land(practice) {
   E.ran = true;
   const F = E_rowF(E.rows[E.rows.length - 1]), tg = E.game.current();
   const ok = Math.abs(F - tg.F) <= E_TOL;
-  E.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', F);
-  E_render();
+  E.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', F, practice);
+  E_syncGo(); E_render();
 }
 function E_wire() {
   const bind = (id, key, fmt) => document.getElementById(id).addEventListener("input", e => {
@@ -2998,6 +3042,7 @@ function E_wire() {
   bind("E_g", "gens", v => String(v));
   bind("E_f", "f", v => v.toFixed(1));
   document.getElementById("E_go").addEventListener("click", E_go);
+  document.getElementById("E_practice").addEventListener("change", E_syncGo);
   const svg = document.getElementById("E_svg");
   const toSvg = ev => { const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
   const at = p => {
@@ -3013,10 +3058,11 @@ function E_wire() {
   E_reset();
   E.game = mountRounds("E", {
     deal: i => ({ F: E_TARGETS[(E_ORDER[Math.min(i, E_ORDER.length - 1)] + E_ROT) % E_TARGETS.length] }),
-    picture: E_drawTarget, pictureH: 80, go: "E_go",
+    picture: E_drawTarget, pictureH: 80, go: "E_go", practising: () => E_practising(),
     prompt: () => "Shade this much of the bottom row's genomes.",
     onDeal: () => { if (!E.running) { E_archive(); E_reset(); E.ran = false; E_render(); } }
   });
+  E_syncGo();
 }
 
 document.addEventListener("score:bypass", () => {
@@ -3027,6 +3073,7 @@ document.addEventListener("score:bypass", () => {
     const t = document.getElementById("toc" + K); if (t) t.classList.remove("locked");
   }
   [A.game, B.game, C.game, D.game, E.game].forEach(g => g && g.show());
+  [A_syncGo, B_syncGo, C_syncGo, D_syncGo, E_syncGo].forEach(f => f());
 });
 
 A_fresh(); A_wire(); A_paint();

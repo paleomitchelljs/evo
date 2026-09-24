@@ -88,6 +88,8 @@ rescuing into a later lesson.
 | 52 | C | a click on the pedigree that missed every founder blanked the tree (`C_layout` called `setupCanvas`, which clears). Found in passing | done |
 | 53 | D | counted heterozygosity is a scribble at 25-80 individuals: bold line = average of all 200 (a finished population counts 0) | done — not asked; flag to JM |
 | 54 | D | "every copy" / "every copy different" left as is: JM's copy→allele note was about E, and D's "copy" is a gene copy, not a founder's allele | open — ask JM |
+| 55 | B | headcount drawn as one point per generation joined by lines, not flat steps; shading kept; brush unchanged (JM 2026-09-24). Point at the middle of its generation's column, so it sits under the pointer and above the F it makes | done |
+| 56 | A, C, E | practice switch on every stage, B's pattern (JM 2026-09-24: "a default incorporation for all of the 'bowling' style activities"). C's button reads "Practice drop". Check drives all five stages' real buttons: 53 bars | done |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
