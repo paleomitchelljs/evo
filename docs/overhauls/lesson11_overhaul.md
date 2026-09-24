@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · five stages; B and D rebuilt again 2026-09-23 (round 3); C's tree redrawn as matings (round 4); `version: 8`; prose still owed; locked
-**Last touched** · 2026-09-23 (round 4 done)
+**Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose still owed; locked
+**Last touched** · 2026-09-23 (round 5 done; 47 bars pass; four calls flagged to JM)
 
 ## What the lesson is
 
@@ -19,8 +19,9 @@ student** — see Rulings.
        F curve                                        (rebuilt 2026-09-23)
     C  the pedigree: set a founder's two alleles by colour, drop them down
                                                         (old B, new mechanics)
-    D  set breeders and how often a partner is a relative; match an F curve
-       whose shape says which cause made it           (rebuilt 2026-09-23)
+    D  alleles at the start, individuals, F; 150 populations run until one
+       allele is left; make the average land on a dealt generation. Ne and
+       4Ne shown live                                  (rebuilt, round 5)
     E  one founding pair traced down (descent.html's engine): F as the shaded
        share of a genome whose two copies come from one founder copy (new)
 
@@ -70,6 +71,15 @@ rescuing into a later lesson.
 | 35 | — | C checks re-run on the new tree; homozygous-founders check rewritten; pairs-once and one-page-readout checks added; "one drop" check moved to mid-range founders | done |
 | 36 | C | pedigree canvas 900 → 680 px: it was wider than its panel, so the right-hand family was cut off with no visible scrollbar on a Mac | done |
 | 37 | C | slider label "matings between relatives" could say what the rule is: "probability a mate is its closest relative" (parallel to D). Not asked; offered | todo |
+| 38 | D | **rebuild (round 5).** Heterozygosity over time; sliders: alleles at the start, individuals, F; 200 populations run to one allele; dot strip of the generation each got there; Ne = N/(1+F) and 4Ne live, with Ne and F measured in the runs beside them after a run | done |
+| 39 | D | F must be HELD by the mating rule, not set once: a starting F under random mating does nothing (measured) | done — flag to JM |
+| 40 | D | mating rule that holds F: partial selfing, s = 2F/(1+F). Full-sib rules measured and rejected (see Measured, round 5) | done — flag to JM |
+| 41 | D | JM's fourth slider (generations) dropped: every population runs to one allele, since an average of times needs every run to finish | done — flag to JM |
+| 42 | D | five rounds, fixed ladder, per-student targets; each round holds the alleles and one of individuals/F. Bowling shape (dealt generation, student builds the population), not "call the generation for a dealt population" — see Measured | done — flag to JM |
+| 43 | — | `mountRounds` picture mode also renders `rows` as a table above the picture (no other stage passes `rows`) | done |
+| 44 | — | checks for D rewritten (15 bars); `Score.init` version 9 | done |
+| 45 | D | old D's `popStep` operator no longer used by D; `popHo` kept with the operator | done |
+| 46 | D | no voice block and a bare "Stage E is open." banner, like B and E: prose owed | todo |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
@@ -111,6 +121,52 @@ rescuing into a later lesson.
 - One drop, 200 drops per founder set in the target range: spread 2.2-3.1, within tolerance of its own mean 35-52% of the time. The check had read 1.5 against 1.5 because it sampled 20 drops at a founder set near the ceiling (15 of 20).
 - Reachability on the new tree: 5→4.9, 7→7.1, 9→8.9, 11→11.0, 13→12.9, 6→6.0.
 
+## Measured, 2026-09-23 round 5 (D, heterozygosity to zero)
+
+Standalone node prototypes, 300-400 populations a setting, one locus.
+- Average generations to one allele = 4Ne·(k−1)·ln(k/(k−1)) for k equally
+  common alleles at the start (Littler 1975; the k → every-copy limit is the
+  whole population's time back to one ancestor copy). N = 50: k = 2 → 142
+  (formula 139), 3 → 162 (162), 4 → 167 (173), 10 → 183 (190), 100 → 190/200
+  (199). **4Ne is the ceiling, reached only with many alleles.** Two alleles
+  run out at ~2.8Ne.
+- A starting F with random mating after it: 182 / 187 / 184 generations at
+  F₀ = 0 / 0.5 / 1 (N = 50, k = 10, SE ≈ 5). Nothing.
+- Selfing held at s = 2F/(1+F): Ne = N/(1+F) within 1-8% (N = 60, F up to 0.9);
+  F measured in the runs 0.494 at 0.5, 0.590 at 0.6, 0.885 at 0.9.
+- The lesson's own operator (`popStep`: pairs, two offspring each, parents
+  drawn with replacement) has Ne ≈ **0.69N at f = 0** (family sizes 2 ×
+  Poisson(1), variance 4) and 0.26N at f = 1, against N/(1+F) = 0.52N.
+- Full-sib mating in monogamous pairs with random family sizes does follow
+  N/(1+F) (0.96-1.02), but **F tops out at 0.27** when every individual that
+  has an unpaired sib takes it: too few sibs to go round.
+- Spread: one population's time has a coefficient of variation 0.53-0.57
+  (many alleles) and 0.75 (two). At 4Ne generations 33-42% of populations
+  still have two or more alleles (median ≈ 0.88 × mean). The average
+  heterozygosity at 4Ne is e⁻² ≈ 14% of its start, not zero.
+- Speed: 100 populations of 200, every copy different, F = 0: 0.8 s.
+- **Why the game is "hit a dealt generation" and not "call the generation
+  for a dealt population".** With 4Ne printed live, calling the time for a
+  dealt population is reading the readout; and a practice run on the dealt
+  population hands over the answer outright. Building the population to a
+  dealt time keeps practice honest (the same trial-and-error B uses) and puts
+  the sliders in the student's hands.
+- Window ±12%, 200 populations. At ±15% the two F-lever rounds accepted
+  overlapping F's (F is a weak lever: 0 → 1 only halves Ne), so one constant
+  F cleared both. At ±12%: F above 0.65 in round 2, below 0.57 in round 4.
+- Rounds (targets two per round, per student): 1 every copy / F 0 / individuals
+  yours, 100 or 120; 2 every copy / 100 individuals / F yours, 210 or 220;
+  3 two alleles / F 0 / individuals yours, 130 or 140; 4 two alleles / 120
+  individuals / F yours, 250 or 260; 5 ten alleles / F 0.5 / individuals yours,
+  190 or 200. Intended setting hits 90-100% (10 fresh runs each); reading 4Ne
+  and stopping, F left at 0, ignoring the held F and the opening setting all
+  hit 0%. Greediest single setting over 2,121: 2 of 5 on the formula, 1 run.
+- Ne from the rate of loss (`neFromDecay`, the page's measured Ne): unbiased
+  over 20 seeds (0.98-1.01 of N/(1+F)) but one run wobbles 4-8%; selfing at
+  middling F runs a few percent under N/(1+F) at 60 individuals (0.92-0.97).
+  The first version of the check took one run per setting at seeds 31 apart
+  and failed on all four together.
+
 ## Rulings
 
 - **2026-09-22 — there is only one F.** JM: *"the students ONLY know F — we
@@ -121,9 +177,18 @@ rescuing into a later lesson.
 - **2026-09-22 — Part B plots F = 1 − H_t/H_0**, heterozygosity lost since the
   founders. That is the one that rises with drift and jumps at a bottleneck,
   which is what the stage is for.
-- **2026-09-22 — Part D is predict-then-measure**: set a pedigree's inbreeding
-  level, draw the F curve you expect from a population mating that way, run it,
-  find out.
+- ~~2026-09-22 — Part D is predict-then-measure~~ — superseded twice: round 3
+  (match an F curve) and round 5 (below).
+- **2026-09-23 — Part D is heterozygosity over time.** JM: *"it is a 'set up a
+  population and predict F over time' which is, perhaps, too similar to the
+  above Parts. What I am thinking is: heterozygosity over time. I am thinking
+  of sliders for (1) Number of alleles at the start, (2) Population size, (3) F
+  (initially), and (4) number of generations. ... run the simulation many times
+  with a parameter set and show the students 4Ne via interaction as that should
+  be when heterozygosity hits 0 (fixation of one allele) on average. I feel
+  like the target would be for students to predict when the diversity hits 0.
+  I think showing Ne as it is driven by their sliders would be good, with 4Ne
+  next to it."*
 - **2026-09-17 (standing)** — no migration, no between-population comparison.
   The operator still takes one pool per parent slot so a later lesson adds an
   argument rather than a model.
@@ -132,6 +197,12 @@ rescuing into a later lesson.
   and gates."* Interactives, gates and games are the deliverable. Prose is not.
 
 ## Do not
+
+- **Do not put Stage D back on `popStep`** (or any full-sib rule) while the
+  page prints Ne = N/(1+F): that operator's Ne is 0.69N at f = 0 and 0.26N at
+  f = 1. If JM wants full sibs back, the Ne readout has to become measured-only.
+- **Do not give Stage D a starting-F slider** that the mating rule does not
+  hold: it moves nothing, measured.
 
 - **Do not write a stage, a panel or a sentence explaining that there is more
   than one F.** Two of the quantities on this page are computed against

@@ -413,16 +413,17 @@
   </div>
 </section>
 
-<!-- ========== STAGE D — two ways to lose heterozygotes ================= -->
+<!-- ========== STAGE D — when the variety runs out ====================== -->
 <section class="stage stage-locked" id="stageD">
   <h2 class="stage-h">D</h2>
   <div class="lock-banner">Solve Stage C to unlock this section.</div>
 
   <div class="panel stage-intro">
     <ul class="setup" style="margin:0; padding:0; border-top:0;">
-      <li><b>The plot</b>: F over forty generations. The red band is the target.</li>
-      <li>Two controls: how many individuals breed, and the probability a mate is a full sibling.</li>
-      <li>Every run stays on the plot, faint, until the next target.</li>
+      <li><b>The plot</b>: 200 populations, one locus each, each run until it is down to one allele. A faint line is one population's heterozygosity if pairing were random.</li>
+      <li><b>Dots</b>: the generation each population was down to one allele.</li>
+      <li><b>F</b> is held where you set it, every generation.</li>
+      <li>You found the moose's effective population size in Lesson 10.</li>
       <li>Tick <b>practice</b> for a run that does not count.</li>
     </ul>
   </div>
@@ -430,12 +431,12 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <canvas id="D_curve" class="plot" width="680" height="300"></canvas>
+        <canvas id="D_curve" class="plot" width="680" height="380"></canvas>
         <div class="readout" id="D_read"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># how many breed, and the probability a mate is a full sibling, for 40 generations</span></span><span class="line" data-line="n">n    &lt;- <span class="num" id="cD_n">1000</span>   <span class="com"># breeders, in pairs</span></span><span class="line" data-line="f">f    &lt;- <span class="num" id="cD_f">0.00</span>   <span class="com"># probability a mate is a full sibling</span></span><span class="line">loci &lt;- <span class="num">80</span></span><span class="line">g   &lt;- <span class="fn">array</span>(<span class="fn">rbinom</span>(<span class="num">2</span>*n*loci, <span class="num">1</span>, <span class="num">0.5</span>), <span class="fn">c</span>(<span class="num">2</span>, loci, n))</span><span class="line">sib &lt;- <span class="fn">rep</span>(<span class="kw">NA</span>, n)</span><span class="line">H   &lt;- <span class="fn">mean</span>(g[<span class="num">1</span>,,] != g[<span class="num">2</span>,,])   <span class="com"># heterozygotes, counted</span></span><span class="line"></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">40</span>) {</span><span class="line">  kid &lt;- g; ksib &lt;- sib</span><span class="line">  <span class="kw">for</span> (pr <span class="kw">in</span> <span class="num">1</span>:(n/<span class="num">2</span>)) {</span><span class="line">    m &lt;- <span class="fn">sample</span>(n, <span class="num">1</span>)</span><span class="line">    d &lt;- <span class="kw">if</span> (<span class="fn">runif</span>(<span class="num">1</span>) &lt; f &amp;&amp; !<span class="fn">is.na</span>(sib[m])) sib[m] <span class="kw">else</span> <span class="fn">sample</span>(<span class="fn">setdiff</span>(<span class="num">1</span>:n, m), <span class="num">1</span>)</span><span class="line">    <span class="kw">for</span> (k <span class="kw">in</span> <span class="fn">c</span>(<span class="num">2</span>*pr - <span class="num">1</span>, <span class="num">2</span>*pr)) {   <span class="com"># two offspring a pair</span></span><span class="line">      kid[<span class="num">1</span>,,k] &lt;- g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, loci, <span class="kw">TRUE</span>), <span class="num">1</span>:loci, m)]</span><span class="line">      kid[<span class="num">2</span>,,k] &lt;- g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, loci, <span class="kw">TRUE</span>), <span class="num">1</span>:loci, d)]</span><span class="line">    }</span><span class="line">    ksib[<span class="num">2</span>*pr - <span class="num">1</span>] &lt;- <span class="num">2</span>*pr; ksib[<span class="num">2</span>*pr] &lt;- <span class="num">2</span>*pr - <span class="num">1</span></span><span class="line">  }</span><span class="line">  g &lt;- kid; sib &lt;- ksib</span><span class="line">  H &lt;- <span class="fn">c</span>(H, <span class="fn">mean</span>(g[<span class="num">1</span>,,] != g[<span class="num">2</span>,,]))</span><span class="line">}</span><span class="line"></span><span class="line">F &lt;- <span class="num">1</span> - H / H[<span class="num">1</span>]</span></pre>
+<pre class="code" id="codeD"><span class="line"><span class="com"># 200 populations, one locus, each run until one allele is left</span></span><span class="line" data-line="k">k &lt;- <span class="num" id="cD_k">300</span>          <span class="com"># alleles at the start, equally common</span></span><span class="line" data-line="n">N &lt;- <span class="num" id="cD_n">150</span>          <span class="com"># individuals</span></span><span class="line" data-line="F">F &lt;- <span class="num" id="cD_F">0.00</span>         <span class="com"># held there every generation</span></span><span class="line">s &lt;- <span class="num">2</span> * F / (<span class="num">1</span> + F)  <span class="com"># chance an offspring's two parents are one individual</span></span><span class="line"></span><span class="line">gens &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, {</span><span class="line">  g &lt;- <span class="fn">matrix</span>(<span class="fn">sample</span>(<span class="fn">rep_len</span>(<span class="num">1</span>:k, <span class="num">2</span> * N)), <span class="num">2</span>)   <span class="com"># two copies each</span></span><span class="line">  t &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">while</span> (<span class="fn">length</span>(<span class="fn">unique</span>(<span class="fn">c</span>(g))) &gt; <span class="num">1</span>) {</span><span class="line">    p1 &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>)</span><span class="line">    p2 &lt;- <span class="fn">ifelse</span>(<span class="fn">runif</span>(N) &lt; s, p1, <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>))</span><span class="line">    g  &lt;- <span class="fn">rbind</span>(g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p1)],</span><span class="line">                g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p2)])</span><span class="line">    t  &lt;- t + <span class="num">1</span></span><span class="line">  }</span><span class="line">  t</span><span class="line">})</span><span class="line"></span><span class="line"><span class="fn">mean</span>(gens)          <span class="com"># the average generation one allele was left</span></span><span class="line">Ne &lt;- N / (<span class="num">1</span> + F)</span><span class="line"><span class="num">4</span> * Ne</span></pre>
       </div>
     </div>
     <div class="col">
@@ -446,8 +447,10 @@
       <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="D_controls">
-          <div class="row" data-line="n"><label for="D_n">individuals breeding</label><input type="range" id="D_n" min="0" max="100" step="1" value="100" /><output id="D_nOut">1000</output></div>
-          <div class="row" data-line="f"><label for="D_f">probability a mate is a full sibling</label><input type="range" id="D_f" min="0" max="1" step="0.05" value="0" /><output id="D_fOut">0.00</output></div>
+          <div class="row" data-line="k" id="D_kRow"><label for="D_k">alleles at the start</label><input type="range" id="D_k" min="0" max="6" step="1" value="6" /><output id="D_kOut">every copy</output></div>
+          <div class="row" data-line="n" id="D_nRow"><label for="D_n">individuals</label><input type="range" id="D_n" min="0" max="100" step="1" value="100" /><output id="D_nOut">150</output></div>
+          <div class="row" data-line="F" id="D_FRow"><label for="D_F">F</label><input type="range" id="D_F" min="0" max="1" step="0.05" value="0" /><output id="D_FOut">0.00</output></div>
+          <div class="readout" id="D_ne" style="margin:4px 0 2px;"></div>
           <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="D_run" class="accent">Go</button>
@@ -458,7 +461,7 @@
       <div class="panel">
         <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="D1">Match the target F curve three times out of five. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
+          <li data-task="D1">Hit the target generation three times out of five. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
         </ul>
         <div class="solved-banner" id="solvedD">Stage E is open.</div>
       </div>
@@ -547,15 +550,16 @@
      A  heterozygotes, and what pairing relatives does to them
      B  draw the population's size; F runs underneath (rebuilt 2026-09-23)
      C  set a founder's two alleles by colour, drop them down a pedigree
-     D  set breeders and how often a partner is a relative to match an F
-        curve (rebuilt 2026-09-23)
+     D  heterozygosity over time: alleles, individuals and F; 200 populations
+        run to one allele; make the average hit a generation (rebuilt again
+        2026-09-23, round 5)
      E  one founding pair, traced down: F as the share of a genome whose
         two copies come from the same founder copy
 
    ONE F. JM, 2026-09-22: "the students ONLY know F — we will not
    introduce Fst until later and we won't dwell on different Fs." Stage A
-   takes it against random pairing at the population's own frequency; stages B
-   and D take it against the founders. A statistician would name those
+   takes it against random pairing at the population's own frequency; stage B
+   takes it against the founders; stage D holds it as a mating rule. A statistician would name those
    differently. The student sees one word, deliberately. Do not add a
    panel explaining the difference — see docs/overhauls/lesson11_overhaul.md.
 
@@ -876,6 +880,9 @@ function mountRounds(stage, cfg) {
   function paint() {
     el("pred" + stage + "_h").textContent = st.done ? "Predict — done" : "Predict";
     if (cfg.picture) {
+      /* picture mode may carry a short table of what the round gives, above the picture */
+      if (cfg.rows) el(stage + "_ttab").innerHTML = (st.round ? cfg.rows(st.round) : [])
+        .map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("");
       cfg.picture(el(stage + "_tpic"), st.round, st.last);
       el(stage + "_tnext").disabled = !st.waiting || st.done;
       /* after a scored run the card waits for Next target; a practice run
@@ -929,7 +936,8 @@ function mountRounds(stage, cfg) {
   }
   el("pred" + stage + "_slot").innerHTML =
     (cfg.picture
-      ? '<canvas class="plot" id="' + stage + '_tpic" width="460" height="' + (cfg.pictureH || 130) + '"></canvas>'
+      ? (cfg.rows ? '<table class="dealt" id="' + stage + '_ttab"></table>' : "") +
+        '<canvas class="plot" id="' + stage + '_tpic" width="460" height="' + (cfg.pictureH || 130) + '"></canvas>'
       : '<table class="dealt" id="' + stage + '_ttab"></table>') +
     '<div class="gm-prompt" id="' + stage + '_tshape" style="margin-top:8px;"></div>' +
     '<div class="flip" id="' + stage + '_tflip"></div>' +
@@ -1028,16 +1036,17 @@ function drawCurveTarget(cv, curve, tol, got, G, top) {
 }
 
 /* =====================================================================
-   THE POPULATION — one operator, used by Stage A and Stage D.
+   THE POPULATION — one operator, used by Stage A.
 
    `loci` independent loci in one population of `n` individuals. Pairs breed two
    offspring apiece, so the next generation has sibships in it and "a partner
    who is a relative" means something. `f` is how often the second parent
    is the first one's full sib.
 
-   A carries one locus and draws the population. D carries thirty and plots the
-   average. Same object, different arguments -- the third caller is where
-   this goes into app/assets/, not before.
+   A carries one locus and draws the population. Stage D used it until round
+   5 (2026-09-23) and now has its own: this operator's Ne is 0.69N even with
+   nobody picking a sib, and D prints Ne = N/(1+F). popHo is D's old counter,
+   kept with the operator it belongs to.
    ===================================================================== */
 function popNew(rng, n, loci, p0) {
   const a = new Uint8Array(2 * n * loci);
@@ -1958,151 +1967,374 @@ function C_wire() {
 }
 
 /* =====================================================================
-   STAGE D — two ways to lose heterozygotes, and the shapes they make.
+   STAGE D — when the variety runs out.
 
-   JM, 2026-09-23: "The students have no visual feedback, they just adjust a
-   curve and see numbers 5 times until finally a line to compare to their
-   curve is revealed." Two things were wrong. The design asked for a
-   prediction before the student had seen a single run. And a bug: the old
-   table-mode round machine dealt the next round inside submit(), and the
-   deal cleared the run, so the line was drawn and erased in the same tick.
+   JM, 2026-09-23 (round 5): "heterozygosity over time ... run the
+   simulation many times with a parameter set and show the students 4Ne via
+   interaction as that should be when heterozygosity hits 0 (fixation of
+   one allele) on average. I feel like the target would be for students to
+   predict when the diversity hits 0. I think showing Ne as it is driven by
+   their sliders would be good, with 4Ne next to it."
 
-   Now the target is an F curve, and the student sets the population that
-   has to make it: how many breed, and how often a partner is a relative.
-   Every run is drawn over the target and stays up, faint, for the rest of
-   that target. The two controls make two different shapes -- partners who
-   are relatives lift F fast and then stop, a small population climbs
-   steadily and never stops -- and reading which one a target needs is the
-   stage. Same operator as Stage A: popNew, popStep, popHo.
+   One locus, D_R populations at once, every one run until it is down to one
+   allele. The round deals a generation; the student sets a population whose
+   AVERAGE time to one allele sits within D_TOL of it. On screen:
+     - Ne = N/(1+F) and 4Ne, from the sliders, live (closed form);
+     - after a run, the average generation one allele was left (measured),
+       and Ne and F measured off the runs beside the slider values.
+
+   Two things the page shows and never says (numbers in the overhaul doc):
+     - 4Ne is the average only when every copy starts as a different allele.
+       With k equally common alleles it is 4Ne(k-1)ln(k/(k-1)) -- 2.8Ne for
+       two, 3.8Ne for ten. The rounds that hold two alleles are where a
+       student who reads 4Ne off the readout and stops misses by 31%.
+     - At 4Ne generations a third or more of the populations still carry two
+       alleles. The average is pulled out by the slow ones; the dots show it.
+
+   F IS HELD, NOT SET ONCE. Under random mating a starting F is gone in a
+   generation and moves nothing (measured: 182/187/184 generations at F0 =
+   0/0.5/1). So each generation an offspring's two parents are one
+   individual with chance s = 2F/(1+F), which holds F at F (s/(2-s) = F) and
+   gives Ne = N/(1+F). Stage A's full-sib rule cannot do this job: popStep's
+   Ne is 0.69N at f = 0 (two offspring a pair, parents drawn with
+   replacement), and monogamous pairs with random family sizes run out of
+   sibs at F = 0.27.
    ===================================================================== */
-const D_GENS = 40, D_LOCI = 80;
-/* Measured (2026-09-23, 20 runs a setting): one run strays from its
-   setting's average by 0.015-0.039 RMS, and at the true setting 0.05 is hit
-   90-100% of the time. */
-const D_TOL = 0.05;
-/* The hidden settings, [breeders, how often a partner is a relative].
-   1000/0.6 was one of them and sat 0.068 from 100/0.5: a setting between
-   the two (142/0.5) cleared both. At 1000/0.5 the closest pair is
-   0.09-0.10 apart; on a 462-setting grid of the controls none clears two,
-   and on the checks' coarser grid one occasionally does (142/0.3), never
-   three. 1000/0.5 and 100/0.5
-   share a knee and part ways after it -- the relatives lift F, the small
-   population keeps it climbing. The opening setting (1000, 0) misses all
-   five. */
-const D_TARGETS = [[60, 0], [1000, 0.5], [1000, 0.9], [200, 0], [100, 0.5]];
-const D_NMIN = 20, D_NMAX = 1000;
-/* The breeders slider runs on a log scale: 50 and 60 differ to F as much as
-   500 and 600 do not. Even, because breeders come in pairs. */
-const D_nAt = v => 2 * Math.round(D_NMIN * Math.pow(D_NMAX / D_NMIN, v / 100) / 2);
-const D_TICK = 35;
-const D = { n: 1000, f: 0, F: null, ghosts: [], showTo: null, running: false, timer: 0,
-            serial: 0, game: null, targets: [] };
+/* 200 populations: one population's time has a coefficient of variation of
+   0.55 (many alleles) to 0.75 (two), so the average of 200 repeats to 4-5%.
+   The window is +-12%, which the right answer clears 97%+ of the time with
+   two alleles and 99%+ with many. At +-15% the two rounds where F is the
+   lever accepted overlapping F's, so one constant F could clear both. */
+const D_R = 200, D_TOL = 0.12;
+/* 0 = every copy a different allele: the whole population traced back to one
+   ancestor copy, which is where the average meets 4Ne. */
+const D_KSTOPS = [2, 3, 4, 6, 10, 20, 0];
+const D_NMIN = 10, D_NMAX = 150;
+const D_nAt = v => Math.round(D_NMIN * Math.pow(D_NMAX / D_NMIN, v / 100));
+const D_vAt = n => Math.round(100 * Math.log(n / D_NMIN) / Math.log(D_NMAX / D_NMIN));
+/* The five rounds, in this order: a ladder. Each holds the alleles and one of
+   individuals / F; the other is the student's. Targets are two per round,
+   picked per student. Chosen so that (checked in scripts/):
+     - the lever windows never overlap between rounds -- individuals 22-34,
+       41-57, 66-89 in rounds 1, 3, 5; F above 0.65 in round 2, below 0.57 in
+       round 4 -- so no one setting clears three rounds;
+     - leaving F at 0 misses rounds 2 and 4 (+90%, +28-33%);
+     - reading 4Ne and stopping misses rounds 3 and 4 by 31%;
+     - ignoring the held F misses round 5 by a third;
+     - no target number is dealt twice. */
+const D_ROUNDS = [
+  { k: 0,  F: 0,   Ts: [100, 120] },
+  { k: 0,  N: 100, Ts: [210, 220] },
+  { k: 2,  F: 0,   Ts: [130, 140] },
+  { k: 2,  N: 120, Ts: [250, 260] },
+  { k: 10, F: 0.5, Ts: [190, 200] }
+];
+const D_TICK = 30, D_FRAMES = 80, D_TRACES = 60;
+const D = { k: 0, n: 150, F: 0, res: null, showTo: null, running: false, timer: 0,
+            serial: 0, game: null };
+const D_kOf = (k, n) => k || 2 * n;
+/* Round i: the ladder's i-th rung, with one of its targets picked per student. */
+function D_deal(i) {
+  const q = D_ROUNDS[i % D_ROUNDS.length];
+  return Object.assign({}, q, { T: q.Ts[pageSeed("l11Dt" + i, 0, q.Ts.length - 1)] });
+}
+const D_Ne = (n, F) => n / (1 + F);
 
-function D_run(n, f, rng) {
-  const st = popNew(rng, n, D_LOCI, 0.5);
-  const H = [popHo(st)];
-  for (let t = 0; t < D_GENS; t++) { popStep(rng, st, f); H.push(popHo(st)); }
-  return H.map(h => 1 - h / H[0]);
-}
-/* A target curve is the average of several runs of its hidden setting --
-   four for the big populations, which barely vary and cost the most, and
-   24 for the small ones, so the target itself does not wobble from one
-   student's page to the next. */
-function D_targetCurve(k) {
-  if (!D.targets[k]) {
-    const [n, f] = D_TARGETS[k], reps = n >= 500 ? 4 : 24;
-    const rng = mulberry32(pageSeed("l11Dt", 1, 99999) + k * 7919);
-    const acc = new Array(D_GENS + 1).fill(0);
-    for (let r = 0; r < reps; r++) D_run(n, f, rng).forEach((v, i) => { acc[i] += v / reps; });
-    D.targets[k] = acc;
+/* One locus, R populations of n individuals, k equally common alleles at the
+   start, F held by selfing. Every population runs until one allele is left.
+   Returns each population's generation of fixation and its heterozygosity-if-
+   pairing-were-random by generation, plus the average across populations
+   (0 once a population is done) and F measured where there is variety to
+   measure it in. */
+function D_run(n, k, F, R, rng) {
+  const s = 2 * F / (1 + F), twoN = 2 * n, K = Math.min(k, twoN);
+  const T = new Int32Array(R), H = [];
+  let a = new Int32Array(twoN), b = new Int32Array(twoN);
+  const c = new Int32Array(K);
+  let fS = 0, fN = 0;
+  for (let r = 0; r < R; r++) {
+    for (let i = 0; i < twoN; i++) a[i] = i % K;
+    for (let i = twoN - 1; i > 0; i--) { const j = (rng() * (i + 1)) | 0; const x = a[i]; a[i] = a[j]; a[j] = x; }
+    const h = []; let t = 0;
+    for (;;) {
+      c.fill(0);
+      for (let i = 0; i < twoN; i++) c[a[i]]++;
+      let ss = 0, alive = 0;
+      for (let j = 0; j < K; j++) if (c[j]) { alive++; ss += c[j] * c[j]; }
+      const he = 1 - ss / (twoN * twoN);
+      h.push(he);
+      if (t >= 10 && he > 0.1) {
+        let het = 0; for (let i = 0; i < n; i++) if (a[2 * i] !== a[2 * i + 1]) het++;
+        fS += 1 - (het / n) / he; fN++;
+      }
+      if (alive <= 1) break;
+      for (let i = 0; i < n; i++) {
+        const p = (rng() * n) | 0, q = rng() < s ? p : (rng() * n) | 0;
+        b[2 * i] = a[2 * p + (rng() < 0.5 ? 0 : 1)];
+        b[2 * i + 1] = a[2 * q + (rng() < 0.5 ? 0 : 1)];
+      }
+      const x = a; a = b; b = x; t++;
+    }
+    T[r] = t; H.push(Float32Array.from(h));
   }
-  return D.targets[k];
+  let top = 0; for (let r = 0; r < R; r++) top = Math.max(top, T[r]);
+  const avg = new Float64Array(top + 1);
+  for (const h of H) for (let t = 0; t < h.length; t++) avg[t] += h[t] / R;
+  let m = 0; for (let r = 0; r < R; r++) m += T[r] / R;
+  return { n, k, F, T, H, avg, mean: m, top, Fm: fN ? fS / fN : null, Nem: neFromDecay(Array.from(avg)) };
 }
+
 const D_practising = () => !!(D.game && (D.game.st.done || document.getElementById("D_practice").checked));
 function D_syncGo() {
   document.getElementById("D_run").textContent = D_practising() ? "Practice run" : "Go";
   if (D.game && !D.running) D.game.repaint();
+}
+/* The round holds the alleles and one of individuals / F. Held rows are set
+   and switched off; practice keeps them held, so a practice run is a try at
+   the same round. Once the stage is done everything is free. */
+function D_held() {
+  const r = D.game && !D.game.st.done ? D.game.current() : null;
+  return { k: !!r, n: !!(r && r.N != null), F: !!(r && r.F != null) };
+}
+function D_applyHeld() {
+  const r = D.game && !D.game.st.done ? D.game.current() : null;
+  if (r) {
+    D.k = r.k;
+    if (r.N != null) D.n = r.N;
+    if (r.F != null) D.F = r.F;
+  }
+  const h = D_held();
+  const set = (id, v, on) => { const el = document.getElementById(id); el.value = v; el.disabled = on || D.running;
+                               document.getElementById(id + "Row").classList.toggle("off", on); };
+  set("D_k", D_KSTOPS.indexOf(D.k), h.k);
+  set("D_n", D_vAt(D.n), h.n);
+  set("D_F", D.F, h.F);
+  D_syncOut();
+}
+function D_syncOut() {
+  document.getElementById("D_kOut").value = D.k ? String(D.k) : "every copy";
+  document.getElementById("D_nOut").value = D.n;
+  document.getElementById("D_FOut").value = f2(D.F);
+  const ne = D_Ne(D.n, D.F);
+  document.getElementById("D_ne").innerHTML =
+    '<span class="label">effective population size</span> <b>Ne ' + ne.toFixed(1) + '</b>' +
+    ' &nbsp;·&nbsp; <b>4Ne ' + Math.round(4 * ne) + '</b>';
+  D_syncCode();
 }
 function D_go(opts) {
   const practice = D_practising();
   if (D.running || (D.game.waiting() && !practice)) return;
   D.serial++;
   const rng = mulberry32(pageSeed("l11D", 1, 99999) + D.serial * 7919);
-  if (D.F) D.ghosts.push(D.F);
-  D.F = D_run(D.n, D.f, rng);
+  D.res = D_run(D.n, D_kOf(D.k, D.n), D.F, D_R, rng);
+  bump("D");
   if (opts && opts.now) { D.showTo = null; D_land(practice); return; }
+  const X = D_xmax(), step = Math.max(1, Math.ceil(Math.min(X, D.res.top) / D_FRAMES));
   D.showTo = 0; D.running = true;
   lockStage("D", true); D_paint();
   D.timer = setInterval(() => {
-    D.showTo++; D_paint();
-    if (D.showTo >= D_GENS) {
+    D.showTo += step; D_paint();
+    if (D.showTo >= Math.min(X, D.res.top)) {
       clearInterval(D.timer); D.running = false; D.showTo = null;
-      lockStage("D", false); D_land(practice);
+      lockStage("D", false); D_applyHeld(); D_land(practice);
     }
   }, D_TICK);
-  bump("D");
 }
+const D_hits = (mean, T) => Math.abs(mean - T) <= D_TOL * T;
 function D_land(practice) {
-  const gap = rmsGap(D.F, D_targetCurve(D.game.current().k)), ok = gap <= D_TOL;
-  D.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', D.F, practice);
-  D_syncGo(); D_paint();
+  const r = D.game.current(), ok = D_hits(D.res.mean, r.T);
+  D.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', D.res.mean, practice);
+  D_applyHeld(); D_syncGo(); D_paint();
 }
-const D_top = () => {
-  let m = 0.5;
-  for (const c of [D.F, ...D.ghosts]) if (c) for (const v of c) m = Math.max(m, v);
-  if (D.game && D.game.current()) for (const v of D_targetCurve(D.game.current().k)) m = Math.max(m, v + D_TOL);
-  return Math.min(1, Math.ceil(m * 1.05 / 0.2 - 1e-9) * 0.2);
-};
+/* The time axis is fixed for a round, at two and a half times its target,
+   so the 4Ne line moves across a still axis while the sliders move. Past the
+   edge it becomes an arrow. Once the stage is done it follows 4Ne too. */
+function D_xmax() {
+  const r = D.game && D.game.current();
+  let x = r ? 2.5 * r.T : 400;
+  if (D.game && D.game.st.done) x = Math.max(x, 2.5 * 4 * D_Ne(D.n, D.F));
+  return Math.ceil(x / 50) * 50;
+}
 function D_drawCurve() {
   const cv = document.getElementById("D_curve");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const f = box(58, 14, W - 80, H - 48, 0, D_GENS, 0, D_top());
-  axes(ctx, f, "generation", "F", v => v.toFixed(2), v => v.toFixed(0));
-  const r = D.game && D.game.current(), tgt = r ? D_targetCurve(r.k) : null;
-  if (tgt) drawTargetBand(ctx, f, tgt, D_TOL);
-  for (const g of D.ghosts) line(ctx, f, g, "rgba(107,107,104,0.35)", 1.2);
-  if (D.F) line(ctx, f, D.F.slice(0, (D.showTo == null ? D_GENS : D.showTo) + 1), DARK, 2.2);
-  document.getElementById("D_read").innerHTML = D.F && D.showTo == null && tgt
-    ? '<span class="label">F at generation ' + D_GENS + '</span> <b>' + f2(D.F[D_GENS]) + '</b>' +
-      ' &nbsp;|&nbsp; <span class="label">gap from the target along the whole curve</span> <b class="big">' +
-      f2(rmsGap(D.F, tgt)) + '</b> <span class="label">(' + f2(D_TOL) + ' or less is a hit)</span>'
-    : '<span class="label">set the population, then Go</span>';
+  const X = D_xmax(), r = D.game && D.game.current();
+  const res = D.res, k = res ? res.k : D_kOf(D.k, D.n);
+  /* a multiple of 0.2, so the quarter ticks read 0.15, 0.30 ... rather than 0.13 */
+  const yTop = Math.min(1, Math.max(0.2, Math.ceil((1 - 1 / k) / 0.2 - 1e-9) * 0.2));
+  const STRIP = 64;
+  const f = box(58, 14, W - 80, H - 14 - 44 - STRIP - 12, 0, X, 0, yTop);
+  const g = box(58, f.py + f.ph + 12, W - 80, STRIP, 0, X, 0, 1);
+  axes(ctx, f, "", "heterozygosity if pairing were random", v => v.toFixed(2), () => "");
+  /* the strip's own axis carries the generations */
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(g.px, g.py + g.ph); ctx.lineTo(g.px + g.pw, g.py + g.ph); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i <= 5; i++) { const v = X * i / 5; ctx.fillText(String(Math.round(v)), g.x(v), g.py + g.ph + 4); }
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
+  ctx.fillText("generation", g.px + g.pw / 2, g.py + g.ph + 18);
+  ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("one allele left", g.px + 4, g.py);
+
+  const vband = (x0, x1, fill) => { ctx.fillStyle = fill;
+    const a = clamp(x0, 0, X), b = clamp(x1, 0, X); if (b > a) ctx.fillRect(f.x(a), f.py, f.x(b) - f.x(a), g.py + g.ph - f.py); };
+  /* line labels are queued and drawn last, on a white halo, so no line runs through one */
+  const labels = [];
+  const tag = (text, x, y, colour, align) => labels.push({ text, x, y, colour, align: align || "left" });
+  const vline = (x, colour, width, dash, label, row) => {
+    ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = width; if (dash) ctx.setLineDash(dash);
+    ctx.beginPath(); ctx.moveTo(f.x(x), f.py); ctx.lineTo(f.x(x), g.py + g.ph); ctx.stroke(); ctx.restore();
+    if (label) tag(label, f.x(x) + 4, f.py + 2 + 14 * row, colour);
+  };
+  if (r) { vband(r.T * (1 - D_TOL), r.T * (1 + D_TOL), "rgba(178,58,72,0.13)"); vline(r.T, HOT, 1.4, [5, 3], "target " + r.T, 0); }
+
+  if (res) {
+    const upTo = D.showTo == null ? res.top : D.showTo;
+    const every = Math.max(1, Math.floor(X / 500));
+    for (let q = 0; q < Math.min(D_TRACES, res.H.length); q++) {
+      const h = res.H[q], end = Math.min(h.length - 1, upTo, X);
+      ctx.strokeStyle = "rgba(85,64,126,0.22)"; ctx.lineWidth = 1; ctx.beginPath();
+      for (let t = 0; t <= end; t += every) { const px = f.x(t), py = f.y(h[t]); t ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      if (end === h.length - 1 && end % every) ctx.lineTo(f.x(end), f.y(h[end]));
+      ctx.stroke();
+    }
+    /* one dot per population, stacked where it reached one allele */
+    const bins = 90, bw = X / bins, stack = new Int32Array(bins + 1), rad = 2.1;
+    let later = 0;
+    ctx.fillStyle = DARK;
+    for (let q = 0; q < res.T.length; q++) {
+      const t = res.T[q];
+      if (t > upTo) continue;
+      if (t > X) { later++; continue; }
+      const bi = Math.min(bins, Math.floor(t / bw)), y = g.py + g.ph - rad - 1 - stack[bi] * (2 * rad + 0.6);
+      stack[bi]++;
+      if (y < g.py - 30) continue;
+      ctx.beginPath(); ctx.arc(g.x((bi + 0.5) * bw), y, rad, 0, 6.2832); ctx.fill();
+    }
+    if (later) tag(later + " later →", g.px + g.pw, g.py - 14, DARK, "right");
+    if (D.showTo != null) {
+      ctx.strokeStyle = "rgba(178,58,72,0.6)"; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(f.x(Math.min(upTo, X)), f.py); ctx.lineTo(f.x(Math.min(upTo, X)), g.py + g.ph); ctx.stroke();
+    }
+  }
+  /* 4Ne from the sliders, live; the average from the runs, once they are done */
+  const four = 4 * D_Ne(D.n, D.F);
+  if (four <= X) vline(four, BLUE, 1.6, [2, 3], "4Ne " + Math.round(four), 1);
+  else tag("4Ne " + Math.round(four) + " →", f.px + f.pw, f.py + 16, BLUE, "right");
+  if (res && D.showTo == null) {
+    if (res.mean <= X) vline(res.mean, DARK, 2.2, null, "average " + Math.round(res.mean), 2);
+    else tag("average " + Math.round(res.mean) + " →", f.px + f.pw, f.py + 30, DARK, "right");
+  }
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textBaseline = "top"; ctx.lineJoin = "round";
+  for (const q of labels) {
+    ctx.textAlign = q.align; ctx.strokeStyle = "rgba(255,255,255,0.92)"; ctx.lineWidth = 4;
+    ctx.strokeText(q.text, q.x, q.y); ctx.fillStyle = q.colour; ctx.fillText(q.text, q.x, q.y);
+  }
+
+  let txt;
+  if (res && D.showTo == null) {
+    const T = Array.from(res.T).sort((x, y) => x - y);
+    txt = '<span class="label">average generation one allele was left</span> <b class="big">' + Math.round(res.mean) + '</b>' +
+          ' <span class="label">(' + res.T.length + ' populations; earliest ' + T[0] + ', latest ' + T[T.length - 1] + ')</span>' +
+          (r ? ' &nbsp;|&nbsp; <span class="label">target</span> <b>' + r.T + ' ± ' + Math.round(D_TOL * r.T) + '</b>' : '') +
+          '<br><span class="label">measured in the runs:</span> <b>Ne ' + (res.Nem ? res.Nem.toFixed(1) : "—") + '</b>' +
+          ' <span class="label">(sliders: ' + D_Ne(res.n, res.F).toFixed(1) + ')</span>' +
+          ' &nbsp;·&nbsp; <b>F ' + (res.Fm == null ? "—" : f2(res.Fm)) + '</b>' +
+          ' <span class="label">(sliders: ' + f2(res.F) + ')</span>';
+  } else txt = D.running ? '<span class="label">running…</span>' : '<span class="label">set the population, then Go</span>';
+  document.getElementById("D_read").innerHTML = txt;
 }
-function D_paint() { D_drawCurve(); D_syncCode(); }
+/* The Predict card: the time axis, the target window, where 4Ne sits now,
+   and the average once a run has landed. */
+function D_drawTarget(cv, r, got) {
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const X = D_xmax(), f = box(20, 22, W - 40, H - 48, 0, X, 0, 1);
+  ctx.fillStyle = "rgba(178,58,72,0.16)";
+  ctx.fillRect(f.x(r.T * (1 - D_TOL)), f.py, f.x(r.T * (1 + D_TOL)) - f.x(r.T * (1 - D_TOL)), f.ph);
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+  ctx.beginPath(); ctx.moveTo(f.x(r.T), f.py); ctx.lineTo(f.x(r.T), f.py + f.ph); ctx.stroke(); ctx.setLineDash([]);
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.px, f.py + f.ph); ctx.lineTo(f.px + f.pw, f.py + f.ph); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i <= 5; i++) ctx.fillText(String(Math.round(X * i / 5)), f.x(X * i / 5), f.py + f.ph + 3);
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textBaseline = "bottom";
+  ctx.fillStyle = HOT; ctx.textAlign = "center"; ctx.fillText("target", f.x(r.T), f.py - 2);
+  const four = 4 * D_Ne(D.n, D.F);
+  ctx.fillStyle = BLUE; ctx.strokeStyle = BLUE; ctx.lineWidth = 1.6;
+  if (four <= X) { ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.moveTo(f.x(four), f.py + 6); ctx.lineTo(f.x(four), f.py + f.ph); ctx.stroke(); ctx.setLineDash([]);
+                   ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.fillText("4Ne", f.x(four) + 3, f.py + 4); }
+  else { ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillText("4Ne →", f.px + f.pw, f.py + 4); }
+  if (got != null) {
+    const x = Math.min(got, X);
+    ctx.fillStyle = DARK; ctx.beginPath(); ctx.arc(f.x(x), f.py + f.ph / 2 + 6, 5, 0, 6.2832); ctx.fill();
+    ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText("average " + Math.round(got) + (got > X ? " →" : ""), f.x(x) + 8, f.py + f.ph / 2 + 6);
+  }
+}
+/* no card repaint mid-run: the round machine's paint re-enables Go */
+function D_paint() { D_drawCurve(); if (D.game && !D.running) D.game.repaint(); }
 function D_syncCode() {
   const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  s("cD_n", D.n); s("cD_f", f2(D.f));
+  s("cD_k", D_kOf(D.k, D.n)); s("cD_n", D.n); s("cD_F", f2(D.F));
 }
 function D_RCODE() {
-  return "# Lesson 11, Stage D -- how many breed, and the probability a mate is a full sibling\n" +
-    "n <- " + D.n + "\nf <- " + D.f + "\nloci <- " + D_LOCI + "\ngens <- " + D_GENS + "\n\n" +
-    "# n/2 pairs, two offspring each, so every offspring has a full sib.\n" +
-    "# With chance f, a parent's partner is its own full sib.\n" +
-    "# H[t] is the share of (individual, locus) pairs carrying two different alleles\n" +
-    "F <- 1 - H / H[1]\n";
+  return "# Lesson 11, Stage D -- " + D_R + " populations, one locus, each run until one allele is left\n" +
+    "k <- " + D_kOf(D.k, D.n) + "   # alleles at the start, equally common\n" +
+    "N <- " + D.n + "   # individuals\n" +
+    "F <- " + D.F + "   # held there every generation\n" +
+    "s <- 2 * F / (1 + F)   # chance an offspring's two parents are one individual\n\n" +
+    "He <- function(g) 1 - sum((table(g) / length(g))^2)   # heterozygosity if pairing were random\n\n" +
+    "runs <- lapply(1:" + D_R + ", function(r) {\n" +
+    "  g <- matrix(sample(rep_len(1:k, 2 * N)), 2)   # two copies each\n" +
+    "  h <- He(g)\n" +
+    "  while (length(unique(c(g))) > 1) {\n" +
+    "    p1 <- sample(N, N, TRUE)\n" +
+    "    p2 <- ifelse(runif(N) < s, p1, sample(N, N, TRUE))\n" +
+    "    g  <- rbind(g[cbind(sample(2, N, TRUE), p1)],\n" +
+    "                g[cbind(sample(2, N, TRUE), p2)])\n" +
+    "    h  <- c(h, He(g))\n" +
+    "  }\n" +
+    "  h\n" +
+    "})\n\n" +
+    "gens <- sapply(runs, length) - 1\n" +
+    "mean(gens)   # the average generation one allele was left\n" +
+    "Ne <- N / (1 + F)\n" +
+    "4 * Ne\n\n" +
+    "plot(NULL, xlim = c(0, max(gens)), ylim = c(0, 1), xlab = \"generation\", ylab = \"heterozygosity if pairing were random\")\n" +
+    "for (h in runs) lines(seq_along(h) - 1, h, col = \"#55407e33\")\n" +
+    "abline(v = c(mean(gens), 4 * Ne), lty = c(1, 3))\n";
 }
 function D_wire() {
-  document.getElementById("D_n").addEventListener("input", e => {
-    D.n = D_nAt(+e.target.value);
-    document.getElementById("D_nOut").value = D.n;
-    highlightByDataLine("codeD", "n"); D_syncCode(); bump("D");
+  document.getElementById("D_k").addEventListener("input", e => {
+    D.k = D_KSTOPS[+e.target.value]; D_syncOut();
+    highlightByDataLine("codeD", "k"); D_paint(); bump("D");
   });
-  document.getElementById("D_f").addEventListener("input", e => {
-    D.f = +e.target.value;
-    document.getElementById("D_fOut").value = f2(D.f);
-    highlightByDataLine("codeD", "f"); D_syncCode(); bump("D");
+  document.getElementById("D_n").addEventListener("input", e => {
+    D.n = D_nAt(+e.target.value); D_syncOut();
+    highlightByDataLine("codeD", "n"); D_paint(); bump("D");
+  });
+  document.getElementById("D_F").addEventListener("input", e => {
+    D.F = +e.target.value; D_syncOut();
+    highlightByDataLine("codeD", "F"); D_paint(); bump("D");
   });
   document.getElementById("D_practice").addEventListener("change", D_syncGo);
   document.getElementById("D_run").addEventListener("click", () => D_go());
   document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson11_stageD.R", D_RCODE()));
   D.game = mountRounds("D", {
-    deal: (() => { const pick = dealDistinct("l11Dr", D_TARGETS.map((_, k) => k)); return i => ({ k: pick(i) }); })(),
-    picture: (cv, r, got) => drawCurveTarget(cv, r && D_targetCurve(r.k), D_TOL, got, D_GENS, D_top()),
-    pictureH: 150, go: "D_run", practising: () => D_practising(),
-    prompt: () => "Set a population whose F follows the red band.",
-    onDeal: () => { D.F = null; D.ghosts = []; D_paint(); }
+    deal: D_deal,
+    rows: r => [["alleles at the start", r.k ? String(r.k) : "every copy different"],
+                ["individuals", r.N != null ? String(r.N) : "yours"],
+                ["F", r.F != null ? f2(r.F) : "yours"],
+                ["average generation with one allele left", r.T + " ± " + Math.round(D_TOL * r.T)]],
+    picture: D_drawTarget, pictureH: 92, go: "D_run", practising: () => D_practising(),
+    prompt: () => "Set a population whose average hits the red band.",
+    onDeal: () => { D.res = null; D_applyHeld(); D_drawCurve(); }
   });
+  D_applyHeld();
   D_syncGo();
 }
 
@@ -2655,7 +2887,7 @@ E_wire(); E_render();
 
 Score.init({
   moduleId: "lesson11",
-  version: 8,
+  version: 9,
   scaffold: 5,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

@@ -284,66 +284,142 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   C.inb = 0; C_rebuild(); C_randomFounders();
 }
 
-/* ---- D. two causes, two shapes ------------------------------------------
-   Rebuilt 2026-09-23. The target is an F curve from a hidden (breeders,
-   relatives) setting; the student sets both and runs. What has to hold:
-     - every target is hit at its own setting, on fresh runs;
-     - the opening setting hits none;
-     - no one setting clears two targets (searched over the controls);
-     - the wrong cause cannot fake the shape: the targets made by pairing
-       relatives cannot be matched by size alone, and the reverse;
-     - the breeders slider can reach every target's size. */
+/* ---- D. when the variety runs out ----------------------------------------
+   Rebuilt 2026-09-23 (round 5). 200 populations of one locus, each run until
+   one allele is left; a round deals a generation and holds the alleles and
+   one of individuals / F. What has to hold, none of it visible on the page:
+     - the model is the one the readout describes: F held where the slider
+       says, Ne = N/(1+F) in the runs, and the average time to one allele
+       equal to 4Ne(k-1)ln(k/(k-1)) -- re-derived here, not read off the page;
+     - one population is not the number, and the average of 200 is;
+     - every round is hit at its intended setting, for every target it can deal;
+     - the naive answers miss: reading 4Ne and stopping (the two-allele rounds),
+       leaving F at 0 (the F rounds), ignoring the held F, the opening setting;
+     - no one setting clears three rounds;
+     - the readout's arithmetic agrees with the sliders, and a round holds
+       what its card says. */
 {
-  const runs = (n, f, reps, seed) => { const o = [];
-    for (let r = 0; r < reps; r++) o.push(D_run(n, f, mulberry32(seed + r * 7919))); return o; };
-  const avg = R => R[0].map((_, t) => R.reduce((s, F) => s + F[t], 0) / R.length);
-  const hitRate = (n, f, k, reps, seed) => runs(n, f, reps, seed).filter(F => rmsGap(F, D_targetCurve(k)) <= D_TOL).length / reps;
-  /* 20 runs for the small populations: at 10, a true rate of 0.9 reads 0.7
-     about one page load in fifteen. */
-  const own = D_TARGETS.map(([n, f], k) => hitRate(n, f, k, n >= 500 ? 5 : 20, 400 + k));
-  check("D every target is hit at its own setting", own.every(h => h >= 0.75),
-        own.map((h, k) => D_TARGETS[k][0] + "/" + D_TARGETS[k][1] + ":" + (100 * h).toFixed(0) + "%").join("  "));
+  const ck = k => (k - 1) * Math.log(k / (k - 1));
+  const kOf = (k, n) => k || 2 * n;
+  const pred = (n, k, F) => 4 * n / (1 + F) * ck(kOf(k, n));
+  const once = (n, k, F, seed) => D_run(n, kOf(k, n), F, D_R, mulberry32(seed));
+  const rate = (n, k, F, T, reps, seed) => { let h = 0;
+    for (let r = 0; r < reps; r++) if (D_hits(once(n, k, F, seed + r * 7919).mean, T)) h++; return h / reps; };
 
-  const open = avg(runs(1000, 0, 3, 77));
-  const openGaps = D_TARGETS.map((_, k) => rmsGap(open, D_targetCurve(k)));
-  check("D the opening setting is not an answer", openGaps.every(g => g > D_TOL),
-        "1000 breeding, no relatives: gaps " + openGaps.map(g => g.toFixed(3)).join("/") + " against " + D_TOL);
+  /* the model. Each estimate here is the mean of eight runs of 200 whose
+     seeds sit far apart: one run's Ne, from the time or from the rate of
+     loss, wobbles by 4-8% (measured over 20 seeds: mean ratio to N/(1+F)
+     0.98-1.01, sd 0.04-0.08), and seeds 31 apart once read low together.
+     Selfing at middling F also runs a few percent under N/(1+F) at these
+     sizes (0.92-0.95 at 60 individuals, F 0.5, over 800-1200 populations),
+     so the bar is 8%, or 3 SE if that is wider. */
+  const set1 = [[60, 0], [60, 0.5], [100, 0.9], [30, 0.3]];
+  const model = set1.map(([n, F], i) => { const v = [];
+    for (let r = 0; r < 8; r++) v.push(once(n, 0, F, 700 + i * 104729 + r * 7919));
+    const truth = n / (1 + F);
+    return { n, F, truth, neT: v.map(m => m.mean / (4 * ck(2 * n)) / truth), neD: v.map(m => (m.Nem || 0) / truth),
+             Fm: mn(v.map(m => m.Fm == null ? NaN : m.Fm)) }; });
+  const within = a => Math.abs(mn(a) - 1) <= Math.max(0.08, 3 * sdv(a) / Math.sqrt(a.length));
+  check("D Ne = N/(1+F) in the runs", model.every(q => within(q.neT)),
+        "Ne from the average time to one allele, over the sliders' Ne: " + model.map(q => q.n + "/F" + q.F + " " +
+        mn(q.neT).toFixed(3) + "±" + sdv(q.neT).toFixed(3)).join("  "));
+  check("D the Ne the page measures agrees with the sliders", model.every(q => within(q.neD)),
+        "from the average rate of loss, over the sliders' Ne: " + model.map(q => q.n + "/F" + q.F + " " +
+        mn(q.neD).toFixed(3) + "±" + sdv(q.neD).toFixed(3)).join("  "));
+  check("D F is held where the slider sets it", model.every(q => Math.abs(q.Fm - q.F) <= 0.04),
+        "F measured in the runs: " + model.map(q => q.Fm.toFixed(3) + " at " + q.F).join("  "));
+  const byK = [2, 3, 10, 0].map((k, i) => { const T = [];
+    for (let r = 0; r < 3; r++) T.push(...Array.from(once(50, k, 0, 800 + i * 104729 + r * 7919).T));
+    return { k, m: mn(T), se: sdv(T) / Math.sqrt(T.length), p: pred(50, k, 0) }; });
+  check("D the average time is 4Ne(k-1)ln(k/(k-1)), and 4Ne only with many alleles",
+        byK.every(q => Math.abs(q.m - q.p) <= 3 * q.se + 0.02 * q.p) && byK[0].m < 0.8 * 200,
+        "50 individuals, F 0, " + 3 * D_R + " populations each: " + byK.map(q => (q.k || "every copy") + " alleles " + q.m.toFixed(0) +
+        "±" + q.se.toFixed(0) + " (formula " + q.p.toFixed(0) + ")").join("  ") + "; 4Ne is 200");
 
-  let minD = 9, minAt = "";
-  for (let i = 0; i < D_TARGETS.length; i++) for (let j = i + 1; j < D_TARGETS.length; j++) {
-    const d = rmsGap(D_targetCurve(i), D_targetCurve(j)); if (d < minD) { minD = d; minAt = D_TARGETS[i].join("/") + " vs " + D_TARGETS[j].join("/"); } }
-  check("D the targets are far apart", minD >= 1.5 * D_TOL,
-        "closest two (" + minAt + ") sit " + minD.toFixed(3) + " apart, against a tolerance of " + D_TOL);
+  /* one population, and the average of 200 */
+  const one = once(60, 0, 0, 900), cv = sdv(Array.from(one.T)) / one.mean;
+  check("D one population is not the number", cv > 3 * D_TOL,
+        "one population's time runs " + one.mean.toFixed(0) + " ± " + (cv * 100).toFixed(0) + "%, against a window of ±" + (100 * D_TOL) + "%");
+  const avgs = []; for (let r = 0; r < 8; r++) avgs.push(once(60, 0, 0, 950 + r * 7919).mean);
+  check("D the average of " + D_R + " repeats inside the window", sdv(avgs) / mn(avgs) <= D_TOL / 2.5,
+        "eight averages: " + mn(avgs).toFixed(0) + " ± " + (100 * sdv(avgs) / mn(avgs)).toFixed(1) + "%");
 
-  /* The control grid, two runs a setting. */
-  const grid = [];
-  for (const v of [0, 15, 28, 35, 41, 50, 59, 70, 85, 100]) for (let f = 0; f <= 1.001; f += 0.1)
-    grid.push({ n: D_nAt(v), f: Math.round(f * 10) / 10, F: avg(runs(D_nAt(v), Math.round(f * 10) / 10, 2, 8000 + v * 11 + Math.round(f * 10))) });
-  /* Same bar as B: no one setting passes the stage (three of five), and
-     settings that clear two are rare. The closest pair of targets is
-     0.09-0.10 apart, just short of the 0.10 that would rule two out. */
-  let most = 0, mostAt = "", two = 0;
-  for (const g of grid) { const c = D_TARGETS.filter((_, k) => rmsGap(g.F, D_targetCurve(k)) <= D_TOL).length;
-    if (c >= 2) two++;
-    if (c > most) { most = c; mostAt = g.n + "/" + g.f; } }
-  check("D no one setting clears three targets, and few clear two", most <= 2 && two <= Math.max(1, 0.02 * grid.length),
-        grid.length + " settings searched; the greediest (" + mostAt + ") clears " + most + ", and " + two + " clear two");
+  /* the rounds */
+  const Ng = []; for (let v = 0; v <= 100; v++) Ng.push(D_nAt(v));
+  const Fg = []; for (let i = 0; i <= 20; i++) Fg.push(i / 20);
+  const near = (list, f, T) => list.reduce((b, x) => Math.abs(f(x) - T) < Math.abs(f(b) - T) ? x : b, list[0]);
+  const aim = (r, T, fn) => r.N != null ? { n: r.N, F: near(Fg, F => fn(r.N, r.k, F), T) }
+                                        : { n: near(Ng, n => fn(n, r.k, r.F), T), F: r.F };
+  const own = [];
+  D_ROUNDS.forEach((r, i) => r.Ts.forEach(T => { const a = aim(r, T, pred);
+    own.push({ i, T, a, h: rate(a.n, r.k, a.F, T, 10, 1100 + i * 97 + T) }); }));
+  check("D every round is hit at its intended setting", own.every(o => o.h >= 0.8),
+        own.map(o => "r" + (o.i + 1) + " " + o.T + "@" + (D_ROUNDS[o.i].N != null ? "F" + o.a.F : "N" + o.a.n) + ":" +
+        (100 * o.h).toFixed(0) + "%").join("  ") + "  (10 fresh runs of " + D_R + " each)");
 
-  /* The wrong cause. 1000/0.5 is made by relatives: size alone (f = 0) must
-     miss it. 60/0 is made by size: relatives alone (1000 breeding) must miss it. */
-  const kRel = D_TARGETS.findIndex(t => t[0] === 1000 && t[1] === 0.5), kSize = D_TARGETS.findIndex(t => t[0] === 60 && t[1] === 0);
-  const bySize = grid.filter(g => g.f === 0).map(g => rmsGap(g.F, D_targetCurve(kRel)));
-  const byRel = grid.filter(g => g.n === 1000).map(g => rmsGap(g.F, D_targetCurve(kSize)));
-  check("D the wrong cause cannot fake the shape", Math.min(...bySize) > D_TOL && Math.min(...byRel) > D_TOL,
-        "best size-only try at the relatives target: " + Math.min(...bySize).toFixed(3) +
-        "; best relatives-only try at the size target: " + Math.min(...byRel).toFixed(3) + " (tolerance " + D_TOL + ")");
+  const four = (n, k, F) => 4 * n / (1 + F);
+  const naive = [];
+  D_ROUNDS.forEach((r, i) => { if (r.k !== 2) return;
+    r.Ts.forEach(T => { const a = aim(r, T, four); naive.push({ i, T, a, h: rate(a.n, r.k, a.F, T, 6, 1300 + i * 97 + T) }); }); });
+  check("D reading 4Ne and stopping misses the two-allele rounds", naive.every(o => o.h <= 0.17),
+        naive.map(o => "r" + (o.i + 1) + " " + o.T + "@" + (D_ROUNDS[o.i].N != null ? "F" + o.a.F : "N" + o.a.n) + ":" +
+        (100 * o.h).toFixed(0) + "%").join("  "));
+  const f0 = [];
+  D_ROUNDS.forEach((r, i) => { if (r.N == null) return; r.Ts.forEach(T => f0.push({ i, T, h: rate(r.N, r.k, 0, T, 6, 1500 + i * 97 + T) })); });
+  check("D leaving F at 0 misses the rounds where F is the lever", f0.every(o => o.h <= 0.17),
+        f0.map(o => "r" + (o.i + 1) + " " + o.T + ":" + (100 * o.h).toFixed(0) + "%").join("  "));
+  const ign = [];
+  D_ROUNDS.forEach((r, i) => { if (!(r.F > 0)) return;
+    r.Ts.forEach(T => { const n = near(Ng, n => pred(n, r.k, 0), T); ign.push({ i, T, n, h: rate(n, r.k, r.F, T, 6, 1700 + T) }); }); });
+  check("D ignoring the held F misses", ign.length > 0 && ign.every(o => o.h <= 0.17),
+        ign.map(o => "r" + (o.i + 1) + " " + o.T + "@N" + o.n + ":" + (100 * o.h).toFixed(0) + "%").join("  "));
+  const open = [];
+  D_ROUNDS.forEach((r, i) => r.Ts.forEach(T => { const n = r.N != null ? r.N : D_nAt(100), F = r.F != null ? r.F : 0;
+    open.push({ i, T, h: rate(n, r.k, F, T, 4, 1900 + i * 97 + T) }); }));
+  check("D the opening setting is not an answer", open.every(o => o.h === 0),
+        D_nAt(100) + " individuals, F 0, where the round leaves them free: " + open.map(o => "r" + (o.i + 1) + " " + o.T + ":" +
+        (100 * o.h).toFixed(0) + "%").join("  "));
 
-  const reach = D_TARGETS.map(([n]) => { let b = 1e9; for (let v = 0; v <= 100; v++) b = Math.min(b, Math.abs(D_nAt(v) - n) / n); return b; });
-  check("D the breeders slider reaches every target's size", reach.every(r => r <= 0.03),
-        D_TARGETS.map(([n], k) => n + " within " + (100 * reach[k]).toFixed(1) + "%").join("  "));
+  /* No one setting clears three rounds. Searched over the whole slider grid
+     and every combination of the per-student targets, on the formula checked
+     above with 3% added to the window for its error; then the greediest
+     setting is run for real. */
+  let most = 0, mostAt = null;
+  for (const n of Ng) for (const F of Fg) {
+    let c = 0;
+    D_ROUNDS.forEach(r => { const nn = r.N != null ? r.N : n, FF = r.F != null ? r.F : F;
+      if (r.Ts.some(T => Math.abs(pred(nn, r.k, FF) - T) <= (D_TOL + 0.03) * T)) c++; });
+    if (c > most) { most = c; mostAt = { n, F }; }
+  }
+  let real = 0;
+  D_ROUNDS.forEach((r, i) => { const nn = r.N != null ? r.N : mostAt.n, FF = r.F != null ? r.F : mostAt.F;
+    if (r.Ts.some(T => rate(nn, r.k, FF, T, 3, 2100 + i * 97 + T) >= 0.5)) real++; });
+  check("D no one setting clears three rounds", most <= 2 && real <= 2,
+        Ng.length * Fg.length + " settings searched: the greediest (" + mostAt.n + " individuals, F " + mostAt.F +
+        ") clears " + most + " of 5 on the formula and " + real + " when run");
 
-  const pick = dealDistinct("l11Dr", D_TARGETS.map((_, k) => k)), dealt = [0, 1, 2, 3, 4].map(pick);
-  check("D five different targets", new Set(dealt).size === 5, "the five rounds deal " + dealt.map(k => D_TARGETS[k].join("/")).join(", "));
+  /* the page's own deal, the readout, and what a round holds */
+  const dealt = [0, 1, 2, 3, 4].map(D_deal);
+  check("D five rounds up the ladder, five different targets",
+        dealt.every((r, i) => D_ROUNDS[i].Ts.indexOf(r.T) >= 0 && r.k === D_ROUNDS[i].k) && new Set(dealt.map(r => r.T)).size === 5,
+        "the five rounds deal " + dealt.map(r => r.T + (r.N != null ? " (F yours)" : " (individuals yours)")).join(", "));
+  const keep = { n: D.n, F: D.F, k: D.k }, arith = [];
+  for (const [n, F] of [[40, 0], [100, 0.5], [120, 0.25]]) {
+    D.n = n; D.F = F; D_syncOut();
+    const t = document.getElementById("D_ne").textContent;
+    const ne = +(/Ne ([0-9.]+)/.exec(t) || [])[1], fn = +(/4Ne ([0-9.]+)/.exec(t) || [])[1];
+    arith.push({ n, F, ne, fn, ok: Math.abs(ne - n / (1 + F)) < 0.06 && Math.abs(fn - 4 * n / (1 + F)) <= 0.5 });
+  }
+  D.n = keep.n; D.F = keep.F; D.k = keep.k; D_applyHeld();
+  check("D the readout's Ne and 4Ne are the sliders' arithmetic", arith.every(a => a.ok),
+        arith.map(a => a.n + "/F" + a.F + ": Ne " + a.ne + ", 4Ne " + a.fn).join("  "));
+  const r0 = D.game.current(), held = { k: document.getElementById("D_k").disabled, n: document.getElementById("D_n").disabled,
+                                        F: document.getElementById("D_F").disabled };
+  check("D a round holds what its card says",
+        held.k && held.n === (r0.N != null) && held.F === (r0.F != null) && D.k === r0.k &&
+        (r0.N == null || D.n === r0.N) && (r0.F == null || D.F === r0.F),
+        "round 1: alleles " + (held.k ? "held" : "free") + ", individuals " + (held.n ? "held" : "free") +
+        ", F " + (held.F ? "held at " + D.F : "free"));
 }
 
 /* ---- E. one founding pair, traced down --------------------------------- */
