@@ -25,7 +25,8 @@ commitment.
 ```
 index.html                    landing page (lessons + scaffolds + explorer)
 LOCKS.txt                     the release gate: one row per page, x = locked
-app/lessons/lessonN.html      30 lessons, in file-number order
+app/lessons/lessonN.html      the live lessons, in file-number order
+app/archive/                  old 14-34: unreviewed first drafts, sources only
 app/scaffolds/sNN_*.html      27 guess-and-check drills
 app/interactives/descent.html pedigree explorer (unscored)
 app/assets/score.js           the submission-code library (name -> opaque passcode)
@@ -60,7 +61,7 @@ The judgment-level checks a machine cannot run are in
 Check every lesson:
 
 ```
-python3 scripts/check_lessons.py          # all 30; exits 0 when clean
+python3 scripts/check_lessons.py          # every page in app/lessons; exits 0 when clean
 python3 scripts/check_lessons.py app/lessons/lesson7.html   # one lesson
 ```
 

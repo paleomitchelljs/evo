@@ -1,132 +1,83 @@
-# Lesson 13 — a trait on a landscape that moves
+# Lesson 13 — selection as regression
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · plan only, no edits made
-**Last touched** · 2026-09-22
+**Status** · replanned 2026-09-24 (the regression lesson of three); plan only; locked
+**Last touched** · 2026-09-24
 
-Second of a pair. **Shared spine — the 12/13 division, the Price thread, the measured two-term numbers — is in `docs/overhauls/lesson12_overhaul.md`.** Not repeated here.
-
-Slot 13 was "Where deleterious alleles get held in place" in `LOCKS.txt`. This displaces it; see open question 4 in 12's doc.
+Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
 
 ## What it is
 
-- One continuous trait, a growth-rate curve beside it, a headcount free to fall.
-- Lesson 12 could not kill a population — relative fitness. This one can.
+- JM, 2026-09-24: *"keeping two things: explicit exploration of covariance as a concept, to build in the Price equation and help students understand its terms for later, and the idea of a regression model based on a causal diagram (arrow = slope, residuals = the 'other' box in the DAG). I would also like to build up the ideas of mediators, confounders, and colliders."*
+- Supersedes the 2026-09-22 plan (one trait on a moving landscape). Its specialisation numbers are kept below, with the birth–death framework.
+- Additive genetic variation and the response to selection (B) added 2026-09-24.
 
-## Protect
+## Candidate stages (provisional)
 
-- **Stage D**: the population that adapted better is the one that nearly dies.
+JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, and birth-death/DAGs). We'll add a frequency dependent one later, probably as 15."* So this lesson is the regression one; the birth–death framework and the two-trait stages are the third lesson's (below, until it has a slot).
 
-## The model
+    A  covariance: who made more offspring, and did it track the trait
+    B  additive genetic variation: push harder, and what actually responds
+    C  the regression is the diagram: arrow = slope, "other" box = residual
+    D  mediator, confounder, collider
 
-- `L` additive biallelic loci. Trait = count of + copies out of `2L`, so it is a count the student already read off lesson 10's dot cloud.
-- `makePop` / `makePool` with a `share` / `breed` all unchanged. **The multi-peak lesson is the same operator with more loci.**
-- Absolute: next headcount = current × mean absolute growth, against a ceiling. Extinction reachable.
+### A — covariance
 
-## The briefed Sewall Wright stage does not simulate
+- JM, 2026-09-24, on the style: *"the recent design philosophy (diverse interactives, bowling games, practice rounds, etc) and any new, bespoke types of parts that make sense."*
+- JM's idea: *"two plots, and when one is distorted the other distorts, and they try to get the two to match some target with rounds varying based on the covariance strength ... I'm not sure it would build up to the hierarchical nature of the Price equation."*
+- **Recommended form, and why it does build to the hierarchical Price.** Left: every parent as a dot, trait across, offspring count up; the student distorts the *fitness* (drags a line or curve through the cloud, or grabs points). Right: the trait distribution twice, parents and offspring-weighted; it distorts as the left is dragged, and the gap between the two means is `cov(w, z)/w̄`, exactly, every frame. Rounds deal a shift to hit; what varies between rounds is the trait's **spread**, so one slope gives different shifts (`cov = slope × variance`: selection needs variation). Bowling, practice switch.
+- The hierarchy comes from two extras seeded here: (1) covariance drawn as signed rectangles, one per dot, `(z − z̄)(w − w̄)`, so it is an area the student can see; (2) dots coloured by group from the start, doing nothing yet. Late-20s, the same picture splits the rectangles into between-group (group means) and within-group parts: the multilevel Price term is the same drawing with a partition, not a new apparatus.
+- Risk to guard: linked plots can become a toy with no measurable target. The target must be the shift (the selection term), measured off the dots.
+- The Price covariance term on screen: offspring count against trait, the covariance as a number, measured.
+- The painted-flower contrast, measured 2026-09-22 (400 individuals, 12 additive loci, steady push, 120 generations, per parent):
 
-JM's brief: small populations do the jump to the high peak; large ones are stuck.
+                                  cov(w,z)/w   E(w·dz)/w   change   trait
+      inherited                      0.0941      0.0051    0.0992   12.00 -> 23.90
+      re-rolled each generation      0.2905     -0.2890    0.0015   12.00 -> 11.77
 
-- Built the obvious way it teaches the opposite. Three peaks, population started on the middle one, success = **sustained** occupancy of the tall peak (mean trait over the last 100 of 600–700 generations), 25–30 runs per cell:
+- Identity exact every generation. Three times the covariance and goes nowhere: `202_lec16_01` painted flowers, `202_lec15_05` puppy tails.
+- `priceTerms` is in lessons 10 and 11, **called by neither, never run**. Check it against a hand computation.
 
-      12 loci, peaks 6/12/19 of 0..24, mu 0.002
-        valley  9.7% deep   N=10: 32%  20: 56%  40: 56%  80: 76%  160: 100%  320: 100%
-        valley 15.2% deep   N=10: 24%  20: 20%  40: 20%  80: 24%  160:  36%  320:  36%
+### B — additive genetic variation, and what responds
 
-      6 loci, peaks 3/6/10 of 0..12, mu 0.001
-        valley 10.0% deep   N=15: 40%  30: 60%  60: 97%  125: 100%  250: 100%  500: 100%
+- JM, 2026-09-24: *"The regression one should also include a bit on additive genetic variation and the fact that R=Va regardless of S should be discovered by students (I'm imagining them making a plot point-by-point where they use interactives to try and force change by ratcheting up selection strength only to find that the response correlates with the heritability variation amount)."*
+- **Stated so it holds:** `R = h² S` — response does grow with S. What holds regardless of S: no additive variance, no response at any S; per unit of selection the response is set by the heritable variation, `R/S = h² = Va/Vp`. With selection strength as the fitness slope `β` (the line A's student drags), `R = Va β`, exactly, for an additive trait. The discoverable fact: **each population's points fall on a line whose slope is its Va.** Ratcheting strength slides along the line; only more Va steepens it.
+- The bespoke part: a plot built point by point. Each run = one generation at a strength the student sets; the page adds a point (strength, response) for that population. Populations dealt with the same total variance and different Va, so the same push gives the same S and different R.
+- Game (to calibrate): a dealt response in a dealt population; one population cannot reach it at the slider's stop. Multi-generation extension: strong selection spends Va, and the response decays (2026-09-22: spread 1.65 against 2.07 after 300 generations).
+- Lesson 8 is the bridge: the slope of offspring on mid-parent is the heritability (JM's ruling, lesson 8), and it is the same `h²` that sets `R/S` here.
 
-- **Larger N equal or better in every cell tried. Never worse.**
-- Trait spread scales with N: 0.85 at N=10, 1.11 at 20, 1.73 at 80, 2.25 at 320. Valley is ~7 trait units wide, so a spread of 2.25 already has individuals on the far peak. Nothing crosses; selection just pulls.
-- At a 15% valley nobody crosses at any size. The 20–36% is drift wandering, not a peak shift.
-- Reason: the model is additive, so there is no valley in **genotype** space — only phenotype space, and a broad distribution walks through it. Wright needs demes + migration, or sign epistasis.
-- Shifting balance is contested in the field (Coyne, Barton & Turelli 1997). Do not assert it.
+### C — the regression is the diagram
 
-**Three ways forward:**
+- JM: *"arrow = slope, residuals = the 'other' box in the DAG."*
+- `paths.js` already binds each arrow of a fixed diagram to a slider. `buildArrows` draws one. Lesson 7's model diagram is the precedent in 1-10.
 
-1. **Reframe around variation, not headcount.** Recommended. You need variation to move, selection spends variation, so the hardest-selected population is the one that cannot move. `202_lec08_01` + `202_lec18_04`, and it feeds Stage D instead of fighting it.
-2. **Demes + migration.** Honest Wright. Cost: spends lesson 16's argument here, and `WORK_ORDER.md` currently forbids it.
-3. **Epistatic landscape** — fitness from the combination, not the sum. Reproduces Wright, real valley in genotype space. More code, harder to draw.
+### D — mediator, confounder, collider
 
-Taking (1) below.
+- On the diagram C builds. Mediator: allele → trait → fitness. Confounder: one allele → two traits, one of which does nothing, and it still correlates with fitness. Collider: to build, and to measure what selecting on it does.
 
-## Stages
+## The third selection lesson — birth–death and DAGs (no slot yet)
 
-    A  one peak — climb it, watch the spread collapse
-    B  three peaks — what decides whether you get off the one you are on
-    C  the peak sinks as you crowd it
-    D  the optimum moves, and the better-adapted population dies
+Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM: they are an arc sketch, not plans). Planned here until then.
 
-### A — climbing, and what it costs
+### Births and deaths on a diagram
 
-- Trait on the vertical axis, growth-rate curve on the right. Birth and death are separate controls; the curve is their difference.
-- Dot cloud from 10 and 12, now spread over a trait.
-- Three numbers per generation: mean trait, **spread**, headcount. The spread falls as it climbs. That is the stage.
-- Price readout returns with the within term doing real work — an offspring is built from two parents and lands nearer the mean. Regression to the mean, i.e. lesson 8's material as one of the two terms.
+- JM: *"a trait that causes changes to the birth rate and causes changes to the death rate ... as mediated by something like carrying capacity ... they can adjust the arrows. The arrows exist. They can't take them away or add them ... 0 it's just a line ... positive, it's blue and negative, it's red."*
+- JM: *"we haven't done carrying capacities and net growth rate, but r versus K. But we may need 2 parts to build that."* So r and K first, then the trait on them.
+- Then the trait driven by one allele, or several (12's machinery).
+- Kept from 2026-09-22: after 300 generations on a peak, strong selection leaves spread 1.65, weak 2.07; move the optimum and the bottleneck is 3 against 105. 25% more variation, 35× the headcount. Nothing went extinct in 20 runs; the extinction bar needs sweeping.
+- 12 C (the valley) can move onto this framework once it exists.
 
-### B — three peaks
+### Two traits
 
-- Controls that matter are the ones governing **variation**: headcount, how hard selection pushes (peak width), mutation rate.
-- Finding to engineer: **widening the peak — selecting less hard — gets you to the top; cranking selection up pins you.**
-- Keep a headcount control and let it not do what the student expects. `LESSON_STYLE` §5.
-
-### C — the peak sinks as you crowd it
-
-- Landscape becomes a function of where the population is; the right-hand curve redraws every generation.
-- `202_lec16_05` is exact: *"the fitness function changes because of the fitness function."* Pupfish as framing.
-- Hardest stage to gate — the target moves while they aim. Suggested gate: **hold two peaks at once for N generations**, only possible when crowding is strong enough that neither wins. Sweep before committing.
-
-### D — specialisation, evolving to extinction
-
-- Phase 1: 300 generations on a peak at trait 12. Phase 2: optimum jumps to 19, headcount driven by absolute growth, ceiling 400, gone below 2. 20 runs per treatment:
-
-                                        strong selection   weak selection
-                                        (narrow peak)      (broad peak)
-      trait spread after 300 gens             1.65              2.07
-      lowest headcount after the move            3               105
-      headcount 250 generations later           44               400
-      mean trait reached (target 19)          13.8              18.8
-
-- **25% more standing variation → 35× the bottleneck.** The strongly selected population never catches the optimum, still at a ninth of the ceiling 250 generations later.
-- Nothing actually went extinct in 20 runs. Extinction needs the bar swept: bigger jump, lower ceiling, or harsher growth constant.
-- Two populations side by side, same move; the student sets how hard each was selected beforehand. Task: build the one that dies.
-
-## Real data
-
-- `data/clean/ltee_fitness_assays.csv` / `ltee_fitness_summary.csv` — twelve populations from one clone, 50,000 generations, and the climb **decelerates**. Stage A's argument in a real record. `WORK_ORDER.md` pins the numbers already.
-- Pupfish (Martin, San Salvador, scale-eaters vs generalists). **Verify the citation and whether data is downloadable before it enters `data/SOURCES.md`** — working from memory, including whether "blue holes" is the right water body. Framing without a panel is fine.
-
-## Voice
-
-    A  202_lec08_01  "selection destroys variation ... that's what it does"
-       202_lec18_04  racehorse asymptote
-    B  202_lec12_02  you can never make anything perfect
-    C  202_lec16_05  scale-eating; the fitness function changes because of itself
-       202_lec16_06  the horse with five mules
-    D  202_lec16_02  "It does not matter if being red is bad later" — the hinge
-       202_lec01_01  things just get better at not dying
-
-## Still to measure
-
-- Stage B, all of it. The numbers above rule out the briefed version, not in the reframed one. Sweep peak width against time-to-tall-peak for a two-sided window.
-- Stage C: whether a two-peak occupancy gate is reachable, and over what crowding range.
-- Stage D: settings where the strongly selected population genuinely dies rather than limping.
-- How many loci. 6 is coarse and jumpy, 12 is smooth and slow. Pick on what reads on a canvas, then re-measure.
-- Whether the Price readout is legible at this lesson's headcounts. Clean at 400, not at 40.
-
-## Do not
-
-- Assert Wright's shifting balance.
-- Sum `cov` and `within`.
-- Use relative fitness anywhere here — the normalisation is what makes extinction impossible.
-- Add migration for Stage B without deciding it is worth spending lesson 16's argument.
-- Take lesson 15 or anything above it as precedent.
-- Pick a bar by eye.
+- JM: *"2 traits, both caused by the same allele. 2 traits caused by different alleles ... trade-offs ... some single allele that pleiotropically causes 2 traits. One has a positive effect, one has a negative effect. And you sort of run it through. And see where the allele's frequency ends up."*
 
 ## Open for JM
 
-1. Stage B reframe (variation, not headcount) or one of the two honest Wright builds.
-2. Must extinction actually happen in D, or is "crashed to 3 and never recovered" the lesson?
-3. Pupfish citation and data.
-4. Are C and D one lesson or does this split again? C is the most expensive thing in either doc.
+1. Pupfish (scale-eaters) as framing for frequency-dependent fitness, for 15: citation unverified.
+
+## Do not
+
+- Sum `cov` and `within`.
+- Take the pre-2026-09-22 `lesson13.html` (mutation–selection balance) as precedent.
+- Assert shifting balance; 12 C shows the one case measured to work.
