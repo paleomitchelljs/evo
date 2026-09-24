@@ -159,7 +159,7 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
 
   /* The brush: a pointer at generation 30, height 10 on the log axis, sets 10 there. */
   const cv = document.getElementById("B_pop"), rc = cv.getBoundingClientRect();
-  const W = +cv.dataset.cssW, H = +cv.dataset.cssH, fr = B_frame(W, H, Math.log(B_NMIN), Math.log(B_NMAX));
+  const W = +cv.dataset.drawW, H = +cv.dataset.cssH, fr = B_frame(W, H, Math.log(B_NMIN), Math.log(B_NMAX));
   const at = (t, n) => ({ clientX: rc.left + fr.x(t + 0.5) * rc.width / W, clientY: rc.top + fr.y(Math.log(n)) * rc.height / H });
   const keep = B.census.slice();
   B.last = null; B_brush(at(30, 10)); B_brush(at(34, 100)); B.last = null;
@@ -317,8 +317,14 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   const model = set1.map(([n, F], i) => { const v = [];
     for (let r = 0; r < 8; r++) v.push(once(n, 0, F, 700 + i * 104729 + r * 7919));
     const truth = n / (1 + F);
+    /* the plotted line against random pairing's, from generation 10 (the
+       held F has set in) while random pairing's is above a tenth of its start */
+    const ratio = m => { let o = 0, e = 0;
+      for (let t = 10; t < m.avgHe.length && m.avgHe[t] > 0.1 * m.avgHe[0]; t++) { o += m.avgHo[t]; e += m.avgHe[t]; }
+      return o / e; };
     return { n, F, truth, neT: v.map(m => m.mean / (4 * ck(2 * n)) / truth), neD: v.map(m => (m.Nem || 0) / truth),
-             Fm: mn(v.map(m => m.Fm == null ? NaN : m.Fm)) }; });
+             Fm: mn(v.map(m => m.Fm == null ? NaN : m.Fm)), ho: mn(v.map(ratio)),
+             plotted: v.every(m => m.H.every(h => h.length > 0 && h[h.length - 1] === 0)) }; });
   const within = a => Math.abs(mn(a) - 1) <= Math.max(0.08, 3 * sdv(a) / Math.sqrt(a.length));
   check("D Ne = N/(1+F) in the runs", model.every(q => within(q.neT)),
         "Ne from the average time to one allele, over the sliders' Ne: " + model.map(q => q.n + "/F" + q.F + " " +
@@ -328,6 +334,13 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
         mn(q.neD).toFixed(3) + "±" + sdv(q.neD).toFixed(3)).join("  "));
   check("D F is held where the slider sets it", model.every(q => Math.abs(q.Fm - q.F) <= 0.04),
         "F measured in the runs: " + model.map(q => q.Fm.toFixed(3) + " at " + q.F).join("  "));
+  /* JM, 2026-09-24: the plot is the heterozygosity the population actually
+     has, not the random-pairing figure. So the plotted line has to sit at
+     (1 - F) of random pairing's, and reach 0 at the generation one allele is left. */
+  check("D the plotted heterozygosity is counted, at (1 - F) of random pairing's",
+        model.every(q => Math.abs(q.ho - (1 - q.F)) <= 0.04 && q.plotted),
+        "plotted over random pairing's, generation 10 on: " + model.map(q => q.ho.toFixed(3) + " at F " + q.F +
+        " (1 - F = " + (1 - q.F).toFixed(2) + ")").join("  ") + "; every line ends at 0: " + model.every(q => q.plotted));
   const byK = [2, 3, 10, 0].map((k, i) => { const T = [];
     for (let r = 0; r < 3; r++) T.push(...Array.from(once(50, k, 0, 800 + i * 104729 + r * 7919).T));
     return { k, m: mn(T), se: sdv(T) / Math.sqrt(T.length), p: pred(50, k, 0) }; });
@@ -470,7 +483,92 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   let adj = false; for (let i = 1; i < seen.length; i++) if (seen[i] === seen[i - 1]) adj = true;
   check("E targets repeat and never twice running", !adj && new Set(seen).size === E_TARGETS.length,
         "the five rounds deal targets " + seen.map(k => E_TARGETS[k].toFixed(2)).join(", "));
+
+  /* The tracker (JM, 2026-09-24): alleles left and pi, by generation.
+     Recounted here genome by genome and pair by pair through E_carries,
+     not through E_dots or the closed form the page uses. */
+  {
+    const brute = row => {
+      const gs = row.flatMap(ind => ind.chroms), has = gs.map(c => E.sites.map(s => E_carries(c, s)));
+      const left = E.sites.filter((_, j) => has.some(h => h[j])).length;
+      let d = 0, pairs = 0;
+      for (let i = 0; i < gs.length; i++) for (let j = i + 1; j < gs.length; j++) {
+        pairs++; for (let s = 0; s < E.sites.length; s++) if (has[i][s] !== has[j][s]) d++; }
+      return { left, pi: d / pairs };
+    };
+    let agree = true, rise = 0, rows = 0, founders = true;
+    for (const [n, g, f] of [[2, 7, 0], [4, 5, 0.5], [8, 6, 1], [3, 4, 0]]) for (let r = 0; r < 10; r++) {
+      E.serial = 12000 + r * 11 + n * 101 + g; E_build(n, g, f);
+      const tr = E.rows.map(E_rowDiv);
+      E.rows.forEach((row, k) => { rows++; const b = brute(row);
+        if (b.left !== tr[k].left || Math.abs(b.pi - tr[k].pi) > 1e-9) agree = false; });
+      for (let k = 1; k < tr.length; k++) if (tr[k].left > tr[k - 1].left) rise++;
+      if (tr[0].left !== E_NANC || Math.abs(tr[0].pi - 6) > 1e-9) founders = false;
+    }
+    check("E the tracker counts what is on the tree", agree && founders,
+          rows + " generations recounted genome by genome: " + (agree ? "all agree" : "DISAGREE") +
+          "; the founders read " + E_NANC + " alleles and pi 6 every time: " + founders);
+    check("E alleles left never rise", rise === 0,
+          "closed, no new mutations: " + rise + " generations with more dot alleles than the one before");
+
+    /* pi is diversity in the sense F is its loss: two genomes that are not
+       identical by descent trace to two different founder genomes, which
+       differ at half the dots. So pi = 6 (1 - mean kinship of the
+       generation's genomes), in expectation. Paired per run.
+       Measured 2026-09-24: no bias (-0.03 ± 0.04 over 400 runs at 8 a
+       generation, relatives always; 120 batches of 40, z from -2.6 to 2.2),
+       but the first page load drew z = -3.7 at 40 runs and 3 SE, with the
+       four settings sharing seeds and so sharing site layouts. Now each
+       setting has its own seeds, 80 runs, 3.5 SE. A with-replacement pi
+       would sit 0.4 low at two a generation, about 5 SE; the recount above
+       is the exact check, this one is what pi means. */
+    let fails = [], rep = [];
+    const R2 = 80;
+    for (const [n, g, f] of [[4, 4, 0], [2, 6, 0], [8, 6, 1], [6, 2, 0]]) {
+      const d = [], pis = [];
+      for (let r = 0; r < R2; r++) {
+        E.serial = 15000 + r * 7 + n * 1009 + g * 101 + Math.round(f * 10) * 13; E_build(n, g, f);
+        const row = E.rows[E.rows.length - 1], m = 2 * row.length;
+        let phi = 0;
+        for (const x of row) phi += E_kin(x.parents[0], x.parents[1]);
+        for (let i = 0; i < row.length; i++) for (let j = i + 1; j < row.length; j++) phi += 4 * E_kin(row[i], row[j]);
+        phi /= m * (m - 1) / 2;
+        const pi = E_rowDiv(row).pi;
+        pis.push(pi); d.push(pi - 6 * (1 - phi));
+      }
+      const m = mn(d), se = sdv(d) / Math.sqrt(R2);
+      rep.push("n" + n + "/g" + g + "/f" + f + " pi " + mn(pis).toFixed(2) + ", minus 6(1-kinship) " + (m >= 0 ? "+" : "") + m.toFixed(3) + "±" + se.toFixed(3));
+      if (Math.abs(m) > 3.5 * se) fails.push(n);
+    }
+    check("E pi falls as the generation's genomes become kin", fails.length === 0, rep.join("  "));
+  }
   E.serial = 0; E.n = 4; E.gens = 2; E.f = 0; E_reset();
+}
+
+/* ---- every plot inside its panel ----------------------------------------
+   JM, 2026-09-24: "Many graphs in both the interactive & prediction parts
+   extend beyond the limits of their boxes." Measured at the check's own
+   width and at an 1100-px window, where they ran 56-119 px over. C's
+   pedigree is exempt: it sits in its own scroller, which JM wants kept. */
+{
+  const over = () => { const bad = [];
+    document.querySelectorAll("canvas").forEach(cv => {
+      if (cv.dataset.fit === "off") return;
+      let host = cv.parentElement; while (host && !host.classList.contains("panel")) host = host.parentElement;
+      if (!host) return;
+      const cs = getComputedStyle(host), hr = host.getBoundingClientRect(), cr = cv.getBoundingClientRect();
+      const o = cr.right - (hr.right - parseFloat(cs.paddingRight) - parseFloat(cs.borderRightWidth));
+      if (o > 0.5) bad.push((cv.id || "card") + " +" + Math.round(o));
+    });
+    return bad; };
+  const fe = window.frameElement, w0 = fe ? fe.width : null, res = [];
+  for (const w of [w0, 1100, 900]) {
+    if (fe && w) { fe.width = w; void document.body.offsetWidth; FIT_EPOCH++; repaintAll(); }
+    res.push({ w: innerWidth, bad: over() });
+  }
+  if (fe) { fe.width = w0; void document.body.offsetWidth; FIT_EPOCH++; repaintAll(); }
+  check("every plot fits its panel", res.every(q => q.bad.length === 0),
+        res.map(q => q.w + " px: " + (q.bad.length ? q.bad.join(" ") : "none over")).join("  |  "));
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");

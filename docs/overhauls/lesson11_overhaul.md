@@ -3,7 +3,7 @@
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
 **Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose still owed; locked
-**Last touched** · 2026-09-23 (round 5 done; 47 bars pass; four calls flagged to JM)
+**Last touched** · 2026-09-24 (round 6: overflow, D's axis, E's tracker; 52 bars pass)
 
 ## What the lesson is
 
@@ -80,6 +80,14 @@ rescuing into a later lesson.
 | 44 | — | checks for D rewritten (15 bars); `Score.init` version 9 | done |
 | 45 | D | old D's `popStep` operator no longer used by D; `popHo` kept with the operator | done |
 | 46 | D | no voice block and a bare "Stage E is open." banner, like B and E: prose owed | todo |
+| 47 | all | **plots overflow their panels** (A, B, D plots and every Predict-card picture): sim.js's `setupCanvas` pins the declared width. Port lesson 10's measuring override; C's pedigree opts out (JM: its scroller "works great") | done |
+| 48 | D | y axis was "heterozygosity if pairing were random" (1 − Σp²). JM: plot the actual heterozygosity under the held F → share of individuals heterozygous, counted | done |
+| 49 | E | "copy" → "allele" on screen: legend, bullets, hover readouts | done |
+| 50 | E | new tracker under the card: founder alleles (the dots) left, by generation, and π (mean dot differences between two genomes in a row); earlier runs faint | done |
+| 51 | — | checks: D's plotted line sits at (1 − F) of random pairing's; E's tracker = brute force, never rises, founders 12 / 6, π = 6(1 − mean kinship of the row's genomes); every plot fits its panel at 1500/1100/900 | done — 52 bars |
+| 52 | C | a click on the pedigree that missed every founder blanked the tree (`C_layout` called `setupCanvas`, which clears). Found in passing | done |
+| 53 | D | counted heterozygosity is a scribble at 25-80 individuals: bold line = average of all 200 (a finished population counts 0) | done — not asked; flag to JM |
+| 54 | D | "every copy" / "every copy different" left as is: JM's copy→allele note was about E, and D's "copy" is a gene copy, not a founder's allele | open — ask JM |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
@@ -167,6 +175,15 @@ Standalone node prototypes, 300-400 populations a setting, one locus.
   The first version of the check took one run per setting at seeds 31 apart
   and failed on all four together.
 
+## Measured, 2026-09-24 round 6
+
+- Overflow before the fix, canvas right edge past the panel's content edge: 1440 window +4 px (680-wide plots); 1280 +15; 1100 +99 to +119, card pictures +56. After: none over at 1500, 1100, 900 (the check resizes its own iframe).
+- C, missed click: 42,704 inked pixels → 0.
+- D, counted over random pairing's from generation 10: 1.009 / 0.510 / 0.102 / 0.720 at F 0 / 0.5 / 0.9 / 0.3. Ne stays measured on random pairing's average: the counted line drops by (1 − F) over the first few generations and a log-slope through that drop reads the wrong Ne.
+- D, counted can start above 1 − 1/k (two alleles, ten individuals: seven heterozygotes is 0.7); the y axis clears the traces drawn, and traces are clipped to the frame.
+- E, π against 6(1 − mean kinship of a generation's genomes): no bias. 400 runs at 8/6/relatives always, −0.027 ± 0.036 and −0.040 ± 0.036; 120 batches of 40, z −2.6 to 2.2. The first check run drew z = −3.7 at 40 runs, 3 SE, the four settings sharing seeds and so site layouts; now per-setting seeds, 80 runs, 3.5 SE.
+- E, the founders read 12 alleles and π 6.00 by construction: four genomes, three dots each, any two differ at six.
+
 ## Rulings
 
 - **2026-09-22 — there is only one F.** JM: *"the students ONLY know F — we
@@ -189,6 +206,16 @@ Standalone node prototypes, 300-400 populations a setting, one locus.
   like the target would be for students to predict when the diversity hits 0.
   I think showing Ne as it is driven by their sliders would be good, with 4Ne
   next to it."*
+- **2026-09-24 — D plots the heterozygosity the population has.** JM: *"Why
+  is the y axis labeled 'heterozygosity if mating were random'? Shouldn't it
+  be the actual simulated heterozygosity for a given population size & level
+  of pedigree-derived inbreeding?"* Counted heterozygotes, not 1 − Σp².
+- **2026-09-24 — E says "allele", tracks the dots and π.** JM: *"I would like
+  something that tracks the number of unique alleles over time (that is, the
+  dots). Something that shows how the total diversity (pi) changes through
+  time would be a valuable bridge forward. Also why 'copy' and not 'allele'
+  for the labels?"* The page does not print π = 6(1 − kinship): that is a
+  second F on screen. The check holds it.
 - **2026-09-17 (standing)** — no migration, no between-population comparison.
   The operator still takes one pool per parent slot so a later lesson adds an
   argument rather than a model.

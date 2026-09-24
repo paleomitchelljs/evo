@@ -371,7 +371,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel pedwrap">
-        <canvas id="C_ped" class="plot" width="680" height="440"></canvas>
+        <canvas id="C_ped" class="plot" width="680" height="440" data-fit="off"></canvas>
         <div class="readout" id="C_pedRead"></div>
       </div>
       <div class="panel">
@@ -420,7 +420,7 @@
 
   <div class="panel stage-intro">
     <ul class="setup" style="margin:0; padding:0; border-top:0;">
-      <li><b>The plot</b>: 200 populations, one locus each, each run until it is down to one allele. A faint line is one population's heterozygosity if pairing were random.</li>
+      <li><b>The plot</b>: 200 populations, one locus each, each run until it is down to one allele. A faint line is one population's heterozygosity: the share of its individuals that are heterozygotes.</li>
       <li><b>Dots</b>: the generation each population was down to one allele.</li>
       <li><b>F</b> is held where you set it, every generation.</li>
       <li>You found the moose's effective population size in Lesson 10.</li>
@@ -478,20 +478,21 @@
     <ul class="setup" style="margin:0; padding:0; border-top:0;">
       <li>One pair founds a population. Nothing comes in from outside.</li>
       <li>Each individual is two bars: one genome from each parent, four chromosomes end to end.</li>
-      <li>Dots are founder variants, coloured by the founder copy they came in on.</li>
-      <li>Shaded: where an individual's two copies trace back to the same founder copy. The share shaded is <b>F</b>.</li>
+      <li>Dots are alleles at twelve loci, coloured by the founder allele they came from.</li>
+      <li>Shaded: where an individual's two alleles trace back to the same founder allele. The share shaded is <b>F</b>.</li>
       <li>Hover an individual to trace its ancestors. Click one, then hover another, to compare them.</li>
+      <li><b>Bottom plots</b>: how many of the twelve dot alleles are left, and <b>π</b> — the average number of dots two genomes from that generation differ at. Faint lines are earlier runs.</li>
     </ul>
   </div>
 
   <div class="stage-body">
     <div class="panel pedsvg">
       <div class="elegend">
-        <span class="lg"><i style="background:var(--f0)"></i>founder 1, copy a</span>
-        <span class="lg"><i style="background:var(--f1)"></i>founder 1, copy b</span>
-        <span class="lg"><i style="background:var(--f2)"></i>founder 2, copy a</span>
-        <span class="lg"><i style="background:var(--f3)"></i>founder 2, copy b</span>
-        <span class="lg"><b class="sh"></b>both copies from the same founder copy</span>
+        <span class="lg"><i style="background:var(--f0)"></i>founder 1, allele a</span>
+        <span class="lg"><i style="background:var(--f1)"></i>founder 1, allele b</span>
+        <span class="lg"><i style="background:var(--f2)"></i>founder 2, allele a</span>
+        <span class="lg"><i style="background:var(--f3)"></i>founder 2, allele b</span>
+        <span class="lg"><b class="sh"></b>both alleles from the same founder allele</span>
       </div>
       <svg id="E_svg" class="estage" xmlns="http://www.w3.org/2000/svg"></svg>
       <div class="readout" id="E_status"></div>
@@ -501,6 +502,10 @@
         <div class="panel predict" id="predE">
           <h3 id="predE_h">Predict</h3>
           <div class="pred-slot" id="predE_slot"></div>
+        </div>
+        <div class="panel">
+          <canvas id="E_track" class="plot" width="660" height="300"></canvas>
+          <div class="readout" id="E_trackRead"></div>
         </div>
       </div>
       <div class="col">
@@ -585,6 +590,67 @@ const clamp = (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v);
 const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
 const sd = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / Math.max(1, a.length - 1)); };
 const f2 = v => v.toFixed(2), f3 = v => v.toFixed(3);
+
+/* ====== canvases that stay inside their panel ========================
+   Lesson 10's override, copied. sim.js's setupCanvas pins the markup
+   `width` as an inline CSS width, so a plot declared 680 wide is laid out
+   680 wide even when its column is 560. JM, 2026-09-24: "Many graphs in
+   both the interactive & prediction parts extend beyond the limits of their
+   boxes." Measured before this: 4 px over at a 1440 window, 99-119 px at
+   1100, and the card pictures 56 px over at 1100.
+
+   This measures the room the canvas has and draws at that width, never
+   wider than declared. Height is left as declared; every draw function
+   here is written against W and H, so the plot re-lays-out rather than
+   squashing. Cached per canvas, invalidated on resize. A canvas marked
+   data-fit="off" keeps its declared width: C's pedigree sits in its own
+   scroller, which JM likes as it is. `drawW` is what was last drawn at, for
+   anything that maps a pointer back into the plot. */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) {
+    canvas.dataset.cssW = String(canvas.width);
+    canvas.dataset.cssH = String(canvas.height);
+  }
+  const declW = +canvas.dataset.cssW, cssH = +canvas.dataset.cssH;
+  let cssW;
+  if (canvas.dataset.fit === "off") cssW = declW;
+  else if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement;
+    let room = 0;
+    if (host) {
+      const cs = getComputedStyle(host);
+      room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+    }
+    if (room > 60) {
+      cssW = Math.round(Math.min(room, declW));
+      canvas.dataset.fitW = String(cssW);
+      canvas.dataset.fitEpoch = String(FIT_EPOCH);
+    } else cssW = declW;      // not laid out yet; do not cache this
+  }
+  canvas.dataset.drawW = String(cssW);
+  canvas.width  = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width  = cssW + "px";
+  canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+let fitTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => { FIT_EPOCH++; repaintAll(); }, 120);
+});
+/* A card repaint re-enables Go, so a stage mid-run keeps its card as it is. */
+function repaintAll() {
+  const safe = f => { try { f(); } catch (e) {} };
+  safe(A_paint); safe(B_paint); safe(C_paint); safe(D_paint); safe(E_render);
+  for (const [S, g] of [[A, A.game], [B, B.game], [C, C.game], [E, E.game]])
+    if (g && !S.running) safe(g.repaint);
+}
 
 /* Gamma deviate, Marsaglia-Tsang. The shares come out of this so that the
    mean is pinned at 1 whatever the spread is: only the unevenness moves. */
@@ -1433,7 +1499,7 @@ function B_RCODE() {
    log scale the plot is drawn on. */
 function B_brush(ev) {
   const cv = document.getElementById("B_pop"), rc = cv.getBoundingClientRect();
-  const W = +cv.dataset.cssW, H = +cv.dataset.cssH;
+  const W = +cv.dataset.drawW, H = +cv.dataset.cssH;
   const mx = (ev.clientX - rc.left) * W / rc.width, my = (ev.clientY - rc.top) * H / rc.height;
   const f = B_frame(W, H, Math.log(B_NMIN), Math.log(B_NMAX));
   const t = clamp(Math.floor((mx - f.px) / f.pw * B_G), 0, B_G - 1);
@@ -1716,7 +1782,10 @@ function C_bottomStats() {
    partners' two lines meet there, and a bar under it carries the family. */
 function C_layout() {
   const cv = document.getElementById("C_ped");
-  const { W, H } = setupCanvas(cv);
+  /* read the size, never setupCanvas: resetting a canvas clears it, and the
+     click handler lays out without repainting when the click hits nobody --
+     which blanked the tree (measured 2026-09-24: 42,704 inked pixels to 0) */
+  const W = +(cv.dataset.drawW || cv.width), H = +(cv.dataset.cssH || cv.height);
   const P = C.ped, rows = P.rows, pos = new Array(P.ped.length), matings = [];
   const rh = (H - 30) / rows.length, yOf = gi => 16 + rh * (gi + 0.35);
   const spread = (ids, gi) => {
@@ -2042,13 +2111,19 @@ const D_Ne = (n, F) => n / (1 + F);
 
 /* One locus, R populations of n individuals, k equally common alleles at the
    start, F held by selfing. Every population runs until one allele is left.
-   Returns each population's generation of fixation and its heterozygosity-if-
-   pairing-were-random by generation, plus the average across populations
-   (0 once a population is done) and F measured where there is variety to
-   measure it in. */
+   Returns each population's generation of fixation and its heterozygosity by
+   generation -- the share of its individuals that are heterozygotes, COUNTED.
+   JM, 2026-09-24: "Why is the y axis labeled 'heterozygosity if mating were
+   random'? Shouldn't it be the actual simulated heterozygosity for a given
+   population size & level of pedigree-derived inbreeding?" It was 1 - sum p^2
+   until then. The random-pairing figure is still kept, averaged across
+   populations (`avgHe`), because the rate of loss that gives the measured
+   Ne is read off it: the counted line drops by (1 - F) in the first few
+   generations as the held F sets in, and a log-slope fitted through that
+   drop reads as the wrong Ne. F is measured where there is variety. */
 function D_run(n, k, F, R, rng) {
   const s = 2 * F / (1 + F), twoN = 2 * n, K = Math.min(k, twoN);
-  const T = new Int32Array(R), H = [];
+  const T = new Int32Array(R), H = [], heSum = [], hoSum = [];
   let a = new Int32Array(twoN), b = new Int32Array(twoN);
   const c = new Int32Array(K);
   let fS = 0, fN = 0;
@@ -2062,11 +2137,10 @@ function D_run(n, k, F, R, rng) {
       let ss = 0, alive = 0;
       for (let j = 0; j < K; j++) if (c[j]) { alive++; ss += c[j] * c[j]; }
       const he = 1 - ss / (twoN * twoN);
-      h.push(he);
-      if (t >= 10 && he > 0.1) {
-        let het = 0; for (let i = 0; i < n; i++) if (a[2 * i] !== a[2 * i + 1]) het++;
-        fS += 1 - (het / n) / he; fN++;
-      }
+      let het = 0; for (let i = 0; i < n; i++) if (a[2 * i] !== a[2 * i + 1]) het++;
+      h.push(het / n);
+      heSum[t] = (heSum[t] || 0) + he; hoSum[t] = (hoSum[t] || 0) + het / n;
+      if (t >= 10 && he > 0.1) { fS += 1 - (het / n) / he; fN++; }
       if (alive <= 1) break;
       for (let i = 0; i < n; i++) {
         const p = (rng() * n) | 0, q = rng() < s ? p : (rng() * n) | 0;
@@ -2078,10 +2152,10 @@ function D_run(n, k, F, R, rng) {
     T[r] = t; H.push(Float32Array.from(h));
   }
   let top = 0; for (let r = 0; r < R; r++) top = Math.max(top, T[r]);
-  const avg = new Float64Array(top + 1);
-  for (const h of H) for (let t = 0; t < h.length; t++) avg[t] += h[t] / R;
+  const avgHe = Array.from({ length: top + 1 }, (_, t) => (heSum[t] || 0) / R);
+  const avgHo = Array.from({ length: top + 1 }, (_, t) => (hoSum[t] || 0) / R);
   let m = 0; for (let r = 0; r < R; r++) m += T[r] / R;
-  return { n, k, F, T, H, avg, mean: m, top, Fm: fN ? fS / fN : null, Nem: neFromDecay(Array.from(avg)) };
+  return { n, k, F, T, H, avgHe, avgHo, mean: m, top, Fm: fN ? fS / fN : null, Nem: neFromDecay(avgHe) };
 }
 
 const D_practising = () => !!(D.game && (D.game.st.done || document.getElementById("D_practice").checked));
@@ -2161,12 +2235,18 @@ function D_drawCurve() {
   ctx.clearRect(0, 0, W, H);
   const X = D_xmax(), r = D.game && D.game.current();
   const res = D.res, k = res ? res.k : D_kOf(D.k, D.n);
-  /* a multiple of 0.2, so the quarter ticks read 0.15, 0.30 ... rather than 0.13 */
-  const yTop = Math.min(1, Math.max(0.2, Math.ceil((1 - 1 / k) / 0.2 - 1e-9) * 0.2));
+  /* a multiple of 0.2, so the quarter ticks read 0.15, 0.30 ... rather than
+     0.13. Counted, a small population's first generation can sit above
+     1 - 1/k by chance (two alleles, ten individuals: seven heterozygotes is
+     0.7), so the top also clears the traces actually drawn. */
+  let seen = 1 - 1 / k;
+  if (res) for (let q = 0; q < Math.min(D_TRACES, res.H.length); q++)
+    for (let t = 0; t < Math.min(res.H[q].length, X + 1); t++) if (res.H[q][t] > seen) seen = res.H[q][t];
+  const yTop = Math.min(1, Math.max(0.2, Math.ceil(seen / 0.2 - 1e-9) * 0.2));
   const STRIP = 64;
   const f = box(58, 14, W - 80, H - 14 - 44 - STRIP - 12, 0, X, 0, yTop);
   const g = box(58, f.py + f.ph + 12, W - 80, STRIP, 0, X, 0, 1);
-  axes(ctx, f, "", "heterozygosity if pairing were random", v => v.toFixed(2), () => "");
+  axes(ctx, f, "", "heterozygosity", v => v.toFixed(2), () => "");
   /* the strip's own axis carries the generations */
   ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(g.px, g.py + g.ph); ctx.lineTo(g.px + g.pw, g.py + g.ph); ctx.stroke();
@@ -2174,14 +2254,13 @@ function D_drawCurve() {
   for (let i = 0; i <= 5; i++) { const v = X * i / 5; ctx.fillText(String(Math.round(v)), g.x(v), g.py + g.ph + 4); }
   ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
   ctx.fillText("generation", g.px + g.pw / 2, g.py + g.ph + 18);
-  ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText("one allele left", g.px + 4, g.py);
 
   const vband = (x0, x1, fill) => { ctx.fillStyle = fill;
     const a = clamp(x0, 0, X), b = clamp(x1, 0, X); if (b > a) ctx.fillRect(f.x(a), f.py, f.x(b) - f.x(a), g.py + g.ph - f.py); };
   /* line labels are queued and drawn last, on a white halo, so no line runs through one */
   const labels = [];
   const tag = (text, x, y, colour, align) => labels.push({ text, x, y, colour, align: align || "left" });
+  tag("one allele left", g.px + 4, g.py, MUTED);   // queued, so the dots stacked here do not cover it
   const vline = (x, colour, width, dash, label, row) => {
     ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = width; if (dash) ctx.setLineDash(dash);
     ctx.beginPath(); ctx.moveTo(f.x(x), f.py); ctx.lineTo(f.x(x), g.py + g.ph); ctx.stroke(); ctx.restore();
@@ -2192,6 +2271,7 @@ function D_drawCurve() {
   if (res) {
     const upTo = D.showTo == null ? res.top : D.showTo;
     const every = Math.max(1, Math.floor(X / 500));
+    ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py - 1, f.pw + 1, f.ph + 2); ctx.clip();
     for (let q = 0; q < Math.min(D_TRACES, res.H.length); q++) {
       const h = res.H[q], end = Math.min(h.length - 1, upTo, X);
       ctx.strokeStyle = "rgba(85,64,126,0.22)"; ctx.lineWidth = 1; ctx.beginPath();
@@ -2199,6 +2279,16 @@ function D_drawCurve() {
       if (end === h.length - 1 && end % every) ctx.lineTo(f.x(end), f.y(h[end]));
       ctx.stroke();
     }
+    /* Counted, one population's line jumps by a heterozygote or two each
+       generation; at 25-80 individuals, the sizes the rounds deal, sixty of
+       them are a scribble. The average over all 200, a finished population
+       counting 0, is the trend under it. */
+    const endA = Math.min(res.avgHo.length - 1, upTo, X);
+    line(ctx, f, res.avgHo.slice(0, endA + 1), "rgba(255,255,255,0.9)", 4.5);
+    line(ctx, f, res.avgHo.slice(0, endA + 1), DARK, 2.2);
+    ctx.restore();
+    const tA = Math.min(endA, Math.round(X * 0.04));
+    tag("all " + res.T.length + " averaged", f.x(tA) + 4, Math.max(f.py + 2, f.y(res.avgHo[tA]) - 16), DARK);
     /* one dot per population, stacked where it reached one allele */
     const bins = 90, bw = X / bins, stack = new Int32Array(bins + 1), rad = 2.1;
     let later = 0;
@@ -2287,16 +2377,16 @@ function D_RCODE() {
     "N <- " + D.n + "   # individuals\n" +
     "F <- " + D.F + "   # held there every generation\n" +
     "s <- 2 * F / (1 + F)   # chance an offspring's two parents are one individual\n\n" +
-    "He <- function(g) 1 - sum((table(g) / length(g))^2)   # heterozygosity if pairing were random\n\n" +
+    "Ho <- function(g) mean(g[1, ] != g[2, ])   # share of individuals that are heterozygotes\n\n" +
     "runs <- lapply(1:" + D_R + ", function(r) {\n" +
     "  g <- matrix(sample(rep_len(1:k, 2 * N)), 2)   # two copies each\n" +
-    "  h <- He(g)\n" +
+    "  h <- Ho(g)\n" +
     "  while (length(unique(c(g))) > 1) {\n" +
     "    p1 <- sample(N, N, TRUE)\n" +
     "    p2 <- ifelse(runif(N) < s, p1, sample(N, N, TRUE))\n" +
     "    g  <- rbind(g[cbind(sample(2, N, TRUE), p1)],\n" +
     "                g[cbind(sample(2, N, TRUE), p2)])\n" +
-    "    h  <- c(h, He(g))\n" +
+    "    h  <- c(h, Ho(g))\n" +
     "  }\n" +
     "  h\n" +
     "})\n\n" +
@@ -2304,7 +2394,7 @@ function D_RCODE() {
     "mean(gens)   # the average generation one allele was left\n" +
     "Ne <- N / (1 + F)\n" +
     "4 * Ne\n\n" +
-    "plot(NULL, xlim = c(0, max(gens)), ylim = c(0, 1), xlab = \"generation\", ylab = \"heterozygosity if pairing were random\")\n" +
+    "plot(NULL, xlim = c(0, max(gens)), ylim = c(0, 1), xlab = \"generation\", ylab = \"heterozygosity\")\n" +
     "for (h in runs) lines(seq_along(h) - 1, h, col = \"#55407e33\")\n" +
     "abline(v = c(mean(gens), 4 * Ne), lty = c(1, 3))\n";
 }
@@ -2374,11 +2464,15 @@ const E_ORDER = [0, 1, 2, 0, 1];
 const E_ROT = pageSeed("l11Erot", 0, 2);
 const E_TICK = 650;
 const E_FCOL = ["var(--f0)", "var(--f1)", "var(--f2)", "var(--f3)"];
-const E_FNAME = ["founder 1, copy a", "founder 1, copy b", "founder 2, copy a", "founder 2, copy b"];
+/* "allele", not "copy" (JM, 2026-09-24: "why 'copy' and not 'allele' for the
+   labels?"). At any locus a founder carries two alleles, a and b; a dot is
+   one of them at a marked locus, and shading is two alleles identical by
+   descent from one founder allele -- which is F's textbook definition. */
+const E_FNAME = ["founder 1, allele a", "founder 1, allele b", "founder 2, allele a", "founder 2, allele b"];
 const E_SHADE = "#b6555f";
 const E_COAL = ["#4a1820", "#6e2632", "#963c48", "#b6555f", "#cf7a84"];   // 1 generation back -> deep
 const E = { n: 4, gens: 2, f: 0, serial: 0, rng: null, sites: [], rows: [], kin: new Map(),
-            nextId: 0, running: false, timer: 0, game: null, ran: false,
+            nextId: 0, running: false, timer: 0, game: null, ran: false, hist: [],
             sel: null, hover: null, conn: [], hitDots: [], hitBoxes: [] };
 
 function E_poisson(l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= E.rng(); } while (p > L); return k - 1; }
@@ -2711,6 +2805,7 @@ function E_render() {
 
   for (const row of E.rows) for (const ind of row) E_drawIndiv(svg, defs, ind, site, indiv, pair, tracks);
   E_status(site, indiv, pair);
+  E_drawTrack();
 }
 
 function E_drawIndiv(svg, defs, ind, site, indiv, pair, tracks) {
@@ -2769,13 +2864,13 @@ function E_status(site, indiv, pair) {
       const k = (E_carries(ind.chroms[0], site) ? 1 : 0) + (E_carries(ind.chroms[1], site) ? 1 : 0);
       copies += k; if (k) inds++; if (k === 2) homo++;
     }
-    el.innerHTML = '<span class="label">variant from</span> <b>' + E_FNAME[site.origin] + '</b> &nbsp;|&nbsp; <span class="label">on</span> <b>' +
-      copies + '</b> <span class="label">copies in</span> <b>' + inds + '</b> <span class="label">individuals,</span> <b>' + homo + '</b> <span class="label">with two</span>';
+    el.innerHTML = '<b>' + E_FNAME[site.origin] + '</b> &nbsp;|&nbsp; <span class="label">carried</span> <b>' +
+      copies + '</b> <span class="label">times, by</span> <b>' + inds + '</b> <span class="label">individuals,</span> <b>' + homo + '</b> <span class="label">with two</span>';
   } else if (pair) {
     const p = pair.stats;
     el.innerHTML = '<b>' + nm(pair.a) + '</b> <span class="label">and</span> <b>' + nm(pair.b) + '</b> &nbsp;|&nbsp; ' +
-      (p.share <= 0 ? '<span class="label">no copy they carry meets a shared ancestor here</span>'
-        : '<span class="label">a copy from each traces to the same founder copy over</span> <b>' + pct(p.share) + '</b>' +
+      (p.share <= 0 ? '<span class="label">no allele they carry meets a shared ancestor here</span>'
+        : '<span class="label">an allele from each traces to the same founder allele over</span> <b>' + pct(p.share) + '</b> <span class="label">of the genome</span>' +
           ' &nbsp;|&nbsp; <span class="label">nearest shared ancestor</span> <b>' + nm(p.closest.ind) + '</b>, ' + p.closest.depth +
           ' <span class="label">generation' + (p.closest.depth === 1 ? "" : "s") + ' back</span>');
   } else if (indiv) {
@@ -2787,6 +2882,61 @@ function E_status(site, indiv, pair) {
       ? '<span class="label">F in the bottom row</span> <b class="big">' + E_rowF(E.rows[E.rows.length - 1]).toFixed(2) + '</b>'
       : '<span class="label">set the controls, then Go</span>';
   }
+}
+
+/* ---- the tracker: what is left, generation by generation -------------------
+   JM, 2026-09-24: "I would like something that tracks the number of unique
+   alleles over time (that is, the dots). Something that shows how the total
+   diversity (pi) changes through time would be a valuable bridge forward."
+   Per generation: how many of the twelve dot alleles anyone still carries,
+   and pi -- pick two genomes from that generation, count the dots they
+   differ at, average over every pair. Closed, no new mutations, so the first
+   can only fall. The founders read 12 and 6.00: four genomes, three dots
+   apiece, and any two differ at six. The check pins pi to 6(1 - the mean
+   kinship of the generation's genomes); the page does not print that, on
+   the one-F ruling. */
+const E_HIST = 8;
+function E_rowDiv(row) {
+  const m = 2 * row.length, cnt = new Map();
+  for (const ind of row) for (const c of ind.chroms) for (const v of E_dots(c)) cnt.set(v.id, (cnt.get(v.id) || 0) + 1);
+  let pi = 0;
+  for (const k of cnt.values()) pi += 2 * k * (m - k) / (m * (m - 1));
+  return { left: cnt.size, pi };
+}
+/* a finished run goes to the faint pile when something replaces it */
+function E_archive() {
+  if (!E.ran || E.rows.length < 2) return;
+  E.hist.push(E.rows.map(E_rowDiv));
+  if (E.hist.length > E_HIST) E.hist.shift();
+}
+function E_drawTrack() {
+  const cv = document.getElementById("E_track");
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const G = +document.getElementById("E_g").max, now = E.rows.map(E_rowDiv);
+  let most = 0; for (const run of [...E.hist, now]) for (const q of run) most = Math.max(most, q.pi);
+  const piTop = most > 6 ? 8 : 6, gh = (H - 58) / 2;
+  const fa = box(52, 12, W - 70, gh - 12, 0, G, 0, E_NANC);
+  const fb = box(52, 12 + gh + 20, W - 70, gh - 12, 0, G, 0, piTop);
+  axes(ctx, fa, "", "alleles left", v => v.toFixed(0), () => "");
+  axes(ctx, fb, "generation (0 = founders)", "π", v => String(+v.toFixed(1)), () => "");
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let g = 0; g <= G; g++) { ctx.fillText(String(g), fa.x(g), fa.py + fa.ph + 4); ctx.fillText(String(g), fb.x(g), fb.py + fb.ph + 4); }
+  const pl = (fr, ys, w, alpha) => {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = DARK; ctx.fillStyle = DARK; ctx.lineWidth = w; ctx.beginPath();
+    ys.forEach((v, i) => { const X = fr.x(i), Y = fr.y(v); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.stroke();
+    ys.forEach((v, i) => { ctx.beginPath(); ctx.arc(fr.x(i), fr.y(v), w + 0.6, 0, 6.2832); ctx.fill(); });
+    ctx.restore();
+  };
+  for (const run of E.hist) { pl(fa, run.map(q => q.left), 1, 0.2); pl(fb, run.map(q => q.pi), 1, 0.2); }
+  pl(fa, now.map(q => q.left), 2.4, 1); pl(fb, now.map(q => q.pi), 2.4, 1);
+  const last = now[now.length - 1];
+  document.getElementById("E_trackRead").innerHTML =
+    '<span class="label">generation</span> <b>' + (now.length - 1) + '</b> &nbsp;|&nbsp; ' +
+    '<span class="label">alleles left</span> <b>' + last.left + '</b> <span class="label">of ' + E_NANC + '</span> &nbsp;|&nbsp; ' +
+    '<span class="label">π</span> <b>' + f2(last.pi) + '</b> <span class="label">(founders ' + f2(now[0].pi) + ')</span>';
 }
 
 /* The card: a genome, with the share of it the student is aiming to shade. */
@@ -2824,7 +2974,7 @@ function E_build(n, gens, f) {
 }
 function E_go() {
   if (E.running || E.game.waiting()) return;
-  E_reset(); E.ran = false; E.running = true;
+  E_archive(); E_reset(); E.ran = false; E.running = true;
   lockStage("E", true); E_render();
   E.timer = setInterval(() => {
     E_breed(); E_render();
@@ -2841,7 +2991,7 @@ function E_land() {
 function E_wire() {
   const bind = (id, key, fmt) => document.getElementById(id).addEventListener("input", e => {
     E[key] = +e.target.value; document.getElementById(id + "Out").value = fmt(E[key]);
-    if (!E.running) { E_reset(); E.ran = false; E_render(); }
+    if (!E.running) { E_archive(); E_reset(); E.ran = false; E_render(); }
     bump("E");
   });
   bind("E_n", "n", v => String(v));
@@ -2865,7 +3015,7 @@ function E_wire() {
     deal: i => ({ F: E_TARGETS[(E_ORDER[Math.min(i, E_ORDER.length - 1)] + E_ROT) % E_TARGETS.length] }),
     picture: E_drawTarget, pictureH: 80, go: "E_go",
     prompt: () => "Shade this much of the bottom row's genomes.",
-    onDeal: () => { if (!E.running) { E_reset(); E.ran = false; E_render(); } }
+    onDeal: () => { if (!E.running) { E_archive(); E_reset(); E.ran = false; E_render(); } }
   });
 }
 
