@@ -281,6 +281,53 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
     }); }
   check("C every individual above the bottom row pairs once", multi === 0 && idle === 0,
         multi + " rows with someone in two couples, " + idle + " individuals who never pair");
+
+  /* Family sizes vary, and nothing about a couple sets its expected family
+     (JM, 2026-09-24: "every individual has the same expected number of
+     offspring"). Tested on the thing that could leak in: a full-sib couple
+     and an unrelated one should raise the same number on average. */
+  {
+    /* One difference per tree, SE across trees: within a row the families
+       sum to the row, so the two groups' totals are negatively correlated and
+       a per-couple SE is too small (read 2.1 SE on the first run). */
+    const diffs = [], sib = [], non = [], v2 = []; let childless = 0, couples = 0;
+    for (let q = 0; q < 300; q++) {
+      const P = C_makePed(mulberry32(60000 + q * 7919), 0.6), s1 = [], o1 = [];
+      P.couples.forEach((pairs, g) => {
+        if (g === 0) return;
+        const fam = new Map(pairs.map(c => [c[0] + "," + c[1], 0]));
+        for (const k of P.rows[g + 1]) { const key = P.ped[k].dam + "," + P.ped[k].sire; fam.set(key, fam.get(key) + 1); }
+        const mean = P.rows[g + 1].length / pairs.length;
+        for (const [m, d] of pairs) {
+          const n = fam.get(m + "," + d), full = P.ped[m].dam === P.ped[d].dam && P.ped[m].sire === P.ped[d].sire;
+          (full ? s1 : o1).push(n / mean); v2.push((n - mean) * (n - mean)); couples++; if (!n) childless++;
+        }
+      });
+      sib.push(...s1); non.push(...o1);
+      if (s1.length && o1.length) diffs.push(mn(s1) - mn(o1));
+    }
+    const se = sdv(diffs) / Math.sqrt(diffs.length);
+    check("C family sizes vary, and a couple's relatedness does not set its family",
+          mn(v2) > 1 && childless > 0 && Math.abs(mn(diffs)) <= 3 * se,
+          "generations 1-3, 300 trees at inbreeding 0.6: variance in family size " + mn(v2).toFixed(2) + ", " +
+          Math.round(100 * childless / couples) + "% of couples childless; family over the row's mean, full sibs " +
+          mn(sib).toFixed(3) + " (" + sib.length + ") against others " + mn(non).toFixed(3) + " (" + non.length +
+          "); per tree " + (mn(diffs) >= 0 ? "+" : "") + mn(diffs).toFixed(3) + " ± " + se.toFixed(3) + " over " + diffs.length + " trees");
+  }
+  /* New tree: other families at the same setting, founders untouched. */
+  {
+    const was = { tree: C.tree, inb: C.inb, founders: JSON.stringify(C.founders),
+                  fam: JSON.stringify(C.ped.rows.map(r => r.map(k => C.ped.ped[k].dam))) };
+    document.getElementById("C_tree").click();
+    const now = JSON.stringify(C.ped.rows.map(r => r.map(k => C.ped.ped[k].dam)));
+    const L = C_layout(), finite = L.pos.every(p => p && isFinite(p.x) && isFinite(p.y));
+    check("C New tree changes the families and nothing else",
+          C.tree === was.tree + 1 && now !== was.fam && C.inb === was.inb && JSON.stringify(C.founders) === was.founders && finite,
+          "tree " + was.tree + " -> " + C.tree + ", families " + (now !== was.fam ? "changed" : "SAME") + ", inbreeding " +
+          (C.inb === was.inb ? "kept" : "MOVED") + ", founders " + (JSON.stringify(C.founders) === was.founders ? "kept" : "MOVED") +
+          ", layout " + (finite ? "finite" : "BROKEN") + " with " + L.matings.filter(m => !m.kids.length).length + " childless couples drawn");
+    C.tree = was.tree; C_rebuild();
+  }
   C.inb = 0; C_rebuild(); C_randomFounders();
 }
 
@@ -292,19 +339,12 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
        says, Ne = N/(1+F) in the runs, and the average time to one allele
        equal to 4Ne(k-1)ln(k/(k-1)) -- re-derived here, not read off the page;
      - one population is not the number, and the average of 200 is;
-     - every round is hit at its intended setting, for every target it can deal;
-     - the naive answers miss: reading 4Ne and stopping (the two-allele rounds),
-       leaving F at 0 (the F rounds), ignoring the held F, the opening setting;
-     - no one setting clears three rounds;
-     - the readout's arithmetic agrees with the sliders, and a round holds
-       what its card says. */
+     - the target games, below. */
 {
   const ck = k => (k - 1) * Math.log(k / (k - 1));
   const kOf = (k, n) => k || 2 * n;
   const pred = (n, k, F) => 4 * n / (1 + F) * ck(kOf(k, n));
   const once = (n, k, F, seed) => D_run(n, kOf(k, n), F, D_R, mulberry32(seed));
-  const rate = (n, k, F, T, reps, seed) => { let h = 0;
-    for (let r = 0; r < reps; r++) if (D_hits(once(n, k, F, seed + r * 7919).mean, T)) h++; return h / reps; };
 
   /* the model. Each estimate here is the mean of eight runs of 200 whose
      seeds sit far apart: one run's Ne, from the time or from the rate of
@@ -357,65 +397,60 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
   check("D the average of " + D_R + " repeats inside the window", sdv(avgs) / mn(avgs) <= D_TOL / 2.5,
         "eight averages: " + mn(avgs).toFixed(0) + " ± " + (100 * sdv(avgs) / mn(avgs)).toFixed(1) + "%");
 
-  /* the rounds */
+  /* The targets (rebuilt 2026-09-24): a SHAPE, judged on its average and its
+     spread. What has to hold, none of it visible on the page:
+       - every target is hit at its own setting, and by a second route to the
+         same Ne (N and F traded against each other);
+       - the other extreme of alleles (2 against 20) at the same average mostly
+         misses -- the spread is what tells the two apart;
+       - the opening setting hits none;
+       - the targets' average windows never overlap three deep, so no one
+         setting clears three;
+       - five different targets are dealt;
+       - the stacks drawn on the strip are the target's own sample. */
   const Ng = []; for (let v = 0; v <= 100; v++) Ng.push(D_nAt(v));
-  const Fg = []; for (let i = 0; i <= 20; i++) Fg.push(i / 20);
-  const near = (list, f, T) => list.reduce((b, x) => Math.abs(f(x) - T) < Math.abs(f(b) - T) ? x : b, list[0]);
-  const aim = (r, T, fn) => r.N != null ? { n: r.N, F: near(Fg, F => fn(r.N, r.k, F), T) }
-                                        : { n: near(Ng, n => fn(n, r.k, r.F), T), F: r.F };
-  const own = [];
-  D_ROUNDS.forEach((r, i) => r.Ts.forEach(T => { const a = aim(r, T, pred);
-    own.push({ i, T, a, h: rate(a.n, r.k, a.F, T, 10, 1100 + i * 97 + T) }); }));
-  check("D every round is hit at its intended setting", own.every(o => o.h >= 0.8),
-        own.map(o => "r" + (o.i + 1) + " " + o.T + "@" + (D_ROUNDS[o.i].N != null ? "F" + o.a.F : "N" + o.a.n) + ":" +
-        (100 * o.h).toFixed(0) + "%").join("  ") + "  (10 fresh runs of " + D_R + " each)");
-
-  const four = (n, k, F) => 4 * n / (1 + F);
-  const naive = [];
-  D_ROUNDS.forEach((r, i) => { if (r.k !== 2) return;
-    r.Ts.forEach(T => { const a = aim(r, T, four); naive.push({ i, T, a, h: rate(a.n, r.k, a.F, T, 6, 1300 + i * 97 + T) }); }); });
-  check("D reading 4Ne and stopping misses the two-allele rounds", naive.every(o => o.h <= 0.17),
-        naive.map(o => "r" + (o.i + 1) + " " + o.T + "@" + (D_ROUNDS[o.i].N != null ? "F" + o.a.F : "N" + o.a.n) + ":" +
-        (100 * o.h).toFixed(0) + "%").join("  "));
-  const f0 = [];
-  D_ROUNDS.forEach((r, i) => { if (r.N == null) return; r.Ts.forEach(T => f0.push({ i, T, h: rate(r.N, r.k, 0, T, 6, 1500 + i * 97 + T) })); });
-  check("D leaving F at 0 misses the rounds where F is the lever", f0.every(o => o.h <= 0.17),
-        f0.map(o => "r" + (o.i + 1) + " " + o.T + ":" + (100 * o.h).toFixed(0) + "%").join("  "));
-  const ign = [];
-  D_ROUNDS.forEach((r, i) => { if (!(r.F > 0)) return;
-    r.Ts.forEach(T => { const n = near(Ng, n => pred(n, r.k, 0), T); ign.push({ i, T, n, h: rate(n, r.k, r.F, T, 6, 1700 + T) }); }); });
-  check("D ignoring the held F misses", ign.length > 0 && ign.every(o => o.h <= 0.17),
-        ign.map(o => "r" + (o.i + 1) + " " + o.T + "@N" + o.n + ":" + (100 * o.h).toFixed(0) + "%").join("  "));
-  const open = [];
-  D_ROUNDS.forEach((r, i) => r.Ts.forEach(T => { const n = r.N != null ? r.N : D_nAt(100), F = r.F != null ? r.F : 0;
-    open.push({ i, T, h: rate(n, r.k, F, T, 4, 1900 + i * 97 + T) }); }));
-  check("D the opening setting is not an answer", open.every(o => o.h === 0),
-        D_nAt(100) + " individuals, F 0, where the round leaves them free: " + open.map(o => "r" + (o.i + 1) + " " + o.T + ":" +
-        (100 * o.h).toFixed(0) + "%").join("  "));
-
-  /* No one setting clears three rounds. Searched over the whole slider grid
-     and every combination of the per-student targets, on the formula checked
-     above with 3% added to the window for its error; then the greediest
-     setting is run for real. */
-  let most = 0, mostAt = null;
-  for (const n of Ng) for (const F of Fg) {
-    let c = 0;
-    D_ROUNDS.forEach(r => { const nn = r.N != null ? r.N : n, FF = r.F != null ? r.F : F;
-      if (r.Ts.some(T => Math.abs(pred(nn, r.k, FF) - T) <= (D_TOL + 0.03) * T)) c++; });
-    if (c > most) { most = c; mostAt = { n, F }; }
-  }
-  let real = 0;
-  D_ROUNDS.forEach((r, i) => { const nn = r.N != null ? r.N : mostAt.n, FF = r.F != null ? r.F : mostAt.F;
-    if (r.Ts.some(T => rate(nn, r.k, FF, T, 3, 2100 + i * 97 + T) >= 0.5)) real++; });
-  check("D no one setting clears three rounds", most <= 2 && real <= 2,
-        Ng.length * Fg.length + " settings searched: the greediest (" + mostAt.n + " individuals, F " + mostAt.F +
-        ") clears " + most + " of 5 on the formula and " + real + " when run");
-
-  /* the page's own deal, the readout, and what a round holds */
+  const nearN = x => Ng.reduce((b, y) => Math.abs(y - x) < Math.abs(b - x) ? y : b, Ng[0]);
+  const hitRate = (tg, n, k, F, reps, seed) => { let h = 0;
+    for (let r = 0; r < reps; r++) if (D_hits(D_run(n, k, F, D_R, mulberry32(seed + r * 7919)), tg)) h++; return h / reps; };
+  const tgs = D_TARGETS.map(D_target);
+  const own = tgs.map((tg, i) => ({ tg, n: nearN(tg.ne), h: hitRate(tg, nearN(tg.ne), tg.k, 0, 20, 1100 + i * 97) }));
+  check("D every target is hit at its own setting", own.every(o => o.h >= 0.6),
+        own.map(o => o.tg.k + " alleles, Ne " + o.tg.ne + " (average " + Math.round(o.tg.mean) + ", spread " + Math.round(o.tg.sd) + ") @N" + o.n + ": " +
+        Math.round(100 * o.h) + "%").join("  ") + "  (20 fresh runs of " + D_R + " each)");
+  const route = [tgs[1], tgs[3]].map((tg, i) => { const n = nearN(1.5 * tg.ne); return { tg, n, h: hitRate(tg, n, tg.k, 0.5, 10, 1250 + i * 97) }; });
+  check("D a target has more than one route (N and F traded)", route.every(o => o.h >= 0.5),
+        route.map(o => o.tg.k + " alleles, Ne " + o.tg.ne + " @N" + o.n + "/F0.5: " + Math.round(100 * o.h) + "%").join("  "));
+  /* The other extreme of alleles, sized by the formula to land the same
+     average, against the right one. Stated as a gap, not a ceiling: each
+     student's target is its own 600-population sample, and its spread wobbles
+     by ~5%, so how often the wrong count slips through varies by student --
+     8-23% per target on three calibration samples, 25-50% on one page load
+     (2026-09-24). The right count stayed at 80-100% throughout. */
+  let wHit = 0, oHit = 0, wN = 0; const wRep = [];
+  tgs.forEach((tg, i) => { if (tg.k !== 2 && tg.k !== 20) return;
+    const ok = tg.k === 2 ? 20 : 2, n = nearN(tg.ne * ck(tg.k) / ck(ok)), h = hitRate(tg, n, ok, 0, 20, 1400 + i * 97);
+    const o = own.find(q => q.tg === tg).h;
+    wHit += h; oHit += o; wN++; wRep.push(tg.k + "-allele Ne " + tg.ne + ": right count " + Math.round(100 * o) + "%, " + ok + " alleles @N" + n + " " + Math.round(100 * h) + "%"); });
+  check("D the spread rewards the right number of alleles", (oHit - wHit) / wN >= 0.3,
+        "same average, 2 against 20 alleles, 20 runs each: right " + Math.round(100 * oHit / wN) + "%, wrong " + Math.round(100 * wHit / wN) +
+        "% -- " + wRep.join("  "));
+  const open = tgs.map((tg, i) => hitRate(tg, D_nAt(100), 20, 0, 3, 1900 + i * 97));
+  check("D the opening setting is not an answer", open.every(h => h === 0),
+        "20 alleles, " + D_nAt(100) + " individuals, F 0: " + open.map(h => Math.round(100 * h) + "%").join(" / ") + " of the six targets");
+  let deep = 0;
+  for (const a of tgs) deep = Math.max(deep, tgs.filter(b => Math.abs(a.mean - b.mean) <= D_TOL * (a.mean + b.mean)).length);
+  check("D no one setting clears three targets", deep <= 2,
+        "target averages " + tgs.map(t => Math.round(t.mean)).sort((x, y) => x - y).join(", ") + "; the most whose ±" + (100 * D_TOL) +
+        "% windows meet is " + deep);
   const dealt = [0, 1, 2, 3, 4].map(D_deal);
-  check("D five rounds up the ladder, five different targets",
-        dealt.every((r, i) => D_ROUNDS[i].Ts.indexOf(r.T) >= 0 && r.k === D_ROUNDS[i].k) && new Set(dealt.map(r => r.T)).size === 5,
-        "the five rounds deal " + dealt.map(r => r.T + (r.N != null ? " (F yours)" : " (individuals yours)")).join(", "));
+  check("D five different targets", new Set(dealt).size === 5,
+        "the five rounds deal " + dealt.map(r => r.k + " alleles / Ne " + r.ne).join(", "));
+  const X0 = 2.5 * tgs[0].mean, sumE = D_expect(tgs[0], X0, 90).reduce((a, b) => a + b, 0),
+        inX = D_R * tgs[0].T.filter(t => t <= X0).length / tgs[0].T.length;
+  check("D the target drawn on the strip is the target's own sample", Math.abs(sumE - inX) <= 0.05 * inX,
+        "stacks drawn over 0-" + Math.round(X0) + ": " + sumE.toFixed(1) + " dots; the sample puts " + inX.toFixed(1) + " of " + D_R + " there");
+
+  /* the readout, and the sliders */
   const keep = { n: D.n, F: D.F, k: D.k }, arith = [];
   for (const [n, F] of [[40, 0], [100, 0.5], [120, 0.25]]) {
     D.n = n; D.F = F; D_syncOut();
@@ -423,38 +458,40 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
     const ne = +(/Ne ([0-9.]+)/.exec(t) || [])[1], fn = +(/4Ne ([0-9.]+)/.exec(t) || [])[1];
     arith.push({ n, F, ne, fn, ok: Math.abs(ne - n / (1 + F)) < 0.06 && Math.abs(fn - 4 * n / (1 + F)) <= 0.5 });
   }
-  D.n = keep.n; D.F = keep.F; D.k = keep.k; D_applyHeld();
+  D.n = keep.n; D.F = keep.F; D.k = keep.k; D_syncSliders();
   check("D the readout's Ne and 4Ne are the sliders' arithmetic", arith.every(a => a.ok),
         arith.map(a => a.n + "/F" + a.F + ": Ne " + a.ne + ", 4Ne " + a.fn).join("  "));
-  const r0 = D.game.current(), held = { k: document.getElementById("D_k").disabled, n: document.getElementById("D_n").disabled,
-                                        F: document.getElementById("D_F").disabled };
-  check("D a round holds what its card says",
-        held.k && held.n === (r0.N != null) && held.F === (r0.F != null) && D.k === r0.k &&
-        (r0.N == null || D.n === r0.N) && (r0.F == null || D.F === r0.F),
-        "round 1: alleles " + (held.k ? "held" : "free") + ", individuals " + (held.n ? "held" : "free") +
-        ", F " + (held.F ? "held at " + D.F : "free"));
+  const ks = document.getElementById("D_k"), free = ["D_k", "D_n", "D_F"].every(id => !document.getElementById(id).disabled);
+  check("D every slider is free, and the alleles stop at 20", free && D_KSTOPS[+ks.max] === 20 && D_KSTOPS.indexOf(0) < 0 &&
+        !/every copy/.test(document.getElementById("stageD").textContent),
+        "sliders " + (free ? "free" : "HELD") + "; alleles run " + D_KSTOPS.join(", ") + '; "every copy" ' +
+        (/every copy/.test(document.getElementById("stageD").textContent) ? "STILL ON THE PAGE" : "gone"));
 }
 
-/* ---- E. one founding pair, traced down --------------------------------- */
+/* ---- E. one founding pair, traced down ---------------------------------
+   Rebuilt 2026-09-24: mates from outside (no founder SNPs), the slider is
+   inbreeding (inside partner = closest relative, else an outsider), and the
+   target is how many of the founders' twelve SNPs the bottom row still has. */
 {
   const REPS = 40;
   const runs = (n, g, f) => { const v = []; for (let r = 0; r < REPS; r++) { E.serial = 5000 + r * 13 + n * 101 + g * 17 + Math.round(f * 10); v.push(E_build(n, g, f)); } return v; };
-  const rate = (v, t) => v.filter(x => Math.abs(x - t) <= E_TOL).length / v.length;
+  const rate = (v, w) => v.filter(x => E_inW(x, w)).length / v.length;
+  const wn = w => w[0] === w[1] ? String(w[0]) : w[0] + "-" + w[1];
   const grid = [];
-  for (const n of [2, 3, 4, 6, 8]) for (const g of [2, 3, 4, 5, 6, 7]) for (const f of [0, 0.5, 1]) grid.push([n, g, f, runs(n, g, f)]);
+  for (const n of [2, 3, 4, 6, 8]) for (const g of [2, 3, 4, 5, 6, 7]) for (const f of [0, 0.2, 0.5, 0.8, 1]) grid.push([n, g, f, runs(n, g, f)]);
+  const tag = q => "n" + q[0] + "/g" + q[1] + "/f" + q[2];
 
-  /* the shaded share is the F the tree implies, measured two ways. Paired
-     per run and judged on the mean difference against 3 SE of it: a flat
-     0.03 bound tripped about one load in twenty at two a generation,
-     where one run's shading wobbles by 0.09. */
+  /* the shaded share is the F the tree implies, measured two ways, paired per
+     run, 3 SE. Outsiders are unrelated, non-inbred individuals to the kinship
+     recursion, and their copies are ones no one else carries to the shading. */
   {
     let fails = [], rep = [];
-    for (const [n, g, f] of [[4, 4, 0], [2, 6, 0], [8, 6, 1]]) {
+    for (const [n, g, f] of [[4, 4, 0], [2, 6, 0.5], [8, 6, 1]]) {
       const d = [];
       for (let r = 0; r < REPS; r++) {
-        E.serial = 9000 + r * 7; const real = E_build(n, g, f);
+        E.serial = 9000 + r * 7; E_build(n, g, f);
         const bot = E.rows[E.rows.length - 1];
-        d.push(real - bot.reduce((t, x) => t + E_kin(x.parents[0], x.parents[1]), 0) / bot.length);
+        d.push(E_rowF(bot) - bot.reduce((t, x) => t + E_kin(x.parents[0], x.parents[1]), 0) / bot.length);
       }
       const m = mn(d), se = sdv(d) / Math.sqrt(REPS);
       rep.push("n" + n + "/g" + g + "/f" + f + " " + (m >= 0 ? "+" : "") + m.toFixed(3) + "±" + se.toFixed(3));
@@ -466,30 +503,42 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
     for (const q of grid) { const h = rate(q[3], t); if (h > best) { best = h; at = q; } }
     return [t, best, at]; });
   check("E every target is reachable", reach.every(r => r[1] >= 0.5),
-        reach.map(r => r[0].toFixed(2) + "@n" + r[2][0] + "/g" + r[2][1] + "/f" + r[2][2] + ":" + (100 * r[1]).toFixed(0) + "%").join("  "));
-  const dflt = runs(4, 2, 0);
+        reach.map(r => wn(r[0]) + " SNPs@" + tag(r[2]) + ":" + (100 * r[1]).toFixed(0) + "%").join("  "));
+  const dflt = []; for (let r = 0; r < 200; r++) { E.serial = 7000 + r * 13; dflt.push(E_build(4, 2, 0)); }
   check("E the default setting is not an answer", E_TARGETS.every(t => rate(dflt, t) < 0.1),
-        "4 a generation, 2 generations gives F " + mn(dflt).toFixed(2) + " ± " + sdv(dflt).toFixed(2) +
-        "; best target hit " + (100 * Math.max(...E_TARGETS.map(t => rate(dflt, t)))).toFixed(0) + "%");
+        "4 a generation, 2 generations, inbreeding 0 leaves " + mn(dflt).toFixed(1) + " ± " + sdv(dflt).toFixed(1) +
+        " SNPs; it hits the targets " + E_TARGETS.map(t => Math.round(100 * rate(dflt, t)) + "%").join(" / "));
   let greedy = 0, gp = "";
-  for (const q of grid) { const k = E_TARGETS.filter(t => rate(q[3], t) >= 0.5).length; if (k > greedy) { greedy = k; gp = "n" + q[0] + "/g" + q[1] + "/f" + q[2]; } }
+  for (const q of grid) { const k = E_TARGETS.filter(t => rate(q[3], t) >= 0.5).length; if (k > greedy) { greedy = k; gp = tag(q); } }
   check("E no one setting clears two targets", greedy <= 1,
         "the greediest setting (" + gp + ") hits " + greedy + " of " + E_TARGETS.length + " targets half the time or better");
-  /* more than one route to a target: the stage's quiet point, searched for */
-  const routes = E_TARGETS.map(t => grid.filter(q => rate(q[3], t) >= 0.4).map(q => "n" + q[0] + "/g" + q[1] + "/f" + q[2]));
+  const routes = E_TARGETS.map(t => grid.filter(q => rate(q[3], t) >= 0.4).map(tag));
   check("E each target has more than one route", routes.every(r => r.length >= 2),
-        routes.map((r, i) => E_TARGETS[i].toFixed(2) + ": " + r.slice(0, 4).join(" ")).join("  |  "));
+        routes.map((r, i) => wn(E_TARGETS[i]) + " SNPs: " + r.length + " settings, e.g. " + r.slice(0, 3).join(" ")).join("  |  "));
   const seen = E_ORDER.map(k => (k + E_ROT) % E_TARGETS.length);
   let adj = false; for (let i = 1; i < seen.length; i++) if (seen[i] === seen[i - 1]) adj = true;
   check("E targets repeat and never twice running", !adj && new Set(seen).size === E_TARGETS.length,
-        "the five rounds deal targets " + seen.map(k => E_TARGETS[k].toFixed(2)).join(", "));
+        "the five rounds deal targets " + seen.map(k => wn(E_TARGETS[k])).join(", "));
+  /* The direction a student will see, and a teaching point in its own right:
+     outsiders carry none of the founders' SNPs, so breeding outside dilutes
+     them away, and MORE inbreeding keeps MORE of them. */
+  {
+    const at = f => { const v = []; for (let r = 0; r < 60; r++) { E.serial = 30000 + r * 13 + Math.round(f * 10); v.push(E_build(4, 5, f)); } return mn(v); };
+    const m = [0, 0.5, 1].map(at);
+    let outs = 0, dotted = 0;
+    for (let r = 0; r < 20; r++) { E.serial = 31000 + r * 13; E_build(6, 5, 0);
+      for (const row of E.rows) for (const ind of row) if (ind.outsider) { outs++; if (ind.chroms.some(c => E_dots(c).length)) dotted++; } }
+    check("E outsiders bring no founder SNPs, so inbreeding keeps more of them", dotted === 0 && outs > 0 && m[0] < m[1] && m[1] < m[2],
+          outs + " outsiders over 20 trees, " + dotted + " carrying a founder SNP; founder SNPs left at 4 a generation over 5 generations, " +
+          "inbreeding 0 / 0.5 / 1: " + m.map(v => v.toFixed(1)).join(" / "));
+  }
 
-  /* The tracker (JM, 2026-09-24): alleles left and pi, by generation.
-     Recounted here genome by genome and pair by pair through E_carries,
-     not through E_dots or the closed form the page uses. */
+  /* The tracker: founder SNPs left and pi, by generation, over the individuals
+     born into it. Recounted genome by genome and pair by pair through
+     E_carries, not through E_dots or the closed form the page uses. */
   {
     const brute = row => {
-      const gs = row.flatMap(ind => ind.chroms), has = gs.map(c => E.sites.map(s => E_carries(c, s)));
+      const gs = E_born(row).flatMap(ind => ind.chroms), has = gs.map(c => E.sites.map(s => E_carries(c, s)));
       const left = E.sites.filter((_, j) => has.some(h => h[j])).length;
       let d = 0, pairs = 0;
       for (let i = 0; i < gs.length; i++) for (let j = i + 1; j < gs.length; j++) {
@@ -507,24 +556,18 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
     }
     check("E the tracker counts what is on the tree", agree && founders,
           rows + " generations recounted genome by genome: " + (agree ? "all agree" : "DISAGREE") +
-          "; the founders read " + E_NANC + " alleles and pi 6 every time: " + founders);
-    check("E alleles left never rise", rise === 0,
-          "closed, no new mutations: " + rise + " generations with more dot alleles than the one before");
+          "; the founders read " + E_NANC + " SNPs and pi 6 every time: " + founders);
+    check("E founder SNPs left never rise", rise === 0,
+          "no new mutations, and outsiders bring none: " + rise + " generations with more founder SNPs than the one before");
 
-    /* pi is diversity in the sense F is its loss: two genomes that are not
-       identical by descent trace to two different founder genomes, which
-       differ at half the dots. So pi = 6 (1 - mean kinship of the
-       generation's genomes), in expectation. Paired per run.
-       Measured 2026-09-24: no bias (-0.03 ± 0.04 over 400 runs at 8 a
-       generation, relatives always; 120 batches of 40, z from -2.6 to 2.2),
-       but the first page load drew z = -3.7 at 40 runs and 3 SE, with the
-       four settings sharing seeds and so sharing site layouts. Now each
-       setting has its own seeds, 80 runs, 3.5 SE. A with-replacement pi
-       would sit 0.4 low at two a generation, about 5 SE; the recount above
-       is the exact check, this one is what pi means. */
+    /* pi = 6 (1 - mean kinship of the generation's genomes), in expectation,
+       where every genome descends from the founders: inbreeding 1, no
+       outsiders. (With outsiders a genome can trace to no founder at all and
+       the identity has another term.) Paired per run, own seeds per setting,
+       80 runs, 3.5 SE -- measured 2026-09-24 with no bias. */
     let fails = [], rep = [];
     const R2 = 80;
-    for (const [n, g, f] of [[4, 4, 0], [2, 6, 0], [8, 6, 1], [6, 2, 0]]) {
+    for (const [n, g, f] of [[4, 4, 1], [2, 6, 1], [8, 6, 1], [6, 2, 1]]) {
       const d = [], pis = [];
       for (let r = 0; r < R2; r++) {
         E.serial = 15000 + r * 7 + n * 1009 + g * 101 + Math.round(f * 10) * 13; E_build(n, g, f);
@@ -537,10 +580,10 @@ check("slots declared match slots written", Object.keys(BIT).length === 5,
         pis.push(pi); d.push(pi - 6 * (1 - phi));
       }
       const m = mn(d), se = sdv(d) / Math.sqrt(R2);
-      rep.push("n" + n + "/g" + g + "/f" + f + " pi " + mn(pis).toFixed(2) + ", minus 6(1-kinship) " + (m >= 0 ? "+" : "") + m.toFixed(3) + "±" + se.toFixed(3));
+      rep.push("n" + n + "/g" + g + " pi " + mn(pis).toFixed(2) + ", minus 6(1-kinship) " + (m >= 0 ? "+" : "") + m.toFixed(3) + "±" + se.toFixed(3));
       if (Math.abs(m) > 3.5 * se) fails.push(n);
     }
-    check("E pi falls as the generation's genomes become kin", fails.length === 0, rep.join("  "));
+    check("E pi falls as the generation's genomes become kin (no outsiders)", fails.length === 0, rep.join("  "));
   }
   E.serial = 0; E.n = 4; E.gens = 2; E.f = 0; E_reset();
 }

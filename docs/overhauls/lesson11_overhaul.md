@@ -3,7 +3,7 @@
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
 **Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose still owed; locked
-**Last touched** · 2026-09-24 (round 6: overflow, D's axis, E's tracker; 52 bars pass)
+**Last touched** · 2026-09-24 (round 6, then D and E rebuilt from JM's notes; 56 bars pass)
 
 ## What the lesson is
 
@@ -19,11 +19,13 @@ student** — see Rulings.
        F curve                                        (rebuilt 2026-09-23)
     C  the pedigree: set a founder's two alleles by colour, drop them down
                                                         (old B, new mechanics)
-    D  alleles at the start, individuals, F; 150 populations run until one
-       allele is left; make the average land on a dealt generation. Ne and
-       4Ne shown live                                  (rebuilt, round 5)
-    E  one founding pair traced down (descent.html's engine): F as the shaded
-       share of a genome whose two copies come from one founder copy (new)
+    D  alleles at the start (2-20), individuals, F; 200 populations run until
+       one allele is left; the target is a fixation-time SHAPE on the dot
+       strip; hit = average and spread both near it. Ne and 4Ne live
+                                                       (rebuilt 2026-09-24)
+    E  one founding pair traced down (descent.html's engine), mates from
+       outside with no founder SNPs; target = founder SNPs left in the
+       bottom row                                      (rebuilt 2026-09-24)
 
 Retired: old D (inbreeding depression — load vs genome size) and old E (the
 coalescent walk backwards). Both are in git history. Old E's payload — two
@@ -70,7 +72,7 @@ rescuing into a later lesson.
 | 34 | D, A | slider label → "probability a mate is a full sibling" (the operator's rule: with chance f the partner is the first parent's full sib). A shares the operator and the label | done |
 | 35 | — | C checks re-run on the new tree; homozygous-founders check rewritten; pairs-once and one-page-readout checks added; "one drop" check moved to mid-range founders | done |
 | 36 | C | pedigree canvas 900 → 680 px: it was wider than its panel, so the right-hand family was cut off with no visible scrollbar on a Mac | done |
-| 37 | C | slider label "matings between relatives" could say what the rule is: "probability a mate is its closest relative" (parallel to D). Not asked; offered | todo |
+| 37 | C | slider label "matings between relatives" could say what the rule is: "probability a mate is its closest relative" (parallel to D). Not asked; offered | closed by 61: JM chose "inbreeding" |
 | 38 | D | **rebuild (round 5).** Heterozygosity over time; sliders: alleles at the start, individuals, F; 200 populations run to one allele; dot strip of the generation each got there; Ne = N/(1+F) and 4Ne live, with Ne and F measured in the runs beside them after a run | done |
 | 39 | D | F must be HELD by the mating rule, not set once: a starting F under random mating does nothing (measured) | done — flag to JM |
 | 40 | D | mating rule that holds F: partial selfing, s = 2F/(1+F). Full-sib rules measured and rejected (see Measured, round 5) | done — flag to JM |
@@ -90,6 +92,22 @@ rescuing into a later lesson.
 | 54 | D | "every copy" / "every copy different" left as is: JM's copy→allele note was about E, and D's "copy" is a gene copy, not a founder's allele | open — ask JM |
 | 55 | B | headcount drawn as one point per generation joined by lines, not flat steps; shading kept; brush unchanged (JM 2026-09-24). Point at the middle of its generation's column, so it sits under the pointer and above the F it makes | done |
 | 56 | A, C, E | practice switch on every stage, B's pattern (JM 2026-09-24: "a default incorporation for all of the 'bowling' style activities"). C's button reads "Practice drop". Check drives all five stages' real buttons: 53 bars | done |
+| 57 | A | prose from JM's dictation (2026-09-24): voice + mutation clause, a goal paragraph in the voice block (lessons 7 and 9 put theirs there), his three setup bullets; F bullet kept, practice bullet dropped (his paragraph says it) | done |
+| 58 | B | intro replaced with JM's text (2026-09-24) as a voice block; three old setup bullets kept for what it does not say (how to draw, what the bottom plot shows, nothing chosen but the headcount); practice bullet dropped (his text says it). His F sentence reads "observed / expected"; B plots 1 − H_t/H_0, so "expected" is the starting population. JM: "the text doesn't need to be hyper correct"; B's quantity is F (loss from the founders), so it keeps the name | done |
+| 59 | C | voice → JM's dictation (2026-09-24): alleles not genotypes, a 50-50 shot at meiosis, the pedigree's shape, equal expected offspring | done |
+| 60 | C | "Drop it down" → "Pass it on" (bullet, button, card prompt); on-screen "drops" → "runs". Identifiers (`C_drop`, `C_DROPS`) kept | done |
+| 61 | C | slider label "matings between relatives" → "inbreeding" (JM); the readout's echo of the slider dropped, so "inbreeding" is not printed beside the tree's own inbreeding with a different value. Closes 37 | done |
+| 62 | C | **family sizes vary**: each child goes to a couple drawn at random (equal expected family, unequal realized, some childless); was as even as the row allows (4 / 2 / 2 / 2-3). Childless couples drawn as a joined pair with no sibship | done |
+| 63 | C | **New tree** button: another tree at the same inbreeding (JM: "a set of 4 or 5 sibling pairs in each generation that they can be chosen among" -- generated instead of preset) | done |
+| 64 | E | check "the default setting is not an answer" flaked (10% against < 10%): true rate 2.3-2.8% on 0.44, and 40 runs read 4 hits about one load in fifty. Now 200 runs | done |
+| 65 | D | voice → JM's text (2026-09-24): the moose, 200 genetic states, heterozygosity over time, predict when the alleles go extinct | done |
+| 66 | D | **target = a fixation-time distribution**, drawn as a density on the dot strip and in the card; the target band and line on the plot go. Verdict: average within ±12% and spread (sd) within ±20% of the target's. Every slider free; no held rows | done |
+| 67 | D | alleles at the start: 2-20, "every copy" dropped (JM: "will just be confusing") | done |
+| 68 | E | target = founder SNPs left in the bottom row (not F). Mates from outside, carrying no founder SNPs (descent.html's rule: inside = closest relative, else an outsider; two new a generation, then reused). Slider → "inbreeding". Reverses the 2026-09-17 no-migration ruling for E, on JM's word | done |
+| 69 | E | voice → JM's text: recombination, haplotypes not alleles, SNPs in a founding pair, trace one through the tree | done |
+| 70 | D, E | checks rewritten for both games | done |
+| 71 | E | targets are WINDOWS of counts with gaps: none / 2-4 / 11-12. Point targets 0±1 and 3±1 touched, and a setting leaving ~1.5 cleared both half the time | done |
+| 72 | E | outsiders sit in their generation's row with no parents: `E_matings` threw on them, so every tree with an outsider failed to draw (the practice check caught it; the build-only checks could not) | done |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
@@ -186,6 +204,24 @@ Standalone node prototypes, 300-400 populations a setting, one locus.
 - E, π against 6(1 − mean kinship of a generation's genomes): no bias. 400 runs at 8/6/relatives always, −0.027 ± 0.036 and −0.040 ± 0.036; 120 batches of 40, z −2.6 to 2.2. The first check run drew z = −3.7 at 40 runs, 3 SE, the four settings sharing seeds and so site layouts; now per-setting seeds, 80 runs, 3.5 SE.
 - E, the founders read 12 alleles and π 6.00 by construction: four genomes, three dots each, any two differ at six.
 
+## Measured, 2026-09-24 — C's families
+
+- Rule: each child goes to a couple drawn at random (row sizes fixed at 16/16/16/20). Family size by generation, 200 trees: mean 4 / 2 / 2 / 2.5, variance 3.2 / 1.7 / 1.7 / 2.2, range 0-10, childless 2% / 12% / 11% / 6%. Same at inbreeding 0 and 1.
+- Relatedness does not set family size: 300 trees at 0.6, full-sib couples 0.982 of the row's mean against 1.014 for others; per tree −0.031 ± 0.016.
+- Tree's own inbreeding, 0 → 1 by 0.1 (40 trees each): 0.089 0.100 0.107 0.126 0.144 0.170 0.190 0.214 0.247 0.297 0.336. Was 0.063 → 0.500: with uneven sibships not everyone has a sib to pair with, so full-sib lines stop closing. Floor up because uneven families make kin.
+- One page's readout up the slider, 60 pages: median of 15 trees fell > 0.02 on 4 (largest 0.061); of 25, none (largest 0.009). `C_CAND` 25.
+- Checks on the new tree: every target reachable (5→5.3 … 13→13.0), founders still out-move the slider (0.0-11.5 vs 10.3-15.5).
+
+## Measured, 2026-09-24 — D's shape game, E's SNPs
+
+- D, spread relative to average by alleles at the start (1000 populations): 2 → 0.745, 3 → 0.65, 4 → 0.62, 6 → 0.58, 10 → 0.575, 20 → 0.55. Shape separates two alleles from many, little else.
+- D, one run of 200: average ±4-6%, spread ±9-11% (sd, middle half, middle 80% all alike). The limit is 200, not the statistic.
+- D, verdict ±12% average, ±20% spread. Three target samples × 20 runs: own setting 85-98%; 2 against 20 alleles at the same average 8-23%. At ±15% spread, own fell to 68% on one target. One page load: own 75-100%, wrong count 5-40% (pooled 20%); the check holds the gap (≥ 0.3), not a ceiling.
+- D, targets (k, Ne): (20,25) (2,35) (20,45) (2,62) (6,65) (3,20) → averages ~63, 92, 97, 160, 168, 236; windows never meet three deep. 600 populations a target, 0.05-0.55 s to build, once.
+- E, founder SNPs left, one run: ±1-2 at a setting. More inbreeding keeps MORE (4 a generation, 5 generations: 1.1 / 4.6 / 6.6 at inbreeding 0 / 0.5 / 1) — outsiders carry none, so breeding out dilutes them. The reverse of "inbreeding loses diversity" as a student may read it; flagged to JM.
+- E, windows none / 2-4 / 11-12 over the grid (60 runs a setting): best 92 / 75 / 93%; 34 / 148 / 45 settings ≥ 40%; no setting's second-best target above 33%; opening setting (7.5 ± 1.8 left) 0 / 5 / 3%.
+- E, pi = 6(1 − mean kinship) still holds with no outsiders (inbreeding 1); with outsiders a genome can trace to no founder and the identity has another term, so the check runs at 1 only.
+
 ## Rulings
 
 - **2026-09-22 — there is only one F.** JM: *"the students ONLY know F — we
@@ -218,7 +254,14 @@ Standalone node prototypes, 300-400 populations a setting, one locus.
   time would be a valuable bridge forward. Also why 'copy' and not 'allele'
   for the labels?"* The page does not print π = 6(1 − kinship): that is a
   second F on screen. The check holds it.
-- **2026-09-17 (standing)** — no migration, no between-population comparison.
+- **2026-09-24 — D's target is a shape.** JM: *"I'd like to show a target
+  fixation time distribution ... they are trying to basically make a set of
+  dots that matches that density plot."* Judged on average and spread.
+- **2026-09-24 — E has mates from outside, and targets founder SNPs.** JM:
+  *"Mates from outside should just have no SNPs that we're tracking ... How
+  many of the founder SNPs will there be at the end?"* This supersedes the
+  2026-09-17 no-migration ruling **for E only**.
+- **2026-09-17 (standing, except E)** — no migration, no between-population comparison.
   The operator still takes one pool per parent slot so a later lesson adds an
   argument rather than a model.
 - **Drafts.** JM: *"All extremely text light as drafts — EXTREMELY text light —
