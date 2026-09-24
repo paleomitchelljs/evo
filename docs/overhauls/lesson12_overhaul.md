@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24; A and B built (`version: 4`, `scaffold: 2`, 20 bars pass); C planned; locked
+**Status** · replanned 2026-09-24; A, B and C built (`version: 5`, `scaffold: 3`, 26 bars pass); prose owed; locked
 **Last touched** · 2026-09-24
 
 ## What it is
@@ -54,7 +54,15 @@
 
 - JM: *"a peak near their starting position that is low and a peak far ... high ... a valley in between of some depth and they can control the depth ... they need drift to cross the valley."*
 - Works **only** as a valley in genotype space, entered from one genotype with rare mutation (measured below). The 2026-09-22 phenotype version, 12 loci with standing variation, had larger N always better.
-- JM wants it "as evidenced by a birth death sort of process": the framework lives in 13 (see there); C can move onto it once it exists.
+- JM wants it "as evidenced by a birth death sort of process": the framework lives in the third selection lesson (see 13's doc); C can move onto it once it exists.
+- Built at 1500 generations, 50 populations, 10-120 individuals, depth 0-0.2, mutation 0.001, high peak 1.2. Rounds, each a window for the share reaching the high peak:
+
+      middling  depth 0.05 held, 28-48%     N 20: 85%
+      stuck     depth 0.05 held, 0-5%       N 120: 100%   (Wright: big populations stay put)
+      deep      depth 0.10 held, 20-45%     N 10: 94%
+      depth20   20 individuals held, 30-55% depth 0.04-0.05: ~90%
+      depth10   10 individuals held, 4-14%  depth 0.17: 87%
+      opening   40 individuals, depth 0.10: at most 4% in any
 
 ## Measured, 2026-09-24 (node prototypes)
 
@@ -90,6 +98,13 @@
 - The recessive gap is ~19 points whatever N and s (blue wins 68% recessive vs 87% additive at 40, s 0.1); at ±0.10 the opening passed 1 run in 5 on one page, so this round's window is ±0.08 (own 90%, opening 2%).
 - "Keep them all" at 30 needed s 0.1 (90% mixed); at s 0.05 only 34% stayed mixed.
 
+## Measured, 2026-09-24 — C at page scale
+
+- Chance one population reaches the high peak in 1500 generations (200-400 populations a cell): depth 0.05: N 10 .53, 15 .45-.47, 20 .35-.38, 30 .29, 40 .14-.18, 60 .05, 80-100 .03, 120 0. Depth 0.10: N 10 .29-.34, 12-15 .20, 20 .14, 40 .01. N 20 by depth: .02 .67, .03 .57, .04 .46, .06 .29, .08 .17. N 10 by depth: .08 .45, .12-.13 .27, .14-.15 .18, .17 .08, .20 .04-.07.
+- A run of 50 wobbles ~7 points, so the windows sit on binomial hit rates, not on the means: at 25-45% (round 1) and 5-18% (round 5) the opening setting reached 9% and 5%, and one page's opening landed on the edge. Moved to 28-48% and 4-14%.
+- On the page: small populations cross (depth 0.05: 10 → 49%, 20 → 43%, 40 → 17%, 120 → 1%); deeper valleys need smaller populations (20 individuals: 0.02 → 63%, 0.05 → 35%, 0.10 → 5%).
+- A population can sit at an average of 2 for hundreds of generations: one locus fixed for +, the other not, every individual in the valley.
+
 ## Carried from the 2026-09-22 plan
 
 - Dominance, 0.10 → 0.01 at `s` = 0.10, deterministic: 922 generations at `h` = 0, 24 at `h` = 1. The middle bar is worth ~6% when the allele is common and two orders of magnitude when rare.
@@ -105,7 +120,7 @@
 | 2 | A | population grid, fitness bars, frequency curve; individuals, F, p0, h, s. Voice: the pinecone quote | done |
 | 3 | A | five window rounds, calibrated; `check_lesson12_numbers.js`, 13 bars | done |
 | 4 | B | four-allele race: allele rows (h, s each), genotype-fitness grid, 200 populations to one allele or 600 generations, traces and dots in the winner's colour, win-share bars against red outlines; five rounds; All neutral; checks (7 bars) | done |
-| 5 | C | the valley | todo |
+| 5 | C | the valley: two loci, 50 populations, 1500 generations, stepped animation; landscape with a ball per population (stacks capped at 8 with a count), traces of each population's average, share gauge; five rounds holding depth or headcount; checks (6 bars) | done |
 
 ## Rulings
 

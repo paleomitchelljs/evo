@@ -3,7 +3,8 @@
  * check_lesson12_numbers.js -- the bar checks for app/lessons/lesson12.html.
  *
  * Lesson 12 is a draft (2026-09-24): Stage A (one locus, five rounds, one per
- * kind of dominance) and Stage B (four alleles racing, five rounds). None of its bars can be seen by opening the page:
+ * kind of dominance), Stage B (four alleles racing, five rounds) and Stage C
+ * (a valley that only small populations cross). None of its bars can be seen by opening the page:
  *
  *   1. the simulator is the model the bars describe (one generation's change
  *      against the recursion, re-derived here), and F is held where set;
@@ -33,8 +34,8 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && B && B.game && typeof Score !== "undefined"), "Stages A and B and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 2, Object.keys(BIT).length + " named bits, scaffold is 2");
+check("page loaded", !!(A && A.game && B && B.game && C && C.game && typeof Score !== "undefined"), "Stages A, B, C and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 3, Object.keys(BIT).length + " named bits, scaffold is 3");
 
 /* ---- the model, re-derived --------------------------------------------
    Fitness (1, 1 + h s, 1 + s); parents drawn in proportion; with chance
@@ -215,6 +216,36 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
   check("B no round's setting clears three rounds", most <= 2, "the greediest, " + mostAt + "'s setting, clears " + most + " of 5");
 }
 
+/* ---- C. the valley ------------------------------------------------------ */
+{
+  const w = C_W(0.07);
+  check("C the landscape is 1, three valley steps at 1 - depth, 1.2", w.join() === [1, 0.93, 0.93, 0.93, 1.2].map(v => +v.toFixed(2)).join() || w.map(v => v.toFixed(2)).join() === "1.00,0.93,0.93,0.93,1.20",
+        "at depth 0.07: " + w.map(v => v.toFixed(2)).join(", "));
+  const shareAt = (n, d, reps, seed) => { const v = []; for (let q = 0; q < reps; q++) v.push(C_share(C_runAll(n, d, mulberry32(seed + q * 7919)))); return mn(v); };
+  /* Wright's point, measured here: at one depth, small populations cross
+     and big ones stay on the low peak */
+  const byN = [10, 20, 40, 120].map((n, i) => shareAt(n, 0.05, 3, 11000 + i * 97));
+  check("C small populations cross the valley, big ones stay put", byN[0] > byN[2] + 0.2 && byN[3] <= 0.05,
+        "depth 0.05, share of 50 on the high peak by generation 1500, averaged over 3 runs: 10 → " + byN.map(v => Math.round(100 * v) + "%").join(", 20 → ").replace(/, 20 → ([^,]+), 20 → ([^,]+), 20 → /, ", 20 → $1, 40 → $2, 120 → "));
+  const byD = [0.02, 0.05, 0.10].map((d, i) => shareAt(20, d, 3, 11500 + i * 97));
+  check("C a deeper valley needs a smaller population", byD[0] > byD[1] + 0.1 && byD[1] > byD[2] + 0.1,
+        "20 individuals: depth 0.02 → " + Math.round(100 * byD[0]) + "%, 0.05 → " + Math.round(100 * byD[1]) + "%, 0.10 → " + Math.round(100 * byD[2]) + "%");
+  const hitC = (r, n, d, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (C_hits(C_share(C_runAll(n, d, mulberry32(seed + q * 7919))), r)) k++; return k / reps; };
+  const aim = { middling: [20, 0.05], stuck: [120, 0.05], deep: [10, 0.10], depth20: [20, 0.05], depth10: [10, 0.17] };
+  const own = C_ROUNDS.map((r, i) => { const [n, d] = aim[r.key]; return { k: r.key, n, d, v: hitC(r, n, d, 8, 12000 + i * 97) }; });
+  check("C every round is hit at a setting built for it", own.every(q => q.v >= 0.5),
+        own.map(q => q.k + " @N" + q.n + "/depth " + q.d + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (8 runs of 50)");
+  const open = C_ROUNDS.map((r, i) => ({ k: r.key, v: hitC(r, r.hold.N != null ? r.hold.N : 40, r.hold.d != null ? r.hold.d : 0.10, 8, 12500 + i * 97) }));
+  check("C the opening setting is not an answer", open.every(q => q.v <= 0.125),
+        "40 individuals, depth 0.10 (what a round holds, held): " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
+  /* no one setting clears three: each round's answer carried to all five */
+  let most = 0, mostAt = "";
+  C_ROUNDS.forEach((src, i) => { const [n, d] = aim[src.key];
+    const c = C_ROUNDS.filter((r, j) => hitC(r, r.hold.N != null ? r.hold.N : n, r.hold.d != null ? r.hold.d : d, 3, 13000 + i * 13 + j) >= 0.5).length;
+    if (c > most) { most = c; mostAt = src.key; } });
+  check("C no round's answer clears three rounds", most <= 2, "the greediest, " + mostAt + "'s, clears " + most + " of 5");
+}
+
 /* ---- every plot inside its panel --------------------------------------- */
 {
   const over = () => { const bad = [];
@@ -245,9 +276,9 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B };
+  const out = [], stages = { A, B, C };
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
@@ -264,7 +295,7 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 2 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 3 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
