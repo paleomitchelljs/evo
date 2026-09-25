@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A, B and C built (`version: 7`, `scaffold: 3`, 31 bars in `check_lesson13_numbers.js`); D planned; locked
+**Status** · replanned 2026-09-24 (the regression lesson of three); A-D built (`version: 8`, `scaffold: 4`, 41 bars in `check_lesson13_numbers.js`); E (collider) planned; locked
 **Last touched** · 2026-09-24
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
@@ -20,7 +20,8 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
     A  covariance: who made more offspring, and did it track the trait
     B  additive genetic variation: push harder, and what actually responds
     C  the regression is the diagram: arrow = slope, "other" box = residual
-    D  mediator, confounder, collider
+    D  mediator, confounder (built)
+    E  collider: selection makes a trade-off (planned)
 
 ### A — covariance
 
@@ -60,6 +61,8 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 ### D — mediator, confounder, collider
 
 - On the diagram C builds. Mediator: allele → trait → fitness. Confounder: one allele → two traits, one of which does nothing, and it still correlates with fitness. Collider: to build, and to measure what selecting on it does.
+- Built 2026-09-24 (mediator + confounder): C's machinery with an allele (0/1/2 copies) behind flower size and stem height; those two arrows are dealt and held, the student sets the four arrows into seeds. Each picture draws the slope the **whole** diagram implies there, `Σ bⱼ cov(xⱼ, xₖ)/var(xₖ)`, so stem's picture tilts with stem's arrow at 0 (confounder) and the allele's picture tilts with the allele's own arrow at 0 (mediator). Rounds: confounder, mediator, hidden pair (+2 / −2, the allele's picture flat), the allele's own arrow, all three.
+- The collider does not fit a "find the arrows" game: least squares on survivors is simply wrong about the arrows, and the page cannot judge against it. Planned as its own stage (E): flower size and stem height unrelated at birth; survival needs enough of the two together; among survivors they trade off. Bowling: set how hard the drought selects to hit a dealt trade-off slope among survivors. The point: selection manufactures a trade-off no allele made.
 
 ## The third selection lesson — birth–death and DAGs (no slot yet)
 
@@ -92,6 +95,9 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | 9 | B | checks: R/S = h² at five h², no response at h² 0 at the stops, variance held at slope 0, one slope = one S everywhere, printed arithmetic, rounds, reveal | done |
 | 10 | C | two traits → seeds, the diagram as controls; one-trait plots with the diagram's line and band; leftover plot; Go grows the diagram's seeds; rounds against least squares; free "New plants" after | done |
 | 11 | C | checks: least squares vs a hand solve, leftover leans on nothing at the fit and is smallest there, one-trait slope = arrow, band formula = measured spread, bands ~2/3, rounds, opening and "box off one picture" miss, no diagram clears three, leftover hidden in a round | done |
+| 12 | D | allele → flower, allele → stem dealt; four arrows into seeds; pictures draw the whole diagram's implied line; rounds confounder / mediator / hidden pair / allele itself / all three | done |
+| 13 | D | checks: 4×4 hand solve, leftover leans on none, implied line = each picture's own at the fit, confounded and mediated slopes shown, bands, rounds, "arrows off pictures" misses all five, greediest of 63869 clears one | done |
+| 14 | E | collider: selection makes a trade-off | open |
 
 ## Measured, 2026-09-24 — A
 
@@ -114,6 +120,12 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - At the least-squares diagram the bands hold 65-72% of plants in every round.
 - Arrows right, box read off the wider one-trait picture: misses 4 of 5 rounds. It hits r4, where the box (4) is most of the spread.
 - On a 0.5 grid (3757 diagrams) the greediest clears one round.
+
+## Measured, 2026-09-24 — D
+
+- Reading each arrow off its own picture (box right) misses all five rounds. On a 0.5 grid the greediest of 63869 diagrams clears one.
+- r2 (mediator) first had allele → flower 1.5 with flower noise 0.7. The allele was then 70% predictable from flower size, and its own fitted arrow (truly 0) passed 0.4 on 21% of pages. At 1.0 and box 1.5: 2%.
+- At the fit, the line and band each picture draws equal that picture's own regression to 4e-15. The identity is `C b = c`, and var(seeds) = b'Cb + box².
 
 ## Open for JM
 

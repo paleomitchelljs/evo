@@ -21,7 +21,11 @@
  *      arrows leave the least over, and it leans on neither trait; each
  *      one-trait slope is its arrow and its spread is the other arrow plus
  *      the box; the rounds as in 3, and reading the box off one picture
- *      misses.
+ *      misses;
+ *   6. D: the same for three causes tied by an allele, plus: the line the
+ *      whole diagram draws in each picture is that picture's slope at the
+ *      fit; a confounded trait and a mediated allele show a slope their own
+ *      arrow does not have; reading arrows off pictures misses.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -44,8 +48,8 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && typeof Score !== "undefined"), "Stages A, B, C, C's diagram and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 3, Object.keys(BIT).length + " named bits, scaffold is 3");
+check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && D && D.game && D.paths && typeof Score !== "undefined"), "Stages A-D, both diagrams and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 4, Object.keys(BIT).length + " named bits, scaffold is 4");
 
 /* ---- the identity, recomputed here from the dots ----------------------- */
 {
@@ -220,10 +224,61 @@ const C_popOf = i => C_makePop(C_ROUNDS[i], pageSeed("l13Cp", 1, 99999) + (i + 1
     const c = hits(() => ({ b1, b2, sig: sg })).filter(Boolean).length; if (c > most) { most = c; at = [b1, b2, sg]; } }
   check("C no one diagram clears three rounds", most <= 2, "3757 diagrams on a 0.5 grid: the greediest (" + at + ") clears " + most);
 }
+/* ---- D: three causes tied by an allele ---------------------------------- */
+const D_popOf = i => D_makePop(D_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1) * 7919);
+{
+  const pops = D_ROUNDS.map((_, i) => D_popOf(i));
+  /* a hand solve: the 4 x 4 normal equations on raw sums, by elimination */
+  const solve = pop => { const n = pop.w.length, K = 4, A = [], y = [0,0,0,0];
+    for (let a = 0; a < K; a++) A.push([0,0,0,0]);
+    for (let i = 0; i < n; i++) { const x = [1, pop.x[0][i], pop.x[1][i], pop.x[2][i]];
+      for (let a = 0; a < K; a++) { y[a] += x[a] * pop.w[i]; for (let b = 0; b < K; b++) A[a][b] += x[a] * x[b]; } }
+    for (let c = 0; c < K; c++) for (let r = c + 1; r < K; r++) { const k = A[r][c] / A[c][c]; for (let q = c; q < K; q++) A[r][q] -= k * A[c][q]; y[r] -= k * y[c]; }
+    const b = [0,0,0,0]; for (let r = K - 1; r >= 0; r--) { let t = y[r]; for (let q = r + 1; q < K; q++) t -= A[r][q] * b[q]; b[r] = t / A[r][r]; }
+    return b.slice(1); };
+  let worst = 0, lean = 0, sdGap = 0, pic = 0;
+  for (const pop of pops) {
+    const f = pop.fit, h = solve(pop);
+    worst = Math.max(worst, ...h.map((v, j) => Math.abs(v - f.b[j])));
+    const st = D_leftStats(pop, f.b); lean = Math.max(lean, ...st.lean.map(Math.abs)); sdGap = Math.max(sdGap, Math.abs(st.sd - f.sig));
+    /* each picture on its own, measured, against what the fitted diagram draws there */
+    for (const k of [0, 1, 2]) { const m = f.m[k]; let c = 0, v = 0;
+      for (let i = 0; i < D_N; i++) { c += (pop.x[k][i] - m) * (pop.w[i] - f.mw) / D_N; v += (pop.x[k][i] - m) ** 2 / D_N; }
+      const slope = c / v; let ss = 0; for (let i = 0; i < D_N; i++) { const e = pop.w[i] - f.mw - slope * (pop.x[k][i] - m); ss += e * e / D_N; }
+      const im = D_implied(pop, k, f.b, f.sig); pic = Math.max(pic, Math.abs(im.slope - slope), Math.abs(im.spread - Math.sqrt(ss))); }
+  }
+  check("D the page's least squares agrees with a hand solve", worst < 1e-9, "5 populations, 3 slopes each: largest gap " + worst.toExponential(1));
+  check("D at the least-squares arrows the leftover leans on none of the three, and its spread is the box", lean < 1e-9 && sdGap < 1e-9,
+        "largest lean " + lean.toExponential(1) + ", spread vs fit " + sdGap.toExponential(1));
+  check("D at the fit, the line and band the diagram draws in each picture are that picture's own", pic < 1e-9, "slope and spread, 15 pictures: largest gap " + pic.toExponential(1));
+  const f1 = pops[0].fit, f2_ = pops[1].fit;
+  check("D a confounded trait and a mediated allele show slopes their own arrows lack",
+        f1.one[2] >= 1 && Math.abs(f1.b[2]) <= 0.5 && f2_.one[0] >= 2 && Math.abs(f2_.b[0]) <= 0.5,
+        "r1 stem height: picture " + f1.one[2].toFixed(2) + ", arrow " + f1.b[2].toFixed(2) + "  |  r2 allele: picture " + f2_.one[0].toFixed(2) + ", arrow " + f2_.b[0].toFixed(2));
+  const bands = pops.map(pop => { const keep = { b: D.b.slice(), sig: D.sig }; D.b = pop.fit.b.slice(); D.sig = pop.fit.sig;
+    const r = [0, 1, 2].map(k => D_inBand(pop, k)); D.b = keep.b; D.sig = keep.sig; return r; });
+  check("D at the right diagram each band holds about two in three", bands.every(q => q.every(v => v >= 0.58 && v <= 0.78)),
+        bands.map(q => q.map(v => Math.round(100 * v) + "%").join("/")).join("  "));
+  const r1 = v => Math.round(v * 10) / 10;
+  const hits = d => pops.map(pop => D_judge(pop, d(pop).b, d(pop).sig).ok.every(Boolean));
+  const ls = hits(pop => ({ b: pop.fit.b.map(r1), sig: r1(pop.fit.sig) }));
+  check("D every round is hit at its least-squares diagram, on the slider's steps", ls.every(Boolean), ls.map(v => v ? "hit" : "MISS").join(" / "));
+  const open = hits(() => ({ b: [0, 0, 0], sig: 3 }));
+  check("D the opening diagram hits none", open.every(v => !v), open.map(v => v ? "HIT" : "miss").join(" / "));
+  const naive = hits(pop => ({ b: pop.fit.one.map(r1), sig: r1(pop.fit.sig) }));
+  check("D reading each arrow off its own picture misses most rounds", naive.filter(Boolean).length <= 1,
+        naive.map((v, i) => D_ROUNDS[i].key + (v ? " hit" : " miss")).join("  ") + " (box right)");
+  let most = 0, at = null; const fits = pops.map(p => p.fit);
+  for (let a = -4; a <= 4; a += 0.5) for (let b = -4; b <= 4; b += 0.5) for (let c = -4; c <= 4; c += 0.5) for (let sg = 0; sg <= 6; sg += 0.5) {
+    let n = 0; for (const f of fits) if (Math.abs(a - f.b[0]) <= D_TOL && Math.abs(b - f.b[1]) <= D_TOL && Math.abs(c - f.b[2]) <= D_TOL && Math.abs(sg - f.sig) <= D_TOL) n++;
+    if (n > most) { most = n; at = [a, b, c, sg]; } }
+  check("D no one diagram clears three rounds", most <= 2, "63869 diagrams on a 0.5 grid: the greediest (" + at + ") clears " + most);
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
   document.getElementById("stageB").classList.remove("stage-locked");
   document.getElementById("stageC").classList.remove("stage-locked");
+  document.getElementById("stageD").classList.remove("stage-locked");
   const over = () => { const bad = [];
     document.querySelectorAll("canvas").forEach(cv => {
       if (cv.dataset.fit === "off") return;
@@ -252,21 +307,23 @@ const C_popOf = i => C_makePop(C_ROUNDS[i], pageSeed("l13Cp", 1, 99999) + (i + 1
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B, C };
-  let hidden = "", shown = "", leftBefore = "", leftAfter = "";
+  const out = [], stages = { A, B, C, D };
+  let hidden = "", shown = "", leftBefore = "", leftAfter = "", dBefore = "", dAfter = "";
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
       const n0 = g.st.hits.length;
       if (S === "C") { tick(false); leftBefore = document.getElementById("C_leftRead").textContent; }
+      if (S === "D") { tick(false); dBefore = document.getElementById("D_leftRead").textContent; }
       tick(true); btn.click();
       const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(document.getElementById(S + "_tflip").textContent);
       if (S === "B") hidden = document.getElementById("B_ptsRead").textContent;
       tick(false); btn.click();
       if (S === "B") shown = document.getElementById("B_ptsRead").textContent;
       if (S === "C") leftAfter = document.getElementById("C_leftRead").textContent;
+      if (S === "D") dAfter = document.getElementById("D_leftRead").textContent;
       const scored = g.st.hits.length === n0 + 1 && g.waiting(), blocked = btn.disabled;
       tick(true); btn.click();
       const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
@@ -276,9 +333,11 @@ const C_popOf = i => C_makePop(C_ROUNDS[i], pageSeed("l13Cp", 1, 99999) + (i + 1
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 3 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 4 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
   check("C the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(leftBefore) && /left over: spread/.test(leftAfter) && /least squares on these plants/.test(leftAfter),
         "before: '" + leftBefore.trim().slice(0, 40) + "'; after the scored run: '" + leftAfter.trim().slice(0, 40) + "…'");
+  check("D the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(dBefore) && /left over: spread/.test(dAfter) && /least squares on these plants/.test(dAfter),
+        "before: '" + dBefore.trim().slice(0, 40) + "'; after the scored run: '" + dAfter.trim().slice(0, 40) + "…'");
   const h1 = f2(B_ROUNDS[0].h2);
   check("B a population's inherited share shows only after its scored run", /inherited share \\?/.test(hidden) && new RegExp("inherited share " + h1).test(shown),
         "after a practice run: '" + (/population 1[^\\n]*/.exec(hidden) || [""])[0].trim() + "'; after the scored run: '" + (/population 1[^\\n]*/.exec(shown) || [""])[0].trim() + "'");
