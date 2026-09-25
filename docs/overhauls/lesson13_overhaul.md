@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A built (`version: 5`, `scaffold: 1`, 11 bars in `check_lesson13_numbers.js`); B-D planned; locked
+**Status** · replanned 2026-09-24 (the regression lesson of three); A and B built (`version: 6`, `scaffold: 2`, 20 bars in `check_lesson13_numbers.js`); C-D planned; locked
 **Last touched** · 2026-09-24
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
@@ -44,7 +44,9 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - JM, 2026-09-24: *"The regression one should also include a bit on additive genetic variation and the fact that R=Va regardless of S should be discovered by students (I'm imagining them making a plot point-by-point where they use interactives to try and force change by ratcheting up selection strength only to find that the response correlates with the heritability variation amount)."*
 - **Stated so it holds:** `R = h² S` — response does grow with S. What holds regardless of S: no additive variance, no response at any S; per unit of selection the response is set by the heritable variation, `R/S = h² = Va/Vp`. With selection strength as the fitness slope `β` (the line A's student drags), `R = Va β`, exactly, for an additive trait. The discoverable fact: **each population's points fall on a line whose slope is its Va.** Ratcheting strength slides along the line; only more Va steepens it.
 - The bespoke part: a plot built point by point. Each run = one generation at a strength the student sets; the page adds a point (strength, response) for that population. Populations dealt with the same total variance and different Va, so the same push gives the same S and different R.
-- Game (to calibrate): a dealt response in a dealt population; one population cannot reach it at the slider's stop. Multi-generation extension: strong selection spends Va, and the response decays (2026-09-22: spread 1.65 against 2.07 after 300 generations).
+- Built 2026-09-24 as: x = how far the parents who bred moved (Stage A's shift, `S`), y = how far the offspring moved (`R`). Stage A is the line `R = S` (offspring copied parents), drawn dashed. Each population's line through the origin has slope h². Selection strength is the slope of A's line, so the x axis is measured, not set.
+- The inherited share is hidden until that population's scored run, then shown beside the fitted slope. After the five rounds an inherited-share slider opens: at 0 the line lies flat at every slope.
+- Not built: "one population cannot reach it at the slider's stop" (a round that cannot be hit is a trap). Multi-generation extension: strong selection spends Va, and the response decays (2026-09-22: spread 1.65 against 2.07 after 300 generations).
 - Lesson 8 is the bridge: the slope of offspring on mid-parent is the heritability (JM's ruling, lesson 8), and it is the same `h²` that sets `R/S` here.
 
 ### C — the regression is the diagram
@@ -81,6 +83,10 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | 3 | A | covariance drawn as one signed rectangle per dot; dots coloured by group, doing nothing yet (seed for the late-20s multilevel Price) | done |
 | 4 | A | rounds: a dealt shift of the mean in populations of different spread; Go draws each parent's actual offspring (Poisson), controls locked; practice switch. In a scored round the offspring distribution waits for Go; with practice ticked it moves live as the line is dragged | done |
 | 5 | A | checks: identity to 1e-14, rectangles = covariance, shift grows with variance at one slope, rounds, slope 0 misses, no slope clears three, drag | done |
+| 6 | B | one generation, 2000 parents, inherited value + the rest; parents picked in pairs off A's line; child = midparent + segregation + fresh rest | done |
+| 7 | B | the point-by-point plot: (S, R) per run, practice included, one colour per population, each population's fitted line; A's `R = S` line for reference; bottom plot parents / parents counted once per child / offspring | done |
+| 8 | B | rounds: a dealt response in a population with hidden h² (0.9, 0.8, 0.6, 0.4, 0.9); share revealed after its scored run; free h² after the rounds; practice switch | done |
+| 9 | B | checks: R/S = h² at five h², no response at h² 0 at the stops, variance held at slope 0, one slope = one S everywhere, printed arithmetic, rounds, reveal | done |
 
 ## Measured, 2026-09-24 — A
 
@@ -88,6 +94,14 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - At 0.1 × spread, a round asking +0.30 at spread 2 was reached by slope 0 on luck 15% of the time; at 0.07 × spread still 10% on one page. That round now asks +0.50.
 - One slope, four spreads (0.5, 1, 2, 3): shift 0.034, 0.138, 0.534, 1.28 — selection needs variation, measured.
 - Slopes the five rounds need: ~0.6, 0.25, −0.41, 1.0, 0.2 (each page draws its own populations).
+
+## Measured, 2026-09-24 — B
+
+- `R/S` pooled over 60 runs: h² 0 → 0.006, 0.25 → 0.251, 0.5 → 0.498, 0.8 → 0.802, 1 → 1.001. At h² 0 and the slider's stops (±1.5) the parents who bred move ±0.65 and the offspring 0.01.
+- Slope 1 moves the parents who bred 0.48 in every population (h² 0.2, 0.5, 0.9: 0.483, 0.484, 0.486). Truncation at zero offspring bends it: slope 1.5 gives 0.65, not 0.75.
+- The response wanders run to run by 0.032 at 1000 parents, 0.024 at 2000. At 1000 with ±0.06, perfect aim hit 73-95% and slope 0 reached a +0.12 target 1 run in 20; at 2000 with ±0.05, best slopes 93-100%, slope 0 none, greediest slope clears two.
+- A first round set asking for slopes 0.7-1.1 let slope 0.85 clear four.
+- One run at slope 0 printed a fitted slope of 2.87 (two wobbles divided). The page holds the slope back until sum(S²) ≥ 0.02.
 
 ## Open for JM
 

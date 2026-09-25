@@ -2,7 +2,8 @@
 /*
  * check_lesson13_numbers.js -- the bar checks for app/lessons/lesson13.html.
  *
- * Lesson 13 is a draft (2026-09-24): Stage A, covariance. What has to hold:
+ * Lesson 13 is a draft (2026-09-24): Stage A, covariance; Stage B, what
+ * responds. What has to hold:
  *
  *   1. the offspring's shift IS cov(w, z) / w̄, every time, exactly -- the
  *      identity the stage prints -- and the covariance IS the average of the
@@ -10,13 +11,18 @@
  *   2. at a fixed slope the shift grows with the trait's variance: selection
  *      needs variation;
  *   3. every round is hit at its slope, missed at slope 0, and no one slope
- *      clears three rounds.
+ *      clears three rounds;
+ *   4. B: the offspring move h2 times the parents who bred, whatever the
+ *      slope; no inherited variation, no response; one slope gives the same
+ *      shift in every population; the printed arithmetic agrees; B's rounds
+ *      as in 3; a population's inherited share stays hidden until its scored
+ *      run.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
  * in a <pre>, and the runner fails if fewer checks come back than ran.
  *
- * Usage:  node scripts/check_lesson12_numbers.js
+ * Usage:  node scripts/check_lesson13_numbers.js
  * Exit 0 iff every bar passes. Needs Google Chrome and python3.
  */
 const { spawn, spawnSync } = require("child_process");
@@ -33,8 +39,8 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && typeof Score !== "undefined"), "Stage A and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 1, Object.keys(BIT).length + " named bit, scaffold is 1");
+check("page loaded", !!(A && A.game && B && B.game && typeof Score !== "undefined"), "Stages A, B and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 2, Object.keys(BIT).length + " named bits, scaffold is 2");
 
 /* ---- the identity, recomputed here from the dots ----------------------- */
 {
@@ -90,8 +96,68 @@ check("slots declared match slots written", Object.keys(BIT).length === 1, Objec
   const got = A.beta; A.beta = keep; A_syncSliders(); A_paint();
   check("A dragging on the plot sets the slope through the pointer", Math.abs(got - 0.4) <= 0.02, "pointer on the line of slope 0.40 through the average parent: slope set to " + got);
 }
+/* ---- B: the model, recomputed here -------------------------------------- */
+const B_gen = (h2, beta, seed) => B_breed(B_makePop(h2, seed), beta, mulberry32(seed + 17));
+{
+  /* the offspring move h2 times the parents who bred: pooled slope through
+     the origin, 60 runs at slopes -1 and +1 */
+  const rows = [0, 0.25, 0.5, 0.8, 1].map(h2 => { let sr = 0, ss = 0;
+    for (let q = 0; q < 30; q++) for (const beta of [-1, 1]) {
+      const g = B_gen(h2, beta, 3000 + q * 131 + Math.round(h2 * 1000) + (beta > 0 ? 7 : 0)); sr += g.S * g.R; ss += g.S * g.S; }
+    return { h2, slope: sr / ss }; });
+  check("B the offspring move h² times the parents who bred", rows.every(q => Math.abs(q.slope - q.h2) < 0.05),
+        rows.map(q => "h² " + q.h2 + " → " + q.slope.toFixed(3)).join("  ") + "  (60 runs each)");
+  /* none inherited: ratchet the slope to the stop and nothing moves */
+  const flat = [-1.5, 1.5].map(beta => { const R = [], S = []; for (let q = 0; q < 20; q++) { const g = B_gen(0, beta, 3500 + q * 17 + (beta > 0 ? 3 : 0)); R.push(g.R); S.push(g.S); }
+    return { beta, R: mn(R), S: mn(S), se: sdv(R) / Math.sqrt(R.length) }; });
+  check("B no inherited variation: no response at the slider's stops", flat.every(q => Math.abs(q.R) < 3 * q.se + 0.005 && Math.abs(q.S) > 0.5),
+        flat.map(q => "slope " + q.beta + ": parents moved " + q.S.toFixed(3) + ", offspring " + q.R.toFixed(4) + " ± " + q.se.toFixed(4)).join("  "));
+  /* the spread holds across the generation: a midparent halves the inherited
+     variance and the segregation term puts it back */
+  const vs = []; for (let q = 0; q < 20; q++) { const g = B_gen(0.5, 0, 3700 + q * 29); vs.push(sdv(Array.from(g.zo)) ** 2); }
+  check("B at slope 0 the offspring vary as much as their parents", Math.abs(mn(vs) - 1) < 0.03, "offspring variance " + mn(vs).toFixed(3) + " (parents 1), 20 runs, h² 0.5");
+  /* every population varies alike, so one slope gives one shift */
+  const sh = [0.2, 0.5, 0.9].map(h2 => { const S = []; for (let q = 0; q < 20; q++) S.push(B_gen(h2, 1, 3900 + q * 23 + Math.round(h2 * 100)).S); return mn(S); });
+  check("B one slope moves the parents who bred alike in every population", Math.max(...sh) - Math.min(...sh) < 0.03,
+        "slope 1: h² 0.2, 0.5, 0.9 → " + sh.map(v => v.toFixed(3)).join(", "));
+}
+{
+  /* the printed arithmetic, against a hand count */
+  const pop = B_makePop(0.6, 4242), g = B_breed(pop, 1, mulberry32(4243));
+  let zb = 0, sw = 0, swz = 0, so = 0; for (let i = 0; i < pop.z.length; i++) { zb += pop.z[i] / pop.z.length; sw += g.uses[i]; swz += g.uses[i] * pop.z[i]; so += g.zo[i]; }
+  const S = swz / sw - zb, R = so / g.zo.length - zb;
+  const keep = { run: B.run, frame: B.frame, pts: B.pts };
+  g.parents = pop; g.key = "r1"; B.run = g; B.frame = null; B_drawGen();
+  const txt = document.getElementById("B_read").textContent.replace(/\\s+/g, " ");
+  const num = re => { const m = re.exec(txt); return m ? +m[1] : NaN; };
+  const pS = num(/bred moved ([+-][0-9.]+)/), pR = num(/offspring moved ([+-][0-9.]+)/), pQ = num(/parents ([0-9.-]+)/);
+  B.pts = [{ key: "r2", S: 0.3, R: 0.2 }, { key: "r2", S: -0.5, R: -0.4 }, { key: "r2", S: 0.6, R: 0.5 }]; B_drawPts();
+  const fit = (0.3 * 0.2 + 0.5 * 0.4 + 0.6 * 0.5) / (0.09 + 0.25 + 0.36);
+  const pF = +(/population 2: 3 runs · slope of its line ([0-9.]+)/.exec(document.getElementById("B_ptsRead").textContent) || [0, NaN])[1];
+  Object.assign(B, keep); B_paint();
+  check("B the printed shifts, ratio and fitted slope agree with a hand count",
+        sw === 2 * pop.z.length && pS === +S.toFixed(2) && pR === +R.toFixed(2) && pQ === +(R / S).toFixed(2) && pF === +fit.toFixed(2),
+        "parents counted " + sw + " times (2 per child); printed " + pS + ", " + pR + ", ratio " + pQ + " — by hand " + S.toFixed(3) + ", " + R.toFixed(3) + ", " + (R / S).toFixed(3) +
+        "; fitted slope printed " + pF + ", by hand " + fit.toFixed(3));
+}
+/* ---- B: the rounds ------------------------------------------------------ */
+{
+  const rate = (r, beta, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (Math.abs(B_gen(r.h2, beta, seed + q * 7919).R - r.R) <= B_TOL) k++; return k / reps; };
+  const slopes = []; for (let b = -1.5; b <= 1.5001; b += 0.05) slopes.push(Math.round(b * 100) / 100);
+  const table = B_ROUNDS.map((r, i) => slopes.map(b => rate(r, b, 12, 5000 + i * 97 + Math.round(b * 100) * 3)));
+  const best = B_ROUNDS.map((r, i) => { let j = 0; table[i].forEach((v, k) => { if (v > table[i][j]) j = k; });
+    return { k: r.key, b: slopes[j], v: rate(r, slopes[j], 40, 9000 + i * 31) }; });
+  check("B every round is hit at its best slope", best.every(q => q.v >= 0.7),
+        best.map(q => q.k + " @" + q.b + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (best of 61 slopes by 12 runs, then 40 fresh)");
+  const zero = B_ROUNDS.map((r, i) => rate(r, 0, 20, 9500 + i * 31));
+  check("B slope 0, the opening, hits none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
+  let most = 0, at = 0;
+  slopes.forEach((b, j) => { const c = B_ROUNDS.filter((_, i) => table[i][j] >= 0.5).length; if (c > most) { most = c; at = b; } });
+  check("B no one slope clears three rounds", most <= 2, "61 slopes, 12 runs each: the greediest (" + at + ") hits half the time or more in " + most);
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
+  document.getElementById("stageB").classList.remove("stage-locked");
   const over = () => { const bad = [];
     document.querySelectorAll("canvas").forEach(cv => {
       if (cv.dataset.fit === "off") return;
@@ -120,16 +186,19 @@ check("slots declared match slots written", Object.keys(BIT).length === 1, Objec
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A };
+  const out = [], stages = { A, B };
+  let hidden = "", shown = "";
   try {
-    for (const [S, go] of [["A", "A_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
       const n0 = g.st.hits.length;
       tick(true); btn.click();
       const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(document.getElementById(S + "_tflip").textContent);
+      if (S === "B") hidden = document.getElementById("B_ptsRead").textContent;
       tick(false); btn.click();
+      if (S === "B") shown = document.getElementById("B_ptsRead").textContent;
       const scored = g.st.hits.length === n0 + 1 && g.waiting(), blocked = btn.disabled;
       tick(true); btn.click();
       const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
@@ -139,7 +208,10 @@ check("slots declared match slots written", Object.keys(BIT).length === 1, Objec
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 1 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 2 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  const h1 = f2(B_ROUNDS[0].h2);
+  check("B a population's inherited share shows only after its scored run", /inherited share \\?/.test(hidden) && new RegExp("inherited share " + h1).test(shown),
+        "after a practice run: '" + (/population 1[^\\n]*/.exec(hidden) || [""])[0].trim() + "'; after the scored run: '" + (/population 1[^\\n]*/.exec(shown) || [""])[0].trim() + "'");
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
