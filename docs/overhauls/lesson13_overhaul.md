@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A-D built (`version: 8`, `scaffold: 4`, 41 bars in `check_lesson13_numbers.js`); E (collider) planned; locked
+**Status** · replanned 2026-09-24 (the regression lesson of three); A-E built (`version: 9`, `scaffold: 5`, 47 bars in `check_lesson13_numbers.js`); locked; prose to come from JM
 **Last touched** · 2026-09-24
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
@@ -21,7 +21,7 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
     B  additive genetic variation: push harder, and what actually responds
     C  the regression is the diagram: arrow = slope, "other" box = residual
     D  mediator, confounder (built)
-    E  collider: selection makes a trade-off (planned)
+    E  collider: selection makes a trade-off (built)
 
 ### A — covariance
 
@@ -97,7 +97,9 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | 11 | C | checks: least squares vs a hand solve, leftover leans on nothing at the fit and is smallest there, one-trait slope = arrow, band formula = measured spread, bands ~2/3, rounds, opening and "box off one picture" miss, no diagram clears three, leftover hidden in a round | done |
 | 12 | D | allele → flower, allele → stem dealt; four arrows into seeds; pictures draw the whole diagram's implied line; rounds confounder / mediator / hidden pair / allele itself / all three | done |
 | 13 | D | checks: 4×4 hand solve, leftover leans on none, implied line = each picture's own at the fit, confounded and mediated slopes shown, bands, rounds, "arrows off pictures" misses all five, greediest of 63869 clears one | done |
-| 14 | E | collider: selection makes a trade-off | open |
+| 14 | E | collider: 2000 seedlings, traits exactly unrelated; survival = dealt arrows + luck 0.5, the drought kills a set share; student sets the share to leave a dealt slope among survivors; the dead fade on Go; a point per run (share killed, survivors' slope) | done |
+| 15 | E | checks: unrelated across all, exact kill share, no-luck slope = truncated-normal formula, deepens with drought and flips with the rule, rounds, no drought misses all, greediest clears two | done |
+| 16 | A-E | prose from JM's dictation; lecture-quote splice (voice) | open |
 
 ## Measured, 2026-09-24 — A
 
@@ -126,6 +128,13 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - Reading each arrow off its own picture (box right) misses all five rounds. On a 0.5 grid the greediest of 63869 diagrams clears one.
 - r2 (mediator) first had allele → flower 1.5 with flower noise 0.7. The allele was then 70% predictable from flower size, and its own fitted arrow (truly 0) passed 0.4 on 21% of pages. At 1.0 and box 1.5: 2%.
 - At the fit, the line and band each picture draws equal that picture's own regression to 4e-15. The identity is `C b = c`, and var(seeds) = b'Cb + box².
+
+## Measured, 2026-09-24 — E
+
+- No luck, equal arrows: the survivors' slope is `−δ/(2 − δ)`, with `δ = λ(λ − c)` for a cut at `c` on `(f + h)/√2`. Measured −0.328 / −0.524 / −0.704 at 30 / 60 / 90% killed, against the formula's −0.340 / −0.525 / −0.711.
+- With luck 0.5, equal arrows, 0/20/50/80% killed: 0.00, −0.22, −0.39, −0.52. Flower +1, stem −1 at 50%: +0.38.
+- A luck-heavy round (luck 1.5) sat near −0.2 for any kill from 30% to 95%, so one kill cleared three rounds. Cut.
+- The practice preview without luck overstated the slope (−0.54 against about −0.44 at 60%). It now uses one seeded draw of luck.
 
 ## Open for JM
 

@@ -25,7 +25,11 @@
  *   6. D: the same for three causes tied by an allele, plus: the line the
  *      whole diagram draws in each picture is that picture's slope at the
  *      fit; a confounded trait and a mediated allele show a slope their own
- *      arrow does not have; reading arrows off pictures misses.
+ *      arrow does not have; reading arrows off pictures misses;
+ *   7. E: the traits are unrelated across all seedlings; the drought kills
+ *      exactly its share; with no luck the survivors' slope is the
+ *      truncated-normal value; it deepens with the drought and flips sign
+ *      with the rule; the rounds as in 3.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -48,8 +52,8 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && D && D.game && D.paths && typeof Score !== "undefined"), "Stages A-D, both diagrams and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 4, Object.keys(BIT).length + " named bits, scaffold is 4");
+check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && D && D.game && D.paths && E && E.game && E.paths && typeof Score !== "undefined"), "Stages A-E, the three diagrams and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 5, Object.keys(BIT).length + " named bits, scaffold is 5");
 
 /* ---- the identity, recomputed here from the dots ----------------------- */
 {
@@ -274,8 +278,50 @@ const D_popOf = i => D_makePop(D_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1
     if (n > most) { most = n; at = [a, b, c, sg]; } }
   check("D no one diagram clears three rounds", most <= 2, "63869 diagrams on a 0.5 grid: the greediest (" + at + ") clears " + most);
 }
+/* ---- E: the collider ---------------------------------------------------- */
+{
+  const pop = E_makePop(4321), all = E_slope(pop, null);
+  const counts = [0.25, 0.5, 0.8].map(k => E_alive(pop, 1, 1, k, pop.luck).alive.reduce((x, y) => x + y, 0));
+  check("E across all seedlings the traits are unrelated, and the drought kills exactly its share",
+        Math.abs(all.slope) < 1e-12 && counts[0] === 1500 && counts[1] === 1000 && counts[2] === 400,
+        "slope among all " + all.slope.toExponential(1) + "; survivors at 25/50/80% killed: " + counts.join(", "));
+  /* with no luck, equal arrows: survival cuts (f + h)/sqrt2 at c; lambda = phi(c)/(1 - Phi(c));
+     delta = lambda (lambda - c); the survivors' slope of stem on flower is -delta / (2 - delta) */
+  const erf = x => { const t = 1 / (1 + 0.3275911 * Math.abs(x)), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return x >= 0 ? y : -y; };
+  const Phi = x => 0.5 * (1 + erf(x / Math.SQRT2)), phi = x => Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI);
+  const qn = p => { let lo = -8, hi = 8; for (let k = 0; k < 80; k++) { const m = (lo + hi) / 2; if (Phi(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; };
+  const rows = [0.3, 0.6, 0.9].map(k => { const c = qn(k), lam = phi(c) / (1 - Phi(c)), d = lam * (lam - c);
+    let m = 0; for (let q = 0; q < 8; q++) m += E_slope(E_makePop(5000 + q * 37), E_alive(E_makePop(5000 + q * 37), 1, 1, k, null).alive).slope / 8;
+    return { k, got: m, want: -d / (2 - d) }; });
+  check("E with no luck the survivors' slope is the truncated-normal value", rows.every(q => Math.abs(q.got - q.want) < 0.03),
+        rows.map(q => Math.round(q.k * 100) + "% killed: " + q.got.toFixed(3) + " [formula " + q.want.toFixed(3) + "]").join("  ") + "  (8 populations each)");
+  const mean = (wf, wh, k) => { let m = 0; for (let q = 0; q < 10; q++) { const pp = E_makePop(6000 + q * 41), rng = mulberry32(6100 + q * 43), lk = Float64Array.from({ length: E_N }, () => A_gauss(rng));
+    m += E_slope(pp, E_alive(pp, wf, wh, k, lk).alive).slope / 10; } return m; };
+  const eq = [0, 0.2, 0.5, 0.8].map(k => mean(1, 1, k)), flip = mean(1, -1, 0.5);
+  check("E the survivors' trade-off deepens with the drought, and flips sign with the rule",
+        Math.abs(eq[0]) < 0.02 && eq[1] < -0.1 && eq[2] < eq[1] && eq[3] < eq[2] && flip > 0.3,
+        "equal arrows, 0/20/50/80% killed: " + eq.map(v => v.toFixed(2)).join(", ") + "  |  flower +1, stem -1, 50%: " + flip.toFixed(2) + "  (10 runs each)");
+}
+{
+  const kills = []; for (let k = 0; k <= 0.95001; k += 0.05) kills.push(Math.round(k * 100) / 100);
+  const one = (r, k, seed) => { const pp = E_makePop(seed), rng = mulberry32(seed + 17), lk = new Float64Array(E_N);
+    for (let i = 0; i < E_N; i++) lk[i] = A_gauss(rng); return E_slope(pp, E_alive(pp, r.wf, r.wh, k, lk).alive).slope; };
+  const rate = (r, k, reps, seed) => { let c = 0; for (let q = 0; q < reps; q++) if (Math.abs(one(r, k, seed + q * 7919) - r.T) <= E_TOL) c++; return c / reps; };
+  const table = E_ROUNDS.map((r, i) => kills.map(k => rate(r, k, 10, 7000 + i * 97 + Math.round(k * 100) * 3)));
+  const best = E_ROUNDS.map((r, i) => { let j = 0; table[i].forEach((v, q) => { if (v > table[i][j]) j = q; });
+    return { k: r.key, kill: kills[j], v: rate(r, kills[j], 40, 9100 + i * 31) }; });
+  check("E every round is hit at its best drought", best.every(q => q.v >= 0.7),
+        best.map(q => q.k + " @" + Math.round(q.kill * 100) + "%: " + Math.round(100 * q.v) + "%").join("  ") + "  (best of 20 by 10 runs, then 40 fresh)");
+  const zero = E_ROUNDS.map((r, i) => rate(r, 0, 10, 9500 + i * 31));
+  check("E no drought, the opening, hits none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
+  let most = 0, at = 0;
+  kills.forEach((k, j) => { const c = E_ROUNDS.filter((_, i) => table[i][j] >= 0.5).length; if (c > most) { most = c; at = k; } });
+  check("E no one drought clears three rounds", most <= 2, "20 droughts, 10 runs each: the greediest (" + Math.round(at * 100) + "%) hits half the time or more in " + most);
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
+  document.getElementById("stageE").classList.remove("stage-locked");
   document.getElementById("stageB").classList.remove("stage-locked");
   document.getElementById("stageC").classList.remove("stage-locked");
   document.getElementById("stageD").classList.remove("stage-locked");
@@ -307,10 +353,10 @@ const D_popOf = i => D_makePop(D_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B, C, D };
+  const out = [], stages = { A, B, C, D, E };
   let hidden = "", shown = "", leftBefore = "", leftAfter = "", dBefore = "", dAfter = "";
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"], ["E", "E_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
@@ -333,7 +379,7 @@ const D_popOf = i => D_makePop(D_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 4 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 5 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
   check("C the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(leftBefore) && /left over: spread/.test(leftAfter) && /least squares on these plants/.test(leftAfter),
         "before: '" + leftBefore.trim().slice(0, 40) + "'; after the scored run: '" + leftAfter.trim().slice(0, 40) + "…'");
   check("D the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(dBefore) && /left over: spread/.test(dAfter) && /least squares on these plants/.test(dAfter),

@@ -236,6 +236,7 @@
   <a href="#stageB" id="tocB" class="locked">B</a>
   <a href="#stageC" id="tocC" class="locked">C</a>
   <a href="#stageD" id="tocD" class="locked">D</a>
+  <a href="#stageE" id="tocE" class="locked">E</a>
 </nav>
 
 <!-- ========== STAGE A — covariance ======================================= -->
@@ -475,11 +476,72 @@
         </div>
       </div>
       <div class="panel">
-        <h3>To finish</h3>
+        <h3>To open Stage E</h3>
         <ul class="tasks" id="tasksD">
           <li data-task="D1">Hit three of the five targets. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
         </ul>
-        <div class="solved-banner" id="solvedD">That is all of Lesson 13 built so far.</div>
+        <div class="solved-banner" id="solvedD">Stage E is open.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE E — the collider: selection makes a trade-off ========= -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <ul class="setup" style="margin:0; padding:0; border-top:0;">
+      <li>Each round is 2000 seedlings. Flower size and stem height are drawn separately: across all the seedlings, one tells you nothing about the other.</li>
+      <li>A drought kills a share of them. Which ones live is set by the diagram: flower size and stem height each count toward surviving, by the dealt arrows, and luck adds the rest.</li>
+      <li>You set how hard the drought is. Go runs it. The survivors are the plants a field biologist would find and measure.</li>
+      <li><b>Top plot</b>: stem height against flower size for every seedling, survivors filled and the dead hollow, with the line through the survivors.</li>
+      <li><b>Bottom plot</b>: every run adds a point: the share the drought killed, and the slope it left among the survivors.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="E_sc" class="plot" width="680" height="330"></canvas>
+        <div class="readout" id="E_scRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="E_pts" class="plot" width="680" height="230"></canvas>
+        <div class="readout" id="E_ptsRead"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeE"><span class="line"><span class="com"># two unrelated traits, one drought</span></span><span class="line">flower &lt;- <span class="fn">rnorm</span>(<span class="num">2000</span>); stem &lt;- <span class="fn">rnorm</span>(<span class="num">2000</span>)</span><span class="line">score  &lt;- w_f * flower + w_h * stem + <span class="fn">rnorm</span>(<span class="num">2000</span>, <span class="num">0</span>, <span class="num">0.5</span>)</span><span class="line" data-line="k">killed &lt;- <span class="num" id="cE_k">0.00</span></span><span class="line">alive  &lt;- score &gt;= <span class="fn">quantile</span>(score, killed)</span><span class="line"></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(stem ~ flower))[<span class="num">2</span>]                <span class="com"># everyone: about 0</span></span><span class="line"><span class="fn">coef</span>(<span class="fn">lm</span>(stem[alive] ~ flower[alive]))[<span class="num">2</span>]  <span class="com"># the survivors</span></span></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel predict" id="predE">
+        <h3 id="predE_h">Predict</h3>
+        <div class="pred-slot" id="predE_slot"></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="E_controls">
+          <div class="pathwrap" id="pathsE"></div>
+          <input type="range" id="E_wf" min="-2" max="2" step="0.5" value="1" class="path-input" />
+          <input type="range" id="E_wh" min="-2" max="2" step="0.5" value="1" class="path-input" />
+          <input type="range" id="E_lk" min="0" max="2" step="0.5" value="0.5" class="path-input" />
+          <div class="row" data-line="k" id="E_kRow"><label for="E_k">share the drought kills</label><input type="range" id="E_k" min="0" max="0.95" step="0.05" value="0" /><output id="E_kOut">0%</output></div>
+          <div class="practice-row"><input type="checkbox" id="E_practice" /><label for="E_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="E_run" class="accent">Go</button>
+            <button id="E_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">Hit three of the five targets. <span class="hint"><span id="E1_now">0 of 5 attempts</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedE">That is all of Lesson 13 built so far.</div>
       </div>
     </div>
   </div>
@@ -505,7 +567,7 @@
    on a causal diagram (arrow = slope, residuals = the 'other' box in the
    DAG)." Plan (A covariance, B additive genetic variation, C the diagram,
    D mediator / confounder / collider) in docs/overhauls/lesson13_overhaul.md.
-   A to D are built; the collider is planned. The mutation-selection draft that stood here is retired.
+   All five stages are built (E is the collider). The mutation-selection draft that stood here is retired.
 
    Furniture copied from lesson 12. Checks: scripts/check_lesson13_numbers.js.
    ===================================================================== */
@@ -578,6 +640,8 @@ function repaintAll() {
   if (C.game && !C.running) safe(C.game.repaint);
   if (!D.running) safe(D_paint);
   if (D.game && !D.running) safe(D.game.repaint);
+  if (!E.running) safe(E_paint);
+  if (E.game && !E.running) safe(E.game.repaint);
 }
 
 
@@ -585,14 +649,13 @@ function repaintAll() {
 /* ====== gates ========================================================
    A stage opens the next by being solved. The written questions record
    on their first attempt and getting one wrong never shuts a door. */
-/* Draft: A to D so far (2026-09-24). The collider is planned in
-   docs/overhauls/lesson13_overhaul.md; D mints the code until it exists. */
-const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false}, D:{open:false,done:false} };
-const NEXT = { A:"B", B:"C", C:"D", D:null };
+/* Draft: A to E (2026-09-24); plan in docs/overhauls/lesson13_overhaul.md. */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false}, D:{open:false,done:false}, E:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
 /* Named one per slot rather than as an array, so check_lessons.py's
    slot-coverage pass can see that every declared slot is written -- it
    reads `name: <integer>` and an array of indices is invisible to it. */
-const BIT = { A1:0, B1:1, C1:2, D1:3 };
+const BIT = { A1:0, B1:1, C1:2, D1:3, E1:4 };
 /* A stage with a real-data panel waits for the panel too, unless the
    fetch failed -- in which case realOffline() releases the wait rather
    than stranding the student behind a file. */
@@ -634,7 +697,7 @@ function record(pos, ok) {
   // Re-mint if the lesson is already finished: the last stage's committed
   // estimate can be locked after its game has closed the final gate, and a
   // code minted at that gate would carry the bit as a zero.
-  if (Gates.D.done && Score.finish) Score.finish();
+  if (Gates.E.done && Score.finish) Score.finish();
 }
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
 function showDone(scroll) {
@@ -1903,6 +1966,250 @@ function D_wire() {
   D_newPop(); D_sync(); D_syncGo();
 }
 
+/* =====================================================================
+   STAGE E — the collider: selection makes a trade-off.
+
+   JM, 2026-09-24: "build up the ideas of mediators, confounders, and
+   colliders." D did the first two. A collider is a common EFFECT:
+   flower size -> survived <- stem height. The two traits are drawn
+   unrelated (made exactly so in each sample, as in C); a drought kills a
+   share, the rule being the dealt arrows plus luck. Among the survivors,
+   stem height falls as flower size rises: a plant with small flowers had
+   to have a tall stem to live. No allele made that trade-off; the drought
+   did, by deciding who is left to measure. A rule where one trait helps
+   and the other hurts makes the survivors' slope positive instead.
+
+   Survival: score = w_f x flower + w_h x stem + 0.5 x luck, the share
+   killed taken from the bottom. The luck is drawn at Go, so a run is a run.
+   ===================================================================== */
+const E_N = 2000, E_Z0 = 10, E_LUCK = 0.5, E_TOL = 0.07, E_FRAMES = 18, E_TICK = 30;
+/* The five rounds: a slope to leave among the survivors (stem on flower).
+   Calibrated 2026-09-24 (2000 seedlings, +-0.07); the kill that hits, and
+   how often, over two calibrations:
+     equal rule,        -0.40    45-55%  93-98%
+     equal rule,        -0.55    80-85%  83-93%
+     flower counts 2x,  -0.30    25%     93-98%
+     flower up, stem down, +0.20 15%     100%
+     stem counts 2x,    -0.33    55-60%  85-98%   (its slope tops out near -0.40)
+   Kill 0 hits none; the greediest kill clears two. A first set with a
+   luck-heavy round (luck 1.5) failed: its slope sits near -0.2 for any kill
+   from 30% to 95%, so one kill cleared three. */
+const E_ROUNDS = [
+  { key: "r1", wf: 1, wh: 1,  T: -0.40 },
+  { key: "r2", wf: 1, wh: 1,  T: -0.55 },
+  { key: "r3", wf: 2, wh: 1,  T: -0.30 },
+  { key: "r4", wf: 1, wh: -1, T: 0.20 },
+  { key: "r5", wf: 1, wh: 2,  T: -0.33 }
+];
+const E = { kill: 0, wf: 1, wh: 1, pop: null, run: null, frame: null, running: false, timer: 0,
+            serial: 0, game: null, paths: null, pts: [] };
+
+/* 2000 seedlings, the two traits made exactly unrelated, spread 1 */
+function E_makePop(seed) {
+  const rng = mulberry32(seed), f = new Float64Array(E_N), h = new Float64Array(E_N);
+  for (let i = 0; i < E_N; i++) { f[i] = A_gauss(rng); h[i] = A_gauss(rng); }
+  const std = z => { let m = 0, v = 0; for (const x of z) m += x / E_N; for (const x of z) v += (x - m) * (x - m) / E_N;
+    const s = Math.sqrt(v); for (let i = 0; i < E_N; i++) z[i] = (z[i] - m) / s; };
+  std(f); let c = 0; for (let i = 0; i < E_N; i++) c += f[i] * h[i] / E_N;
+  for (let i = 0; i < E_N; i++) h[i] -= c * f[i];
+  std(h);
+  /* one draw of luck for the practice preview; Go draws its own */
+  const luck = new Float64Array(E_N); for (let i = 0; i < E_N; i++) luck[i] = A_gauss(rng);
+  return { f, h, luck };
+}
+/* who lives: the top (1 - kill) by score. luck is an array of deviates, or null for none */
+function E_alive(pop, wf, wh, kill, luck) {
+  const sc = new Float64Array(E_N);
+  for (let i = 0; i < E_N; i++) sc[i] = wf * pop.f[i] + wh * pop.h[i] + (luck ? E_LUCK * luck[i] : 0);
+  const alive = new Uint8Array(E_N), k = Math.floor(kill * E_N);
+  if (k <= 0) { alive.fill(1); return { alive, cut: -Infinity }; }
+  const cut = Float64Array.from(sc).sort()[k];
+  for (let i = 0; i < E_N; i++) alive[i] = sc[i] >= cut ? 1 : 0;
+  return { alive, cut };
+}
+/* stem on flower, among those given (all if mask is null) */
+function E_slope(pop, mask) {
+  let n = 0, mf = 0, mh = 0;
+  for (let i = 0; i < E_N; i++) if (!mask || mask[i]) { n++; mf += pop.f[i]; mh += pop.h[i]; }
+  mf /= n; mh /= n; let c = 0, v = 0;
+  for (let i = 0; i < E_N; i++) if (!mask || mask[i]) { c += (pop.f[i] - mf) * (pop.h[i] - mh); v += (pop.f[i] - mf) ** 2; }
+  return { slope: v > 0 ? c / v : 0, n, mf, mh };
+}
+const E_round = () => (E.game && !E.game.st.done) ? E.game.current() : null;
+const E_practising = () => !!(E.game && (E.game.st.done || document.getElementById("E_practice").checked));
+function E_newPop() {
+  E.pop = E_makePop(pageSeed("l13Ep", 1, 99999) + (E.serial + 1) * 7919);
+  E.run = null; E.frame = null;
+}
+function E_setRule() {
+  const r = E_round(); if (r) { E.wf = r.wf; E.wh = r.wh; }
+  document.getElementById("E_wf").value = E.wf; document.getElementById("E_wh").value = E.wh;
+  if (E.paths) E.paths.sync();
+}
+function E_syncGo() {
+  document.getElementById("E_run").textContent = E_practising() ? "Practice run" : "Go";
+  if (E.game && !E.running) E.game.repaint();
+}
+function E_sync() {
+  const k = document.getElementById("E_k"); k.value = E.kill; k.disabled = E.running;
+  document.getElementById("E_kOut").value = Math.round(E.kill * 100) + "%";
+  const c = document.getElementById("cE_k"); if (c) c.textContent = E.kill.toFixed(2);
+}
+function E_go() {
+  const practice = E_practising();
+  if (E.running || (E.game.waiting() && !practice)) return;
+  E.serial++;
+  const rng = mulberry32(pageSeed("l13E", 1, 99999) + E.serial * 7919), luck = new Float64Array(E_N);
+  for (let i = 0; i < E_N; i++) luck[i] = A_gauss(rng);
+  const a = E_alive(E.pop, E.wf, E.wh, E.kill, luck), st = E_slope(E.pop, a.alive);
+  E.run = { pop: E.pop, alive: a.alive, slope: st.slope, n: st.n, kill: E.kill, key: E_round() ? E_round().key : "free", wf: E.wf, wh: E.wh };
+  bump("E");
+  E.frame = 0; E.running = true; lockStage("E", true); E_paint();
+  E.timer = setInterval(() => {
+    E.frame++; E_drawSc();
+    if (E.frame >= E_FRAMES) { clearInterval(E.timer); E.running = false; E.frame = null; lockStage("E", false); E_land(practice); }
+  }, E_TICK);
+}
+function E_land(practice) {
+  const run = E.run, r = E_round();
+  E.pts.push({ key: run.key, kill: run.kill, slope: run.slope, scored: !!r && !practice });
+  if (r) { const ok = Math.abs(run.slope - r.T) <= E_TOL;
+    E.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', run.slope, practice); }
+  const keep = E.run; E_newPop(); E.run = keep;   // the next run's seedlings; this run stays on the plot
+  E_sync(); E_syncGo(); E_paint();
+}
+
+/* ---- drawing ------------------------------------------------------------ */
+const E_colour = key => { const i = E_ROUNDS.findIndex(r => r.key === key); return i >= 0 ? B_HUES[i] : "#1d1d1b"; };
+function E_drawSc() {
+  const cv = document.getElementById("E_sc");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const run = E.run, pop = run ? run.pop : E.pop, prac = E_practising();
+  /* without a run: in practice, who the drought would take on one draw of luck
+     (without luck it overstated the slope: -0.54 against about -0.44 at 60%);
+     in a round, nobody yet */
+  const pre = !run && prac ? E_alive(pop, E.wf, E.wh, E.kill, pop.luck) : null;
+  const alive = run ? run.alive : pre ? pre.alive : null;
+  const f = box(56, 12, W - 74, H - 46, 6, 14, 6, 14);
+  axes(ctx, f, "flower size", "stem height", v => v.toFixed(0), v => v.toFixed(0), 4);
+  ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
+  const u = run && E.frame != null ? E.frame / E_FRAMES : 1;
+  for (let i = 0; i < E_N; i++) {
+    const X = f.x(E_Z0 + pop.f[i]), Y = f.y(E_Z0 + pop.h[i]);
+    if (!alive || alive[i]) { ctx.fillStyle = alive ? GREEN : "#8a8880"; ctx.globalAlpha = alive ? 0.6 : 0.45; ctx.beginPath(); ctx.arc(X, Y, 1.9, 0, 6.2832); ctx.fill(); }
+    else { ctx.strokeStyle = "#8a8880"; ctx.globalAlpha = 0.25 + 0.35 * (1 - u); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(X, Y, 1.9, 0, 6.2832); ctx.stroke(); }
+  }
+  ctx.globalAlpha = 1;
+  /* the drought's line, luck aside: plants above it score enough to live */
+  if (E.kill > 0 && !run) { const sc = Float64Array.from(pop.f, (v, i) => E.wf * v + E.wh * pop.h[i]).sort(), c = sc[Math.floor(E.kill * E_N)];
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.setLineDash([6, 4]); ctx.beginPath();
+    if (Math.abs(E.wh) > 1e-9) { const hAt = x => (c - E.wf * x) / E.wh; ctx.moveTo(f.x(E_Z0 - 4), f.y(E_Z0 + hAt(-4))); ctx.lineTo(f.x(E_Z0 + 4), f.y(E_Z0 + hAt(4))); }
+    else { ctx.moveTo(f.x(E_Z0 + c / E.wf), f.py); ctx.lineTo(f.x(E_Z0 + c / E.wf), f.py + f.ph); }
+    ctx.stroke(); ctx.setLineDash([]); }
+  /* lines: everyone, and the survivors */
+  const drawFit = (st, col, dash) => { ctx.strokeStyle = col; ctx.lineWidth = 2.2; if (dash) ctx.setLineDash(dash); ctx.beginPath();
+    ctx.moveTo(f.x(E_Z0 - 4), f.y(E_Z0 + st.mh + st.slope * (-4 - st.mf))); ctx.lineTo(f.x(E_Z0 + 4), f.y(E_Z0 + st.mh + st.slope * (4 - st.mf))); ctx.stroke(); ctx.setLineDash([]); };
+  const all = E_slope(pop, null);
+  drawFit(all, "#8a8880", [4, 4]);
+  const surv = alive && (!run || E.frame == null) ? E_slope(pop, alive) : null;
+  if (surv) drawFit(surv, DARK, null);
+  ctx.restore();
+  const sg = v => (v >= 0 ? "+" : "") + f2(v), r = E_round();
+  /* the key lives here: on the canvas it sat on the survivors' line */
+  const key = '<span style="color:' + GREEN + '">●</span> <span class="label">survivors</span> <span style="color:#8a8880">○</span> <span class="label">the dead</span> ' +
+    '<span style="color:' + DARK + '">━</span> <span class="label">line through the survivors</span> <span style="color:#8a8880">┅</span> <span class="label">line through every seedling</span> ' +
+    '<span style="color:' + HOT + '">┅</span> <span class="label">the drought\'s line, luck aside</span><br>';
+  const tgt = r ? ' &nbsp;·&nbsp; <span class="label">target among survivors</span> <b>' + sg(r.T) + " ± " + f2(E_TOL) + "</b>" : "";
+  document.getElementById("E_scRead").innerHTML = key + (run && E.frame == null
+    ? '<span class="label">survived</span> <b>' + run.n + '</b> <span class="label">of ' + E_N + '</span> &nbsp;·&nbsp; ' +
+      '<span class="label">stem on flower among survivors</span> <b class="big">' + sg(run.slope) + '</b> &nbsp;·&nbsp; ' +
+      '<span class="label">among every seedling</span> <b>' + sg(all.slope) + '</b>' + tgt
+    : pre ? '<span class="label">on one draw of luck, the drought would leave the survivors a slope of about</span> <b>' + sg(E_slope(pop, pre.alive).slope) + '</b>' + tgt
+    : '<span class="label">among every seedling, stem on flower</span> <b>' + sg(all.slope) + '</b>' + tgt);
+}
+function E_drawPts() {
+  const cv = document.getElementById("E_pts");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = box(56, 12, W - 74, H - 46, 0, 1, -1, 1), r = E_round();
+  axes(ctx, f, "share the drought killed", "survivors' slope", v => (v > 0 ? "+" : "") + v.toFixed(1), v => Math.round(v * 100) + "%", 4);
+  ctx.strokeStyle = "#d8d5cc"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(f.px, f.y(0)); ctx.lineTo(f.px + f.pw, f.y(0)); ctx.stroke();
+  if (r) { ctx.fillStyle = "rgba(178,58,72,0.14)"; ctx.fillRect(f.px, f.y(r.T + E_TOL), f.pw, f.y(r.T - E_TOL) - f.y(r.T + E_TOL)); }
+  for (const p of E.pts) { ctx.fillStyle = E_colour(p.key); ctx.beginPath(); ctx.arc(f.x(p.kill), f.y(clamp(p.slope, -1, 1)), p.scored ? 4.4 : 3.2, 0, 6.2832); ctx.fill();
+    if (p.scored) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1; ctx.stroke(); } }
+  if (!E.pts.length) { ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+    ctx.fillText("each run adds a point here", f.px + 8, f.py + 4); }
+  const keys = [...new Set(E.pts.map(p => p.key))];
+  document.getElementById("E_ptsRead").innerHTML = keys.length
+    ? keys.map(k => { const q = E_ROUNDS.find(x => x.key === k), n = E.pts.filter(p => p.key === k).length;
+        const rule = q ? "flower " + (q.wf > 0 ? "+" : "") + q.wf + ", stem " + (q.wh > 0 ? "+" : "") + q.wh : "after the rounds";
+        return '<span style="color:' + E_colour(k) + '">●</span> <span class="label">' + (q ? "population " + (E_ROUNDS.indexOf(q) + 1) : "your own") + " (" + rule + "):</span> " + n + " run" + (n === 1 ? "" : "s"); }).join("<br>")
+    : '<span class="label">no runs yet</span>';
+}
+function E_drawTarget(cv, r, got) {
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const span = 1, x0 = 14, x1 = W - 14, y0 = 30, bh = 16, X = v => x0 + (v + span) / (2 * span) * (x1 - x0);
+  ctx.fillStyle = "#e7e4da"; ctx.fillRect(x0, y0, x1 - x0, bh);
+  ctx.fillStyle = "rgba(178,58,72,0.25)"; ctx.fillRect(X(r.T - E_TOL), y0 - 6, X(r.T + E_TOL) - X(r.T - E_TOL), bh + 12);
+  ctx.strokeStyle = "#8a8880"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(0), y0 - 8); ctx.lineTo(X(0), y0 + bh + 8); ctx.stroke();
+  ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("leave the survivors a slope of " + (r.T >= 0 ? "+" : "") + f2(r.T) + " ± " + f2(E_TOL), x0, 16);
+  ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center";
+  for (const v of [-1, -0.5, 0, 0.5, 1]) ctx.fillText((v > 0 ? "+" : "") + v.toFixed(1), X(v), y0 + bh + 18);
+  if (got != null) {
+    ctx.strokeStyle = DARK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(clamp(got, -1, 1)), y0 - 10); ctx.lineTo(X(clamp(got, -1, 1)), y0 + bh + 10); ctx.stroke();
+    ctx.fillStyle = DARK; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "right";
+    ctx.fillText("got " + (got >= 0 ? "+" : "") + f2(got), x1, 16);
+  }
+}
+function E_paint() { E_drawSc(); E_drawPts(); }
+function E_RCODE() {
+  return "# Lesson 13, Stage E -- the collider: a drought makes a trade-off\n" +
+    "set.seed(1)\nN <- " + E_N + "\nw_f <- " + E.wf + "; w_h <- " + E.wh + "; killed <- " + E.kill + "\n\n" +
+    "flower <- rnorm(N); stem <- rnorm(N)                 # unrelated\n" +
+    "score <- w_f * flower + w_h * stem + rnorm(N, 0, " + E_LUCK + ")\n" +
+    "alive <- if (killed > 0) score >= quantile(score, killed) else rep(TRUE, N)\n\n" +
+    "coef(lm(stem ~ flower))[2]                         # everyone: about 0\n" +
+    "coef(lm(stem[alive] ~ flower[alive]))[2]           # the survivors\n\n" +
+    "# how the survivors' slope grows with the drought\n" +
+    "k <- seq(0, 0.9, 0.1)\nslope <- sapply(k, function(q) { a <- score >= quantile(score, q); coef(lm(stem[a] ~ flower[a]))[2] })\n" +
+    "plot(k, slope, type = \"b\", xlab = \"share killed\", ylab = \"survivors' slope\"); abline(h = 0, lty = 2)\n";
+}
+function E_wire() {
+  document.getElementById("E_k").addEventListener("input", e => { E.kill = +e.target.value; E.run = null; E_sync(); highlightByDataLine("codeE", "k"); E_paint(); bump("E"); });
+  const sf = v => (v > 0 ? "+" : "") + v.toFixed(1);
+  E.paths = Paths.init({
+    mount: "#pathsE", width: 460, height: 196,
+    boxes: [
+      { id: "f", label: "flower size", x: 80, y: 32, w: 124, h: 36 },
+      { id: "h", label: "stem height", x: 230, y: 32, w: 124, h: 36 },
+      { id: "l", label: "luck", x: 380, y: 32, w: 100, h: 36 },
+      { id: "s", label: "survived the drought", x: 230, y: 164, w: 190, h: 40, kind: "outcome" }
+    ],
+    arrows: [
+      { id: "wf", from: "f", to: "s", input: "E_wf", readonly: true, signed: true, label: "", fmt: sf, labelAt: { x: 138, y: 100 } },
+      { id: "wh", from: "h", to: "s", input: "E_wh", readonly: true, signed: true, label: "", fmt: sf, labelAt: { x: 230, y: 100 } },
+      { id: "lk", from: "l", to: "s", input: "E_lk", readonly: true, label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 322, y: 100 } }
+    ],
+    idleNote: "The arrows into surviving are dealt each round. What you set is how hard the drought is."
+  });
+  document.getElementById("E_run").addEventListener("click", E_go);
+  document.getElementById("E_practice").addEventListener("change", () => { E_syncGo(); E_paint(); });
+  document.getElementById("E_dl").addEventListener("click", () => downloadText("lesson13_stageE.R", E_RCODE()));
+  E.game = mountRounds("E", {
+    deal: i => E_ROUNDS[i % E_ROUNDS.length],
+    rows: r => [["population", String(E_ROUNDS.indexOf(r) + 1)], ["flower → survival, stem → survival", sf(r.wf) + ", " + sf(r.wh)]],
+    picture: E_drawTarget, pictureH: 80, go: "E_run", practising: () => E_practising(),
+    prompt: () => "Set the drought so the survivors' line lands in the red band.",
+    onDeal: () => { E_setRule(); E_newPop(); E_sync(); E_paint(); }
+  });
+  E_setRule(); E_newPop(); E_sync(); E_syncGo();
+}
+
 document.addEventListener("score:bypass", () => {
   Gates.A.open = true;
   const sec = document.getElementById("stageA"); if (sec) sec.classList.remove("stage-locked");
@@ -1924,17 +2231,23 @@ document.addEventListener("score:bypass", () => {
   const td = document.getElementById("tocD"); if (td) td.classList.remove("locked");
   if (D.game) D.game.show();
   D_newPop(); D_sync(); D_syncGo(); D_paint();
+  Gates.E.open = true;
+  const se = document.getElementById("stageE"); if (se) se.classList.remove("stage-locked");
+  const te = document.getElementById("tocE"); if (te) te.classList.remove("locked");
+  if (E.game) E.game.show();
+  E_newPop(); E_sync(); E_syncGo(); E_paint();
 });
 
 A_wire(); A_paint();
 B_wire(); B_paint();
 C_wire(); C_paint();
 D_wire(); D_paint();
+E_wire(); E_paint();
 
 Score.init({
   moduleId: "lesson13",
-  version: 8,
-  scaffold: 4,
+  version: 9,
+  scaffold: 5,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
