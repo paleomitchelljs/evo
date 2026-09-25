@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24; A, B and C built (`version: 5`, `scaffold: 3`, 26 bars pass); prose owed; locked
+**Status** · replanned 2026-09-24; A-D built (`version: 6`, `scaffold: 4`, 33 bars pass); prose owed (D has a voice block); locked
 **Last touched** · 2026-09-24
 
 ## What it is
@@ -23,7 +23,7 @@
     C  the valley: two loci, start on the low peak, a deeper valley needs a
        smaller population to cross. Depth dealt, population the student's.
     D  mutation-selection balance, with h and s (JM 2026-09-24): a bad allele
-       made by mutation, removed by selection; where it settles. (planned)
+       made by mutation, removed by selection; where it settles.  (built)
 
 ### A — one locus, h and s
 
@@ -107,6 +107,21 @@
 - On the page: small populations cross (depth 0.05: 10 → 49%, 20 → 43%, 40 → 17%, 120 → 1%); deeper valleys need smaller populations (20 individuals: 0.02 → 63%, 0.05 → 35%, 0.10 → 5%).
 - A population can sit at an average of 2 for hundreds of generations: one locus fixed for +, the other not, every individual in the valley.
 
+## Measured, 2026-09-24 — D
+
+- Rounds (mutation dealt, one of h and s held, the other the lever):
+
+      additive  mu .004, h .5 held; s -0.08 -> ~0.10         8 runs: 75-100%
+      partial   mu .004, s -.2 held; h 0.25 -> ~0.07          100%
+      hidden    mu .002, s -.1 held; h 0 -> ~0.14             88% (sqrt(mu/s) 0.141 vs 0.04 at h .5)
+      dominant  mu .006, h 1 held; s -0.2 -> ~0.031           100%
+      shows     mu .003, s -.1 held; h 1 -> ~0.031            88%
+
+- **With h and s both free, one setting cleared four rounds** (h .25, s −.11): the recessive term blurs the h × s the rounds need. One lever per round, with conflicting values for the same lever across rounds, caps it at two.
+- At balance, copies made = copies removed (14.6/14.5, 15.2/15.1, 6.9/6.7, 23.6/23.6, 11.7/11.8 per generation).
+- The settled frequency against the printed arithmetic: within 11% (additive runs 0.089 against μ/(h|s|) 0.100; the recessive term the formula drops).
+- Share of purple copies in heterozygotes is ~1 − q (87-97%): it tracks rarity, not dominance. The check says so.
+
 ## Carried from the 2026-09-22 plan
 
 - Dominance, 0.10 → 0.01 at `s` = 0.10, deterministic: 922 generations at `h` = 0, 24 at `h` = 1. The middle bar is worth ~6% when the allele is common and two orders of magnitude when rare.
@@ -122,7 +137,7 @@
 | 2 | A | population grid, fitness bars, frequency curve; individuals, F, p0, h, s. Voice: the pinecone quote | done |
 | 3 | A | five window rounds, calibrated; `check_lesson12_numbers.js`, 13 bars | done |
 | 4 | B | four-allele race: allele rows (h, s each), genotype-fitness grid, 200 populations to one allele or 600 generations, traces and dots in the winner's colour, win-share bars against red outlines; five rounds; All neutral; checks (7 bars) | done |
-| 6 | D | mutation–selection balance: JM, 2026-09-24, *"A mutation-selection balance activity makes sense as a stage with manipulable h and s—either standalone or baked in somewhere."* Standalone D here (12 has the h and s machinery; the old slot-13 lesson's content) | todo |
+| 6 | D | mutation–selection balance: JM, 2026-09-24, *"A mutation-selection balance activity makes sense as a stage with manipulable h and s—either standalone or baked in somewhere."* Standalone D here (12 has the h and s machinery; the old slot-13 lesson's content). Built: 2000 individuals, 300 generations, target = purple over 200-300; plots of purple (with the arithmetic beside) and of copies made vs removed; voice 202_lec17_02, pink katydid in the banner; checks (7 bars) | done |
 | 5 | C | the valley: two loci, 50 populations, 1500 generations, stepped animation; landscape with a ball per population (stacks capped at 8 with a count), traces of each population's average, share gauge; five rounds holding depth or headcount; checks (6 bars) | done |
 
 ## Rulings

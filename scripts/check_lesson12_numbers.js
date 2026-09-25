@@ -4,7 +4,8 @@
  *
  * Lesson 12 is a draft (2026-09-24): Stage A (one locus, five rounds, one per
  * kind of dominance), Stage B (four alleles racing, five rounds) and Stage C
- * (a valley that only small populations cross). None of its bars can be seen by opening the page:
+ * (a valley that only small populations cross) and Stage D (mutation-selection
+ * balance, with h and s). None of its bars can be seen by opening the page:
  *
  *   1. the simulator is the model the bars describe (one generation's change
  *      against the recursion, re-derived here), and F is held where set;
@@ -34,8 +35,8 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && B && B.game && C && C.game && typeof Score !== "undefined"), "Stages A, B, C and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 3, Object.keys(BIT).length + " named bits, scaffold is 3");
+check("page loaded", !!(A && A.game && B && B.game && C && C.game && D && D.game && typeof Score !== "undefined"), "Stages A-D and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 4, Object.keys(BIT).length + " named bits, scaffold is 4");
 
 /* ---- the model, re-derived --------------------------------------------
    Fitness (1, 1 + h s, 1 + s); parents drawn in proportion; with chance
@@ -246,6 +247,63 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
   check("C no round's answer clears three rounds", most <= 2, "the greediest, " + mostAt + "'s, clears " + most + " of 5");
 }
 
+/* ---- D. made by mutation, removed by selection -------------------------- */
+{
+  /* one generation from a random-pairing start against selection-then-mutation,
+     written here: q' = (pq(1+hs) + q^2(1+s)) / w̄, then q'' = q' + (1 - q') mu */
+  const rep = []; let fails = 0;
+  for (const [q0, h, sv, mu] of [[0.2, 0.5, -0.2, 0.01], [0.4, 0, -0.3, 0.005], [0.1, 1, -0.1, 0.02]]) {
+    const p0 = 1 - q0, wb = p0 * p0 + 2 * p0 * q0 * (1 + h * sv) + q0 * q0 * (1 + sv);
+    const q1 = (p0 * q0 * (1 + h * sv) + q0 * q0 * (1 + sv)) / wb, want = q1 + (1 - q1) * mu;
+    const v = [];
+    for (let r = 0; r < 60; r++) { const run = D_start(mu, h, sv, mulberry32(15000 + r * 7919));
+      for (let i = 0; i < 2 * D_N; i++) run.a[i] = run.rng() < q0 ? 1 : 0; run.q[0] = 0; D_step(run, 1); v.push(run.q[1]); }
+    const m = mn(v), se = sdv(v) / Math.sqrt(v.length);
+    rep.push("q " + q0 + " h " + h + " s " + sv + " mu " + mu + ": " + m.toFixed(4) + " vs " + want.toFixed(4));
+    if (Math.abs(m - want) > 3 * se + 0.002) fails++;
+  }
+  check("D one generation is selection then mutation", fails === 0, rep.join("  "));
+}
+{
+  const aim = { additive: [0.5, -0.08], partial: [0.25, -0.2], hidden: [0, -0.1], dominant: [1, -0.2], shows: [1, -0.1] };
+  const sl = (a, from) => { let t = 0, n = 0; for (let g = from; g < a.length; g++) { t += a[g]; n++; } return t / n; };
+  const runs = D_ROUNDS.map((r, i) => { const [h, sv] = aim[r.key]; return { r, h, sv, runs: Array.from({ length: 8 }, (_, q) => D_runAll(r.mu, h, sv, mulberry32(16000 + i * 97 + q * 7919))) }; });
+  /* the balance itself: made and removed agree once purple has settled */
+  const bal = runs.map(q => ({ k: q.r.key, made: mn(q.runs.map(x => sl(x.made, D_W0))), rem: mn(q.runs.map(x => sl(x.removed, D_W0))) }));
+  check("D at balance, copies made equal copies removed", bal.every(q => Math.abs(q.made - q.rem) <= 0.12 * q.made + 0.5),
+        bal.map(q => q.k + " made " + q.made.toFixed(1) + " removed " + q.rem.toFixed(1)).join("  ") + "  (per generation, 200-300, 8 runs)");
+  /* the arithmetic printed beside the measurement */
+  const ar = runs.map(q => { const fm = D_formula(q.r.mu, q.h, q.sv), m = mn(q.runs.map(D_settled)); return { k: q.r.key, m, f: fm.v, t: fm.t }; });
+  check("D the settled frequency is the printed arithmetic", ar.every(q => Math.abs(q.m - q.f) <= 0.15 * q.f),
+        ar.map(q => q.k + " " + q.m.toFixed(3) + " vs " + q.t + " = " + q.f.toFixed(3)).join("  "));
+  const own = runs.map(q => ({ k: q.r.key, v: q.runs.filter(x => D_hits(D_settled(x), q.r)).length / q.runs.length }));
+  check("D every round is hit at a setting built for it", own.every(q => q.v >= 0.6),
+        own.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  ") + "  (8 runs of 2000)");
+  const hs = runs.map(q => ({ k: q.r.key, v: mn(q.runs.map(x => sl(x.hetShare, D_W0))) }));
+  /* not a dominance effect: the share is about 1 - q, so it tracks rarity --
+     the dominant rounds, rarest, have the most (97%), the recessive one 87% */
+  check("D a rare bad allele sits mostly in heterozygotes", hs.every(q => q.v > 0.8),
+        "share of purple copies in heterozygotes, 200-300: " + hs.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
+}
+{
+  const open = D_ROUNDS.map((r, i) => { let k = 0;
+    for (let q = 0; q < 6; q++) if (D_hits(D_settled(D_runAll(r.mu, r.hold.h != null ? r.hold.h : 0.5, r.hold.s != null ? r.hold.s : 0, mulberry32(17000 + i * 97 + q * 7919))), r)) k++;
+    return { k: r.key, v: k / 6 }; });
+  check("D the opening setting is not an answer", open.every(q => q.v === 0),
+        "h 0.5, s 0 (what a round holds, held): " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
+  /* one (h, s) across all five, on the model re-derived here, then run for real */
+  const detQ = (mu, h, sv) => { let q = 0, t = 0, acc = 0; for (let g = 1; g <= D_G; g++) {
+      const p0 = 1 - q, wb = p0 * p0 + 2 * p0 * q * (1 + h * sv) + q * q * (1 + sv), q1 = (p0 * q * (1 + h * sv) + q * q * (1 + sv)) / wb;
+      q = q1 + (1 - q1) * mu; if (g >= D_W0) { acc += q; t++; } } return acc / t; };
+  let most = 0, at = null;
+  for (let h = 0; h <= 1.0001; h += 0.05) for (let sv = -0.3; sv <= 0.0001; sv += 0.01) {
+    const c = D_ROUNDS.filter(r => D_hits(detQ(r.mu, r.hold.h != null ? r.hold.h : h, r.hold.s != null ? r.hold.s : sv), r)).length;
+    if (c > most) { most = c; at = { h: +h.toFixed(2), s: +sv.toFixed(2) }; } }
+  const real = D_ROUNDS.filter((r, i) => D_hits(D_settled(D_runAll(r.mu, r.hold.h != null ? r.hold.h : at.h, r.hold.s != null ? r.hold.s : at.s, mulberry32(18000 + i))), r)).length;
+  check("D no one (h, s) clears three rounds", most <= 2 && real <= 2,
+        "21 x 31 settings on the model: the greediest (h " + at.h + ", s " + at.s + ") clears " + most + "; run for real, " + real);
+}
+
 /* ---- every plot inside its panel --------------------------------------- */
 {
   const over = () => { const bad = [];
@@ -276,9 +334,9 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B, C };
+  const out = [], stages = { A, B, C, D };
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
@@ -295,7 +353,7 @@ const R = {}; for (const r of A_ROUNDS) R[r.key] = r;
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 3 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 4 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
