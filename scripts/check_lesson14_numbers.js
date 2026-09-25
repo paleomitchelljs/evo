@@ -8,7 +8,11 @@
  *   1. the crossing the page prints is where the two lines actually meet;
  *   2. populations settle at the crossing, measured over many runs;
  *   3. every round is hit at the lever value its level needs, missed at the
- *      lever's opening value, and the held arrows are the round's.
+ *      lever's opening value, and the held arrows are the round's;
+ *   4. B: births minus deaths is r (1 - N/K) on both sides of zero; the
+ *      crossing printed is where the two lines meet; the r arrow moves the
+ *      early share and the K arrow the late one; every pattern is hit by
+ *      some setting, none by arrows at zero, and no setting clears three.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -30,8 +34,8 @@ let bad = 0, ran = 0;
 const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FAIL ") + name + "  " + detail); };
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 
-check("page loaded", !!(A && A.game && A.paths && typeof Score !== "undefined"), "Stage A, its diagram and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 1, Object.keys(BIT).length + " named bit, scaffold is 1");
+check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && typeof Score !== "undefined"), "Stages A, B, their diagrams and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 2, Object.keys(BIT).length + " named bits, scaffold is 2");
 
 /* ---- the crossing, found here by bisection on births minus deaths -------- */
 {
@@ -82,9 +86,46 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   const held = Object.keys(r.fix).every(k => Math.abs(v[k] - r.fix[k]) < 1e-9);
   check("A the held arrows are the round's", held, "round " + r.key + ": " + Object.keys(r.fix).map(k => k + " " + v[k] + " (dealt " + r.fix[k] + ")").join(", "));
 }
+/* ---- B: the trait on r and K -------------------------------------------- */
+{
+  /* births minus deaths, as the run splits it, against r (1 - N/K) */
+  let worst = 0;
+  for (const tr of [-0.3, 0, 0.3]) for (const tk of [-3000, 0, 3000]) for (const N of [0, 1000, 4000, 7000, 12000]) {
+    const pp = B_rK(tr, tk);
+    for (const i of [0, 1]) { const g = B_g(pp, i, N), b = Math.max(0, B_D0 + g), d = Math.min(1, B_D0 + Math.max(0, -(B_D0 + g)));
+      if (d < 1) worst = Math.max(worst, Math.abs((b - d) - pp.r[i] * (1 - N / pp.K[i]))); }
+  }
+  check("B births minus deaths is r (1 - N/K), growing or shrinking", worst < 1e-12, "9 settings x 5 crowdings x 2 kinds: largest gap " + worst.toExponential(1));
+  let gap = 0, n = 0;
+  for (const tr of [-0.3, -0.1, 0.1, 0.3]) for (const tk of [-2000, -500, 500, 2000]) { const pp = B_rK(tr, tk), m = B_meet(pp); if (m == null) continue;
+    gap = Math.max(gap, Math.abs(B_g(pp, 0, m) - B_g(pp, 1, m))); n++; }
+  check("B the crossing printed is where the two lines meet", gap < 1e-12 && n > 8, n + " settings: largest gap in births minus deaths there " + gap.toExponential(1));
+  /* r acts while uncrowded, K once crowded */
+  const med = (tr, tk, t) => { const v = []; for (let q = 0; q < 15; q++) v.push(B_run(tr, tk, mulberry32(4000 + q * 7919 + Math.round(tr * 100) * 13 + tk)).share[t]); v.sort((a, b) => a - b); return v[7]; };
+  const early = [-0.2, 0, 0.2].map(tr => med(tr, 0, 10)), late = [-1500, 0, 1500].map(tk => med(0, tk, 100));
+  check("B the r arrow moves the early share, the K arrow the late one", early[0] < 0.4 && early[1] > 0.4 && early[1] < 0.6 && early[2] > 0.65 && late[0] < 0.05 && late[2] > 0.95,
+        "share at generation 10, r arrow -0.2/0/+0.2: " + early.map(v => v.toFixed(2)).join(", ") + "  |  at 100, K arrow -1500/0/+1500: " + late.map(v => v.toFixed(2)).join(", ") + "  (medians of 15)");
+}
+{
+  /* the r arrow in steps of 0.06 (on the slider's 0.02 steps, through 0 and +0.24) */
+  const grid = []; for (let a = -0.3; a <= 0.3001; a += 0.06) for (let k = -3000; k <= 3000; k += 500) grid.push([+a.toFixed(2), k]);
+  const rates = grid.map(([tr, tk], j) => { const h = B_ROUNDS.map(() => 0);
+    for (let q = 0; q < 10; q++) { const sh = B_run(tr, tk, mulberry32(6000 + j * 131 + q * 7919)).share; B_ROUNDS.forEach((r, i) => { if (B_judge(sh, r)) h[i]++; }); }
+    return h.map(v => v / 10); });
+  const best = B_ROUNDS.map((r, i) => { let j = 0; rates.forEach((v, q) => { if (v[i] > rates[j][i]) j = q; });
+    let c = 0; for (let q = 0; q < 40; q++) if (B_judge(B_run(grid[j][0], grid[j][1], mulberry32(8000 + i * 31 + q * 7919)).share, r)) c++;
+    return { k: r.key, at: grid[j], v: c / 40 }; });
+  check("B every pattern is hit by some setting", best.every(q => q.v >= 0.85),
+        best.map(q => q.k + " @(" + q.at.join(", ") + "): " + Math.round(100 * q.v) + "%").join("  ") + "  (best of 143 by 10 runs, then 40 fresh)");
+  const zero = B_ROUNDS.map((r, i) => { let c = 0; for (let q = 0; q < 20; q++) if (B_judge(B_run(0, 0, mulberry32(9000 + i * 31 + q * 7919)).share, r)) c++; return c / 20; });
+  check("B the trait's arrows at zero hit none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
+  let most = 0, at = null; rates.forEach((v, j) => { const c = v.filter(x => x >= 0.5).length; if (c > most) { most = c; at = grid[j]; } });
+  check("B no one setting clears three patterns", most <= 2, "143 settings, 10 runs each: the greediest (" + at.join(", ") + ") hits half the time or more in " + most);
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
   document.getElementById("stageA").classList.remove("stage-locked");
+  document.getElementById("stageB").classList.remove("stage-locked");
   const over = () => { const bad = [];
     document.querySelectorAll("canvas").forEach(cv => {
       if (cv.dataset.fit === "off") return;
@@ -113,9 +154,9 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A };
+  const out = [], stages = { A, B };
   try {
-    for (const [S, go] of [["A", "A_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
@@ -132,7 +173,7 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 1 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 2 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
