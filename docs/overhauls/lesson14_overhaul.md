@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson14.html` — new page, 2026-09-24
 **Checks** · `node scripts/check_lesson14_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · A and B built (`version: 2`, `scaffold: 2`, 16 bars in `check_lesson14_numbers.js`); C planned; locked
+**Status** · A-C built (`version: 3`, `scaffold: 3`, 24 bars in `check_lesson14_numbers.js`); locked; prose to come from JM
 **Last touched** · 2026-09-24
 
 Third of three selection lessons: 12 the genetics, 13 the regression, this the births and deaths. Planned in `lesson13_overhaul.md` until it had a slot.
@@ -17,7 +17,7 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 
     A  births and deaths lean on crowding; the population levels off where they meet   (built)
     B  a trait causes r and K, each arrow negative to positive; hit patterns of its share over time   (built)
-    C  the trait driven by a locus + environmental factors: the genotype's direct influence against the rest
+    C  the trait driven by a locus + environmental factors: the genotype's direct influence against the rest   (built)
 
 - JM, 2026-09-24, replanning B onward: *"I am thinking of a DAG where there is a Trait that *causes* r & K -- with the students able to adjust from negative to positive for each arrow separately. The goal would be to have students look at scenarios where the trait causes both to go up, where it causes each to go up while the other down, and a bad trait that causes them to go down. The Predict would be to try and achieve various frequencies and patterns of the traits over time and perhaps a complex landscape underlying it. Expanding out to have the trait then driven by a locus + environmental factors to allow students to adjust the direct influence of the genotype on the trait relative to other factors, kind of tying it all together."*
 - "Perhaps a complex landscape underlying it": not built; open.
@@ -34,7 +34,8 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 | 4 | A | checks: crossing vs bisection, populations settle at the crossing, rounds at the needed lever value, opening misses, held arrows | done |
 | 5 | B | trait → r, trait → K (signed, student-set); other factors hold r 0.40, K 5000 for everyone; one shared crowding; 50 at the start, half carriers; births − deaths plot (r where a line meets the edge, K where it crosses zero), share over 100 generations against windows, counts of each | done |
 | 6 | B | rounds: takes over / rises then vanishes / falls then takes over / vanishes fast / rises then holds; checks | done |
-| 7 | C | locus + environment → trait → r, K | todo |
+| 7 | C | copies → trait (signed) and environment → trait (spread) set by the student; trait → r, trait → K dealt per round, free after; diploid, random mating, three genotype classes, each class's rates averaged over its trait (41 points); plots: trait at the start by genotype, the allele's share against windows, births − deaths by genotype | done |
+| 8 | C | rounds pair a window on the trait's spread with windows on the allele's share; checks | done |
 
 ## Measured, 2026-09-24 — A
 
@@ -48,6 +49,14 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 - Medians over 15 runs: share at generation 10 is 0.20 / 0.51 / 0.77 for the r arrow at −0.2 / 0 / +0.2, and at generation 100 it is 0.00 / 0.52 / 1.00 for the K arrow at −1500 / 0 / +1500.
 - With equal K, a trait with higher r rises and then holds wherever the growth phase left it (0.72 at +0.1, 0.81 at +0.2, 0.88 at +0.3): nothing acts once crowded.
 - Neutral drift reached the "rises, then holds" windows 1% of the time (200 runs). Its first window is ≥ 0.72.
+
+## Measured, 2026-09-24 — C
+
+- With trait → r at +0.3 and K untouched, copies 1.0 took the allele to 0.92 by generation 30 with the environment at 0, 0.6 or 1.2 (medians of 15, same seeds). The environment widens the trait and gives selection nothing to move: 13 B from the ecology side.
+- Through K it helps a little, because 1/K is curved: copies 1.0 reached 0.89 by generation 30 at environment 0 and 0.93 at 1.2.
+- 7-point Gauss-Hermite was off by up to 0.065 in a death rate where the integrand kinks (births floored at 0, K at 100, deaths capped at 1). 41 points across ±4 sd come within 0.003.
+- A round asking the allele to stop part way (0.6-0.75) failed: drift in the first dozen generations spreads the plateau by ±0.12. It was replaced by a K round (spread 1.4-1.6, allele ≥ 0.9 by 60).
+- The check's grid search took the first of many settings tied at 8/8, which sits at the edge of a round's region (57% at (−0.2, 1) against 95% at (0, 0.9)). It now confirms the top five.
 
 ## Rulings
 

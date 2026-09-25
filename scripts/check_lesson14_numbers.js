@@ -12,7 +12,12 @@
  *   4. B: births minus deaths is r (1 - N/K) on both sides of zero; the
  *      crossing printed is where the two lines meet; the r arrow moves the
  *      early share and the K arrow the late one; every pattern is hit by
- *      some setting, none by arrows at zero, and no setting clears three.
+ *      some setting, none by arrows at zero, and no setting clears three;
+ *   5. C: each genotype's rates, averaged by quadrature, match a fine
+ *      integral; offspring come in the proportions two gamete draws give;
+ *      the spread printed is the spread of the individuals; the environment
+ *      arrow leaves the allele's fate alone when the trait acts on r; the
+ *      rounds as in 4; the dealt arrows are held in a round.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -34,8 +39,8 @@ let bad = 0, ran = 0;
 const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FAIL ") + name + "  " + detail); };
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 
-check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && typeof Score !== "undefined"), "Stages A, B, their diagrams and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 2, Object.keys(BIT).length + " named bits, scaffold is 2");
+check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && C && C.game && C.paths && typeof Score !== "undefined"), "Stages A-C, their diagrams and Score are defined");
+check("slots declared match slots written", Object.keys(BIT).length === 3, Object.keys(BIT).length + " named bits, scaffold is 3");
 
 /* ---- the crossing, found here by bisection on births minus deaths -------- */
 {
@@ -122,10 +127,61 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   let most = 0, at = null; rates.forEach((v, j) => { const c = v.filter(x => x >= 0.5).length; if (c > most) { most = c; at = grid[j]; } });
   check("B no one setting clears three patterns", most <= 2, "143 settings, 10 runs each: the greediest (" + at.join(", ") + ") hits half the time or more in " + most);
 }
+/* ---- C: an allele and the environment make the trait -------------------- */
+{
+  /* the quadrature against a fine integral over the trait */
+  let worst = 0;
+  for (const v of [{ a: 1, e: 0.8, br: 0.3, bK: 0 }, { a: -1.2, e: 1.4, br: -0.2, bK: 2000 }, { a: 0.5, e: 0.3, br: 0.2, bK: -1500 }])
+    for (const k of [0, 1, 2]) for (const N of [0, 3000, 6000]) {
+      const [b, d] = C_rates(v, k, N), mu = v.a * (k - 1); let bi = 0, di = 0, wsum = 0;
+      for (let q = -4000; q <= 4000; q++) { const x = q / 500, w = Math.exp(-x * x / 2), z = mu + v.e * x;
+        const r = B_R0 + v.br * z, K = Math.max(100, B_K0 + v.bK * z), g = r * (1 - N / K);
+        bi += w * Math.max(0, B_D0 + g); di += w * Math.min(1, B_D0 + Math.max(0, -(B_D0 + g))); wsum += w; }
+      worst = Math.max(worst, Math.abs(b - bi / wsum), Math.abs(d - di / wsum)); }
+  check("C each genotype's births and deaths, averaged by quadrature, match a fine integral", worst < 0.003, "27 cases: largest gap " + worst.toExponential(1));
+  /* offspring genotypes: the page's two-step split of births against q², 2q(1-q), (1-q)² */
+  const rng = mulberry32(55), q = 0.3, B = 1000; let s2 = 0, s1 = 0;
+  for (let t = 0; t < 2000; t++) { const o2 = A_binom(rng, B, q * q), o1 = A_binom(rng, B - o2, 2 * q * (1 - q) / (1 - q * q)); s2 += o2 / B / 2000; s1 += o1 / B / 2000; }
+  check("C offspring come in the proportions two draws from the gamete pool give", Math.abs(s2 - q * q) < 0.003 && Math.abs(s1 - 2 * q * (1 - q)) < 0.003,
+        "q 0.3: two copies " + s2.toFixed(4) + " [" + (q * q).toFixed(4) + "], one " + s1.toFixed(4) + " [" + (2 * q * (1 - q)).toFixed(4) + "]  (2000 x 1000 births)");
+  /* the spread printed, against individuals drawn from the starting genotypes */
+  const rs = mulberry32(66); let sgap = 0;
+  for (const v of [{ a: 1.4, e: 0 }, { a: 0.5, e: 1 }, { a: -1, e: 0.6 }]) { const zs = [];
+    C_N0.forEach((n, k) => { for (let i = 0; i < n * 200; i++) zs.push(v.a * (k - 1) + v.e * A_gauss(rs)); });
+    const m = mn(zs), sd = Math.sqrt(zs.reduce((x, z) => x + (z - m) * (z - m), 0) / zs.length); sgap = Math.max(sgap, Math.abs(sd - C_spread(v).sd)); }
+  check("C the spread printed is the spread of the individuals", sgap < 0.02, "3 settings, 10000 individuals each: largest gap " + sgap.toFixed(4));
+  /* the environment and the allele's fate */
+  const med = (v, t) => { const x = []; for (let q2 = 0; q2 < 15; q2++) x.push(C_run(v, mulberry32(7000 + q2 * 7919)).p[t]); x.sort((a2, b2) => a2 - b2); return x[7]; };
+  const rFlat = [0, 0.6, 1.2].map(e => med({ a: 1, e, br: 0.3, bK: 0 }, 30)), none = [0, 1.4].map(e => med({ a: 0, e, br: 0.3, bK: 0 }, 30));
+  check("C with the trait acting on r, the environment arrow leaves the allele's fate alone", Math.max(...rFlat) - Math.min(...rFlat) < 0.03 && rFlat[0] > 0.8 && none.every(x => Math.abs(x - 0.5) < 0.1),
+        "copies 1.0, environment 0 / 0.6 / 1.2: share at 30 " + rFlat.map(x => x.toFixed(2)).join(", ") + "  |  copies 0, environment 0 / 1.4: " + none.map(x => x.toFixed(2)).join(", ") + "  (medians of 15, same seeds)");
+}
+{
+  const grid = []; for (let a = -1.5; a <= 1.5001; a += 0.1) for (let e = 0; e <= 1.5001; e += 0.1) grid.push([+a.toFixed(1), +e.toFixed(1)]);
+  const V = (r, a, e) => ({ a, e, br: r.br, bK: r.bK });
+  const rates = grid.map(([a, e], j) => C_ROUNDS.map((r, i) => { let c = 0; for (let q = 0; q < 8; q++) if (C_judge(V(r, a, e), C_run(V(r, a, e), mulberry32(11000 + j * 131 + q * 7919 + i)).p, r)) c++; return c / 8; }));
+  /* the five best by 8 runs, each confirmed on 40 fresh: taking the first of
+     many settings tied at 8/8 drifted to the edge of each round's region */
+  const best = C_ROUNDS.map((r, i) => { const top = grid.map((g, j) => j).sort((x, y) => rates[y][i] - rates[x][i]).slice(0, 5);
+    let pick = null; for (const j of top) { const [a, e] = grid[j]; let c = 0;
+      for (let q = 0; q < 40; q++) if (C_judge(V(r, a, e), C_run(V(r, a, e), mulberry32(13000 + i * 31 + q * 7919)).p, r)) c++;
+      if (!pick || c / 40 > pick.v) pick = { k: r.key, at: grid[j], v: c / 40 }; }
+    return pick; });
+  check("C every round is hit by some setting", best.every(q => q.v >= 0.85),
+        best.map(q => q.k + " @(" + q.at.join(", ") + "): " + Math.round(100 * q.v) + "%").join("  ") + "  (top five of 496 by 8 runs, each then 40 fresh)");
+  const open = C_ROUNDS.map((r, i) => { let c = 0; for (let q = 0; q < 20; q++) if (C_judge(V(r, 0, 0.5), C_run(V(r, 0, 0.5), mulberry32(15000 + i * 31 + q * 7919)).p, r)) c++; return c / 20; });
+  check("C the opening arrows hit none", open.every(x => x === 0), open.map(x => Math.round(100 * x) + "%").join(" / "));
+  let most = 0, at = null; rates.forEach((x, j) => { const c = x.filter(y => y >= 0.5).length; if (c > most) { most = c; at = grid[j]; } });
+  check("C no one setting clears three rounds", most <= 2, "496 settings, 8 runs each: the greediest (" + at.join(", ") + ") hits half the time or more in " + most);
+  const r0 = C.game.current();
+  check("C the dealt arrows are the round's", C.br === r0.br && C.bK === r0.bK && +document.getElementById("C_br").value === r0.br && +document.getElementById("C_bK").value === r0.bK,
+        "round " + r0.key + ": trait -> r " + C.br + " (dealt " + r0.br + "), trait -> K " + C.bK + " (dealt " + r0.bK + ")");
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
   document.getElementById("stageA").classList.remove("stage-locked");
   document.getElementById("stageB").classList.remove("stage-locked");
+  document.getElementById("stageC").classList.remove("stage-locked");
   const over = () => { const bad = [];
     document.querySelectorAll("canvas").forEach(cv => {
       if (cv.dataset.fit === "off") return;
@@ -154,9 +210,9 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B };
+  const out = [], stages = { A, B, C };
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
@@ -173,7 +229,7 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 2 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 3 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
