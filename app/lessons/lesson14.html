@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 14</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+
+  /* Lecture voice — JM's own words, spliced from the lecture corpus. Source
+     ids are in the comment above each block. */
+  .stage-intro { margin-bottom:16px; }
+  .intro-grid { display:grid; grid-template-columns:1.45fr 1fr; gap:22px; align-items:start; }
+  .stage-intro ul.setup { margin:0; padding:0; border-top:0; }
+  @media (max-width: 980px) { .intro-grid { grid-template-columns:1fr; gap:14px; }
+    .stage-intro ul.setup { margin-top:12px; padding-top:12px; border-top:1px solid var(--rule); } }
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  ul.setup { list-style:none; margin:14px 0 0; padding:13px 0 0; border-top:1px solid var(--rule); font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+
+  .controls .row { display:grid; grid-template-columns:218px 1fr 86px; align-items:center; gap:10px; margin-bottom:6px; }
+  @media (max-width:520px) { .controls .row { grid-template-columns:1fr; } }
+  .controls label { font-size:13px; }
+  .controls output { font-family:ui-monospace,Menlo,monospace; font-size:13px; }
+  .controls input[type=range] { width:100%; }
+  .controls .row.off { opacity:0.38; pointer-events:none; }
+  .controls .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.secondary { background:#888; }
+  .controls button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.accent { background:var(--accent); }
+  .controls button.accent:disabled { background:#bbb; }
+  .toggle { display:flex; align-items:center; gap:8px; margin:9px 0 4px; font-size:13px; }
+  .toggle input { width:15px; height:15px; }
+  .path-input { display:none; }
+  .pathwrap { margin:2px 0 8px; }
+
+  canvas.plot { width:100%; height:auto; display:block; background:#fff; }
+  .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
+  .readout .label { color:var(--muted); }
+  .readout b { font-weight:600; }
+  .readout .ok { color:var(--good); font-weight:600; }
+  .readout .off { color:var(--bad); font-weight:600; }
+  .readout .big { font-size:15px; font-weight:600; }
+
+  table.tally { border-collapse:collapse; font:12.5px ui-monospace,Menlo,monospace; width:100%; }
+  table.tally th { text-align:left; font-weight:600; color:var(--muted); font-size:11px; text-transform:uppercase;
+                   letter-spacing:0.04em; padding:3px 6px 3px 0; border-bottom:1px solid var(--rule); }
+  table.tally th.n { text-align:right; }
+  table.tally td { padding:3px 6px 3px 0; border-bottom:1px solid #f0eee5; }
+  table.tally td.n { text-align:right; font-variant-numeric:tabular-nums; }
+  table.tally tr.sel td { background:#f3efe2; }
+  .chip { display:inline-block; width:11px; height:11px; border-radius:3px; vertical-align:-1px; margin-right:5px; border:1px solid rgba(0,0,0,0.25); }
+
+  .numq { display:none; }
+  .numq.shown { display:block; }
+  .numq .q { font-weight:600; margin-bottom:6px; font-size:14px; }
+  .gm { margin-top:10px; }
+  .gm .gm-prompt { font-size:13.5px; line-height:1.45; margin-bottom:10px; }
+  .gm .gm-prompt b { font-family:ui-monospace,Menlo,monospace; font-weight:600; color:var(--ink); }
+  .gm .buttons { align-items:center; }
+  .gm canvas { display:block; margin-top:10px; max-width:100%; }
+  .flip { margin-top:7px; font:12.5px ui-monospace,Menlo,monospace; min-height:16px; line-height:1.55; }
+  .flip .ok { color:var(--good); font-weight:600; }
+  .flip .off { color:var(--bad); font-weight:600; }
+  .tally-pill { display:inline-block; padding:2px 9px; border-radius:11px; background:#eceae2;
+                font:12px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .tally-pill.on { background:#4a7a2a; color:#fff; }
+  .verdict { margin-top:9px; padding:8px 11px; border-radius:4px; font-size:13px; display:none; }
+  .verdict.shown { display:block; }
+  .verdict.right { background:#e4efd4; border:1px solid #6f8a4a; color:#2e4410; }
+
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:340px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .kw { color:#c792ea; } pre.code .fn { color:#82aaff; } pre.code .num { color:#f78c6c; }
+  pre.code .str { color:#c3e88d; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+
+  /* ---- the real-data panels ------------------------------------------
+     Full width, under the stage's two columns, so the record gets the
+     room the simulation gets. */
+  .realdata { margin-top:16px; border-left:4px solid var(--accent2); }
+  .rd-grid { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(280px,1fr); gap:20px; align-items:start; }
+  @media (max-width:1040px) { .rd-grid { grid-template-columns:minmax(0,1fr); } }
+  .realdata ul.setup li b { font-family:ui-monospace,Menlo,monospace; }
+
+  /* ---- the pedigree, Stage B ------------------------------------------
+     Five rows of individuals in a fixed tree. The canvas is wide, so it gets its
+     own scroller rather than squashing the rest of the column. */
+  .pedwrap { overflow-x:auto; }
+  .pedwrap canvas { min-width:620px; }
+
+  /* ---- the two rules, Stage B / the routes, Stage D --------------------
+     One switch with two settings, and the setting you are not on stays
+     on screen in grey. The contrast is the stage, so it has to
+     accumulate rather than replace. */
+  .ruleswitch { display:flex; gap:6px; margin-bottom:10px; }
+  .ruleswitch button { flex:1 1 0; background:#fff; border:1px solid var(--rule); color:var(--ink);
+                       border-radius:4px; padding:8px 7px; cursor:pointer; font-size:12.5px; line-height:1.3; text-align:left; }
+  .ruleswitch button.on { background:var(--accent2); border-color:var(--accent2); color:#fff; }
+
+  /* ---- predict card, dealt table, round pips (ported from lesson 10) ----
+     The new-style apparatus this lesson did not have. */
+  .rollbar:empty, .rollpips:empty { display:none; }
+  .rollbar { margin-top:10px; padding:9px 12px; border-radius:4px; background:#f3efe2;
+             border-left:3px solid #bdb8a4; font-size:13px; line-height:1.5; }
+  .rollbar.live { border-left-color:var(--accent); background:#eef3e6; }
+  .rollbar.hit  { border-left-color:#6f8a4a; background:#e4efd4; color:#2e4410; }
+  .rollbar.miss { border-left-color:#b23a48; background:#f7e7e9; color:#6e1f28; }
+  .rollbar .goal { font-weight:600; }
+  .rollpips { display:flex; gap:5px; margin-top:7px; flex-wrap:wrap; align-items:center; }
+  .rollpips i { width:13px; height:13px; border-radius:50%; border:1.6px solid #bdb8a4; display:inline-block; }
+  .rollpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
+  .rollpips i.miss { background:#e3d4d6; border-color:#c99; }
+  .rollpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
+  .panel.predict { border-left:4px solid var(--accent); }
+  .pred-slot:empty { display:none; }
+  .pred-note { margin-top:9px; font-size:12.5px; color:var(--muted); font-style:italic; }
+  .controls.pending { opacity:0.42; pointer-events:none; }
+  .picks { display:flex; gap:6px; margin:4px 0 10px; }
+  .picks button { flex:1 1 0; background:#fff; border:1px solid var(--rule); color:var(--ink);
+                  border-radius:4px; padding:8px 7px; cursor:pointer; font-size:12.5px; line-height:1.3; }
+  .picks button.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .picks button:disabled { opacity:0.45; cursor:not-allowed; }
+  .picks button .swatch { display:inline-block; width:10px; height:10px; border-radius:2px;
+                          vertical-align:-1px; margin-right:5px; border:1px solid rgba(0,0,0,0.3); }
+  .pickq { font-size:13px; margin-top:8px; }
+  .callpips { display:flex; gap:5px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .callpips i { width:13px; height:13px; border-radius:50%; border:1.6px solid #bdb8a4; display:inline-block; }
+  .callpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
+  .callpips i.miss { background:#e3d4d6; border-color:#c99; }
+  .callpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
+
+  /* ---- the dealt round's parameter table ------------------------------
+     JM, 2026-09-21: "There is WAY too much text in the prediction box. It
+     should be a short, flat table." Three facts about the population on offer,
+     and then the two things being called. Nothing else is in the card. */
+  table.dealt { border-collapse:collapse; width:100%; font:13px -apple-system,sans-serif; margin-bottom:10px; }
+  table.dealt th { text-align:left; font-weight:400; color:var(--muted); padding:3px 0; width:58%; }
+  table.dealt td { text-align:right; font:13px ui-monospace,Menlo,monospace; font-weight:600;
+                   font-variant-numeric:tabular-nums; padding:3px 0; }
+  table.dealt tr + tr th, table.dealt tr + tr td { border-top:1px solid #f2f0e8; }
+  .roundpips { display:flex; gap:4px; margin-top:8px; flex-wrap:wrap; align-items:center; }
+  .roundpips i { width:11px; height:11px; border-radius:50%; border:1.5px solid #ddd9cc; display:inline-block; }
+  .roundpips i.hit { background:#6f8a4a; border-color:#6f8a4a; }
+  .roundpips i.miss { background:#e3d4d6; border-color:#c99; }
+  /* a call that was right but far wider than it needed to be */
+  .roundpips i.wide { background:#f0e2c2; border-color:#c9a94e; }
+  .roundpips i.now { border-color:var(--accent); border-width:2px; }
+  .roundpips span { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin-left:4px; }
+
+  /* ---- the practice switch, stages B and D (lesson 10's, copied) -------
+     A run that counts and a run that does not are the same machine, so the
+     switch says which one is armed in two places: here, and on the button. */
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px;
+                  font-size:12.5px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  .flip .prac { color:var(--accent2); font-weight:600; }
+  /* a plot the student draws on */
+  canvas.paint { cursor:crosshair; touch-action:none; }
+  canvas.paint.off { cursor:default; }
+
+  /* ---- Stage B: one row per allele, h and s side by side ------------------ */
+  .controls .arow { display:grid; grid-template-columns:62px 20px minmax(0,1fr) 38px 20px minmax(0,1fr) 46px; align-items:center; gap:6px; margin-bottom:6px; font-size:13px; }
+  .controls .arow .nm { display:flex; align-items:center; gap:5px; }
+  .controls .arow .nm i { width:11px; height:11px; border-radius:3px; display:inline-block; border:1px solid rgba(0,0,0,0.25); }
+  .controls .arow.off { opacity:0.38; pointer-events:none; }
+  .controls .arow input[type=range] { width:100%; }
+  .controls .arow output { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; }
+  .controls .arow .k { color:var(--muted); font-size:12px; text-align:right; }
+  /* ---- the diagram's colours (JM, 2026-09-24, for this lesson's arrows:
+     "positive, it's blue and negative, it's red"). paths.css draws a negative
+     arrow brown and a selected one red, so here red means negative and the
+     arrow in hand goes dark. CSS outranks the markers' fill attributes. */
+  .paths-arrow.down { stroke:#b23a48; }
+  .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .paths-arrow.selected, .paths-hit:focus + .paths-arrow, .paths-hit:focus-visible + .paths-arrow { stroke:#1d1d1b; }
+  .paths-arrow-value.selected { fill:#1d1d1b; }
+  #paths-head-sel path { fill:#1d1d1b; }
+  .paths-step circle { stroke:#1d1d1b; }
+  .paths-step text { fill:#1d1d1b; }
+  .paths-step:hover circle { fill:#e7e4da; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 14</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+</nav>
+
+<!-- ========== STAGE A — births, deaths, and where they meet ================ -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <ul class="setup" style="margin:0; padding:0; border-top:0;">
+      <li>One population, one generation at a time. Each individual has, on average, the <b>births per individual</b> number of offspring, and dies with the <b>deaths per individual</b> chance.</li>
+      <li><b>Crowding</b> is how many there are. Its two arrows are how much each extra hundred individuals changes births and deaths: blue raises, red lowers.</li>
+      <li>The <b>other factors</b> arrows are births and deaths when there is no crowding at all.</li>
+      <li><b>Top plot</b>: births and deaths per individual against how many there are. Where births are higher the population grows; where deaths are higher it shrinks.</li>
+      <li><b>Bottom plot</b>: the population over 40 generations, from 20 individuals. Each round, one arrow is yours; the rest are held.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="A_rates" class="plot" width="680" height="250"></canvas>
+        <div class="readout" id="A_ratesRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="A_time" class="plot" width="680" height="240"></canvas>
+        <div class="readout" id="A_timeRead"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeA"><span class="line"><span class="com"># births and deaths, both leaning on crowding</span></span><span class="line" data-line="b0">b0 &lt;- <span class="num" id="cA_b0">0.60</span>   <span class="com"># births per individual, uncrowded</span></span><span class="line" data-line="bb">bb &lt;- <span class="num" id="cA_bb">0.00</span>   <span class="com"># change per extra 100 individuals</span></span><span class="line" data-line="d0">d0 &lt;- <span class="num" id="cA_d0">0.20</span>   <span class="com"># deaths per individual, uncrowded</span></span><span class="line" data-line="bd">bd &lt;- <span class="num" id="cA_bd">0.00</span></span><span class="line">N &lt;- <span class="num">20</span></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">40</span>) {</span><span class="line">  b &lt;- <span class="fn">max</span>(<span class="num">0</span>, b0 + bb * N[t] / <span class="num">100</span>); d &lt;- <span class="fn">min</span>(<span class="num">1</span>, <span class="fn">max</span>(<span class="num">0</span>, d0 + bd * N[t] / <span class="num">100</span>))</span><span class="line">  N[t + <span class="num">1</span>] &lt;- <span class="fn">rbinom</span>(<span class="num">1</span>, N[t], <span class="num">1</span> - d) + <span class="fn">rpois</span>(<span class="num">1</span>, N[t] * b)</span><span class="line">}</span><span class="line"><span class="num">100</span> * (b0 - d0) / (bd - bb)   <span class="com"># where the two lines cross</span></span></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel predict" id="predA">
+        <h3 id="predA_h">Predict</h3>
+        <div class="pred-slot" id="predA_slot"></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="A_controls">
+          <div class="pathwrap" id="pathsA"></div>
+          <input type="range" id="A_bb" min="-0.3" max="0.3" step="0.01" value="0" class="path-input" />
+          <input type="range" id="A_bd" min="-0.3" max="0.3" step="0.01" value="0" class="path-input" />
+          <input type="range" id="A_b0" min="0" max="1.2" step="0.05" value="0.6" class="path-input" />
+          <input type="range" id="A_d0" min="0" max="1" step="0.05" value="0.2" class="path-input" />
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="A_run" class="accent">Go</button>
+            <button id="A_clear" class="ghost">Clear runs</button>
+            <button id="A_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Hit three of the five targets. <span class="hint"><span id="A1_now">0 of 5 attempts</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">That is all of Lesson 14 built so far.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 14 built so far. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 14 — births, deaths, and crowding. DRAFT, new 2026-09-24.
+
+   The third selection lesson (12 the genetics, 13 the regression). JM,
+   2026-09-24: "a trait that causes changes to the birth rate and causes
+   changes to the death rate ... as mediated by something like carrying
+   capacity ... they can adjust the arrows. The arrows exist. They can't
+   take them away or add them ... 0 it's just a line ... positive, it's
+   blue and negative, it's red." And: "we haven't done carrying capacities
+   and net growth rate, but r versus K. But we may need 2 parts to build
+   that." So A is births and deaths leaning on crowding, before any trait.
+   Plan in docs/overhauls/lesson14_overhaul.md.
+
+   Furniture copied from lesson 13. Checks: scripts/check_lesson14_numbers.js.
+   ===================================================================== */
+const GREEN = "#4a7a2a", HOT = "#b23a48", BLUE = "#2f6b8f", MUTED = "#6b6b68";
+const PALE = "#e8c96a", MID = "#9a8a6e", DARK = "#55407e";   // 0, 1, 2 copies
+const clamp = (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v);
+const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
+const sd = a => { const m = mean(a); return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / Math.max(1, a.length - 1)); };
+const f2 = v => v.toFixed(2), f3 = v => v.toFixed(3);
+
+/* ====== canvases that stay inside their panel ========================
+   Lesson 10's override, copied. sim.js's setupCanvas pins the markup
+   `width` as an inline CSS width, so a plot declared 680 wide is laid out
+   680 wide even when its column is 560. Lesson 11 measured the
+   overflow on 2026-09-24: 4 px at a 1440 window, 99-119 px at 1100.
+
+   This measures the room the canvas has and draws at that width, never
+   wider than declared. Height is left as declared; every draw function
+   here is written against W and H, so the plot re-lays-out rather than
+   squashing. Cached per canvas, invalidated on resize. A canvas marked
+   data-fit="off" keeps its declared width: C's pedigree sits in its own
+   scroller, which JM likes as it is. `drawW` is what was last drawn at, for
+   anything that maps a pointer back into the plot. */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) {
+    canvas.dataset.cssW = String(canvas.width);
+    canvas.dataset.cssH = String(canvas.height);
+  }
+  const declW = +canvas.dataset.cssW, cssH = +canvas.dataset.cssH;
+  let cssW;
+  if (canvas.dataset.fit === "off") cssW = declW;
+  else if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement;
+    let room = 0;
+    if (host) {
+      const cs = getComputedStyle(host);
+      room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+    }
+    if (room > 60) {
+      cssW = Math.round(Math.min(room, declW));
+      canvas.dataset.fitW = String(cssW);
+      canvas.dataset.fitEpoch = String(FIT_EPOCH);
+    } else cssW = declW;      // not laid out yet; do not cache this
+  }
+  canvas.dataset.drawW = String(cssW);
+  canvas.width  = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width  = cssW + "px";
+  canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+let fitTimer = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(fitTimer);
+  fitTimer = setTimeout(() => { FIT_EPOCH++; repaintAll(); }, 120);
+});
+/* A card repaint re-enables Go, so a stage mid-run keeps its card as it is. */
+function repaintAll() {
+  const safe = f => { try { f(); } catch (e) {} };
+  if (!A.running) safe(A_paint);
+  if (A.game && !A.running) safe(A.game.repaint);
+}
+
+
+
+/* ====== gates ========================================================
+   A stage opens the next by being solved. The written questions record
+   on their first attempt and getting one wrong never shuts a door. */
+/* Draft: A so far (2026-09-24); plan in docs/overhauls/lesson14_overhaul.md. */
+const Gates = { A:{open:false,done:false} };
+const NEXT = { A:null };
+/* Named one per slot rather than as an array, so check_lessons.py's
+   slot-coverage pass can see that every declared slot is written -- it
+   reads `name: <integer>` and an array of indices is invisible to it. */
+const BIT = { A1:0 };
+/* A stage with a real-data panel waits for the panel too, unless the
+   fetch failed -- in which case realOffline() releases the wait rather
+   than stranding the student behind a file. */
+const RealNeeded = { };   /* no real-data panel in this draft */
+
+function unlockNext(stage) {
+  const nx = NEXT[stage];
+  /* The last stage mints the code. Nothing did this between 2026-09-21,
+     when Stage E was cut and the re-mint guard below moved to Gates.D, and
+     2026-09-22: the done banner appeared saying "your completion code is
+     below" with nothing below it, and no error anywhere. Score.finish() has
+     to be called explicitly -- recordCheckpoint does not do it. */
+  if (!nx) {
+    showDone(true);
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+    return;
+  }
+  const sec = document.getElementById("stage" + nx);
+  if (sec && sec.classList.contains("stage-locked")) {
+    sec.classList.remove("stage-locked");
+    const toc = document.getElementById("toc" + nx);
+    if (toc) toc.classList.remove("locked");
+  }
+  Gates[nx].open = true;
+}
+function markTask(stage, key) {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  if (li) li.classList.add("done");
+}
+const taskDone = (stage, key) => {
+  const li = document.querySelector(`#tasks${stage} li[data-task="${key}"]`);
+  return !!(li && li.classList.contains("done"));
+};
+function hint(id, text) { const el = document.getElementById(id + "_now"); if (el) el.textContent = text; }
+function showSolved(stage) { const el = document.getElementById("solved" + stage); if (el) el.classList.add("shown"); }
+function record(pos, ok) {
+  if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+  // Re-mint if the lesson is already finished: the last stage's committed
+  // estimate can be locked after its game has closed the final gate, and a
+  // code minted at that gate would carry the bit as a zero.
+  if (Gates.A.done && Score.finish) Score.finish();
+}
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function showDone(scroll) {
+  const b = document.getElementById("done-banner");
+  if (!b) return;
+  b.classList.add("shown");
+  if (scroll && b.scrollIntoView) b.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true;
+  showSolved(stage);
+  unlockNext(stage);
+}
+/* Called by each stage when one of its gates lands. A stage is done when
+   every task in its list is ticked. */
+function checkStageDone(stage) {
+  const lis = document.querySelectorAll(`#tasks${stage} li[data-task]`);
+  for (const li of lis) if (!li.classList.contains("done")) return;
+  finishStage(stage);
+}
+function realOffline(stage, readId, what) {
+  RealNeeded[stage] = false;
+  const el = document.getElementById(readId);
+  if (el) el.innerHTML = '<span class="off">' + what + " did not load.</span> That panel is skipped; the rest of the stage still counts.";
+  const li = document.querySelector(`#tasks${stage} li[data-task="${stage}4"]`);
+  if (li) { li.classList.add("done"); }
+  checkStageDone(stage);
+}
+
+/* ====== a small framed plot ==========================================
+   sim.js's makeFrame pads against the whole canvas, which cannot stack
+   two panels in one element. This one takes a box. */
+function box(px, py, pw, ph, xMin, xMax, yMin, yMax) {
+  return { px, py, pw, ph, xMin, xMax, yMin, yMax,
+           x: v => px + (v - xMin) / (xMax - xMin) * pw,
+           y: v => py + ph - (v - yMin) / (yMax - yMin) * ph };
+}
+function axes(ctx, f, xLab, yLab, yFmt, xFmt, xN) {
+  yFmt = yFmt || (v => v.toFixed(1)); xFmt = xFmt || (v => String(Math.round(v))); xN = xN || 5;
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(f.px, f.py); ctx.lineTo(f.px, f.py + f.ph); ctx.lineTo(f.px + f.pw, f.py + f.ph); ctx.stroke();
+  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let i = 0; i <= 4; i++) { const v = f.yMin + (f.yMax - f.yMin) * i / 4; ctx.fillText(yFmt(v), f.px - 5, f.y(v)); }
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let i = 0; i <= xN; i++) { const v = f.xMin + (f.xMax - f.xMin) * i / xN; ctx.fillText(xFmt(v), f.x(v), f.py + f.ph + 4); }
+  ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
+  if (xLab) { ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillText(xLab, f.px + f.pw / 2, f.py + f.ph + 18); }
+  if (yLab) { ctx.save(); ctx.translate(f.px - 36, f.py + f.ph / 2); ctx.rotate(-Math.PI / 2);
+              ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText(yLab, 0, 0); ctx.restore(); }
+}
+function line(ctx, f, ys, colour, width, dash, x0) {
+  ctx.save(); ctx.strokeStyle = colour; ctx.lineWidth = width || 2;
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath();
+  ys.forEach((v, i) => { const X = f.x((x0 || 0) + i), Y = f.y(v); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+  ctx.stroke(); ctx.restore();
+}
+/* =====================================================================
+   THE ROUND MACHINE — all four stages use it.
+
+   Five attempts, three have to land. Each attempt deals a target into the
+   Predict card, the student works the controls, and the stage calls
+   submit() with its own verdict. Nothing here knows what a stage measures.
+   ===================================================================== */
+/* Picture mode (cfg.picture): the target is drawn, not tabled, and a result
+   stays on the card until the student asks for the next target -- dealing
+   the next round in the same breath as the verdict wiped the picture of
+   what just happened. st.waiting is true between a verdict and Next. */
+/* Five different targets out of a list, in an order that is the student's own.
+   JM, 2026-09-23: "the targets are repetitive (I got F = 0.20 I think 3/5
+   times?)". The old deal was (seed + i*3) % 6, which only ever reaches two
+   of the six values. A seeded shuffle, read in order, never repeats. */
+function dealDistinct(label, list) {
+  const rng = mulberry32(pageSeed(label, 1, 99999));
+  const order = list.map((_, k) => k);
+  for (let k = order.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); const t = order[k]; order[k] = order[j]; order[j] = t; }
+  return i => list[order[i % order.length]];
+}
+/* The tally under every card. JM, 2026-09-23: "Just list the attempts done
+   and number of successes eg (3 of 5 attempts, 2 successful hits)". */
+const tallyText = (tries, RN, hits) => tries + " of " + RN + " attempts, " + hits + " successful hit" + (hits === 1 ? "" : "s");
+
+function mountRounds(stage, cfg) {
+  const RN = cfg.rounds || 5, NEED = cfg.need || 3;
+  const st = { i: 0, hits: [], done: false, round: null, waiting: false, last: null };
+  const el = id => document.getElementById(id);
+  const nHits = () => st.hits.filter(Boolean).length;
+  function deal() { st.round = cfg.deal(st.i, st); st.last = null; st.waiting = false;
+                    if (cfg.onDeal) cfg.onDeal(st.round); paint(); }
+  function paint() {
+    el("pred" + stage + "_h").textContent = st.done ? "Predict — done" : "Predict";
+    if (cfg.picture) {
+      /* picture mode may carry a short table of what the round gives, above the picture */
+      if (cfg.rows) el(stage + "_ttab").innerHTML = (st.round ? cfg.rows(st.round) : [])
+        .map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("");
+      cfg.picture(el(stage + "_tpic"), st.round, st.last);
+      el(stage + "_tnext").disabled = !st.waiting || st.done;
+      /* after a scored run the card waits for Next target; a practice run
+         is still allowed, so a student can try again at the target just missed */
+      if (cfg.go) el(cfg.go).disabled = st.waiting && !st.done && !(cfg.practising && cfg.practising());
+    } else {
+    const rows = st.round ? cfg.rows(st.round) : [];
+    el(stage + "_ttab").innerHTML =
+      '<tr><th>attempt</th><td>' + Math.min(st.i + 1, RN) + " of " + RN + "</td></tr>" +
+      rows.map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("");
+    }
+    el(stage + "_tshape").textContent = st.done
+      ? (st.hits.filter(Boolean).length >= NEED
+          ? "You have it. Keep playing with the controls if you like."
+          : "Five attempts done. Keep playing with the controls if you like.")
+      : cfg.prompt(st.round);
+    let h = "";
+    for (let k = 0; k < RN; k++)
+      h += '<i class="' + (st.hits[k] === true ? "hit" : st.hits[k] === false ? "miss"
+            : (k === st.i && !st.done ? "now" : "")) + '"></i>';
+    h += "<span>" + tallyText(st.hits.length, RN, nHits()) + "</span>";
+    el(stage + "_tpips").innerHTML = h;
+  }
+  /* `practice` is lesson 10's practice switch: the run is shown against the
+     target and neither scored nor consumed. */
+  function submit(ok, detail, result, practice) {
+    el(stage + "_tflip").innerHTML = practice && !st.done
+      ? '<span class="prac">practice run — this one did not count</span>' : detail;
+    if (st.done || practice) { st.last = result == null ? null : result; if (cfg.picture) paint(); return; }
+    st.hits.push(ok);
+    st.i = st.hits.length;
+    hint(stage + "1", tallyText(st.hits.length, RN, nHits()));
+    bump(stage);
+    if (cfg.picture) {
+      st.last = result == null ? null : result;
+      st.waiting = st.i < RN;
+      if (st.i >= RN) finish();
+      paint();
+      return;
+    }
+    if (st.i >= RN) { finish(); paint(); }
+    else deal();
+  }
+  function finish() {
+    if (st.done) return;
+    st.done = true;
+    record(BIT[stage + "1"], nHits() >= NEED);
+    markTask(stage, stage + "1");
+    hint(stage + "1", tallyText(st.hits.length, RN, nHits()));
+    checkStageDone(stage);
+  }
+  el("pred" + stage + "_slot").innerHTML =
+    (cfg.picture
+      ? (cfg.rows ? '<table class="dealt" id="' + stage + '_ttab"></table>' : "") +
+        '<canvas class="plot" id="' + stage + '_tpic" width="460" height="' + (cfg.pictureH || 130) + '"></canvas>'
+      : '<table class="dealt" id="' + stage + '_ttab"></table>') +
+    '<div class="gm-prompt" id="' + stage + '_tshape" style="margin-top:8px;"></div>' +
+    '<div class="flip" id="' + stage + '_tflip"></div>' +
+    (cfg.picture ? '<div class="controls"><div class="buttons" style="margin-top:6px;">' +
+                   '<button id="' + stage + '_tnext" class="secondary" disabled>Next target</button></div></div>' : "") +
+    '<div class="roundpips" id="' + stage + '_tpips"></div>';
+  if (cfg.picture) el(stage + "_tnext").addEventListener("click", () => { if (st.waiting && !st.done) deal(); });
+  deal();
+  return { st, submit, current: () => st.round, repaint: paint,
+           waiting: () => st.waiting,
+           show: () => { if (!st.done) { st.hits = [true, true, true]; st.waiting = false; finish(); paint(); } } };
+}
+
+/* A run is thrown, not steered: while it plays, the stage's controls are
+   off. The Next button in the card is outside #X_controls and is not
+   touched. */
+function lockStage(stage, on) {
+  const c = document.getElementById(stage + "_controls");
+  if (!c) return;
+  c.classList.toggle("pending", on);
+  c.querySelectorAll("input, button").forEach(x => { x.disabled = on; });
+}
+
+
+
+/* =====================================================================
+   STAGE A — births, deaths, and where they meet.
+
+   Per individual per generation: births b(N) = max(0, b0 + bb N/100),
+   Poisson; deaths d(N) = clamp(d0 + bd N/100, 0, 1), each individual on
+   its own. Lesson 9 E's diagram (a cause on births and deaths, other
+   factors on each) with crowding as the cause. The population grows where
+   b > d and shrinks where d > b, so it levels off where the lines cross:
+   N* = 100 (b0 - d0) / (bd - bb), printed beside the level each run
+   actually settles at. Not named on the page (lesson 9's rule: build it,
+   do not name it).
+
+   A round deals one arrow to set and a level to hit, judged on the mean
+   of generations 31-40. The other three arrows are held.
+   ===================================================================== */
+const A_N0 = 20, A_G = 40, A_W0 = 31, A_TICK = 45;
+/* The five rounds. The lever, what it has to be, and the level:
+     r1  crowding -> deaths    +0.10    400    (births flat)
+     r2  crowding -> births    -0.18    250
+     r3  other -> births        0.80    600
+     r4  other -> deaths        0.40    300
+     r5  crowding -> deaths    +0.025   800    (between slider steps: 0.02 or 0.03)
+   Window +-10%. The opening value of each lever misses its round. */
+const A_ROUNDS = [
+  { key: "r1", lever: "bd", fix: { b0: 0.6, bb: 0,     d0: 0.2 }, start: 0,   K: 400 },
+  { key: "r2", lever: "bb", fix: { b0: 0.8, bd: 0.02,  d0: 0.3 }, start: 0,   K: 250 },
+  { key: "r3", lever: "b0", fix: { bb: -0.05, bd: 0.05, d0: 0.2 }, start: 0.5, K: 600 },
+  { key: "r4", lever: "d0", fix: { b0: 1.0, bb: -0.1, bd: 0.1 },  start: 0.2, K: 300 },
+  { key: "r5", lever: "bd", fix: { b0: 0.9, bb: -0.05, d0: 0.3 }, start: 0,   K: 800 }
+];
+const A_TOL = 0.10;
+const A_LEVER = { bb: "crowding → births", bd: "crowding → deaths", b0: "other factors → births", d0: "other factors → deaths" };
+const A = { v: { b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, runs: [], cur: null, frame: null, running: false, timer: 0,
+            serial: 0, game: null, paths: null };
+
+const A_birth = (v, N) => Math.max(0, v.b0 + v.bb * N / 100);
+const A_death = (v, N) => clamp(v.d0 + v.bd * N / 100, 0, 1);
+/* where births meet deaths; null if they never do above zero */
+function A_cross(v) {
+  const g = v.bd - v.bb, r = v.b0 - v.d0;
+  if (r <= 0) return 0;
+  if (g <= 1e-9) return null;
+  return 100 * r / g;
+}
+function A_binom(rng, n, p) {
+  if (n <= 0 || p <= 0) return 0; if (p >= 1) return n;
+  if (n < 60) { let k = 0; for (let i = 0; i < n; i++) if (rng() < p) k++; return k; }
+  const m = n * p, s = Math.sqrt(n * p * (1 - p));
+  return clamp(Math.round(m + s * A_gauss(rng)), 0, n);
+}
+function A_pois(rng, l) {
+  if (l <= 0) return 0;
+  if (l < 40) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1; }
+  return Math.max(0, Math.round(l + Math.sqrt(l) * A_gauss(rng)));
+}
+function A_gauss(rng) { const u = rng() || 1e-12, v = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(6.283185307 * v); }
+/* one run of 40 generations; capped so a population with no brake stays drawable */
+function A_run(v, rng) {
+  const N = [A_N0];
+  for (let t = 0; t < A_G; t++) { const n = N[t];
+    N.push(Math.min(20000, A_binom(rng, n, 1 - A_death(v, n)) + A_pois(rng, n * A_birth(v, n)))); }
+  return N;
+}
+const A_level = N => { let s = 0; for (let t = A_W0; t <= A_G; t++) s += N[t]; return s / (A_G - A_W0 + 1); };
+const A_round = () => (A.game && !A.game.st.done) ? A.game.current() : null;
+const A_practising = () => !!(A.game && (A.game.st.done || document.getElementById("A_practice").checked));
+function A_hold() {
+  const r = A_round();
+  for (const k of ["bb", "bd", "b0", "d0"]) if (A.paths) A.paths.setArrow(k, { readonly: !!r && r.lever !== k });
+}
+function A_deal(r) {
+  A.v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, r.fix); A.v[r.lever] = r.start;
+  A.runs = []; A.cur = null; A_syncInputs(); A_hold();
+}
+function A_syncInputs() {
+  for (const k of ["bb", "bd", "b0", "d0"]) { document.getElementById("A_" + k).value = A.v[k];
+    const c = document.getElementById("cA_" + k); if (c) c.textContent = A.v[k].toFixed(2); }
+  if (A.paths) A.paths.sync();
+}
+function A_syncGo() {
+  document.getElementById("A_run").textContent = A_practising() ? "Practice run" : "Go";
+  if (A.game && !A.running) A.game.repaint();
+}
+function A_go() {
+  const practice = A_practising();
+  if (A.running || (A.game.waiting() && !practice)) return;
+  A.serial++;
+  const N = A_run(A.v, mulberry32(pageSeed("l14A", 1, 99999) + A.serial * 7919));
+  A.cur = { N, v: Object.assign({}, A.v), practice };
+  bump("A");
+  A.frame = 0; A.running = true; lockStage("A", true); A_paint();
+  A.timer = setInterval(() => {
+    A.frame++; A_paint();
+    if (A.frame >= A_G) { clearInterval(A.timer); A.running = false; A.frame = null; lockStage("A", false); A_land(practice); }
+  }, A_TICK);
+}
+function A_land(practice) {
+  const run = A.cur, lev = A_level(run.N), r = A_round();
+  A.runs.push(run); A.cur = null;
+  if (r) { const ok = Math.abs(lev - r.K) <= A_TOL * r.K;
+    A.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', lev, practice); }
+  A_syncGo(); A_paint();
+}
+
+/* ---- drawing ------------------------------------------------------------ */
+function A_drawRates() {
+  const cv = document.getElementById("A_rates");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const v = A.v, r = A_round(), xMax = 1000, K = A_cross(v);
+  const f = box(56, 12, W - 74, H - 46, 0, xMax, 0, 1.6);
+  axes(ctx, f, "how many there are (crowding)", "per individual", v => v.toFixed(1), v => String(Math.round(v)), 5);
+  /* where it grows and where it shrinks: one fill per stretch (strips of
+     translucent fill drew as stripes) */
+  const grows = N => A_birth(v, N) > A_death(v, N);
+  let a = 0, up = grows(0.5);
+  for (let N = 1; N <= xMax; N++) { const g = N < xMax ? grows(N + 0.5) : !up;
+    if (g !== up || N === xMax) { ctx.fillStyle = up ? "rgba(74,122,42,0.10)" : "rgba(178,58,72,0.08)"; ctx.fillRect(f.x(a), f.py, f.x(N) - f.x(a), f.ph); a = N; up = g; } }
+  if (r) { ctx.fillStyle = "rgba(178,58,72,0.16)"; ctx.fillRect(f.x(r.K * (1 - A_TOL)), f.py, f.x(r.K * (1 + A_TOL)) - f.x(r.K * (1 - A_TOL)), f.ph); }
+  const curve = (fn, col) => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath();
+    for (let q = 0; q <= 200; q++) { const N = xMax * q / 200, y = f.y(Math.min(1.6, fn(v, N))); q ? ctx.lineTo(f.x(N), y) : ctx.moveTo(f.x(N), y); } ctx.stroke(); };
+  curve(A_birth, BLUE); curve(A_death, HOT);
+  if (K != null && K > 0 && K <= xMax) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(f.x(K), f.py); ctx.lineTo(f.x(K), f.py + f.ph); ctx.stroke(); ctx.setLineDash([]); }
+  /* the population now, while a run plays */
+  if (A.cur && A.frame != null) { const n = A.cur.N[A.frame]; if (n <= xMax) {
+    ctx.fillStyle = DARK; ctx.beginPath(); ctx.arc(f.x(n), f.py + f.ph - 6, 5, 0, 6.2832); ctx.fill(); } }
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  [[BLUE, "births per individual"], [HOT, "deaths per individual"]].forEach(([col, lab], q) => { const y = f.py + 7 + 13 * q;
+    ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(f.px + f.pw - 170, y); ctx.lineTo(f.px + f.pw - 154, y); ctx.stroke();
+    ctx.fillStyle = col; ctx.fillText(lab, f.px + f.pw - 148, y); });
+  const sg = x => (x >= 0 ? "+" : "") + f2(x);
+  document.getElementById("A_ratesRead").innerHTML =
+    '<span class="label">uncrowded: births</span> <b>' + f2(v.b0) + '</b> <span class="label">deaths</span> <b>' + f2(v.d0) + '</b> <span class="label">→ grows by</span> <b>' + sg(v.b0 - v.d0) + '</b> <span class="label">per individual per generation when rare</span><br>' +
+    '<span class="label">the lines cross at</span> <b class="big">' + (K == null ? "never" : Math.round(K)) + '</b>' +
+    (K != null ? ' <span class="label">= 100 × (' + f2(v.b0) + ' − ' + f2(v.d0) + ') ÷ (' + sg(v.bd) + ' − ' + sg(v.bb) + ')</span>' : ' <span class="label">(crowding never brings births down to deaths)</span>');
+}
+function A_drawTime() {
+  const cv = document.getElementById("A_time");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const r = A_round(), K = A_cross(A.v);
+  let top = 1000; for (const run of A.runs) for (const n of run.N) top = Math.max(top, n);
+  if (A.cur) for (const n of A.cur.N) top = Math.max(top, n);
+  top = Math.min(4000, Math.ceil(top / 500) * 500);
+  const f = box(56, 12, W - 74, H - 46, 0, A_G, 0, top);
+  axes(ctx, f, "generation", "how many", v => String(Math.round(v)), v => String(Math.round(v)), 4);
+  if (r) { ctx.fillStyle = "rgba(178,58,72,0.18)"; ctx.fillRect(f.x(A_W0), f.y(r.K * (1 + A_TOL)), f.x(A_G) - f.x(A_W0), f.y(r.K * (1 - A_TOL)) - f.y(r.K * (1 + A_TOL))); }
+  if (K != null && K > 0 && K <= top) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1.2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(f.px, f.y(K)); ctx.lineTo(f.px + f.pw, f.y(K)); ctx.stroke(); ctx.setLineDash([]); }
+  ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
+  const trace = (N, upto, col, w) => { ctx.strokeStyle = col; ctx.lineWidth = w; ctx.beginPath();
+    for (let t = 0; t <= upto; t++) { const X = f.x(t), Y = f.y(Math.min(top, N[t])); t ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); } ctx.stroke(); };
+  A.runs.forEach((run, i) => trace(run.N, A_G, i === A.runs.length - 1 && !A.cur ? DARK : "rgba(85,64,126,0.28)", i === A.runs.length - 1 && !A.cur ? 2.2 : 1.4));
+  if (A.cur) trace(A.cur.N, A.frame == null ? A_G : A.frame, DARK, 2.2);
+  ctx.restore();
+  const last = A.runs.length && !A.cur ? A.runs[A.runs.length - 1] : null;
+  document.getElementById("A_timeRead").innerHTML = last
+    ? '<span class="label">generations 31–40 averaged</span> <b class="big">' + Math.round(A_level(last.N)) + '</b> &nbsp;·&nbsp; <span class="label">where the lines cross</span> <b>' + (K == null ? "never" : Math.round(K)) + '</b>' +
+      (r ? ' &nbsp;·&nbsp; <span class="label">target</span> <b>' + r.K + ' ± ' + Math.round(A_TOL * r.K) + '</b>' : '')
+    : (r ? '<span class="label">target: level off at</span> <b>' + r.K + ' ± ' + Math.round(A_TOL * r.K) + '</b> <span class="label">(generations 31–40 averaged)</span>' : '<span class="label">press Go to run 40 generations</span>');
+}
+function A_drawTarget(cv, r, got) {
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const x0 = 14, x1 = W - 14, y0 = 30, bh = 16, X = v => x0 + clamp(v, 0, 1000) / 1000 * (x1 - x0);
+  ctx.fillStyle = "#e7e4da"; ctx.fillRect(x0, y0, x1 - x0, bh);
+  ctx.fillStyle = "rgba(178,58,72,0.25)"; ctx.fillRect(X(r.K * (1 - A_TOL)), y0 - 6, X(r.K * (1 + A_TOL)) - X(r.K * (1 - A_TOL)), bh + 12);
+  ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("level off at " + r.K + " ± " + Math.round(A_TOL * r.K), x0, 16);
+  ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center";
+  for (const v of [0, 250, 500, 750, 1000]) ctx.fillText(String(v), X(v), y0 + bh + 18);
+  if (got != null) {
+    ctx.strokeStyle = DARK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(got), y0 - 10); ctx.lineTo(X(got), y0 + bh + 10); ctx.stroke();
+    ctx.fillStyle = DARK; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "right";
+    ctx.fillText("got " + Math.round(got), x1, 16);
+  }
+}
+function A_paint() { A_drawRates(); A_drawTime(); }
+function A_RCODE() {
+  const v = A.v;
+  return "# Lesson 14, Stage A -- births, deaths, and crowding\n" +
+    "set.seed(1)\nb0 <- " + v.b0 + "; bb <- " + v.bb + "    # births: uncrowded, and per extra 100\n" +
+    "d0 <- " + v.d0 + "; bd <- " + v.bd + "    # deaths: uncrowded, and per extra 100\n\n" +
+    "N <- " + A_N0 + "\nfor (t in 1:" + A_G + ") {\n" +
+    "  b <- max(0, b0 + bb * N[t] / 100); d <- min(1, max(0, d0 + bd * N[t] / 100))\n" +
+    "  N[t + 1] <- rbinom(1, N[t], 1 - d) + rpois(1, N[t] * b)\n}\n" +
+    "plot(0:" + A_G + ", N, type = \"l\", xlab = \"generation\", ylab = \"how many\")\n" +
+    "abline(h = 100 * (b0 - d0) / (bd - bb), lty = 2)     # where births meet deaths\n" +
+    "mean(N[32:41])\n";
+}
+function A_wire() {
+  for (const k of ["bb", "bd", "b0", "d0"])
+    document.getElementById("A_" + k).addEventListener("input", e => { A.v[k] = +e.target.value;
+      const c = document.getElementById("cA_" + k); if (c) c.textContent = A.v[k].toFixed(2);
+      highlightByDataLine("codeA", k); if (A.paths) A.paths.sync(); if (A.game && !A.running) A.game.repaint(); A_paint(); bump("A"); });
+  const sf = v => (v > 0 ? "+" : "") + v.toFixed(2);
+  A.paths = Paths.init({
+    mount: "#pathsA", width: 460, height: 262,
+    boxes: [
+      { id: "crowd", label: "crowding: how many there are", x: 230, y: 32, w: 210, h: 38 },
+      { id: "ob", label: "other factors", x: 60, y: 126, w: 104, h: 34 },
+      { id: "od", label: "other factors", x: 400, y: 126, w: 104, h: 34 },
+      { id: "birth", label: "births per individual", x: 128, y: 228, w: 176, h: 42, kind: "outcome" },
+      { id: "death", label: "deaths per individual", x: 332, y: 228, w: 176, h: 42, kind: "outcome" }
+    ],
+    arrows: [
+      { id: "bb", from: "crowd", to: "birth", input: "A_bb", signed: true, label: "", fmt: sf, labelAt: { x: 176, y: 118 }, dragSpan: 240 },
+      { id: "bd", from: "crowd", to: "death", input: "A_bd", signed: true, label: "", fmt: sf, labelAt: { x: 284, y: 118 }, dragSpan: 240 },
+      { id: "b0", from: "ob", to: "birth", input: "A_b0", label: "", fmt: v => v.toFixed(2), labelAt: { x: 60, y: 190 }, dragSpan: 240 },
+      { id: "d0", from: "od", to: "death", input: "A_d0", label: "", fmt: v => v.toFixed(2), labelAt: { x: 400, y: 190 }, dragSpan: 240 }
+    ],
+    idleNote: "Click the arrow that is yours this round, then drag it up or down. The crowding arrows are per extra 100 individuals: blue raises, red lowers."
+  });
+  document.getElementById("A_run").addEventListener("click", A_go);
+  document.getElementById("A_clear").addEventListener("click", () => { if (A.running) return; A.runs = []; A_paint(); });
+  document.getElementById("A_practice").addEventListener("change", () => { A_syncGo(); A_paint(); });
+  document.getElementById("A_dl").addEventListener("click", () => downloadText("lesson14_stageA.R", A_RCODE()));
+  A.game = mountRounds("A", {
+    deal: i => A_ROUNDS[i % A_ROUNDS.length],
+    rows: r => [["the arrow that is yours", A_LEVER[r.lever]], ["level off at", r.K + " ± " + Math.round(A_TOL * r.K)]],
+    picture: A_drawTarget, pictureH: 80, go: "A_run", practising: () => A_practising(),
+    prompt: () => "Set your arrow so the population levels off in the red band.",
+    onDeal: r => { A_deal(r); A_paint(); }
+  });
+  A_syncGo();
+}
+
+document.addEventListener("score:bypass", () => {
+  Gates.A.open = true;
+  const sec = document.getElementById("stageA"); if (sec) sec.classList.remove("stage-locked");
+  const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+  if (A.game) A.game.show();
+  A_hold(); A_syncGo(); A_paint();
+});
+
+A_wire(); A_hold(); A_paint();
+
+Score.init({
+  moduleId: "lesson14",
+  version: 1,
+  scaffold: 1,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    document.getElementById("stageA").classList.remove("stage-locked");
+    const t = document.getElementById("tocA"); if (t) t.classList.remove("locked");
+    Gates.A.open = true;
+  }
+});
+</script>
+</body>
+</html>
