@@ -6,6 +6,7 @@
 <script src="../assets/lock.js"></script>
 <title>BIO 202 — Lesson 13</title>
 <link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/paths.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
   * { box-sizing:border-box; }
@@ -65,6 +66,8 @@
   .controls button.accent:disabled { background:#bbb; }
   .toggle { display:flex; align-items:center; gap:8px; margin:9px 0 4px; font-size:13px; }
   .toggle input { width:15px; height:15px; }
+  .path-input { display:none; }
+  .pathwrap { margin:2px 0 8px; }
 
   canvas.plot { width:100%; height:auto; display:block; background:#fff; }
   .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
@@ -231,6 +234,7 @@
 <nav class="toc" id="toc">
   <a href="#stageA" id="tocA">A</a>
   <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
 </nav>
 
 <!-- ========== STAGE A — covariance ======================================= -->
@@ -340,11 +344,74 @@
         </div>
       </div>
       <div class="panel">
-        <h3>To finish</h3>
+        <h3>To open Stage C</h3>
         <ul class="tasks" id="tasksB">
           <li data-task="B1">Hit three of the five targets. <span class="hint"><span id="B1_now">0 of 5 attempts</span></span></li>
         </ul>
-        <div class="solved-banner" id="solvedB">That is all of Lesson 13 built so far.</div>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE C — the regression is the diagram ===================== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Solve Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <ul class="setup" style="margin:0; padding:0; border-top:0;">
+      <li>Each round is a new population of 200 plants. Two traits, <b>flower size</b> and <b>stem height</b>, and one count, <b>seeds set</b>.</li>
+      <li>The <b>diagram</b> is the controls. Each trait's arrow is how many seeds one unit of that trait adds; blue pushes seeds up, brown pulls them down. The <b>other causes</b> arrow is how far everything else scatters the seeds.</li>
+      <li><b>Top plots</b>: seeds against each trait, with the diagram's line and the spread the diagram expects in that picture.</li>
+      <li><b>Bottom plot</b>: what is left of the seeds once the diagram's arrows are taken out. In a round it waits for Go; with practice ticked it moves as you set the arrows.</li>
+      <li>Go grows seeds from your diagram on the same plants and lays them over the real ones.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="C_z1" class="plot" width="680" height="220"></canvas>
+        <div class="readout" id="C_z1Read"></div>
+        <canvas id="C_z2" class="plot" width="680" height="220" style="margin-top:10px;"></canvas>
+        <div class="readout" id="C_z2Read"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_left" class="plot" width="680" height="200"></canvas>
+        <div class="readout" id="C_leftRead"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># the diagram as a regression</span></span><span class="line">flower &lt;- <span class="fn">rnorm</span>(<span class="num">200</span>, <span class="num">10</span>, <span class="num">1</span>); stem &lt;- <span class="fn">rnorm</span>(<span class="num">200</span>, <span class="num">10</span>, <span class="num">1</span>)</span><span class="line" data-line="b1">b_flower &lt;- <span class="num" id="cC_b1">0.0</span></span><span class="line" data-line="b2">b_stem   &lt;- <span class="num" id="cC_b2">0.0</span></span><span class="line" data-line="sig">other    &lt;- <span class="num" id="cC_sig">3.0</span></span><span class="line">seeds &lt;- <span class="num">20</span> + b_flower * (flower - <span class="num">10</span>) + b_stem * (stem - <span class="num">10</span>) + <span class="fn">rnorm</span>(<span class="num">200</span>, <span class="num">0</span>, other)</span><span class="line"></span><span class="line">fit &lt;- <span class="fn">lm</span>(seeds ~ flower + stem)   <span class="com"># one slope per arrow</span></span><span class="line"><span class="fn">coef</span>(fit)</span><span class="line"><span class="fn">sd</span>(<span class="fn">resid</span>(fit))               <span class="com"># the other box</span></span></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel predict" id="predC">
+        <h3 id="predC_h">Predict</h3>
+        <div class="pred-slot" id="predC_slot"></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="C_controls">
+          <div class="pathwrap" id="pathsC"></div>
+          <input type="range" id="C_b1" min="-4" max="4" step="0.1" value="0" class="path-input" />
+          <input type="range" id="C_b2" min="-4" max="4" step="0.1" value="0" class="path-input" />
+          <input type="range" id="C_sig" min="0" max="6" step="0.1" value="3" class="path-input" />
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="C_run" class="accent">Go</button>
+            <button id="C_new" class="secondary" style="display:none;">New plants</button>
+            <button id="C_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Hit three of the five targets. <span class="hint"><span id="C1_now">0 of 5 attempts</span></span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">That is all of Lesson 13 built so far.</div>
       </div>
     </div>
   </div>
@@ -359,6 +426,7 @@
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
+<script src="../assets/paths.js"></script>
 <script>
 /* =====================================================================
    LESSON 13 — selection as regression. DRAFT, rebuilt from zero 2026-09-24.
@@ -369,7 +437,7 @@
    on a causal diagram (arrow = slope, residuals = the 'other' box in the
    DAG)." Plan (A covariance, B additive genetic variation, C the diagram,
    D mediator / confounder / collider) in docs/overhauls/lesson13_overhaul.md.
-   A and B are built. The mutation-selection draft that stood here is retired.
+   A, B and C are built. The mutation-selection draft that stood here is retired.
 
    Furniture copied from lesson 12. Checks: scripts/check_lesson13_numbers.js.
    ===================================================================== */
@@ -438,6 +506,8 @@ function repaintAll() {
   if (A.game && !A.running) safe(A.game.repaint);
   if (!B.running) safe(B_paint);
   if (B.game && !B.running) safe(B.game.repaint);
+  if (!C.running) safe(C_paint);
+  if (C.game && !C.running) safe(C.game.repaint);
 }
 
 
@@ -445,14 +515,14 @@ function repaintAll() {
 /* ====== gates ========================================================
    A stage opens the next by being solved. The written questions record
    on their first attempt and getting one wrong never shuts a door. */
-/* Draft: A and B so far (2026-09-24). C and D are planned in
-   docs/overhauls/lesson13_overhaul.md; B mints the code until they exist. */
-const Gates = { A:{open:false,done:false}, B:{open:false,done:false} };
-const NEXT = { A:"B", B:null };
+/* Draft: A, B and C so far (2026-09-24). D is planned in
+   docs/overhauls/lesson13_overhaul.md; C mints the code until it exists. */
+const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false} };
+const NEXT = { A:"B", B:"C", C:null };
 /* Named one per slot rather than as an array, so check_lessons.py's
    slot-coverage pass can see that every declared slot is written -- it
    reads `name: <integer>` and an array of indices is invisible to it. */
-const BIT = { A1:0, B1:1 };
+const BIT = { A1:0, B1:1, C1:2 };
 /* A stage with a real-data panel waits for the panel too, unless the
    fetch failed -- in which case realOffline() releases the wait rather
    than stranding the student behind a file. */
@@ -494,7 +564,7 @@ function record(pos, ok) {
   // Re-mint if the lesson is already finished: the last stage's committed
   // estimate can be locked after its game has closed the final gate, and a
   // code minted at that gate would carry the bit as a zero.
-  if (Gates.B.done && Score.finish) Score.finish();
+  if (Gates.C.done && Score.finish) Score.finish();
 }
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
 function showDone(scroll) {
@@ -1208,6 +1278,283 @@ function B_wire() {
   B_newPop(); B_syncSliders(); B_syncGo();
 }
 
+/* =====================================================================
+   STAGE C — the regression is the diagram.
+
+   JM, 2026-09-24: "a regression model based on a causal diagram (arrow =
+   slope, residuals = the 'other' box in the DAG)."
+
+   Lesson 8 D fits one arrow and a band to one cloud. Here two traits push
+   seeds, each by its own arrow, and the other box is what is left after
+   both. Three things to find, each on the page:
+     - a trait's arrow is the slope of seeds on that trait;
+     - a one-trait picture's spread is NOT the other box: it holds the other
+       trait's arrow too (spread^2 = other arrow^2 x its variance + box^2);
+     - the least-squares arrows are the ones whose leftover leans on neither
+       trait, and the leftover's spread is the other box.
+   The traits are made exactly unrelated, so each one-trait slope is its arrow.
+   Stage D breaks that: a trait tied to another borrows its arrow.
+
+   A round is judged against the least-squares fit of that round's own
+   plants (measured on the page), not against the numbers that made them.
+   ===================================================================== */
+const C_N = 200, C_Z0 = 10, C_W0 = 20, C_TOL = 0.5, C_FRAMES = 16, C_TICK = 30;
+/* The five rounds: the diagram that made each population. What the student
+   has to match is the fit of the plants drawn, which lands within ~0.3 of
+   these. The one-trait spreads, to show which rounds punish reading the
+   other box off one picture:
+     r1  +3, 0, 2      flower picture 2.0 (right), stem picture 3.6
+     r2  +2, +3, 1.5   3.4 and 2.5 -- both miss the box by a mile
+     r3  -2, +2.5, 2   3.2 and 2.8
+     r4  0, +2, 4      4.5 and 4.0 -- the box is most of it
+     r5  +3, -3, 1     3.2 and 3.2 */
+const C_ROUNDS = [
+  { key: "r1", b1: 3,  b2: 0,   sig: 2 },
+  { key: "r2", b1: 2,  b2: 3,   sig: 1.5 },
+  { key: "r3", b1: -2, b2: 2.5, sig: 2 },
+  { key: "r4", b1: 0,  b2: 2,   sig: 4 },
+  { key: "r5", b1: 3,  b2: -3,  sig: 1 }
+];
+const C = { b1: 0, b2: 0, sig: 3, pop: null, grown: null, frame: null, running: false, timer: 0,
+            serial: 0, game: null, paths: null, free: 0, seen: false };
+
+/* least squares with two slopes: centre, then the 2 x 2 normal equations */
+function C_ols(z1, z2, w) {
+  const n = w.length; let m1 = 0, m2 = 0, mw = 0;
+  for (let i = 0; i < n; i++) { m1 += z1[i] / n; m2 += z2[i] / n; mw += w[i] / n; }
+  let s11 = 0, s22 = 0, s12 = 0, s1w = 0, s2w = 0;
+  for (let i = 0; i < n; i++) { const a = z1[i] - m1, b = z2[i] - m2, c = w[i] - mw;
+    s11 += a * a / n; s22 += b * b / n; s12 += a * b / n; s1w += a * c / n; s2w += b * c / n; }
+  const det = s11 * s22 - s12 * s12, b1 = (s22 * s1w - s12 * s2w) / det, b2 = (s11 * s2w - s12 * s1w) / det;
+  let ss = 0; for (let i = 0; i < n; i++) { const r = w[i] - mw - b1 * (z1[i] - m1) - b2 * (z2[i] - m2); ss += r * r / n; }
+  return { m1, m2, mw, b1, b2, sig: Math.sqrt(ss), v1: s11, v2: s22, c12: s12 };
+}
+/* The two traits are made exactly unrelated in each sample: stem height has
+   its chance lean on flower size taken out, then both are set to mean 10,
+   spread 1. Left to chance, 200 plants correlated them by up to 0.19, and at
+   0.19 the flower picture's slope read 2.45 against an arrow of 1.91 --
+   Stage D's lesson arriving early and by accident. */
+function C_makePop(d, seed) {
+  const rng = mulberry32(seed), z1 = new Float64Array(C_N), z2 = new Float64Array(C_N), w = new Float64Array(C_N);
+  for (let i = 0; i < C_N; i++) { z1[i] = A_gauss(rng); z2[i] = A_gauss(rng); }
+  const std = z => { let m = 0, v = 0; for (const x of z) m += x / C_N; for (const x of z) v += (x - m) * (x - m) / C_N;
+    const s = Math.sqrt(v); for (let i = 0; i < C_N; i++) z[i] = (z[i] - m) / s; };
+  std(z1); let c = 0; for (let i = 0; i < C_N; i++) c += z1[i] * z2[i] / C_N;
+  for (let i = 0; i < C_N; i++) z2[i] -= c * z1[i];
+  std(z2);
+  for (let i = 0; i < C_N; i++) {
+    w[i] = Math.max(0, C_W0 + d.b1 * z1[i] + d.b2 * z2[i] + d.sig * A_gauss(rng));
+    z1[i] += C_Z0; z2[i] += C_Z0;
+  }
+  return { z1, z2, w, fit: C_ols(z1, z2, w) };
+}
+/* what the diagram leaves over, plant by plant; its line runs through the average plant */
+function C_leftover(pop, b1, b2) { const f = pop.fit;
+  return Array.from(pop.w, (w, i) => w - f.mw - b1 * (pop.z1[i] - f.m1) - b2 * (pop.z2[i] - f.m2)); }
+function C_leftStats(pop, b1, b2) {
+  const r = C_leftover(pop, b1, b2), f = pop.fit, n = r.length; let m = 0, ss = 0, c1 = 0, c2 = 0;
+  for (let i = 0; i < n; i++) m += r[i] / n;
+  for (let i = 0; i < n; i++) { ss += (r[i] - m) * (r[i] - m) / n; c1 += (r[i] - m) * (pop.z1[i] - f.m1) / n; c2 += (r[i] - m) * (pop.z2[i] - f.m2) / n; }
+  return { r, sd: Math.sqrt(ss), lean1: c1 / f.v1, lean2: c2 / f.v2 };
+}
+/* the spread the diagram expects in a one-trait picture: the other trait's
+   arrow over its own spread, and the other box */
+const C_viewSpread = (pop, k) => Math.sqrt((k === 1 ? C.b2 * C.b2 * pop.fit.v2 : C.b1 * C.b1 * pop.fit.v1) + C.sig * C.sig);
+function C_inBand(pop, k) {
+  const f = pop.fit, z = k === 1 ? pop.z1 : pop.z2, m = k === 1 ? f.m1 : f.m2, b = k === 1 ? C.b1 : C.b2, s = C_viewSpread(pop, k);
+  let n = 0; for (let i = 0; i < C_N; i++) if (Math.abs(pop.w[i] - f.mw - b * (z[i] - m)) <= s) n++;
+  return n / C_N;
+}
+const C_judge = (pop, d) => { const f = pop.fit;
+  return { ok1: Math.abs(d.b1 - f.b1) <= C_TOL, ok2: Math.abs(d.b2 - f.b2) <= C_TOL, ok3: Math.abs(d.sig - f.sig) <= C_TOL }; };
+
+const C_round = () => (C.game && !C.game.st.done) ? C.game.current() : null;
+const C_practising = () => !!(C.game && (C.game.st.done || document.getElementById("C_practice").checked));
+/* the leftover shows in practice, after a run, and once the rounds are done */
+const C_showLeft = () => C_practising() || C.seen;
+function C_newPop() {
+  const r = C_round();
+  if (r) C.pop = C_makePop(r, pageSeed("l13Cp", 1, 99999) + (C_ROUNDS.indexOf(r) + 1) * 7919);
+  else { const rng = mulberry32(pageSeed("l13Cf", 1, 99999) + C.free * 104729);
+    const d = { b1: Math.round((rng() * 6 - 3) * 2) / 2, b2: Math.round((rng() * 6 - 3) * 2) / 2, sig: 1 + Math.round(rng() * 6) / 2 };
+    C.pop = C_makePop(d, pageSeed("l13Cf", 1, 99999) + C.free * 7919 + 1); }
+  C.grown = null; C.frame = null; C.seen = false;
+}
+function C_syncGo() {
+  document.getElementById("C_run").textContent = C_practising() ? "Practice run" : "Go";
+  document.getElementById("C_new").style.display = C.game && C.game.st.done ? "" : "none";
+  if (C.game && !C.running) C.game.repaint();
+}
+function C_sync() {
+  const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  s("cC_b1", C.b1.toFixed(1)); s("cC_b2", C.b2.toFixed(1)); s("cC_sig", C.sig.toFixed(1));
+  if (C.paths) C.paths.sync();
+}
+function C_go() {
+  const practice = C_practising();
+  if (C.running || (C.game.waiting() && !practice)) return;
+  C.serial++;
+  const rng = mulberry32(pageSeed("l13C", 1, 99999) + C.serial * 7919), f = C.pop.fit;
+  C.grown = Array.from(C.pop.w, (_, i) => Math.max(0, f.mw + C.b1 * (C.pop.z1[i] - f.m1) + C.b2 * (C.pop.z2[i] - f.m2) + C.sig * A_gauss(rng)));
+  bump("C");
+  C.frame = 0; C.running = true; lockStage("C", true); C_paint();
+  C.timer = setInterval(() => {
+    C.frame++; C_drawViews();
+    if (C.frame >= C_FRAMES) { clearInterval(C.timer); C.running = false; C.frame = null; lockStage("C", false); C_land(practice); }
+  }, C_TICK);
+}
+function C_land(practice) {
+  const d = { b1: C.b1, b2: C.b2, sig: C.sig }, j = C_judge(C.pop, d), ok = j.ok1 && j.ok2 && j.ok3;
+  if (!practice) C.seen = true;
+  /* a practice run in a round keeps the least-squares windows back */
+  const got = practice && !C.game.st.done ? Object.assign({ fit: null }, d) : Object.assign({ fit: C.pop.fit }, d, j);
+  C.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', got, practice);
+  C_sync(); C_syncGo(); C_paint();
+}
+
+/* ---- drawing ------------------------------------------------------------ */
+/* seeds centred on 20, the half-range a multiple of 4 so the ticks land on
+   whole numbers; traits 6 to 14, ticks every 2 */
+function C_frameView(W, H, pop) {
+  let dev = 0; for (const v of pop.w) dev = Math.max(dev, Math.abs(v - C_W0));
+  if (C.grown) for (const v of C.grown) dev = Math.max(dev, Math.abs(v - C_W0));
+  const h = Math.max(12, Math.min(C_W0, Math.ceil(dev / 4) * 4));
+  return box(56, 12, W - 74, H - 46, C_Z0 - 4, C_Z0 + 4, C_W0 - h, C_W0 + h);
+}
+function C_drawView(k) {
+  const cv = document.getElementById(k === 1 ? "C_z1" : "C_z2");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const pop = C.pop, fit = pop.fit, f = C_frameView(W, H, pop);
+  const z = k === 1 ? pop.z1 : pop.z2, m = k === 1 ? fit.m1 : fit.m2, b = k === 1 ? C.b1 : C.b2, s = C_viewSpread(pop, k);
+  axes(ctx, f, k === 1 ? "flower size" : "stem height", "seeds set", v => v.toFixed(0), v => v.toFixed(0), 4);
+  /* the band the diagram expects in this picture */
+  ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
+  const yAt = x => fit.mw + b * (x - m);
+  ctx.fillStyle = "rgba(47,107,143,0.10)"; ctx.beginPath();
+  ctx.moveTo(f.x(f.xMin), f.y(yAt(f.xMin) + s)); ctx.lineTo(f.x(f.xMax), f.y(yAt(f.xMax) + s));
+  ctx.lineTo(f.x(f.xMax), f.y(yAt(f.xMax) - s)); ctx.lineTo(f.x(f.xMin), f.y(yAt(f.xMin) - s)); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = GREEN; ctx.globalAlpha = 0.55;
+  for (let i = 0; i < C_N; i++) { ctx.beginPath(); ctx.arc(f.x(z[i]), f.y(pop.w[i]), 2.4, 0, 6.2832); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  if (C.grown) { const nG = C.frame == null ? C_N : Math.round(C_N * C.frame / C_FRAMES);
+    ctx.strokeStyle = DARK; ctx.lineWidth = 1.1;
+    for (let i = 0; i < nG; i++) { ctx.beginPath(); ctx.arc(f.x(z[i]), f.y(C.grown[i]), 2.6, 0, 6.2832); ctx.stroke(); } }
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x(f.xMin), f.y(yAt(f.xMin))); ctx.lineTo(f.x(f.xMax), f.y(yAt(f.xMax))); ctx.stroke();
+  ctx.restore();
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  [[GREEN, "the plants", false], [DARK, C.grown ? "seeds grown from your diagram" : "your diagram's seeds: press Go", true]].forEach(([col, lab, hollow], q) => {
+    const y = f.py + 6 + 13 * q; ctx.fillStyle = col; ctx.strokeStyle = col; ctx.beginPath(); ctx.arc(f.px + 12, y, 2.8, 0, 6.2832);
+    hollow ? ctx.stroke() : ctx.fill(); ctx.fillStyle = q === 1 && !C.grown ? MUTED : col; ctx.fillText(lab, f.px + 20, y); });
+  const other = k === 1 ? "stem height's arrow" : "flower size's arrow";
+  document.getElementById(k === 1 ? "C_z1Read" : "C_z2Read").innerHTML =
+    '<span class="label">line</span> <b>' + (b >= 0 ? "+" : "") + b.toFixed(1) + '</b> <span class="label">seeds per unit</span> &nbsp;·&nbsp; ' +
+    '<span class="label">band: the spread the diagram expects here (' + other + ' + other causes)</span> <b>± ' + f2(s) + '</b> &nbsp;·&nbsp; ' +
+    '<span class="label">it holds</span> <b>' + Math.round(100 * C_inBand(pop, k)) + '%</b> <span class="label">of plants — about two in three when the picture is right</span>';
+}
+function C_drawViews() { C_drawView(1); C_drawView(2); }
+function C_drawLeft() {
+  const cv = document.getElementById("C_left");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const st = C_leftStats(C.pop, C.b1, C.b2), x0 = -16, x1 = 16, bins = 40, bw = (x1 - x0) / bins;
+  const hist = new Float64Array(bins);
+  for (const v of st.r) hist[Math.min(bins - 1, Math.max(0, Math.floor((v - x0) / bw)))] += 1 / C_N;
+  const dens = v => bw * Math.exp(-v * v / (2 * C.sig * C.sig)) / (C.sig * Math.sqrt(2 * Math.PI));
+  const top = 1.2 * Math.max(0.08, ...hist, C.sig > 0.3 ? dens(0) : 0);
+  const f = box(56, 12, W - 74, H - 46, x0, x1, 0, top), show = C_showLeft();
+  axes(ctx, f, "seeds left over once the diagram's arrows are taken out", "share", v => v.toFixed(2), v => (v > 0 ? "+" : "") + v.toFixed(0), 4);
+  if (!show) { ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText("what is left over appears when you press Go, or while practice is ticked", f.px + f.pw / 2, f.py + f.ph / 2);
+    document.getElementById("C_leftRead").innerHTML = '<span class="label">the other causes box:</span> <b>± ' + C.sig.toFixed(1) + '</b>';
+    return; }
+  ctx.fillStyle = "rgba(74,122,42,0.45)";
+  for (let b = 0; b < bins; b++) if (hist[b] > 0) ctx.fillRect(f.x(x0 + b * bw) + 1, f.y(hist[b]), f.x(x0 + (b + 1) * bw) - f.x(x0 + b * bw) - 2, f.y(0) - f.y(hist[b]));
+  if (C.sig > 0.05) { ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath();
+    for (let q = 0; q <= 120; q++) { const v = x0 + (x1 - x0) * q / 120, y = f.y(Math.min(top, dens(v))); q ? ctx.lineTo(f.x(v), y) : ctx.moveTo(f.x(v), y); }
+    ctx.stroke(); }
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "rgba(74,122,42,0.8)"; ctx.fillRect(f.px + 8, f.py + 2, 14, 8); ctx.fillText("what the plants leave over", f.px + 28, f.py + 6);
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.px + 8, f.py + 20); ctx.lineTo(f.px + 22, f.py + 20); ctx.stroke();
+  ctx.fillStyle = BLUE; ctx.fillText("the other causes box", f.px + 28, f.py + 20);
+  const sg = v => (v >= 0 ? "+" : "") + f2(v), fit = C.pop.fit;
+  document.getElementById("C_leftRead").innerHTML =
+    '<span class="label">left over: spread</span> <b class="big">± ' + f2(st.sd) + '</b> &nbsp;·&nbsp; ' +
+    '<span class="label">it still leans on flower size by</span> <b>' + sg(st.lean1) + '</b> <span class="label">and on stem height by</span> <b>' + sg(st.lean2) + '</b> <span class="label">seeds per unit</span> &nbsp;·&nbsp; ' +
+    '<span class="label">the other causes box</span> <b>± ' + C.sig.toFixed(1) + '</b>' +
+    (C.seen || (C.game && C.game.st.done) ? '<br><span class="label">least squares on these plants: flower size</span> <b>' + sg(fit.b1) + '</b> <span class="label">· stem height</span> <b>' + sg(fit.b2) + '</b> <span class="label">· left over</span> <b>± ' + f2(fit.sig) + '</b>' : "");
+}
+/* the card: three number lines, the diagram's settings on them; after Go,
+   the window around the least-squares value on each */
+function C_drawTarget(cv, r, got) {
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const fit = got && got.fit;
+  const rows = [["flower size's arrow", -4, 4, C.b1, fit ? fit.b1 : null, got && got.ok1],
+                ["stem height's arrow", -4, 4, C.b2, fit ? fit.b2 : null, got && got.ok2],
+                ["other causes", 0, 6, C.sig, fit ? fit.sig : null, got && got.ok3]];
+  const lx = 118, x1 = W - 14;
+  ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(fit ? "the least-squares diagram, ± " + C_TOL + " each" : got ? "practice run: the windows show on a scored run" : "set the diagram that made these plants", 8, 14);
+  rows.forEach(([lab, lo, hi, mine, want, ok], q) => {
+    const y = 30 + q * 30, X = v => lx + (clamp(v, lo, hi) - lo) / (hi - lo) * (x1 - lx);
+    ctx.fillStyle = "#333"; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.fillText(lab, lx - 8, y + 6);
+    ctx.fillStyle = "#e7e4da"; ctx.fillRect(lx, y, x1 - lx, 12);
+    if (lo < 0) { ctx.strokeStyle = "#8a8880"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(0), y - 3); ctx.lineTo(X(0), y + 15); ctx.stroke(); }
+    if (want != null) { ctx.fillStyle = "rgba(178,58,72,0.28)"; ctx.fillRect(X(want - C_TOL), y - 4, X(want + C_TOL) - X(want - C_TOL), 20); }
+    ctx.strokeStyle = DARK; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(mine), y - 5); ctx.lineTo(X(mine), y + 17); ctx.stroke();
+    if (want != null) { ctx.fillStyle = ok ? GREEN : HOT; ctx.textAlign = "left"; ctx.font = "600 11px -apple-system, sans-serif";
+      ctx.fillText(ok ? "✓" : "✗", x1 - 10, y - 8); }
+  });
+}
+function C_paint() { C_drawViews(); C_drawLeft(); }
+function C_RCODE() {
+  return "# Lesson 13, Stage C -- the regression is the diagram\n" +
+    "set.seed(1)\nflower <- rnorm(" + C_N + ", 10, 1); stem <- rnorm(" + C_N + ", 10, 1)\n" +
+    "b_flower <- " + C.b1 + "; b_stem <- " + C.b2 + "; other <- " + C.sig + "\n" +
+    "seeds <- pmax(0, 20 + b_flower * (flower - 10) + b_stem * (stem - 10) + rnorm(" + C_N + ", 0, other))\n\n" +
+    "fit <- lm(seeds ~ flower + stem)\ncoef(fit)                 # one slope per arrow\nsd(resid(fit))            # the other box\n\n" +
+    "# a one-trait picture: its slope is the arrow, its spread is not the box\n" +
+    "one <- lm(seeds ~ flower)\ncoef(one); sd(resid(one)); sqrt(b_stem^2 * var(stem) + other^2)\n\n" +
+    "# what is left leans on neither trait\ncoef(lm(resid(fit) ~ flower)); coef(lm(resid(fit) ~ stem))\n";
+}
+function C_wire() {
+  for (const [id, key, line] of [["C_b1", "b1", "b1"], ["C_b2", "b2", "b2"], ["C_sig", "sig", "sig"]])
+    document.getElementById(id).addEventListener("input", e => { C[key] = +e.target.value; C.grown = null; C_sync(); highlightByDataLine("codeC", line);
+      if (C.game && !C.running) C.game.repaint(); C_paint(); bump("C"); });
+  C.paths = Paths.init({
+    mount: "#pathsC", width: 460, height: 250,
+    boxes: [
+      { id: "z1", label: "flower size", x: 80, y: 36, w: 124, h: 38 },
+      { id: "z2", label: "stem height", x: 230, y: 36, w: 124, h: 38 },
+      { id: "oth", label: "other causes", x: 380, y: 36, w: 124, h: 38 },
+      { id: "w", label: "seeds set", x: 230, y: 214, w: 160, h: 42, kind: "outcome" }
+    ],
+    arrows: [
+      { id: "b1", from: "z1", to: "w", input: "C_b1", signed: true, label: "", fmt: v => (v > 0 ? "+" : "") + v.toFixed(1), labelAt: { x: 132, y: 128 } },
+      { id: "b2", from: "z2", to: "w", input: "C_b2", signed: true, label: "", fmt: v => (v > 0 ? "+" : "") + v.toFixed(1), labelAt: { x: 230, y: 128 } },
+      { id: "sig", from: "oth", to: "w", input: "C_sig", label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 328, y: 128 },
+        hint: "How far everything else scatters the seeds, either way." }
+    ],
+    idleNote: "Click an arrow, then drag it up or down. A trait's arrow is the seeds one unit of it adds: blue up, brown down."
+  });
+  document.getElementById("C_run").addEventListener("click", C_go);
+  document.getElementById("C_new").addEventListener("click", () => { C.free++; C_newPop(); C_syncGo(); C_paint(); bump("C"); });
+  document.getElementById("C_practice").addEventListener("change", () => { C_syncGo(); C_paint(); });
+  document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson13_stageC.R", C_RCODE()));
+  C.game = mountRounds("C", {
+    deal: i => C_ROUNDS[i % C_ROUNDS.length],
+    rows: r => [["population", String(C_ROUNDS.indexOf(r) + 1)], ["plants", String(C_N)]],
+    picture: C_drawTarget, pictureH: 112, go: "C_run", practising: () => C_practising(),
+    prompt: () => "Set the three arrows to the diagram that made these plants.",
+    onDeal: () => { C_newPop(); C_sync(); C_paint(); }
+  });
+  C_newPop(); C_sync(); C_syncGo();
+}
+
 document.addEventListener("score:bypass", () => {
   Gates.A.open = true;
   const sec = document.getElementById("stageA"); if (sec) sec.classList.remove("stage-locked");
@@ -1219,15 +1566,21 @@ document.addEventListener("score:bypass", () => {
   const tb = document.getElementById("tocB"); if (tb) tb.classList.remove("locked");
   if (B.game) B.game.show();
   B_newPop(); B_syncSliders(); B_syncGo(); B_paint();
+  Gates.C.open = true;
+  const sc = document.getElementById("stageC"); if (sc) sc.classList.remove("stage-locked");
+  const tc = document.getElementById("tocC"); if (tc) tc.classList.remove("locked");
+  if (C.game) C.game.show();
+  C_newPop(); C_sync(); C_syncGo(); C_paint();
 });
 
 A_wire(); A_paint();
 B_wire(); B_paint();
+C_wire(); C_paint();
 
 Score.init({
   moduleId: "lesson13",
-  version: 6,
-  scaffold: 2,
+  version: 7,
+  scaffold: 3,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {

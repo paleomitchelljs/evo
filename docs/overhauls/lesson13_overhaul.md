@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A and B built (`version: 6`, `scaffold: 2`, 20 bars in `check_lesson13_numbers.js`); C-D planned; locked
+**Status** · replanned 2026-09-24 (the regression lesson of three); A, B and C built (`version: 7`, `scaffold: 3`, 31 bars in `check_lesson13_numbers.js`); D planned; locked
 **Last touched** · 2026-09-24
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
@@ -53,6 +53,9 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 
 - JM: *"arrow = slope, residuals = the 'other' box in the DAG."*
 - `paths.js` already binds each arrow of a fixed diagram to a slider. `buildArrows` draws one. Lesson 7's model diagram is the precedent in 1-10.
+- Lesson 8 D already fits **one** arrow and an "other factors" band to one cloud. So C is two causes: flower size and stem height → seeds set, plus other causes. What it adds: a one-trait picture's spread is not the other box, because it holds the other trait's arrow too; and the least-squares arrows are the ones whose leftover leans on neither trait, with the leftover's spread as the box.
+- Built 2026-09-24: the diagram (`paths.js`, signed arrows) is the controls. Two one-trait plots, each with the diagram's line and the band it expects there (`sqrt(other arrow² × var + box²)`). A leftover histogram against the box's curve, with its lean on each trait printed; live in practice, after Go in a round. Go grows seeds from the student's diagram on the same plants, as hollow dots over the real ones. A round is judged against the least-squares fit of that round's own plants, ±0.5 on each of the three.
+- The traits are made exactly unrelated in every sample (C's one-trait slopes = the arrows). D breaks that on purpose.
 
 ### D — mediator, confounder, collider
 
@@ -87,6 +90,8 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | 7 | B | the point-by-point plot: (S, R) per run, practice included, one colour per population, each population's fitted line; A's `R = S` line for reference; bottom plot parents / parents counted once per child / offspring | done |
 | 8 | B | rounds: a dealt response in a population with hidden h² (0.9, 0.8, 0.6, 0.4, 0.9); share revealed after its scored run; free h² after the rounds; practice switch | done |
 | 9 | B | checks: R/S = h² at five h², no response at h² 0 at the stops, variance held at slope 0, one slope = one S everywhere, printed arithmetic, rounds, reveal | done |
+| 10 | C | two traits → seeds, the diagram as controls; one-trait plots with the diagram's line and band; leftover plot; Go grows the diagram's seeds; rounds against least squares; free "New plants" after | done |
+| 11 | C | checks: least squares vs a hand solve, leftover leans on nothing at the fit and is smallest there, one-trait slope = arrow, band formula = measured spread, bands ~2/3, rounds, opening and "box off one picture" miss, no diagram clears three, leftover hidden in a round | done |
 
 ## Measured, 2026-09-24 — A
 
@@ -102,6 +107,13 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - The response wanders run to run by 0.032 at 1000 parents, 0.024 at 2000. At 1000 with ±0.06, perfect aim hit 73-95% and slope 0 reached a +0.12 target 1 run in 20; at 2000 with ±0.05, best slopes 93-100%, slope 0 none, greediest slope clears two.
 - A first round set asking for slopes 0.7-1.1 let slope 0.85 clear four.
 - One run at slope 0 printed a fitted slope of 2.87 (two wobbles divided). The page holds the slope back until sum(S²) ≥ 0.02.
+
+## Measured, 2026-09-24 — C
+
+- Left to chance, 200 plants correlated the two traits by up to 0.19. At 0.19 the flower picture's slope read 2.45 against an arrow of 1.91, beyond the ±0.5 window. The traits are now made exactly unrelated in each sample.
+- At the least-squares diagram the bands hold 65-72% of plants in every round.
+- Arrows right, box read off the wider one-trait picture: misses 4 of 5 rounds. It hits r4, where the box (4) is most of the spread.
+- On a 0.5 grid (3757 diagrams) the greediest clears one round.
 
 ## Open for JM
 
