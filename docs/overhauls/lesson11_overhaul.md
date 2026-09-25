@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson11.html`
 **Checks** · `node scripts/check_lesson11_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose still owed; locked
-**Last touched** · 2026-09-24 (round 6, then D and E rebuilt from JM's notes; 56 bars pass)
+**Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose in; **open** 2026-09-25
+**Last touched** · 2026-09-25 (E's recombination passage rewritten by JM; unlocked; 56 bars pass)
 
 ## What the lesson is
 
@@ -81,7 +81,7 @@ rescuing into a later lesson.
 | 43 | — | `mountRounds` picture mode also renders `rows` as a table above the picture (no other stage passes `rows`) | done |
 | 44 | — | checks for D rewritten (15 bars); `Score.init` version 9 | done |
 | 45 | D | old D's `popStep` operator no longer used by D; `popHo` kept with the operator | done |
-| 46 | D | no voice block and a bare "Stage E is open." banner, like B and E: prose owed | todo |
+| 46 | D | no voice block and a bare "Stage E is open." banner, like B and E: prose owed | done (row 65) |
 | 47 | all | **plots overflow their panels** (A, B, D plots and every Predict-card picture): sim.js's `setupCanvas` pins the declared width. Port lesson 10's measuring override; C's pedigree opts out (JM: its scroller "works great") | done |
 | 48 | D | y axis was "heterozygosity if pairing were random" (1 − Σp²). JM: plot the actual heterozygosity under the held F → share of individuals heterozygous, counted | done |
 | 49 | E | "copy" → "allele" on screen: legend, bullets, hover readouts | done |
@@ -89,7 +89,7 @@ rescuing into a later lesson.
 | 51 | — | checks: D's plotted line sits at (1 − F) of random pairing's; E's tracker = brute force, never rises, founders 12 / 6, π = 6(1 − mean kinship of the row's genomes); every plot fits its panel at 1500/1100/900 | done — 52 bars |
 | 52 | C | a click on the pedigree that missed every founder blanked the tree (`C_layout` called `setupCanvas`, which clears). Found in passing | done |
 | 53 | D | counted heterozygosity is a scribble at 25-80 individuals: bold line = average of all 200 (a finished population counts 0) | done — not asked; flag to JM |
-| 54 | D | "every copy" / "every copy different" left as is: JM's copy→allele note was about E, and D's "copy" is a gene copy, not a founder's allele | open — ask JM |
+| 54 | D | "every copy" / "every copy different" left as is: JM's copy→allele note was about E, and D's "copy" is a gene copy, not a founder's allele | done (row 67: "every copy" dropped) |
 | 55 | B | headcount drawn as one point per generation joined by lines, not flat steps; shading kept; brush unchanged (JM 2026-09-24). Point at the middle of its generation's column, so it sits under the pointer and above the F it makes | done |
 | 56 | A, C, E | practice switch on every stage, B's pattern (JM 2026-09-24: "a default incorporation for all of the 'bowling' style activities"). C's button reads "Practice drop". Check drives all five stages' real buttons: 53 bars | done |
 | 57 | A | prose from JM's dictation (2026-09-24): voice + mutation clause, a goal paragraph in the voice block (lessons 7 and 9 put theirs there), his three setup bullets; F bullet kept, practice bullet dropped (his paragraph says it) | done |
@@ -108,6 +108,7 @@ rescuing into a later lesson.
 | 70 | D, E | checks rewritten for both games | done |
 | 71 | E | targets are WINDOWS of counts with gaps: none / 2-4 / 11-12. Point targets 0±1 and 3±1 touched, and a setting leaving ~1.5 cleared both half the time | done |
 | 72 | E | outsiders sit in their generation's row with no parents: `E_matings` threw on them, so every tree with an outsider failed to draw (the practice check caught it; the build-only checks could not) | done |
+| 73 | E | voice: recombination passage replaced with JM's 2026-09-25 text (haplotypes as chromosomal fragments, a mishmash from both grandparents, chunk size set by recombination against other forces); `LOCKS.txt` row → o | done |
 
 - JM 2026-09-22: A and B → bowling with graphical targets, not number tables; C's bottom panel → founder-allele frequencies + F through time; Part E from `descent.html`.
 - JM 2026-09-23 (round 3): *"a careful student should be able to visually inspect something and intuit the main point in a few tries — and then evaluate how well they can apply that intuition. The current lesson 11 largely relies on evaluating how well a student understands what's going on before even attempting the activity."* B: *"built to test if a student already understands births/deaths/F instead of existing to build intuition"*. D: *"no visual feedback, they just adjust a curve and see numbers 5 times until finally a line to compare to their curve is revealed."*
