@@ -22,6 +22,8 @@
        button. A round where an advantageous allele must be lost to drift.
     C  the valley: two loci, start on the low peak, a deeper valley needs a
        smaller population to cross. Depth dealt, population the student's.
+    D  mutation-selection balance, with h and s (JM 2026-09-24): a bad allele
+       made by mutation, removed by selection; where it settles. (planned)
 
 ### A — one locus, h and s
 
@@ -120,6 +122,7 @@
 | 2 | A | population grid, fitness bars, frequency curve; individuals, F, p0, h, s. Voice: the pinecone quote | done |
 | 3 | A | five window rounds, calibrated; `check_lesson12_numbers.js`, 13 bars | done |
 | 4 | B | four-allele race: allele rows (h, s each), genotype-fitness grid, 200 populations to one allele or 600 generations, traces and dots in the winner's colour, win-share bars against red outlines; five rounds; All neutral; checks (7 bars) | done |
+| 6 | D | mutation–selection balance: JM, 2026-09-24, *"A mutation-selection balance activity makes sense as a stage with manipulable h and s—either standalone or baked in somewhere."* Standalone D here (12 has the h and s machinery; the old slot-13 lesson's content) | todo |
 | 5 | C | the valley: two loci, 50 populations, 1500 generations, stepped animation; landscape with a ball per population (stacks capped at 8 with a count), traces of each population's average, share gauge; five rounds holding depth or headcount; checks (6 bars) | done |
 
 ## Rulings
@@ -131,7 +134,7 @@
 
 ## Still open
 
-- Mutation–selection balance (the old slot-13 lesson, pink katydid `202_lec17_03`) is still displaced.
+- ~~Mutation–selection balance displaced~~ → 12 D (JM, 2026-09-24).
 
 ## Do not
 

@@ -1,8 +1,8 @@
 # Lesson 13 — selection as regression
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
-**Checks** · `node scripts/check_lesson13_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); plan only; locked
+**Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
+**Status** · replanned 2026-09-24 (the regression lesson of three); A built (`version: 5`, `scaffold: 1`, 11 bars in `check_lesson13_numbers.js`); B-D planned; locked
 **Last touched** · 2026-09-24
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
@@ -71,6 +71,23 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 ### Two traits
 
 - JM: *"2 traits, both caused by the same allele. 2 traits caused by different alleles ... trade-offs ... some single allele that pleiotropically causes 2 traits. One has a positive effect, one has a negative effect. And you sort of run it through. And see where the allele's frequency ends up."*
+
+## Items
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 1 | — | new page from lesson 12's furniture; the old mutation–selection draft retired (its content goes to lesson 12 D) | done |
+| 2 | A | covariance, linked plots: parents as dots (trait across, offspring up) under a fitness line the student tilts by dragging; the offspring's trait distribution beside it; the gap between the means is `cov(w, z)/w̄`, printed beside `slope × variance` | done |
+| 3 | A | covariance drawn as one signed rectangle per dot; dots coloured by group, doing nothing yet (seed for the late-20s multilevel Price) | done |
+| 4 | A | rounds: a dealt shift of the mean in populations of different spread; Go draws each parent's actual offspring (Poisson), controls locked; practice switch. In a scored round the offspring distribution waits for Go; with practice ticked it moves live as the line is dragged | done |
+| 5 | A | checks: identity to 1e-14, rectangles = covariance, shift grows with variance at one slope, rounds, slope 0 misses, no slope clears three, drag | done |
+
+## Measured, 2026-09-24 — A
+
+- The drawn offspring move the shift by spread / sqrt(M w̄) = 0.041 × spread (300 parents, w̄ 2). Tolerance 0.09 × spread: the right slope 93-100%.
+- At 0.1 × spread, a round asking +0.30 at spread 2 was reached by slope 0 on luck 15% of the time; at 0.07 × spread still 10% on one page. That round now asks +0.50.
+- One slope, four spreads (0.5, 1, 2, 3): shift 0.034, 0.138, 0.534, 1.28 — selection needs variation, measured.
+- Slopes the five rounds need: ~0.6, 0.25, −0.41, 1.0, 0.2 (each page draws its own populations).
 
 ## Open for JM
 
