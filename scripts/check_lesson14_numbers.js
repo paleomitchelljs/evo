@@ -74,7 +74,7 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   const rate = (r, v, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (Math.abs(A_level(A_run(v, mulberry32(seed + q * 7919))) - r.K) <= A_TOL * r.K) k++; return k / reps; };
   const hit = A_ROUNDS.map((r, i) => { const nd = need(r); return { k: r.key, val: nd.val, v: rate(r, nd.v, 40, 5000 + i * 97) }; });
   check("A every round is hit at the lever value its level needs", hit.every(q => q.v >= 0.9),
-        hit.map(q => q.k + " @" + q.val + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (40 runs each)");
+        hit.map(q => q.k + " @" + q.val + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (100 runs each)");
   const open = A_ROUNDS.map((r, i) => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, r.fix); v[r.lever] = r.start; return rate(r, v, 20, 6000 + i * 97); });
   check("A the lever's opening value hits none", open.every(v => v === 0), open.map(v => Math.round(100 * v) + "%").join(" / "));
   /* one value of each lever serves at most two of its rounds */
@@ -126,6 +126,16 @@ const need = r => { const v = Object.assign({ b0: 0.6, bb: 0, d0: 0.2, bd: 0 }, 
   check("B the trait's arrows at zero hit none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
   let most = 0, at = null; rates.forEach((v, j) => { const c = v.filter(x => x >= 0.5).length; if (c > most) { most = c; at = grid[j]; } });
   check("B no one setting clears three patterns", most <= 2, "143 settings, 10 runs each: the greediest (" + at.join(", ") + ") hits half the time or more in " + most);
+}
+{
+  /* the carriers' relative fitness: counted from the share, against the
+     model's (1 + g1) / (1 + g-bar), and uncrowded against (1 + r1) / (1 + r-bar) */
+  const rows = [[0.2, 0], [0.3, -1500], [-0.2, 2000]].map(([tr, tk]) => { const w0 = [], w30 = [], m30 = [];
+    for (let q = 0; q < 100; q++) { const run = Object.assign(B_run(tr, tk, mulberry32(9600 + q * 7919 + Math.round(tr * 100))), { tr, tk });
+      w0.push(B_wAt(run, 0)); if (B_wAt(run, 30) != null) { w30.push(B_wAt(run, 30)); m30.push(B_wModel(run, 30)); } }
+    const pp = B_rK(tr, tk); return { tr, tk, w0: mn(w0), e0: (1 + pp.r[1]) / (1 + 0.5 * (pp.r[0] + pp.r[1])), w30: w30.length ? mn(w30) : null, m30: m30.length ? mn(m30) : null }; });
+  check("B the carriers' relative fitness, counted, matches (1 + g) / (1 + average g)", rows.every(q => Math.abs(q.w0 - q.e0) < 0.03 && (q.w30 == null || Math.abs(q.w30 - q.m30) < 0.03)),
+        rows.map(q => "(" + q.tr + ", " + q.tk + "): w at 0 " + q.w0.toFixed(3) + " [(1 + r1)/(1 + r-bar) " + q.e0.toFixed(3) + "]" + (q.w30 != null ? ", at 30 " + q.w30.toFixed(3) + " [" + q.m30.toFixed(3) + "]" : "")).join("  ") + "  (100 runs each)");
 }
 /* ---- C: an allele and the environment make the trait -------------------- */
 {

@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson14.html` — new page, 2026-09-24
 **Checks** · `node scripts/check_lesson14_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · A-C built (`version: 3`, `scaffold: 3`, 24 bars in `check_lesson14_numbers.js`); locked; prose to come from JM
+**Status** · A-C built (`version: 3`, `scaffold: 3`, 25 bars in `check_lesson14_numbers.js`); locked; prose to come from JM
 **Last touched** · 2026-09-24
 
 Third of three selection lessons: 12 the genetics, 13 the regression, this the births and deaths. Planned in `lesson13_overhaul.md` until it had a slot.
@@ -36,6 +36,9 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 | 6 | B | rounds: takes over / rises then vanishes / falls then takes over / vanishes fast / rises then holds; checks | done |
 | 7 | C | copies → trait (signed) and environment → trait (spread) set by the student; trait → r, trait → K dealt per round, free after; diploid, random mating, three genotype classes, each class's rates averaged over its trait (41 points); plots: trait at the start by genotype, the allele's share against windows, births − deaths by genotype | done |
 | 8 | C | rounds pair a window on the trait's spread with windows on the allele's share; checks | done |
+| 9 | A | r and K named once built: r bracket at the left edge of the rates plot, K on the crossing and on the time plot, readouts, one intro line, R code | done |
+| 10 | B | the carriers' relative fitness (w) each generation: counted (share next ÷ share now, 5+ carriers) beside (1 + g1)/(1 + ḡ); uncrowded it is (1 + r1)/(1 + r̄); bar | done |
+| 11 | — | food as the mechanism of K (how many → food per individual → deaths, looping to the next generation): mocked 2026-09-24, parked | parked |
 
 ## Measured, 2026-09-24 — A
 
@@ -61,7 +64,8 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 ## Rulings
 
 - Negative arrows red, positive blue, zero a plain line (JM, above).
-- The level is not named on the page. Lesson 9's rule: build it, don't name it.
+- ~~The level is not named on the page.~~ Superseded 2026-09-24: r and K are named in A once built. JM: *"r has a direct and obvious tie to w (relative fitness)"*, and the thread through the earlier lessons should run *"'scalar rates don't work' to 'use rates that are functions' to 'parameterize by r/K which can also be functions'"*. The earlier lessons' side is row 5 of `docs/REVISIONS_PLANNED.md`.
+- Food as the mechanism (JM, 2026-09-24: *"a 'food' box that directly causes deaths & is in-turn caused by N ... the trait can modulate the N->Food arrow ... higher efficiency/more diverse food options"*): parked. It makes a loop that closes only across generations. With `paths.js` the return arrows cross the food and death arrows; the mockup is not in the repo. The pull toward it: crowding's bite would be the product of the two arrows (13 D's path tracing), with K = 100 (b0 − d0) / product. JM chose to keep r and K.
 
 ## Do not
 
