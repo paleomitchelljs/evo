@@ -2,8 +2,58 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24; A-D built (`version: 6`, `scaffold: 4`, 33 bars pass); prose owed (D has a voice block); locked
-**Last touched** · 2026-09-24
+**Status** · restructured 2026-09-27: A-E built (`version: 7`, `scaffold: 5`, 38 bars pass); A and E prose spliced, not yet seen by JM; locked
+**Last touched** · 2026-09-27
+
+## 2026-09-27 restructure (JM)
+
+- JM: *"Lesson 12 parts A and B are fantastic. I'd like to keep them, but move them down. I'd like a very simple interactive that helps students intuit what h and s mean. Something where they manipulate a visible phenotype based on alleles (a modification of the previous shape/elongation/color activity?) and an environment (color of background? Preference of pollinators?) such that the advantage/disadvantage of a given trait is clear, and where h is made clear to be a function of both the gene (dominance per se) and the environment (eg red, light red, and white may have identical fitnesses, higher fitness for heterozygotes, no difference between red/light red, etc) depending on the context."*
+- JM: *"Parts C and D are good—but I am thinking of keeping only one, and adding something about population level mean fitness. I think I'd like to keep the fitness valley example and have a track-the-population-mean-fitness be the final part. So it'd go: visually explore h/s (A), current part A (B), current part B (C), fitness valley activity (D), population-mean-fitness capstone (E)."*
+
+      A  NEW: the meadow. Flowers red / pink / white (lesson 9 D's glyph idea,
+         colour only); hummingbirds and bees visit; seeds per flower -> h and s
+      B  old A, unchanged (windows, one kind of dominance a round)
+      C  old B, unchanged (four alleles race)
+      D  old C, unchanged (the valley)
+      E  NEW: mean fitness. Old A's population; w-bar tracked by generation and
+         on the hill w-bar(p); rounds on what only w-bar shows
+      --  old D (mutation-selection balance) cut; in git at 8ced490
+
+- A as built: gene = how red one copy makes a flower (the heterozygote's colour, 0 white .. 1 red; JM's 145_lec25_02 "add purple paint"). Environment = hummingbirds (visit flowers at least this red) and bees (at most this red), a count and a colour edge each. Visits -> seeds. Bars relative to white: 1, 1 + hs, 1 + s; h read off a ruler from white's bar (0) to red's (1). Voice 202_lec18_02 (JM's own pink flower, hummingbirds and bees); conclusion 202_lec18_01 in the solved banner.
+- A rounds: gene held at pink-halfway for three (pink as good as red / pink best / pink worst: environment the lever); environment held for two (gene the lever). Opening = visitors take any colour, all three bars equal (JM's "identical fitnesses"), which is no round's answer.
+- E as built: w-bar measured each generation off B's simulator (`B_run` returns `W`; its RNG draws unchanged, so B's bars hold); closed form `HW + F p q s (1 - 2h)` beside. Hill plot (w-bar against p, dashed at F, a ball) over a w-bar-by-generation plot with windows; dotted line = fittest genotype. On-screen wording "average fitness" (style report flags "mean"; JM's 461_lec16_04 says "average population fitness").
+- Voice: A = 145_lec25_02 (red for purple) + 202_lec18_02 cut at "Which one likes pink?", **hummingbirds and bees swapped** to hummingbirds-red / bees-white (JM's lecture has them the other way); solved banner = the quote's answer + 202_lec18_01. E = 202_lec01_02 + first sentence of 202_lec14_01; solved banner 461_lec12_02 trimmed. B gained "as in Stage A" on its bars bullet.
+
+      A rounds (hold; target; built-for setting, on the page, 40 seasons)
+      asred    pink 0.5 held; h 0.85-1.15, s >= 0.3; 8 H from 0.3, 2 B to 0.3     98%
+      best     pink 0.5 held; h 1.5-2.5;             7 H from 0.3, 3 B to 0.7     98%
+      worst    pink 0.5 held; h -1.5 to -0.5;        7 H from 0.7, 3 B to 0.3    100%
+      aswhite  visitors held (8 H from 0.8, 2 B to 0.3); h +-0.15; pink <= 0.4, or 0.65   100%
+      asred2   same visitors held; h 0.85-1.15; pink >= 0.8                        88-98%
+      opening (pink 0.5, 5 and 5 taking every colour): s = 0, clears none
+      one setting, 307,461 on the arithmetic: at most 2 rounds
+
+      E rounds (30 runs at the built-for setting)
+      climb    from 0.05; >= 1.10 at 40, 1.18-1.22 at 100          h 0.7 s 0.2        97%
+      above    s 0.1 held, from 0.1; 1.105-1.16 at 60 and 100     h 2                100%
+      strand   s 0.3 held, from 0.25; <= 0.97 at 2, 0.98-1.02 at 100   h -1          100%
+      drift    from 0.5; 0.98-1.02 at 0/25/50/75/100, purple at a wall   40 at F 0.8  83%
+      inbred   F 0.8 held, from 0.5; falls 0.08 by generation 5    h 2 s 0.3         100%
+      each needs its thing: recessive climb, h 1 above, drift strand, selection-cleared
+      drift, recessive-bad or additive inbred: all 0%. Opening: 0% in all five.
+
+- Measured 2026-09-27, A: visitors share their visits among the flowers they take, so **moving pink moves red's seeds**. At 6 H / 3 B held, pink at 0.9 took half the hummingbirds' visits off red and s fell from 0.75 to 0.11 (under 0.3): held visitors moved to 8 / 2.
+- Measured 2026-09-27, E: inbreeding costs w-bar `F p q s (1 - 2h)`: nothing without dominance, most with a heterozygote above both homozygotes. A recessive bad allele (h 0, s -0.3) at F 0.8 dips 0.02, because purging starts at once; only heterozygote advantage clears the 0.08 round.
+- Open: mutation–selection balance has no home now (was D). Candidates: the later mutation–drift–selection + Price capstone (lesson 16 doc), or a round in E on JM's 1 − 2μ (202_lec14_01, 461_lec16_04), which would need mutation in `B_run`.
+- Open: A's phenotype is colour only; JM floated shape/elongation from lesson 9 D. Not added.
+
+| # | What | Status |
+|---|------|--------|
+| R1 | cut old D; letters shift A->B, B->C, C->D (ids, prefixes, seeds, BIT, checks) | done (a regex shift; `A.F` and `A[key]` needed a second pass) |
+| R2 | new A: meadow, map, bars; rounds; checks (6 bars) | done |
+| R3 | new E: w-bar tracked; rounds; checks (5 bars) | done |
+| R4 | `version` 7, `scaffold` 5; done banner; nav | done |
+| R5 | JM review of A and E | todo |
 
 ## What it is
 
@@ -11,7 +61,7 @@
 - 12 = alleles under selection, dominance, drift against selection, a valley. 13 = covariance, Price, the regression a DAG draws, mediators / confounders / colliders, the birth–death framework. See `lesson13_overhaul.md`.
 - Supersedes the 2026-09-22 split (12 relative fitness / one locus, 13 absolute / one trait). Its measured numbers are kept below where they still apply.
 
-## Stages
+## Stages (2026-09-24 letters: this A is now B, B is C, C is D; D was cut 2026-09-27)
 
     A  one locus: lesson 11 A's population plus individuals, inbreeding,
        starting frequency, h and s. Pass the frequency through windows, one
