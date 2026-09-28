@@ -2,8 +2,53 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · 2026-09-28 revision built (`version: 8`, 47 bars pass); awaiting JM's live test; locked
+**Status** · 2026-09-28 voice-note revision built (`version: 9`, 46 bars pass); awaiting JM's live test; locked
 **Last touched** · 2026-09-28
+
+## 2026-09-28 voice notes (JM, after demoing `version: 8`)
+
+- Dictated intros for A, B, race, mutations, E: they are the copy (ASR fixes only). Mutations' bullets: JM "deal with the bullet points later".
+- JM: *"in class, I used one minus HS and one minus S ... negative H should indicate over dominant"*; *"S should be inherently a negative factor. It's the fitness deficit of the negative allele."*
+- JM calls h "heritability" (his lecture usage too: 202_lec17_02 "how heritable that badness is"). Kept in his prose; lesson 13's heritability is the regression slope.
+- A: *"I dont think we need the sliders at all. The control panel should just be the beautiful interactive plot"*; "take" → "choose"; "red from one copy" → "redness of heterozygote"; PhyloPic hummingbird offered (b4f64736, CC0, Margot Michaud).
+- B: plots top to bottom = frequency, bars, individuals; rounds sweep, rescue, hide, hold, split.
+- Race moves before mutations: C = race, D = mutations. Race rounds a ladder: blue everywhere, keep everything (one-sided: *"if you maximize no extinction, you get the last target incorrect"*), two alleles, then drift, dominance.
+- Mutations: keep the plane; the only line plots = homozygosity and average fitness (w̄) by generation; targets on those; spreads set on small distributions, not sliders; selfed ÷ outcrossed dropped (*"difficult for them"*); covariance plot dropped; banner "Stage E is open."
+
+- As built (`version: 9`):
+
+      A  rounds turned round (h_new = 1 - h_old); s floor 0.25 against red (was 1.3x white)
+         asred h -0.15..0.15 · best h <= -0.25 · worst h >= 1.25 · halfway 0.35-0.65 · mostly 0.15-0.4
+      B  sweep, rescue (h 0, s -0.2 held), hide (h -0.2, s 0.3), hold (h 2, s -0.15), split (h -1, s -0.3)
+      C  (200 populations)                            built-for                 opening
+         one    blue >= 0.9                         blue s -0.2, 100: 100%     21%
+         all    still mixed >= 0.9                  every h -1, s 0.1: 100%    9-13% (same s, no dominance: 9-13%)
+         two    50/50/0/0/0 +-0.1                   green, yellow s 0.2, 40    —  (100: 7-10% mixed; 150: 16-21%)
+         drift, dominance as before, s signs flipped
+      D  (U 0.3; holds: N rounds h 0.5+-0.1, s 0.05+-0.03; h rounds 300, h spread 0.1, s 0.15+-0.05)
+         homozygous  homozygosity@400 >= 20    N 15: 16/16 (22-45) · 20 ~half · 25 13.6/19.2/25.4 (5th/50th/95th)
+         clean       homozygosity@400 <= 0.4   N 1000: 16/16 · 700: 75% · 500: 44% · 300: 13%
+         above       w̄@400 >= 2                h -0.1: 6.3-7.9 · -0.05: 2.6-3.0 · 0: 1.38-1.55
+         fast        w̄@5 <= 0.82               h 2: 12/12 · 1.5: 8 · 1.2: 2 · 1: 0 (0.83-0.87)
+         middle      homozygosity@400 6-16     N 35-45: 88-93% · 30: 78% · 100: 0 of 40  (slider floor now 15)
+
+- Measured (node, D's simulator): with h ≥ 0.3, w̄@400 is 0.72-0.77 at any s and N ≥ 50 (the magic trick); any h tail below 0 is heterozygote advantage and w̄ runs to 10^4 at 1000 (plot clips, prints the value). A recessive load does NOT show in w̄ at 400: h 0.05 ± 0.02, s 0.3 is 0.75-0.79 at every N ≥ 50 (hs 0.015 is purged in ~70 generations); only h ≈ 0 holds w̄ near 0.9, and half of that curve is below 0.
+- w̄(t) against exp(−U(1 − e^(−hst))): 0.752 expected, 0.754 measured at generation 10, h 2, N 300. Generation 10 is too noisy to separate h 1 from 2 (sd ~0.025 against a 0.04 gap); generation 5 does.
+- Homozygosity = loci with two copies of one allele, fixed loci included, averaged over individuals.
+- Dropped from D: Price covariance dots and take-out plot (JM had asked for covariance in B and C; now only in B), selfed ÷ outcrossed test, copies line. In git at c5b4968.
+- The check suite outgrew 10 minutes (race "all" runs 200 populations to the 600 cap).
+
+| # | What | Status |
+|---|------|--------|
+| V1 | swap C ↔ D (ids, prefixes, seeds, BIT, checks); fix the stale `C1_now`/`D1_now` tally spans | done (regex missed `predD_slot`; fixed) |
+| V2 | 1 − hs, 1 − s in A (against red), B, race, mutations (s > 0 harmful) | done |
+| V3 | A: map is the control card, counts set on it, no sliders; wording; JM intro + bullets; PhyloPic bird | done |
+| V4 | B: plot order; JM intro; round order | done |
+| V5 | C race: JM intro; ladder rounds; checks | done |
+| V6 | D mutations: JM intro; homozygosity + w̄ panel; distribution widgets; rounds measured; checks | done |
+| V7 | E: JM intro | done |
+| V8 | `version` 9; all checks | done (46 bars; D's homozygosity windows reset once after the first run caught 100 and 300 individuals in them) |
+| V9 | JM live test | todo |
 
 ## 2026-09-28 revision (JM)
 

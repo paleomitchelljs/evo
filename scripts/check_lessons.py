@@ -146,6 +146,8 @@ JS_GLOBALS = {
     # the rest of the typed-array family. Three of them were already listed and
     # the others were not, so lesson10's Float32Array read as an undefined helper.
     "Int8Array","Uint8ClampedArray","Int16Array","Uint16Array","Uint32Array","Float32Array",
+    # canvas: lesson12 draws an embedded silhouette path
+    "Path2D",
     "if","for","while","switch","catch","return","function","typeof","new","await","super",
     "constructor","get","set","of","in","do","else","try","case","void","delete","yield",
 }
