@@ -200,7 +200,7 @@
   canvas.paint { cursor:crosshair; touch-action:none; }
   canvas.paint.off { cursor:default; }
 
-  /* ---- Stage C: one row per allele, h and s side by side ------------------ */
+  /* ---- Stage D: one row per allele, h and s side by side ------------------ */
   .controls .arow { display:grid; grid-template-columns:62px 20px minmax(0,1fr) 38px 20px minmax(0,1fr) 46px; align-items:center; gap:6px; margin-bottom:6px; font-size:13px; }
   .controls .arow .nm { display:flex; align-items:center; gap:5px; }
   .controls .arow .nm i { width:11px; height:11px; border-radius:3px; display:inline-block; border:1px solid rgba(0,0,0,0.25); }
@@ -243,9 +243,10 @@
         <li>36 flowers, 12 of each genotype. The two squares under a flower are its two copies, red or white.</li>
         <li><b>red from one copy</b>: how red a flower with one red copy is, from 0 (white) to 1 (as red as two copies).</li>
         <li>Hummingbirds take flowers at least as red as their edge; bees, flowers at most as red as theirs. Colours they do not take get a few visits. Drag pink or either edge on the middle plot.</li>
-        <li><b>Go</b> plays a season: 300 visits from each visitor, one seed a visit.</li>
+        <li><b>Go</b> plays a season: each visitor calls on every flower it takes about 8 times, one seed a visit.</li>
         <li><b>The bars</b>: seeds per flower, against white. <b>s</b> is how far red sits above white; <b>h</b> is where pink sits on the ruler from white (0) to red (1).</li>
-        <li>Tick <b>practice</b> for a run that does not count.</li>
+        <li><b>Bottom plot</b>: every season you play, pink's colour against its h.</li>
+        <li>Play some seasons first; <b>Start the targets</b> when you are ready. Tick <b>practice</b> for a run that does not count.</li>
       </ul>
     </div>
   </div>
@@ -265,8 +266,12 @@
         <div class="readout" id="A_read"></div>
       </div>
       <div class="panel">
+        <canvas id="A_seasons" class="plot" width="680" height="210"></canvas>
+        <div class="readout" id="A_seasonsRead"></div>
+      </div>
+      <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeA"><span class="line"><span class="com"># 36 flowers: 12 each with 0, 1 and 2 red copies</span></span><span class="line">g   &lt;- <span class="fn">rep</span>(<span class="num">0</span>:<span class="num">2</span>, each = <span class="num">12</span>)</span><span class="line" data-line="d">d   &lt;- <span class="num" id="cA_d">0.50</span>                 <span class="com"># red from one copy</span></span><span class="line">col &lt;- <span class="fn">c</span>(<span class="num">0</span>, d, <span class="num">1</span>)[g + <span class="num">1</span>]        <span class="com"># 0 white ... 1 red</span></span><span class="line"></span><span class="line" data-line="H">nH &lt;- <span class="num" id="cA_nH">5</span>; tH &lt;- <span class="num" id="cA_tH">0.00</span>    <span class="com"># hummingbirds, and the palest flower they take</span></span><span class="line" data-line="B">nB &lt;- <span class="num" id="cA_nB">5</span>; tB &lt;- <span class="num" id="cA_tB">1.00</span>    <span class="com"># bees, and the reddest flower they take</span></span><span class="line">likeH &lt;- <span class="num">0.1</span> + <span class="num">0.9</span> * <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (col - tH + <span class="num">0.2</span>) / <span class="num">0.2</span>))</span><span class="line">likeB &lt;- <span class="num">0.1</span> + <span class="num">0.9</span> * <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (tB - col + <span class="num">0.2</span>) / <span class="num">0.2</span>))</span><span class="line"></span><span class="line"><span class="com"># 300 visits from each visitor; a visit sets a seed</span></span><span class="line">seeds &lt;- <span class="fn">tabulate</span>(<span class="fn">c</span>(<span class="fn">sample</span>(<span class="num">36</span>, nH * <span class="num">300</span>, <span class="kw">TRUE</span>, likeH),</span><span class="line">                    <span class="fn">sample</span>(<span class="num">36</span>, nB * <span class="num">300</span>, <span class="kw">TRUE</span>, likeB)), <span class="num">36</span>)</span><span class="line">w &lt;- <span class="fn">tapply</span>(seeds, g, mean)      <span class="com"># white, pink, red</span></span><span class="line">s &lt;- w[<span class="num">3</span>] / w[<span class="num">1</span>] - <span class="num">1</span></span><span class="line">h &lt;- (w[<span class="num">2</span>] - w[<span class="num">1</span>]) / (w[<span class="num">3</span>] - w[<span class="num">1</span>])</span></pre>
+<pre class="code" id="codeA"><span class="line"><span class="com"># 36 flowers: 12 each with 0, 1 and 2 red copies</span></span><span class="line">g   &lt;- <span class="fn">rep</span>(<span class="num">0</span>:<span class="num">2</span>, each = <span class="num">12</span>)</span><span class="line" data-line="d">d   &lt;- <span class="num" id="cA_d">0.50</span>                 <span class="com"># red from one copy</span></span><span class="line">col &lt;- <span class="fn">c</span>(<span class="num">0</span>, d, <span class="num">1</span>)[g + <span class="num">1</span>]        <span class="com"># 0 white ... 1 red</span></span><span class="line"></span><span class="line" data-line="H">nH &lt;- <span class="num" id="cA_nH">5</span>; tH &lt;- <span class="num" id="cA_tH">0.00</span>    <span class="com"># hummingbirds, and the palest flower they take</span></span><span class="line" data-line="B">nB &lt;- <span class="num" id="cA_nB">5</span>; tB &lt;- <span class="num" id="cA_tB">1.00</span>    <span class="com"># bees, and the reddest flower they take</span></span><span class="line">likeH &lt;- <span class="num">0.1</span> + <span class="num">0.9</span> * <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (col - tH + <span class="num">0.2</span>) / <span class="num">0.2</span>))</span><span class="line">likeB &lt;- <span class="num">0.1</span> + <span class="num">0.9</span> * <span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">pmax</span>(<span class="num">0</span>, (tB - col + <span class="num">0.2</span>) / <span class="num">0.2</span>))</span><span class="line"></span><span class="line"><span class="com"># each visitor calls on a flower it takes 8 times; a visit sets a seed</span></span><span class="line">seeds &lt;- <span class="fn">rpois</span>(<span class="num">36</span>, <span class="num">8</span> * (nH * likeH + nB * likeB))</span><span class="line">w &lt;- <span class="fn">tapply</span>(seeds, g, mean)      <span class="com"># white, pink, red</span></span><span class="line">s &lt;- w[<span class="num">3</span>] / w[<span class="num">1</span>] - <span class="num">1</span></span><span class="line">h &lt;- (w[<span class="num">2</span>] - w[<span class="num">1</span>]) / (w[<span class="num">3</span>] - w[<span class="num">1</span>])</span></pre>
       </div>
     </div>
     <div class="col">
@@ -314,7 +319,8 @@
       </div>
       <ul class="setup">
         <li>Individuals, one locus, two alleles. Each individual is two halves, one per copy.</li>
-        <li><b>The bars</b>, as in Stage A: how many offspring each genotype leaves, against the yellow homozygote. <b>s</b> moves the purple homozygote; <b>h</b> moves the heterozygote, from below both to above both.</li>
+        <li><b>The bars</b>, as in Stage A: how many offspring each genotype leaves, against the yellow homozygote. <b>s</b> moves the purple homozygote; <b>h</b> moves the heterozygote: at 0 it sits with yellow, at 1 with purple, outside 0 to 1 beyond both.</li>
+        <li><b>The line</b> runs through every individual's offspring against its purple copies. Its slope × the spread of copies is how much offspring and purple go together; ÷ average offspring, it is how far purple moves next generation.</li>
         <li><b>F</b> is held where you set it, every generation.</li>
         <li><b>Bottom plot</b>: how common purple is. A run has to pass through every red window.</li>
         <li>Tick <b>practice</b> for a run that does not count.</li>
@@ -372,10 +378,91 @@
   </div>
 </section>
 
-<!-- ========== STAGE C — four alleles race ================================= -->
+<!-- ========== STAGE C — new mutations: which ones stay ================== -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Solve Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <div class="intro-grid">
+      <!-- VOICE: 202_lec13_04, then the last two sentences of 461_lec18_04's
+           cleaned text. The solved banner is 202_lec14_01. -->
+      <div class="voice">
+        <p>Recessive is not some extra property. Recessive is the word we use when something doesn't matter as a heterozygote. Things often don't matter as a heterozygote because they're broken, but there's a backup. You have about 100 mutations; almost all of them are either neutral, or they break something.</p>
+        <p>Two individuals with the same broken locus can produce homozygous-recessive offspring with an embryo-lethal mutation. The more inbred you are, the higher the rate.</p>
+      </div>
+      <ul class="setup">
+        <li>New mutations arise every generation, at a fixed rate. Each is a new allele at its own locus, and each is harmful: its <b>s</b> is below 0.</li>
+        <li>You set where new mutations' <b>h</b> and <b>s</b> come from: an average and a spread for each.</li>
+        <li>An individual's fitness multiplies over the alleles it carries: 1 + h s for one copy, 1 + s for two.</li>
+        <li><b>Top plot</b>: grey is every mutation that arose. Dots are the alleles still here, sized by their copies: dark arose in the first 200 generations, pale in the last 200. The edges count copies.</li>
+        <li><b>Middle plot</b>: the harmful copies an individual carries, and how many selection takes out each generation.</li>
+        <li><b>Right</b>: every individual, its harmful copies against its offspring. The line's slope × the spread of copies is what selection takes out.</li>
+        <li><b>Inbreeding test</b>, after the run: offspring of one parent selfed, against offspring of two.</li>
+        <li>Try some runs first; <b>Start the targets</b> when you are ready. Tick <b>practice</b> for a run that does not count.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="C_plane" class="plot" width="680" height="380"></canvas>
+        <div class="readout" id="C_planeRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_time" class="plot" width="680" height="270"></canvas>
+        <div class="readout" id="C_read"></div>
+      </div>
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"><span class="line"><span class="com"># new harmful mutations, each a new allele at its own locus</span></span><span class="line" data-line="n">N   &lt;- <span class="num" id="cC_n">100</span>; U &lt;- <span class="num">0.3</span>        <span class="com"># new mutations per individual, each generation</span></span><span class="line" data-line="h">hm  &lt;- <span class="num" id="cC_hm">0.50</span>; hsd &lt;- <span class="num" id="cC_hsd">0.20</span>   <span class="com"># h: average, spread</span></span><span class="line" data-line="s">sm  &lt;- <span class="num" id="cC_sm">0.10</span>; ssd &lt;- <span class="num" id="cC_ssd">0.05</span>   <span class="com"># how harmful: average, spread</span></span><span class="line">arise &lt;- <span class="kw">function</span>(k) <span class="fn">data.frame</span>(h = <span class="fn">pmin</span>(<span class="num">2</span>, <span class="fn">pmax</span>(-<span class="num">1</span>, <span class="fn">rnorm</span>(k, hm, hsd))),</span><span class="line">  s = -<span class="fn">pmin</span>(<span class="num">1</span>, <span class="fn">rgamma</span>(k, shape = (sm / ssd)^<span class="num">2</span>, scale = ssd^<span class="num">2</span> / sm)))</span><span class="line"></span><span class="line">muts &lt;- <span class="fn">arise</span>(<span class="num">0</span>); g1 &lt;- g2 &lt;- <span class="fn">matrix</span>(<span class="num">0</span>, N, <span class="num">0</span>)   <span class="com"># two copies per locus</span></span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">400</span>) {</span><span class="line">  g &lt;- g1 + g2</span><span class="line">  w &lt;- <span class="fn">exp</span>((g == <span class="num">1</span>) %*% <span class="fn">log</span>(<span class="num">1</span> + muts$h * muts$s) + (g == <span class="num">2</span>) %*% <span class="fn">log</span>(<span class="num">1</span> + muts$s))</span><span class="line">  z &lt;- <span class="fn">rowSums</span>(g)                            <span class="com"># harmful copies each carries</span></span><span class="line">  taken &lt;- -<span class="fn">mean</span>((w / <span class="fn">mean</span>(w) - <span class="num">1</span>) * (z - <span class="fn">mean</span>(z)))   <span class="com"># what selection takes out</span></span><span class="line">  gam &lt;- <span class="kw">function</span>(p) { k &lt;- <span class="fn">runif</span>(<span class="fn">length</span>(g1[p, ])) &lt; <span class="num">0.5</span>; <span class="fn">ifelse</span>(k, g1[p, ], g2[p, ]) }</span><span class="line">  a &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, w); b &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, w)</span><span class="line">  g1 &lt;- <span class="fn">t</span>(<span class="fn">sapply</span>(a, gam)); g2 &lt;- <span class="fn">t</span>(<span class="fn">sapply</span>(b, gam))</span><span class="line">  k &lt;- <span class="fn">rpois</span>(<span class="num">1</span>, U * N); muts &lt;- <span class="fn">rbind</span>(muts, <span class="fn">arise</span>(k))   <span class="com"># new alleles, one copy each</span></span><span class="line">  new &lt;- <span class="fn">matrix</span>(<span class="num">0</span>, N, k); new[<span class="fn">cbind</span>(<span class="fn">sample</span>(N, k, <span class="kw">TRUE</span>), <span class="fn">seq_len</span>(k))] &lt;- <span class="num">1</span></span><span class="line">  g1 &lt;- <span class="fn">cbind</span>(<span class="fn">matrix</span>(g1, N), new); g2 &lt;- <span class="fn">cbind</span>(<span class="fn">matrix</span>(g2, N), <span class="fn">matrix</span>(<span class="num">0</span>, N, k))</span><span class="line">}</span></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel predict" id="predC">
+        <h3 id="predC_h">Predict</h3>
+        <div class="pred-slot" id="predC_slot"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_cov" class="plot" width="460" height="220"></canvas>
+        <div class="readout" id="C_covRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_inb" class="plot" width="460" height="120"></canvas>
+        <div class="readout" id="C_inbRead"></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="C_controls">
+          <div class="row" data-line="n" id="C_nRow"><label for="C_n">individuals</label><input type="range" id="C_n" min="0" max="100" step="1" value="41" /><output id="C_nOut">100</output></div>
+          <div class="row" data-line="h" id="C_hmRow"><label for="C_hm">h, average</label><input type="range" id="C_hm" min="-1" max="2" step="0.05" value="0.5" /><output id="C_hmOut">0.50</output></div>
+          <div class="row" data-line="h" id="C_hsdRow"><label for="C_hsd">h, spread</label><input type="range" id="C_hsd" min="0" max="1" step="0.05" value="0.2" /><output id="C_hsdOut">0.20</output></div>
+          <div class="row" data-line="s" id="C_smRow"><label for="C_sm">s, average</label><input type="range" id="C_sm" min="0.01" max="0.5" step="0.01" value="0.1" /><output id="C_smOut">−0.10</output></div>
+          <div class="row" data-line="s" id="C_ssdRow"><label for="C_ssd">s, spread</label><input type="range" id="C_ssd" min="0" max="0.3" step="0.01" value="0.05" /><output id="C_ssdOut">0.05</output></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="C_run" class="accent">Go</button>
+            <button id="C_dl" class="ghost">Download .R</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To open Stage D</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C1">Hit three of the five targets. <span class="hint"><span id="C1_now">0 of 5 attempts</span></span></li>
+        </ul>
+        <!-- SOLVED: 202_lec14_01 (cleaned), from its second sentence. -->
+        <div class="solved-banner" id="solvedC">It's going to be a function of the mutation rate. Full stop. Selection is not in there. It went away. How does selection go away? It's a magic trick. The worse a mutation is, the rarer it is. The less bad it is, the more common. They cancel each other out. Stage D is open.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE D — four alleles race ================================= -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Solve Stage C to unlock this section.</div>
 
   <div class="panel stage-intro">
     <ul class="setup" style="margin:0; padding:0; border-top:0;">
@@ -391,55 +478,55 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <canvas id="C_traj" class="plot" width="680" height="330"></canvas>
-        <div class="readout" id="C_trajRead"></div>
+        <canvas id="D_traj" class="plot" width="680" height="330"></canvas>
+        <div class="readout" id="D_trajRead"></div>
       </div>
       <div class="panel">
-        <canvas id="C_shares" class="plot" width="680" height="230"></canvas>
-        <div class="readout" id="C_read"></div>
+        <canvas id="D_shares" class="plot" width="680" height="230"></canvas>
+        <div class="readout" id="D_read"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeC"><span class="line"><span class="com"># four alleles, each with its own h and s</span></span><span class="line" data-line="hs">h &lt;- <span class="fn">c</span>(<span class="num" id="cC_h">0.5, 0.5, 0.5, 0.5</span>)</span><span class="line" data-line="hs">s &lt;- <span class="fn">c</span>(<span class="num" id="cC_s">0, 0, 0, 0</span>)</span><span class="line" data-line="n">N &lt;- <span class="num" id="cC_n">100</span>; F &lt;- <span class="num" id="cC_F">0.00</span></span><span class="line">w &lt;- <span class="fn">outer</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i, j)</span><span class="line">       <span class="fn">ifelse</span>(i == j, <span class="num">1</span> + s[i], <span class="num">1</span> + h[i] * s[i] + h[j] * s[j]))</span><span class="line"></span><span class="line">winner &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, {</span><span class="line">  g &lt;- <span class="fn">matrix</span>(<span class="fn">sample</span>(<span class="fn">rep_len</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="num">2</span> * N)), <span class="num">2</span>)</span><span class="line">  t &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">while</span> (<span class="fn">length</span>(<span class="fn">unique</span>(<span class="fn">c</span>(g))) &gt; <span class="num">1</span> &amp;&amp; t &lt; <span class="num">600</span>) {</span><span class="line">    fit &lt;- w[<span class="fn">cbind</span>(g[<span class="num">1</span>, ], g[<span class="num">2</span>, ])]</span><span class="line">    p1 &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit)</span><span class="line">    p2 &lt;- <span class="fn">ifelse</span>(<span class="fn">runif</span>(N) &lt; <span class="num">2</span> * F / (<span class="num">1</span> + F), p1, <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit))</span><span class="line">    g  &lt;- <span class="fn">rbind</span>(g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p1)], g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p2)])</span><span class="line">    t  &lt;- t + <span class="num">1</span></span><span class="line">  }</span><span class="line">  <span class="kw">if</span> (<span class="fn">length</span>(<span class="fn">unique</span>(<span class="fn">c</span>(g))) == <span class="num">1</span>) g[<span class="num">1</span>] <span class="kw">else</span> <span class="num">0</span>   <span class="com"># 0 = still mixed</span></span><span class="line">})</span><span class="line"><span class="fn">table</span>(<span class="fn">factor</span>(winner, <span class="num">0</span>:<span class="num">4</span>)) / <span class="num">200</span></span></pre>
+<pre class="code" id="codeD"><span class="line"><span class="com"># four alleles, each with its own h and s</span></span><span class="line" data-line="hs">h &lt;- <span class="fn">c</span>(<span class="num" id="cD_h">0.5, 0.5, 0.5, 0.5</span>)</span><span class="line" data-line="hs">s &lt;- <span class="fn">c</span>(<span class="num" id="cD_s">0, 0, 0, 0</span>)</span><span class="line" data-line="n">N &lt;- <span class="num" id="cD_n">100</span>; F &lt;- <span class="num" id="cD_F">0.00</span></span><span class="line">w &lt;- <span class="fn">outer</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="num">1</span>:<span class="num">4</span>, <span class="kw">function</span>(i, j)</span><span class="line">       <span class="fn">ifelse</span>(i == j, <span class="num">1</span> + s[i], <span class="num">1</span> + h[i] * s[i] + h[j] * s[j]))</span><span class="line"></span><span class="line">winner &lt;- <span class="fn">replicate</span>(<span class="num">200</span>, {</span><span class="line">  g &lt;- <span class="fn">matrix</span>(<span class="fn">sample</span>(<span class="fn">rep_len</span>(<span class="num">1</span>:<span class="num">4</span>, <span class="num">2</span> * N)), <span class="num">2</span>)</span><span class="line">  t &lt;- <span class="num">0</span></span><span class="line">  <span class="kw">while</span> (<span class="fn">length</span>(<span class="fn">unique</span>(<span class="fn">c</span>(g))) &gt; <span class="num">1</span> &amp;&amp; t &lt; <span class="num">600</span>) {</span><span class="line">    fit &lt;- w[<span class="fn">cbind</span>(g[<span class="num">1</span>, ], g[<span class="num">2</span>, ])]</span><span class="line">    p1 &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit)</span><span class="line">    p2 &lt;- <span class="fn">ifelse</span>(<span class="fn">runif</span>(N) &lt; <span class="num">2</span> * F / (<span class="num">1</span> + F), p1, <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit))</span><span class="line">    g  &lt;- <span class="fn">rbind</span>(g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p1)], g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p2)])</span><span class="line">    t  &lt;- t + <span class="num">1</span></span><span class="line">  }</span><span class="line">  <span class="kw">if</span> (<span class="fn">length</span>(<span class="fn">unique</span>(<span class="fn">c</span>(g))) == <span class="num">1</span>) g[<span class="num">1</span>] <span class="kw">else</span> <span class="num">0</span>   <span class="com"># 0 = still mixed</span></span><span class="line">})</span><span class="line"><span class="fn">table</span>(<span class="fn">factor</span>(winner, <span class="num">0</span>:<span class="num">4</span>)) / <span class="num">200</span></span></pre>
       </div>
     </div>
     <div class="col">
-      <div class="panel predict" id="predC">
-        <h3 id="predC_h">Predict</h3>
-        <div class="pred-slot" id="predC_slot"></div>
+      <div class="panel predict" id="predD">
+        <h3 id="predD_h">Predict</h3>
+        <div class="pred-slot" id="predD_slot"></div>
       </div>
       <div class="panel">
-        <canvas id="C_fit" class="plot" width="460" height="190"></canvas>
+        <canvas id="D_fit" class="plot" width="460" height="190"></canvas>
       </div>
       <div class="panel">
         <h3>Controls</h3>
-        <div class="controls" id="C_controls">
-          <div id="C_arows"></div>
-          <div class="row" data-line="n" id="C_nRow"><label for="C_n">individuals</label><input type="range" id="C_n" min="0" max="100" step="1" value="77" /><output id="C_nOut">100</output></div>
-          <div class="row" data-line="n" id="C_FRow"><label for="C_F">inbreeding F</label><input type="range" id="C_F" min="0" max="0.9" step="0.05" value="0" /><output id="C_FOut">0.00</output></div>
-          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+        <div class="controls" id="D_controls">
+          <div id="D_arows"></div>
+          <div class="row" data-line="n" id="D_nRow"><label for="D_n">individuals</label><input type="range" id="D_n" min="0" max="100" step="1" value="77" /><output id="D_nOut">100</output></div>
+          <div class="row" data-line="n" id="D_FRow"><label for="D_F">inbreeding F</label><input type="range" id="D_F" min="0" max="0.9" step="0.05" value="0" /><output id="D_FOut">0.00</output></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
-            <button id="C_run" class="accent">Go</button>
-            <button id="C_neutral" class="secondary">All neutral</button>
-            <button id="C_dl" class="ghost">Download .R</button>
+            <button id="D_run" class="accent">Go</button>
+            <button id="D_neutral" class="secondary">All neutral</button>
+            <button id="D_dl" class="ghost">Download .R</button>
           </div>
         </div>
       </div>
       <div class="panel">
-        <h3>To open Stage D</h3>
-        <ul class="tasks" id="tasksC">
-          <li data-task="C1">Match three of the five targets. <span class="hint"><span id="C1_now">0 of 5 attempts</span></span></li>
+        <h3>To open Stage E</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D1">Match three of the five targets. <span class="hint"><span id="C1_now">0 of 5 attempts</span></span></li>
         </ul>
-        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+        <div class="solved-banner" id="solvedD">Stage E is open.</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ========== STAGE D — the valley ======================================== -->
-<section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D</h2>
-  <div class="lock-banner">Solve Stage C to unlock this section.</div>
+<!-- ========== STAGE E — the valley ======================================== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Solve Stage D to unlock this section.</div>
 
   <div class="panel stage-intro">
     <ul class="setup" style="margin:0; padding:0; border-top:0;">
@@ -454,82 +541,16 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <canvas id="D_land" class="plot" width="680" height="260"></canvas>
-        <div class="readout" id="D_landRead"></div>
+        <canvas id="E_land" class="plot" width="680" height="260"></canvas>
+        <div class="readout" id="E_landRead"></div>
       </div>
       <div class="panel">
-        <canvas id="D_time" class="plot" width="680" height="240"></canvas>
-        <div class="readout" id="D_read"></div>
-      </div>
-      <div class="panel">
-        <h3>R code</h3>
-<pre class="code" id="codeD"><span class="line"><span class="com"># two loci; the trait is the number of + copies, 0 to 4</span></span><span class="line" data-line="n">N  &lt;- <span class="num" id="cD_n">40</span></span><span class="line" data-line="d">d  &lt;- <span class="num" id="cD_d">0.10</span>            <span class="com"># how deep the valley is</span></span><span class="line">w  &lt;- <span class="fn">c</span>(<span class="num">1</span>, <span class="num">1</span> - d, <span class="num">1</span> - d, <span class="num">1</span> - d, <span class="num">1.2</span>)   <span class="com"># fitness at 0, 1, 2, 3, 4 copies</span></span><span class="line">mu &lt;- <span class="num">0.001</span></span><span class="line"></span><span class="line">crossed &lt;- <span class="fn">replicate</span>(<span class="num">50</span>, {</span><span class="line">  g &lt;- <span class="fn">matrix</span>(<span class="num">0</span>, N, <span class="num">4</span>)   <span class="com"># everyone on the low peak</span></span><span class="line">  <span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">1500</span>) {</span><span class="line">    <span class="kw">if</span> (<span class="fn">mean</span>(<span class="fn">rowSums</span>(g)) &gt;= <span class="num">3.5</span>) <span class="kw">break</span></span><span class="line">    fit &lt;- w[<span class="fn">rowSums</span>(g) + <span class="num">1</span>]</span><span class="line">    a &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit); b &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit)</span><span class="line">    <span class="kw">for</span> (l <span class="kw">in</span> <span class="num">0</span>:<span class="num">1</span>)   <span class="com"># one copy from each parent at each locus</span></span><span class="line">      g[, <span class="num">2</span>*l + <span class="num">1</span>:<span class="num">2</span>] &lt;- <span class="fn">cbind</span>(g[<span class="fn">cbind</span>(a, <span class="num">2</span>*l + <span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>))], g[<span class="fn">cbind</span>(b, <span class="num">2</span>*l + <span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>))])</span><span class="line">    flip &lt;- <span class="fn">runif</span>(<span class="num">4</span> * N) &lt; mu; g[flip] &lt;- <span class="num">1</span> - g[flip]</span><span class="line">  }</span><span class="line">  <span class="fn">mean</span>(<span class="fn">rowSums</span>(g)) &gt;= <span class="num">3.5</span></span><span class="line">})</span><span class="line"><span class="fn">mean</span>(crossed)   <span class="com"># the share that reached the high peak</span></span></pre>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel predict" id="predD">
-        <h3 id="predD_h">Predict</h3>
-        <div class="pred-slot" id="predD_slot"></div>
-      </div>
-      <div class="panel">
-        <h3>Controls</h3>
-        <div class="controls" id="D_controls">
-          <div class="row" data-line="n" id="D_nRow"><label for="D_n">individuals</label><input type="range" id="D_n" min="0" max="100" step="1" value="58" /><output id="D_nOut">40</output></div>
-          <div class="row" data-line="d" id="D_dRow"><label for="D_d">how deep the valley is</label><input type="range" id="D_d" min="0" max="0.2" step="0.01" value="0.1" /><output id="D_dOut">0.10</output></div>
-          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
-          <div class="buttons">
-            <button id="D_run" class="accent">Go</button>
-            <button id="D_dl" class="ghost">Download .R</button>
-          </div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>To open Stage E</h3>
-        <ul class="tasks" id="tasksD">
-          <li data-task="D1">Hit three of the five targets. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
-        </ul>
-        <div class="solved-banner" id="solvedD">Stage E is open.</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ========== STAGE E — the population's average fitness ===================== -->
-<section class="stage stage-locked" id="stageE">
-  <h2 class="stage-h">E</h2>
-  <div class="lock-banner">Solve Stage D to unlock this section.</div>
-
-  <div class="panel stage-intro">
-    <div class="intro-grid">
-      <!-- VOICE: 202_lec01_02, then the first sentence of 202_lec14_01 (the rest
-           of it is mutation load, which this stage does not build). -->
-      <div class="voice">
-        <p>Selection is the only thing that can make things consistently better — but it's also pretty weak, so it doesn't work that well. And by "better," it doesn't mean better in some objective sense. Just die less or have more kids.</p>
-        <p>How many children individuals in your population have on average — that's what fitness is.</p>
-      </div>
-      <ul class="setup">
-        <li>Stage B's population: individuals, one locus, <b>h</b> and <b>s</b>, <b>F</b> held where you set it.</li>
-        <li><b>Average fitness</b>: the offspring an individual leaves, against the yellow homozygote, averaged over the whole population each generation.</li>
-        <li><b>Top plot</b>: average fitness against how common purple is. The line is where a population with that much purple sits; dashed, with F where it is held. The ball is this population.</li>
-        <li><b>Bottom plot</b>: average fitness by generation, through the red windows. The dotted line is the fittest genotype.</li>
-        <li>Tick <b>practice</b> for a run that does not count.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel">
-        <canvas id="E_hill" class="plot" width="680" height="260"></canvas>
-        <div class="readout" id="E_hillRead"></div>
-      </div>
-      <div class="panel">
-        <canvas id="E_time" class="plot" width="680" height="250"></canvas>
+        <canvas id="E_time" class="plot" width="680" height="240"></canvas>
         <div class="readout" id="E_read"></div>
       </div>
       <div class="panel">
         <h3>R code</h3>
-<pre class="code" id="codeE"><span class="line"><span class="com"># Stage B's population, and its average fitness each generation</span></span><span class="line" data-line="n">N  &lt;- <span class="num" id="cE_n">400</span></span><span class="line" data-line="F">F  &lt;- <span class="num" id="cE_F">0.00</span>            <span class="com"># held there every generation</span></span><span class="line" data-line="p">p0 &lt;- <span class="num" id="cE_p">0.50</span></span><span class="line" data-line="h">h  &lt;- <span class="num" id="cE_h">0.5</span></span><span class="line" data-line="s">s  &lt;- <span class="num" id="cE_s">0.00</span></span><span class="line">w  &lt;- <span class="fn">c</span>(<span class="num">1</span>, <span class="num">1</span> + h * s, <span class="num">1</span> + s)   <span class="com"># yellow homozygote, heterozygote, purple</span></span><span class="line">sf &lt;- <span class="num">2</span> * F / (<span class="num">1</span> + F)</span><span class="line"></span><span class="line">k &lt;- <span class="fn">round</span>(<span class="num">2</span> * N * p0)</span><span class="line">g &lt;- <span class="fn">matrix</span>(<span class="fn">sample</span>(<span class="fn">rep</span>(<span class="num">1</span>:<span class="num">0</span>, <span class="fn">c</span>(k, <span class="num">2</span> * N - k))), <span class="num">2</span>)</span><span class="line">p &lt;- wbar &lt;- <span class="fn">c</span>()</span><span class="line"><span class="kw">for</span> (t <span class="kw">in</span> <span class="num">0</span>:<span class="num">100</span>) {</span><span class="line">  fit  &lt;- w[<span class="fn">colSums</span>(g) + <span class="num">1</span>]</span><span class="line">  p    &lt;- <span class="fn">c</span>(p, <span class="fn">mean</span>(g)); wbar &lt;- <span class="fn">c</span>(wbar, <span class="fn">mean</span>(fit))   <span class="com"># average fitness</span></span><span class="line">  p1 &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit)</span><span class="line">  p2 &lt;- <span class="fn">ifelse</span>(<span class="fn">runif</span>(N) &lt; sf, p1, <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit))</span><span class="line">  g  &lt;- <span class="fn">rbind</span>(g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p1)], g[<span class="fn">cbind</span>(<span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>), p2)])</span><span class="line">}</span><span class="line"><span class="fn">plot</span>(p, wbar, type = <span class="str">"l"</span>)   <span class="com"># the top plot; its line, at F = 0:</span></span><span class="line"><span class="fn">curve</span>((<span class="num">1</span> - x)^<span class="num">2</span> * w[<span class="num">1</span>] + <span class="num">2</span> * x * (<span class="num">1</span> - x) * w[<span class="num">2</span>] + x^<span class="num">2</span> * w[<span class="num">3</span>], add = <span class="kw">TRUE</span>)</span></pre>
+<pre class="code" id="codeE"><span class="line"><span class="com"># two loci; the trait is the number of + copies, 0 to 4</span></span><span class="line" data-line="n">N  &lt;- <span class="num" id="cE_n">40</span></span><span class="line" data-line="d">d  &lt;- <span class="num" id="cE_d">0.10</span>            <span class="com"># how deep the valley is</span></span><span class="line">w  &lt;- <span class="fn">c</span>(<span class="num">1</span>, <span class="num">1</span> - d, <span class="num">1</span> - d, <span class="num">1</span> - d, <span class="num">1.2</span>)   <span class="com"># fitness at 0, 1, 2, 3, 4 copies</span></span><span class="line">mu &lt;- <span class="num">0.001</span></span><span class="line"></span><span class="line">crossed &lt;- <span class="fn">replicate</span>(<span class="num">50</span>, {</span><span class="line">  g &lt;- <span class="fn">matrix</span>(<span class="num">0</span>, N, <span class="num">4</span>)   <span class="com"># everyone on the low peak</span></span><span class="line">  <span class="kw">for</span> (t <span class="kw">in</span> <span class="num">1</span>:<span class="num">1500</span>) {</span><span class="line">    <span class="kw">if</span> (<span class="fn">mean</span>(<span class="fn">rowSums</span>(g)) &gt;= <span class="num">3.5</span>) <span class="kw">break</span></span><span class="line">    fit &lt;- w[<span class="fn">rowSums</span>(g) + <span class="num">1</span>]</span><span class="line">    a &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit); b &lt;- <span class="fn">sample</span>(N, N, <span class="kw">TRUE</span>, fit)</span><span class="line">    <span class="kw">for</span> (l <span class="kw">in</span> <span class="num">0</span>:<span class="num">1</span>)   <span class="com"># one copy from each parent at each locus</span></span><span class="line">      g[, <span class="num">2</span>*l + <span class="num">1</span>:<span class="num">2</span>] &lt;- <span class="fn">cbind</span>(g[<span class="fn">cbind</span>(a, <span class="num">2</span>*l + <span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>))], g[<span class="fn">cbind</span>(b, <span class="num">2</span>*l + <span class="fn">sample</span>(<span class="num">2</span>, N, <span class="kw">TRUE</span>))])</span><span class="line">    flip &lt;- <span class="fn">runif</span>(<span class="num">4</span> * N) &lt; mu; g[flip] &lt;- <span class="num">1</span> - g[flip]</span><span class="line">  }</span><span class="line">  <span class="fn">mean</span>(<span class="fn">rowSums</span>(g)) &gt;= <span class="num">3.5</span></span><span class="line">})</span><span class="line"><span class="fn">mean</span>(crossed)   <span class="com"># the share that reached the high peak</span></span></pre>
       </div>
     </div>
     <div class="col">
@@ -538,16 +559,10 @@
         <div class="pred-slot" id="predE_slot"></div>
       </div>
       <div class="panel">
-        <canvas id="E_fit" class="plot" width="460" height="170"></canvas>
-      </div>
-      <div class="panel">
         <h3>Controls</h3>
         <div class="controls" id="E_controls">
-          <div class="row" data-line="n" id="E_nRow"><label for="E_n">individuals</label><input type="range" id="E_n" min="0" max="100" step="1" value="100" /><output id="E_nOut">400</output></div>
-          <div class="row" data-line="F" id="E_FRow"><label for="E_F">inbreeding F</label><input type="range" id="E_F" min="0" max="0.9" step="0.05" value="0" /><output id="E_FOut">0.00</output></div>
-          <div class="row" data-line="p" id="E_pRow"><label for="E_p">purple at the start</label><input type="range" id="E_p" min="0.02" max="0.98" step="0.02" value="0.5" /><output id="E_pOut">0.50</output></div>
-          <div class="row" data-line="h" id="E_hRow"><label for="E_h">h</label><input type="range" id="E_h" min="-1" max="2" step="0.1" value="0.5" /><output id="E_hOut">0.5</output></div>
-          <div class="row" data-line="s" id="E_sRow"><label for="E_s">s</label><input type="range" id="E_s" min="-0.3" max="0.3" step="0.01" value="0" /><output id="E_sOut">0.00</output></div>
+          <div class="row" data-line="n" id="E_nRow"><label for="E_n">individuals</label><input type="range" id="E_n" min="0" max="100" step="1" value="58" /><output id="E_nOut">40</output></div>
+          <div class="row" data-line="d" id="E_dRow"><label for="E_d">how deep the valley is</label><input type="range" id="E_d" min="0" max="0.2" step="0.01" value="0.1" /><output id="E_dOut">0.10</output></div>
           <div class="practice-row"><input type="checkbox" id="E_practice" /><label for="E_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="E_run" class="accent">Go</button>
@@ -558,9 +573,9 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksE">
-          <li data-task="E1">Hit three of the five targets. <span class="hint"><span id="E1_now">0 of 5 attempts</span></span></li>
+          <li data-task="E1">Hit three of the five targets. <span class="hint"><span id="D1_now">0 of 5 attempts</span></span></li>
         </ul>
-        <!-- SOLVED: 461_lec12_02, trimmed. -->
+        <!-- SOLVED: 461_lec12_02, trimmed (moved from the old Stage E, 2026-09-28). -->
         <div class="solved-banner" id="solvedE">Selection is not a forward-thinking process. It's literally each generation: what makes more of itself? The lower peak is just as much a fixed point as the higher peak. Selection cannot see across the valley.</div>
       </div>
     </div>
@@ -584,11 +599,14 @@
    JM, 2026-09-24: "maybe lesson 13 is a 'selection as regression' module
    ... while lesson 12 is more genetics-specific." JM, 2026-09-27: "visually
    explore h/s (A), current part A (B), current part B (C), fitness valley
-   activity (D), population-mean-fitness capstone (E)." So: A a meadow where
-   a gene and its visitors make h and s, B one locus with h and s, C four
-   alleles racing, D a valley drift has to cross, E the population's mean
-   fitness. The plan is docs/overhauls/lesson12_overhaul.md. The mutation-
-   selection stage that was D until 2026-09-27 is in git at 8ced490.
+   activity (D), population-mean-fitness capstone (E)." JM, 2026-09-28: a
+   new C, where students set the h and s of new mutations and see which
+   stay; the average-fitness E dropped. So: A a meadow where a gene and its
+   visitors make h and s, B one locus with h and s, C new mutations and what
+   stays, D four alleles racing, E a valley drift has to cross. The plan is
+   docs/overhauls/lesson12_overhaul.md. The mutation-selection stage that
+   was D until 2026-09-27 is in git at 8ced490; the average-fitness E, at
+   42d3727.
 
    The furniture (canvas fitting, gates, plots, the round machine, the
    practice switch) is lesson 11's, copied. Every number on screen is
@@ -663,7 +681,7 @@ function repaintAll() {
 /* ====== gates ========================================================
    A stage opens the next by being solved. The written questions record
    on their first attempt and getting one wrong never shuts a door. */
-/* A to E (2026-09-27). E mints the code. */
+/* A to E (2026-09-28). E mints the code. */
 const Gates = { A:{open:false,done:false}, B:{open:false,done:false}, C:{open:false,done:false}, D:{open:false,done:false}, E:{open:false,done:false} };
 const NEXT = { A:"B", B:"C", C:"D", D:"E", E:null };
 /* Named one per slot rather than as an array, so check_lessons.py's
@@ -796,9 +814,14 @@ function dealDistinct(label, list) {
    and number of successes eg (3 of 5 attempts, 2 successful hits)". */
 const tallyText = (tries, RN, hits) => tries + " of " + RN + " attempts, " + hits + " successful hit" + (hits === 1 ? "" : "s");
 
+/* cfg.freeFirst (2026-09-28): no target is dealt until the student asks
+   for one. Until then every run is free play, scored as practice, and
+   nothing is held -- JM, 2026-09-23: "a careful student should be able to
+   visually inspect something and intuit the main point in a few tries --
+   and then evaluate". The Next target button reads "Start the targets". */
 function mountRounds(stage, cfg) {
   const RN = cfg.rounds || 5, NEED = cfg.need || 3;
-  const st = { i: 0, hits: [], done: false, round: null, waiting: false, last: null };
+  const st = { i: 0, hits: [], done: false, round: null, waiting: false, last: null, free: !!cfg.freeFirst };
   const el = id => document.getElementById(id);
   const nHits = () => st.hits.filter(Boolean).length;
   function deal() { st.round = cfg.deal(st.i, st); st.last = null; st.waiting = false;
@@ -810,10 +833,11 @@ function mountRounds(stage, cfg) {
       if (cfg.rows) el(stage + "_ttab").innerHTML = (st.round ? cfg.rows(st.round) : [])
         .map(r => "<tr><th>" + r[0] + "</th><td>" + r[1] + "</td></tr>").join("");
       cfg.picture(el(stage + "_tpic"), st.round, st.last);
-      el(stage + "_tnext").disabled = !st.waiting || st.done;
+      el(stage + "_tnext").disabled = st.free ? false : (!st.waiting || st.done);
+      el(stage + "_tnext").textContent = st.free ? "Start the targets" : "Next target";
       /* after a scored run the card waits for Next target; a practice run
          is still allowed, so a student can try again at the target just missed */
-      if (cfg.go) el(cfg.go).disabled = st.waiting && !st.done && !(cfg.practising && cfg.practising());
+      if (cfg.go) el(cfg.go).disabled = !st.free && st.waiting && !st.done && !(cfg.practising && cfg.practising());
     } else {
     const rows = st.round ? cfg.rows(st.round) : [];
     el(stage + "_ttab").innerHTML =
@@ -824,19 +848,21 @@ function mountRounds(stage, cfg) {
       ? (st.hits.filter(Boolean).length >= NEED
           ? "You have it. Keep playing with the controls if you like."
           : "Five attempts done. Keep playing with the controls if you like.")
+      : st.free ? (cfg.freePrompt || "Try some runs first. Everything is free and nothing counts. Start the targets when you are ready.")
       : cfg.prompt(st.round);
     let h = "";
     for (let k = 0; k < RN; k++)
       h += '<i class="' + (st.hits[k] === true ? "hit" : st.hits[k] === false ? "miss"
-            : (k === st.i && !st.done ? "now" : "")) + '"></i>';
+            : (k === st.i && !st.done && !st.free ? "now" : "")) + '"></i>';
     h += "<span>" + tallyText(st.hits.length, RN, nHits()) + "</span>";
     el(stage + "_tpips").innerHTML = h;
   }
   /* `practice` is lesson 10's practice switch: the run is shown against the
      target and neither scored nor consumed. */
   function submit(ok, detail, result, practice) {
+    if (st.free) practice = true;
     el(stage + "_tflip").innerHTML = practice && !st.done
-      ? '<span class="prac">practice run — this one did not count</span>' : detail;
+      ? '<span class="prac">' + (st.free ? "free run — nothing counts yet" : "practice run — this one did not count") + '</span>' : detail;
     if (st.done || practice) { st.last = result == null ? null : result; if (cfg.picture) paint(); return; }
     st.hits.push(ok);
     st.i = st.hits.length;
@@ -870,11 +896,13 @@ function mountRounds(stage, cfg) {
     (cfg.picture ? '<div class="controls"><div class="buttons" style="margin-top:6px;">' +
                    '<button id="' + stage + '_tnext" class="secondary" disabled>Next target</button></div></div>' : "") +
     '<div class="roundpips" id="' + stage + '_tpips"></div>';
-  if (cfg.picture) el(stage + "_tnext").addEventListener("click", () => { if (st.waiting && !st.done) deal(); });
-  deal();
+  if (cfg.picture) el(stage + "_tnext").addEventListener("click", () => {
+    if (st.free) { st.free = false; el(stage + "_tflip").innerHTML = ""; deal(); }
+    else if (st.waiting && !st.done) deal(); });
+  if (st.free) { if (cfg.onDeal) cfg.onDeal(null); paint(); } else deal();
   return { st, submit, current: () => st.round, repaint: paint,
-           waiting: () => st.waiting,
-           show: () => { if (!st.done) { st.hits = [true, true, true]; st.waiting = false; finish(); paint(); } } };
+           waiting: () => st.waiting, free: () => st.free,
+           show: () => { if (!st.done) { st.free = false; st.hits = [true, true, true]; st.waiting = false; finish(); paint(); } } };
 }
 
 /* A run is thrown, not steered: while it plays, the stage's controls are
@@ -903,31 +931,34 @@ function lockStage(stage, on) {
    visits: hummingbirds take any flower at least tH red, bees any flower at
    most tB red, and each takes a little past its edge, over a ramp A_RAMP
    wide. A colour a visitor does not take still gets A_FLOOR of a full
-   share. Each visitor makes A_V visits a season, choosing a flower in
-   proportion to how much it takes that colour; each visit sets one seed.
+   rate. Each visitor calls on every flower it takes A_RATE times a season
+   (Poisson), so a flower's seeds depend on its own colour and the visitors,
+   never on what the other flowers look like. Each visit sets one seed.
 
    Seeds per flower, against white, are 1, 1 + h s, 1 + s: s = red / white
    - 1, and h = (pink - white) / (red - white), where pink sits on a ruler
    running from white (0) to red (1). Both are measured off the season; the
-   expected values, from the visit shares, print beside them. Dominance in
-   the fitness (h) is the colour's dominance (d) read through what the
-   visitors take: with visitors held, d moves h; with d held, the visitors
-   do.
+   expected values print beside them. s depends only on the visitors; h on
+   the gene and the visitors together.
 
-   Measured 2026-09-27 (node prototype, 300 visits each, 300 seasons):
-   pink held halfway -- 8 hummingbirds from 0.3, 2 bees to 0.3: h 1.00 +-
-   0.08, s 0.94. 7 and 3, edges 0.3 and 0.7 (both take pink): h 1.76 +- 0.11.
-   7 and 3, edges 0.7 and 0.3 (neither does): h -0.75 +- 0.04. Visitors held
-   at 8 from 0.8 and 2 to 0.3 (on the page, 40 seasons a step): h is 0 for
-   pink at or below 0.3 (s 3.2), -0.33 at 0.5-0.6, 1 at 0.8 and above (s
-   0.94). "As few as white" is hit at pink 0.4 or below, and at 0.65, where
-   pink has lost the bees and gained just enough hummingbirds; "as many as
-   red" at 0.8 and above, 98%.
-   The visitors' visits are shared among the flowers they take, so moving
-   pink moves red's seeds too: at 6 and 3 held, pink at 0.9 took half the
-   hummingbirds' visits off red and s fell to 0.11, under the rounds' 0.3.
+   2026-09-28: until then each visitor made 300 visits shared among the
+   flowers it took, so moving pink moved red's seeds (s 3.18 -> 0.94 as pink
+   went 0.3 -> 0.8 with the visitors held), and h and s stopped being
+   separable. Rounds recalibrated on the fixed rate (node, 200 seasons):
+     asred    pink 0.5 held; 8 H from 0.3, 2 B to 0.3 (h 1.00)       95%
+     best     pink 0.5 held; 7 H from 0.3, 3 B to 0.7 (h 1.75)      100%
+     worst    pink 0.5 held; 7 H from 0.7, 3 B to 0.3 (h -0.75)     100%
+     halfway  8 H from 0.9 held, no bees; pink 0.8 (h 0.50)          100%
+     mostly   8 H from 0.4 held, no bees; pink 0.35 (h 0.75)         100%
+              (window 0.6-0.85: the opening pink 0.5 is h 1.00 +- 0.06 a
+              season, and a top at 0.9 let it through 1 season in 30)
+   A setting drawn at random (53,361 on the arithmetic; 21 pinks for the
+   last two) clears 10 / 6 / 4 / 5 / 5%; the greediest one setting clears
+   two; the opening clears none. The last two are colour against fitness:
+   pink 0.5, halfway in colour, is h 0 in the halfway round, and the answers
+   (0.8 and 0.35) sit either side of the colour's halfway.
    ===================================================================== */
-const A_FL = 12, A_V = 300, A_RAMP = 0.2, A_FLOOR = 0.1, A_FRAMES = 60, A_TICK = 30;
+const A_FL = 12, A_RATE = 8, A_RAMP = 0.2, A_FLOOR = 0.1, A_FRAMES = 60, A_TICK = 30;
 const A_BEE = "#d4a017", A_GROUND = "#eef1e4", A_EDGE = "#8a8780";
 /* the colour a flower of redness r is painted: white to the lesson's red */
 function A_paintOf(r) {
@@ -945,49 +976,54 @@ const A_LAYOUT = (function (rng) {
 })(mulberry32(pageSeed("l12Alay", 1, 99999)));
 /* The five rounds, in this order. Three hold the gene (pink halfway) and
    the visitors are the lever; two hold the visitors and the gene is the
-   lever. Every round wants red at least 30% above white, so h reads the
-   same way in all five (with red below white, pink above both is h < 0).
-   The opening -- visitors that take any colour -- gives s = 0 and clears
-   none. */
+   lever, each with a single answer that is not pink's halfway. Every round
+   wants red at least 30% above white, so h reads the same way in all five
+   (with red below white, pink above both is h < 0). "Most" and "fewest" are
+   one-sided: pink above both, or below both, however far. */
 const A_SMIN = 0.3;
-const A_ENV = { nH: 8, tH: 0.8, nB: 2, tB: 0.3 };
+const A_ENV = { nH: 8, tH: 0.9, nB: 0, tB: 0.3 }, A_ENV2 = { nH: 8, tH: 0.4, nB: 0, tB: 0.3 };
 const A_ROUNDS = [
-  { key: "asred",   hold: { d: 0.5 },   h: [0.85, 1.15], say: "Pink sets as many seeds as red." },
-  { key: "best",    hold: { d: 0.5 },   h: [1.5, 2.5],   say: "Pink sets the most seeds of the three." },
-  { key: "worst",   hold: { d: 0.5 },   h: [-1.5, -0.5], say: "Pink sets the fewest seeds of the three." },
-  { key: "aswhite", hold: { env: A_ENV }, h: [-0.15, 0.15], say: "Pink sets as few seeds as white." },
-  { key: "asred2",  hold: { env: A_ENV }, h: [0.85, 1.15], say: "Pink sets as many seeds as red." }
+  { key: "asred",   hold: { d: 0.5 },    h: [0.85, 1.15],      say: "Pink sets as many seeds as red." },
+  { key: "best",    hold: { d: 0.5 },    h: [1.25, Infinity],  say: "Pink sets the most seeds of the three." },
+  { key: "worst",   hold: { d: 0.5 },    h: [-Infinity, -0.25], say: "Pink sets the fewest seeds of the three." },
+  { key: "halfway", hold: { env: A_ENV },  h: [0.35, 0.65],    say: "Pink sets seeds halfway between white and red." },
+  { key: "mostly",  hold: { env: A_ENV2 }, h: [0.6, 0.85],     say: "Pink sets seeds three quarters of the way from white to red." }
 ];
 const A = { d: 0.5, nH: 5, tH: 0, nB: 5, tB: 1, season: null, showTo: null,
-            running: false, timer: 0, serial: 0, game: null, drag: null };
+            running: false, timer: 0, serial: 0, game: null, drag: null, seasons: [] };
 
 /* Seeds per flower each genotype can expect, and the same for a flower of
    any colour `at(r)` dropped into this meadow: the arithmetic printed beside
-   the season. */
+   the season. Every visitor calls on each flower it takes A_RATE times. */
 function A_expect(d, nH, tH, nB, tB) {
-  const R = [0, d, 1], sH = R.reduce((x, r) => x + A_likeH(r, tH), 0), sB = R.reduce((x, r) => x + A_likeB(r, tB), 0);
-  const at = r => A_V * (nH * A_likeH(r, tH) / sH + nB * A_likeB(r, tB) / sB) / A_FL;
-  return { w: R.map(at), at };
+  const at = r => A_RATE * (nH * A_likeH(r, tH) + nB * A_likeB(r, tB));
+  return { w: [0, d, 1].map(at), at };
 }
-/* One season. Every visitor's visits are kept in order, so the page can
-   play them out; seeds are the visits each flower received. */
+function A_pois(rng, l) {
+  if (l > 30) { let u = 0; while (u === 0) u = rng(); return Math.max(0, Math.round(l + Math.sqrt(l) * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()))); }
+  const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1;
+}
+/* One season. Each visitor's calls on each flower are drawn, then shuffled
+   into the order the page plays them; seeds are the visits a flower got. */
 function A_season(d, nH, tH, nB, tB, rng) {
   const R = A_LAYOUT.map(f => [0, d, 1][f.g]), visitors = [];
   for (const [kind, n, t] of [["H", nH, tH], ["B", nB, tB]]) {
     const like = kind === "H" ? A_likeH : A_likeB;
-    const cum = []; let tot = 0; for (const r of R) { tot += like(r, t); cum.push(tot); }
     for (let q = 0; q < n; q++) {
-      const seq = new Uint8Array(A_V);
-      for (let v = 0; v < A_V; v++) { const u = rng() * tot; let i = 0; while (cum[i] < u) i++; seq[v] = i; }
-      visitors.push({ kind, seq });
+      const v = [];
+      R.forEach((r, i) => { const k = A_pois(rng, A_RATE * like(r, t)); for (let j = 0; j < k; j++) v.push(i); });
+      for (let k = v.length - 1; k > 0; k--) { const j = Math.floor(rng() * (k + 1)); const x = v[k]; v[k] = v[j]; v[j] = x; }
+      visitors.push({ kind, seq: Uint8Array.from(v) });
     }
   }
   const seeds = A_seedsTo({ visitors }, A_FRAMES);
   return { d, nH, tH, nB, tB, visitors, seeds, w: A_classMeans(seeds) };
 }
+/* the seeds set by frame `frame` of the season's A_FRAMES: each visitor is
+   the same share of the way through its own calls */
 function A_seedsTo(season, frame) {
-  const upto = Math.round(A_V * frame / A_FRAMES), s = new Int32Array(A_LAYOUT.length);
-  for (const V of season.visitors) for (let v = 0; v < upto; v++) s[V.seq[v]]++;
+  const s = new Int32Array(A_LAYOUT.length);
+  for (const V of season.visitors) { const upto = Math.round(V.seq.length * frame / A_FRAMES); for (let v = 0; v < upto; v++) s[V.seq[v]]++; }
   return s;
 }
 function A_classMeans(seeds) { const t = [0, 0, 0]; A_LAYOUT.forEach((f, i) => { t[f.g] += seeds[i]; }); return t.map(v => v / A_FL); }
@@ -998,11 +1034,11 @@ function A_hs(w) {
   const h = w[0] > 0 && Math.abs(w[2] - w[0]) > 0.05 * w[0] ? (w[1] - w[0]) / (w[2] - w[0]) : NaN;
   return { s, h };
 }
-const A_judge = (r, w) => { const q = A_hs(w); return q.s >= A_SMIN && q.h >= r.h[0] && q.h <= r.h[1]; };
+const A_judge = (r, w) => { if (!r) return false; const q = A_hs(w); return q.s >= A_SMIN && q.h >= r.h[0] && q.h <= r.h[1]; };
 const A_round = () => (A.game && !A.game.st.done) ? A.game.current() : null;
 const A_hold = () => { const r = A_round(); return r ? r.hold : {}; };
 
-const A_practising = () => !!(A.game && (A.game.st.done || document.getElementById("A_practice").checked));
+const A_practising = () => !!(A.game && (A.game.st.done || A.game.st.free || document.getElementById("A_practice").checked));
 function A_syncGo() {
   document.getElementById("A_run").textContent = A_practising() ? "Practice run" : "Go";
   if (A.game && !A.running) A.game.repaint();
@@ -1050,7 +1086,10 @@ function A_go() {
   }, A_TICK);
 }
 function A_land(practice) {
-  const r = A.game.current(), ok = A_judge(r, A.season.w);
+  const r = A.game.current(), ok = A_judge(r, A.season.w), q = A_hs(A.season.w);
+  /* every season stays on the seasons plot, whatever the settings */
+  A.seasons.push({ d: A.season.d, h: q.h, s: q.s });
+  if (A.seasons.length > 40) A.seasons.shift();
   A.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', A_hs(A.season.w), practice);
   A_syncSliders(); A_syncGo(); A_paint();
 }
@@ -1114,15 +1153,16 @@ function A_drawMeadow() {
   });
   /* each visitor at the flower it is on now */
   if (S && A.showTo != null && A.showTo > 0) {
-    const upto = Math.max(1, Math.round(A_V * A.showTo / A_FRAMES));
     S.visitors.forEach((V, q) => {
+      const upto = Math.round(V.seq.length * A.showTo / A_FRAMES);
+      if (upto < 1) return;
       const { x, y } = M.at(A_LAYOUT[V.seq[upto - 1]]), dx = (q % 3 - 1) * 4;
       if (V.kind === "H") A_hummer(ctx, x + 9 + dx, y - R - 2); else A_bee(ctx, x - 9 + dx, y - R - 1);
     });
   }
   const cm = seeds ? A_classMeans(seeds) : null;
   document.getElementById("A_meadowRead").innerHTML = S
-    ? '<span class="label">visit</span> <b>' + Math.round(A_V * frame / A_FRAMES) + '</b> <span class="label">of ' + A_V + ' each</span> &nbsp;|&nbsp; ' +
+    ? '<span class="label">visits so far</span> <b>' + seeds.reduce((x, y) => x + y, 0) + '</b> <span class="label">of ' + S.seeds.reduce((x, y) => x + y, 0) + '</span> &nbsp;|&nbsp; ' +
       '<span class="label">seeds per flower: white</span> <b>' + cm[0].toFixed(1) + '</b> <span class="label">· pink</span> <b>' + cm[1].toFixed(1) +
       '</b> <span class="label">· red</span> <b>' + cm[2].toFixed(1) + '</b>'
     : '<span class="label">red from one copy</span> <b>' + f2(A.d) + '</b> &nbsp;|&nbsp; <span class="label">set the meadow, then Go</span>';
@@ -1226,6 +1266,10 @@ function A_drawBars() {
       ctx.fillText(f2(v), f.x(i + 0.5), y - 3);
     });
     const q = A_hs(S.w), ex = A_hs(A_expect(S.d, S.nH, S.tH, S.nB, S.tB).w);
+    /* a straight line from white's bar to red's: a pink on it is h 0.5, and
+       pink's distance off it is how far its fitness strays from halfway */
+    ctx.save(); ctx.strokeStyle = BLUE; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4; ctx.beginPath();
+    ctx.moveTo(f.x(0.5), f.y(rel[0])); ctx.lineTo(f.x(2.5), f.y(rel[2])); ctx.stroke(); ctx.restore();
     /* the ruler, to the right of the bars: 0 at white, 1 at red */
     const rx = f.px + f.pw + 44, lvl = hh => 1 + hh * (rel[2] - 1);
     ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
@@ -1278,11 +1322,46 @@ function A_drawTarget(cv, r, got) {
       ctx.fillText("got " + (ok ? f2(val) : "—"), x1, y0 - 9);
     }
   };
-  strip(20, -1.5, 3, r.h[0], r.h[1], "h between " + f2(r.h[0]) + " and " + f2(r.h[1]), [-1, 0, 1, 2, 3],
+  const hLab = r.h[1] === Infinity ? "h at least " + f2(r.h[0]) : r.h[0] === -Infinity ? "h at most " + f2(r.h[1]) : "h between " + f2(r.h[0]) + " and " + f2(r.h[1]);
+  strip(20, -1.5, 3, r.h[0], r.h[1], hLab, [-1, 0, 1, 2, 3],
         got ? got.h : null, { 0: "0 white", 1: "1 red" });
   strip(76, 0, 2, A_SMIN, 2, "s at least " + f2(A_SMIN), [0, 0.5, 1, 1.5, 2], got ? got.s : null);
 }
-function A_paint() { A_drawMeadow(); A_drawMap(); A_drawBars(); }
+/* Every season so far: pink's colour across, the h it set up. The dashed
+   diagonal is fitness in step with colour; a season off it is the gene and
+   the visitors pulling the two apart. One pink with three sets of visitors
+   is a column of three. */
+function A_drawSeasons() {
+  const cv = document.getElementById("A_seasons");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const f = box(58, 12, W - 124, H - 44, 0, 1, -1.5, 2.5);
+  axes(ctx, f, "pink's colour: red from one copy", "h", () => "", v => v.toFixed(1));
+  C_ticks(ctx, f, [], [-1, 0, 1, 2], String, v => String(v));
+  ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+  for (const hh of [0, 1]) { ctx.beginPath(); ctx.moveTo(f.px, f.y(hh)); ctx.lineTo(f.px + f.pw, f.y(hh)); ctx.stroke(); }
+  ctx.strokeStyle = BLUE; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.3;
+  ctx.beginPath(); ctx.moveTo(f.x(0), f.y(0)); ctx.lineTo(f.x(1), f.y(1)); ctx.stroke(); ctx.restore();
+  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillText("as white", f.px + f.pw + 6, f.y(0)); ctx.fillText("as red", f.px + f.pw + 6, f.y(1));
+  ctx.fillStyle = BLUE; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("↗ fitness in step with colour", f.x(0.02), f.y(0) + 5);
+  const n = A.seasons.length;
+  A.seasons.forEach((q, k) => {
+    if (!isFinite(q.h)) return;
+    const x = f.x(q.d), y = f.y(clamp(q.h, -1.5, 2.5)), last = k === n - 1;
+    ctx.globalAlpha = last ? 1 : 0.45 + 0.4 * k / Math.max(1, n - 1);
+    A_flower(ctx, x, y, last ? 7 : 5.5, A_paintOf(q.d));
+    ctx.globalAlpha = 1;
+    if (last) { ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x, y, 10, 0, 6.2832); ctx.stroke(); }
+  });
+  const shown = A.seasons.filter(q => isFinite(q.h)).length;
+  document.getElementById("A_seasonsRead").innerHTML = n
+    ? '<span class="label">seasons so far</span> <b>' + n + '</b>' + (shown < n ? ' <span class="label">(' + (n - shown) + ' with red and white too close to read h)</span>' : '') +
+      ' &nbsp;|&nbsp; <span class="label">the ringed flower is the last season</span>'
+    : '<span class="label">every season you play lands here</span>';
+}
+function A_paint() { A_drawMeadow(); A_drawMap(); A_drawBars(); A_drawSeasons(); }
 function A_RCODE() {
   return "# Lesson 12, Stage A -- a meadow: h and s from a gene and its visitors\n" +
     "g   <- rep(0:2, each = 12)          # red copies: 12 flowers each\n" +
@@ -1292,9 +1371,8 @@ function A_RCODE() {
     "nB <- " + A.nB + "; tB <- " + A.tB + "            # bees, and the reddest flower they take\n" +
     "likeH <- 0.1 + 0.9 * pmin(1, pmax(0, (col - tH + 0.2) / 0.2))\n" +
     "likeB <- 0.1 + 0.9 * pmin(1, pmax(0, (tB - col + 0.2) / 0.2))\n\n" +
-    "# " + A_V + " visits from each visitor; a visit sets a seed\n" +
-    "seeds <- tabulate(c(sample(36, nH * " + A_V + ", TRUE, likeH),\n" +
-    "                    sample(36, nB * " + A_V + ", TRUE, likeB)), 36)\n" +
+    "# each visitor calls on a flower it takes " + A_RATE + " times; a visit sets a seed\n" +
+    "seeds <- rpois(36, " + A_RATE + " * (nH * likeH + nB * likeB))\n" +
     "w <- tapply(seeds, g, mean)         # white, pink, red\n" +
     "s <- w[3] / w[1] - 1\n" +
     "h <- (w[2] - w[1]) / (w[3] - w[1])\n" +
@@ -1342,7 +1420,8 @@ function A_wire() {
     rows: r => r.hold.d != null ? [["red from one copy", f2(r.hold.d) + " (held)"]]
              : [["hummingbirds", r.hold.env.nH + ", taking " + f2(r.hold.env.tH) + " and redder (held)"],
                 ["bees", r.hold.env.nB + ", taking " + f2(r.hold.env.tB) + " and paler (held)"]],
-    picture: A_drawTarget, pictureH: 118, go: "A_run", practising: () => A_practising(),
+    picture: A_drawTarget, pictureH: 118, go: "A_run", practising: () => A_practising(), freeFirst: true,
+    freePrompt: "Play some seasons first: move pink, the visitors and their edges. Nothing counts yet. Start the targets when you are ready.",
     prompt: r => r ? r.say : "",
     onDeal: () => { A.season = null; A_syncSliders(); A_paint(); }
   });
@@ -1404,7 +1483,7 @@ const B = { n: 400, F: 0, p0: 0.5, h: 0.5, s: 0, runs: null, ghosts: [], showTo:
             running: false, timer: 0, serial: 0, game: null, preview: null };
 
 /* One population for `gens` generations. Returns the purple frequency and
-   the mean fitness (Stage E) by generation, and with `keep` every
+   the mean fitness by generation, and with `keep` every
    generation's copies, for the grid. Mean fitness is the average of the
    individuals' own fitnesses, so it carries whatever the genotypes are
    doing, drift and F included. */
@@ -1518,6 +1597,24 @@ function B_drawPop() {
     '<span class="label">generation</span> <b>' + t + '</b> &nbsp;|&nbsp; <span class="label">purple allele</span> <b>' + f2(k / pop.length) + '</b>' +
     ' <span class="label">(' + n + ' individuals' + (B.runs && B.runs.length > 1 ? '; the first population of ' + B.runs.length : '') + ')</span>';
 }
+/* The population at the generation on show, as counts per genotype, and
+   Price's covariance term read off it: the least-squares line of fitness on
+   purple copies through every individual, cov(w, copies) = slope x var, and
+   cov / w-bar = the change in purple copies per individual selection makes
+   next generation (half that for the allele's frequency). */
+function B_cov(pop, h, s) {
+  const w = [1, 1 + h * s, 1 + s], c = [0, 0, 0], n = pop.length / 2;
+  for (let i = 0; i < n; i++) c[pop[2 * i] + pop[2 * i + 1]]++;
+  const xb = (c[1] + 2 * c[2]) / n, wb = (c[0] * w[0] + c[1] * w[1] + c[2] * w[2]) / n;
+  let cv = 0, vx = 0;
+  for (let g = 0; g < 3; g++) { cv += c[g] * (w[g] - wb) * (g - xb); vx += c[g] * (g - xb) * (g - xb); }
+  cv /= n; vx /= n;
+  return { c, n, xb, wb, cv, vx, slope: vx > 0 ? cv / vx : NaN, dp: cv / wb / 2 };
+}
+function B_fitAt() {
+  const t = B.runs ? (B.showTo == null ? B_G : B.showTo) : 0, R = B.runs ? B.runs[0] : B.preview;
+  return { t, R, pop: R.snaps[t] };
+}
 function B_drawFit() {
   const cv = document.getElementById("B_fit");
   const { ctx, W, H } = setupCanvas(cv);
@@ -1528,6 +1625,7 @@ function B_drawFit() {
   ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.beginPath();
   ctx.moveTo(f.px, f.y(1)); ctx.lineTo(f.px + f.pw, f.y(1)); ctx.stroke(); ctx.restore();
   const names = ["yellow homozygote", "heterozygote", "purple homozygote"];
+  const at = B_fitAt(), q = B_cov(at.pop, B.h, B.s);
   w.forEach((v, i) => {
     const bw = f.pw / 3 * 0.42, x0 = f.x(i + 0.5) - bw / 2, y = f.y(v), hgt = f.y(0) - y;
     if (i === 1) { ctx.fillStyle = PALE; ctx.fillRect(x0, y, bw / 2, hgt); ctx.fillStyle = DARK; ctx.fillRect(x0 + bw / 2, y, bw / 2, hgt); }
@@ -1535,11 +1633,24 @@ function B_drawFit() {
     ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
     ctx.fillText(f2(v), f.x(i + 0.5), y - 3);
     ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textBaseline = "top";
-    ctx.fillText(names[i], f.x(i + 0.5), f.py + f.ph + 6);
+    ctx.fillText(names[i] + " × " + q.c[i], f.x(i + 0.5), f.py + f.ph + 6);
   });
+  /* the line through the individuals: bar centres sit at 0, 1, 2 copies */
+  if (isFinite(q.slope)) {
+    const yAt = g => q.wb + q.slope * (g - q.xb);
+    ctx.save(); ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(f.x(0.2), f.y(clamp(yAt(-0.3), 0, 1.6))); ctx.lineTo(f.x(2.8), f.y(clamp(yAt(2.3), 0, 1.6))); ctx.stroke();
+    ctx.fillStyle = BLUE; ctx.beginPath(); ctx.arc(f.x(q.xb + 0.5), f.y(q.wb), 4, 0, 6.2832); ctx.fill(); ctx.restore();
+  }
+  const sg = v => (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(4);
+  let moved = "";
+  if (B.runs && at.t < B_G) moved = ' &nbsp;·&nbsp; <span class="label">it moved</span> <b>' + sg(at.R.P[at.t + 1] - at.R.P[at.t]) + '</b> <span class="label">(the rest is luck)</span>';
   document.getElementById("B_fitRead").innerHTML =
     '<span class="label">h</span> <b>' + B.h.toFixed(1) + '</b> &nbsp;·&nbsp; <span class="label">s</span> <b>' + f2(B.s) + '</b>' +
-    ' &nbsp;|&nbsp; <span class="label">offspring left, yellow · heterozygote · purple</span> <b>' + w.map(f2).join(" · ") + '</b>';
+    ' &nbsp;|&nbsp; <span class="label">offspring left, yellow · heterozygote · purple</span> <b>' + w.map(f2).join(" · ") + '</b><br>' +
+    '<span class="label">generation ' + at.t + ': the line\'s slope</span> <b>' + (isFinite(q.slope) ? q.slope.toFixed(3) : "—") + '</b>' +
+    ' <span class="label">× spread of copies</span> <b>' + q.vx.toFixed(3) + '</b> <span class="label">= covariance</span> <b>' + q.cv.toFixed(4) + '</b>' +
+    ' <span class="label">; ÷ average offspring ' + f3(q.wb) + ' ÷ 2 = purple should move</span> <b>' + sg(q.dp) + '</b>' + moved;
 }
 /* the round's windows, on any frequency-by-generation frame */
 function B_drawWindows(ctx, f, r) {
@@ -1632,7 +1743,536 @@ function B_wire() {
 }
 
 /* =====================================================================
-   STAGE C — four alleles race.
+   STAGE C — new mutations: which ones stay.
+
+   JM, 2026-09-28: "Have students set a mean & variance for the s and h
+   values of new mutations (there's a fixed mutation rate in the background
+   not shown to students). Let a population run, with students able to
+   control the effective population size of the population. Show the final
+   distribution of s's and h's in the population. The idea would be to
+   interactively illustrate that low-h alleles can persist well even at
+   highly negative s values in populations. Adding something like the
+   breakdown of new-versus-old distributions ... would also be revealing."
+   Later the same day: new mutations are harmful only; "I'd like the student
+   sliders to allow h to explore under/over dominant scenarios--they're
+   important!--and to keep at least one target that requires over/under
+   dominance (h outside of 0-1)"; "put covariance in both B & C and include
+   the C inbreeding round--don't show the mutation line yet".
+
+   The model. Every generation each gamete carries Poisson(C_U / 2) new
+   mutations, each a new allele at its own locus (so a copy is a copy of one
+   allele, never two). h is drawn from a bell curve at the set average and
+   spread, redrawn if it falls outside [-1, 2]; how harmful, from a gamma
+   with the set average and spread, so s sits in [-1, 0) and a spread below
+   the average keeps the curve off 0. Fitness multiplies over loci (log
+   fitness summed, so thousands of loci never overflow): 1 + h s for one
+   copy, 1 + s for two. Parents in proportion to fitness; free recombination;
+   an allele every copy carries moves to the fixed list and its cost to the
+   fixed load, so "average fitness" stays against an individual carrying
+   none. Individuals, not frequencies, so the covariance is read off them.
+
+   Price's covariance term, on screen. z = harmful copies an individual
+   carries; selection's change in the average is cov(w, z) / w-bar. The page
+   prints its negative as what selection takes out, and draws it through
+   the individuals as slope x variance. The other term -- what mutation
+   adds, C_U a generation -- is not drawn (JM: "don't show the mutation line
+   yet"); the copies line's own slope is the two together.
+
+   Measured 2026-09-28 (node, the functions below verbatim, 400 generations):
+   - 500 individuals, h spread 0.1, s 0.15 +- 0.05, by average h: selfed /
+     outcrossed 0.01 (h 0), 0.29 (0.1), 0.70 (0.2), 0.88 (0.3), 0.99 (0.5),
+     1.08 (1), 1.12 (2); copies each carries 200-290 (h -0.1 and below), ~100
+     (0), 35 (0.1), 14 (0.2), 4.7 (0.5), 2.3 (1), 1.4 (1.6), 1.15 (2).
+   - average fitness 0.72-0.77 wherever h is 0.2 to 2 and whatever s is:
+     202_lec14_01's "magic trick". With heterozygote advantage it passes 1.
+   - by copies, not by alleles: arrivals with h < 0.1 are 17% of harmful
+     copies arriving and 36-52% of those standing. Any tail of h below 0
+     takes the old copies: at h 0.5 +- 0.25 (2% below 0) the first half's
+     copies average h -0.2 at every size from 100 up.
+   - hidden load (h 0.05 +- 0.02, s 0.3 +- 0.1), selfed / outcrossed by
+     individuals: 20 -> 0.57-0.77, 100 -> 0.46-0.55, 300 -> 0.41, 500 ->
+     0.34-0.41, 700-1000 -> 0.30-0.32. Small populations purge or fix it.
+   - drift (h 0.5 +- 0.25, s 0.05 +- 0.03), alleles fixed by 400: 20 -> 14-19,
+     25 -> 13-24, 30 -> 6-18, 40 -> 5-9, 60 -> 2-5, 100 -> 0-1.
+   - worst case, 1000 individuals with every mutation h -1: 1.6 s a run.
+   ===================================================================== */
+const C_U = 0.3, C_G = 400, C_HALF = 200, C_STEP = 4, C_TICK = 30, C_HMIN = -1, C_HMAX = 2;
+const C_NMIN = 20, C_NMAX = 1000;
+const C_nAt = v => Math.round(C_NMIN * Math.pow(C_NMAX / C_NMIN, v / 100));
+const C_vAt = n => Math.round(100 * Math.log(n / C_NMIN) / Math.log(C_NMAX / C_NMIN));
+/* The five rounds, in this order. Three hold the population and how
+   harmful new mutations are, and the average h is the lever; two hold the
+   mutations and the population size is. Each lever's rounds want opposite
+   settings, so no one setting clears three. */
+const C_HOLD_H = { n: 500, hsd: 0.1, sm: 0.15, ssd: 0.05 };
+const C_ROUNDS = [
+  { key: "inbred",  hold: C_HOLD_H, m: "inb",   lo: 0.55, hi: 0.8,
+    say: "Make inbreeding cost something: selfed offspring set between 55% and 80% of what offspring of two parents set." },
+  { key: "kept",    hold: C_HOLD_H, m: "z",     lo: 150, hi: Infinity,
+    say: "Keep harmful alleles: at least 150 harmful copies an individual at the end." },
+  { key: "cleared", hold: C_HOLD_H, m: "z",     lo: -Infinity, hi: 1.6,
+    say: "Clear harmful alleles: at most 1.6 harmful copies an individual at the end." },
+  { key: "hidden",  hold: { hm: 0.05, hsd: 0.02, sm: 0.3, ssd: 0.1 }, m: "inb", lo: -Infinity, hi: 0.35,
+    say: "Hide a heavy load: selfed offspring set no more than 35% of what offspring of two parents set." },
+  { key: "fixed",   hold: { hm: 0.5, hsd: 0.25, sm: 0.05, ssd: 0.03 }, m: "fixed", lo: 10, hi: Infinity,
+    say: "Let drift fix at least 10 harmful alleles, so every individual carries them." }
+];
+const C = { n: 100, hm: 0.5, hsd: 0.2, sm: 0.1, ssd: 0.05, run: null, preview: null, showTo: null,
+            running: false, timer: 0, serial: 0, game: null };
+
+/* ---- the simulator (the node calibration reads these verbatim) ---------- */
+function C_gauss(rng) { let u = 0; while (u === 0) u = rng(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rng()); }
+function C_gamma(rng, k) {
+  if (k < 1) return C_gamma(rng, 1 + k) * Math.pow(rng() || 1e-300, 1 / k);
+  const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+  for (;;) { let x, v; do { x = C_gauss(rng); v = 1 + c * x; } while (v <= 0); v = v * v * v; const u = rng();
+    if (u < 1 - 0.0331 * x * x * x * x || Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v; }
+}
+function C_pois(rng, l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1; }
+/* one new mutation's h and s */
+function C_draw(set, rng) {
+  let h = set.hm;
+  if (set.hsd > 0) { let k = 0; do { h = set.hm + set.hsd * C_gauss(rng); } while ((h < C_HMIN || h > C_HMAX) && ++k < 50); h = clamp(h, C_HMIN, C_HMAX); }
+  let a = set.sm;
+  if (set.ssd > 0) a = C_gamma(rng, (set.sm / set.ssd) ** 2) * set.ssd * set.ssd / set.sm;
+  return { h, s: -Math.min(1, a) };
+}
+function C_start(n, set, rng) {
+  const pop = []; for (let i = 0; i < n; i++) pop.push([new Int32Array(0), new Int32Array(0)]);
+  return { n, set: Object.assign({}, set), rng, pop, gen: 0, H: [], S: [], B: [], fixed: [], fixedLog: 0,
+           Z: [], X: [], Wbar: [], snap: null, alleles: null, inb: null };
+}
+function C_logw(run, a, b) {
+  const H = run.H, S = run.S; let f = 0, i = 0, j = 0;
+  while (i < a.length || j < b.length) {
+    if (j >= b.length || (i < a.length && a[i] < b[j])) { f += Math.log(Math.max(1e-300, 1 + H[a[i]] * S[a[i]])); i++; }
+    else if (i >= a.length || b[j] < a[i]) { f += Math.log(Math.max(1e-300, 1 + H[b[j]] * S[b[j]])); j++; }
+    else { f += Math.log(Math.max(1e-300, 1 + S[a[i]])); i++; j++; }
+  }
+  return f;
+}
+function C_gamete(a, b, rng, out) {
+  let i = 0, j = 0, k = 0;
+  while (i < a.length || j < b.length) {
+    if (j >= b.length || (i < a.length && a[i] < b[j])) { if (rng() < 0.5) out[k++] = a[i]; i++; }
+    else if (i >= a.length || b[j] < a[i]) { if (rng() < 0.5) out[k++] = b[j]; j++; }
+    else { out[k++] = a[i]; i++; j++; }
+  }
+  return k;
+}
+/* Score the generation now alive: each individual's fitness and harmful
+   copies; the average copies (Z), what selection takes out, -cov(w, z) /
+   w-bar (X), and average fitness against an individual carrying none
+   (Wbar, fixed load included). Returns what reproduction needs. */
+function C_score(run) {
+  const n = run.n, lw = new Float64Array(n), z = new Float64Array(n), cum = new Float64Array(n);
+  let mx = -Infinity;
+  for (let i = 0; i < n; i++) { const [a, b] = run.pop[i]; lw[i] = C_logw(run, a, b); z[i] = a.length + b.length + 2 * run.fixed.length; if (lw[i] > mx) mx = lw[i]; }
+  let tot = 0, zb = 0; for (let i = 0; i < n; i++) { tot += Math.exp(lw[i] - mx); cum[i] = tot; zb += z[i]; }
+  zb /= n; const wb = tot / n, rel = new Float64Array(n);
+  let cv = 0; for (let i = 0; i < n; i++) { rel[i] = Math.exp(lw[i] - mx) / wb; cv += (rel[i] - 1) * (z[i] - zb); } cv /= n;
+  run.Z.push(zb); run.X.push(-cv); run.Wbar.push(Math.exp(mx + run.fixedLog) * wb);
+  run.snap = { z, w: rel, gen: run.gen };
+  return { cum, tot };
+}
+function C_step(run, gens) {
+  const n = run.n, rng = run.rng; let buf = new Int32Array(64);
+  for (let g = 0; g < gens && run.gen < C_G; g++) {
+    const { cum, tot } = C_score(run);
+    const pick = () => { const u = rng() * tot; let lo = 0, hi = n - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (cum[m] < u) lo = m + 1; else hi = m; } return lo; };
+    const next = new Array(n);
+    for (let i = 0; i < n; i++) {
+      const kid = [];
+      for (let side = 0; side < 2; side++) {
+        const [a, b] = run.pop[pick()];
+        if (buf.length < a.length + b.length + 16) buf = new Int32Array(2 * (a.length + b.length + 16));
+        let k = C_gamete(a, b, rng, buf);
+        const m = C_pois(rng, C_U / 2);
+        for (let q = 0; q < m; q++) {
+          const d = C_draw(run.set, rng); run.H.push(d.h); run.S.push(d.s); run.B.push(run.gen);
+          if (k >= buf.length) { const nb = new Int32Array(2 * buf.length); nb.set(buf); buf = nb; }
+          buf[k++] = run.H.length - 1;
+        }
+        kid.push(buf.slice(0, k));
+      }
+      next[i] = kid;
+    }
+    run.pop = next; run.gen++;
+    if (run.gen % 20 === 0) C_prune(run);
+  }
+  return run;
+}
+function C_counts(run) {
+  const c = new Int32Array(run.H.length);
+  for (const [a, b] of run.pop) { for (const m of a) c[m]++; for (const m of b) c[m]++; }
+  return c;
+}
+function C_prune(run) {
+  const c = C_counts(run), full = 2 * run.n, gone = new Set();
+  for (let m = 0; m < c.length; m++) if (c[m] === full) gone.add(m);
+  if (!gone.size) return;
+  for (const m of gone) { run.fixed.push({ h: run.H[m], s: run.S[m], born: run.B[m], at: run.gen }); run.fixedLog += Math.log(Math.max(1e-300, 1 + run.S[m])); }
+  for (const ind of run.pop) for (let k = 0; k < 2; k++) ind[k] = ind[k].filter(m => !gone.has(m));
+}
+/* every allele still here, with its copies */
+function C_alleles(run) {
+  const c = C_counts(run), al = [];
+  for (let m = 0; m < c.length; m++) if (c[m] > 0) al.push({ h: run.H[m], s: run.S[m], born: run.B[m], k: c[m] });
+  return al;
+}
+/* the end of a run: prune, score generation 400, the inbreeding test */
+function C_finish(run, rng) {
+  C_prune(run); C_score(run);
+  run.alleles = C_alleles(run);
+  run.inb = C_inbred(run, rng);
+  return run;
+}
+/* offspring of two parents drawn at random against offspring of one parent
+   selfed, 1500 of each, average fitness against an individual carrying none */
+function C_inbred(run, rng, M) {
+  M = M || 1500; const n = run.n; let out = 0, self = 0, b1 = new Int32Array(64), b2 = new Int32Array(64);
+  for (let q = 0; q < M; q++) {
+    const p = run.pop[(rng() * n) | 0], o = run.pop[(rng() * n) | 0];
+    const need = Math.max(p[0].length + p[1].length, o[0].length + o[1].length) + 4;
+    if (b1.length < need) { b1 = new Int32Array(2 * need); b2 = new Int32Array(2 * need); }
+    const k1 = C_gamete(p[0], p[1], rng, b1);
+    let k2 = C_gamete(o[0], o[1], rng, b2);
+    out += Math.exp(C_logw(run, b1.subarray(0, k1), b2.subarray(0, k2)));
+    k2 = C_gamete(p[0], p[1], rng, b2);
+    self += Math.exp(C_logw(run, b1.subarray(0, k1), b2.subarray(0, k2)));
+  }
+  const f = Math.exp(run.fixedLog);
+  return { out: f * out / M, self: f * self / M, ratio: out > 0 ? self / out : NaN };
+}
+function C_runAll(n, set, rng, rngInb) { const run = C_start(n, set, rng); while (run.gen < C_G) C_step(run, 50); return C_finish(run, rngInb || mulberry32(4242)); }
+/* what a round reads off a finished run */
+function C_measure(run) {
+  let old = 0, all = 0, hOld = 0;
+  for (const a of run.alleles) { all += a.k; if (a.born < C_HALF) { old += a.k; hOld += a.k * a.h; } }
+  return { z: run.Z[run.Z.length - 1], inb: run.inb.ratio, fixed: run.fixed.length, wbar: run.Wbar[run.Wbar.length - 1],
+           oldShare: all ? old / all : 0, hOld: old ? hOld / old : NaN };
+}
+/* ---- end of the simulator ------------------------------------------------ */
+
+const C_judge = (r, M) => !!r && M[r.m] >= r.lo && M[r.m] <= r.hi;
+const C_round = () => (C.game && !C.game.st.done) ? C.game.current() : null;
+const C_set = () => ({ hm: C.hm, hsd: C.hsd, sm: C.sm, ssd: C.ssd });
+const C_practising = () => !!(C.game && (C.game.st.done || C.game.st.free || document.getElementById("C_practice").checked));
+function C_syncGo() {
+  document.getElementById("C_run").textContent = C_practising() ? "Practice run" : "Go";
+  if (C.game && !C.running) C.game.repaint();
+}
+/* A round holds all but its lever, and practice keeps them held. */
+function C_syncSliders() {
+  const r = C_round(), hd = r ? r.hold : {};
+  for (const k of ["n", "hm", "hsd", "sm", "ssd"]) if (hd[k] != null) C[k] = hd[k];
+  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || C.running;
+                                 document.getElementById(id + "Row").classList.toggle("off", held); };
+  set("C_n", C_vAt(C.n), hd.n != null); set("C_hm", C.hm, hd.hm != null); set("C_hsd", C.hsd, hd.hsd != null);
+  set("C_sm", C.sm, hd.sm != null); set("C_ssd", C.ssd, hd.ssd != null);
+  C_syncOut();
+}
+function C_syncOut() {
+  const o = (id, v) => { document.getElementById(id).value = v; };
+  o("C_nOut", C.n); o("C_hmOut", f2(C.hm)); o("C_hsdOut", f2(C.hsd)); o("C_smOut", "−" + f2(C.sm)); o("C_ssdOut", f2(C.ssd));
+  const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  s("cC_n", C.n); s("cC_hm", f2(C.hm)); s("cC_hsd", f2(C.hsd)); s("cC_sm", f2(C.sm)); s("cC_ssd", f2(C.ssd));
+}
+/* what the settings make, before any run: 3000 arrivals, seeded */
+function C_newPreview() {
+  const rng = mulberry32(pageSeed("l12Cp", 1, 99999)), set = C_set(), H = [], S = [];
+  for (let k = 0; k < 3000; k++) { const d = C_draw(set, rng); H.push(d.h); S.push(d.s); }
+  C.preview = { H, S };
+}
+function C_go() {
+  const practice = C_practising();
+  if (C.running || (C.game.waiting() && !practice)) return;
+  C.serial++;
+  const seed = pageSeed("l12C", 1, 99999) + C.serial * 7919;
+  C.run = C_start(C.n, C_set(), mulberry32(seed));
+  C.run.rngInb = mulberry32(seed + 104729);
+  bump("C");
+  C.running = true; lockStage("C", true); C_paint();
+  C.timer = setInterval(() => {
+    C_step(C.run, C_STEP);
+    if (C.run.gen >= C_G) {
+      clearInterval(C.timer); C_finish(C.run, C.run.rngInb);
+      C.running = false; lockStage("C", false); C_land(practice);
+    } else C_paint();
+  }, C_TICK);
+}
+function C_land(practice) {
+  const r = C.game.current(), M = C_measure(C.run), ok = C_judge(r, M);
+  C.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', M, practice);
+  C_syncSliders(); C_syncGo(); C_paint();
+}
+
+/* ---- drawing ------------------------------------------------------------ */
+/* tick labels at chosen values, for frames whose even fifths fall badly */
+function C_ticks(ctx, f, xs, ys, xFmt, yFmt) {
+  ctx.fillStyle = "#333"; ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.font = "10px ui-monospace, Menlo, monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const v of xs) { const X = f.x(v); ctx.beginPath(); ctx.moveTo(X, f.py + f.ph); ctx.lineTo(X, f.py + f.ph + 3); ctx.stroke(); ctx.fillText(xFmt(v), X, f.py + f.ph + 4); }
+  ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (const v of ys) { const Y = f.y(v); ctx.beginPath(); ctx.moveTo(f.px - 3, Y); ctx.lineTo(f.px, Y); ctx.stroke(); ctx.fillText(yFmt(v), f.px - 5, Y); }
+}
+const C_fmtW = v => !isFinite(v) ? "—" : v >= 1000 ? v.toExponential(1).replace("e+", " × 10^") : v >= 100 ? v.toFixed(0) : f2(v);
+/* How far down the s axis runs: fixed by the settings, so it never rescales
+   during a run. */
+const C_sMax = set => Math.min(1, Math.max(0.2, Math.ceil((set.sm + 3.2 * set.ssd) * 10) / 10));
+/* The top plot: h across, s down; grey is every mutation that arose, dots
+   are the alleles still here, sized by copies and shaded by age; crosses
+   are alleles drift fixed. Along the top, h counted by copies; down the
+   right, s. Arrivals are counted once each (one copy when they arise). */
+function C_drawPlane() {
+  const cv = document.getElementById("C_plane");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const run = C.run, set = run ? run.set : C_set(), sMax = C_sMax(set);
+  const mx = 58, mR = W - 112, top = 96, bot = H - 40;
+  const f = box(mx, top, mR - mx, bot - top, C_HMIN, C_HMAX, -sMax, 0);
+  /* the two sides of 0 to 1 */
+  ctx.fillStyle = "rgba(74,122,42,0.06)"; ctx.fillRect(f.x(-1), f.py, f.x(0) - f.x(-1), f.ph);
+  ctx.fillStyle = "rgba(178,58,72,0.06)"; ctx.fillRect(f.x(1), f.py, f.x(2) - f.x(1), f.ph);
+  axes(ctx, f, "h of the allele", "s", () => "", () => "");
+  const sStep = sMax > 0.5 ? 0.2 : 0.1, sT = []; for (let v = 0; v <= sMax + 1e-9; v += sStep) sT.push(-v);
+  C_ticks(ctx, f, [-1, -0.5, 0, 0.5, 1, 1.5, 2], sT, v => v.toFixed(1), v => v.toFixed(1));
+  ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.lineWidth = 1;
+  for (const v of [0, 1]) { ctx.beginPath(); ctx.moveTo(f.x(v), f.py); ctx.lineTo(f.x(v), f.py + f.ph); ctx.stroke(); }
+  ctx.restore();
+  /* arrivals, as a grey density */
+  const AH = run ? run.H : C.preview.H, AS = run ? run.S : C.preview.S, NB = 40, NS = 24, grid = new Float64Array(NB * NS);
+  let gmax = 0;
+  for (let k = 0; k < AH.length; k++) {
+    const i = Math.min(NB - 1, Math.floor((AH[k] - C_HMIN) / (C_HMAX - C_HMIN) * NB)), j = Math.min(NS - 1, Math.floor(-AS[k] / sMax * NS));
+    if (j < 0 || j >= NS) continue; const q = ++grid[i * NS + j]; if (q > gmax) gmax = q;
+  }
+  const cw = f.pw / NB, ch = f.ph / NS;
+  for (let i = 0; i < NB; i++) for (let j = 0; j < NS; j++) { const q = grid[i * NS + j]; if (!q) continue;
+    ctx.fillStyle = "rgba(107,107,104," + (0.06 + 0.34 * Math.sqrt(q / gmax)).toFixed(3) + ")"; ctx.fillRect(f.px + i * cw, f.py + j * ch, cw + 0.5, ch + 0.5); }
+  /* the alleles here now */
+  const al = run ? (run.alleles || C_alleles(run)) : [];
+  const dot = (a, fill, stroke) => { const r = Math.min(13, 1.4 + 0.75 * Math.sqrt(a.k));
+    ctx.beginPath(); ctx.arc(f.x(a.h), f.y(clamp(a.s, -sMax, 0)), r, 0, 6.2832); ctx.fillStyle = fill; ctx.fill(); ctx.strokeStyle = stroke; ctx.lineWidth = 0.8; ctx.stroke(); };
+  for (const a of al) if (a.born >= C_HALF) dot(a, "rgba(232,201,106,0.75)", MID);
+  for (const a of al) if (a.born < C_HALF) dot(a, "rgba(85,64,126,0.8)", DARK);
+  /* what each side of 0 to 1 means, over the dots */
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const [t, hx] of [["heterozygote fitter than both", -0.5], ["heterozygote worse than both", 1.5]]) {
+    const tw = ctx.measureText(t).width; ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fillRect(f.x(hx) - tw / 2 - 3, f.py + 3, tw + 6, 14);
+    ctx.fillStyle = MUTED; ctx.fillText(t, f.x(hx), f.py + 4); }
+  if (run) { ctx.strokeStyle = HOT; ctx.lineWidth = 1.6;
+    for (const a of run.fixed) { const X = f.x(a.h), Y = f.y(clamp(a.s, -sMax, 0)); ctx.beginPath(); ctx.moveTo(X - 4, Y - 4); ctx.lineTo(X + 4, Y + 4); ctx.moveTo(X + 4, Y - 4); ctx.lineTo(X - 4, Y + 4); ctx.stroke(); } }
+  /* the edges: shares of copies in bands of h and of s */
+  const hb = 30, sb = 20, share = (vals, wts, lo, hi, nb) => { const o = new Float64Array(nb); let t = 0;
+    vals.forEach((v, k) => { const b = Math.min(nb - 1, Math.max(0, Math.floor((v - lo) / (hi - lo) * nb))); o[b] += wts[k]; t += wts[k]; });
+    return t ? Array.from(o, x => x / t) : null; };
+  const one = a => a.map(() => 1);
+  const oldA = al.filter(a => a.born < C_HALF), newA = al.filter(a => a.born >= C_HALF);
+  const hSer = [share(AH, one(AH), C_HMIN, C_HMAX, hb), share(newA.map(a => a.h), newA.map(a => a.k), C_HMIN, C_HMAX, hb), share(oldA.map(a => a.h), oldA.map(a => a.k), C_HMIN, C_HMAX, hb)];
+  const sSer = [share(AS.map(v => -v), one(AS), 0, sMax, sb), share(newA.map(a => -a.s), newA.map(a => a.k), 0, sMax, sb), share(oldA.map(a => -a.s), oldA.map(a => a.k), 0, sMax, sb)];
+  const styles = [["rgba(107,107,104,0.30)", MUTED], ["rgba(232,201,106,0.55)", MID], ["rgba(85,64,126,0.35)", DARK]];
+  const hTop = Math.max(0.05, ...hSer.filter(Boolean).map(a => Math.max(...a))), eH = 70, eY = 14;
+  hSer.forEach((ser, k) => { if (!ser) return; ctx.beginPath(); ctx.moveTo(f.px, eY + eH);
+    ser.forEach((v, b) => { const x0 = f.px + b * f.pw / hb, x1 = x0 + f.pw / hb, y = eY + eH - v / hTop * eH; ctx.lineTo(x0, y); ctx.lineTo(x1, y); });
+    ctx.lineTo(f.px + f.pw, eY + eH); ctx.fillStyle = styles[k][0]; ctx.fill(); ctx.strokeStyle = styles[k][1]; ctx.lineWidth = 1; ctx.stroke(); });
+  ctx.strokeStyle = "#333"; ctx.beginPath(); ctx.moveTo(f.px, eY + eH); ctx.lineTo(f.px + f.pw, eY + eH); ctx.stroke();
+  const sTop = Math.max(0.05, ...sSer.filter(Boolean).map(a => Math.max(...a))), eX = mR + 12, eW = W - eX - 10;
+  sSer.forEach((ser, k) => { if (!ser) return; ctx.beginPath(); ctx.moveTo(eX, f.py);
+    ser.forEach((v, b) => { const y0 = f.py + b * f.ph / sb, y1 = y0 + f.ph / sb, x = eX + v / sTop * eW; ctx.lineTo(x, y0); ctx.lineTo(x, y1); });
+    ctx.lineTo(eX, f.py + f.ph); ctx.fillStyle = styles[k][0]; ctx.fill(); ctx.strokeStyle = styles[k][1]; ctx.lineWidth = 1; ctx.stroke(); });
+  ctx.strokeStyle = "#333"; ctx.beginPath(); ctx.moveTo(eX, f.py); ctx.lineTo(eX, f.py + f.ph); ctx.stroke();
+  /* a key */
+  ctx.font = "10.5px -apple-system, sans-serif"; ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  [["arose", styles[0]], ["here: last 200", styles[1]], ["here: first 200", styles[2]]].forEach(([t, st], k) => {
+    const x = W - 104, y = 20 + k * 16; ctx.lineWidth = 1; ctx.fillStyle = st[0]; ctx.fillRect(x, y - 5, 12, 10); ctx.strokeStyle = st[1]; ctx.strokeRect(x + 0.5, y - 4.5, 11, 9);
+    ctx.fillStyle = "#333"; ctx.fillText(t, x + 17, y); });
+  const cp = a => a.reduce((t, x) => t + x.k, 0), mh = a => { const c = cp(a); return c ? f2(a.reduce((t, x) => t + x.k * x.h, 0) / c) : "—"; };
+  document.getElementById("C_planeRead").innerHTML = run
+    ? '<span class="label">generation</span> <b>' + run.gen + '</b> &nbsp;|&nbsp; <span class="label">alleles here</span> <b>' + al.length + '</b> <span class="label">holding</span> <b>' + cp(al) + '</b> <span class="label">copies</span>' +
+      ' &nbsp;·&nbsp; <span class="label">from the first 200 generations:</span> <b>' + cp(oldA) + '</b> <span class="label">copies, average h</span> <b>' + mh(oldA) + '</b>' +
+      ' &nbsp;·&nbsp; <span class="label">from the last 200:</span> <b>' + cp(newA) + '</b> <span class="label">copies, average h</span> <b>' + mh(newA) + '</b>' +
+      ' &nbsp;·&nbsp; <span class="label">fixed by drift</span> <b>' + run.fixed.length + '</b>'
+    : '<span class="label">grey: where new mutations will come from with these settings. Set them, then Go.</span>';
+}
+/* The middle plot: harmful copies an individual carries, and what selection
+   takes out each generation (Price's covariance term, as copies). */
+function C_drawTime() {
+  const cv = document.getElementById("C_time");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const run = C.run, r = C_round(), Z = run ? run.Z : [], X = run ? run.X : [];
+  let zTop = 5; for (const v of Z) zTop = Math.max(zTop, v);
+  if (r && r.m === "z") zTop = Math.max(zTop, isFinite(r.lo) ? r.lo : r.hi);
+  const nice = v => { const e = Math.pow(10, Math.floor(Math.log10(v))); for (const m of [1, 2, 2.5, 5, 10]) if (m * e >= v) return m * e; return 10 * e; };
+  const zStep = nice(zTop * 1.1 / 4); zTop = Math.ceil(zTop * 1.1 / zStep) * zStep;
+  const f1 = box(58, 12, W - 80, 104, 0, C_G, 0, zTop);
+  axes(ctx, f1, "", "harmful copies each", () => "", () => "");
+  const zT = []; for (let v = 0; v <= zTop + 1e-9; v += zStep) zT.push(v);
+  C_ticks(ctx, f1, [], zT, String, v => zStep < 1 ? v.toFixed(1) : v.toFixed(0));
+  if (r && r.m === "z") {
+    const lo = isFinite(r.lo) ? r.lo : 0, hi = isFinite(r.hi) ? r.hi : zTop;
+    ctx.fillStyle = "rgba(178,58,72,0.18)"; ctx.fillRect(f1.x(C_G - 4), f1.y(hi), f1.x(C_G) - f1.x(C_G - 4) + 4, f1.y(lo) - f1.y(hi));
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.2; ctx.strokeRect(f1.x(C_G - 4), f1.y(hi), f1.x(C_G) - f1.x(C_G - 4) + 4, f1.y(lo) - f1.y(hi));
+  }
+  if (Z.length) line(ctx, f1, Z, DARK, 2);
+  /* the take-out, each generation (faint) and averaged over 20 (bold) */
+  const sm = X.map((_, t) => { const a = Math.max(0, t - 19); let u = 0; for (let k = a; k <= t; k++) u += X[k]; return u / (t - a + 1); });
+  let xlo = -0.1, xhi = 0.5; for (const v of sm) { xlo = Math.min(xlo, v); xhi = Math.max(xhi, v); }
+  const step = nice((xhi - xlo) / 4); xlo = Math.floor(xlo / step) * step; xhi = Math.ceil(xhi * 1.05 / step) * step;
+  const f2b = box(58, 146, W - 80, H - 146 - 36, 0, C_G, xlo, xhi);
+  axes(ctx, f2b, "generation", "taken out", () => "", v => v.toFixed(0));
+  const yT = []; for (let v = xlo; v <= xhi + 1e-9; v += step) yT.push(v);
+  C_ticks(ctx, f2b, [], yT, String, v => Math.abs(v) < 1e-9 ? "0" : step < 0.1 ? v.toFixed(2) : v.toFixed(1));
+  ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(f2b.px, f2b.y(0)); ctx.lineTo(f2b.px + f2b.pw, f2b.y(0)); ctx.stroke(); ctx.restore();
+  if (X.length) { ctx.save(); ctx.beginPath(); ctx.rect(f2b.px, f2b.py, f2b.pw, f2b.ph); ctx.clip();
+    line(ctx, f2b, X, "rgba(47,107,143,0.25)", 1); line(ctx, f2b, sm, BLUE, 2); ctx.restore(); }
+  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  ctx.fillText("copies selection takes out of each individual, each generation (below 0: puts in)", f2b.px + 6, f2b.py - 12);
+  let txt = '<span class="label">set the controls, then Go</span>';
+  if (run && Z.length) {
+    const t = Z.length - 1, last = X.slice(-50), avg = last.reduce((a, b) => a + b, 0) / last.length;
+    txt = '<span class="label">generation</span> <b>' + t + '</b> &nbsp;|&nbsp; <span class="label">harmful copies each</span> <b>' + (Z[t] >= 10 ? Z[t].toFixed(1) : f2(Z[t])) + '</b>' +
+          ' &nbsp;·&nbsp; <span class="label">selection takes out</span> <b>' + f3(avg) + '</b> <span class="label">a generation (last ' + last.length + ')</span>' +
+          ' &nbsp;·&nbsp; <span class="label">average fitness, against an individual carrying none</span> <b>' + C_fmtW(run.Wbar[t]) + '</b>';
+  }
+  document.getElementById("C_read").innerHTML = txt;
+}
+/* Right: every individual, copies against offspring (against the average),
+   and the least-squares line; slope x variance = cov = what is taken out. */
+function C_drawCov() {
+  const cv = document.getElementById("C_cov");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const run = C.run, sn = run && run.snap;
+  let zlo = 0, zhi = 10;
+  if (sn) { zlo = Infinity; zhi = -Infinity; for (const v of sn.z) { zlo = Math.min(zlo, v); zhi = Math.max(zhi, v); } zlo = Math.max(0, Math.floor(zlo - 1)); zhi = Math.ceil(zhi + 1); }
+  const f = box(48, 12, W - 60, H - 46, zlo, zhi, 0, 3);
+  axes(ctx, f, "harmful copies it carries", "offspring, against the average", () => "", v => v.toFixed(0));
+  C_ticks(ctx, f, [], [0, 1, 2, 3], String, v => v.toFixed(0));
+  ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(f.px, f.y(1)); ctx.lineTo(f.px + f.pw, f.y(1)); ctx.stroke(); ctx.restore();
+  let txt = '<span class="label">each individual appears here once a run starts</span>';
+  if (sn) {
+    const n = sn.z.length, jit = mulberry32(77 + sn.gen);
+    let zb = 0; for (const v of sn.z) zb += v; zb /= n;
+    let vz = 0, c = 0; for (let i = 0; i < n; i++) { vz += (sn.z[i] - zb) ** 2; c += (sn.w[i] - 1) * (sn.z[i] - zb); } vz /= n; c /= n;
+    ctx.fillStyle = "rgba(85,64,126,0.35)";
+    for (let i = 0; i < n; i++) { const x = f.x(sn.z[i] + (jit() - 0.5) * 0.6), y = f.y(Math.min(3, sn.w[i]));
+      ctx.beginPath(); ctx.arc(x, y, 2, 0, 6.2832); ctx.fill(); }
+    const b = vz > 0 ? c / vz : 0, yAt = x => 1 + b * (x - zb);
+    ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
+    ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x(zlo), f.y(yAt(zlo))); ctx.lineTo(f.x(zhi), f.y(yAt(zhi))); ctx.stroke(); ctx.restore();
+    txt = '<span class="label">generation ' + sn.gen + ': slope</span> <b>' + b.toFixed(4) + '</b> <span class="label">× spread of copies</span> <b>' + vz.toFixed(2) + '</b>' +
+          ' <span class="label">= covariance</span> <b>' + c.toFixed(3) + '</b> <span class="label">: selection takes out</span> <b>' + f3(-c) + '</b> <span class="label">copies an individual</span>';
+  }
+  document.getElementById("C_covRead").innerHTML = txt;
+}
+/* the inbreeding test, after a run: selfed offspring against offspring of
+   two parents, the two parents' kind set at 1 */
+function C_drawInb() {
+  const cv = document.getElementById("C_inb");
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  const q = C.run && C.run.inb, r = C_round();
+  const top = q ? Math.max(1.2, Math.min(3, q.ratio * 1.1)) : 1.2, x0 = 150, x1 = W - 20, X = v => x0 + clamp(v, 0, top) / top * (x1 - x0);
+  ctx.fillStyle = "#333"; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  ctx.fillText("offspring of two parents", x0 - 8, 30); ctx.fillText("one parent, selfed", x0 - 8, 62);
+  ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, 14); ctx.lineTo(x0, 80); ctx.lineTo(x1, 80); ctx.stroke();
+  ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (let v = 0; v <= top + 1e-9; v += top > 2 ? 0.5 : 0.2) ctx.fillText(v.toFixed(1), X(v), 84);
+  if (r && r.m === "inb") { const lo = isFinite(r.lo) ? r.lo : 0, hi = isFinite(r.hi) ? r.hi : top;
+    ctx.fillStyle = "rgba(178,58,72,0.18)"; ctx.fillRect(X(lo), 50, X(hi) - X(lo), 24); ctx.strokeStyle = HOT; ctx.strokeRect(X(lo), 50, X(hi) - X(lo), 24); }
+  let txt = '<span class="label">the test runs on the last generation, after Go</span>';
+  if (q) {
+    ctx.fillStyle = MID; ctx.fillRect(x0, 22, X(1) - x0, 16);
+    ctx.fillStyle = DARK; ctx.fillRect(x0, 54, X(q.ratio) - x0, 16);
+    ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace, Menlo, monospace"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.fillText("1.00", X(1) + 5, 30); ctx.fillText(f2(q.ratio), X(q.ratio) + 5, 62);
+    txt = '<span class="label">selfed ÷ two parents</span> <b>' + f2(q.ratio) + '</b> &nbsp;·&nbsp; <span class="label">average fitness, against an individual carrying none: two parents</span> <b>' + C_fmtW(q.out) +
+          '</b><span class="label">, selfed</span> <b>' + C_fmtW(q.self) + '</b>';
+  }
+  document.getElementById("C_inbRead").innerHTML = txt;
+}
+/* the card: the round's window on the one number it reads */
+function C_drawTarget(cv, r, got) {
+  if (!cv) return;
+  const { ctx, W, H } = setupCanvas(cv);
+  ctx.clearRect(0, 0, W, H);
+  if (!r) return;
+  const spec = { inb: [0, 1.2, [0, 0.2, 0.4, 0.6, 0.8, 1, 1.2], "selfed ÷ two parents"], z: r.hi <= 10 ? [0, 6, [0, 1, 2, 3, 4, 5, 6], "harmful copies each, at the end"] : [0, 300, [0, 50, 100, 150, 200, 250, 300], "harmful copies each, at the end"],
+                 fixed: [0, 25, [0, 5, 10, 15, 20, 25], "alleles drift fixed"] }[r.m];
+  const [lo, hi, ticks, what] = spec, x0 = 14, x1 = W - 14, X = v => x0 + (clamp(v, lo, hi) - lo) / (hi - lo) * (x1 - x0), y0 = 34, bh = 12;
+  const wl = isFinite(r.lo) ? r.lo : lo, wh = isFinite(r.hi) ? r.hi : hi;
+  ctx.fillStyle = "#e7e4da"; ctx.fillRect(x0, y0, x1 - x0, bh);
+  ctx.fillStyle = "rgba(178,58,72,0.25)"; ctx.fillRect(X(wl), y0 - 5, X(wh) - X(wl), bh + 10);
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.4; ctx.strokeRect(X(wl), y0 - 5, X(wh) - X(wl), bh + 10);
+  const lab = !isFinite(r.hi) ? what + ": at least " + r.lo : !isFinite(r.lo) ? what + ": at most " + r.hi : what + ": between " + r.lo + " and " + r.hi;
+  ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillText(lab, x0, y0 - 10);
+  ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  for (const t of ticks) ctx.fillText(String(t), X(t), y0 + bh + 6);
+  if (got) { const v = got[r.m], ok = isFinite(v);
+    ctx.strokeStyle = DARK; ctx.lineWidth = 3; if (ok) { ctx.beginPath(); ctx.moveTo(X(v), y0 - 8); ctx.lineTo(X(v), y0 + bh + 8); ctx.stroke(); }
+    ctx.fillStyle = DARK; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "alphabetic";
+    ctx.fillText("got " + (ok ? (r.m === "fixed" ? String(v) : v >= 10 ? v.toFixed(1) : f2(v)) : "—"), x1, y0 - 10); }
+}
+function C_paint() { if (!C.preview) C_newPreview(); C_drawPlane(); C_drawTime(); C_drawCov(); C_drawInb(); }
+function C_RCODE() {
+  return "# Lesson 12, Stage C -- new harmful mutations, each a new allele at its own locus\n" +
+    "N <- " + C.n + "; U <- " + C_U + "        # new mutations per individual, each generation\n" +
+    "hm <- " + C.hm + "; hsd <- " + C.hsd + "   # h of new mutations: average, spread\n" +
+    "sm <- " + C.sm + "; ssd <- " + C.ssd + "   # how harmful: average, spread (s is minus this)\n" +
+    "arise <- function(k) data.frame(h = pmin(2, pmax(-1, rnorm(k, hm, hsd))),\n" +
+    "  s = -pmin(1, if (ssd > 0) rgamma(k, shape = (sm / ssd)^2, scale = ssd^2 / sm) else rep(sm, k)))\n\n" +
+    "muts <- arise(0); g1 <- g2 <- matrix(0, N, 0)   # each individual's two copies at every locus\n" +
+    "Z <- taken <- c()\n" +
+    "for (t in 1:" + C_G + ") {\n" +
+    "  g <- g1 + g2\n" +
+    "  w <- exp((g == 1) %*% log(1 + muts$h * muts$s) + (g == 2) %*% log(1 + muts$s))\n" +
+    "  z <- rowSums(g)                                   # harmful copies each carries\n" +
+    "  Z <- c(Z, mean(z))\n" +
+    "  taken <- c(taken, -mean((w / mean(w) - 1) * (z - mean(z))))   # what selection takes out\n" +
+    "  gam <- function(p) { k <- runif(ncol(g1)) < 0.5; ifelse(k, g1[p, ], g2[p, ]) }\n" +
+    "  a <- sample(N, N, TRUE, w); b <- sample(N, N, TRUE, w)\n" +
+    "  g1 <- matrix(t(sapply(a, gam)), N); g2 <- matrix(t(sapply(b, gam)), N)\n" +
+    "  k <- rpois(1, U * N); muts <- rbind(muts, arise(k))   # new alleles, one copy each\n" +
+    "  new <- matrix(0, N, k); new[cbind(sample(N, k, TRUE), seq_len(k))] <- 1\n" +
+    "  g1 <- cbind(g1, new); g2 <- cbind(g2, matrix(0, N, k))\n" +
+    "}\n" +
+    "par(mfrow = c(2, 1)); plot(Z, type = \"l\", ylab = \"harmful copies each\"); plot(taken, type = \"l\", ylab = \"taken out\")\n" +
+    "here <- colSums(g1 + g2) > 0; plot(muts$h[here], muts$s[here], xlab = \"h\", ylab = \"s\")\n";
+}
+function C_wire() {
+  const bind = (id, key, conv, ln) => document.getElementById(id).addEventListener("input", e => {
+    C[key] = conv(+e.target.value); C_syncOut(); highlightByDataLine("codeC", ln);
+    if (!C.running) { C.run = null; C_newPreview(); C_paint(); if (C.game) C.game.repaint(); }
+    bump("C");
+  });
+  bind("C_n", "n", v => C_nAt(v), "n");
+  bind("C_hm", "hm", v => Math.round(v * 20) / 20, "h");
+  bind("C_hsd", "hsd", v => Math.round(v * 20) / 20, "h");
+  bind("C_sm", "sm", v => Math.round(v * 100) / 100, "s");
+  bind("C_ssd", "ssd", v => Math.round(v * 100) / 100, "s");
+  document.getElementById("C_run").addEventListener("click", C_go);
+  document.getElementById("C_practice").addEventListener("change", C_syncGo);
+  document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson12_stageC.R", C_RCODE()));
+  const heldRows = r => { const hd = r.hold, rows = [];
+    if (hd.n != null) rows.push(["individuals", hd.n + " (held)"]);
+    if (hd.hm != null) rows.push(["h, average and spread", f2(hd.hm) + " ± " + f2(hd.hsd) + " (held)"]); else rows.push(["h, spread", f2(hd.hsd) + " (held)"]);
+    rows.push(["s, average and spread", "−" + f2(hd.sm) + " ± " + f2(hd.ssd) + " (held)"]);
+    return rows; };
+  C.game = mountRounds("C", {
+    deal: i => C_ROUNDS[i % C_ROUNDS.length],
+    rows: heldRows, picture: C_drawTarget, pictureH: 70, go: "C_run", practising: () => C_practising(), freeFirst: true,
+    freePrompt: "Try some runs first: every control is free and nothing counts. Start the targets when you are ready.",
+    prompt: r => r ? r.say : "",
+    onDeal: () => { C.run = null; C_syncSliders(); C_newPreview(); C_paint(); }
+  });
+  C_syncSliders();
+  C_syncGo();
+}
+
+/* =====================================================================
+   STAGE D — four alleles race.
 
    JM, 2026-09-24: "they can select from, say, 4 alleles and for each of
    these, set the H and the S ... hit go ... what color the line is, is what
@@ -1641,18 +2281,18 @@ function B_wire() {
    where they have to drive an advantageous allele extinct through drift."
 
    Genotype fitness: homozygote 1 + s_i; heterozygote 1 + h_i s_i + h_j s_j
-   (JM: "Ok"). With the partner neutral it is Stage B's model. C_R
+   (JM: "Ok"). With the partner neutral it is Stage B's model. D_R
    populations, each starting with a quarter of its copies of each allele,
-   run until one allele is left or C_CAP generations ("still mixed").
+   run until one allele is left or D_CAP generations ("still mixed").
    ===================================================================== */
-const C_K = 4, C_R = 200, C_RT = 300, C_CAP = 600, C_TOL = 0.10, C_TRACES = 60, C_TICK = 30, C_FRAMES = 80;
-const C_HUES = ["#2a78d6", "#eb6834", "#1baf7a", "#d4a017"], C_NAMES = ["blue", "orange", "green", "yellow"], C_MIXED = "#a5a29a";
-const C_NMIN = 10, C_NMAX = 200;
-const C_nAt = v => Math.round(C_NMIN * Math.pow(C_NMAX / C_NMIN, v / 100));
-const C_vAt = n => Math.round(100 * Math.log(n / C_NMIN) / Math.log(C_NMAX / C_NMIN));
+const D_K = 4, D_R = 200, D_RT = 300, D_CAP = 600, D_TOL = 0.10, D_TRACES = 60, D_TICK = 30, D_FRAMES = 80;
+const D_HUES = ["#2a78d6", "#eb6834", "#1baf7a", "#d4a017"], D_NAMES = ["blue", "orange", "green", "yellow"], D_MIXED = "#a5a29a";
+const D_NMIN = 10, D_NMAX = 200;
+const D_nAt = v => Math.round(D_NMIN * Math.pow(D_NMAX / D_NMIN, v / 100));
+const D_vAt = n => Math.round(100 * Math.log(n / D_NMIN) / Math.log(D_NMAX / D_NMIN));
 /* The five rounds, in this order. A target is how often each allele wins,
-   and how often none has by C_CAP, over C_RT populations at a hidden setting;
-   every bar must land within C_TOL. Measured 2026-09-24 (node prototype;
+   and how often none has by D_CAP, over D_RT populations at a hidden setting;
+   every bar must land within D_TOL. Measured 2026-09-24 (node prototype;
    the checks re-measure here), four students' targets x 8 runs each:
      favourite   blue s 0.08, others neutral, 60           100%
      drift       every h and s held (blue s 0.1); N and F are the levers.
@@ -1668,41 +2308,41 @@ const C_vAt = n => Math.round(100 * Math.log(n / C_NMIN) / Math.log(C_NMAX / C_N
      balance     every allele h 2, s 0.1, 30: 90% still mixed; the same s
                  without dominance leaves none mixed                  100%
    The opening setting (every s 0, 100 individuals) misses all five. */
-const C_ROUNDS = [
+const D_ROUNDS = [
   { key: "favourite", N: 60, F: 0, h: [0.5, 0.5, 0.5, 0.5], s: [0.08, 0, 0, 0] },
   { key: "drift",     N: 10, F: 0, h: [0.5, 0.5, 0.5, 0.5], s: [0.1, 0, 0, 0], hold: { hs: true } },
   { key: "recessive", N: 40, F: 0, h: [0, 0.5, 0.5, 0.5],   s: [0.1, 0, 0, 0], hold: { s: true, N: true }, tol: 0.08 },
   { key: "dominance", N: 60, F: 0, h: [1, 0, 0.5, 0.5],     s: [0.08, 0.08, 0, 0] },
   { key: "balance",   N: 30, F: 0, h: [2, 2, 2, 2],         s: [0.1, 0.1, 0.1, 0.1] }
 ];
-const C = { h: [0.5, 0.5, 0.5, 0.5], s: [0, 0, 0, 0], n: 100, F: 0, res: null, showTo: null,
+const D = { h: [0.5, 0.5, 0.5, 0.5], s: [0, 0, 0, 0], n: 100, F: 0, res: null, showTo: null,
             running: false, timer: 0, serial: 0, game: null };
 
-function C_W(h, s) {
+function D_W(h, s) {
   const W = [];
-  for (let x = 0; x < C_K; x++) { W.push([]);
-    for (let y = 0; y < C_K; y++) W[x].push(Math.max(0.05, x === y ? 1 + s[x] : 1 + h[x] * s[x] + h[y] * s[y])); }
+  for (let x = 0; x < D_K; x++) { W.push([]);
+    for (let y = 0; y < D_K; y++) W[x].push(Math.max(0.05, x === y ? 1 + s[x] : 1 + h[x] * s[x] + h[y] * s[y])); }
   return W;
 }
 /* R populations of n. Returns the share won by each allele (index 4 = still
-   mixed at C_CAP), each population's winner and last generation, its four
+   mixed at D_CAP), each population's winner and last generation, its four
    frequencies at the end, and for the first `traces` populations the
    winner's frequency by generation (for a population still mixed, its
    commonest allele). `cap` shortens the run, for the checks. */
-function C_race(n, h, s, F, R, rng, traces, cap) {
-  cap = cap == null ? C_CAP : cap;
-  const sf = 2 * F / (1 + F), W = C_W(h, s), win = new Int8Array(R), T = new Int32Array(R), tr = [], ends = new Float32Array(4 * R);
+function D_race(n, h, s, F, R, rng, traces, cap) {
+  cap = cap == null ? D_CAP : cap;
+  const sf = 2 * F / (1 + F), W = D_W(h, s), win = new Int8Array(R), T = new Int32Array(R), tr = [], ends = new Float32Array(4 * R);
   let a = new Uint8Array(2 * n), b = new Uint8Array(2 * n);
   const cum = new Float64Array(n), c = [0, 0, 0, 0];
   for (let r = 0; r < R; r++) {
-    for (let i = 0; i < 2 * n; i++) a[i] = i % C_K;
+    for (let i = 0; i < 2 * n; i++) a[i] = i % D_K;
     for (let i = 2 * n - 1; i > 0; i--) { const j = (rng() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; }
     const keep = r < traces ? [] : null;
     let t = 0, w = 4;
     for (;;) {
       c.fill(0); for (let i = 0; i < 2 * n; i++) c[a[i]]++;
       if (keep) keep.push(c[0], c[1], c[2], c[3]);
-      let alive = 0, last = 0; for (let k = 0; k < C_K; k++) if (c[k]) { alive++; last = k; }
+      let alive = 0, last = 0; for (let k = 0; k < D_K; k++) if (c[k]) { alive++; last = k; }
       if (alive === 1) { w = last; break; }
       if (t >= cap) break;
       let tot = 0;
@@ -1717,10 +2357,10 @@ function C_race(n, h, s, F, R, rng, traces, cap) {
       const x = a; a = b; b = x; t++;
     }
     win[r] = w; T[r] = t;
-    for (let k = 0; k < C_K; k++) ends[4 * r + k] = c[k] / (2 * n);
+    for (let k = 0; k < D_K; k++) ends[4 * r + k] = c[k] / (2 * n);
     if (keep) {
       let k = w;
-      if (k === 4) { let best = -1; for (let q = 0; q < C_K; q++) if (c[q] > best) { best = c[q]; k = q; } }
+      if (k === 4) { let best = -1; for (let q = 0; q < D_K; q++) if (c[q] > best) { best = c[q]; k = q; } }
       const f = new Float32Array(keep.length / 4);
       for (let g = 0; g < f.length; g++) f[g] = keep[4 * g + k] / (2 * n);
       tr.push({ win: w, col: k, f });
@@ -1730,83 +2370,83 @@ function C_race(n, h, s, F, R, rng, traces, cap) {
   return { share, win, T, tr, ends };
 }
 /* A target is a sample, built the first time its round is dealt. */
-function C_target(r) {
-  if (!r.tg) r.tg = C_race(r.N, r.h, r.s, r.F, C_RT, mulberry32(pageSeed("l12Ct", 1, 99999) + (C_ROUNDS.indexOf(r) + 1) * 7919), 0);
+function D_target(r) {
+  if (!r.tg) r.tg = D_race(r.N, r.h, r.s, r.F, D_RT, mulberry32(pageSeed("l12Dt", 1, 99999) + (D_ROUNDS.indexOf(r) + 1) * 7919), 0);
   return r;
 }
-const C_tol = r => r.tol || C_TOL;
-const C_hits = (share, r) => share.every((v, j) => Math.abs(v - r.tg.share[j]) <= C_tol(r));
-const C_round = () => (C.game && !C.game.st.done) ? C.game.current() : null;
+const D_tol = r => r.tol || D_TOL;
+const D_hits = (share, r) => share.every((v, j) => Math.abs(v - r.tg.share[j]) <= D_tol(r));
+const D_round = () => (D.game && !D.game.st.done) ? D.game.current() : null;
 
-const C_practising = () => !!(C.game && (C.game.st.done || document.getElementById("C_practice").checked));
-function C_syncGo() {
-  document.getElementById("C_run").textContent = C_practising() ? "Practice run" : "Go";
-  if (C.game && !C.running) C.game.repaint();
+const D_practising = () => !!(D.game && (D.game.st.done || document.getElementById("D_practice").checked));
+function D_syncGo() {
+  document.getElementById("D_run").textContent = D_practising() ? "Practice run" : "Go";
+  if (D.game && !D.running) D.game.repaint();
 }
 /* What a round holds: "drift" every h and s (the levers are individuals and
    F); "recessive" every s and the headcount (the lever is h). Practice keeps
    them held; once the stage is done everything is free. */
-function C_held() {
-  const r = C_round(), hd = r && r.hold ? r.hold : {};
+function D_held() {
+  const r = D_round(), hd = r && r.hold ? r.hold : {};
   return { h: !!hd.hs, s: !!(hd.hs || hd.s), n: !!hd.N };
 }
-function C_syncSliders() {
-  const r = C_round(), hd = C_held();
-  if (r && hd.h) C.h = r.h.slice();
-  if (r && hd.s) C.s = r.s.slice();
-  if (r && hd.n) C.n = r.N;
-  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || C.running;
+function D_syncSliders() {
+  const r = D_round(), hd = D_held();
+  if (r && hd.h) D.h = r.h.slice();
+  if (r && hd.s) D.s = r.s.slice();
+  if (r && hd.n) D.n = r.N;
+  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || D.running;
     el.style.opacity = held ? 0.38 : ""; const o = document.getElementById(id + "Out"); if (o) o.style.opacity = held ? 0.38 : ""; };
-  for (let k = 0; k < C_K; k++) { set("C_h" + k, C.h[k], hd.h); set("C_s" + k, C.s[k], hd.s); }
-  set("C_n", C_vAt(C.n), hd.n); set("C_F", C.F, false);
-  document.getElementById("C_neutral").disabled = C.running || hd.s;
-  C_syncOut();
+  for (let k = 0; k < D_K; k++) { set("D_h" + k, D.h[k], hd.h); set("D_s" + k, D.s[k], hd.s); }
+  set("D_n", D_vAt(D.n), hd.n); set("D_F", D.F, false);
+  document.getElementById("D_neutral").disabled = D.running || hd.s;
+  D_syncOut();
 }
-function C_syncOut() {
-  for (let k = 0; k < C_K; k++) {
-    document.getElementById("C_h" + k + "Out").value = C.h[k].toFixed(1);
-    document.getElementById("C_s" + k + "Out").value = f2(C.s[k]);
+function D_syncOut() {
+  for (let k = 0; k < D_K; k++) {
+    document.getElementById("D_h" + k + "Out").value = D.h[k].toFixed(1);
+    document.getElementById("D_s" + k + "Out").value = f2(D.s[k]);
   }
-  document.getElementById("C_nOut").value = C.n;
-  document.getElementById("C_FOut").value = f2(C.F);
+  document.getElementById("D_nOut").value = D.n;
+  document.getElementById("D_FOut").value = f2(D.F);
   const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  s("cC_h", C.h.map(v => v.toFixed(1)).join(", ")); s("cC_s", C.s.map(f2).join(", ")); s("cC_n", C.n); s("cC_F", f2(C.F));
+  s("cD_h", D.h.map(v => v.toFixed(1)).join(", ")); s("cD_s", D.s.map(f2).join(", ")); s("cD_n", D.n); s("cD_F", f2(D.F));
 }
-function C_go() {
-  const practice = C_practising();
-  if (C.running || (C.game.waiting() && !practice)) return;
-  C.serial++;
-  C.res = C_race(C.n, C.h, C.s, C.F, C_R, mulberry32(pageSeed("l12C", 1, 99999) + C.serial * 7919), C_TRACES);
-  bump("C");
-  const X = C_xmax(), step = Math.max(1, Math.ceil(X / C_FRAMES));
-  C.showTo = 0; C.running = true;
-  lockStage("C", true); C_paint();
-  C.timer = setInterval(() => {
-    C.showTo += step; C_paint();
-    if (C.showTo >= X) {
-      clearInterval(C.timer); C.running = false; C.showTo = null;
-      lockStage("C", false); C_land(practice);
+function D_go() {
+  const practice = D_practising();
+  if (D.running || (D.game.waiting() && !practice)) return;
+  D.serial++;
+  D.res = D_race(D.n, D.h, D.s, D.F, D_R, mulberry32(pageSeed("l12D", 1, 99999) + D.serial * 7919), D_TRACES);
+  bump("D");
+  const X = D_xmax(), step = Math.max(1, Math.ceil(X / D_FRAMES));
+  D.showTo = 0; D.running = true;
+  lockStage("D", true); D_paint();
+  D.timer = setInterval(() => {
+    D.showTo += step; D_paint();
+    if (D.showTo >= X) {
+      clearInterval(D.timer); D.running = false; D.showTo = null;
+      lockStage("D", false); D_land(practice);
     }
-  }, C_TICK);
+  }, D_TICK);
 }
-function C_land(practice) {
-  const r = C_target(C.game.current()), ok = C_hits(C.res.share, r);
-  C.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', C.res.share, practice);
-  C_syncSliders(); C_syncGo(); C_paint();
+function D_land(practice) {
+  const r = D_target(D.game.current()), ok = D_hits(D.res.share, r);
+  D.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', D.res.share, practice);
+  D_syncSliders(); D_syncGo(); D_paint();
 }
 /* the time axis: the run's own length, rounded up, or the cap before any run */
-function C_xmax() {
-  if (!C.res) return C_CAP;
-  let m = 0; for (const t of C.res.T) if (t > m) m = t;
-  return Math.max(50, Math.min(C_CAP, Math.ceil(m / 50) * 50));
+function D_xmax() {
+  if (!D.res) return D_CAP;
+  let m = 0; for (const t of D.res.T) if (t > m) m = t;
+  return Math.max(50, Math.min(D_CAP, Math.ceil(m / 50) * 50));
 }
 
 /* ---- drawing ------------------------------------------------------------ */
-function C_drawTraj() {
-  const cv = document.getElementById("C_traj");
+function D_drawTraj() {
+  const cv = document.getElementById("D_traj");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const X = C_xmax(), STRIP = 64;
+  const X = D_xmax(), STRIP = 64;
   const f = box(52, 14, W - 70, H - 14 - 44 - STRIP - 12, 0, X, 0, 1);
   const g = box(52, f.py + f.ph + 12, W - 70, STRIP, 0, X, 0, 1);
   axes(ctx, f, "", "the winner's frequency", v => v.toFixed(2), () => "");
@@ -1817,13 +2457,13 @@ function C_drawTraj() {
   ctx.font = "11px -apple-system, sans-serif"; ctx.fillStyle = MUTED;
   ctx.fillText("generation", g.px + g.pw / 2, g.py + g.ph + 18);
   ctx.textAlign = "left"; ctx.fillText("one allele left", g.px + 4, g.py);
-  const res = C.res;
+  const res = D.res;
   if (res) {
-    const upTo = C.showTo == null ? X : C.showTo;
+    const upTo = D.showTo == null ? X : D.showTo;
     ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py - 1, f.pw + 1, f.ph + 2); ctx.clip();
     for (const q of res.tr) {
       const end = Math.min(q.f.length - 1, upTo);
-      ctx.strokeStyle = q.win === 4 ? C_MIXED : C_HUES[q.col]; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.1; ctx.beginPath();
+      ctx.strokeStyle = q.win === 4 ? D_MIXED : D_HUES[q.col]; ctx.globalAlpha = 0.45; ctx.lineWidth = 1.1; ctx.beginPath();
       for (let t = 0; t <= end; t++) { const x = f.x(t), y = f.y(q.f[t]); t ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
       ctx.stroke();
     }
@@ -1836,23 +2476,23 @@ function C_drawTraj() {
       const t = res.T[q]; if (t > upTo) continue;
       const bi = Math.min(bins, Math.floor(t / bw)), y = g.py + g.ph - rad - 1 - stack[bi] * (2 * rad + 0.6);
       stack[bi]++; if (y < g.py - 30) continue;
-      ctx.fillStyle = C_HUES[res.win[q]]; ctx.beginPath(); ctx.arc(g.x((bi + 0.5) * bw), y, rad, 0, 6.2832); ctx.fill();
+      ctx.fillStyle = D_HUES[res.win[q]]; ctx.beginPath(); ctx.arc(g.x((bi + 0.5) * bw), y, rad, 0, 6.2832); ctx.fill();
     }
-    if (mixed && C.showTo == null) { ctx.fillStyle = MUTED; ctx.textAlign = "right"; ctx.textBaseline = "top";
-      ctx.fillText(mixed + " still mixed at " + C_CAP + " →", g.px + g.pw, g.py - 14); }
-    if (C.showTo != null) { ctx.strokeStyle = "rgba(178,58,72,0.6)"; ctx.lineWidth = 1.2;
+    if (mixed && D.showTo == null) { ctx.fillStyle = MUTED; ctx.textAlign = "right"; ctx.textBaseline = "top";
+      ctx.fillText(mixed + " still mixed at " + D_CAP + " →", g.px + g.pw, g.py - 14); }
+    if (D.showTo != null) { ctx.strokeStyle = "rgba(178,58,72,0.6)"; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(f.x(Math.min(upTo, X)), f.py); ctx.lineTo(f.x(Math.min(upTo, X)), g.py + g.ph); ctx.stroke(); }
   }
   let done = 0, sumT = 0; if (res) for (let q = 0; q < res.T.length; q++) if (res.win[q] !== 4) { done++; sumT += res.T[q]; }
-  document.getElementById("C_trajRead").innerHTML = res && C.showTo == null
+  document.getElementById("D_trajRead").innerHTML = res && D.showTo == null
     ? '<span class="label">populations down to one allele</span> <b>' + done + '</b> <span class="label">of ' + res.T.length + '</span>' +
       (done ? ' &nbsp;|&nbsp; <span class="label">on average by generation</span> <b>' + Math.round(sumT / done) + '</b>' : '')
-    : '<span class="label">' + (C.running ? "running…" : "set the alleles, then Go") + '</span>';
+    : '<span class="label">' + (D.running ? "running…" : "set the alleles, then Go") + '</span>';
 }
 /* bars: the run's shares filled, the target as a red outline with its band */
-function C_bars(ctx, f, share, tg, labels, tol) {
-  tol = tol || C_TOL;
-  const cols = C_HUES.concat([C_MIXED]), names = C_NAMES.concat(["still mixed"]);
+function D_bars(ctx, f, share, tg, labels, tol) {
+  tol = tol || D_TOL;
+  const cols = D_HUES.concat([D_MIXED]), names = D_NAMES.concat(["still mixed"]);
   for (let j = 0; j < 5; j++) {
     const cx = f.x(j + 0.5), bw = f.pw / 5 * 0.5;
     if (tg) {
@@ -1871,33 +2511,33 @@ function C_bars(ctx, f, share, tg, labels, tol) {
     }
   }
 }
-function C_drawShares() {
-  const cv = document.getElementById("C_shares");
+function D_drawShares() {
+  const cv = document.getElementById("D_shares");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const f = box(52, 12, W - 70, H - 40, 0, 5, 0, 1);
   axes(ctx, f, "", "share of populations", v => v.toFixed(2), () => "");
-  const r = C.game && C.game.current(), tg = r && r.tg ? r.tg.share : null;
-  C_bars(ctx, f, C.res && C.showTo == null ? C.res.share : null, C_round() ? tg : null, true, r ? C_tol(r) : C_TOL);
+  const r = D.game && D.game.current(), tg = r && r.tg ? r.tg.share : null;
+  D_bars(ctx, f, D.res && D.showTo == null ? D.res.share : null, D_round() ? tg : null, true, r ? D_tol(r) : D_TOL);
   const pc = v => Math.round(100 * v) + "%";
-  document.getElementById("C_read").innerHTML = C.res && C.showTo == null
-    ? C_NAMES.concat(["still mixed"]).map((nm, j) => '<span class="label">' + nm + '</span> <b' +
-        (C_round() && tg ? ' class="' + (Math.abs(C.res.share[j] - tg[j]) <= C_tol(r) ? "ok" : "off") + '"' : '') + '>' + pc(C.res.share[j]) + '</b>' +
-        (C_round() && tg ? ' <span class="label">(' + pc(tg[j]) + ')</span>' : '')).join(' &nbsp; ')
-    : '<span class="label">the share of the ' + C_R + ' populations each allele wins</span>';
+  document.getElementById("D_read").innerHTML = D.res && D.showTo == null
+    ? D_NAMES.concat(["still mixed"]).map((nm, j) => '<span class="label">' + nm + '</span> <b' +
+        (D_round() && tg ? ' class="' + (Math.abs(D.res.share[j] - tg[j]) <= D_tol(r) ? "ok" : "off") + '"' : '') + '>' + pc(D.res.share[j]) + '</b>' +
+        (D_round() && tg ? ' <span class="label">(' + pc(tg[j]) + ')</span>' : '')).join(' &nbsp; ')
+    : '<span class="label">the share of the ' + D_R + ' populations each allele wins</span>';
 }
 /* every genotype's fitness, as a half-grid: bluer above 1, redder below */
-function C_drawFit() {
-  const cv = document.getElementById("C_fit");
+function D_drawFit() {
+  const cv = document.getElementById("D_fit");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const Wm = C_W(C.h, C.s), cell = Math.min((W - 60) / C_K, (H - 40) / C_K), x0 = 44, y0 = 26;
+  const Wm = D_W(D.h, D.s), cell = Math.min((W - 60) / D_K, (H - 40) / D_K), x0 = 44, y0 = 26;
   ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
   ctx.fillText("fitness by genotype", 4, 4);
-  for (let i = 0; i < C_K; i++) {
-    ctx.fillStyle = C_HUES[i];
+  for (let i = 0; i < D_K; i++) {
+    ctx.fillStyle = D_HUES[i];
     ctx.fillRect(x0 - 16, y0 + i * cell + cell / 2 - 5, 10, 10);
-    ctx.fillRect(x0 + i * cell + cell / 2 - 5, y0 + C_K * cell + 5, 10, 10);
+    ctx.fillRect(x0 + i * cell + cell / 2 - 5, y0 + D_K * cell + 5, 10, 10);
     for (let j = 0; j <= i; j++) {
       const v = Wm[i][j], x = x0 + j * cell, y = y0 + i * cell, d = Math.min(1, Math.abs(v - 1) / 0.4);
       ctx.fillStyle = v >= 1 ? "rgba(47,107,143," + (0.08 + 0.6 * d) + ")" : "rgba(178,58,72," + (0.08 + 0.6 * d) + ")";
@@ -1908,69 +2548,69 @@ function C_drawFit() {
   }
 }
 /* the card: the target's shares as red outlines; the run's filled on top once it lands */
-function C_drawTarget(cv, r, got) {
+function D_drawTarget(cv, r, got) {
   if (!cv) return;
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   if (!r) return;
   const f = box(34, 8, W - 46, H - 30, 0, 5, 0, 1);
   axes(ctx, f, "", "", v => v.toFixed(1), () => "");
-  C_bars(ctx, f, got, C_target(r).tg.share, true, C_tol(r));
+  D_bars(ctx, f, got, D_target(r).tg.share, true, D_tol(r));
 }
-function C_paint() { C_drawTraj(); C_drawShares(); C_drawFit(); }
-function C_RCODE() {
-  return "# Lesson 12, Stage C -- four alleles, each with its own h and s\n" +
-    "h <- c(" + C.h.join(", ") + ")\ns <- c(" + C.s.join(", ") + ")\nN <- " + C.n + "; F <- " + C.F + "\n" +
+function D_paint() { D_drawTraj(); D_drawShares(); D_drawFit(); }
+function D_RCODE() {
+  return "# Lesson 12, Stage D -- four alleles, each with its own h and s\n" +
+    "h <- c(" + D.h.join(", ") + ")\ns <- c(" + D.s.join(", ") + ")\nN <- " + D.n + "; F <- " + D.F + "\n" +
     "w <- outer(1:4, 1:4, function(i, j) ifelse(i == j, 1 + s[i], 1 + h[i] * s[i] + h[j] * s[j]))\n\n" +
-    "winner <- replicate(" + C_R + ", {\n" +
+    "winner <- replicate(" + D_R + ", {\n" +
     "  g <- matrix(sample(rep_len(1:4, 2 * N)), 2)\n  t <- 0\n" +
-    "  while (length(unique(c(g))) > 1 && t < " + C_CAP + ") {\n" +
+    "  while (length(unique(c(g))) > 1 && t < " + D_CAP + ") {\n" +
     "    fit <- w[cbind(g[1, ], g[2, ])]\n" +
     "    p1 <- sample(N, N, TRUE, fit)\n" +
     "    p2 <- ifelse(runif(N) < 2 * F / (1 + F), p1, sample(N, N, TRUE, fit))\n" +
     "    g  <- rbind(g[cbind(sample(2, N, TRUE), p1)], g[cbind(sample(2, N, TRUE), p2)])\n" +
     "    t  <- t + 1\n  }\n" +
     "  if (length(unique(c(g))) == 1) g[1] else 0   # 0 = still mixed\n})\n" +
-    "table(factor(winner, 0:4, c(\"still mixed\", \"blue\", \"orange\", \"green\", \"yellow\"))) / " + C_R + "\n";
+    "table(factor(winner, 0:4, c(\"still mixed\", \"blue\", \"orange\", \"green\", \"yellow\"))) / " + D_R + "\n";
 }
-function C_wire() {
-  document.getElementById("C_arows").innerHTML = C_NAMES.map((nm, k) =>
-    '<div class="arow" data-line="hs"><span class="nm"><i style="background:' + C_HUES[k] + '"></i>' + nm + '</span>' +
-    '<span class="k">h</span><input type="range" id="C_h' + k + '" min="-1" max="2" step="0.1" value="0.5" /><output id="C_h' + k + 'Out">0.5</output>' +
-    '<span class="k">s</span><input type="range" id="C_s' + k + '" min="-0.3" max="0.3" step="0.01" value="0" /><output id="C_s' + k + 'Out">0.00</output></div>').join("");
-  const redo = line => { C_syncOut(); highlightByDataLine("codeC", line); if (!C.running) { C.res = null; C_paint(); } bump("C"); };
-  for (let k = 0; k < C_K; k++) {
-    document.getElementById("C_h" + k).addEventListener("input", e => { C.h[k] = Math.round(+e.target.value * 10) / 10; redo("hs"); });
-    document.getElementById("C_s" + k).addEventListener("input", e => { C.s[k] = Math.round(+e.target.value * 100) / 100; redo("hs"); });
+function D_wire() {
+  document.getElementById("D_arows").innerHTML = D_NAMES.map((nm, k) =>
+    '<div class="arow" data-line="hs"><span class="nm"><i style="background:' + D_HUES[k] + '"></i>' + nm + '</span>' +
+    '<span class="k">h</span><input type="range" id="D_h' + k + '" min="-1" max="2" step="0.1" value="0.5" /><output id="D_h' + k + 'Out">0.5</output>' +
+    '<span class="k">s</span><input type="range" id="D_s' + k + '" min="-0.3" max="0.3" step="0.01" value="0" /><output id="D_s' + k + 'Out">0.00</output></div>').join("");
+  const redo = line => { D_syncOut(); highlightByDataLine("codeD", line); if (!D.running) { D.res = null; D_paint(); } bump("D"); };
+  for (let k = 0; k < D_K; k++) {
+    document.getElementById("D_h" + k).addEventListener("input", e => { D.h[k] = Math.round(+e.target.value * 10) / 10; redo("hs"); });
+    document.getElementById("D_s" + k).addEventListener("input", e => { D.s[k] = Math.round(+e.target.value * 100) / 100; redo("hs"); });
   }
-  document.getElementById("C_n").addEventListener("input", e => { C.n = C_nAt(+e.target.value); redo("n"); });
-  document.getElementById("C_F").addEventListener("input", e => { C.F = +e.target.value; redo("n"); });
+  document.getElementById("D_n").addEventListener("input", e => { D.n = D_nAt(+e.target.value); redo("n"); });
+  document.getElementById("D_F").addEventListener("input", e => { D.F = +e.target.value; redo("n"); });
   /* JM: "a baseline setting button, where they can just set everybody ... to
      zero". Every s to 0 -- and h back to 0.5, not 0: in the recessive round
      every s is held and h = 0 is the answer, so a button zeroing h would hand
      it over. With s at 0, h does nothing anyway. */
-  document.getElementById("C_neutral").addEventListener("click", () => {
-    const hd = C_held();
-    if (!hd.s) C.s = [0, 0, 0, 0];
-    if (!hd.h) C.h = [0.5, 0.5, 0.5, 0.5];
-    C_syncSliders(); if (!C.running) { C.res = null; C_paint(); } bump("C");
+  document.getElementById("D_neutral").addEventListener("click", () => {
+    const hd = D_held();
+    if (!hd.s) D.s = [0, 0, 0, 0];
+    if (!hd.h) D.h = [0.5, 0.5, 0.5, 0.5];
+    D_syncSliders(); if (!D.running) { D.res = null; D_paint(); } bump("D");
   });
-  document.getElementById("C_run").addEventListener("click", C_go);
-  document.getElementById("C_practice").addEventListener("change", C_syncGo);
-  document.getElementById("C_dl").addEventListener("click", () => downloadText("lesson12_stageC.R", C_RCODE()));
-  C.game = mountRounds("C", {
-    deal: i => C_target(C_ROUNDS[i % C_ROUNDS.length]),
+  document.getElementById("D_run").addEventListener("click", D_go);
+  document.getElementById("D_practice").addEventListener("change", D_syncGo);
+  document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson12_stageD.R", D_RCODE()));
+  D.game = mountRounds("D", {
+    deal: i => D_target(D_ROUNDS[i % D_ROUNDS.length]),
     rows: r => r.hold ? [["held", r.hold.hs ? "every h and s" : "every s, and " + r.N + " individuals"]] : [],
-    picture: C_drawTarget, pictureH: 150, go: "C_run", practising: () => C_practising(),
+    picture: D_drawTarget, pictureH: 150, go: "D_run", practising: () => D_practising(),
     prompt: () => "Make each allele win about as often as its red outline.",
-    onDeal: () => { C.res = null; C_syncSliders(); C_paint(); }
+    onDeal: () => { D.res = null; D_syncSliders(); D_paint(); }
   });
-  C_syncSliders();
-  C_syncGo();
+  D_syncSliders();
+  D_syncGo();
 }
 
 /* =====================================================================
-   STAGE D — the valley.
+   STAGE E — the valley.
 
    JM, 2026-09-24: "an adaptive landscape ... a peak near their starting
    position that is low and a peak far from their starting position that is
@@ -1994,11 +2634,11 @@ function C_wire() {
    smaller populations. A run is 50 populations, so its share wobbles by
    about 7 points.
    ===================================================================== */
-const D_P = 50, D_G = 1500, D_B = 0.2, D_MU = 0.001, D_STEP = 20, D_TICK = 30, D_TRACE = 5;
-const D_NMIN = 10, D_NMAX = 120;
-const D_nAt = v => Math.round(D_NMIN * Math.pow(D_NMAX / D_NMIN, v / 100));
-const D_vAt = n => Math.round(100 * Math.log(n / D_NMIN) / Math.log(D_NMAX / D_NMIN));
-const D_W = d => [1, 1 - d, 1 - d, 1 - d, 1 + D_B];
+const E_P = 50, E_G = 1500, E_B = 0.2, E_MU = 0.001, E_STEP = 20, E_TICK = 30, E_TRACE = 5;
+const E_NMIN = 10, E_NMAX = 120;
+const E_nAt = v => Math.round(E_NMIN * Math.pow(E_NMAX / E_NMIN, v / 100));
+const E_vAt = n => Math.round(100 * Math.log(n / E_NMIN) / Math.log(E_NMAX / E_NMIN));
+const E_W = d => [1, 1 - d, 1 - d, 1 - d, 1 + E_B];
 /* The five rounds, in this order. Each deals a window for the share of the
    50 populations that reach the high peak, and holds either the depth or
    the headcount. Chance a run lands in the window (binomial on the
@@ -2015,25 +2655,25 @@ const D_W = d => [1, 1 - d, 1 - d, 1 - d, 1 + D_B];
    4% (re-pinned at 400 populations: N 40 at 0.05 is .175, N 10 at 0.10 is
    .34; at 25-45% and 5-18% the opening sat on the edges, 9% and 5%). No two rounds share an answer: 1 and 2 hold the same depth and want
    opposite sizes. */
-const D_ROUNDS = [
+const E_ROUNDS = [
   { key: "middling", hold: { d: 0.05 }, lo: 0.28, hi: 0.48 },
   { key: "stuck",    hold: { d: 0.05 }, lo: 0,    hi: 0.05 },
   { key: "deep",     hold: { d: 0.10 }, lo: 0.20, hi: 0.45 },
   { key: "depth20",  hold: { N: 20 },   lo: 0.30, hi: 0.55 },
   { key: "depth10",  hold: { N: 10 },   lo: 0.04, hi: 0.14 }
 ];
-const D = { n: 40, d: 0.10, run: null, running: false, timer: 0, serial: 0, game: null };
+const E = { n: 40, d: 0.10, run: null, running: false, timer: 0, serial: 0, game: null };
 
-/* One set of D_P populations, advanced in steps so the page can draw between
+/* One set of E_P populations, advanced in steps so the page can draw between
    them. Each population is N individuals x 4 copies; `t[q]` is the
    generation it reached the high peak, or -1. `mean[q]` its average trait by
    step, for the traces. */
-function D_start(n, d, rng) {
+function E_start(n, d, rng) {
   const pops = [];
-  for (let q = 0; q < D_P; q++) pops.push({ g: new Uint8Array(4 * n), h: new Uint8Array(4 * n), t: -1, z: 0, trace: [0] });
-  return { n, d, w: D_W(d), rng, pops, gen: 0, cum: new Float64Array(n) };
+  for (let q = 0; q < E_P; q++) pops.push({ g: new Uint8Array(4 * n), h: new Uint8Array(4 * n), t: -1, z: 0, trace: [0] });
+  return { n, d, w: E_W(d), rng, pops, gen: 0, cum: new Float64Array(n) };
 }
-function D_step(run, gens) {
+function E_step(run, gens) {
   const { n, w, rng, cum } = run;
   for (const P of run.pops) {
     if (P.t >= 0) continue;
@@ -2048,7 +2688,7 @@ function D_step(run, gens) {
         const a = pick(), b = pick();
         for (let l = 0; l < 2; l++) {
           let x = P.g[4*a + 2*l + (rng() < 0.5 ? 0 : 1)], y = P.g[4*b + 2*l + (rng() < 0.5 ? 0 : 1)];
-          if (rng() < D_MU) x = 1 - x; if (rng() < D_MU) y = 1 - y;
+          if (rng() < E_MU) x = 1 - x; if (rng() < E_MU) y = 1 - y;
           P.h[4*i + 2*l] = x; P.h[4*i + 2*l + 1] = y;
         }
       }
@@ -2061,60 +2701,60 @@ function D_step(run, gens) {
   return run;
 }
 /* the whole run at once, for the checks */
-function D_runAll(n, d, rng) { const run = D_start(n, d, rng); while (run.gen < D_G) D_step(run, D_STEP); return run; }
-const D_share = run => run.pops.filter(P => P.t >= 0).length / D_P;
-const D_hits = (share, r) => share >= r.lo - 1e-9 && share <= r.hi + 1e-9;
-const D_round = () => (D.game && !D.game.st.done) ? D.game.current() : null;
+function E_runAll(n, d, rng) { const run = E_start(n, d, rng); while (run.gen < E_G) E_step(run, E_STEP); return run; }
+const E_share = run => run.pops.filter(P => P.t >= 0).length / E_P;
+const E_hits = (share, r) => share >= r.lo - 1e-9 && share <= r.hi + 1e-9;
+const E_round = () => (E.game && !E.game.st.done) ? E.game.current() : null;
 
-const D_practising = () => !!(D.game && (D.game.st.done || document.getElementById("D_practice").checked));
-function D_syncGo() {
-  document.getElementById("D_run").textContent = D_practising() ? "Practice run" : "Go";
-  if (D.game && !D.running) D.game.repaint();
+const E_practising = () => !!(E.game && (E.game.st.done || document.getElementById("E_practice").checked));
+function E_syncGo() {
+  document.getElementById("E_run").textContent = E_practising() ? "Practice run" : "Go";
+  if (E.game && !E.running) E.game.repaint();
 }
-function D_syncSliders() {
-  const r = D_round(), hd = r ? r.hold : {};
-  if (hd.d != null) D.d = hd.d;
-  if (hd.N != null) D.n = hd.N;
-  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || D.running;
+function E_syncSliders() {
+  const r = E_round(), hd = r ? r.hold : {};
+  if (hd.d != null) E.d = hd.d;
+  if (hd.N != null) E.n = hd.N;
+  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || E.running;
                                  document.getElementById(id + "Row").classList.toggle("off", held); };
-  set("D_n", D_vAt(D.n), hd.N != null); set("D_d", D.d, hd.d != null);
-  D_syncOut();
+  set("E_n", E_vAt(E.n), hd.N != null); set("E_d", E.d, hd.d != null);
+  E_syncOut();
 }
-function D_syncOut() {
-  document.getElementById("D_nOut").value = D.n;
-  document.getElementById("D_dOut").value = f2(D.d);
+function E_syncOut() {
+  document.getElementById("E_nOut").value = E.n;
+  document.getElementById("E_dOut").value = f2(E.d);
   const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  s("cD_n", D.n); s("cD_d", f2(D.d));
+  s("cE_n", E.n); s("cE_d", f2(E.d));
 }
-function D_go() {
-  const practice = D_practising();
-  if (D.running || (D.game.waiting() && !practice)) return;
-  D.serial++;
-  D.run = D_start(D.n, D.d, mulberry32(pageSeed("l12D", 1, 99999) + D.serial * 7919));
-  bump("D");
-  D.running = true; lockStage("D", true); D_paint();
-  D.timer = setInterval(() => {
-    D_step(D.run, D_STEP); D_paint();
-    if (D.run.gen >= D_G) {
-      clearInterval(D.timer); D.running = false;
-      lockStage("D", false); D_land(practice);
+function E_go() {
+  const practice = E_practising();
+  if (E.running || (E.game.waiting() && !practice)) return;
+  E.serial++;
+  E.run = E_start(E.n, E.d, mulberry32(pageSeed("l12E", 1, 99999) + E.serial * 7919));
+  bump("E");
+  E.running = true; lockStage("E", true); E_paint();
+  E.timer = setInterval(() => {
+    E_step(E.run, E_STEP); E_paint();
+    if (E.run.gen >= E_G) {
+      clearInterval(E.timer); E.running = false;
+      lockStage("E", false); E_land(practice);
     }
-  }, D_TICK);
+  }, E_TICK);
 }
-function D_land(practice) {
-  const r = D.game.current(), sh = D_share(D.run), ok = D_hits(sh, r);
-  D.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', sh, practice);
-  D_syncSliders(); D_syncGo(); D_paint();
+function E_land(practice) {
+  const r = E.game.current(), sh = E_share(E.run), ok = E_hits(sh, r);
+  E.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', sh, practice);
+  E_syncSliders(); E_syncGo(); E_paint();
 }
 
 /* ---- drawing ------------------------------------------------------------ */
 /* The landscape: fitness against the trait, a smooth curve through the five
    values, and each population as a ball at its average. */
-function D_drawLand() {
-  const cv = document.getElementById("D_land");
+function E_drawLand() {
+  const cv = document.getElementById("E_land");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const w = D_W(D.run ? D.run.d : D.d), lo = Math.min(0.75, ...w) - 0.05;
+  const w = E_W(E.run ? E.run.d : E.d), lo = Math.min(0.75, ...w) - 0.05;
   const f = box(52, 18, W - 76, H - 58, 0, 4, lo, 1.3);
   axes(ctx, f, "the trait: + copies an individual carries", "fitness", v => v.toFixed(2), () => "");
   /* integer ticks: five even intervals over 0-4 printed "2" twice */
@@ -2134,12 +2774,12 @@ function D_drawLand() {
   ctx.fillText("low peak, the start", f.x(0.35), f.y(w[0]) - 10);
   ctx.fillText("high peak", f.x(3.75), f.y(w[4]) - 12);
   ctx.fillText("valley", f.x(2), f.y(w[2]) - 8);
-  if (D.run) {
+  if (E.run) {
     /* balls stack upward where several sit at the same place, eight high at
        most; past that the stack carries its count (33 on the start peak
        made a column taller than the plot) */
     const groups = new Map();
-    for (const P of D.run.pops) {
+    for (const P of E.run.pops) {
       const x = P.t >= 0 ? 4 : Math.min(4, P.z), key = Math.round(x * 20);
       if (!groups.has(key)) groups.set(key, { x, n: 0, up: P.t >= 0 });
       groups.get(key).n++;
@@ -2154,48 +2794,48 @@ function D_drawLand() {
         ctx.fillText("×" + q.n, px + (q.x > 3.5 ? -7 : 7), base - (shown - 1) * 5.2); }
     }
   }
-  const up = D.run ? D.run.pops.filter(P => P.t >= 0).length : 0;
-  document.getElementById("D_landRead").innerHTML = D.run
-    ? '<span class="label">generation</span> <b>' + Math.min(D.run.gen, D_G) + '</b> &nbsp;|&nbsp; <span class="label">on the high peak</span> <b>' + up + '</b> <span class="label">of ' + D_P + '</span>'
+  const up = E.run ? E.run.pops.filter(P => P.t >= 0).length : 0;
+  document.getElementById("E_landRead").innerHTML = E.run
+    ? '<span class="label">generation</span> <b>' + Math.min(E.run.gen, E_G) + '</b> &nbsp;|&nbsp; <span class="label">on the high peak</span> <b>' + up + '</b> <span class="label">of ' + E_P + '</span>'
     : '<span class="label">fitness at 0, 1, 2, 3, 4 + copies:</span> <b>' + w.map(f2).join(" · ") + '</b>';
 }
-function D_drawTime() {
-  const cv = document.getElementById("D_time");
+function E_drawTime() {
+  const cv = document.getElementById("E_time");
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
-  const f = box(52, 14, W - 150, H - 48, 0, D_G, 0, 4);
+  const f = box(52, 14, W - 150, H - 48, 0, E_G, 0, 4);
   axes(ctx, f, "generation", "a population's average", v => v.toFixed(0), v => v.toFixed(0));
   ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([4, 3]); ctx.beginPath();
   ctx.moveTo(f.px, f.y(3.5)); ctx.lineTo(f.px + f.pw, f.y(3.5)); ctx.stroke(); ctx.restore();
-  if (D.run) {
-    for (const P of D.run.pops) {
+  if (E.run) {
+    for (const P of E.run.pops) {
       ctx.strokeStyle = P.t >= 0 ? GREEN : DARK; ctx.globalAlpha = P.t >= 0 ? 0.6 : 0.25; ctx.lineWidth = 1.1; ctx.beginPath();
-      P.trace.forEach((v, i) => { const x = f.x(Math.min(D_G, i * D_STEP)), y = f.y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      P.trace.forEach((v, i) => { const x = f.x(Math.min(E_G, i * E_STEP)), y = f.y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
       ctx.stroke();
     }
     ctx.globalAlpha = 1;
   }
   /* the gauge: the share on the high peak against the round's window */
-  const gx = f.px + f.pw + 40, gw = 22, g = y => f.py + f.ph - y * f.ph, r = D_round();
+  const gx = f.px + f.pw + 40, gw = 22, g = y => f.py + f.ph - y * f.ph, r = E_round();
   ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.strokeRect(gx, f.py, gw, f.ph);
   if (r) { ctx.fillStyle = "rgba(178,58,72,0.18)"; ctx.fillRect(gx - 6, g(r.hi), gw + 12, g(r.lo) - g(r.hi));
            ctx.strokeStyle = HOT; ctx.lineWidth = 1.2; ctx.strokeRect(gx - 6, g(r.hi), gw + 12, g(r.lo) - g(r.hi)); }
-  if (D.run) { const sh = D_share(D.run); ctx.fillStyle = GREEN; ctx.fillRect(gx + 5, g(sh), gw - 10, g(0) - g(sh)); }
+  if (E.run) { const sh = E_share(E.run); ctx.fillStyle = GREEN; ctx.fillRect(gx + 5, g(sh), gw - 10, g(0) - g(sh)); }
   ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "left"; ctx.textBaseline = "middle";
   for (const v of [0, 0.5, 1]) ctx.fillText(Math.round(100 * v) + "%", gx + gw + 4, g(v));
   ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
   ctx.fillText("on the", gx + gw / 2, f.py + f.ph + 6); ctx.fillText("high peak", gx + gw / 2, f.py + f.ph + 18);
   let txt;
-  if (D.run && !D.running) {
-    const sh = D_share(D.run), ts = D.run.pops.filter(P => P.t >= 0).map(P => P.t);
-    txt = '<span class="label">reached the high peak</span> <b class="big">' + Math.round(100 * sh) + '%</b> <span class="label">(' + ts.length + ' of ' + D_P + ')</span>' +
+  if (E.run && !E.running) {
+    const sh = E_share(E.run), ts = E.run.pops.filter(P => P.t >= 0).map(P => P.t);
+    txt = '<span class="label">reached the high peak</span> <b class="big">' + Math.round(100 * sh) + '%</b> <span class="label">(' + ts.length + ' of ' + E_P + ')</span>' +
           (r ? ' &nbsp;|&nbsp; <span class="label">target</span> <b>' + Math.round(100 * r.lo) + '–' + Math.round(100 * r.hi) + '%</b>' : '') +
           (ts.length ? ' &nbsp;|&nbsp; <span class="label">on average by generation</span> <b>' + Math.round(mean(ts)) + '</b>' : '');
-  } else txt = '<span class="label">' + (D.running ? "running…" : "set the population, then Go") + '</span>';
-  document.getElementById("D_read").innerHTML = txt;
+  } else txt = '<span class="label">' + (E.running ? "running…" : "set the population, then Go") + '</span>';
+  document.getElementById("E_read").innerHTML = txt;
 }
 /* the card: the window on a 0-100% bar; the run's share once it lands */
-function D_drawTarget(cv, r, got) {
+function E_drawTarget(cv, r, got) {
   if (!cv) return;
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
@@ -2205,7 +2845,7 @@ function D_drawTarget(cv, r, got) {
   ctx.fillStyle = "rgba(178,58,72,0.25)"; ctx.fillRect(X(r.lo), y0 - 6, Math.max(3, X(r.hi) - X(r.lo)), bh + 12);
   ctx.strokeStyle = HOT; ctx.lineWidth = 1.4; ctx.strokeRect(X(r.lo), y0 - 6, Math.max(3, X(r.hi) - X(r.lo)), bh + 12);
   ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
-  ctx.fillText(Math.round(100 * r.lo) + "–" + Math.round(100 * r.hi) + "% of the " + D_P + " populations on the high peak by generation " + D_G, x0, 16);
+  ctx.fillText(Math.round(100 * r.lo) + "–" + Math.round(100 * r.hi) + "% of the " + E_P + " populations on the high peak by generation " + E_G, x0, 16);
   ctx.fillStyle = MUTED; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center";
   for (const v of [0, 0.25, 0.5, 0.75, 1]) ctx.fillText(Math.round(100 * v) + "%", X(v), y0 + bh + 20);
   if (got != null) {
@@ -2215,14 +2855,14 @@ function D_drawTarget(cv, r, got) {
     ctx.fillText("got " + Math.round(100 * got) + "%", x1, 16);
   }
 }
-function D_paint() { D_drawLand(); D_drawTime(); }
-function D_RCODE() {
-  return "# Lesson 12, Stage D -- two loci, a valley between two peaks\n" +
-    "N <- " + D.n + "; d <- " + D.d + "; mu <- " + D_MU + "\n" +
-    "w <- c(1, 1 - d, 1 - d, 1 - d, " + (1 + D_B) + ")   # fitness at 0-4 + copies\n\n" +
-    "crossed <- replicate(" + D_P + ", {\n" +
+function E_paint() { E_drawLand(); E_drawTime(); }
+function E_RCODE() {
+  return "# Lesson 12, Stage E -- two loci, a valley between two peaks\n" +
+    "N <- " + E.n + "; d <- " + E.d + "; mu <- " + E_MU + "\n" +
+    "w <- c(1, 1 - d, 1 - d, 1 - d, " + (1 + E_B) + ")   # fitness at 0-4 + copies\n\n" +
+    "crossed <- replicate(" + E_P + ", {\n" +
     "  g <- matrix(0, N, 4)\n" +
-    "  for (t in 1:" + D_G + ") {\n" +
+    "  for (t in 1:" + E_G + ") {\n" +
     "    if (mean(rowSums(g)) >= 3.5) break\n" +
     "    fit <- w[rowSums(g) + 1]\n" +
     "    a <- sample(N, N, TRUE, fit); b <- sample(N, N, TRUE, fit)\n" +
@@ -2233,298 +2873,18 @@ function D_RCODE() {
     "})\n" +
     "mean(crossed)\n";
 }
-function D_wire() {
-  document.getElementById("D_n").addEventListener("input", e => { D.n = D_nAt(+e.target.value); D_syncOut(); highlightByDataLine("codeD", "n"); if (!D.running) { D.run = null; D_paint(); } bump("D"); });
-  document.getElementById("D_d").addEventListener("input", e => { D.d = Math.round(+e.target.value * 100) / 100; D_syncOut(); highlightByDataLine("codeD", "d"); if (!D.running) { D.run = null; D_paint(); } bump("D"); });
-  document.getElementById("D_run").addEventListener("click", D_go);
-  document.getElementById("D_practice").addEventListener("change", D_syncGo);
-  document.getElementById("D_dl").addEventListener("click", () => downloadText("lesson12_stageD.R", D_RCODE()));
-  D.game = mountRounds("D", {
-    deal: i => D_ROUNDS[i % D_ROUNDS.length],
-    rows: r => [[r.hold.d != null ? "how deep the valley is" : "individuals", r.hold.d != null ? f2(r.hold.d) + " (held)" : r.hold.N + " (held)"]],
-    picture: D_drawTarget, pictureH: 80, go: "D_run", practising: () => D_practising(),
-    prompt: () => "Get this share of the populations onto the high peak.",
-    onDeal: () => { D.run = null; D_syncSliders(); D_paint(); }
-  });
-  D_syncSliders();
-  D_syncGo();
-}
-
-/* =====================================================================
-   STAGE E — the population's average fitness.
-
-   JM, 2026-09-27: "adding something about population level average fitness
-   ... have a track-the-population-mean-fitness be the final part."
-
-   Stage B's population and simulator: B_run returns average fitness by
-   generation, the average of the individuals' own fitnesses (against the
-   yellow homozygote), so drift and F are in it. Beside it, the arithmetic
-   for a population at purple frequency p whose genotypes sit where F puts
-   them:
-       (1-p)^2 + 2p(1-p)(1 + hs) + p^2(1 + s)  +  F p(1-p) s(1 - 2h)
-   The last term is what inbreeding costs. It is zero when h = 0.5, and
-   largest when the heterozygote beats both homozygotes.
-
-   The five rounds, in this order, each on something only average fitness
-   shows. Measured 2026-09-27 (node prototype of this simulator, 400
-   individuals unless said, 40 runs; the checks re-measure off this page):
-     climb   from 0.05: >= 1.10 by 40, 1.18-1.22 at 100     h .5-1, s .2: 85-100%
-             (s .25 overshoots, 0%; recessive or overdominant, 0%)
-     above   s .1 held, from 0.1: 1.105-1.16 at 60 and 100  h 1.5+: 98-100%
-             -- above both homozygotes (1 and 1.1), below the
-             heterozygote; h 1 or 1.2: 0%
-     strand  s .3 held, from 0.25: <= 0.97 at 2, 0.98-1.02 at 100
-             h -0.6 or below: 80-100%; h 0 at 20 individuals (drift
-             losing purple): 0%
-     drift   from 0.5: 0.98-1.02 at 0, 25, 50, 75, 100 and purple at a wall
-             by 100    20 individuals, s 0: 83%; 40 at F .8: 93%; 400: 0%;
-             s -0.3 (selection clearing purple): 0%
-     inbred  F .8 held, from 0.5: average fitness falls 0.08 by generation 5
-             h 2 s .3: 100%, h 2 s .2: 88%, h -1 s -.3: 100% (every one
-             a heterozygote above both); recessive bad, h 0 s -.3: 0%
-   ===================================================================== */
-const E_G = 100, E_TICK = 25;
-const E_ROUNDS = [
-  { key: "climb",  p0: 0.05, win: [[40, 1.10, 1.35], [100, 1.18, 1.22]],
-    say: "Pass average fitness through every red window." },
-  { key: "above",  p0: 0.1, hold: { s: 0.1 }, win: [[60, 1.105, 1.16], [100, 1.105, 1.16]],
-    say: "Settle average fitness above both homozygotes." },
-  { key: "strand", p0: 0.25, hold: { s: 0.3 }, win: [[2, 0.80, 0.97], [100, 0.98, 1.02]],
-    say: "Purple is the fittest homozygote. End on the other hill." },
-  { key: "drift",  p0: 0.5, win: [[0, 0.98, 1.02], [25, 0.98, 1.02], [50, 0.98, 1.02], [75, 0.98, 1.02], [100, 0.98, 1.02]], wall: true,
-    say: "Send purple to a wall by generation 100, and keep average fitness in every window." },
-  { key: "inbred", p0: 0.5, hold: { F: 0.8 }, drop: [5, 0.08],
-    say: "Make inbreeding cost average fitness 0.08 by generation 5." }
-];
-const E = { n: 400, F: 0, p0: 0.5, h: 0.5, s: 0, run: null, ghosts: [], showTo: null,
-            running: false, timer: 0, serial: 0, game: null };
-
-/* the arithmetic: average fitness at frequency p with F where it is held */
-const E_wbar = (p, h, s, F) => (1 - p) * (1 - p) + 2 * p * (1 - p) * (1 + h * s) + p * p * (1 + s) + F * p * (1 - p) * s * (1 - 2 * h);
-const E_best = (h, s) => Math.max(1, 1 + h * s, 1 + s);
-function E_judge(r, x) {
-  if (r.win && !r.win.every(([g, lo, hi]) => x.W[g] >= lo && x.W[g] <= hi)) return false;
-  if (r.wall && !(x.P[E_G] <= 0.05 || x.P[E_G] >= 0.95)) return false;
-  if (r.drop) {
-    let m = Infinity; for (let g = 1; g <= r.drop[0]; g++) m = Math.min(m, x.W[g]);
-    if (m > x.W[0] - r.drop[1]) return false;
-  }
-  return true;
-}
-const E_round = () => (E.game && !E.game.st.done) ? E.game.current() : null;
-const E_start = () => { const r = E_round(); return r ? r.p0 : E.p0; };
-
-const E_practising = () => !!(E.game && (E.game.st.done || document.getElementById("E_practice").checked));
-function E_syncGo() {
-  document.getElementById("E_run").textContent = E_practising() ? "Practice run" : "Go";
-  if (E.game && !E.running) E.game.repaint();
-}
-function E_syncSliders() {
-  const r = E_round(), hd = r && r.hold ? r.hold : {};
-  if (hd.s != null) E.s = hd.s;
-  if (hd.F != null) E.F = hd.F;
-  const set = (id, v, held) => { const el = document.getElementById(id); el.value = v; el.disabled = held || E.running;
-                                 document.getElementById(id + "Row").classList.toggle("off", held); };
-  set("E_n", B_vAt(E.n), false); set("E_F", E.F, hd.F != null); set("E_p", E_start(), !!r);
-  set("E_h", E.h, false); set("E_s", E.s, hd.s != null);
-  E_syncOut();
-}
-function E_syncOut() {
-  const o = (id, v) => { document.getElementById(id).value = v; };
-  o("E_nOut", E.n); o("E_FOut", f2(E.F)); o("E_pOut", f2(E_start())); o("E_hOut", E.h.toFixed(1)); o("E_sOut", f2(E.s));
-  const s = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-  s("cE_n", E.n); s("cE_F", f2(E.F)); s("cE_p", f2(E_start())); s("cE_h", E.h.toFixed(1)); s("cE_s", f2(E.s));
-}
-function E_go() {
-  const practice = E_practising();
-  if (E.running || (E.game.waiting() && !practice)) return;
-  E.serial++;
-  if (E.run) E.ghosts.push(E.run);
-  E.run = B_run(E.n, E_start(), E.h, E.s, E.F, mulberry32(pageSeed("l12E", 1, 99999) + E.serial * 7919), false, E_G);
-  E.run.set = { h: E.h, s: E.s, F: E.F };
-  bump("E");
-  E.showTo = 0; E.running = true;
-  lockStage("E", true); E_paint();
-  E.timer = setInterval(() => {
-    E.showTo++; E_paint();
-    if (E.showTo >= E_G) {
-      clearInterval(E.timer); E.running = false; E.showTo = null;
-      lockStage("E", false); E_land(practice);
-    }
-  }, E_TICK);
-}
-function E_land(practice) {
-  const r = E.game.current(), ok = E_judge(r, E.run);
-  E.game.submit(ok, ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>', E.run, practice);
-  E_syncSliders(); E_syncGo(); E_paint();
-}
-
-/* ---- drawing ------------------------------------------------------------ */
-/* One vertical range for both plots, fixed by the settings and the round,
-   so nothing rescales while a run plays. */
-function E_yRange() {
-  const r = E_round(), w = [1, 1 + E.h * E.s, 1 + E.s];
-  let lo = Math.min(0.95, ...w, E_wbar(0.5, E.h, E.s, E.F)), hi = Math.max(1.05, ...w);
-  if (r && r.win) for (const q of r.win) { lo = Math.min(lo, q[1]); hi = Math.max(hi, Math.min(q[2], 1.5)); }
-  if (E.run) { lo = Math.min(lo, ...E.run.W); hi = Math.max(hi, ...E.run.W); }
-  /* a span in steps of 0.2, so the four gridlines fall on 0.05s */
-  const a = Math.floor((lo - 0.02) * 20) / 20, span = Math.ceil((hi + 0.02 - a) / 0.2 - 1e-9) * 0.2;
-  return [a, a + span];
-}
-const E_upTo = () => E.showTo == null ? E_G : E.showTo;
-function E_drawHill() {
-  const cv = document.getElementById("E_hill");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const [lo, hi] = E_yRange(), f = box(58, 14, W - 80, H - 48, 0, 1, lo, hi), r = E_round();
-  axes(ctx, f, "purple allele", "average fitness", v => v.toFixed(2), v => v.toFixed(1));
-  if (r && r.wall) {
-    ctx.fillStyle = "rgba(178,58,72,0.14)";
-    ctx.fillRect(f.x(0), f.py, f.x(0.05) - f.x(0), f.ph); ctx.fillRect(f.x(0.95), f.py, f.x(1) - f.x(0.95), f.ph);
-  }
-  const best = E_best(E.h, E.s);
-  ctx.save(); ctx.strokeStyle = MUTED; ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2; ctx.beginPath();
-  ctx.moveTo(f.px, f.y(best)); ctx.lineTo(f.px + f.pw, f.y(best)); ctx.stroke(); ctx.restore();
-  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "bottom";
-  ctx.fillText("the fittest genotype", f.px + f.pw, f.y(best) - 2);
-  const curve = (F, dash) => {
-    ctx.save(); ctx.strokeStyle = BLUE; ctx.lineWidth = 2; if (dash) ctx.setLineDash(dash); ctx.beginPath();
-    for (let k = 0; k <= 200; k++) { const p = k / 200, X = f.x(p), Y = f.y(clamp(E_wbar(p, E.h, E.s, F), lo, hi)); k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
-    ctx.stroke(); ctx.restore();
-  };
-  curve(0, null); if (E.F > 0) curve(E.F, [6, 4]);
-  for (const g of E.ghosts) {
-    ctx.strokeStyle = "rgba(107,107,104,0.25)"; ctx.lineWidth = 1; ctx.beginPath();
-    g.P.forEach((p, t) => { const X = f.x(p), Y = f.y(g.W[t]); t ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.stroke();
-  }
-  let txt;
-  if (E.run) {
-    const T = E_upTo(), x = E.run;
-    ctx.strokeStyle = "rgba(85,64,126,0.55)"; ctx.lineWidth = 1.4; ctx.beginPath();
-    for (let t = 0; t <= T; t++) { const X = f.x(x.P[t]), Y = f.y(x.W[t]); t ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
-    ctx.stroke();
-    ctx.fillStyle = DARK; ctx.beginPath(); ctx.arc(f.x(x.P[T]), f.y(x.W[T]), 6, 0, 6.2832); ctx.fill();
-    const st = x.set;
-    txt = '<span class="label">generation</span> <b>' + T + '</b> &nbsp;|&nbsp; <span class="label">purple</span> <b>' + f2(x.P[T]) + '</b>' +
-          ' &nbsp;·&nbsp; <span class="label">average fitness</span> <b>' + f3(x.W[T]) + '</b>' +
-          ' <span class="label">(the arithmetic at that purple' + (st.F > 0 ? ', F ' + f2(st.F) : '') + ':</span> <b>' + f3(E_wbar(x.P[T], st.h, st.s, st.F)) + '</b><span class="label">)</span>' +
-          ' &nbsp;·&nbsp; <span class="label">fittest genotype</span> <b>' + f3(E_best(st.h, st.s)) + '</b>';
-  } else {
-    const p0 = E_start(), w0 = E_wbar(p0, E.h, E.s, 0);
-    ctx.strokeStyle = DARK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(f.x(p0), f.y(w0), 6, 0, 6.2832); ctx.stroke();
-    txt = '<span class="label">the ball starts at purple</span> <b>' + f2(p0) + '</b>, <span class="label">average fitness</span> <b>' + f3(w0) + '</b>' +
-          ' &nbsp;·&nbsp; <span class="label">fittest genotype</span> <b>' + f3(best) + '</b>';
-  }
-  document.getElementById("E_hillRead").innerHTML = txt;
-}
-/* the round's windows (and a drop's band) on any mean-fitness-by-generation frame */
-function E_drawWindows(ctx, f, r, w0) {
-  if (!r) return;
-  const band = (g0, g1, lo, hi) => {
-    const x0 = f.x(Math.max(0, g0)), x1 = f.x(Math.min(E_G, g1)), y0 = f.y(Math.min(hi, f.yMax)), y1 = f.y(Math.max(lo, f.yMin));
-    ctx.fillStyle = "rgba(178,58,72,0.18)"; ctx.fillRect(x0, y0, x1 - x0, y1 - y0);
-    ctx.strokeStyle = HOT; ctx.lineWidth = 1.2; ctx.strokeRect(x0, y0, x1 - x0, y1 - y0);
-  };
-  if (r.win) for (const [g, lo, hi] of r.win) band(g - 1.6, g + 1.6, lo, hi);
-  if (r.drop && w0 != null) band(1, r.drop[0], -9, w0 - r.drop[1]);
-}
-function E_drawTime() {
-  const cv = document.getElementById("E_time");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const [lo, hi] = E_yRange(), f = box(58, 14, W - 80, H - 48, 0, E_G, lo, hi), r = E_round();
-  axes(ctx, f, "generation", "average fitness", v => v.toFixed(2), v => v.toFixed(0));
-  const w0 = E.run ? E.run.W[0] : E_wbar(E_start(), E.h, E.s, 0);
-  E_drawWindows(ctx, f, r, w0);
-  const best = E_best(E.h, E.s);
-  ctx.save(); ctx.strokeStyle = MUTED; ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2; ctx.beginPath();
-  ctx.moveTo(f.px, f.y(best)); ctx.lineTo(f.px + f.pw, f.y(best)); ctx.stroke(); ctx.restore();
-  for (const g of E.ghosts) line(ctx, f, g.W, "rgba(107,107,104,0.28)", 1.1);
-  if (E.run) line(ctx, f, E.run.W.slice(0, E_upTo() + 1), DARK, 2.2);
-  let txt = '<span class="label">' + (E.running ? "running…" : "set the controls, then Go") + '</span>';
-  if (E.run && !E.running) {
-    const x = E.run, gs = r && r.win ? [...new Set(r.win.map(q => q[0]))] : [0, 20, 50, E_G];
-    if (gs[gs.length - 1] !== E_G) gs.push(E_G);
-    txt = '<span class="label">average fitness at generation</span> ' + gs.map(g => g + ': <b>' + f3(x.W[g]) + '</b>').join(' <span class="label">·</span> ');
-    if (r && r.drop) { let m = Infinity; for (let g = 1; g <= r.drop[0]; g++) m = Math.min(m, x.W[g]);
-      txt += ' &nbsp;|&nbsp; <span class="label">fell by</span> <b>' + f3(Math.max(0, x.W[0] - m)) + '</b> <span class="label">by generation ' + r.drop[0] + '</span>'; }
-    if (r && r.wall) txt += ' &nbsp;|&nbsp; <span class="label">purple at 100</span> <b>' + f2(x.P[E_G]) + '</b>';
-  }
-  document.getElementById("E_read").innerHTML = txt;
-}
-function E_drawFit() {
-  const cv = document.getElementById("E_fit");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const w = [1, 1 + E.h * E.s, 1 + E.s], f = box(40, 10, W - 50, H - 38, 0, 3, 0, 1.6);
-  axes(ctx, f, "", "", v => v.toFixed(1), () => "");
-  const names = ["yellow homozygote", "heterozygote", "purple homozygote"];
-  w.forEach((v, i) => {
-    const bw = f.pw / 3 * 0.42, x0 = f.x(i + 0.5) - bw / 2, y = f.y(v), hgt = f.y(0) - y;
-    if (i === 1) { ctx.fillStyle = PALE; ctx.fillRect(x0, y, bw / 2, hgt); ctx.fillStyle = DARK; ctx.fillRect(x0 + bw / 2, y, bw / 2, hgt); }
-    else { ctx.fillStyle = i ? DARK : PALE; ctx.fillRect(x0, y, bw, hgt); }
-    ctx.fillStyle = "#333"; ctx.font = "11px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "bottom";
-    ctx.fillText(f2(v), f.x(i + 0.5), y - 2);
-    ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textBaseline = "top";
-    ctx.fillText(names[i], f.x(i + 0.5), f.py + f.ph + 5);
-  });
-}
-/* the card: the windows on a small mean-fitness-by-generation frame; the
-   run's line once it lands */
-function E_drawTarget(cv, r, got) {
-  if (!cv) return;
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  if (!r) return;
-  const [lo, hi] = E_yRange(), f = box(40, 8, W - 52, H - 30, 0, E_G, lo, hi);
-  axes(ctx, f, "", "", v => v.toFixed(2), v => v.toFixed(0));
-  E_drawWindows(ctx, f, r, got ? got.W[0] : E_wbar(r.p0, E.h, E.s, 0));
-  if (got) line(ctx, f, got.W, DARK, 1.8);
-}
-function E_paint() { E_drawHill(); E_drawTime(); E_drawFit(); }
-function E_RCODE() {
-  return "# Lesson 12, Stage E -- the population's average fitness\n" +
-    "N <- " + E.n + "; F <- " + E.F + "; p0 <- " + E_start() + "\n" +
-    "h <- " + E.h + "; s <- " + E.s + "\n" +
-    "w <- c(1, 1 + h * s, 1 + s)   # yellow homozygote, heterozygote, purple\n" +
-    "sf <- 2 * F / (1 + F)\n\n" +
-    "k <- round(2 * N * p0)\n" +
-    "g <- matrix(sample(rep(1:0, c(k, 2 * N - k))), 2)\n" +
-    "p <- wbar <- c()\n" +
-    "for (t in 0:" + E_G + ") {\n" +
-    "  fit  <- w[colSums(g) + 1]\n" +
-    "  p    <- c(p, mean(g)); wbar <- c(wbar, mean(fit))\n" +
-    "  p1 <- sample(N, N, TRUE, fit)\n" +
-    "  p2 <- ifelse(runif(N) < sf, p1, sample(N, N, TRUE, fit))\n" +
-    "  g  <- rbind(g[cbind(sample(2, N, TRUE), p1)], g[cbind(sample(2, N, TRUE), p2)])\n" +
-    "}\n" +
-    "par(mfrow = c(2, 1))\n" +
-    "plot(p, wbar, type = \"l\", xlim = c(0, 1), xlab = \"purple allele\", ylab = \"average fitness\")\n" +
-    "curve((1 - x)^2 * w[1] + 2 * x * (1 - x) * w[2] + x^2 * w[3] + F * x * (1 - x) * s * (1 - 2 * h), add = TRUE, lty = 2)\n" +
-    "plot(0:" + E_G + ", wbar, type = \"l\", xlab = \"generation\", ylab = \"average fitness\")\n";
-}
 function E_wire() {
-  const bind = (id, key, conv, ln) => document.getElementById(id).addEventListener("input", e => {
-    E[key] = conv(+e.target.value); E_syncOut(); highlightByDataLine("codeE", ln);
-    if (!E.running) { E.run = null; E.ghosts = []; E_paint(); if (E.game) E.game.repaint(); }
-    bump("E");
-  });
-  bind("E_n", "n", v => B_nAt(v), "n");
-  bind("E_F", "F", v => v, "F");
-  bind("E_p", "p0", v => v, "p");
-  bind("E_h", "h", v => Math.round(v * 10) / 10, "h");
-  bind("E_s", "s", v => Math.round(v * 100) / 100, "s");
+  document.getElementById("E_n").addEventListener("input", e => { E.n = E_nAt(+e.target.value); E_syncOut(); highlightByDataLine("codeE", "n"); if (!E.running) { E.run = null; E_paint(); } bump("E"); });
+  document.getElementById("E_d").addEventListener("input", e => { E.d = Math.round(+e.target.value * 100) / 100; E_syncOut(); highlightByDataLine("codeE", "d"); if (!E.running) { E.run = null; E_paint(); } bump("E"); });
   document.getElementById("E_run").addEventListener("click", E_go);
   document.getElementById("E_practice").addEventListener("change", E_syncGo);
   document.getElementById("E_dl").addEventListener("click", () => downloadText("lesson12_stageE.R", E_RCODE()));
   E.game = mountRounds("E", {
     deal: i => E_ROUNDS[i % E_ROUNDS.length],
-    rows: r => [["purple at the start", f2(r.p0) + " (held)"]]
-                .concat(r.hold && r.hold.s != null ? [["s", f2(r.hold.s) + " (held)"]] : [])
-                .concat(r.hold && r.hold.F != null ? [["inbreeding F", f2(r.hold.F) + " (held)"]] : []),
-    picture: E_drawTarget, pictureH: 120, go: "E_run", practising: () => E_practising(),
-    prompt: r => r ? r.say : "",
-    onDeal: () => { E.run = null; E.ghosts = []; E_syncSliders(); E_paint(); }
+    rows: r => [[r.hold.d != null ? "how deep the valley is" : "individuals", r.hold.d != null ? f2(r.hold.d) + " (held)" : r.hold.N + " (held)"]],
+    picture: E_drawTarget, pictureH: 80, go: "E_run", practising: () => E_practising(),
+    prompt: () => "Get this share of the populations onto the high peak.",
+    onDeal: () => { E.run = null; E_syncSliders(); E_paint(); }
   });
   E_syncSliders();
   E_syncGo();
@@ -2538,7 +2898,7 @@ document.addEventListener("score:bypass", () => {
   }
   for (const X of [A, B, C, D, E]) if (X.game) X.game.show();
   A_syncGo(); B_syncGo(); C_syncGo(); D_syncGo(); E_syncGo();
-  A_syncSliders(); E_syncSliders();
+  A_syncSliders(); C_syncSliders();
 });
 
 A_wire(); A_paint();
@@ -2547,11 +2907,12 @@ C_wire(); C_paint();
 D_wire(); D_paint();
 E_wire(); E_paint();
 
-/* version 7, 2026-09-27: new A (the meadow) and E (mean fitness); the old
-   mutation-selection D cut; B-D are the old A-C. Codes from 6 do not decode. */
+/* version 8, 2026-09-28: new C (new mutations and what stays); old C and D
+   are D and E; the average-fitness E cut; A's visits at a fixed rate. Codes
+   from 7 do not decode. */
 Score.init({
   moduleId: "lesson12",
-  version: 7,
+  version: 8,
   scaffold: 5,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

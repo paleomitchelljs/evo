@@ -2,12 +2,13 @@
 /*
  * check_lesson12_numbers.js -- the bar checks for app/lessons/lesson12.html.
  *
- * Lesson 12 is a draft (2026-09-24, restructured 2026-09-27): Stage A (a
- * meadow where a gene and its visitors make h and s), Stage B (one locus,
- * five rounds, one per kind of dominance), Stage C (four alleles racing),
- * Stage D (a valley that only small populations cross) and Stage E (the
- * population's mean fitness). None of its bars can be seen by opening the
- * page:
+ * Lesson 12 is a draft (2026-09-24, restructured 2026-09-27 and 2026-09-28):
+ * Stage A (a meadow where a gene and its visitors make h and s), Stage B
+ * (one locus, five rounds, one per kind of dominance, with Price's
+ * covariance on the bars), Stage C (new harmful mutations: which ones stay,
+ * the covariance, an inbreeding test), Stage D (four alleles racing) and
+ * Stage E (a valley that only small populations cross). None of its bars
+ * can be seen by opening the page:
  *
  *   1. the simulator is the model the bars describe (one generation's change
  *      against the recursion, re-derived here), and F is held where set;
@@ -38,17 +39,25 @@ const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
 check("page loaded", !!(A && A.game && B && B.game && C && C.game && D && D.game && E && E.game && typeof Score !== "undefined"), "Stages A-E and Score are defined");
+{
+  /* A and C open on free play: no target dealt, every control free, until
+     the student asks. Then Start the targets deals the first. */
+  const before = [A, C].map(X => X.game.free() && X.game.current() == null);
+  for (const K of ["A", "C"]) document.getElementById(K + "_tnext").click();
+  const after = [A, C].map(X => !X.game.free() && X.game.current() != null);
+  check("A and C open on free play, then deal on Start", before.every(Boolean) && after.every(Boolean),
+        "free at load: A " + before[0] + ", C " + before[1] + "; a target after Start: A " + after[0] + ", C " + after[1]);
+}
 check("slots declared match slots written", Object.keys(BIT).length === 5, Object.keys(BIT).length + " named bits, scaffold is 5");
 
 /* ---- A. the meadow -------------------------------------------------------
    Written here from the setup's sentences, not read off the page: a visitor
    takes a flower fully at or past its edge, a share rising over 0.2 before
-   it, and a tenth of a share for any other colour; each visit picks a
-   flower in proportion; a visit is a seed. */
+   it, and a tenth of a full rate for any other colour; each visitor calls on
+   a flower it takes fully 8 times a season; a visit is a seed. */
 const lkH = (r, t) => 0.1 + 0.9 * Math.min(1, Math.max(0, (r - t + 0.2) / 0.2));
 const lkB = (r, t) => 0.1 + 0.9 * Math.min(1, Math.max(0, (t - r + 0.2) / 0.2));
-const aWant = (d, nH, tH, nB, tB) => { const R = [0, d, 1], sH = R.reduce((x, r) => x + lkH(r, tH), 0), sB = R.reduce((x, r) => x + lkB(r, tB), 0);
-  return R.map(r => 300 * (nH * lkH(r, tH) / sH + nB * lkB(r, tB) / sB) / 12); };
+const aWant = (d, nH, tH, nB, tB) => [0, d, 1].map(r => 8 * (nH * lkH(r, tH) + nB * lkB(r, tB)));
 const aHS = w => ({ s: w[2] / w[0] - 1, h: (w[1] - w[0]) / (w[2] - w[0]) });
 {
   const rep = []; let fails = 0;
@@ -59,13 +68,25 @@ const aHS = w => ({ s: w[2] / w[0] - 1, h: (w[1] - w[0]) / (w[2] - w[0]) });
     got.forEach((m, g) => { if (Math.abs(m - want[g]) > 3 * se[g] + 0.05 || Math.abs(page[g] - want[g]) > 1e-9) fails++; });
     rep.push(st.join("/") + ": " + got.map(x => x.toFixed(1)).join(" ") + " vs " + want.map(x => x.toFixed(1)).join(" "));
   }
-  check("A a season's seeds are the visit shares", fails === 0, "d/nH/tH/nB/tB, seeds per flower white pink red, 120 seasons vs written here: " + rep.join("  "));
+  check("A a season's seeds are the visit rates", fails === 0, "d/nH/tH/nB/tB, seeds per flower white pink red, 120 seasons vs written here: " + rep.join("  "));
+}
+{
+  /* the 2026-09-28 fix: a flower's seeds depend on its colour and the
+     visitors only, so moving pink leaves red and white where they were, and
+     s is the visitors' alone */
+  let worst = 0; const rep = [];
+  for (const e of [[8, 0.3, 2, 0.3], [7, 0.7, 3, 0.3], [6, 0.8, 3, 0.3], [8, 0.9, 0, 0.3]]) {
+    const ss = [0, 0.3, 0.5, 0.8, 1].map(d => { const w = A_expect(d, ...e).w; return [w[0], w[2], aHS(w).s]; });
+    for (const q of ss) worst = Math.max(worst, Math.abs(q[0] - ss[0][0]), Math.abs(q[1] - ss[0][1]), Math.abs(q[2] - ss[0][2]));
+    rep.push(e.join("/") + ": s " + ss[0][2].toFixed(2));
+  }
+  check("A moving pink moves neither red nor white", worst < 1e-12, "largest change in white's or red's seeds, or s, as pink goes 0 to 1: " + worst.toExponential(1) + "  (" + rep.join("  ") + ")");
 }
 const hitA = (r, st, reps, seed) => { let k = 0;
   for (let q = 0; q < reps; q++) if (A_judge(r, A_season(...st, mulberry32(seed + q * 7919)).w)) k++; return k / reps; };
 const withHold = (r, d, nH, tH, nB, tB) => r.hold.d != null ? [r.hold.d, nH, tH, nB, tB] : [d, r.hold.env.nH, r.hold.env.tH, r.hold.env.nB, r.hold.env.tB];
 {
-  const aim = { asred: [0.5, 8, 0.3, 2, 0.3], best: [0.5, 7, 0.3, 3, 0.7], worst: [0.5, 7, 0.7, 3, 0.3], aswhite: [0.2, 0, 0, 0, 0], asred2: [0.9, 0, 0, 0, 0] };
+  const aim = { asred: [0.5, 8, 0.3, 2, 0.3], best: [0.5, 7, 0.3, 3, 0.7], worst: [0.5, 7, 0.7, 3, 0.3], halfway: [0.8, 0, 0, 0, 0], mostly: [0.35, 0, 0, 0, 0] };
   const own = A_ROUNDS.map((r, i) => { const st = withHold(r, ...aim[r.key]); return { k: r.key, st, v: hitA(r, st, 40, 21000 + i * 97) }; });
   check("A every round is hit at a setting built for it", own.every(q => q.v >= 0.8),
         own.map(q => q.k + " @" + q.st.join("/") + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (40 seasons)");
@@ -75,26 +96,34 @@ const withHold = (r, d, nH, tH, nB, tB) => r.hold.d != null ? [r.hold.d, nH, tH,
 }
 {
   /* the point of the stage: h moves with the visitors when the gene is
-     held, and with the gene when the visitors are held */
+     held, and with the gene when the visitors are held; and in the gene
+     rounds, pink halfway in colour is not halfway in seeds */
   const byEnv = [[8, 0.3, 2, 0.3], [7, 0.3, 3, 0.7], [7, 0.7, 3, 0.3]].map(e => aHS(aWant(0.5, ...e)).h);
-  const e = A_ENV, byGene = [0.2, 0.55, 0.9].map(d => aHS(aWant(d, e.nH, e.tH, e.nB, e.tB)).h);
+  const e = A_ENV, byGene = [0.5, 0.8, 1].map(d => aHS(aWant(d, e.nH, e.tH, e.nB, e.tB)).h);
+  const e2 = A_ENV2, at35 = aHS(aWant(0.35, e2.nH, e2.tH, e2.nB, e2.tB)).h;
   const spread = a => Math.max(...a) - Math.min(...a);
-  check("A h moves with the visitors, and with the gene", spread(byEnv) >= 2 && spread(byGene) >= 1.2,
-        "pink 0.5, three sets of visitors: h " + byEnv.map(f2).join(", ") + "; the held visitors, pink 0.2 / 0.55 / 0.9: h " + byGene.map(f2).join(", "));
+  check("A h moves with the visitors, and with the gene", spread(byEnv) >= 2 && spread(byGene) >= 0.9 && Math.abs(byGene[0]) < 1e-9 && Math.abs(byGene[1] - 0.5) < 1e-9,
+        "pink 0.5, three sets of visitors: h " + byEnv.map(f2).join(", ") + "; the halfway round's visitors, pink 0.5 / 0.8 / 1: h " + byGene.map(f2).join(", ") +
+        "; the three-quarter round's, pink 0.35: h " + f2(at35));
 }
 {
   /* one setting across the five, on the arithmetic: every d, every count,
-     edges in tenths; the greediest then played for real */
-  let most = 0, at = null, n = 0;
+     edges in tenths; the greediest then played for real. And how often a
+     setting drawn at random clears each round. */
+  let most = 0, at = null, n = 0; const cnt = A_ROUNDS.map(() => 0);
   for (let d = 0; d <= 1.0001; d += 0.05) for (let nH = 0; nH <= 10; nH++) for (let nB = 0; nB <= 10; nB++)
     for (let tH = 0; tH <= 1.0001; tH += 0.1) for (let tB = 0; tB <= 1.0001; tB += 0.1) {
       n++;
-      const c = A_ROUNDS.filter(r => A_judge(r, A_expect(...withHold(r, d, nH, tH, nB, tB)).w)).length;
+      const hits = A_ROUNDS.map(r => A_judge(r, A_expect(...withHold(r, d, nH, tH, nB, tB)).w));
+      hits.forEach((h, k) => { if (h) cnt[k]++; });
+      const c = hits.filter(Boolean).length;
       if (c > most) { most = c; at = [+d.toFixed(2), nH, +tH.toFixed(1), nB, +tB.toFixed(1)]; }
     }
   const real = A_ROUNDS.filter((r, i) => hitA(r, withHold(r, ...at), 10, 23000 + i * 97) >= 0.5).length;
-  check("A no one setting clears three rounds", most <= 2 && real <= 2,
-        n + " settings on the arithmetic: the greediest (" + at.join("/") + ") clears " + most + "; played for real, " + real);
+  const share = cnt.map(c => c / n);
+  check("A no one setting clears three rounds, and a random one rarely any", most <= 2 && real <= 2 && share.every(v => v <= 0.12),
+        n + " settings on the arithmetic: the greediest (" + at.join("/") + ") clears " + most + "; played for real, " + real +
+        "; a random setting clears " + A_ROUNDS.map((r, k) => r.key + " " + (100 * share[k]).toFixed(1) + "%").join(", "));
 }
 {
   /* the bars' readout is the season's own arithmetic */
@@ -228,14 +257,165 @@ const R = {}; for (const r of B_ROUNDS) R[r.key] = r;
   check("B the printed fitnesses are 1, 1 + hs, 1 + s", ok, rep.join("  "));
 }
 
-/* ---- C. four alleles race ---------------------------------------------- */
+{
+  /* Price's covariance on B's bars: slope, covariance and the change it
+     predicts, recomputed here from the population's own copies */
+  const keep = { runs: B.runs, showTo: B.showTo, h: B.h, s: B.s };
+  B.h = 0; B.s = 0.2; B.runs = [B_run(400, 0.3, 0, 0.2, 0, mulberry32(31000), true, 40)]; B.showTo = 12; B_drawFit();
+  const pop = B.runs[0].snaps[12], w = [1, 1, 1.2]; let sx = 0, sw = 0, sxx = 0, sxw = 0;
+  for (let i = 0; i < 400; i++) { const x = pop[2 * i] + pop[2 * i + 1]; sx += x; sw += w[x]; sxx += x * x; sxw += x * w[x]; }
+  const xb = sx / 400, wb = sw / 400, cov = sxw / 400 - xb * wb, vx = sxx / 400 - xb * xb, dp = cov / wb / 2;
+  const t = document.getElementById("B_fitRead").textContent.replace(/\u2212/g, "-");
+  const mc = /= covariance\\s+(-?[0-9.]+)/.exec(t), mp = /purple should move\\s+([-+][0-9.]+)/.exec(t), msl = /slope\\s+(-?[0-9.]+)/.exec(t);
+  Object.assign(B, keep); B_syncSliders(); B_paint();
+  check("B the line's slope and covariance are the population's", !!(mc && mp && msl) && Math.abs(+mc[1] - cov) < 6e-5 && Math.abs(+mp[1] - dp) < 6e-5 && Math.abs(+msl[1] - cov / vx) < 6e-4,
+        "generation 12, recessive s 0.2: printed slope " + (msl ? msl[1] : "?") + ", covariance " + (mc ? mc[1] : "?") + ", purple should move " + (mp ? mp[1] : "?") +
+        "; from its copies " + (cov / vx).toFixed(3) + ", " + cov.toFixed(4) + ", " + dp.toFixed(4));
+}
+{
+  /* and it is the change: over 400 populations, purple's average one-
+     generation change against the average covariance / (2 w-bar) read off
+     each one's parents -- inbred or not, since Price's term does not care
+     how the parents pair */
+  const rep = []; let fails = 0;
+  for (const [p0, h, s, F] of [[0.1, 0, 0.3, 0], [0.1, 0, 0.3, 0.6], [0.5, 2, 0.2, 0], [0.3, 1, -0.2, 0.4]]) {
+    const act = [], pred = [];
+    for (let r = 0; r < 400; r++) { const R = B_run(400, p0, h, s, F, mulberry32(32000 + r * 7919), true, 1); act.push(R.P[1] - R.P[0]); pred.push(B_cov(R.snaps[0], h, s).dp); }
+    const d = act.map((v, k) => v - pred[k]), m = mn(d), se = sdv(d) / Math.sqrt(d.length);
+    rep.push("p " + p0 + " h " + h + " s " + s + " F " + F + ": moved " + mn(act).toFixed(4) + ", covariance said " + mn(pred).toFixed(4));
+    if (Math.abs(m) > 3 * se + 0.0005) fails++;
+  }
+  check("B the covariance is purple's expected change", fails === 0, rep.join("  "));
+}
+
+/* ---- C. new mutations: which ones stay ----------------------------------- */
+{
+  /* arrivals are the curves the controls set: h a bell curve cut to [-1, 2];
+     how harmful, a gamma with the set average and spread; s in [-1, 0) */
+  const rep = []; let ok = true;
+  for (const set of [{ hm: 0.5, hsd: 0.2, sm: 0.1, ssd: 0.05 }, { hm: 0.3, hsd: 0.1, sm: 0.3, ssd: 0.1 }, { hm: -0.4, hsd: 0.3, sm: 0.05, ssd: 0.05 }, { hm: 1.5, hsd: 0, sm: 0.2, ssd: 0 }]) {
+    const rng = mulberry32(40000), H = [], A2 = [];
+    for (let k = 0; k < 20000; k++) { const d = C_draw(set, rng); H.push(d.h); A2.push(-d.s); if (d.s > 0 || d.s < -1 || d.h < -1 || d.h > 2) ok = false; }
+    const [mh, sh, ma, sa] = [mn(H), sdv(H), mn(A2), sdv(A2)];
+    /* the bell curve cut to [-1, 2], its mean and spread by integration */
+    let eh = set.hm, esd = 0;
+    if (set.hsd > 0) { let z = 0, m1 = 0, m2 = 0; for (let k = 0; k <= 30000; k++) { const x = -1 + 3 * k / 30000, d = Math.exp(-0.5 * ((x - set.hm) / set.hsd) ** 2); z += d; m1 += d * x; m2 += d * x * x; }
+      eh = m1 / z; esd = Math.sqrt(m2 / z - eh * eh); }
+    if (Math.abs(mh - eh) > 0.01 || Math.abs(sh - esd) > 0.01 || Math.abs(ma - set.sm) > 0.01 * Math.max(1, set.sm * 10) || Math.abs(sa - set.ssd) > 0.01 * Math.max(1, set.ssd * 10)) ok = false;
+    rep.push("h " + set.hm + "±" + set.hsd + " (cut: " + eh.toFixed(3) + "±" + esd.toFixed(3) + ") s -" + set.sm + "±" + set.ssd + ": drawn " + mh.toFixed(3) + "±" + sh.toFixed(3) + ", -" + ma.toFixed(3) + "±" + sa.toFixed(3));
+  }
+  check("C new mutations come from the curves the controls set", ok, "20000 draws each: " + rep.join("  "));
+}
+{
+  /* fitness multiplies over loci, 1 + h s for one copy and 1 + s for two:
+     one individual built by hand */
+  const run = C_start(1, { hm: 0, hsd: 0, sm: 0.1, ssd: 0 }, mulberry32(1));
+  run.H = [0.5, 0, 2, -1]; run.S = [-0.2, -0.5, -0.1, -0.3];
+  const w = Math.exp(C_logw(run, Int32Array.from([0, 1, 3]), Int32Array.from([1, 2]))), want = 0.9 * 0.5 * 0.8 * 1.3;
+  check("C fitness is 1 + h s for one copy, 1 + s for two, multiplied", Math.abs(w - want) < 1e-12,
+        "one copy each of h 0.5 / 2 / -1 (s -0.2 / -0.1 / -0.3) and two of s -0.5: " + w.toFixed(6) + " vs 0.9 × 0.5 × 0.8 × 1.3 = " + want.toFixed(6));
+}
+/* fitness and copies written here from the setup's sentences */
+const cFit = (run, a, b) => { const c = new Map(); for (const m of a) c.set(m, (c.get(m) || 0) + 1); for (const m of b) c.set(m, (c.get(m) || 0) + 1);
+  let f = 1; for (const [m, k] of c) f *= k === 2 ? 1 + run.S[m] : 1 + run.H[m] * run.S[m]; return Math.max(0, f); };
+const RC = C_runAll(300, { hm: 0.2, hsd: 0.15, sm: 0.15, ssd: 0.05 }, mulberry32(41000), mulberry32(41001));
+{
+  /* the covariance on screen is the individuals': the last generation's
+     copies and fitnesses recomputed here, then read off the dots' readout */
+  const n = RC.n, w = [], z = [];
+  for (const [a, b] of RC.pop) { w.push(cFit(RC, a, b)); z.push(a.length + b.length + 2 * RC.fixed.length); }
+  const wb = mn(w), zb = mn(z); let c = 0; for (let i = 0; i < n; i++) c += (w[i] / wb - 1) * (z[i] - zb); c /= n;
+  const keep = C.run; C.run = RC; C_drawCov();
+  const t = document.getElementById("C_covRead").textContent.replace(/\u2212/g, "-"), m = /takes out\\s+(-?[0-9.]+)/.exec(t);
+  C.run = keep; C_paint();
+  check("C what selection takes out is -cov(w, copies) / w-bar, off the individuals", Math.abs(RC.X[RC.X.length - 1] + c) < 1e-9 && !!m && m[1] === f3(-c),
+        "300 individuals, generation 400: recomputed " + (-c).toFixed(4) + ", the page's " + RC.X[RC.X.length - 1].toFixed(4) + ", printed " + (m ? m[1] : "?"));
+}
+{
+  /* and it is Price's covariance term: the copies line's average change
+     over generations 200-399 is what mutation adds (C_U, off screen) less
+     what selection takes out */
+  const d = [], p = [];
+  for (let r = 0; r < 4; r++) { const R = C_runAll(500, { hm: 0.3, hsd: 0.1, sm: 0.15, ssd: 0.05 }, mulberry32(42000 + r * 7919));
+    for (let t = 200; t < 400; t++) { d.push(R.Z[t + 1] - R.Z[t]); p.push(C_U - R.X[t]); } }
+  const diff = d.map((v, k) => v - p[k]), se = sdv(diff) / Math.sqrt(diff.length);
+  check("C copies change by what mutation adds less what selection takes out", Math.abs(mn(diff)) < 3 * se + 0.005,
+        "500 individuals, h 0.3, s -0.15, generations 200-399 of 4 runs: moved " + mn(d).toFixed(4) + " a generation, " + C_U + " - taken out " + (C_U - mn(p)).toFixed(4) + " = " + mn(p).toFixed(4));
+}
+{
+  /* average fitness is against an individual carrying none, the fixed
+     load in: recomputed from a small population that drift has fixed alleles in */
+  const R = C_runAll(20, { hm: 0.5, hsd: 0.25, sm: 0.05, ssd: 0.03 }, mulberry32(43000), mulberry32(43001));
+  let fl = 1; for (const a of R.fixed) fl *= 1 + a.s;
+  const w = mn(R.pop.map(([a, b]) => cFit(R, a, b))) * fl, page = R.Wbar[R.Wbar.length - 1];
+  check("C average fitness is against an individual carrying none, fixed ones in", R.fixed.length > 0 && Math.abs(w / page - 1) < 1e-9,
+        "20 individuals, " + R.fixed.length + " fixed: recomputed " + w.toFixed(4) + ", the page's " + page.toFixed(4));
+}
+{
+  /* the inbreeding test by hand: 4000 selfed and 4000 outcrossed offspring
+     with their own dice, against the page's ratio */
+  const rng = mulberry32(44000), n = RC.n;
+  const gam = ([a, b]) => { const c = new Map(); for (const m of a) c.set(m, (c.get(m) || 0) + 1); for (const m of b) c.set(m, (c.get(m) || 0) + 1);
+    const g = []; for (const [m, k] of c) if (k === 2 || rng() < 0.5) g.push(m); return g; };
+  let out = 0, self = 0;
+  for (let q = 0; q < 4000; q++) { const p = RC.pop[(rng() * n) | 0], o = RC.pop[(rng() * n) | 0]; out += cFit(RC, gam(p), gam(o)); self += cFit(RC, gam(p), gam(p)); }
+  const hand = self / out;
+  check("C the inbreeding test is selfed against outcrossed offspring", Math.abs(hand - RC.inb.ratio) < 0.04,
+        "300 individuals, h 0.2: by hand " + hand.toFixed(3) + ", the page's " + RC.inb.ratio.toFixed(3));
+}
+{
+  /* 202_lec14_01's magic trick, measured: average fitness at the end barely
+     moves with h (0.2 and up) or s; heterozygote advantage lifts it past 1 */
+  const v = [[0.3, 0.1], [0.3, 0.3], [1, 0.15], [2, 0.15]].map(([hm, sm], k) => ({ hm, sm,
+    w: C_measure(C_runAll(500, { hm, hsd: 0.1, sm, ssd: sm / 3 }, mulberry32(45000 + k * 97))).wbar }));
+  const od = C_measure(C_runAll(500, { hm: -0.3, hsd: 0.1, sm: 0.15, ssd: 0.05 }, mulberry32(45900))).wbar;
+  const ws = v.map(q => q.w);
+  check("C average fitness hardly moves with h or s, until the heterozygote wins", Math.max(...ws) - Math.min(...ws) <= 0.08 && ws.every(x => x > 0.66 && x < 0.84) && od > 1,
+        "500 individuals: " + v.map(q => "h " + q.hm + " s -" + q.sm + " → " + q.w.toFixed(3)).join(", ") + "; h -0.3 → " + od.toFixed(1));
+}
+const cSet = (r, lev) => ({ n: r.hold.n != null ? r.hold.n : lev.n, hm: r.hold.hm != null ? r.hold.hm : lev.hm, hsd: r.hold.hsd, sm: r.hold.sm, ssd: r.hold.ssd });
+const hitCr = (r, lev, reps, seed) => { let k = 0; const st = cSet(r, lev);
+  for (let q = 0; q < reps; q++) if (C_judge(r, C_measure(C_runAll(st.n, st, mulberry32(seed + q * 7919), mulberry32(seed + q * 7919 + 1))))) k++; return k / reps; };
+{
+  const aim = { inbred: { hm: 0.2 }, kept: { hm: -0.2 }, cleared: { hm: 2 }, hidden: { n: 1000 }, fixed: { n: 20 } };
+  const own = C_ROUNDS.map((r, i) => ({ k: r.key, a: aim[r.key], v: hitCr(r, aim[r.key], 4, 46000 + i * 97) }));
+  check("C every round is hit at a setting built for it", own.every(q => q.v >= 0.75),
+        own.map(q => q.k + " @" + JSON.stringify(q.a).replace(/[{}"]/g, "") + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (4 runs)");
+  const open = C_ROUNDS.map((r, i) => ({ k: r.key, v: hitCr(r, { n: 100, hm: 0.5 }, 3, 47000 + i * 97) }));
+  check("C the opening setting is not an answer", open.every(q => q.v === 0),
+        "100 individuals, h 0.5 (what a round holds, held): " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
+  const R = {}; for (const r of C_ROUNDS) R[r.key] = r;
+  const need = [
+    ["kept with a recessive (h 0), no heterozygote advantage", hitCr(R.kept, { hm: 0 }, 3, 48000)],
+    ["cleared with a dominant (h 1), heterozygote not below both", hitCr(R.cleared, { hm: 1 }, 3, 48100)],
+    ["inbred with h 0.5", hitCr(R.inbred, { hm: 0.5 }, 3, 48200)],
+    ["inbred with h 0.1", hitCr(R.inbred, { hm: 0.1 }, 3, 48300)],
+    ["hidden at 100 individuals", hitCr(R.hidden, { n: 100 }, 3, 48400)],
+    ["fixed at 100 individuals", hitCr(R.fixed, { n: 100 }, 3, 48500)]];
+  check("C each round needs what it is about (kept: h below 0; cleared: h above 1)", need.every(q => q[1] === 0), need.map(q => q[0] + " " + Math.round(100 * q[1]) + "%").join("  "));
+}
+{
+  /* no one setting clears three. A round holds all but one lever, so a
+     setting's h rounds depend on its h alone and its size rounds on its size
+     alone: the most any one setting clears is the best h plus the best size. */
+  const hR = C_ROUNDS.filter(r => r.hold.n != null), nR = C_ROUNDS.filter(r => r.hold.hm != null);
+  let bh = 0, bhAt = null, bn = 0, bnAt = null;
+  [-1, -0.5, -0.2, 0, 0.1, 0.15, 0.2, 0.25, 0.3, 0.5, 1, 1.5, 2].forEach((hm, i) => {
+    const c = hR.filter((r, j) => hitCr(r, { hm }, 1, 49000 + i * 13 + j) > 0).length; if (c > bh) { bh = c; bhAt = hm; } });
+  [20, 40, 100, 300, 700, 1000].forEach((n, i) => {
+    const c = nR.filter((r, j) => hitCr(r, { n }, 1, 49500 + i * 13 + j) > 0).length; if (c > bn) { bn = c; bnAt = n; } });
+  check("C no one setting clears three rounds", bh + bn <= 2,
+        "the greediest h (" + bhAt + ") clears " + bh + " of the h rounds, the greediest size (" + bnAt + ") " + bn + " of the size rounds");
+}
+
+/* ---- D. four alleles race ---------------------------------------------- */
 {
   /* the grid is the rule JM agreed: 1 + s_i on the diagonal, 1 + h_i s_i + h_j s_j off it */
-  const h = [1, 0, 2, -1], sv = [0.1, 0.2, -0.1, 0.05], Wm = C_W(h, sv); let ok = true;
+  const h = [1, 0, 2, -1], sv = [0.1, 0.2, -0.1, 0.05], Wm = D_W(h, sv); let ok = true;
   for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) {
     const want = i === j ? 1 + sv[i] : 1 + h[i] * sv[i] + h[j] * sv[j];
     if (Math.abs(Wm[i][j] - Math.max(0.05, want)) > 1e-12) ok = false; }
-  check("C the fitness grid is 1 + s on the diagonal, 1 + h s + h s off it", ok,
+  check("D the fitness grid is 1 + s on the diagonal, 1 + h s + h s off it", ok,
         "blue/orange " + Wm[0][1].toFixed(3) + " (1 + 1·0.1 + 0·0.2), green/yellow " + Wm[2][3].toFixed(3) + " (1 + 2·(-0.1) + (-1)·0.05)");
 }
 {
@@ -243,134 +423,80 @@ const R = {}; for (const r of B_ROUNDS) R[r.key] = r;
      quarter each: p_i' = p_i Σ_j p_j w_ij / w̄. 300 runs, 3 SE */
   const rep = []; let fails = 0;
   for (const [h, sv] of [[[1, 0, 0.5, 0.5], [0.2, 0.2, 0, 0]], [[2, 2, 2, 2], [0.1, 0.1, 0.1, 0.1]], [[0.5, 0, 1, 0.5], [0.3, -0.2, 0.1, 0]]]) {
-    const Wm = C_W(h, sv), p = [0.25, 0.25, 0.25, 0.25];
+    const Wm = D_W(h, sv), p = [0.25, 0.25, 0.25, 0.25];
     const wi = p.map((_, i) => p.reduce((t, pj, j) => t + pj * Wm[i][j], 0)), wbar = p.reduce((t, pi, i) => t + pi * wi[i], 0);
     const want = p.map((pi, i) => pi * wi[i] / wbar);
-    const res = C_race(200, h, sv, 0, 300, mulberry32(7100), 0, 1);
+    const res = D_race(200, h, sv, 0, 300, mulberry32(7100), 0, 1);
     const got = [0, 1, 2, 3].map(k => { const v = []; for (let r = 0; r < 300; r++) v.push(res.ends[4 * r + k]); return [mn(v), sdv(v) / Math.sqrt(300)]; });
     got.forEach(([m, se], k) => { if (Math.abs(m - want[k]) > 3 * se + 0.002) fails++; });
     rep.push(got.map(g => g[0].toFixed(3)).join("/") + " vs " + want.map(v => v.toFixed(3)).join("/"));
   }
-  check("C one generation of the race is the four-allele model's", fails === 0, rep.join("  "));
+  check("D one generation of the race is the four-allele model's", fails === 0, rep.join("  "));
 }
 {
   const pc = sh => sh.map(v => Math.round(100 * v)).join("/");
   const hitB = (r, n, h, sv, F, reps, seed) => { let k = 0;
-    for (let q = 0; q < reps; q++) if (C_hits(C_race(n, h, sv, F, C_R, mulberry32(seed + q * 7919), 0).share, r)) k++; return k / reps; };
-  const own = C_ROUNDS.map((r, i) => { C_target(r); return { k: r.key, t: pc(r.tg.share), v: hitB(r, r.N, r.h, r.s, r.F, 10, 8000 + i * 97) }; });
-  check("C every round is hit at its own setting", own.every(q => q.v >= 0.7),
-        own.map(q => q.k + " (" + q.t + ") " + Math.round(100 * q.v) + "%").join("  ") + "  (10 runs of " + C_R + ")");
-  const open = C_ROUNDS.map((r, i) => { const hd = r.hold || {};
+    for (let q = 0; q < reps; q++) if (D_hits(D_race(n, h, sv, F, D_R, mulberry32(seed + q * 7919), 0).share, r)) k++; return k / reps; };
+  const own = D_ROUNDS.map((r, i) => { D_target(r); return { k: r.key, t: pc(r.tg.share), v: hitB(r, r.N, r.h, r.s, r.F, 10, 8000 + i * 97) }; });
+  check("D every round is hit at its own setting", own.every(q => q.v >= 0.7),
+        own.map(q => q.k + " (" + q.t + ") " + Math.round(100 * q.v) + "%").join("  ") + "  (10 runs of " + D_R + ")");
+  const open = D_ROUNDS.map((r, i) => { const hd = r.hold || {};
     return { k: r.key, v: hitB(r, hd.N ? r.N : 100, hd.hs ? r.h : [0.5, 0.5, 0.5, 0.5], (hd.hs || hd.s) ? r.s : [0, 0, 0, 0], 0, 20, 8500 + i * 97) }; });
   /* 20 runs, at most 10%: the recessive round's opening sits ~2% (measured over
      six targets); a bar of 0 in 5 would fail on sampling one load in ten */
-  check("C the opening setting is not an answer", open.every(q => q.v <= 0.1),
+  check("D the opening setting is not an answer", open.every(q => q.v <= 0.1),
         "every s 0 (what a round holds, held), 100 individuals: " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
-  const R = {}; for (const r of C_ROUNDS) R[r.key] = r;
+  const R = {}; for (const r of D_ROUNDS) R[r.key] = r;
   const noDom = [
     ["recessive, blue without dominance", hitB(R.recessive, 40, [0.5, 0.5, 0.5, 0.5], R.recessive.s, 0, 10, 9000)],
     ["dominance, both without dominance", hitB(R.dominance, 60, [0.5, 0.5, 0.5, 0.5], R.dominance.s, 0, 10, 9100)],
     ["balance, same s without dominance", hitB(R.balance, 30, [0.5, 0.5, 0.5, 0.5], R.balance.s, 0, 10, 9200)]];
-  check("C dominance is what the dominance rounds are about", noDom.every(q => q[1] <= 0.2),
+  check("D dominance is what the dominance rounds are about", noDom.every(q => q[1] <= 0.2),
         noDom.map(q => q[0] + " " + Math.round(100 * q[1]) + "%").join("  "));
   const big = hitB(R.drift, 100, R.drift.h, R.drift.s, 0, 5, 9300), small = hitB(R.drift, 10, R.drift.h, R.drift.s, 0, 10, 9400);
   const inbred = hitB(R.drift, 20, R.drift.h, R.drift.s, 0.9, 10, 9500);
-  check("C an advantageous allele lost to drift: small populations do it", big === 0 && small >= 0.7,
+  check("D an advantageous allele lost to drift: small populations do it", big === 0 && small >= 0.7,
         "blue s 0.1 held: 100 individuals " + Math.round(100 * big) + "%, 10 individuals " + Math.round(100 * small) +
         "% (blue wins " + Math.round(100 * R.drift.tg.share[0]) + "% of the target's populations); 20 individuals at F 0.9 " + Math.round(100 * inbred) + "%");
   /* no one setting clears three: every round's own setting, carried to all five */
   let most = 0, mostAt = "";
-  C_ROUNDS.forEach((src, i) => {
-    const c = C_ROUNDS.filter((r, j) => { const hd = r.hold || {};
+  D_ROUNDS.forEach((src, i) => {
+    const c = D_ROUNDS.filter((r, j) => { const hd = r.hold || {};
       return hitB(r, hd.N ? r.N : src.N, hd.hs ? r.h : src.h, (hd.hs || hd.s) ? r.s : src.s, src.F, 3, 9600 + i * 13 + j) >= 0.5; }).length;
     if (c > most) { most = c; mostAt = src.key; } });
-  check("C no round's setting clears three rounds", most <= 2, "the greediest, " + mostAt + "'s setting, clears " + most + " of 5");
+  check("D no round's setting clears three rounds", most <= 2, "the greediest, " + mostAt + "'s setting, clears " + most + " of 5");
 }
 
-/* ---- D. the valley ------------------------------------------------------ */
+/* ---- E. the valley ------------------------------------------------------ */
 {
-  const w = D_W(0.07);
-  check("D the landscape is 1, three valley steps at 1 - depth, 1.2", w.join() === [1, 0.93, 0.93, 0.93, 1.2].map(v => +v.toFixed(2)).join() || w.map(v => v.toFixed(2)).join() === "1.00,0.93,0.93,0.93,1.20",
+  const w = E_W(0.07);
+  check("E the landscape is 1, three valley steps at 1 - depth, 1.2", w.join() === [1, 0.93, 0.93, 0.93, 1.2].map(v => +v.toFixed(2)).join() || w.map(v => v.toFixed(2)).join() === "1.00,0.93,0.93,0.93,1.20",
         "at depth 0.07: " + w.map(v => v.toFixed(2)).join(", "));
-  const shareAt = (n, d, reps, seed) => { const v = []; for (let q = 0; q < reps; q++) v.push(D_share(D_runAll(n, d, mulberry32(seed + q * 7919)))); return mn(v); };
+  const shareAt = (n, d, reps, seed) => { const v = []; for (let q = 0; q < reps; q++) v.push(E_share(E_runAll(n, d, mulberry32(seed + q * 7919)))); return mn(v); };
   /* Wright's point, measured here: at one depth, small populations cross
      and big ones stay on the low peak */
   const byN = [10, 20, 40, 120].map((n, i) => shareAt(n, 0.05, 3, 11000 + i * 97));
-  check("D small populations cross the valley, big ones stay put", byN[0] > byN[2] + 0.2 && byN[3] <= 0.05,
+  check("E small populations cross the valley, big ones stay put", byN[0] > byN[2] + 0.2 && byN[3] <= 0.05,
         "depth 0.05, share of 50 on the high peak by generation 1500, averaged over 3 runs: 10 → " + byN.map(v => Math.round(100 * v) + "%").join(", 20 → ").replace(/, 20 → ([^,]+), 20 → ([^,]+), 20 → /, ", 20 → $1, 40 → $2, 120 → "));
   const byD = [0.02, 0.05, 0.10].map((d, i) => shareAt(20, d, 3, 11500 + i * 97));
-  check("D a deeper valley needs a smaller population", byD[0] > byD[1] + 0.1 && byD[1] > byD[2] + 0.1,
+  check("E a deeper valley needs a smaller population", byD[0] > byD[1] + 0.1 && byD[1] > byD[2] + 0.1,
         "20 individuals: depth 0.02 → " + Math.round(100 * byD[0]) + "%, 0.05 → " + Math.round(100 * byD[1]) + "%, 0.10 → " + Math.round(100 * byD[2]) + "%");
-  const hitC = (r, n, d, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (D_hits(D_share(D_runAll(n, d, mulberry32(seed + q * 7919))), r)) k++; return k / reps; };
+  const hitC = (r, n, d, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (E_hits(E_share(E_runAll(n, d, mulberry32(seed + q * 7919))), r)) k++; return k / reps; };
   const aim = { middling: [20, 0.05], stuck: [120, 0.05], deep: [10, 0.10], depth20: [20, 0.05], depth10: [10, 0.17] };
-  const own = D_ROUNDS.map((r, i) => { const [n, d] = aim[r.key]; return { k: r.key, n, d, v: hitC(r, n, d, 8, 12000 + i * 97) }; });
-  check("D every round is hit at a setting built for it", own.every(q => q.v >= 0.5),
+  const own = E_ROUNDS.map((r, i) => { const [n, d] = aim[r.key]; return { k: r.key, n, d, v: hitC(r, n, d, 8, 12000 + i * 97) }; });
+  check("E every round is hit at a setting built for it", own.every(q => q.v >= 0.5),
         own.map(q => q.k + " @N" + q.n + "/depth " + q.d + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (8 runs of 50)");
-  const open = D_ROUNDS.map((r, i) => ({ k: r.key, v: hitC(r, r.hold.N != null ? r.hold.N : 40, r.hold.d != null ? r.hold.d : 0.10, 8, 12500 + i * 97) }));
-  check("D the opening setting is not an answer", open.every(q => q.v <= 0.125),
+  const open = E_ROUNDS.map((r, i) => ({ k: r.key, v: hitC(r, r.hold.N != null ? r.hold.N : 40, r.hold.d != null ? r.hold.d : 0.10, 8, 12500 + i * 97) }));
+  check("E the opening setting is not an answer", open.every(q => q.v <= 0.125),
         "40 individuals, depth 0.10 (what a round holds, held): " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
   /* no one setting clears three: each round's answer carried to all five */
   let most = 0, mostAt = "";
-  D_ROUNDS.forEach((src, i) => { const [n, d] = aim[src.key];
-    const c = D_ROUNDS.filter((r, j) => hitC(r, r.hold.N != null ? r.hold.N : n, r.hold.d != null ? r.hold.d : d, 3, 13000 + i * 13 + j) >= 0.5).length;
-    if (c > most) { most = c; mostAt = src.key; } });
-  check("D no round's answer clears three rounds", most <= 2, "the greediest, " + mostAt + "'s, clears " + most + " of 5");
-}
-
-
-/* ---- E. the population's mean fitness ------------------------------------ */
-{
-  /* mean fitness is the individuals' own average, recomputed from the copies */
-  let worst = 0;
-  for (const [h, s, F] of [[2, 0.2, 0], [0, -0.3, 0.8], [-1, 0.3, 0.3]]) {
-    const R = B_run(200, 0.4, h, s, F, mulberry32(25000), true, 40), w = [1, 1 + h * s, 1 + s];
-    R.snaps.forEach((a, t) => { let tot = 0; for (let i = 0; i < 200; i++) tot += w[a[2 * i] + a[2 * i + 1]];
-      worst = Math.max(worst, Math.abs(tot / 200 - R.W[t])); });
-  }
-  check("E mean fitness is the individuals' average", worst < 1e-12, "largest gap over 3 runs x 41 generations: " + worst.toExponential(1));
-}
-{
-  /* the arithmetic printed beside it, with F: generations 20-100 of big runs */
-  const rep = []; let ok = true;
-  for (const [h, s, F] of [[2, 0.15, 0], [2, 0.15, 0.6], [0, -0.3, 0.8], [0.5, 0.2, 0.5]]) {
-    const R = B_run(3000, 0.3, h, s, F, mulberry32(26000), false, 100); let m = 0;
-    for (let t = 20; t <= 100; t++) m = Math.max(m, Math.abs(R.W[t] - E_wbar(R.P[t], h, s, F)));
-    rep.push(h + "/" + s + "/F" + F + ": " + m.toFixed(4)); if (m > 0.012) ok = false;
-  }
-  check("E the printed arithmetic is the measured mean fitness", ok, "largest gap, generations 20-100, 3000 individuals: " + rep.join("  "));
-}
-const hitE = (r, n, h, s, F, reps, seed) => { let k = 0;
-  const ss = r.hold && r.hold.s != null ? r.hold.s : s, FF = r.hold && r.hold.F != null ? r.hold.F : F;
-  for (let q = 0; q < reps; q++) if (E_judge(r, B_run(n, r.p0, h, ss, FF, mulberry32(seed + q * 7919), false, E_G))) k++; return k / reps; };
-const RE = {}; for (const r of E_ROUNDS) RE[r.key] = r;
-const aimE = { climb: [400, 0.7, 0.2, 0], above: [400, 2, 0, 0], strand: [400, -1, 0, 0], drift: [40, 0.5, 0, 0.8], inbred: [400, 2, 0.3, 0] };
-{
-  const own = E_ROUNDS.map((r, i) => ({ k: r.key, a: aimE[r.key], v: hitE(r, ...aimE[r.key], 30, 27000 + i * 97) }));
-  check("E every round is hit at a setting built for it", own.every(q => q.v >= 0.75),
-        own.map(q => q.k + " @N" + q.a[0] + "/h" + q.a[1] + "/s" + q.a[2] + "/F" + q.a[3] + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (30 runs)");
-  const open = E_ROUNDS.map((r, i) => ({ k: r.key, v: hitE(r, 400, 0.5, 0, 0, 20, 28000 + i * 97) }));
-  check("E the opening setting is not an answer", open.every(q => q.v <= 0.05),
-        "400 individuals, h 0.5, s 0, F 0 (what a round holds, held): " + open.map(q => q.k + " " + Math.round(100 * q.v) + "%").join("  "));
-}
-{
-  /* each round needs the thing it is about */
-  const cases = [
-    ["climb, recessive (h 0, s 0.3)", hitE(RE.climb, 400, 0, 0.3, 0, 20, 29000)],
-    ["above, no heterozygote advantage (h 1)", hitE(RE.above, 400, 1, 0, 0, 20, 29100)],
-    ["strand, drift instead (h 0, 20 individuals)", hitE(RE.strand, 20, 0, 0, 0, 30, 29200)],
-    ["drift, selection clearing purple (s -0.3, 20)", hitE(RE.drift, 20, 0.5, -0.3, 0, 20, 29300)],
-    ["inbred, recessive bad (h 0, s -0.3)", hitE(RE.inbred, 400, 0, -0.3, 0, 20, 29400)],
-    ["inbred, no dominance (h 0.5, s 0.3)", hitE(RE.inbred, 400, 0.5, 0.3, 0, 20, 29500)]];
-  check("E each round needs what it is about", cases.every(q => q[1] <= 0.1), cases.map(q => q[0] + " " + Math.round(100 * q[1]) + "%").join("  "));
-}
-{
-  /* no one setting clears three: each round's answer carried to all five */
-  let most = 0, mostAt = "";
-  E_ROUNDS.forEach((src, i) => {
-    const c = E_ROUNDS.filter((r, j) => hitE(r, ...aimE[src.key], 6, 30000 + i * 13 + j) >= 0.5).length;
+  E_ROUNDS.forEach((src, i) => { const [n, d] = aim[src.key];
+    const c = E_ROUNDS.filter((r, j) => hitC(r, r.hold.N != null ? r.hold.N : n, r.hold.d != null ? r.hold.d : d, 3, 13000 + i * 13 + j) >= 0.5).length;
     if (c > most) { most = c; mostAt = src.key; } });
   check("E no round's answer clears three rounds", most <= 2, "the greediest, " + mostAt + "'s, clears " + most + " of 5");
 }
+
 
 /* ---- every plot inside its panel --------------------------------------- */
 {
@@ -408,7 +534,7 @@ const aimE = { climb: [400, 0.7, 0.2, 0], above: [400, 2, 0, 0], strand: [400, -
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
-      const n0 = g.st.hits.length;
+      const n0 = g.st.hits.length, sea0 = A.seasons.length;
       tick(true); btn.click();
       const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(document.getElementById(S + "_tflip").textContent);
       tick(false); btn.click();
@@ -416,9 +542,12 @@ const aimE = { climb: [400, 0.7, 0.2, 0], above: [400, 2, 0, 0], strand: [400, -
       tick(true); btn.click();
       const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
       tick(false);
-      out.push({ ok: pracOk && scored && blocked && stillPrac,
+      /* A keeps every season on its seasons plot; C finishes each run */
+      const extra = S === "A" ? A.seasons.length === sea0 + 3 : S === "C" ? !!(C.run && C.run.gen === 400 && C.run.inb && isFinite(C.run.inb.ratio)) : true;
+      out.push({ ok: pracOk && scored && blocked && stillPrac && extra,
                  t: S + ": practice " + (pracOk ? "unscored" : "SCORED") + ", ticked off " + (scored ? "scored" : "NOT scored") +
-                    ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
+                    ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") +
+                    (S === "A" ? (extra ? ", 3 seasons plotted" : ", SEASONS NOT PLOTTED") : S === "C" ? (extra ? ", runs to 400 with its test" : ", RUN UNFINISHED") : "") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
   check("every stage has a practice switch that does not score", out.length === 5 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));

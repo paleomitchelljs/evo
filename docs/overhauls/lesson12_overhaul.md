@@ -2,8 +2,63 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · restructured 2026-09-27: A-E built (`version: 7`, `scaffold: 5`, 38 bars pass); A and E prose spliced, not yet seen by JM; locked
-**Last touched** · 2026-09-27
+**Status** · 2026-09-28 revision built (`version: 8`, 47 bars pass); awaiting JM's live test; locked
+**Last touched** · 2026-09-28
+
+## 2026-09-28 revision (JM)
+
+- JM: new C = students set average and spread of **h and s of new mutations** (fixed rate, hidden), individuals the lever; show the h/s of what persists, arrivals in the first half against the second. Old C, D → D, E. Old E dropped.
+- JM: *"constraining new mutations to have negative fitness makes sense. I'd like the student sliders to allow h to explore under/over dominant scenarios--they're important!--and to keep at least one target that requires over/under dominance (h outside of 0-1)."*
+- JM: *"also put covariance in both B & C and include the C inbreeding round--don't show the mutation line yet."*
+- Approved list (chat, 2026-09-28): A visits at a fixed rate per flower taken; A free play before round 1, seasons that accumulate, rounds 4-5 retargeted at colour against fitness, "best" one-sided; A's white-to-red line on the bars; B's h bullet; covariance in B (line through the genotypes weighted by the population) and in C (selection's take-out = cov(w, copies)/w̄, dots of individuals); C inbreeding round.
+
+      A  meadow (visits fixed per flower; free play; seasons plot)
+      B  one locus + covariance line on the bars
+      C  NEW: new mutations' h and s; what stays; covariance; inbreeding test
+      D  four alleles (old C)
+      E  valley (old D)
+
+- Measured 2026-09-28 (node prototype, `C_` simulator as on the page; U 0.3 a generation, 400 generations, multiplicative, free recombination):
+  - Low h shows **by copies, not alleles**: harmful copies from h < 0.1 = 17% of arrivals, 36-52% standing; per distinct allele 18-31%.
+  - Run halves split works at 200-400 generations; at 1000 the old half is a few near-neutral alleles. First half empty at ≤ 50 individuals.
+  - **Any tail of h below 0 takes the old copies**: h 0.4 ± 0.15 (0.4% below 0) at 1000 individuals, old copies' average h ≈ −0.03. What stays is what does not hurt in one copy: recessive or heterozygote advantage.
+  - N 500, s 0.15 ± 0.05, h spread 0.1, by average h: selfed / outcrossed 0.01 (h 0), 0.29 (0.1), 0.70 (0.2), 0.88 (0.3), 0.99 (0.5), 1.08 (1), 1.1 (2); copies each carries 250-280 (h ≤ −0.2), 100 (0), 35 (0.1), 14 (0.2), 4.7 (0.5), 2.3 (1), 1.5 (1.5), 1.1 (2).
+  - Average fitness (against an individual carrying none) 0.72-0.77 for h 0.2-2 (202_lec14_01's "magic trick"); above 1 with heterozygote advantage; 0.33-0.51 at 20 individuals (drift fixes 3-6).
+  - Worst case (1000 individuals, every mutation h −1): 1.6 s a run in node.
+
+- As built 2026-09-28 (`version: 8`, `scaffold: 5`, 47 bars):
+
+      A  rounds (held; target; built-for; 40 seasons on the page)
+      asred    pink 0.5; h 0.85-1.15            8 H from 0.3, 2 B to 0.3      98%
+      best     pink 0.5; h at least 1.25        7 H from 0.3, 3 B to 0.7     100%
+      worst    pink 0.5; h at most -0.25        7 H from 0.7, 3 B to 0.3     100%
+      halfway  8 H from 0.9, no bees; h 0.35-0.65     pink 0.8              100%
+      mostly   8 H from 0.4, no bees; h 0.6-0.85      pink 0.35             100%   (top at 0.9 let pink 0.5, h 1.00 ± 0.06, through 1 season in 30)
+      random setting clears 12 / 6 / 4 / 5 / 5%; greediest of 307,461 clears 2
+
+      C  rounds (held; target; built-for; 4 runs)
+      inbred   500, h spread 0.1, s 0.15 ± 0.05; selfed ÷ outcrossed 0.55-0.8   h 0.2      100%
+      kept     same; harmful copies each ≥ 150 at 400                           h -0.2     100%
+      cleared  same; harmful copies each ≤ 1.6 at 400                           h 2        100%
+      hidden   h 0.05 ± 0.02, s 0.3 ± 0.1; selfed ÷ outcrossed ≤ 0.35           1000       100%
+      fixed    h 0.5 ± 0.25, s 0.05 ± 0.03; drift fixes ≥ 10                     20         100%
+      kept needs h < 0 (h 0: ~100 copies); cleared needs h > 1 (h 1: 2.0-2.5)
+
+- A free play first: `mountRounds({ freeFirst })`, no target until "Start the targets"; runs before it score as practice. Also on C.
+- A's s is still large (s 1.9 at 8 H / 2 B; 9 with no bees) against B's ±0.3. Left as is.
+- C, dropped: an "old copies" round with the size as lever. With any tail of h below 0 the old copies are heterozygote-advantage alleles at every size ≥ 100; tail-free (h 0.3 ± 0.1), old copies ≤ 5% and noisy. Old against new stays a picture (plane, edges, readout), not a target.
+- C, the covariance: dots (copies against offspring ÷ average), least-squares line, `slope × spread = covariance`; the take-out plot; checked against `C_U − taken out` = the copies line's change (Price, with the mutation term off screen).
+- B, the covariance: the line through every individual on the bars, counts under each; printed covariance ÷ w̄ ÷ 2 against purple's actual next change. Checked: over 400 populations the average change is the average covariance term, at F 0 and F 0.4-0.6.
+
+| # | What | Status |
+|---|------|--------|
+| S1 | cut E; letters C → D, D → E (ids, prefixes, seeds, BIT, checks); E's closing quote moved to the valley | done |
+| S2 | A: visits at a fixed rate per flower taken (s from visitors only) | done |
+| S3 | A: free play before round 1; seasons plot (colour against h); white-to-red line; rounds 4-5 retargeted; "best" one-sided | done |
+| S4 | B: h bullet; covariance line on the bars, printed beside purple's next change | done |
+| S5 | C: simulator, plane + edges, copies and take-out plot, individuals' dots, inbreeding bars; rounds; free play first | done |
+| S6 | checks for A, B, C; D and E renamed; `version` 8 | done |
+| S7 | JM live test | todo |
 
 ## 2026-09-27 restructure (JM)
 
