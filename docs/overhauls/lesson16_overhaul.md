@@ -35,7 +35,7 @@ After the selection lessons (12 genetics, 13 regression, 14 birth–death, 15 fr
 - A share dragged is a probability, so many populations and windows on hit rates (12 C's machinery).
 - Recombination needs a log scale or set steps: everything happens below 0.01 per gap (measured below).
 - A new single copy is lost to drift ~92-96% of the time at these settings. Either run enough populations that the survivors are the picture, or start it at a few copies on the one chromosome. **Unmeasured.**
-- Price and 13 D's language: at r 0 the bad allele's count *is* the good allele's count, so its covariance with fitness is positive whatever its own s. The good allele confounds it. 202_lec19_03: *"Selection on phenotype is blind to the linkage."*
+- Price and 13 E's language: at r 0 the bad allele's count *is* the good allele's count, so its covariance with fitness is positive whatever its own s. The good allele confounds it. 202_lec19_03: *"Selection on phenotype is blind to the linkage."*
 
 ### C — held back
 

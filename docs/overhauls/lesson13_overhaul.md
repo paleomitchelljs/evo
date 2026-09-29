@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A-E built (`version: 9`, `scaffold: 5`, 47 bars in `check_lesson13_numbers.js`); locked; prose to come from JM
-**Last touched** · 2026-09-24
+**Status** · replanned 2026-09-24 (the regression lesson of three); A-F built (`version: 10`, `scaffold: 6`, 58 bars; B-F were A-E on 2026-09-24, A added in front 2026-09-29); locked; prose to come from JM; A awaits JM's first look
+**Last touched** · 2026-09-29
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
 
@@ -11,19 +11,32 @@ Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), thi
 
 - JM, 2026-09-24: *"keeping two things: explicit exploration of covariance as a concept, to build in the Price equation and help students understand its terms for later, and the idea of a regression model based on a causal diagram (arrow = slope, residuals = the 'other' box in the DAG). I would also like to build up the ideas of mediators, confounders, and colliders."*
 - Supersedes the 2026-09-22 plan (one trait on a moving landscape). Its specialisation numbers are kept below, with the birth–death framework.
-- Additive genetic variation and the response to selection (B) added 2026-09-24.
+- Additive genetic variation and the response to selection (C) added 2026-09-24.
+- New opening stage A added 2026-09-29 (JM): lesson 12 A's meadow on a continuous colour, as the intuitive road into B's covariance picture. The old A-E are now B-F, code and checks renamed with them.
 
 ## Candidate stages (provisional)
 
 JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, and birth-death/DAGs). We'll add a frequency dependent one later, probably as 15."* So this lesson is the regression one; the birth–death framework and the two-trait stages are the third lesson's (below, until it has a slot).
 
-    A  covariance: who made more offspring, and did it track the trait
-    B  additive genetic variation: push harder, and what actually responds
-    C  the regression is the diagram: arrow = slope, "other" box = residual
-    D  mediator, confounder (built)
-    E  collider: selection makes a trade-off (built)
+    A  the meadow: visitors make a fitness landscape; where does the colour end up (new, 2026-09-29)
+    B  covariance: who made more offspring, and did it track the trait
+    C  additive genetic variation: push harder, and what actually responds
+    D  the regression is the diagram: arrow = slope, "other" box = residual
+    E  mediator, confounder (built)
+    F  collider: selection makes a trade-off (built)
 
-### A — covariance
+### A — the meadow, on a continuous colour (2026-09-29)
+
+- JM, 2026-09-29: *"a sort of copy of lesson 12's Part A. Except I'd like to (1) change from a single locus trait with explicit genes to a continuous trait (flower color ranging along this color ramp: ['#7f3b08', ..., '#2d004b']), (2) a third pollinator (butterflies), (3) the activity would have a control panel that's the same as the current 12.A one but with the necessary adjustments, (4) a "fitness landscape" produced by the setting of pollinator preferences/numbers, and (5) the goal is to predict final frequencies in the population, with the key terms of the price equation (cov(w,z) and E(dz*w)) shown visually as a function of the fitness landscape & parameters (the trait is assumed to be the result of additive genetic variation with some small random component to it, too). The idea would be to help bridge to the more arcane current visualization of cov(w,z) in the current 13A."*
+- JM on the first build, same day: target = the meadow's **average colour**, on *"something like the fitness landscape from the latter part of 12, with individual points shown occupying different positions in the final round from the initial"*; Price terms kept (*"that's going to be recurring"*); *"all flowers are interfertile, but visitors should actively influence the offspring"*; *"the option for dying — the collapse of variation is a key conceptual point, and if a 'good' set of variants is lost that's important"*; *"something like 100 loci, each with two alleles (one increasing purple value, one increasing orange value) ... basically a pure additive state."*
+- Model (rebuilt): colour 0 (darkest orange) to 10 (darkest purple); class c = [c−1, c) in ramp colour c. 100 genes, two copies, each copy purple or orange; colour = 5 + 0.08 × (purple − orange copies) + a random part sd 0.5, clipped 0-10. Purely additive. 0.08 a copy, not 0.05: at 0.05 the 200 copies span 0-10 exactly but the start's inherited spread is 0.35 and a third of the variation inherited. At 0.08: spread 1.13, inherited share ~0.8; 162+ purple copies = darkest.
+- Visitors, 12 A's rules: each calls on a flower it chooses 8 times a season, others at 0.1, over a ramp 2 colours wide; hummingbirds 0 to an edge, bees an edge to 10. **Butterflies a bell curve** (JM 2026-09-29: *"a roughly normal distribution--so the students position their mean preference & spread using the same slider mechanic"*): a handle on the favourite, two small mirrored handles at ± one spread (0.25-4), down to the same 0.1 floor. A bell curve cannot be flat, so the opening has no butterflies. No seeds without visits.
+- A generation: a seed = (kind, flower), drawn in proportion to visits; its pollen parent drawn from that kind's calls. Absolute fitness: next year's flowers = min(200, Binomial(seeds, 1/16)). The meadow can shrink, crash, die. JM: *"so long as the population doesn't easily crash & the genetic variation to reach both extremes does exist"*: over 300 random settings, 1 in 24 left 9 under 50 flowers (3 died), 1 in 16 left 6 (2 died), so 16. Both ends reachable at either: bees 10 at 8.5 → 9.5, hummingbirds 10 at 1.5 → 0.45.
+- Price per generation, exact: w = seedlings parented as mother or pollen parent (w̄ = 2 × next ÷ this year's flowers); expected paternity = own visits, so the landscape is the shape of w.
+- Panels: meadow (empty ground as it shrinks; a 100-bar gene strip; genes still varying); this generation (offspring against colour, landscape in offspring units, the line at 2, the straight line = B's line; zoomed arrows; three distributions); by generation (flowers of each colour stacked, so height = meadow size; the two terms as bars); map (counts + edges, no landscape); **card = the landscape with every flower stacked on it, the start in grey, the 16-seed replacement line, the average window in red, start and now averages as triangles.**
+- Target: the average colour after 20 generations in a window, **and at least 100 flowers left** (a meadow crashed to 7 flowers with no gene varying sat at 8.0, inside the "few" window).
+
+### B — covariance
 
 - JM, 2026-09-24, on the style: *"the recent design philosophy (diverse interactives, bowling games, practice rounds, etc) and any new, bespoke types of parts that make sense."*
 - JM's idea: *"two plots, and when one is distorted the other distorts, and they try to get the two to match some target with rounds varying based on the covariance strength ... I'm not sure it would build up to the hierarchical nature of the Price equation."*
@@ -40,17 +53,17 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Identity exact every generation. Three times the covariance and goes nowhere: `202_lec16_01` painted flowers, `202_lec15_05` puppy tails.
 - `priceTerms` is in lessons 10 and 11, **called by neither, never run**. Check it against a hand computation.
 
-### B — additive genetic variation, and what responds
+### C — additive genetic variation, and what responds
 
 - JM, 2026-09-24: *"The regression one should also include a bit on additive genetic variation and the fact that R=Va regardless of S should be discovered by students (I'm imagining them making a plot point-by-point where they use interactives to try and force change by ratcheting up selection strength only to find that the response correlates with the heritability variation amount)."*
 - **Stated so it holds:** `R = h² S` — response does grow with S. What holds regardless of S: no additive variance, no response at any S; per unit of selection the response is set by the heritable variation, `R/S = h² = Va/Vp`. With selection strength as the fitness slope `β` (the line A's student drags), `R = Va β`, exactly, for an additive trait. The discoverable fact: **each population's points fall on a line whose slope is its Va.** Ratcheting strength slides along the line; only more Va steepens it.
 - The bespoke part: a plot built point by point. Each run = one generation at a strength the student sets; the page adds a point (strength, response) for that population. Populations dealt with the same total variance and different Va, so the same push gives the same S and different R.
-- Built 2026-09-24 as: x = how far the parents who bred moved (Stage A's shift, `S`), y = how far the offspring moved (`R`). Stage A is the line `R = S` (offspring copied parents), drawn dashed. Each population's line through the origin has slope h². Selection strength is the slope of A's line, so the x axis is measured, not set.
+- Built 2026-09-24 as: x = how far the parents who bred moved (Stage B's shift, `S`), y = how far the offspring moved (`R`). Stage B is the line `R = S` (offspring copied parents), drawn dashed. Each population's line through the origin has slope h². Selection strength is the slope of B's line, so the x axis is measured, not set.
 - The inherited share is hidden until that population's scored run, then shown beside the fitted slope. After the five rounds an inherited-share slider opens: at 0 the line lies flat at every slope.
 - Not built: "one population cannot reach it at the slider's stop" (a round that cannot be hit is a trap). Multi-generation extension: strong selection spends Va, and the response decays (2026-09-22: spread 1.65 against 2.07 after 300 generations).
 - Lesson 8 is the bridge: the slope of offspring on mid-parent is the heritability (JM's ruling, lesson 8), and it is the same `h²` that sets `R/S` here.
 
-### C — the regression is the diagram
+### D — the regression is the diagram
 
 - JM: *"arrow = slope, residuals = the 'other' box in the DAG."*
 - `paths.js` already binds each arrow of a fixed diagram to a slider. `buildArrows` draws one. Lesson 7's model diagram is the precedent in 1-10.
@@ -58,11 +71,11 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Built 2026-09-24: the diagram (`paths.js`, signed arrows) is the controls. Two one-trait plots, each with the diagram's line and the band it expects there (`sqrt(other arrow² × var + box²)`). A leftover histogram against the box's curve, with its lean on each trait printed; live in practice, after Go in a round. Go grows seeds from the student's diagram on the same plants, as hollow dots over the real ones. A round is judged against the least-squares fit of that round's own plants, ±0.5 on each of the three.
 - The traits are made exactly unrelated in every sample (C's one-trait slopes = the arrows). D breaks that on purpose.
 
-### D — mediator, confounder, collider
+### E — mediator, confounder, collider
 
 - On the diagram C builds. Mediator: allele → trait → fitness. Confounder: one allele → two traits, one of which does nothing, and it still correlates with fitness. Collider: to build, and to measure what selecting on it does.
 - Built 2026-09-24 (mediator + confounder): C's machinery with an allele (0/1/2 copies) behind flower size and stem height; those two arrows are dealt and held, the student sets the four arrows into seeds. Each picture draws the slope the **whole** diagram implies there, `Σ bⱼ cov(xⱼ, xₖ)/var(xₖ)`, so stem's picture tilts with stem's arrow at 0 (confounder) and the allele's picture tilts with the allele's own arrow at 0 (mediator). Rounds: confounder, mediator, hidden pair (+2 / −2, the allele's picture flat), the allele's own arrow, all three.
-- The collider does not fit a "find the arrows" game: least squares on survivors is simply wrong about the arrows, and the page cannot judge against it. Planned as its own stage (E): flower size and stem height unrelated at birth; survival needs enough of the two together; among survivors they trade off. Bowling: set how hard the drought selects to hit a dealt trade-off slope among survivors. The point: selection manufactures a trade-off no allele made.
+- The collider does not fit a "find the arrows" game: least squares on survivors is simply wrong about the arrows, and the page cannot judge against it. Planned as its own stage (F): flower size and stem height unrelated at birth; survival needs enough of the two together; among survivors they trade off. Bowling: set how hard the drought selects to hit a dealt trade-off slope among survivors. The point: selection manufactures a trade-off no allele made.
 
 ## The third selection lesson — birth–death and DAGs (no slot yet)
 
@@ -85,30 +98,55 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | # | Stage | What | Status |
 |---|-------|------|--------|
 | 1 | — | new page from lesson 12's furniture; the old mutation–selection draft retired (its content goes to lesson 12 D) | done |
-| 2 | A | covariance, linked plots: parents as dots (trait across, offspring up) under a fitness line the student tilts by dragging; the offspring's trait distribution beside it; the gap between the means is `cov(w, z)/w̄`, printed beside `slope × variance` | done |
-| 3 | A | covariance drawn as one signed rectangle per dot; dots coloured by group, doing nothing yet (seed for the late-20s multilevel Price) | done |
-| 4 | A | rounds: a dealt shift of the mean in populations of different spread; Go draws each parent's actual offspring (Poisson), controls locked; practice switch. In a scored round the offspring distribution waits for Go; with practice ticked it moves live as the line is dragged | done |
-| 5 | A | checks: identity to 1e-14, rectangles = covariance, shift grows with variance at one slope, rounds, slope 0 misses, no slope clears three, drag | done |
-| 6 | B | one generation, 2000 parents, inherited value + the rest; parents picked in pairs off A's line; child = midparent + segregation + fresh rest | done |
-| 7 | B | the point-by-point plot: (S, R) per run, practice included, one colour per population, each population's fitted line; A's `R = S` line for reference; bottom plot parents / parents counted once per child / offspring | done |
-| 8 | B | rounds: a dealt response in a population with hidden h² (0.9, 0.8, 0.6, 0.4, 0.9); share revealed after its scored run; free h² after the rounds; practice switch | done |
-| 9 | B | checks: R/S = h² at five h², no response at h² 0 at the stops, variance held at slope 0, one slope = one S everywhere, printed arithmetic, rounds, reveal | done |
-| 10 | C | two traits → seeds, the diagram as controls; one-trait plots with the diagram's line and band; leftover plot; Go grows the diagram's seeds; rounds against least squares; free "New plants" after | done |
-| 11 | C | checks: least squares vs a hand solve, leftover leans on nothing at the fit and is smallest there, one-trait slope = arrow, band formula = measured spread, bands ~2/3, rounds, opening and "box off one picture" miss, no diagram clears three, leftover hidden in a round | done |
-| 12 | D | allele → flower, allele → stem dealt; four arrows into seeds; pictures draw the whole diagram's implied line; rounds confounder / mediator / hidden pair / allele itself / all three | done |
-| 13 | D | checks: 4×4 hand solve, leftover leans on none, implied line = each picture's own at the fit, confounded and mediated slopes shown, bands, rounds, "arrows off pictures" misses all five, greediest of 63869 clears one | done |
-| 14 | E | collider: 2000 seedlings, traits exactly unrelated; survival = dealt arrows + luck 0.5, the drought kills a set share; student sets the share to leave a dealt slope among survivors; the dead fade on Go; a point per run (share killed, survivors' slope) | done |
-| 15 | E | checks: unrelated across all, exact kill share, no-luck slope = truncated-normal formula, deepens with drought and flips with the rule, rounds, no drought misses all, greediest clears two | done |
-| 16 | A-E | prose from JM's dictation; lecture-quote splice (voice) | open |
+| 1a | — | shift A-E → B-F: ids, prefixes, gates, BIT, check script; `version: 10`, `scaffold: 6`; 47 bars still pass (checked before A went in); cross-references in lesson 14 and the 14/16 docs repointed | done |
+| 1b | A | (superseded by 1g) model: 200 flowers, 10 loci + random part, three visitors, seeds → seedlings, 20 generations; Price terms per generation | done |
+| 1c | A | map (12 A's, adjusted): three count columns, three preference rows (butterflies two handles), live landscape over the meadow's colours, colour ramp strip | done |
+| 1d | A | meadow animation; this-generation panel (scatter + line + zoomed arrows + three distributions); by-generation panel; card histogram + target | done |
+| 1e | A | rounds (freeFirst, practice, lesson 12's `mountRounds` ported in with `plot`): orange / purple / still / past / darkest | done |
+| 1f | A | checks (11 new, 58 in all): landscape = hand rule and = mean seeds, Price identity per generation by hand, pull-back, rounds hit / opening and no visitors miss / cheap routes miss / none clears three, map drag, card count, practice | done |
+| 1g | A | JM's revision: average-colour target on a landscape card (flowers stacked, start in grey); 100 additive genes; visitor-borne pollen; absolute fitness (1 seed in 24, room for 200, can die); ≥ 100 flowers to count | done |
+| 1h | A | new rounds orange / purple / still / past / few; checks rewritten (15 for A, 62 in all): genes add up, one seed in 24, pollen by kind, crash strips genes | done |
+| 1i | A | butterflies a bell curve (favourite + spread handles); one seed in 16; few holds 2 bees + 1 butterfly; answers and cheap routes re-measured; pushed for JM's live test | done |
+| 2 | B | covariance, linked plots: parents as dots (trait across, offspring up) under a fitness line the student tilts by dragging; the offspring's trait distribution beside it; the gap between the means is `cov(w, z)/w̄`, printed beside `slope × variance` | done |
+| 3 | B | covariance drawn as one signed rectangle per dot; dots coloured by group, doing nothing yet (seed for the late-20s multilevel Price) | done |
+| 4 | B | rounds: a dealt shift of the mean in populations of different spread; Go draws each parent's actual offspring (Poisson), controls locked; practice switch. In a scored round the offspring distribution waits for Go; with practice ticked it moves live as the line is dragged | done |
+| 5 | B | checks: identity to 1e-14, rectangles = covariance, shift grows with variance at one slope, rounds, slope 0 misses, no slope clears three, drag | done |
+| 6 | C | one generation, 2000 parents, inherited value + the rest; parents picked in pairs off B's line; child = midparent + segregation + fresh rest | done |
+| 7 | C | the point-by-point plot: (S, R) per run, practice included, one colour per population, each population's fitted line; B's `R = S` line for reference; bottom plot parents / parents counted once per child / offspring | done |
+| 8 | C | rounds: a dealt response in a population with hidden h² (0.9, 0.8, 0.6, 0.4, 0.9); share revealed after its scored run; free h² after the rounds; practice switch | done |
+| 9 | C | checks: R/S = h² at five h², no response at h² 0 at the stops, variance held at slope 0, one slope = one S everywhere, printed arithmetic, rounds, reveal | done |
+| 10 | D | two traits → seeds, the diagram as controls; one-trait plots with the diagram's line and band; leftover plot; Go grows the diagram's seeds; rounds against least squares; free "New plants" after | done |
+| 11 | D | checks: least squares vs a hand solve, leftover leans on nothing at the fit and is smallest there, one-trait slope = arrow, band formula = measured spread, bands ~2/3, rounds, opening and "box off one picture" miss, no diagram clears three, leftover hidden in a round | done |
+| 12 | E | allele → flower, allele → stem dealt; four arrows into seeds; pictures draw the whole diagram's implied line; rounds confounder / mediator / hidden pair / allele itself / all three | done |
+| 13 | E | checks: 4×4 hand solve, leftover leans on none, implied line = each picture's own at the fit, confounded and mediated slopes shown, bands, rounds, "arrows off pictures" misses all five, greediest of 63869 clears one | done |
+| 14 | F | collider: 2000 seedlings, traits exactly unrelated; survival = dealt arrows + luck 0.5, the drought kills a set share; student sets the share to leave a dealt slope among survivors; the dead fade on Go; a point per run (share killed, survivors' slope) | done |
+| 15 | F | checks: unrelated across all, exact kill share, no-luck slope = truncated-normal formula, deepens with drought and flips with the rule, rounds, no drought misses all, greediest clears two | done |
+| 16 | A-F | prose from JM's dictation; lecture-quote splice (voice) | open |
 
-## Measured, 2026-09-24 — A
+## Measured, 2026-09-29 — A, the rebuilt model (in-page, the checks re-measure)
+
+- Rounds (bell-curve butterflies, 1 in 16), eight start meadows × 5 runs (hit = average in window with ≥ 100 flowers):
+      orange   2.0-3.0                                   butterflies 10 around 2.5 ± 1: 100%; hummingbirds 8 at 4: 90%; at 3 (past it) 0%
+      purple   6.5-7.5                                   butterflies 8 around 7 ± 1: 100%; around 7.5: 48%; bees 10 at 6.5 (past it) 3%
+      still    bees 8 at 6 held; 4.5-5.5                 hummingbirds 8 at 4 + butterflies 10 around 5 ± 1: 100%; butterflies around 4 alone 95%, around 5 alone 3%; held alone 0% (7.7)
+      past     hummingbirds 10 at 4 held; 7.5-8.5        bees 10 at 6.5 + butterflies 10 around 8 ± 1: 100%; any one kind alone 0%
+      few      no hummingbirds, 2 bees, 1 butterfly      bees at 5.5, butterfly around 7.5 ± 1: 100% (never under ~150 flowers); aimed straight at it (bees 7.5, butterfly 7.5 ± 0.5)
+               held; 7.0-8.0                              8%, crashing to ~16, some dying. (2 bees + 2 butterflies at 1 in 16: the straight shot hit 45%, crashing only to ~39.)
+- Opening and no visitors: 0 in every round. 200 random settings × 3 runs: none clears three.
+- Crash, 2 bees + 1 butterfly, bees at 8 and the butterfly around 7.5 ± 0.5: fewest flowers 0 (median), 15 of 100 genes still varying; bees at 5.5, butterfly ± 1: 153, 100 of 100.
+- Pollen: mother–father colour correlation, hummingbirds on 0-3 and bees on 7-10: 0.37-0.53; generalists or one kind: −0.12 to 0.10.
+- **A split meadow is not stable.** Hummingbirds on orange + bees on purple: the minority side holds 20% at generation 10 with visitor pollen (3% with random pollen), ~2% by 20. Both colours share one room of 200 and nothing favours the rarer, so one side drifts out. A stable split needs a rare advantage (visitors saturating on the common colour): frequency dependence, lesson 15's subject.
+- Offspring vs. parents: −0.14 to −0.22 of who left more.
+- Earlier 10-gene / fixed-200 draft, kept for the record: counts barely mattered alone; stabilising selection narrowed the spread only 1.17 → 1.08 in 20 generations; the class-share target topped out near 66% in two classes.
+
+## Measured, 2026-09-24 — B
 
 - The drawn offspring move the shift by spread / sqrt(M w̄) = 0.041 × spread (300 parents, w̄ 2). Tolerance 0.09 × spread: the right slope 93-100%.
 - At 0.1 × spread, a round asking +0.30 at spread 2 was reached by slope 0 on luck 15% of the time; at 0.07 × spread still 10% on one page. That round now asks +0.50.
 - One slope, four spreads (0.5, 1, 2, 3): shift 0.034, 0.138, 0.534, 1.28 — selection needs variation, measured.
 - Slopes the five rounds need: ~0.6, 0.25, −0.41, 1.0, 0.2 (each page draws its own populations).
 
-## Measured, 2026-09-24 — B
+## Measured, 2026-09-24 — C
 
 - `R/S` pooled over 60 runs: h² 0 → 0.006, 0.25 → 0.251, 0.5 → 0.498, 0.8 → 0.802, 1 → 1.001. At h² 0 and the slider's stops (±1.5) the parents who bred move ±0.65 and the offspring 0.01.
 - Slope 1 moves the parents who bred 0.48 in every population (h² 0.2, 0.5, 0.9: 0.483, 0.484, 0.486). Truncation at zero offspring bends it: slope 1.5 gives 0.65, not 0.75.
@@ -116,20 +154,20 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - A first round set asking for slopes 0.7-1.1 let slope 0.85 clear four.
 - One run at slope 0 printed a fitted slope of 2.87 (two wobbles divided). The page holds the slope back until sum(S²) ≥ 0.02.
 
-## Measured, 2026-09-24 — C
+## Measured, 2026-09-24 — D
 
 - Left to chance, 200 plants correlated the two traits by up to 0.19. At 0.19 the flower picture's slope read 2.45 against an arrow of 1.91, beyond the ±0.5 window. The traits are now made exactly unrelated in each sample.
 - At the least-squares diagram the bands hold 65-72% of plants in every round.
 - Arrows right, box read off the wider one-trait picture: misses 4 of 5 rounds. It hits r4, where the box (4) is most of the spread.
 - On a 0.5 grid (3757 diagrams) the greediest clears one round.
 
-## Measured, 2026-09-24 — D
+## Measured, 2026-09-24 — E
 
 - Reading each arrow off its own picture (box right) misses all five rounds. On a 0.5 grid the greediest of 63869 diagrams clears one.
 - r2 (mediator) first had allele → flower 1.5 with flower noise 0.7. The allele was then 70% predictable from flower size, and its own fitted arrow (truly 0) passed 0.4 on 21% of pages. At 1.0 and box 1.5: 2%.
 - At the fit, the line and band each picture draws equal that picture's own regression to 4e-15. The identity is `C b = c`, and var(seeds) = b'Cb + box².
 
-## Measured, 2026-09-24 — E
+## Measured, 2026-09-24 — F
 
 - No luck, equal arrows: the survivors' slope is `−δ/(2 − δ)`, with `δ = λ(λ − c)` for a cut at `c` on `(f + h)/√2`. Measured −0.328 / −0.524 / −0.704 at 30 / 60 / 90% killed, against the formula's −0.340 / −0.525 / −0.711.
 - With luck 0.5, equal arrows, 0/20/50/80% killed: 0.00, −0.22, −0.39, −0.52. Flower +1, stem −1 at 50%: +0.38.
@@ -138,7 +176,9 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 
 ## Open for JM
 
-1. Pupfish (scale-eaters) as framing for frequency-dependent fitness, for 15: citation unverified.
+1. A: a split meadow does not hold (see measured): offer visitor saturation (rare colours get more calls per flower) if he wants it — it is frequency dependence, 15's subject.
+2. A: 0.08 a copy (not 0.05) so the start keeps a spread near 1.1; confirm.
+3. Pupfish (scale-eaters) as framing for frequency-dependent fitness, for 15: citation unverified.
 
 ## Do not
 

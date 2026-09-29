@@ -55,7 +55,7 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 
 ## Measured, 2026-09-24 — C
 
-- With trait → r at +0.3 and K untouched, copies 1.0 took the allele to 0.92 by generation 30 with the environment at 0, 0.6 or 1.2 (medians of 15, same seeds). The environment widens the trait and gives selection nothing to move: 13 B from the ecology side.
+- With trait → r at +0.3 and K untouched, copies 1.0 took the allele to 0.92 by generation 30 with the environment at 0, 0.6 or 1.2 (medians of 15, same seeds). The environment widens the trait and gives selection nothing to move: 13 C from the ecology side.
 - Through K it helps a little, because 1/K is curved: copies 1.0 reached 0.89 by generation 30 at environment 0 and 0.93 at 1.2.
 - 7-point Gauss-Hermite was off by up to 0.065 in a death rate where the integrand kinks (births floored at 0, K at 100, deaths capped at 1). 41 points across ±4 sd come within 0.003.
 - A round asking the allele to stop part way (0.6-0.75) failed: drift in the first dozen generations spreads the plateau by ±0.12. It was replaced by a K round (spread 1.4-1.6, allele ≥ 0.9 by 60).
@@ -65,7 +65,7 @@ Third of three selection lessons: 12 the genetics, 13 the regression, this the b
 
 - Negative arrows red, positive blue, zero a plain line (JM, above).
 - ~~The level is not named on the page.~~ Superseded 2026-09-24: r and K are named in A once built. JM: *"r has a direct and obvious tie to w (relative fitness)"*, and the thread through the earlier lessons should run *"'scalar rates don't work' to 'use rates that are functions' to 'parameterize by r/K which can also be functions'"*. The earlier lessons' side is row 5 of `docs/REVISIONS_PLANNED.md`.
-- Food as the mechanism (JM, 2026-09-24: *"a 'food' box that directly causes deaths & is in-turn caused by N ... the trait can modulate the N->Food arrow ... higher efficiency/more diverse food options"*): parked. It makes a loop that closes only across generations. With `paths.js` the return arrows cross the food and death arrows; the mockup is not in the repo. The pull toward it: crowding's bite would be the product of the two arrows (13 D's path tracing), with K = 100 (b0 − d0) / product. JM chose to keep r and K.
+- Food as the mechanism (JM, 2026-09-24: *"a 'food' box that directly causes deaths & is in-turn caused by N ... the trait can modulate the N->Food arrow ... higher efficiency/more diverse food options"*): parked. It makes a loop that closes only across generations. With `paths.js` the return arrows cross the food and death arrows; the mockup is not in the repo. The pull toward it: crowding's bite would be the product of the two arrows (13 E's path tracing), with K = 100 (b0 − d0) / product. JM chose to keep r and K.
 
 ## Do not
 
