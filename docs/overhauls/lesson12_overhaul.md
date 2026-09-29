@@ -2,8 +2,37 @@
 
 **File** · `app/lessons/lesson12.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson12_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · 2026-09-28 voice-note revision built (`version: 9`, 46 bars pass); awaiting JM's live test; locked
+**Status** · 2026-09-28 "last updates" built (`version: 9`, rounds unchanged); unlocked and pushed
 **Last touched** · 2026-09-28
+
+## 2026-09-28 last updates (JM, after testing `version: 9`)
+
+- A: *"The birds/bees N selector should be vertical instead of horizontal to provide more room."*
+- All: *"I don't think we need a separate panel on the left showing the simulation & on the right showing the target/end state. Is there a way to **just** have the Predict panel image and run the animation on there? It would save a lot of space & create more clarity across all parts."*
+- D: cut "an individual carrying none" from the plot; cut the w̄ / homozygosity bullet (*"they should have those definitions in their notes"*); Go read "Practice run" on the first target with practice unticked; key "recent mutation" / "recent mutation" (read as recent / old), no "arose"; "off the top" label *"at the x value of the first point beyond the y limit. Also--why can we not just scale the y limits on that axis?"*; *"Some of the target bars are also not at the extreme x value for the run."*
+- E: x label "trait value".
+- As built:
+
+      A  counts: two columns of ten down the left of the map (click/drag up and down; 0 under each); colour axis ~40% wider
+         bars moved into Predict; fill as the season plays (scale from the whole season); white's box (≤ 0.75), pink's box + ruler window (appear once white has seeds); h/s strips cut
+      B  frequency plot moved into Predict (windows, ghosts, the run animating); strip card cut
+      C  share bars moved into Predict; grow as populations finish, "still mixed" at the end; strip card cut
+      D  w̄ + homozygosity moved into Predict; strip card cut; w̄ axis grows to hold the run (no clip, no "off the top"); windows end at their generation, flush with the axis end at 400 (they overhung it by 4 px)
+      E  traces + gauge moved into Predict; prompt carries the window's numbers; strip card cut
+      mountRounds({ plot: { id, read } }): the card hosts the stage's own canvas and readout
+
+- Not certain: the "extreme x value" note. Read as D's 400 windows overhanging the axis end (B's sit flush). The fast round's window is at generation 5 by design; if the note meant that one, it is a round to rethink, not a drawing fix.
+- The pre-season h box in A cannot be drawn: pink's box hangs off white's height, which only a season sets. The round's words carry it until then.
+- Measured (not changed): A's "no one setting clears three" check flaked on its first run. The greediest setting, one hummingbird from 0.1 and pink 0.35, cleared three at 10 seasons on 7 of 300 page layouts; at 40 seasons on none of 150, so the check now plays 40. A student who kept that setting all through A, one season a round: 3 hits of 5 in 215 of 3000 (7%). The noisiest meadow buys the luck (asred 37%, best 24% a season); mostly is its honest answer. Open for JM: a floor on visitors would close it, at the cost of a scoring change.
+
+| # | What | Status |
+|---|------|--------|
+| L1 | A: vertical counts | done |
+| L2 | one picture per stage, in Predict, runs on it (A-E) | done |
+| L3 | D: label, bullet, Go label (also A), key, w̄ axis scales, windows flush | done |
+| L4 | E: "trait value" | done |
+| L5 | checks: Go label after Start; every plot in its card | done |
+| L6 | unlock, push | done |
 
 ## 2026-09-28 voice notes (JM, after demoing `version: 8`)
 

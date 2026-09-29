@@ -44,10 +44,30 @@ check("page loaded", !!(A && A.game && B && B.game && C && C.game && D && D.game
   /* A and D open on free play: no target dealt, every control free, until
      the student asks. Then Start the targets deals the first. */
   const before = [A, D].map(X => X.game.free() && X.game.current() == null);
+  const labFree = ["A", "D"].map(K => document.getElementById(K + "_run").textContent);
   for (const K of ["A", "D"]) document.getElementById(K + "_tnext").click();
   const after = [A, D].map(X => !X.game.free() && X.game.current() != null);
   check("A and D open on free play, then deal on Start", before.every(Boolean) && after.every(Boolean),
         "free at load: A " + before[0] + ", D " + before[1] + "; a target after Start: A " + after[0] + ", D " + after[1]);
+  /* JM, 2026-09-28: the button read "Practice run" on the first target with
+     practice unticked, until something else repainted it */
+  const labNow = ["A", "D"].map(K => document.getElementById(K + "_run").textContent);
+  const unticked = ["A", "D"].every(K => !document.getElementById(K + "_practice").checked);
+  check("A and D's button reads Go once the targets start", unticked && labFree.every(t => t === "Practice run") && labNow.every(t => t === "Go"),
+        "free play: " + labFree.join(" / ") + "; first target, practice unticked: " + labNow.join(" / "));
+}
+{
+  /* JM, 2026-09-28: one picture per stage -- the target is drawn on the plot
+     the run plays on, and that plot is in the Predict card */
+  const where = { A: "A_bars", B: "B_traj", C: "C_shares", D: "D_time", E: "E_time" }, rep = [];
+  let ok = true;
+  for (const [K, id] of Object.entries(where)) {
+    const cv = document.getElementById(id), card = document.getElementById("pred" + K), n = document.querySelectorAll("#stage" + K + " canvas").length;
+    const inCard = !!(cv && card && card.contains(cv)), old = !!document.getElementById(K + "_tpic");
+    if (!inCard || old) ok = false;
+    rep.push(K + " " + id + (inCard ? " in the card" : " NOT IN THE CARD") + (old ? ", A SECOND PICTURE" : "") + " (" + n + " canvases)");
+  }
+  check("every stage runs on its Predict picture, and has no second one", ok, rep.join("; "));
 }
 check("slots declared match slots written", Object.keys(BIT).length === 5, Object.keys(BIT).length + " named bits, scaffold is 5");
 
@@ -121,7 +141,11 @@ const withHold = (r, d, nH, tH, nB, tB) => r.hold.d != null ? [r.hold.d, nH, tH,
       const c = hits.filter(Boolean).length;
       if (c > most) { most = c; at = [+d.toFixed(2), nH, +tH.toFixed(1), nB, +tB.toFixed(1)]; }
     }
-  const real = A_ROUNDS.filter((r, i) => hitA(r, withHold(r, ...at), 10, 23000 + i * 97) >= 0.5).length;
+  /* 40 seasons, not 10: the greediest setting is one hummingbird from 0.1,
+     whose seasons are the noisiest there are. At 10 seasons it cleared three
+     on 7 of 300 page layouts (asred 37% and best 24% a season, lucking past
+     half); at 40, none of 150. (2026-09-28) */
+  const real = A_ROUNDS.filter((r, i) => hitA(r, withHold(r, ...at), 40, 23000 + i * 97) >= 0.5).length;
   const share = cnt.map(c => c / n);
   check("A no one setting clears three rounds, and a random one rarely any", most <= 2 && real <= 2 && share.every(v => v <= 0.12),
         n + " settings on the arithmetic: the greediest (" + at.join("/") + ") clears " + most + "; played for real, " + real +
