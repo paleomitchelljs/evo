@@ -252,8 +252,8 @@
       <li>A meadow with room for 200 flowers. Color runs from dark orange (0) to dark purple (10). Its color is passed down through 100 genes, each with a purple and an orange allele: every purple copy adds a little, every orange copy takes a little away. A little of the color is not passed down.</li>
       <li>Three visitors, set on the map in Controls: <b>hummingbirds</b> choose colors from 0 up to their edge, <b>bees</b> from their edge up to 10, <b>butterflies</b> most around one color, less and less either side. Drag a handle to move an edge, the butterflies' favorite, or how far either side they go; click the slots on the left to set how many come.</li>
       <li>A visit sets a seed. Its pollen comes from a flower the same kind of visitor called on. One seed in 16 grows, up to the 200 the meadow has room for. No visits, no seeds.</li>
-      <li><b>Predict</b>: the seeds a flower of each color can expect, with every flower stacked on it. Under the dashed line a flower does not replace itself. <b>Go</b> plays 20 generations; the start stays in grey.</li>
-      <li><b>This generation</b>: each flower's offspring against its color, and the straight line through them. Under it, where the average color moved: <b>who left more</b>, cov(w, z) ÷ w̄, then <b>how the offspring differ from their parents</b>, E(w Δz) ÷ w̄.</li>
+      <li><b>Predict</b>: the seeds a flower of each color can expect, with every flower stacked on it; the start stays in grey. <b>Go</b> plays 20 generations.</li>
+      <li>Under the meadow: how many flowers of each color, generation by generation, and what moved the average color each time: <b>cov(w, z)</b>, who reproduced; <b>E(Δz, w)</b>, inheritance; <b>Δz</b>, the change. w is a flower's offspring ÷ the meadow's average.</li>
       <li>Play some runs first; <b>Start the targets</b> when you are ready. Tick <b>practice</b> for a run that does not count.</li>
     </ul>
   </div>
@@ -265,11 +265,7 @@
         <div class="readout" id="A_meadowRead"></div>
       </div>
       <div class="panel">
-        <canvas id="A_price" class="plot" width="680" height="400"></canvas>
-        <div class="readout" id="A_priceRead"></div>
-      </div>
-      <div class="panel">
-        <canvas id="A_hist" class="plot" width="680" height="270"></canvas>
+        <canvas id="A_hist" class="plot" width="680" height="300"></canvas>
         <div class="readout" id="A_histRead"></div>
       </div>
       <div class="panel">
@@ -1153,18 +1149,6 @@ function A_price(z, mom, dad, zk) {
   const zo = A_mean(zk), live = zk.length > 0;
   return { w, zb, wb, zo, cov, V, sel: live ? cov / wb : 0, off: live ? t / wb : 0, dz: live ? zo - zb : NaN, dead: !live };
 }
-/* the same numbers for offspring a flower can expect, before any seedling exists */
-function A_stats(z, w) {
-  const N = z.length; let zb = 0, wb = 0; for (let i = 0; i < N; i++) { zb += z[i] / N; wb += w[i] / N; }
-  let cov = 0, V = 0; for (let i = 0; i < N; i++) { cov += (w[i] - wb) * (z[i] - zb) / N; V += (z[i] - zb) * (z[i] - zb) / N; }
-  return { w, zb, wb, cov, V, sel: wb > 0 ? cov / wb : 0 };
-}
-/* offspring each flower can expect: its seeds x (the flowers they will make ÷ all seeds), twice */
-function A_expected(z, s) {
-  const ev = Array.from(z, v => A_expect(v, s).seeds), T = ev.reduce((a, b) => a + b, 0);
-  const scale = T > 0 ? 2 * Math.min(A_K, T / A_ONE) / T : 0;
-  return { w: ev.map(v => v * scale), scale };
-}
 /* One season and the flowers it leaves. Visits are drawn per kind of
    visitor. A seed is a (kind, flower) pair, drawn in proportion to visits;
    its pollen parent is drawn from that kind's calls. */
@@ -1448,8 +1432,8 @@ function A_drawMap() {
 
 /* The card: the landscape -- seeds a flower of each colour can expect --
    and every flower on it, stacked where its colour is: the start in grey,
-   the meadow on screen in colour. Below the dashed line a flower does not
-   replace itself. The round's window on the average colour is the red band;
+   the meadow on screen in colour. The round's window on the average colour
+   is the red band;
    the triangles under the axis are the averages, start (grey) and now. The
    run plays on it a generation at a time. */
 function A_drawCard() {
@@ -1474,11 +1458,6 @@ function A_drawCard() {
   ctx.strokeStyle = BLUE; ctx.lineWidth = 2; ctx.beginPath();
   for (let k = 0; k <= 200; k++) { const X = f.x(k / 20), Y = f.y(ex(k / 20)); k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
   ctx.stroke();
-  /* replacement */
-  ctx.save(); ctx.strokeStyle = "#1d1d1b"; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.1; ctx.beginPath();
-  ctx.moveTo(f.px, f.y(A_ONE)); ctx.lineTo(f.px + f.pw, f.y(A_ONE)); ctx.stroke(); ctx.restore();
-  ctx.fillStyle = "#1d1d1b"; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
-  ctx.fillText(A_ONE + " seeds: a flower replaces itself", f.px + 4, f.y(A_ONE) - 2);
   /* the flowers, stacked on the landscape in bins a quarter of a colour wide */
   const stack = (z, fill, edge) => {
     const cnt = new Array(40).fill(0), col = new Array(40).fill(null);
@@ -1497,8 +1476,6 @@ function A_drawCard() {
   const tri = (z, col) => { const X = f.x(z), Y = f.py + f.ph + 22; ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X - 6, Y + 9); ctx.lineTo(X + 6, Y + 9); ctx.closePath(); ctx.fill(); };
   if (A.run) tri(A_mean(A_START.z), "#b0aea6");
   if (pop.n) tri(A_mean(pop.z), "#1d1d1b");
-  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText(A.run ? "generation " + v.k + " · grey: the start" : "the start", f.px + 4, 4);
   const zb = A_mean(pop.z), inb = r && zb >= r.lo && zb <= r.hi;
   document.getElementById("A_cardRead").innerHTML = !pop.n
     ? '<span class="off">the meadow died out in generation ' + v.k + '</span>'
@@ -1508,102 +1485,15 @@ function A_drawCard() {
       (A.run ? ' &nbsp;·&nbsp; <span class="label">average at the start</span> <b>' + f2(A_mean(A_START.z)) + '</b>' : '');
 }
 
-/* This generation: the flowers that just made seedlings, each at its colour
-   and the seedlings it left (before a run, the seedlings it can expect);
-   the landscape in the same units; the line at 2, where a flower replaces
-   itself; the straight line through the dots, which is Stage B's line.
-   Under it, where the average colour moved, on a zoomed line: the parents
-   counted once per seedling (who left more, cov(w, z) / w̄), then the
-   seedlings themselves (how they differ from those parents, E(w Δz) / w̄).
-   Then the three distributions. */
-function A_drawPrice() {
-  const cv = document.getElementById("A_price");
-  const { ctx, W, H } = setupCanvas(cv);
-  ctx.clearRect(0, 0, W, H);
-  const v = A_view(), s = A_setShown(), rec = v.rec;
-  const z = rec ? rec.z : v.pop.z, E = A_expected(z, s), st = rec || A_stats(z, E.w), w = st.w;
-  const scale = rec ? (rec.T > 0 ? 2 * rec.next.n / rec.T : 0) : E.scale;
-  let wmax = 4; for (const x of w) wmax = Math.max(wmax, x);
-  const f = box(52, 24, W - 70, 150, 0, 10, 0, Math.ceil(wmax + 0.5));
-  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText(rec ? "generation " + (v.k - 1) + ": the offspring each flower left" : "the start: the offspring each flower can expect", f.px, 4);
-  axes(ctx, f, "", "offspring", q => q.toFixed(0), () => "");
-  A_strip(ctx, f, f.py + f.ph + 1, 5, true);
-  ctx.save(); ctx.strokeStyle = "#bbb"; ctx.setLineDash([2, 3]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(f.px, f.y(2)); ctx.lineTo(f.px + f.pw, f.y(2)); ctx.stroke(); ctx.restore();
-  ctx.fillStyle = "#999"; ctx.font = "10px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText("2: replaces itself", f.px + 4, f.y(2) - 1);
-  /* the landscape, as offspring */
-  ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
-  ctx.strokeStyle = MUTED; ctx.setLineDash([5, 4]); ctx.lineWidth = 1.4; ctx.beginPath();
-  for (let k = 0; k <= 200; k++) { const zz = k / 20, X = f.x(zz), Y = f.y(scale * A_expect(zz, s).seeds); k ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
-  ctx.stroke(); ctx.restore();
-  for (let i = 0; i < z.length; i++) {
-    const y = w[i] + (rec ? 0.55 * A_LAYOUT[A_SLOT[i]].jy : 0);
-    ctx.beginPath(); ctx.arc(f.x(z[i]), f.y(Math.max(0, y)), 2.8, 0, 6.2832);
-    ctx.fillStyle = A_colOf(z[i]); ctx.fill(); ctx.strokeStyle = "rgba(29,29,27,0.45)"; ctx.lineWidth = 0.6; ctx.stroke();
-  }
-  /* the straight line through the dots, across the flowers' own range */
-  let zlo = 10, zhi = 0; for (const x of z) { zlo = Math.min(zlo, x); zhi = Math.max(zhi, x); }
-  const slope = st.V > 0 ? st.cov / st.V : 0, yAt = x => st.wb + slope * (x - st.zb);
-  if (z.length > 1) {
-    ctx.save(); ctx.beginPath(); ctx.rect(f.px, f.py, f.pw, f.ph); ctx.clip();
-    ctx.strokeStyle = "#1d1d1b"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(f.x(zlo), f.y(yAt(zlo))); ctx.lineTo(f.x(zhi), f.y(yAt(zhi))); ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle = "#1d1d1b"; ctx.beginPath(); ctx.arc(f.x(st.zb), f.y(st.wb), 4, 0, 6.2832); ctx.fill();
-  }
-  ctx.fillStyle = MUTED; ctx.font = "10.5px -apple-system, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "top";
-  ctx.fillText("- - the landscape   — the straight line through the flowers", f.px + f.pw, f.py + 2);
-
-  /* where the average colour moved, zoomed: one colour either side of the parents' average */
-  const zf = box(52, 216, W - 70, 22, st.zb - 1, st.zb + 1, 0, 1);
-  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "top";
-  ctx.fillText("where the average color moved (zoomed: one color either side of the parents' average)", zf.px, 196);
-  ctx.strokeStyle = "#bbb"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(zf.px, zf.py + zf.ph); ctx.lineTo(zf.px + zf.pw, zf.py + zf.ph); ctx.stroke();
-  ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  for (const d of [-1, -0.5, 0, 0.5, 1]) { const X = zf.x(st.zb + d); ctx.beginPath(); ctx.moveTo(X, zf.py + zf.ph - 3); ctx.lineTo(X, zf.py + zf.ph + 3); ctx.stroke();
-    ctx.fillText((d > 0 ? "+" : "") + d, X, zf.py + zf.ph + 5); }
-  const arrow = (a, b, y, col, lab) => {
-    const xa = zf.x(clamp(a, zf.xMin, zf.xMax)), xb = zf.x(clamp(b, zf.xMin, zf.xMax));
-    ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(xa, y); ctx.lineTo(xb, y); ctx.stroke();
-    if (Math.abs(xb - xa) > 2) { const d = xb > xa ? 1 : -1; ctx.beginPath(); ctx.moveTo(xb + d * 2, y); ctx.lineTo(xb - d * 7, y - 5); ctx.lineTo(xb - d * 7, y + 5); ctx.fill(); }
-    ctx.font = "10.5px -apple-system, sans-serif"; ctx.textBaseline = "middle";
-    const right = xb >= xa; ctx.textAlign = right ? "left" : "right"; ctx.fillText(lab, right ? Math.max(xa, xb) + 8 : Math.min(xa, xb) - 8, y);
-  };
-  ctx.strokeStyle = "#8a8880"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(zf.x(st.zb), zf.py - 6); ctx.lineTo(zf.x(st.zb), zf.py + zf.ph); ctx.stroke();
-  const dead = rec && rec.dead;
-  if (!dead) arrow(st.zb, st.zb + st.sel, zf.py + 4, BLUE, "who left more " + (st.sel >= 0 ? "+" : "") + f2(st.sel));
-  if (rec && !dead) arrow(st.zb + st.sel, st.zb + st.sel + st.off, zf.py + 15, HOT, "offspring vs. parents " + (st.off >= 0 ? "+" : "") + f2(st.off));
-  if (dead) { ctx.fillStyle = HOT; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "left"; ctx.textBaseline = "middle"; ctx.fillText("no seedlings: nothing moved, nothing is left", zf.x(st.zb) + 8, zf.py + 8); }
-
-  /* the three distributions, on the colour axis */
-  const bp = A_bins(z), bw = A_bins(z, w), bo = rec && !dead ? A_bins(rec.next.z) : null;
-  const hTop = Math.ceil(1.15 * Math.max(0.04, ...bp, ...(dead ? [0] : bw), ...(bo || [0])) / 0.04) * 0.04;
-  const g = box(52, 272, W - 70, 84, 0, 10, 0, hTop);
-  axes(ctx, g, "", "share", q => Math.round(100 * q) + "%", () => "");
-  if (bo) { ctx.globalAlpha = 0.6; for (let k = 0; k < 20; k++) { ctx.fillStyle = A_RAMPC[k >> 1]; ctx.fillRect(g.x(k / 2) + 1, g.y(bo[k]), g.x(0.5) - g.x(0) - 2, g.y(0) - g.y(bo[k])); } ctx.globalAlpha = 1; }
-  A_steps(ctx, g, bp, "#8a8880", 1.3);
-  if (!dead) A_steps(ctx, g, bw, BLUE, 1.6, [4, 3]);
-  A_strip(ctx, g, g.py + g.ph + 1, 5, true);
-  ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "top";
-  ctx.fillText("flower color", g.px + g.pw / 2, g.py + g.ph + 20);
-  ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.font = "10.5px -apple-system, sans-serif";
-  ctx.fillStyle = "#8a8880"; ctx.fillText("— parents", g.px + 6, g.py - 12);
-  ctx.fillStyle = BLUE; ctx.fillText("- - parents, once per offspring", g.px + 76, g.py - 12);
-  if (bo) { ctx.fillStyle = "#333"; ctx.fillText("▮ offspring", g.px + 262, g.py - 12); }
-  const sg = x => (x >= 0 ? "+" : "") + f2(x);
-  document.getElementById("A_priceRead").innerHTML = dead
-    ? '<span class="off">generation ' + (v.k - 1) + ' set ' + rec.T + ' seeds and none grew: the meadow is gone</span>'
-    : '<span class="label">cov(w, z) = slope</span> <b>' + f2(slope) + '</b> <span class="label">× variance</span> <b>' + f2(st.V) + '</b> <span class="label">=</span> <b>' + f3(st.cov) + '</b>' +
-      ' &nbsp;·&nbsp; <span class="label">w̄</span> <b>' + f2(st.wb) + '</b>' + (rec ? ' <span class="label">(' + rec.n + ' flowers → ' + rec.next.n + ')</span>' : '') + '<br>' +
-      '<span class="label" style="color:' + BLUE + '">who left more, cov(w, z) ÷ w̄</span> <b>' + sg(st.sel) + '</b>' +
-      (rec ? ' &nbsp;+&nbsp; <span class="label" style="color:' + HOT + '">offspring vs. parents, E(w Δz) ÷ w̄</span> <b>' + sg(st.off) + '</b>' +
-             ' &nbsp;=&nbsp; <b>' + sg(st.sel + st.off) + '</b> &nbsp;·&nbsp; <span class="label">the average color moved</span> <b class="big">' + sg(st.dz) + '</b>'
-           : ' &nbsp;·&nbsp; <span class="label">offspring vs. parents: after Go</span>');
-}
-
 /* Generation by generation: how many flowers of each colour, stacked, one
    bar per generation -- the height is the meadow's size; under it, each
-   generation's two terms (blue who left more, red offspring vs. parents)
-   and the move they add up to (a dot), between the two bars they join. */
+   generation's two Price terms and the change they add up to, between the
+   two bars they join. JM, 2026-09-29: labels "cov(w,z) (who reproduced)",
+   "E(dz,w) (inheritance)" and "dz (change this generation)", with deltas.
+   w here is a flower's offspring over the meadow's average (relative
+   fitness), which makes the two terms the plotted cov/w-bar and
+   E(w dz)/w-bar exactly, and they add to dz. The panel that showed one
+   generation's scatter and distributions was cut the same day. */
 function A_drawHist() {
   const cv = document.getElementById("A_hist");
   const { ctx, W, H } = setupCanvas(cv);
@@ -1623,13 +1513,13 @@ function A_drawHist() {
   const recs = A.run ? A.run.gens.slice(0, v.k).filter(r => !r.dead) : [];
   let m = 0.3; if (A.run) for (const r of A.run.gens) if (!r.dead) m = Math.max(m, Math.abs(r.sel), Math.abs(r.off), Math.abs(r.dz));
   m = Math.ceil(m * 1.15 * 10) / 10;
-  const g = box(52, 172, W - 70, 56, -0.6, A_G + 0.6, -m, m);
+  const g = box(52, 184, W - 70, 76, -0.6, A_G + 0.6, -m, m);
   ctx.strokeStyle = "#333"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(g.px, g.py); ctx.lineTo(g.px, g.py + g.ph); ctx.stroke();
   ctx.strokeStyle = "#bbb"; ctx.beginPath(); ctx.moveTo(g.px, g.y(0)); ctx.lineTo(g.px + g.pw, g.y(0)); ctx.stroke();
   ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
   for (const q of [-m, 0, m]) ctx.fillText((q > 0 ? "+" : "") + q.toFixed(1), g.px - 5, g.y(q));
   ctx.save(); ctx.translate(g.px - 36, g.py + g.ph / 2); ctx.rotate(-Math.PI / 2); ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif";
-  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText("moved", 0, 0); ctx.restore();
+  ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillText("Δ color", 0, 0); ctx.restore();
   A.run && A.run.gens.slice(0, v.k).forEach((r, k) => {
     if (r.dead) return;
     const x = k + 0.5, bw = g.x(0.28) - g.x(0);
@@ -1640,19 +1530,20 @@ function A_drawHist() {
   ctx.fillStyle = "#333"; ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top";
   for (let k = 0; k <= A_G; k += 5) ctx.fillText(String(k), g.x(k), g.py + g.ph + 4);
   ctx.fillStyle = MUTED; ctx.font = "11px -apple-system, sans-serif"; ctx.fillText("generation", g.px + g.pw / 2, g.py + g.ph + 18);
-  ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.font = "10.5px -apple-system, sans-serif";
-  ctx.fillStyle = BLUE; ctx.fillText("▮ who left more", g.px + 4, g.py - 4);
-  ctx.fillStyle = HOT; ctx.fillText("▮ offspring vs. parents", g.px + 100, g.py - 4);
-  ctx.fillStyle = "#1d1d1b"; ctx.fillText("● moved", g.px + 250, g.py - 4);
+  ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.font = "11px -apple-system, sans-serif";
+  let lx = g.px + 4;
+  for (const [col, lab] of [[BLUE, "▮ cov(w, z) (who reproduced)"], [HOT, "▮ E(Δz, w) (inheritance)"], ["#1d1d1b", "● Δz (change this generation)"]]) {
+    ctx.fillStyle = col; ctx.fillText(lab, lx, g.py - 5); lx += ctx.measureText(lab).width + 18; }
   const sum = key => recs.reduce((a, r) => a + r[key], 0), sg = x => (x >= 0 ? "+" : "") + f2(x);
   const low = A.run ? Math.min(...pops.map(p => p.n)) : A_K;
   document.getElementById("A_histRead").innerHTML = recs.length
-    ? '<span class="label">after ' + recs.length + ' generation' + (recs.length > 1 ? "s" : "") + ': who left more added up to</span> <b>' + sg(sum("sel")) +
-      '</b> <span class="label">· offspring vs. parents</span> <b>' + sg(sum("off")) + '</b> <span class="label">· the average color moved</span> <b>' + sg(sum("dz")) +
-      '</b> <span class="label">· fewest flowers</span> <b class="' + (low < 20 ? "off" : "") + '">' + low + '</b>'
-    : '<span class="label">every generation of a run lands here</span>';
+    ? '<span class="label">after ' + recs.length + ' generation' + (recs.length > 1 ? "s" : "") + ', added up:</span> <span class="label" style="color:' + BLUE + '">cov(w, z)</span> <b>' + sg(sum("sel")) +
+      '</b> <span class="label">+</span> <span class="label" style="color:' + HOT + '">E(Δz, w)</span> <b>' + sg(sum("off")) + '</b> <span class="label">= Δz</span> <b>' + sg(sum("dz")) +
+      '</b> <span class="label">(' + f2(A.run.gens[0].zb) + ' → ' + f2(recs[recs.length - 1].zo) + ') · fewest flowers</span> <b class="' + (low < 20 ? "off" : "") + '">' + low + '</b>' +
+      '<br><span class="label">w: a flower\'s offspring ÷ the meadow\'s average</span>'
+    : '<span class="label">every generation of a run lands here · w: a flower\'s offspring ÷ the meadow\'s average</span>';
 }
-function A_paint() { A_drawMeadow(); A_drawMap(); A_drawPrice(); A_drawHist(); A_drawCard(); }
+function A_paint() { A_drawMeadow(); A_drawMap(); A_drawHist(); A_drawCard(); }
 function A_RCODE() {
   return "# Lesson 13, Stage A -- a meadow: visitors, a landscape, and where the color goes\n" +
     "# a meadow with room for 200: color 0 (dark orange) to 10 (dark purple)\n" +
