@@ -179,15 +179,14 @@ check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && 
         "); a family dragged 1.3: " + moved + "; the strip dragged 0.5: " + all.join(", "));
 }
 {
-  /* the card's arithmetic is the page's own terms, rounded as printed */
+  /* JM, 2026-09-30: nothing under the card on a plain round -- no averages, no sums -- while the
+     card's arrows show in practice */
   const keep = { n: A.n.slice(), d: A.d.slice(), step: A.step }, box = document.getElementById("A_practice");
   box.checked = true; A_setStep(1); A.n = [0, 1, 1, 2, 2, 2, 3, 3, 4, 5]; A_changed("n");
-  const txt = document.getElementById("A_cardRead").textContent.replace(/−/g, "-");
-  const m = /cov\\(w, z\\) ([-+][0-9.]+) \\+ E\\(wΔz\\) ([-+][0-9.]+) = Δz ([-+][0-9.]+)/.exec(txt), t = A_terms(A.n, A.d);
-  const ok = !!m && +m[1] === +t.cov.toFixed(2) && +m[2] === +t.tr.toFixed(2) && +m[3] === +t.dz.toFixed(2) && new RegExp("offspring's " + f2(t.zo)).test(txt);
+  const txt = document.getElementById("A_cardRead").textContent, shows = A_cardShows(), t = A_terms(A.n, A.d);
   box.checked = false; A_setStep(keep.step); A.n = keep.n; A.d = keep.d; A_changed("n"); A_syncGo();
-  check("A the card prints the terms and the offspring's average as the page counts them", ok,
-        "printed '" + (m ? m[0] : txt.slice(0, 80)) + "'; counted cov " + t.cov.toFixed(4) + ", E(wΔz) " + t.tr.toFixed(4) + ", Δz " + t.dz.toFixed(4) + ", average " + t.zo.toFixed(4));
+  check("A the card is bare underneath and its arrows show in practice", !/[0-9]/.test(txt) && shows && Math.abs(t.cov + t.tr - t.dz) < 1e-12,
+        "under the card: '" + txt.trim().slice(0, 60) + "'; arrows showing: " + shows + "; cov + E(wΔz) - Δz = " + (t.cov + t.tr - t.dz).toExponential(1));
 }
 /* ---- B: the meadow ------------------------------------------------------ */
 {
@@ -369,15 +368,14 @@ const B_rate = (r, s, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++)
         "; the other spread handle dragged onto the favorite: " + sdMin + " (the narrowest, " + B_SDMIN + ")");
 }
 {
-  /* the card reads the average and the count off the flowers on screen */
-  const keep = B.run, run = B_runAll(B_SOL.orange, mulberry32(15));
+  /* JM, 2026-09-30: no average under the card; in a round, the flower count the round needs */
+  const keep = B.run, run = B_runAll(B_SOL.orange, mulberry32(15)), r = B_round();
   B.run = run; B.show = null; B_drawCard();
   const txt = document.getElementById("B_cardRead").textContent;
-  const avg = +(/average color ([0-9.]+)/.exec(txt) || [0, NaN])[1], cnt = +(/(\\d+) flowers/.exec(txt) || [0, NaN])[1];
-  const hand = run.final.z.reduce((a, b) => a + b, 0) / run.final.n;
+  const cnt = +(/(\\d+) flowers/.exec(txt) || [0, NaN])[1];
   B.run = keep; B_paint();
-  check("B the card's average and count are the final meadow's", avg === +hand.toFixed(2) && cnt === run.final.n,
-        "printed average " + avg + ", counted here " + hand.toFixed(2) + "; printed " + cnt + " flowers, counted " + run.final.n);
+  check("B under the card: no average, and in a round the final meadow's count", !/average|[0-9]\\.[0-9]/.test(txt) && (r ? cnt === run.final.n : txt.trim() === ""),
+        (r ? "round " + r.key + ": " : "free play: ") + "'" + txt.trim() + "'; counted " + run.final.n + " flowers");
 }
 /* ---- C: the diagram behind the two terms, one trait -------------------- */
 /* the page's own set builder, so the checks run with the chance the page runs with */
@@ -537,17 +535,23 @@ const C_SOL = { tall: { bb: 3.5 }, weather: { bb: 7 }, genes: { a: 0.7 }, wet: {
      pale = held this round, grey = fixed. Read in a round (tall holds genes and environment). */
   {
     const root = document.getElementById("pathsC"), vals = () => [...root.querySelectorAll(".paths-arrow-value")].map(t => t.textContent.trim()).filter(Boolean);
-    const cls = id => { const h = root.querySelector('.paths-hit[data-arrow="' + id + '"]'); return h && h.nextElementSibling ? h.nextElementSibling.getAttribute("class") : ""; };
+    /* read an arrow's class off the drawn curve: held and fixed arrows have no hit target (JM: no
+       pop-ups on arrows that cannot be set), so find the curve by the arrow's slider */
+    const cls = id => { const k = root.querySelector('.paths-arrow[data-of="' + id + '"]'); return k ? k.getAttribute("class") : ""; };
     /* the round's free arrow is stem height -> birth rate; set it negative (red) and click it */
     C.bb = -2; document.getElementById("C_bb").value = -2; C_syncDag(); C.paths.sync();
     const idle = vals();
     const hit = root.querySelector('.paths-hit[data-arrow="bb"]'); hit.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); window.dispatchEvent(new PointerEvent("pointerup"));
-    const picked = vals(), note = root.querySelector(".paths-note").textContent;
+    const picked = vals(), noteEl = root.querySelector(".paths-note"), note = noteEl ? noteEl.textContent : "", noteHidden = !noteEl || getComputedStyle(noteEl).display === "none";
+    /* JM, 2026-09-30: no pop-up on an arrow that cannot be set -- a held or fixed arrow has no hit target */
+    const noHit = ["a", "s", "bd", "t", "gc"].every(id => !root.querySelector('.paths-hit[data-arrow="' + id + '"]'));
+    const keepsColour = /down/.test(cls("bb")) && /selected/.test(cls("bb"));
     const held = C_round() && "a" in C_round().hold && /locked/.test(cls("a")) && /locked/.test(cls("s")) && /locked/.test(cls("bd")), neg = /down/.test(cls("bb"));
     const grey = [...root.querySelectorAll(".paths-arrow.dark")].length >= 5;
     C.bb = 0; document.getElementById("C_bb").value = 0; C_syncHold(); C_paint();
-    check("C the diagram shows numbers only on the arrow being set; held arrows pale, fixed ones grey", idle.join(" ") === "+ −" && picked.some(v => v.replace("−", "-") === "-2.0") && /is now/.test(note) && held && neg && grey,
-          "numbers on show with nothing selected: [" + idle.join(", ") + "]; after clicking stem height → birth rate at −2: [" + picked.join(", ") + "], note '" + note.slice(0, 40) + "'; red: " + neg + "; held arrows marked locked: " + held + "; fixed (grey) arrows: " + [...root.querySelectorAll(".paths-arrow.dark")].length);
+    check("C the diagram shows numbers only on the arrow being set; held arrows pale, fixed ones grey, neither clickable", idle.join(" ") === "+ −" && picked.some(v => v.replace("−", "-") === "-2.0") && noteHidden && held && neg && keepsColour && grey && noHit,
+          "numbers on show with nothing selected: [" + idle.join(", ") + "]; after clicking stem height → birth rate at −2: [" + picked.join(", ") + "], note " + (noteHidden ? "hidden" : "SHOWN '" + note.slice(0, 40) + "'") + "; red, and still red selected: " + neg + ", " + keepsColour +
+          "; held arrows marked locked: " + held + "; fixed (grey) arrows: " + [...root.querySelectorAll(".paths-arrow.dark")].length + "; held and fixed arrows without a click target: " + noHit);
   }
   /* the bells are trial generations at the arrows: their averages sit on the arrows' arithmetic */
   const set = C_SET(1, 0.8, 5, 0.6), tr = PD_trials(C_START, set, 999)[0], e2 = PD_expect(C_START, set)[0].per;
@@ -660,20 +664,20 @@ const D_SOL = { along: { fb: 4.5 }, eaten: { fd: 6 }, patch: { fb: -6.5 }, follo
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
   const out = [], stages = { A, B, C, D }, bitsSeen = [];
   const read = id => document.getElementById(id).textContent;
-  let aBefore = "", aAfter = "", cBefore = "", cAfter = "", dBefore = "", dAfter = "";
+  let aBefore = null, aAfter = null, cBefore = "", cAfter = "", dBefore = "", dAfter = "";
   try {
     for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
       const n0 = g.st.hits.length;
-      if (S === "A") { tick(false); aBefore = read("A_cardRead"); }
+      if (S === "A") { tick(false); aBefore = A_cardShows(); }
       if (S === "C") { tick(false); cBefore = read("pathsC") + " | " + read("C_cardRead"); }
       if (S === "D") { tick(false); dBefore = read("pathsD") + " | " + read("D_cardRead"); }
       tick(true); btn.click();
       const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(read(S + "_tflip"));
       tick(false); btn.click();
-      if (S === "A") aAfter = read("A_cardRead");
+      if (S === "A") aAfter = A_cardShows();
       if (S === "C") cAfter = read("pathsC") + " | " + read("C_cardRead");
       if (S === "D") dAfter = read("pathsD") + " | " + read("D_cardRead");
       const scored = g.st.hits.length === n0 + 1 && g.waiting(), blocked = btn.disabled;
@@ -695,8 +699,8 @@ const D_SOL = { along: { fb: 4.5 }, eaten: { fd: 6 }, patch: { fb: -6.5 }, follo
   const r2 = D.game.current(), free = D_KEYS.filter(k => !(k in r2.hold)), reset = free.every(k => D[k] === D_OPEN[k]), held = Object.keys(r2.hold).every(k => D[k] === r2.hold[k]);
   check("a new target starts its free arrows where they opened", !!r2 && r2 !== D_ROUNDS[0] && free.length > 0 && reset && held,
         "every arrow moved, Next target: D round " + (r2 || {}).key + ", free " + free.map(k => k + " " + D[k] + " [opening " + D_OPEN[k] + "]").join(", ") + "; held arrows at the round's values: " + held);
-  check("A the offspring's average waits for Go in a round, and shows after it", /after Go/.test(aBefore) && !/offspring's [0-9]/.test(aBefore) && /offspring's [0-9]/.test(aAfter),
-        "before: '" + aBefore.trim().slice(0, 60) + "'; after the scored run: '" + aAfter.trim().slice(0, 60) + "'");
+  check("A the card's arrows wait for Go in a round, and show after it", aBefore === false && aAfter === true,
+        "before the scored run: " + aBefore + "; after it: " + aAfter);
   /* the diagram's boxes carry the terms before Go and after; the card, no numbers either way */
   const onDag = (t, n) => (t.match(/cov\\(w, z\\) [-+−][0-9]/g) || []).length === n && (t.match(/E\\(wΔz\\) [-+−][0-9]/g) || []).length === n;
   const cardBare = t => !/[0-9]/.test(t.split(" | ")[1] || "");
