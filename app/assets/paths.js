@@ -49,16 +49,21 @@
 // is being adjusted" and "Pale red = locked & negative, Pale blue = locked &
 // positive, Red = negative & adjustable, Blue = positive & adjustable, Gray
 // = intrinsic and unadjustable"):
-//   valuesOnSelect: true   an arrow's label and value show only while it is
-//                          selected. Only arrows the student can set can be
-//                          selected (JM: no pop-ups on arrows that cannot be
-//                          changed). An arrow with `always: true` keeps its
-//                          `text` on show.
+//   valuesOnSelect: true   an arrow's value shows only while it is
+//                          selected, as the number between − and +, with no
+//                          name, placed beside the arrow where it covers
+//                          neither it nor, where it can help it, any other
+//                          arrow, box or label (`labelAt` is not used for it).
+//                          Only arrows the student can set can be selected
+//                          (JM: no pop-ups on arrows that cannot be changed).
+//                          An arrow with `always: true` keeps its `text` on
+//                          show, at its `labelAt`.
 //   lockColours: true      a readonly arrow that is not `dark` gets the class
 //                          `locked` and pale heads, for the page's CSS to
 //                          colour as held; a selected arrow keeps its sign's
 //                          colour and head (red now means negative), and its
-//                          value is coloured by sign as it is dragged.
+//                          value is coloured by sign as it is dragged. An
+//                          arrow the student can set now gets `settable`.
 // And per arrow, `width` fixes a `dark` arrow's stroke (default 2.2).
 
 (function (global) {
@@ -67,6 +72,9 @@
   const NS = "http://www.w3.org/2000/svg";
   const DRAG_SPAN = 170;   // px of vertical drag that covers the whole range
   const MIN_W = 2.0, MAX_W = 15.0;
+  // Where along the head (0 = its base, 10 = its tip) the line ends, and how
+  // far past that the tip reaches in stroke widths: 2.6 widths per 10 units.
+  const HEAD_REF = 4.5, TIP_W = (10 - HEAD_REF) * 0.26;
 
   function svg(name, attrs) {
     const e = document.createElementNS(NS, name);
@@ -136,7 +144,10 @@
         // line. A fixed head is worse than a big one: past about 8px of stroke
         // the line simply swallows it and the arrow stops reading as an arrow.
         // 2.6 stroke-widths stays a head rather than a blot at full weight.
-        const m = svg("marker", { id: id, viewBox: "0 0 10 10", refX: "7.6", refY: "5",
+        // The line ends at HEAD_REF, where the head is 0.72 stroke-widths wide
+        // either side -- wider than the line's round cap (0.5) -- so a thick
+        // line cannot poke out past the head's flanks (JM, 2026-09-30).
+        const m = svg("marker", { id: id, viewBox: "0 0 10 10", refX: String(HEAD_REF), refY: "5",
                                   markerWidth: "2.6", markerHeight: "2.6",
                                   orient: "auto-start-reverse" });
         m.appendChild(svg("path", { d: "M0,0 L10,5 L0,10 z", fill: fill }));
@@ -201,14 +212,28 @@
       const straightMid = { x: (b1.x + b2.x) / 2, y: (b1.y + b2.y) / 2 };
       const dx = b2.x - b1.x, dy = b2.y - b1.y, len = Math.hypot(dx, dy) || 1;
       const nx = -dy / len, ny = dx / len;
-      const ctrl = { x: straightMid.x + nx * bend, y: straightMid.y + ny * bend };
-      const p1 = edgePoint(b1, ctrl);
-      const p2 = backOff(edgePoint(b2, ctrl), ctrl, 2 + width * 1.9);
+      let ctrl = { x: straightMid.x + nx * bend, y: straightMid.y + ny * bend };
+      const p1 = edgePoint(b1, ctrl), e2 = edgePoint(b2, ctrl);
+      // the tip lands 2 + 1.28 widths off the box edge, as it did when the
+      // line ran on to 7.6 units into the head
+      let p2 = backOff(e2, ctrl, 2 + width * (1.28 + TIP_W)), fit = width;
+      // Between close boxes that pull-back can carry the line's end past the
+      // control point: the curve doubles back and the head turns round (JM,
+      // 2026-09-30). Such an arrow is redrawn from its own two ends, its tip
+      // nearer the box, and no thicker than a head can fit in the room.
+      const dot = (u, v, w) => (u.x - w.x) * (v.x - w.x) + (u.y - w.y) * (v.y - w.y);
+      if (dot(p2, e2, ctrl) <= 0 || dot(ctrl, e2, p1) <= 0 || dot(p2, e2, p1) <= 0) {
+        const L = Math.hypot(e2.x - p1.x, e2.y - p1.y) || 1, ux = (e2.x - p1.x) / L, uy = (e2.y - p1.y) / L;
+        fit = Math.max(1.6, Math.min(width, (L - 10) / (0.3 + TIP_W)));
+        const gap = 2 + fit * (0.3 + TIP_W);
+        p2 = { x: e2.x - ux * gap, y: e2.y - uy * gap };
+        ctrl = { x: (p1.x + p2.x) / 2 + nx * bend * 0.5, y: (p1.y + p2.y) / 2 + ny * bend * 0.5 };
+      }
       // the point the label rides on: the curve at t = 0.5
       const mid = { x: 0.25 * p1.x + 0.5 * ctrl.x + 0.25 * p2.x,
                     y: 0.25 * p1.y + 0.5 * ctrl.y + 0.25 * p2.y };
       return { d: `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} Q${ctrl.x.toFixed(1)},${ctrl.y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`,
-               mid, nx, ny };
+               mid, nx, ny, p1, ctrl, p2, fit };
     }
 
     // Two arrows between the same pair need opposite bends or they overlap.
@@ -245,6 +270,10 @@
       const refocus = (ae && ae.classList && ae.classList.contains("paths-hit")
                        && gArrows.contains(ae)) ? ae.getAttribute("data-arrow") : null;
       gArrows.innerHTML = ""; gBoxes.innerHTML = ""; gTop.innerHTML = "";
+      // under valuesOnSelect the selected arrow's readout is placed after every
+      // arrow is drawn, so it can be put where it hides none of them
+      const drawn = [], labelRects = [], ownGeo = [];
+      let pending = null;
 
       arrows.forEach(a => {
         if (a.hidden) return;
@@ -262,6 +291,13 @@
           const b = autoBend(a, ed.from, ed.to);
           const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b, width);
           if (!g) return;
+          if (valuesOnSelect) {
+            // what covering it costs: an arrow the student could click next
+            // most, a held one less, a fixed grey one least
+            const k = a.dark || a.ghost ? 0.4 : (!a.readonly && inp(a) && !inp(a).disabled ? 2.5 : 1);
+            drawn.push({ id: a.id, g, w: g.fit < width ? g.fit : width, k });
+            if (sel) ownGeo.push(geom(ed.from, ed.to, fork && i > 0 ? -b : b, 0));
+          }
           const neg = isNeg(a);
           const cls = ["paths-arrow"];
           if (a.ghost) cls.push("ghost");
@@ -275,8 +311,12 @@
                             : (a.dark || n <= 0.0001 ? "url(#paths-head-dark)"
                                                      : (neg ? (locked ? "url(#paths-head-locked-down)" : "url(#paths-head-down)")
                                                             : (locked ? "url(#paths-head-locked)" : "url(#paths-head)"))));
+          // Under lockColours an arrow the student can set right now (not held,
+          // not mid-run) is marked, for the page to make it stand out (JM:
+          // "maybe any selectable arrow has a 'glow' effect?").
+          if (lockColours && !a.readonly && !a.dark && !a.ghost && inp(a) && !inp(a).disabled) cls.push("settable");
           const path = svg("path", { d: g.d, class: cls.join(" "),
-                                     "stroke-width": width.toFixed(2),
+                                     "stroke-width": (g.fit < width ? g.fit : width).toFixed(2),
                                      "marker-end": head });
           // Under lockColours a held arrow has no hit target, so the drawn
           // curve carries its id for a page (or a check) to read its state.
@@ -304,8 +344,10 @@
           // Label and value ride on the first head only; the others are the
           // same control reaching somewhere else and saying so twice is noise.
           const showBlock = !valuesOnSelect || sel || (a.always && a.text != null);
-          if (i === 0 && showBlock) {
-            const lines = a.label && (!valuesOnSelect || sel) ? wrap(a.label, 20) : [];
+          if (i === 0 && showBlock && valuesOnSelect && sel) pending = { a, g };
+          else if (i === 0 && showBlock) {
+            // JM, 2026-09-30: under valuesOnSelect no name over the number
+            const lines = a.label && !valuesOnSelect ? wrap(a.label, 20) : [];
             const showVal = !a.ghost;
             const blockH = lines.length * 13 + (showVal ? 15 : 0);
             // These diagrams are hand-laid, so an arrow may name where its
@@ -337,10 +379,12 @@
               lg.appendChild(t);
             }
             plate(lg);
+            if (valuesOnSelect) { try { labelRects.push(lg.getBBox()); } catch (e) {} }
             if (showVal && sel && !a.readonly && spec(a)) stepper(tx, ty + 2, a, spec(a));
           }
         });
       });
+      if (pending) readout(pending.a, placeReadout(pending.a, pending.g, ownGeo, drawn, labelRects));
 
       order.forEach(id => {
         const b = boxes[id];
@@ -372,6 +416,99 @@
       }
     }
 
+    // The selected arrow's readout under valuesOnSelect: its number between
+    // the − and +, centred on `c`.
+    function readout(a, c) {
+      // pushed away from its arrow for want of room, it gets a faint leader
+      // back to it, so the number is not read as another arrow's
+      const HW = c.hw || 48, HH = c.hh || 12;
+      if (c.near && Math.hypot(c.near.x - clamp(c.near.x, c.x - HW, c.x + HW), c.near.y - clamp(c.near.y, c.y - HH, c.y + HH)) > MAX_W / 2 + 14) {
+        const rx = clamp(c.near.x, c.x - HW + 8, c.x + HW - 8), ry = clamp(c.near.y, c.y - HH, c.y + HH);
+        const dx = c.near.x - rx, dy = c.near.y - ry, d = Math.hypot(dx, dy) || 1, stop = (c.w || 2) / 2 + 3;
+        gTop.appendChild(svg("line", { x1: rx, y1: ry, x2: (c.near.x - dx / d * stop).toFixed(1), y2: (c.near.y - dy / d * stop).toFixed(1), class: "paths-leader" }));
+      }
+      const lg = svg("g");
+      gTop.appendChild(lg);
+      const vcls = ["paths-arrow-value"];
+      if (isNeg(a)) vcls.push("down");
+      const t = svg("text", { x: c.x, y: c.y + 4.5, class: vcls.join(" ") });
+      const s = spec(a);
+      t.textContent = a.text != null ? a.text : (s ? a.fmt(s.v) : "—");
+      lg.appendChild(t);
+      plate(lg);
+      if (!a.readonly && s) stepper(c.x, c.y + 4.5, a, s, RO_STEP, c.upright);
+    }
+    // Where that readout goes (JM, 2026-09-30: "the popup boxes can obscure
+    // what arrow you" are setting). Candidates sit beside the arrow, stepped
+    // out from points along it; one that comes within a full-weight stroke of
+    // its own arrow is out, and the rest are scored by the other arrows,
+    // boxes and labels they cover, then by distance. The arrow's own curve is
+    // taken at no width, so the readout does not move while it is dragged.
+    // two shapes: − number + side by side, or + over the number over −
+    // (dragging up makes an arrow bigger); the tighter spot picks
+    const RO_STEP = 36, RO_SHAPES = [{ hw: RO_STEP + 12, hh: 12, upright: false }, { hw: 20, hh: 36, upright: true }];
+    function placeReadout(a, g, own, drawn, labelRects) {
+      const quad = (q, t) => ({ x: (1 - t) * (1 - t) * q.p1.x + 2 * (1 - t) * t * q.ctrl.x + t * t * q.p2.x,
+                                y: (1 - t) * (1 - t) * q.p1.y + 2 * (1 - t) * t * q.ctrl.y + t * t * q.p2.y });
+      // a curve as points, each standing for its share of the curve's length;
+      // with a width, the head too, as its base and tip at a heavier price,
+      // since a covered head hides which way the arrow runs
+      const pts = (q, w) => {
+        const out = [];
+        let len = 0; for (let k = 1; k <= 24; k++) { const u = quad(q, (k - 1) / 24), v = quad(q, k / 24); len += Math.hypot(v.x - u.x, v.y - u.y); }
+        for (let k = 0; k <= 24; k++) out.push(Object.assign(quad(q, k / 24), { cost: len / 25 * 0.6 }));
+        if (w) { const dx = q.p2.x - q.ctrl.x, dy = q.p2.y - q.ctrl.y, d = Math.hypot(dx, dy) || 1;
+                 for (const f of [0.5, 1]) out.push({ x: q.p2.x + dx / d * TIP_W * w * f, y: q.p2.y + dy / d * TIP_W * w * f, cost: 20 }); }
+        return out;
+      };
+      const mine = [].concat(...own.map(q => pts(q, 0)));
+      const others = drawn.filter(o => o.id !== a.id).map(o => ({ p: pts(o.g, o.w), r: o.w / 2 + 2, k: o.k }));
+      const rects = order.map(id => boxes[id]).filter(b => !b.hidden).map(b => ({ x: b.x - b.w / 2, y: b.y - b.h / 2, w: b.w, h: b.h, cost: 100 }))
+        .concat(labelRects.map(r => ({ x: r.x, y: r.y, w: r.width, h: r.height, cost: 30 })));
+      const clear = MAX_W / 2 + 5, q0 = own[0] || g, mid = quad(q0, 0.5);
+      let best = null, bestS = Infinity, dist;
+      for (const shape of RO_SHAPES) {
+      const RO_HW = shape.hw, RO_HH = shape.hh;
+      dist = (p, c) => Math.hypot(Math.max(Math.abs(p.x - c.x) - RO_HW, 0), Math.max(Math.abs(p.y - c.y) - RO_HH, 0));
+      for (const t of [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74]) {
+        const P = quad(q0, t);
+        const tx = 2 * (1 - t) * (q0.ctrl.x - q0.p1.x) + 2 * t * (q0.p2.x - q0.ctrl.x);
+        const ty = 2 * (1 - t) * (q0.ctrl.y - q0.p1.y) + 2 * t * (q0.p2.y - q0.ctrl.y), tl = Math.hypot(tx, ty) || 1;
+        const nx = -ty / tl, ny = tx / tl;
+        for (const [ux, uy] of [[nx, ny], [-nx, -ny], [0, -1], [0, 1], [-1, 0], [1, 0]]) {
+          const reach = clear + RO_HW * Math.abs(ux) + RO_HH * Math.abs(uy);
+          for (const extra of [0, 10, 22, 36, 52, 72]) {
+            const c = { x: P.x + ux * (reach + extra), y: P.y + uy * (reach + extra) };
+            if (c.x - RO_HW < 2 || c.x + RO_HW > W - 2 || c.y - RO_HH < 2 || c.y + RO_HH > H - 2) continue;
+            if (mine.some(p => dist(p, c) < clear)) continue;
+            let sc = Math.hypot(c.x - mid.x, c.y - mid.y) / 8;
+            for (const o of others) for (const p of o.p) if (dist(p, c) < o.r) sc += p.cost * o.k;
+            for (const r of rects) if (r.x < c.x + RO_HW + 2 && r.x + r.w > c.x - RO_HW - 2 && r.y < c.y + RO_HH + 2 && r.y + r.h > c.y - RO_HH - 2) sc += r.cost;
+            // set away from its arrow, it will need a leader: one through a
+            // box or over another arrow's head is worse than none
+            let near = mine[0], nd = Infinity;
+            for (const p of mine) { const d = dist(p, c); if (d < nd) { nd = d; near = p; } }
+            if (nd > MAX_W / 2 + 14) {
+              const rx = clamp(near.x, c.x - RO_HW, c.x + RO_HW), ry = clamp(near.y, c.y - RO_HH, c.y + RO_HH);
+              for (let k = 1; k < 12; k++) {
+                const p = { x: rx + (near.x - rx) * k / 12, y: ry + (near.y - ry) * k / 12 };
+                if (rects.some(r => r.cost >= 100 && p.x > r.x + 3 && p.x < r.x + r.w - 3 && p.y > r.y + 3 && p.y < r.y + r.h - 3)) { sc += 60; break; }
+              }
+              sc += nd / 6;
+            }
+            if (sc < bestS) { bestS = sc; best = Object.assign(c, shape); }
+          }
+        }
+      }
+      }
+      if (!best) return a.labelAt || g.mid;
+      let near = mine[0], nd = Infinity;
+      dist = (p, c) => Math.hypot(Math.max(Math.abs(p.x - c.x) - c.hw, 0), Math.max(Math.abs(p.y - c.y) - c.hh, 0));
+      for (const p of mine) { const d = dist(p, best); if (d < nd) { nd = d; near = p; } }
+      const self = drawn.find(o => o.id === a.id);
+      return { x: best.x, y: best.y, hw: best.hw, hh: best.hh, upright: best.upright, near, w: self ? self.w : 2 };
+    }
+
     // Slip an opaque rounded plate behind a label group, sized to whatever the
     // text actually measured out to.
     function plate(group) {
@@ -387,12 +524,13 @@
 
     // The − and + that appear on a selected arrow, for anyone who would rather
     // click than drag.
-    function stepper(x, y, a, s) {
+    function stepper(x, y, a, s, off, upright) {
       const nudge = Math.max(s.step, (s.max - s.min) / 40);
-      [[-1, x - 46, "−"], [1, x + 46, "+"]].forEach(([dir, cx, glyph]) => {
+      off = off || 46;
+      (upright ? [[-1, x, "−", y + 22], [1, x, "+", y - 26]] : [[-1, x - off, "−", y], [1, x + off, "+", y]]).forEach(([dir, cx, glyph, cy]) => {
         const g = svg("g", { class: "paths-step" });
-        g.appendChild(svg("circle", { cx: cx, cy: y - 4, r: 10 }));
-        const t = svg("text", { x: cx, y: y + 1 });
+        g.appendChild(svg("circle", { cx: cx, cy: cy - 4, r: 10 }));
+        const t = svg("text", { x: cx, y: cy + 1 });
         t.textContent = glyph;
         g.appendChild(t);
         g.addEventListener("pointerdown", ev => {

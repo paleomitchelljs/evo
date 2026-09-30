@@ -631,6 +631,60 @@ const D_SOL = { along: { fb: 4.5 }, eaten: { fd: 6 }, patch: { fb: -6.5 }, follo
     if (hit.length > most) { most = hit.length; at = JSON.stringify(s) + " clears " + hit.map(r => r.key).join(", "); } });
   check("D no one setting clears more than four of the ten rounds", most <= 4, sets.length + " settings (the ten answers and 80 at random), 2 runs a round, cleared when both hit: " + hist.map((v, k) => k + ":" + v).filter((_, k) => k <= 3).join(" ") + "; the greediest " + at);
 }
+/* ---- the diagrams' arrows (JM, 2026-09-30): heads that never turn back, a readout that
+   hides no arrow, and a glow on the arrows that can be set ----------------------------- */
+{
+  const out = [], bad = [], cover = [], glow = [];
+  for (const S of ["C", "D"]) {
+    document.getElementById("stage" + S).classList.remove("stage-locked");
+    const st = S === "C" ? C : D, root = document.getElementById("paths" + S), keys = S === "C" ? C_KEYS : D_KEYS, sync = S === "C" ? C_syncDag : D_syncDag;
+    const keep = {}; for (const k of keys) keep[k] = st[k];
+    /* in a round: the free arrows glow, the held ones do not; mid-run, none do */
+    const r = st.game.current(), free = r ? keys.filter(k => !(k in r.hold)) : keys;
+    st.paths.sync();
+    const lit = [...root.querySelectorAll(".paths-arrow.settable")].map(p => p.getAttribute("data-of"));
+    lockStage(S, true); st.paths.sync();
+    const litRun = root.querySelectorAll(".paths-arrow.settable").length;
+    lockStage(S, false); st.paths.sync();
+    const drawnFree = free.filter(k => root.querySelector('.paths-arrow[data-of="' + k + '"]'));
+    glow.push(S + (r ? " round " + r.key : " free play") + ": glowing [" + [...new Set(lit)].join(", ") + "], free [" + drawnFree.join(", ") + "], mid-run " + litRun);
+    if (!(drawnFree.every(k => lit.includes(k)) && lit.every(k => free.includes(k)) && litRun === 0)) glow.push("WRONG");
+    /* every arrow freed and at its widest, as in free play: the worst room for heads and readouts */
+    for (const k of keys) { st.paths.setArrow(k, { readonly: false }); const el = document.getElementById(S + "_" + k); if (el) { st[k] = +el.max; el.value = el.max; } }
+    sync(); st.paths.sync();
+    for (const p of root.querySelectorAll("path.paths-arrow")) {
+      const m = /M([-\d.]+),([-\d.]+) Q([-\d.]+),([-\d.]+) ([-\d.]+),([-\d.]+)/.exec(p.getAttribute("d")); if (!m) continue;
+      const [x1, y1, cx, cy, x2, y2] = m.slice(1).map(Number);
+      if (!((x2 - cx) * (x2 - x1) + (y2 - cy) * (y2 - y1) > 0 && (cx - x1) * (x2 - x1) + (cy - y1) * (y2 - y1) > 0)) bad.push(S + " " + p.getAttribute("data-of"));
+    }
+    for (const k of keys) {
+      const hit = root.querySelector('.paths-hit[data-arrow="' + k + '"]'); if (!hit) continue;
+      hit.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); window.dispatchEvent(new PointerEvent("pointerup"));
+      const steps = [...root.querySelectorAll(".paths-step circle")], val = [...root.querySelectorAll(".paths-arrow-value")].find(t => /[0-9]/.test(t.textContent));
+      if (!val || steps.length !== 2) { cover.push(S + " " + k + ": no readout"); continue; }
+      const bb = val.getBBox(), xs = steps.map(c => +c.getAttribute("cx")), ys = steps.map(c => +c.getAttribute("cy"));
+      const R = { x0: Math.min(...xs, bb.x) - 10, x1: Math.max(...xs, bb.x + bb.width) + 10, y0: Math.min(...ys.map(v => v - 10), bb.y), y1: Math.max(...ys.map(v => v + 10), bb.y + bb.height) };
+      const inR = q => q.x >= R.x0 && q.x <= R.x1 && q.y >= R.y0 && q.y <= R.y1;
+      for (const p of root.querySelectorAll("path.paths-arrow")) {
+        const id = p.getAttribute("data-of"), L = p.getTotalLength();
+        let n = 0; for (let q = 0; q <= 40; q++) if (inR(p.getPointAtLength(L * q / 40))) n++;
+        if (id === k && n) cover.push(S + " " + k + " covers its own arrow");
+        if (inR(p.getPointAtLength(L))) cover.push(S + " " + k + " covers the head of " + id);
+      }
+      for (const b of root.querySelectorAll(".paths-box-bg")) {
+        const x = +b.getAttribute("x"), y = +b.getAttribute("y"), w = +b.getAttribute("width"), h = +b.getAttribute("height");
+        if (x < R.x1 && x + w > R.x0 && y < R.y1 && y + h > R.y0) cover.push(S + " " + k + " covers a box");
+      }
+      out.push(k);
+    }
+    for (const k of keys) { st[k] = keep[k]; const el = document.getElementById(S + "_" + k); if (el) el.value = keep[k]; st.paths.setArrow(k, { readonly: !!r && k in r.hold }); }
+    sync(); st.paths.sync();
+  }
+  check("C, D the free arrows glow, held and fixed ones do not, and none mid-run", !glow.includes("WRONG"), glow.filter(t => t !== "WRONG").join("  |  "));
+  check("C, D at their widest, no arrow's end turns back on itself", bad.length === 0, bad.length ? "turned back: " + bad.join(", ") : "every drawn arrow runs forward to its head");
+  check("C, D a selected arrow's readout covers no part of it, no arrow's head and no box", cover.length === 0 && out.length >= 16,
+        (cover.length ? cover.join("; ") : "clear") + " (" + out.length + " arrows selected, every free arrow at its widest)");
+}
 /* ---- every plot inside its panel --------------------------------------- */
 {
   for (const S of ["C", "D"]) document.getElementById("stage" + S).classList.remove("stage-locked");
