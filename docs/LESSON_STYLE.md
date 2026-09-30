@@ -170,6 +170,20 @@ Two things worth stealing:
   Do not tell the student — a student who knows they are marked on improvement
   can manufacture it.
 
+**The target is where the process ends up, not what the controls read.** JM,
+2026-09-29: *"The targets are often much too directly tied to the sliders
+themselves. Something like predicting a net change or a new allele frequency
+as a function of the options."* A window on the controls' own values (the
+least-squares arrows, one slider mapped to one number) tests reading; a window
+on where the population ends up after the run tests the model. The same day,
+on lesson 13 C: *"cov(w,z) and E(wdz) shouldn't be kept secret. Manipulating
+the arrows in the DAG should directly show the students how the numbers are
+changing ... Students shouldn't see how the expected trait value moves, but
+rather ... see the two terms move and predict the final end."* So the terms
+the controls set are live, in rounds too; where the trait is expected to end
+is never drawn. And keep the card a picture: *"Let's not even show students
+the actual numbers below the plot ... Let the DAG carry them."*
+
 ---
 
 ## 7. Interactive families

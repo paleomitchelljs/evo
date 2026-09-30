@@ -2,8 +2,33 @@
 
 **File** · `app/lessons/lesson13.html` — rebuild from zero
 **Checks** · `node scripts/check_lesson13_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · replanned 2026-09-24 (the regression lesson of three); A-G (`version: 11`, `scaffold: 7`); the meadow went in front as A on 2026-09-29 and moved to B the same day when the Price demo took A; C-G were A-E on 2026-09-24; locked; prose to come from JM; B-G to be cut/consolidated (JM: not decided how)
-**Last touched** · 2026-09-29
+**Status** · A-D (`version: 13`, `scaffold: 25`: one bit per scored attempt, D ten targets; uncommitted). 2026-09-29: old C, D, E archived, C/D rebuilt on JM's DAG; 2026-09-30: E (mediator/confounder) and F (collider) archived; locked; prose to come from JM
+**Last touched** · 2026-09-30
+
+## Revision 2026-09-29 (JM's review of v11)
+
+- JM: A solid. B solid, *"though I think butterfly count or spread could use slightly more constrained--it's a bit too easy to just set the butterfly on the target with narrow preference spread."*
+- JM: C/D *"good but too arcane and superseded by the new parts A and B ... they seem archivable."*
+- JM on E: *"The targets are often much too directly tied to the sliders themselves."* New E: predict where the phenotype ends up; start and target distributions; *"Parent Traits -> Seeds -> Children Traits <- Other factors"*, Parent → Seeds = cov(w, z), Seeds → Children and Other → Children = E(wΔz) (*"if I am missing something here, please critically assess"*); the field drawn by stem height / flower size; a line plot of each trait over time; the DAG the only control; the two terms as densities on a shared axis; roll.
+- Measured, B: a count cap and a wider minimum spread do nothing. Butterflies alone on the window, best of five backgrounds, 6 runs: orange and purple **100%** at every cap tried (10, 5, 4, 3) and every minimum spread (0.25, 1, 1.5, 2, 2.5, 3). A lone bell curve is a peak the meadow climbs wherever it sits. On the window they already miss still and past (0%).
+- So B: orange and purple now **hold the butterflies** (5, liking the middle: 5.5 ± 1.5 for orange, 4.5 ± 1.5 for purple). Edge-only settings that hit ≥ 75% (4 runs, 210 tried): orange 4 (hummingbirds 6 at 2.5, 8 at 3, 8 at 3.5, 10 at 3.5); purple 5 (bees 6 at 7, 8 at 6.5, 10 at 6.5, …). Every round now holds one kind.
+- DAG, assessed: the chain as first sent has no road from a parent's trait to its seedling's trait except through how many seeds it set. Taken as drawn, selection off means seedlings stop resembling parents, and selection on means E(wΔz) cancels cov(w, z) exactly (the painted flowers: cov 0.29, E(wΔz) −0.29, change 0.0015).
+- **JM's second DAG, same day (built):** *"a major teaching point here should be that the numbers they practiced with (cov(w,z), E(wdz)) explain it all via their inputs ... Parent's Genetics -> Parent's traits <- Parent's environment; Parent's traits -> Seed number; Parent's genetics -> Offspring genetics -> Offspring traits <- Offspring environment. To not hide the causal chain, as what all goes into the E(wdz) term will be important later."* And: *"environment to have shared and unshared effects on each trait, as well as genetics having shared & unshared effects ... pleiotropy ... fall[s] out easily ... Maybe one trait DAG or no shared genetic/environmental influence for C, then adding the shared effects or second trait in part D?"*
+- The terms, split by the diagram's inputs (exact every generation; E_w = average over parents counted once per seedling):
+  - cov(w, z)/w̄ = genes' arrow × (E_w[genes] − mean) + environment's arrow × (E_w[env] − mean)
+  - E(wΔz)/w̄ = − the environment's part of cov (the parents' environment, not passed on) + the seedlings' environment against the parents' (a round's wet year) + which copies each seed got (0 give or take)
+  - expected a generation: genes b a²/W0, environment b s²/W0, E(wΔz) −b s²/W0 (+ the shift once)
+- Built: one engine (`PD_`) for C and D. 400 plants, 50 genes a set (two copies, the value put on the start's scale), environment a fresh normal draw, made exactly unrelated to the genes in the start; seeds W0 20 + arrows, Poisson; both parents drawn by seeds; 10 generations. Genes → trait and environment → trait are paths.js tiers (one control, both generations); parent's genes → seedling's genes is drawn, "copied", not a control.
+- C: one trait (stem height); arrows genes, environment (0-1.5), stem → seeds (−8..8). A round may deal the seedlings a wet year (shown on their environment box).
+- D: flower size added; the same genes box and environment box reach both traits (four signed arrows) plus both seeds arrows. No arrow between the traits. One genes box means the two responses keep the genes arrows' ratio whichever trait is selected (measured 0.80 for arrows 0.8/1.0 either way); a second genes box would let each trait keep genes of its own — offered to JM.
+- The card: per trait, the start's density, the target window, where cov(w, z) alone takes it (dashed), where both terms take it (dashed, before a run), the generation on screen (filled); A's three arrows over it, cov(w, z) in two colours (genes, environment). The field: start | generation, stems as tall as stem height, heads as wide as flower size, target band on the stems, flower target as two reference heads. By generation: each trait's average and each generation's terms.
+- JM, later the same evening: *"cov(w,z) and E(wdz) shouldn't be kept secret. Manipulating the arrows in the DAG should directly show the students how the numbers are changing (or their expectation given stochasticity). Students shouldn't see how the expected trait value moves"*; *"The price terms density plots are way too messy--we don't need to show the lines for each individual and the labels shouldn't overlap the density curves"*; *"Let's not even show students the actual numbers below the plot--it's too many. Let the DAG carry them."* Built: the card's top strip is a generation's cov(w, z) and E(wΔz) as bells (24 trial generations, the environment drawn afresh each time, so the bells spread like a run's own generations: ±0.045 vs ±0.041), live in every mode; a run's generations land as dots. No expected end curve, no expected path, no Δz before a run, no text under the card. The diagram's trait boxes carry cov(w, z) (parents) and E(wΔz) (seedlings), redrawn as the arrows move (the arrows had not redrawn during a drag at all before this).
+- JM: *"adding two causal arrows to 'seeds': birth rate & death rate. Then traits can link to the two separately ... Both birth and death get a random effect leading to them ... This opens up tradeoff models and eventually sexual selection, too."* Built: births 30 + arrows + chance, deaths 10 + arrows + chance, seeds set = births − deaths (fixed + and − arrows); chance 0-8, 2 by default. Rounds hold death arrows at 0 and chance at 2, so the free seeds arrow is births and the calibration carries over (re-measured). Trade-off rounds not built: freeing birth and death together lets one setting answer several rounds (the composite trap).
+- JM asked whether the genes/environment split of cov(w, z) is right, or "more like drift". It is exact (z is linear in genes and environment, so the covariance splits). Each part has a selection piece set by the arrows (genes b a²/20, environment b s²/20 a generation) and a chance piece: with no selection the genes' part averages 0 ± 0.039 a generation (that is drift, and it is passed on) and the environment's 0 ± 0.018 (taken back by E(wΔz)). Chance on the rates adds to the drift, but little: at 8 on each rate the genes' part wobbles 15% more over a run's generations (0.046 vs 0.040; 1.33× in a first generation from the start). Most drift is which seeds become the 400 seedlings.
+- Prototype (N 200, 40 runs a case): the end change is ~0.94 of the expected (the genes' spread is spent); a run's end wobbles 0.2 at N 200, so N 400 (0.1-0.2) and windows ± 0.3-0.4. The checks pool: realized ÷ expected 0.98.
+- `pageSeed` gives every check run a new start, so rounds were calibrated over 8 start populations × 4 runs, not one page (one-page windows hit 65-70% on the next page).
+- Composite settings: rounds that each free a *different* single arrow can all be cleared by one setting made of their answers (D's first set: 4 of 85 random settings cleared three). Fixed by freeing the same arrow (flower → seeds) in every one-arrow round of D, at values that do not overlap; in C, the drought became a wet year so its seeds arrow is negative.
+- Archived as `app/archive/lesson13_2026-09-29.html` (the whole page at 287e3e0, all seven stages, runnable). Old E's least squares goes with it; E (old F) is now the first stage that fits arrows to a cloud; its setup bullet now says what an arrow is.
 
 Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), this the regression, then birth–death and DAGs (planned at the end of this doc until it has a slot).
 
@@ -20,12 +45,11 @@ Second of three selection lessons: 12 the genetics (`lesson12_overhaul.md`), thi
 JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, and birth-death/DAGs). We'll add a frequency dependent one later, probably as 15."* So this lesson is the regression one; the birth–death framework and the two-trait stages are the third lesson's (below, until it has a slot).
 
     A  the Price demo: things that make more (cov) / of themselves (E(wΔz)) / become more common (Δz)
-    B  the meadow: visitors make a fitness landscape; where does the colour end up
-    C  covariance: who made more offspring, and did it track the trait
-    D  additive genetic variation: push harder, and what actually responds
-    E  the regression is the diagram: arrow = slope, "other" box = residual
-    F  mediator, confounder (built)
-    G  collider: selection makes a trade-off (built)
+    B  the meadow: visitors make a fitness landscape; where does the colour end up (every round holds one kind)
+    C  the diagram behind the two terms: genes and environment, parents and seedlings, one trait (2026-09-29)
+    D  a second trait on the same diagram: shared and unshared genes and environment (2026-09-29)
+    archived 2026-09-29: covariance (was C), what responds (was D), the least-squares diagram (was E)
+    archived 2026-09-30: mediator / confounder, collider (were E, F; F, G in the archive file)
 
 ### A — the Price equation, two routes (2026-09-29)
 
@@ -51,7 +75,7 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Panels: meadow (empty ground as it shrinks; a 100-bar gene strip; genes still varying); by generation (flowers of each colour stacked, so height = meadow size; the two terms as bars); map (counts + edges, no landscape); **card = the landscape with every flower stacked on it, the start in grey, the average window in red, start and now averages as triangles.** (JM cut the one-generation panel, the replacement line and the card title as chart junk.)
 - Target: the average colour after 20 generations in a window, **and at least 100 flowers left** (a meadow crashed to 7 flowers with no gene varying sat at 8.0, inside the "few" window).
 
-### C — covariance
+### Archived 2026-09-29 — covariance (was C)
 
 - JM, 2026-09-24, on the style: *"the recent design philosophy (diverse interactives, bowling games, practice rounds, etc) and any new, bespoke types of parts that make sense."*
 - JM's idea: *"two plots, and when one is distorted the other distorts, and they try to get the two to match some target with rounds varying based on the covariance strength ... I'm not sure it would build up to the hierarchical nature of the Price equation."*
@@ -68,7 +92,7 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Identity exact every generation. Three times the covariance and goes nowhere: `202_lec16_01` painted flowers, `202_lec15_05` puppy tails.
 - `priceTerms` is in lessons 10 and 11, **called by neither, never run**. Check it against a hand computation.
 
-### D — additive genetic variation, and what responds
+### Archived 2026-09-29 — additive genetic variation, and what responds (was D; its R = Va β point now lives in C)
 
 - JM, 2026-09-24: *"The regression one should also include a bit on additive genetic variation and the fact that R=Va regardless of S should be discovered by students (I'm imagining them making a plot point-by-point where they use interactives to try and force change by ratcheting up selection strength only to find that the response correlates with the heritability variation amount)."*
 - **Stated so it holds:** `R = h² S` — response does grow with S. What holds regardless of S: no additive variance, no response at any S; per unit of selection the response is set by the heritable variation, `R/S = h² = Va/Vp`. With selection strength as the fitness slope `β` (the line A's student drags), `R = Va β`, exactly, for an additive trait. The discoverable fact: **each population's points fall on a line whose slope is its Va.** Ratcheting strength slides along the line; only more Va steepens it.
@@ -78,7 +102,7 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Not built: "one population cannot reach it at the slider's stop" (a round that cannot be hit is a trap). Multi-generation extension: strong selection spends Va, and the response decays (2026-09-22: spread 1.65 against 2.07 after 300 generations).
 - Lesson 8 is the bridge: the slope of offspring on mid-parent is the heritability (JM's ruling, lesson 8), and it is the same `h²` that sets `R/S` here.
 
-### E — the regression is the diagram
+### Archived 2026-09-29 — the regression is the diagram (was E)
 
 - JM: *"arrow = slope, residuals = the 'other' box in the DAG."*
 - `paths.js` already binds each arrow of a fixed diagram to a slider. `buildArrows` draws one. Lesson 7's model diagram is the precedent in 1-10.
@@ -86,7 +110,7 @@ JM, 2026-09-24: *"let's have selection as three lessons (genetics, regression, a
 - Built 2026-09-24: the diagram (`paths.js`, signed arrows) is the controls. Two one-trait plots, each with the diagram's line and the band it expects there (`sqrt(other arrow² × var + box²)`). A leftover histogram against the box's curve, with its lean on each trait printed; live in practice, after Go in a round. Go grows seeds from the student's diagram on the same plants, as hollow dots over the real ones. A round is judged against the least-squares fit of that round's own plants, ±0.5 on each of the three.
 - The traits are made exactly unrelated in every sample (C's one-trait slopes = the arrows). D breaks that on purpose.
 
-### F — mediator, confounder; G — collider
+### E — mediator, confounder; F — collider (were F, G until 2026-09-29)
 
 - On the diagram C builds. Mediator: allele → trait → fitness. Confounder: one allele → two traits, one of which does nothing, and it still correlates with fitness. Collider: to build, and to measure what selecting on it does.
 - Built 2026-09-24 (mediator + confounder): C's machinery with an allele (0/1/2 copies) behind flower size and stem height; those two arrows are dealt and held, the student sets the four arrows into seeds. Each picture draws the slope the **whole** diagram implies there, `Σ bⱼ cov(xⱼ, xₖ)/var(xₖ)`, so stem's picture tilts with stem's arrow at 0 (confounder) and the allele's picture tilts with the allele's own arrow at 0 (mediator). Rounds: confounder, mediator, hidden pair (+2 / −2, the allele's picture flat), the allele's own arrow, all three.
@@ -141,6 +165,17 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 | 17 | — | shift A-F → B-G (ids, prefixes, gates, BIT, checks; stale stage pointers in comments fixed); 62 bars pass before A went in; the meadow's genes-average bar resized to 4 standard errors (failed at HEAD on one page: 0.115 against 0.1, SE 0.036) | done |
 | 18 | A | Price demo: ten flowers, step 1 counts (clones), step 2 family shifts (everyone two); card with the three arrows and the window; rounds; R panel written from the screen | done |
 | 19 | A | checks (11 new, 73 in all; A added to page-loaded, slots and practice-switch checks): identity by hand, each term zero in its step, stay-put routes move nothing, rounds reachable / none hits two / intended moves hit / opening and cheap routes miss, pointer, printed arithmetic, average waits for Go | done |
+| 20 | — | archive the page as it stands (`app/archive/lesson13_2026-09-29.html`, README line) | done |
+| 21 | — | cut old C, D, E (markup, code, checks); F → E, G → F (ids, prefixes, gates, BIT, checks; `C_gauss` and `D_HUES`, borrowed by F and G, now shared `gauss1` and `HUES`); `version: 12`, `scaffold: 6` | done |
+| 22 | B | orange and purple hold the butterflies; answers, cheap routes and the map-drag check (run outside a round) re-measured | done |
+| 23 | C | JM's DAG, one trait: engine `PD_`, the diagram (tiers for the two generations), field, by-generation chart, card (densities + split arrows), R panel; rounds tall / weather / genes / wet / shorter | done |
+| 24 | D | the same diagram, two traits: four signed source arrows + two seeds arrows; rounds along / patch / trade / shared / build | done |
+| 25 | C, D | checks (26 new, 71 in all): start spreads exact, Price by hand and its splits, seedling-on-midparent slope = genes' share, expected = arrows' arithmetic, run ≈ expected, environment grows cov and E takes it back, nothing in the genes moves nothing, a wet/dry year moves once, traits tied only through shared boxes, response ratio = genes ratio, shared environment moves nothing, rounds / opening / cheap routes / none clears three, printed arithmetic, terms wait for Go | done |
+| 26 | — | cross-references repointed (lesson 14 comment → 13 C; 16 doc → 13 E); memory | done |
+| 27 | E, F | archived 2026-09-30 (JM) | done |
+| 28 | — | one bit per scored attempt (JM 2026-09-30): BIT A1-A5, B1-B5, C1-C5, D1-D10; `version: 13`, `scaffold: 25`; tasks read "every one you hit counts"; bypass records every slot as hit; check that each scored attempt writes its own bit | done |
+| 30 | C, D | germination drawn on both diagrams: seeds set → germination ("400 seeds grow") ← chance, a fixed thick "at random" arrow, no control. JM, 2026-09-30: *"I just want students to be able to visually see where a large chunk of drift is entering, even if they can't control it, lest they wonder why they're getting results more stochastic than it seems from the settings for drift they can control."* The draw is most of the drift: ±0.037 a generation in the genes' part of cov(w, z) with no selection and no chance on the rates; chance at 8 on each rate adds about a fifth | done |
+| 29 | D | ten targets: eaten, follow, topple, shared2, build2 added (birth/death arrows, genes → flower); calibrated over 8 starts. Found: a round's held values carried into the next round's free arrows (eaten's held +6 on flower's births was patch's answer), so C and D now reset free arrows to the opening on every new target. Rounds freeing four different single arrows can be cleared together by one built-up setting (one of 90 random did), so the bar is no one setting clears more than four of ten. And the lazy route with the reset ("put whatever arrow is free at x"): with answers clustered at 2.5-4.5, x = 3 cleared four rounds; answers now spread and signed (patch −6.5, follow −4, trade −2.5, topple 3.5, along 4.5, eaten 6: trade and patch now select for smaller flowers, windows mirrored about 10 since the model is symmetric) and a check holds any single x to two; with trade +2.5 and patch +6.5, x = 3.5 cleared three on one page | done |
 
 ## Measured, 2026-09-29 — A (the two routes)
 
@@ -165,14 +200,14 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - Offspring vs. parents: −0.14 to −0.22 of who left more.
 - Earlier 10-gene / fixed-200 draft, kept for the record: counts barely mattered alone; stabilising selection narrowed the spread only 1.17 → 1.08 in 20 generations; the class-share target topped out near 66% in two classes.
 
-## Measured, 2026-09-24 — C (covariance)
+## Measured, 2026-09-24 — covariance (archived; was C)
 
 - The drawn offspring move the shift by spread / sqrt(M w̄) = 0.041 × spread (300 parents, w̄ 2). Tolerance 0.09 × spread: the right slope 93-100%.
 - At 0.1 × spread, a round asking +0.30 at spread 2 was reached by slope 0 on luck 15% of the time; at 0.07 × spread still 10% on one page. That round now asks +0.50.
 - One slope, four spreads (0.5, 1, 2, 3): shift 0.034, 0.138, 0.534, 1.28 — selection needs variation, measured.
 - Slopes the five rounds need: ~0.6, 0.25, −0.41, 1.0, 0.2 (each page draws its own populations).
 
-## Measured, 2026-09-24 — D (what responds)
+## Measured, 2026-09-24 — what responds (archived; was D)
 
 - `R/S` pooled over 60 runs: h² 0 → 0.006, 0.25 → 0.251, 0.5 → 0.498, 0.8 → 0.802, 1 → 1.001. At h² 0 and the slider's stops (±1.5) the parents who bred move ±0.65 and the offspring 0.01.
 - Slope 1 moves the parents who bred 0.48 in every population (h² 0.2, 0.5, 0.9: 0.483, 0.484, 0.486). Truncation at zero offspring bends it: slope 1.5 gives 0.65, not 0.75.
@@ -180,20 +215,20 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - A first round set asking for slopes 0.7-1.1 let slope 0.85 clear four.
 - One run at slope 0 printed a fitted slope of 2.87 (two wobbles divided). The page holds the slope back until sum(S²) ≥ 0.02.
 
-## Measured, 2026-09-24 — E (the diagram)
+## Measured, 2026-09-24 — the least-squares diagram (archived; was E)
 
 - Left to chance, 200 plants correlated the two traits by up to 0.19. At 0.19 the flower picture's slope read 2.45 against an arrow of 1.91, beyond the ±0.5 window. The traits are now made exactly unrelated in each sample.
 - At the least-squares diagram the bands hold 65-72% of plants in every round.
 - Arrows right, box read off the wider one-trait picture: misses 4 of 5 rounds. It hits r4, where the box (4) is most of the spread.
 - On a 0.5 grid (3757 diagrams) the greediest clears one round.
 
-## Measured, 2026-09-24 — F (mediator, confounder)
+## Measured, 2026-09-24 — E (mediator, confounder; was F)
 
 - Reading each arrow off its own picture (box right) misses all five rounds. On a 0.5 grid the greediest of 63869 diagrams clears one.
 - r2 (mediator) first had allele → flower 1.5 with flower noise 0.7. The allele was then 70% predictable from flower size, and its own fitted arrow (truly 0) passed 0.4 on 21% of pages. At 1.0 and box 1.5: 2%.
 - At the fit, the line and band each picture draws equal that picture's own regression to 4e-15. The identity is `C b = c`, and var(seeds) = b'Cb + box².
 
-## Measured, 2026-09-24 — G (collider)
+## Measured, 2026-09-24 — F (collider; was G)
 
 - No luck, equal arrows: the survivors' slope is `−δ/(2 − δ)`, with `δ = λ(λ − c)` for a cut at `c` on `(f + h)/√2`. Measured −0.328 / −0.524 / −0.704 at 30 / 60 / 90% killed, against the formula's −0.340 / −0.525 / −0.711.
 - With luck 0.5, equal arrows, 0/20/50/80% killed: 0.00, −0.22, −0.39, −0.52. Flower +1, stem −1 at 50%: +0.38.
@@ -201,6 +236,8 @@ Takes slot 14 when it is built; the placeholder drafts from 14 up shift then (JM
 - The practice preview without luck overstated the slope (−0.54 against about −0.44 at 60%). It now uses one seeded draw of luck.
 
 ## Open for JM
+
+0. C/D (2026-09-29): (e) trade-off rounds on births vs deaths are still his call. Sexual selection is out of 13 (JM, 2026-09-30: held for speciation later in the semester; when it comes, *"mating success isn't so much a 'third rate' as it is a mediator between trait & birth rate"*: trait → mating success → birth rate). Note for then: this engine draws a plant's pollen success in proportion to its seeds set, so paternity rides on the birth rate; a male-only path (mating success → seeds sired) needs its own arrow; (f) D's diagram is busy (13 boxes). (a) D has one genes box, so the two traits' responses always keep the genes arrows' ratio; a second genes box gives each trait genes of its own. (b) JM's first DAG's seeds → seedling arrow is left out: its one honest meaning is crowding (more seeds, less in each), a one-off step. (c) E and F still have targets that are the controls' own values. (d) B: the butterfly count/spread cap he suggested measured to do nothing; the rounds hold the butterflies instead.
 
 1. A: JM called the first term "the correlation"; the page shows cov(w, z), which is the correlation × spread of w × spread of z, so the same perfect tilt moves a narrow population less (C's point). Labels say cov(w, z).
 2. A: the meadow's chart labels (who reproduced / transmission bias / change this generation) could take A's frame (things that make more / of themselves / become more common).

@@ -2,10 +2,10 @@
 /*
  * check_lesson13_numbers.js -- the bar checks for app/lessons/lesson13.html.
  *
- * Lesson 13 is a draft (2026-09-24; the meadow went in front 2026-09-29 and
- * moved to B when the Price demo took A the same day): A the two routes,
- * B the meadow, C covariance, D what responds, E the diagram, F mediator /
- * confounder, G the collider. What has to hold:
+ * Lesson 13 is a draft (2026-09-24; rebuilt 2026-09-29): A the two routes,
+ * B the meadow, C the diagram behind the two terms (one trait), D the same
+ * diagram with a second trait (ten targets). One bit per scored attempt.
+ * What has to hold:
  *
  *   A. the ten flowers are mirrored pairs averaging exactly 5; cov(w, z) +
  *      E(wΔz) is the change in the average, counted offspring by offspring;
@@ -22,33 +22,28 @@
  *      like with like; who left more plus offspring vs. parents is the
  *      change in the average colour, every generation, counted by hand; the
  *      part not passed on pulls back; a hard push with few visitors crashes
- *      the meadow and strips its genes; every round hit at its setting, the
- *      opening and no visitors hitting none, the cheap routes missing, no
- *      one setting clearing three; the map sets what the pointer is on; the
- *      card reads the average and count off the flowers;
- *   C. the offspring's shift IS cov(w, z) / w̄, every time, exactly -- the
- *      identity the stage prints -- and the covariance IS the average of the
- *      rectangles it draws; at a fixed slope the shift grows with the
- *      trait's variance: selection needs variation; every round is hit at
- *      its slope, missed at slope 0, and no one slope clears three rounds;
- *   D. the offspring move h2 times the parents who bred, whatever the
- *      slope; no inherited variation, no response; one slope gives the same
- *      shift in every population; the printed arithmetic agrees; D's rounds
- *      as in C; a population's inherited share stays hidden until its
- *      scored run;
- *   E. the page's least squares against a hand solve; the least-squares
- *      arrows leave the least over, and it leans on neither trait; each
- *      one-trait slope is its arrow and its spread is the other arrow plus
- *      the box; the rounds as in C, and reading the box off one picture
- *      misses;
- *   F. the same for three causes tied by an allele, plus: the line the
- *      whole diagram draws in each picture is that picture's slope at the
- *      fit; a confounded trait and a mediated allele show a slope their own
- *      arrow does not have; reading arrows off pictures misses;
- *   G. the traits are unrelated across all seedlings; the drought kills
- *      exactly its share; with no luck the survivors' slope is the
- *      truncated-normal value; it deepens with the drought and flips sign
- *      with the rule; the rounds as in C.
+ *      the meadow and strips its genes; every round hit at its setting
+ *      (orange and purple hold the butterflies), the opening and no
+ *      visitors hitting none, the cheap routes missing, no one setting
+ *      clearing three; the map sets what the pointer is on; the card reads
+ *      the average and count off the flowers;
+ *   C. the start has the spread the arrows say; cov(w, z) + E(wΔz) is the
+ *      change, every generation, counted seedling by seedling, and each
+ *      term splits by the diagram's inputs; the slope of seedlings on their
+ *      parents' average is the genes' share; the expected terms are the
+ *      arrows' arithmetic and a run lands a little under them; the
+ *      environment arrow grows cov(w, z) and E(wΔz) takes it back; nothing
+ *      in the genes, nothing moves; a drought moves the average once; the
+ *      rounds as in B; in a round the diagram carries a generation's terms as
+ *      the arrows set them, the card's bells are trial generations centred on
+ *      them, the card prints no numbers and nothing shows an expected end;
+ *   D. the traits are tied only through the boxes they share; the terms
+ *      add up for both; the responses keep the genes arrows' ratio
+ *      whichever trait is selected; a shared environment gives cov(w, z)
+ *      that E(wΔz) takes back; the rounds as in B;
+ * The old C (covariance), D (what responds) and E (least squares) were
+ * archived 2026-09-29 with their checks, and E (mediator / confounder) and F
+ * (collider) on 2026-09-30: see app/archive/README.md.
  *
  * Same harness as check_lesson11_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -71,8 +66,13 @@ const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok?"ok   ":"FA
 const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 
-check("page loaded", !!(A && A.game && B && B.game && C && C.game && D && D.game && E && E.game && E.paths && F && F.game && F.paths && G && G.game && G.paths && typeof Score !== "undefined"), "Stages A-G, the three diagrams and Score are defined");
-check("slots declared match slots written", Object.keys(BIT).length === 7, Object.keys(BIT).length + " named bits, scaffold is 7");
+check("page loaded", !!(A && A.game && B && B.game && C && C.game && C.paths && D && D.game && D.paths && typeof Score !== "undefined"), "Stages A-D, the two diagrams and Score are defined");
+{
+  /* one bit per scored attempt: five for A, B, C, ten for D, in order, no gaps */
+  const want = []; for (const [S, n] of [["A", 5], ["B", 5], ["C", 5], ["D", 10]]) for (let k = 1; k <= n; k++) want.push(S + k);
+  const ok = Object.keys(BIT).length === 25 && want.every((k, i) => BIT[k] === i) && A.game.st && D_ROUNDS.length === 10;
+  check("one bit per scored attempt: 25 slots, five for A, B and C, ten for D", ok, Object.keys(BIT).length + " named bits (" + Object.keys(BIT).slice(0, 3).join(", ") + " … " + Object.keys(BIT).slice(-2).join(", ") + "); D deals " + D_ROUNDS.length + " rounds");
+}
 /* ---- A: the two routes -------------------------------------------------- */
 {
   /* A opens on free play; Start deals the first target, and the round holds its step */
@@ -305,8 +305,8 @@ check("slots declared match slots written", Object.keys(BIT).length === 7, Objec
    these hold on whatever meadow this run of the check was dealt. Measured
    2026-09-29 over eight start meadows: these settings hit 100%. */
 const B_SOL = {
-  orange: { nH: 0, tH: 10,  nB: 0,  tB: 0,   nF: 10, fMu: 2.5, fSd: 1 },
-  purple: { nH: 0, tH: 10,  nB: 0,  tB: 0,   nF: 8,  fMu: 7,   fSd: 1 },
+  orange: { nH: 8, tH: 3,   nB: 0,  tB: 0,   nF: 0,  fMu: 5,   fSd: 1 },
+  purple: { nH: 0, tH: 10,  nB: 8,  tB: 6.5, nF: 0,  fMu: 5,   fSd: 1 },
   still:  { nH: 8, tH: 4,   nB: 0,  tB: 0,   nF: 10, fMu: 5,   fSd: 1 },
   past:   { nH: 0, tH: 0,   nB: 10, tB: 6.5, nF: 10, fMu: 8,   fSd: 1 },
   few:    { nH: 0, tH: 10,  nB: 0,  tB: 5.5, nF: 0,  fMu: 7.5, fSd: 1 } };
@@ -318,21 +318,27 @@ const B_rate = (r, s, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++)
   const open = B_ROUNDS.map((r, i) => B_rate(r, B_OPEN, 10, 12000 + i * 97)), nil = B_ROUNDS.map((r, i) => B_rate(r, B_NONE, 10, 12500 + i * 97));
   check("B the opening, and no visitors at all, hit none", open.every(v => v === 0) && nil.every(v => v === 0),
         "opening: " + open.map(v => Math.round(100 * v) + "%").join(" / ") + "; no visitors: " + nil.map(v => Math.round(100 * v) + "%").join(" / ") + "  (10 runs each)");
-  /* the cheap routes (eight start meadows, 2026-09-29): past the orange 0%;
-     the held bees answered by butterflies on the middle alone 3%; one kind
-     of visitor against ten hummingbirds 0%; few visitors aimed straight at
-     the window (bees at 7.5, the butterfly around 7.5 +- 0.5) 8%, crashing
-     to ~16 flowers and some dying */
+  /* the cheap routes (eight start meadows, 2026-09-29): hummingbirds at 4,
+     orange's answer before the butterflies were held; the held bees
+     answered by butterflies on the middle alone 3%; one kind of visitor
+     against ten hummingbirds 0%; few visitors aimed straight at the window
+     (bees at 7.5, the butterfly around 7.5 +- 0.5) 8%, crashing to ~16
+     flowers and some dying */
   const by = k => B_ROUNDS.find(r => r.key === k);
-  const past = B_rate(by("orange"), Object.assign({}, B_NONE, { nH: 8, tH: 3 }), 10, 13000);
+  const past = B_rate(by("orange"), Object.assign({}, B_NONE, { nH: 8, tH: 4 }), 10, 13000);
   const mid = B_rate(by("still"), Object.assign({}, B_NONE, { nF: 10, fMu: 5, fSd: 1 }), 10, 13100);
   let alone = 0;
   for (const t of [5, 5.5, 6, 6.5, 7, 7.5]) alone = Math.max(alone, B_rate(by("past"), Object.assign({}, B_NONE, { nB: 10, tB: t }), 6, 13200 + t * 10));
   for (const [a, b] of [[7, 2], [8, 1], [8.5, 1], [9, 1.5], [7.5, 0.5]]) alone = Math.max(alone, B_rate(by("past"), Object.assign({}, B_NONE, { nF: 10, fMu: a, fSd: b }), 6, 13400 + a * 10 + b));
   const straight = B_rate(by("few"), Object.assign({}, B_NONE, { tB: 7.5, fMu: 7.5, fSd: 0.5 }), 12, 13600);
   check("B the cheap routes miss", past <= 0.2 && mid <= 0.3 && alone <= 0.34 && straight <= 0.4,
-        "orange with hummingbirds at 3: " + Math.round(100 * past) + "%; still with butterflies around 5 alone: " + Math.round(100 * mid) +
+        "orange with hummingbirds at 4 against the held butterflies: " + Math.round(100 * past) + "%; still with butterflies around 5 alone: " + Math.round(100 * mid) +
         "%; past with one kind of visitor (best of 11): " + Math.round(100 * alone) + "%; few aimed straight at 7-8 (bees at 7.5, the butterfly 7.5 ± 0.5): " + Math.round(100 * straight) + "%");
+  /* JM, 2026-09-29: "too easy to just set the butterfly on the target". Orange and purple hold them now;
+     the old answer, butterflies on the window, comes out as the held butterflies and misses */
+  const onWin = ["orange", "purple"].map((k, i) => { const r = by(k); return B_rate(r, Object.assign({}, B_NONE, { nF: 10, fMu: (r.lo + r.hi) / 2, fSd: 0.5 }), 6, 13700 + i * 7); });
+  check("B orange and purple hold the butterflies, so they cannot be set on the window", onWin.every(v => v === 0) && ["orange", "purple"].every(k => "fMu" in by(k).hold && "nF" in by(k).hold),
+        "butterflies 10 on the window, ± 0.5, with nothing else: orange " + Math.round(100 * onWin[0]) + "%, purple " + Math.round(100 * onWin[1]) + "% (100% before they were held)");
   /* no one setting clears three: random settings, each tried 3 times per round, cleared when 2 of 3 hit */
   const rng = mulberry32(4321), g = () => Math.round(rng() * 20) / 2, n = () => Math.floor(rng() * 11), hist = [0, 0, 0, 0, 0, 0];
   let most = 0; const NS = 200;
@@ -347,6 +353,7 @@ const B_rate = (r, s, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++)
      along its row, and their spread from the small handle under it */
   const cv = document.getElementById("B_map"), rc = cv.getBoundingClientRect(), W = +cv.dataset.drawW, H = +cv.dataset.cssH, f = B_mapFrame(W, H);
   const keep = B_setNow(), ev = (type, x, y) => cv.dispatchEvent(new PointerEvent(type, { clientX: rc.left + x * rc.width / W, clientY: rc.top + y * rc.height / H, pointerId: 1, bubbles: true }));
+  const wasDone = B.game.st.done; B.game.st.done = true;   /* outside a round: orange and purple hold the butterflies */
   Object.assign(B, { nF: 2, fMu: 5, fSd: 1, tB: 0 }); B_syncHold();
   ev("pointerdown", f.cx[2], f.cBot - 3.5 * f.sh); ev("pointerup", f.cx[2], f.cBot - 3.5 * f.sh);
   const nGot = B.nF;
@@ -356,7 +363,7 @@ const B_rate = (r, s, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++)
   const sdGot = B.fSd;
   ev("pointerdown", f.x(7.5 - 2.25), f.rows[2] + 9); ev("pointermove", f.x(7.5 - 0.1), f.rows[2] + 9); ev("pointerup", f.x(7.5 - 0.1), f.rows[2] + 9);
   const sdMin = B.fSd;
-  Object.assign(B, keep); B_syncHold(); B.run = null; B_paint();
+  B.game.st.done = wasDone; Object.assign(B, keep); B_syncHold(); B.run = null; B_paint();
   check("B the map sets counts, the butterflies' favorite and their spread where the pointer is", nGot === 4 && muGot === 7.5 && sdGot === 2.25 && sdMin === B_SDMIN,
         "fourth butterfly slot: " + nGot + " butterflies; favorite dragged from 5 to 7.5: " + muGot + "; spread handle dragged out to 9.75: spread " + sdGot +
         "; the other spread handle dragged onto the favorite: " + sdMin + " (the narrowest, " + B_SDMIN + ")");
@@ -372,276 +379,239 @@ const B_rate = (r, s, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++)
   check("B the card's average and count are the final meadow's", avg === +hand.toFixed(2) && cnt === run.final.n,
         "printed average " + avg + ", counted here " + hand.toFixed(2) + "; printed " + cnt + " flowers, counted " + run.final.n);
 }
-/* ---- the identity, recomputed here from the dots ----------------------- */
+/* ---- C: the diagram behind the two terms, one trait -------------------- */
+/* the page's own set builder, so the checks run with the chance the page runs with */
+const C_SET = (a, s, b, sh) => C_setOf(Object.assign({}, C_OPEN, { a, s, bb: b }), sh);
+const C_endOf = (set, seed) => PD_mean(PD_run(set, C_START, mulberry32(seed)).z[PD_T][0]);
+const C_rate = (r, st, reps, seed) => { let k = 0; const s = Object.assign({}, C_OPEN, st, r.hold);
+  for (let q = 0; q < reps; q++) { const m = C_endOf(C_setOf(s, r.shift), seed + q * 7919); if (m >= r.lo && m <= r.hi) k++; } return k / reps; };
 {
-  let worst = 0, worstRect = 0, n = 0;
-  for (const sd of [0.5, 1.5, 3]) for (const beta of [-1, -0.3, 0, 0.4, 1.2]) for (let q = 0; q < 5; q++) {
-    const pop = C_makePop(sd, 900 + q * 13 + Math.round(sd * 10)), rng = mulberry32(1000 + q * 7919);
-    const w = C_lambda(pop, beta).map(l => C_pois(rng, l)), st = C_stats(pop, w);
-    /* by hand: the weighted mean of the parents' trait, minus their mean */
-    let sw = 0, swz = 0, sz = 0; for (let i = 0; i < pop.z.length; i++) { sw += w[i]; swz += w[i] * pop.z[i]; sz += pop.z[i]; }
-    const shift = sw > 0 ? swz / sw - sz / pop.z.length : 0;
-    /* the rectangles, one per dot, signed, averaged */
-    const zb = sz / pop.z.length, wb = sw / pop.z.length;
-    let rect = 0; for (let i = 0; i < pop.z.length; i++) rect += (pop.z[i] - zb) * (w[i] - wb) / pop.z.length;
-    worst = Math.max(worst, Math.abs(shift - rect / wb), Math.abs(st.shift - shift));
-    worstRect = Math.max(worstRect, Math.abs(rect - st.cov)); n++;
+  const before = C.game.free() && C.game.current() == null, labFree = document.getElementById("C_run").textContent;
+  document.getElementById("C_tnext").click();
+  const r0 = C.game.current(), held = C.a === r0.hold.a && C.s === r0.hold.s && document.getElementById("C_a").value == r0.hold.a;
+  check("C opens on free play; Start deals the first target and holds its arrows", before && labFree === "Practice run" && r0 === C_ROUNDS[0] && held && document.getElementById("C_run").textContent === "Go",
+        "free at load: " + before + " (button '" + labFree + "'); after Start: round " + (r0 || {}).key + ", genes " + C.a + " and environment " + C.s + " held: " + held);
+}
+{
+  /* the start has exactly the spreads the arrows say: genes and environment unrelated, each spread 1 */
+  const g = C_START.gs[0], e = C_START.env[0];
+  let c = 0; for (let i = 0; i < PD_N; i++) c += g[i] * e[i] / PD_N;
+  const rows = [[1, 0.5], [0.5, 1], [1.5, 0], [0, 1.2]].map(([a, s]) => { const z = PD_traits(C_START, [{ g: [a], e: [s] }])[0]; return { a, s, m: PD_mean(z), sd: PD_sd(z), want: Math.sqrt(a * a + s * s) }; });
+  check("C the start has the spread the arrows say, genes and environment unrelated", Math.abs(c) < 1e-12 && Math.abs(PD_mean(g)) < 1e-12 && Math.abs(PD_sd(g) - 1) < 1e-12 &&
+        rows.every(q => Math.abs(q.m - 10) < 1e-12 && Math.abs(q.sd - q.want) < 1e-12),
+        "genes–environment covariance " + c.toExponential(1) + "; " + rows.map(q => "genes " + q.a + ", env " + q.s + ": spread " + q.sd.toFixed(4) + " [√(a² + s²) " + q.want.toFixed(4) + "]").join("  "));
+}
+{
+  /* Price by hand, every generation: w from the mothers and pollen parents,
+     each term from its definition, and each split from the sources */
+  let gap = 0, split = 0, gens = 0;
+  const sets = [C_SET(1, 0.5, 4), C_SET(0.5, 1, -6), C_SET(0, 1, 8), C_SET(1.2, 0.6, 3, -1)];
+  sets.forEach((set, si) => {
+    const run = PD_run(set, C_START, mulberry32(40 + si));
+    run.recs.forEach((r, t) => {
+      const pop = run.pops[t], nx = run.pops[t + 1], z = run.z[t][0], zk = run.z[t + 1][0], w = new Float64Array(PD_N);
+      for (let j = 0; j < PD_N; j++) { w[r.mom[j]]++; w[r.dad[j]]++; }
+      const W = w.reduce((x, y) => x + y, 0), wb = W / PD_N, zb = mn(Array.from(z));
+      let cov = 0, ewdz = 0; const kids = Array.from({ length: PD_N }, () => []);
+      for (let j = 0; j < PD_N; j++) { kids[r.mom[j]].push(zk[j]); kids[r.dad[j]].push(zk[j]); }
+      for (let i = 0; i < PD_N; i++) { cov += (w[i] - wb) * (z[i] - zb) / PD_N; if (w[i]) ewdz += w[i] * (mn(kids[i]) - z[i]) / PD_N; }
+      const dz = mn(Array.from(zk)) - zb, T = r.terms[0];
+      gap = Math.max(gap, Math.abs(cov / wb + ewdz / wb - dz), Math.abs(T.cov - cov / wb), Math.abs(T.E - ewdz / wb), Math.abs(T.dz - dz));
+      const a = set.cf[0].g[0], s = set.cf[0].e[0], Ew = x => { let q = 0; for (let i = 0; i < PD_N; i++) q += w[i] * x[i]; return q / W; };
+      const covG = a * (Ew(pop.gs[0]) - mn(Array.from(pop.gs[0]))), covE = s * (Ew(pop.env[0]) - mn(Array.from(pop.env[0])));
+      const eOff = s * (mn(Array.from(nx.env[0])) - mn(Array.from(pop.env[0]))) + nx.sh[0] - pop.sh[0];
+      split = Math.max(split, Math.abs(T.covG - covG), Math.abs(T.covE - covE), Math.abs(T.eEnv + covE), Math.abs(T.eOff - eOff), Math.abs(T.covG + T.covE - T.cov), Math.abs(T.eG + T.eEnv + T.eOff - T.E));
+      gens++;
+    });
+  });
+  check("C cov(w, z) + E(wΔz) is the change in the average, every generation, and each splits by the diagram's inputs", gap < 1e-9 && split < 1e-9,
+        gens + " generations, 4 settings (one with a drought), counted seedling by seedling: identity and page vs hand " + gap.toExponential(1) + "; splits (genes, environment, not passed on, seedlings' environment) " + split.toExponential(1));
+}
+{
+  /* what the diagram passes down: the slope of seedlings on the average of their two parents is the genes' share */
+  const slope = (a, s) => { let sxy = 0, sxx = 0;
+    for (let q = 0; q < 5; q++) { const run = PD_run(C_SET(a, s, 0), C_START, mulberry32(70 + q)), r = run.recs[0], z = run.z[0][0], zk = run.z[1][0];
+      const mp = Array.from({ length: PD_N }, (_, j) => (z[r.mom[j]] + z[r.dad[j]]) / 2), mm = mn(mp), mk = mn(Array.from(zk));
+      for (let j = 0; j < PD_N; j++) { sxy += (mp[j] - mm) * (zk[j] - mk); sxx += (mp[j] - mm) ** 2; } }
+    return sxy / sxx; };
+  const rows = [[1, 0.5], [0.5, 1], [1, 1], [0, 1]].map(([a, s]) => ({ a, s, got: slope(a, s), want: a * a / (a * a + s * s) }));
+  check("C the slope of seedlings on their parents' average is the genes' share of the spread", rows.every(q => Math.abs(q.got - q.want) < 0.1),
+        rows.map(q => "genes " + q.a + ", env " + q.s + ": " + q.got.toFixed(2) + " [a² ÷ (a² + s²) " + q.want.toFixed(2) + "]").join("  ") + "  (no selection, 5 × 400 seedlings each)");
+}
+{
+  /* the expected terms are the arrows' arithmetic: a generation's cov(w, z) is b a² / W0 from the genes and b s² / W0 from the environment */
+  let worst = 0; const rows = [];
+  /* settings where no plant is pushed to zero seeds: there the floor bends the arithmetic (0.2997 for 0.3 at genes 0.5, env 1, seeds 6) */
+  for (const [a, s, b] of [[1, 0.5, 4], [0.5, 1, 4], [1.2, 0.3, -3], [0.8, 0.6, 2]]) {
+    const ex = PD_expect(C_START, C_SET(a, s, b))[0];
+    worst = Math.max(worst, Math.abs(ex.per.covG - b * a * a / PD_W0), Math.abs(ex.per.covE - b * s * s / PD_W0), Math.abs(ex.eEnv + PD_T * ex.per.covE), Math.abs(ex.dz - PD_T * ex.per.covG));
+    rows.push("a " + a + " s " + s + " b " + b + ": genes " + ex.per.covG.toFixed(4) + " [" + (b * a * a / PD_W0).toFixed(4) + "], environment " + ex.per.covE.toFixed(4) + " [" + (b * s * s / PD_W0).toFixed(4) + "]");
   }
-  check("C the shift is cov(w, z) / w̄, and the covariance is the average rectangle", worst < 1e-9 && worstRect < 1e-9,
-        n + " populations x slopes x draws: largest gap " + worst.toExponential(1) + " (shift) and " + worstRect.toExponential(1) + " (rectangles)");
+  check("C the expected terms are the arrows' arithmetic", worst < 1e-9, rows.join("  "));
+  /* and a run lands near them: the genes' part runs a little under, as their spread is spent */
+  /* pooled over three settings and 8 runs each, so a run's drift (0.1-0.2) does not decide it. By
+     chance the start's 50 genes are a little tied together across its 400 plants; free recombination
+     undoes that in the first generation, so the genes' spread moves a few percent from the start's.
+     Measured 2026-09-29, 12 starts x 8 runs at genes 1, env 0.5, seeds 4: 0.89 to 1.05, mean 0.95. */
+  let got = 0, want = 0; const each = [];
+  for (const [a, s, b] of [[1, 0.5, 4], [0.5, 1, 7], [0.8, 0.6, -3]]) { const w = PD_expect(C_START, C_SET(a, s, b))[0].dz; let g = 0;
+    for (let q = 0; q < 8; q++) g += (C_endOf(C_SET(a, s, b), 90 + q) - 10) / 8; each.push(g / w); got += Math.abs(g); want += Math.abs(w); }
+  check("C a run's change is close to the expected", got / want > 0.85 && got / want < 1.1,
+        "realized ÷ expected over " + PD_T + " generations, pooled: " + (got / want).toFixed(3) + " (each: " + each.map(v => v.toFixed(3)).join(", ") + "; 8 runs each)");
 }
 {
-  /* selection needs variation: one slope, four spreads */
-  const beta = 0.3, rows = [0.5, 1, 2, 3].map(sd => { const pop = C_makePop(sd, 1200 + sd * 10), st = C_stats(pop, C_lambda(pop, beta));
-    return { sd, V: pop.V, shift: st.shift, pred: beta * pop.V / st.wb }; });
-  check("C at one slope the shift grows with the variance", rows.every((q, i) => i === 0 || q.shift > rows[i - 1].shift) && rows.every(q => Math.abs(q.shift - q.pred) < 0.02 * Math.max(1, q.pred)),
-        "slope 0.3: " + rows.map(q => "spread " + q.sd + " (variance " + q.V.toFixed(2) + ") → " + q.shift.toFixed(3) + " [slope × variance ÷ w̄ " + q.pred.toFixed(3) + "]").join("  "));
-}
-/* ---- the rounds --------------------------------------------------------- */
-{
-  const popOf = (r, i) => C_makePop(r.sd, pageSeed("l13Ap", 1, 99999) + (i + 1) * 7919);
-  const hitA = (r, pop, beta, reps, seed) => { let k = 0; const lam = C_lambda(pop, beta);
-    for (let q = 0; q < reps; q++) { const rng = mulberry32(seed + q * 7919); if (Math.abs(C_stats(pop, lam.map(l => C_pois(rng, l))).shift - r.S) <= C_tol(r)) k++; }
-    return k / reps; };
-  const own = C_ROUNDS.map((r, i) => { const pop = popOf(r, i), beta = Math.round(200 * r.S / pop.V) / 100; return { k: r.key, beta, v: hitA(r, pop, beta, 40, 2000 + i * 97) }; });
-  check("C every round is hit at its slope", own.every(q => q.v >= 0.9),
-        own.map(q => q.k + " @" + q.beta + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (40 draws each)");
-  const zero = C_ROUNDS.map((r, i) => hitA(r, popOf(r, i), 0, 20, 2500 + i * 97));
-  check("C slope 0, the opening, hits none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
-  let most = 0, at = 0;
-  for (let b = -1.5; b <= 1.5001; b += 0.01) { const beta = Math.round(b * 100) / 100;
-    const c = C_ROUNDS.filter((r, i) => { const pop = popOf(r, i); return Math.abs(C_stats(pop, C_lambda(pop, beta)).shift - r.S) <= C_tol(r); }).length;
-    if (c > most) { most = c; at = beta; } }
-  check("C no one slope clears three rounds", most <= 2, "301 slopes on the expected offspring: the greediest (" + at + ") clears " + most);
-  const spreadOK = C_ROUNDS.map((r, i) => { const pop = popOf(r, i); return Math.round(200 * r.S / pop.V) / 100; });
-  check("C the slope a round needs changes with its spread", Math.max(...spreadOK.map(Math.abs)) / Math.min(...spreadOK.map(Math.abs)) > 3,
-        "slopes: " + spreadOK.join(", ") + " — spreads " + C_ROUNDS.map(r => r.sd).join(", "));
-}
-/* ---- the drag puts the slope where the pointer is ---------------------- */
-{
-  const cv = document.getElementById("C_scatter"), rc = cv.getBoundingClientRect(), W = +cv.dataset.drawW, H = +cv.dataset.cssH;
-  const keep = C.beta; C.drawn = null;
-  const f = C_frameTop(W, H), z = C.pop.zb + 2 * C.pop.sd, w = C_WBAR + 0.4 * (2 * C.pop.sd);
-  C_dragTo({ clientX: rc.left + f.x(z) * rc.width / W, clientY: rc.top + f.y(w) * rc.height / H });
-  const got = C.beta; C.beta = keep; C_syncSliders(); C_paint();
-  check("C dragging on the plot sets the slope through the pointer", Math.abs(got - 0.4) <= 0.02, "pointer on the line of slope 0.40 through the average parent: slope set to " + got);
-}
-/* ---- D: the model, recomputed here -------------------------------------- */
-const D_gen = (h2, beta, seed) => D_breed(D_makePop(h2, seed), beta, mulberry32(seed + 17));
-{
-  /* the offspring move h2 times the parents who bred: pooled slope through
-     the origin, 60 runs at slopes -1 and +1 */
-  const rows = [0, 0.25, 0.5, 0.8, 1].map(h2 => { let sr = 0, ss = 0;
-    for (let q = 0; q < 30; q++) for (const beta of [-1, 1]) {
-      const g = D_gen(h2, beta, 3000 + q * 131 + Math.round(h2 * 1000) + (beta > 0 ? 7 : 0)); sr += g.S * g.R; ss += g.S * g.S; }
-    return { h2, slope: sr / ss }; });
-  check("D the offspring move h² times the parents who bred", rows.every(q => Math.abs(q.slope - q.h2) < 0.05),
-        rows.map(q => "h² " + q.h2 + " → " + q.slope.toFixed(3)).join("  ") + "  (60 runs each)");
-  /* none inherited: ratchet the slope to the stop and nothing moves */
-  const flat = [-1.5, 1.5].map(beta => { const R = [], S = []; for (let q = 0; q < 20; q++) { const g = D_gen(0, beta, 3500 + q * 17 + (beta > 0 ? 3 : 0)); R.push(g.R); S.push(g.S); }
-    return { beta, R: mn(R), S: mn(S), se: sdv(R) / Math.sqrt(R.length) }; });
-  check("D no inherited variation: no response at the slider's stops", flat.every(q => Math.abs(q.R) < 3 * q.se + 0.005 && Math.abs(q.S) > 0.5),
-        flat.map(q => "slope " + q.beta + ": parents moved " + q.S.toFixed(3) + ", offspring " + q.R.toFixed(4) + " ± " + q.se.toFixed(4)).join("  "));
-  /* the spread holds across the generation: a midparent halves the inherited
-     variance and the segregation term puts it back */
-  const vs = []; for (let q = 0; q < 20; q++) { const g = D_gen(0.5, 0, 3700 + q * 29); vs.push(sdv(Array.from(g.zo)) ** 2); }
-  check("D at slope 0 the offspring vary as much as their parents", Math.abs(mn(vs) - 1) < 0.03, "offspring variance " + mn(vs).toFixed(3) + " (parents 1), 20 runs, h² 0.5");
-  /* every population varies alike, so one slope gives one shift */
-  const sh = [0.2, 0.5, 0.9].map(h2 => { const S = []; for (let q = 0; q < 20; q++) S.push(D_gen(h2, 1, 3900 + q * 23 + Math.round(h2 * 100)).S); return mn(S); });
-  check("D one slope moves the parents who bred alike in every population", Math.max(...sh) - Math.min(...sh) < 0.03,
-        "slope 1: h² 0.2, 0.5, 0.9 → " + sh.map(v => v.toFixed(3)).join(", "));
+  /* the environment arrow grows cov(w, z), E(wΔz) takes the growth back, the end stays;
+     with nothing in the genes nothing moves; a drought moves the average once */
+  const tot = (set, seeds) => { const t = { cov: 0, E: 0, dz: 0 }; seeds.forEach(sd => { const s = PD_sums(PD_run(set, C_START, mulberry32(sd)), PD_T)[0]; for (const k in t) t[k] += s[k] / seeds.length; }); return t; };
+  const seeds = [110, 111, 112, 113, 114, 115];
+  const lo = tot(C_SET(1, 0, 4), seeds), hi = tot(C_SET(1, 1.5, 4), seeds), none = tot(C_SET(0, 1, 8), seeds);
+  check("C the environment arrow grows cov(w, z), E(wΔz) takes it back, and the end stays", hi.cov - lo.cov > 3 && Math.abs((hi.cov - lo.cov) + (hi.E - lo.E)) < 0.35 && Math.abs(hi.dz - lo.dz) < 0.35,
+        "genes 1, seeds 4, environment 0 → 1.5: cov(w, z) " + lo.cov.toFixed(2) + " → " + hi.cov.toFixed(2) + ", E(wΔz) " + lo.E.toFixed(2) + " → " + hi.E.toFixed(2) + ", Δz " + lo.dz.toFixed(2) + " → " + hi.dz.toFixed(2) + "  (6 runs each)");
+  check("C nothing in the genes: cov(w, z) is large and nothing moves", none.cov > 3 && Math.abs(none.dz) < 0.12,
+        "genes 0, environment 1, seeds 8: cov(w, z) " + none.cov.toFixed(2) + " + E(wΔz) " + none.E.toFixed(2) + " = Δz " + none.dz.toFixed(2));
+  /* 10 runs: a run's nine later generations wobble about 0.25 added up, its end about 0.2 */
+  const dr = []; for (let q = 0; q < 10; q++) { const run = PD_run(C_SET(1, 0.6, 0, -1), C_START, mulberry32(130 + q)); dr.push({ first: run.recs[0].terms[0].E, later: run.recs.slice(1).reduce((x, r) => x + r.terms[0].E, 0), end: PD_mean(run.z[PD_T][0]) }); }
+  check("C a drought moves the average once: E(wΔz) in the first generation, nothing after", Math.abs(mn(dr.map(q => q.first)) + 1) < 0.06 && Math.abs(mn(dr.map(q => q.later))) < 0.25 && Math.abs(mn(dr.map(q => q.end)) - 9) < 0.25,
+        "drought −1, no selection: E(wΔz) in generation 1 " + mn(dr.map(q => q.first)).toFixed(2) + ", generations 2-" + PD_T + " added up " + mn(dr.map(q => q.later)).toFixed(2) + ", end " + mn(dr.map(q => q.end)).toFixed(2) + "  (10 runs)");
 }
 {
-  /* the printed arithmetic, against a hand count */
-  const pop = D_makePop(0.6, 4242), g = D_breed(pop, 1, mulberry32(4243));
-  let zb = 0, sw = 0, swz = 0, so = 0; for (let i = 0; i < pop.z.length; i++) { zb += pop.z[i] / pop.z.length; sw += g.uses[i]; swz += g.uses[i] * pop.z[i]; so += g.zo[i]; }
-  const S = swz / sw - zb, R = so / g.zo.length - zb;
-  const keep = { run: D.run, frame: D.frame, pts: D.pts };
-  g.parents = pop; g.key = "r1"; D.run = g; D.frame = null; D_drawGen();
-  const txt = document.getElementById("D_read").textContent.replace(/\\s+/g, " ");
-  const num = re => { const m = re.exec(txt); return m ? +m[1] : NaN; };
-  const pS = num(/bred moved ([+-][0-9.]+)/), pR = num(/offspring moved ([+-][0-9.]+)/), pQ = num(/parents ([0-9.-]+)/);
-  D.pts = [{ key: "r2", S: 0.3, R: 0.2 }, { key: "r2", S: -0.5, R: -0.4 }, { key: "r2", S: 0.6, R: 0.5 }]; D_drawPts();
-  const fit = (0.3 * 0.2 + 0.5 * 0.4 + 0.6 * 0.5) / (0.09 + 0.25 + 0.36);
-  const pF = +(/population 2: 3 runs · slope of its line ([0-9.]+)/.exec(document.getElementById("D_ptsRead").textContent) || [0, NaN])[1];
-  Object.assign(C, keep); D_paint();
-  check("D the printed shifts, ratio and fitted slope agree with a hand count",
-        sw === 2 * pop.z.length && pS === +S.toFixed(2) && pR === +R.toFixed(2) && pQ === +(R / S).toFixed(2) && pF === +fit.toFixed(2),
-        "parents counted " + sw + " times (2 per child); printed " + pS + ", " + pR + ", ratio " + pQ + " — by hand " + S.toFixed(3) + ", " + R.toFixed(3) + ", " + (R / S).toFixed(3) +
-        "; fitted slope printed " + pF + ", by hand " + fit.toFixed(3));
+  /* seeds set are births less deaths: a birth arrow of +6 with a death arrow of +2 is a push of +4 */
+  const both = C_setOf(Object.assign({}, C_OPEN, { bb: 6, bd: 2 }), 0), one = C_setOf(Object.assign({}, C_OPEN, { bb: 4, bd: 0 }), 0);
+  const e1 = PD_expect(C_START, both)[0].per, e2 = PD_expect(C_START, one)[0].per;
+  let m1 = 0, m2 = 0; for (let q = 0; q < 8; q++) { m1 += C_endOf(both, 140 + q) / 8; m2 += C_endOf(one, 140 + q) / 8; }
+  check("C seeds set are births less deaths: births +6 with deaths +2 is a push of +4", Math.abs(e1.cov - e2.cov) < 1e-12 && Math.abs(m1 - m2) < 0.15,
+        "a generation's cov(w, z): " + e1.cov.toFixed(4) + " and " + e2.cov.toFixed(4) + "; average after " + PD_T + " generations " + m1.toFixed(2) + " and " + m2.toFixed(2) + " (8 runs each)");
+  /* chance on the rates is drift in Price's terms: with no selection, the genes' part of cov(w, z)
+     averages 0 and wobbles more from generation to generation. Measured 2026-09-29: the rates' chance
+     adds only about a quarter to that wobble (sd ratio ~1.25 at 8 on each), because most of it comes
+     from which seeds become the 400 seedlings; the end of a single run barely shows it (0.19 against
+     0.20 over 16 runs). Over 64 runs x 10 generations: 0.040 and 0.046, ratio 1.15 (from the start
+     alone, 300 first generations: 1.33; the arithmetic sqrt((1/800 + 147/160000) / (1/800 + 20/160000))
+     = 1.26). 160 generations gave 1.06 once: too few. */
+  const quiet = C_setOf(Object.assign({}, C_OPEN, { bb: 0, lb: 0, ld: 0 }), 0), loud = C_setOf(Object.assign({}, C_OPEN, { bb: 0, lb: 8, ld: 8 }), 0);
+  const parts = set => { const g = []; for (let q = 0; q < 64; q++) PD_run(set, C_START, mulberry32(160 + q)).recs.forEach(r => g.push(r.terms[0].covG)); return g; };
+  const gq = parts(quiet), gl = parts(loud);
+  check("C chance on the birth and death rates is drift: the genes' part of cov(w, z) averages 0 and wobbles more", Math.abs(mn(gq)) < 0.01 && Math.abs(mn(gl)) < 0.012 && PD_sd(gl) > 1.05 * PD_sd(gq),
+        "no selection, 640 generations each: chance 0 on each rate " + mn(gq).toFixed(3) + " ± " + PD_sd(gq).toFixed(3) + ", chance 8 " + mn(gl).toFixed(3) + " ± " + PD_sd(gl).toFixed(3) + " (ratio " + (PD_sd(gl) / PD_sd(gq)).toFixed(2) + ")");
 }
-/* ---- D: the rounds ------------------------------------------------------ */
+const C_SOL = { tall: { bb: 3.5 }, weather: { bb: 7 }, genes: { a: 0.7 }, wet: { bb: -2 }, shorter: { a: 1, bb: -3 } };
 {
-  const rate = (r, beta, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (Math.abs(D_gen(r.h2, beta, seed + q * 7919).R - r.R) <= D_TOL) k++; return k / reps; };
-  const slopes = []; for (let b = -1.5; b <= 1.5001; b += 0.05) slopes.push(Math.round(b * 100) / 100);
-  const table = D_ROUNDS.map((r, i) => slopes.map(b => rate(r, b, 12, 5000 + i * 97 + Math.round(b * 100) * 3)));
-  const best = D_ROUNDS.map((r, i) => { let j = 0; table[i].forEach((v, k) => { if (v > table[i][j]) j = k; });
-    return { k: r.key, b: slopes[j], v: rate(r, slopes[j], 40, 9000 + i * 31) }; });
-  check("D every round is hit at its best slope", best.every(q => q.v >= 0.7),
-        best.map(q => q.k + " @" + q.b + ": " + Math.round(100 * q.v) + "%").join("  ") + "  (best of 61 slopes by 12 runs, then 40 fresh)");
-  const zero = D_ROUNDS.map((r, i) => rate(r, 0, 20, 9500 + i * 31));
-  check("D slope 0, the opening, hits none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
-  let most = 0, at = 0;
-  slopes.forEach((b, j) => { const c = D_ROUNDS.filter((_, i) => table[i][j] >= 0.5).length; if (c > most) { most = c; at = b; } });
-  check("D no one slope clears three rounds", most <= 2, "61 slopes, 12 runs each: the greediest (" + at + ") hits half the time or more in " + most);
-}
-/* ---- E: the regression, recomputed here --------------------------------- */
-const E_popOf = i => E_makePop(E_ROUNDS[i], pageSeed("l13Cp", 1, 99999) + (i + 1) * 7919);
-{
-  /* a hand solve: the 3 x 3 normal equations on raw sums, by elimination */
-  const solve = pop => { const n = pop.w.length, X = i => [1, pop.z1[i], pop.z2[i]];
-    const A = [[0,0,0],[0,0,0],[0,0,0]], y = [0,0,0];
-    for (let i = 0; i < n; i++) { const x = X(i); for (let a = 0; a < 3; a++) { y[a] += x[a] * pop.w[i]; for (let b = 0; b < 3; b++) A[a][b] += x[a] * x[b]; } }
-    for (let c = 0; c < 3; c++) for (let r = c + 1; r < 3; r++) { const k = A[r][c] / A[c][c]; for (let q = c; q < 3; q++) A[r][q] -= k * A[c][q]; y[r] -= k * y[c]; }
-    const b = [0,0,0]; for (let r = 2; r >= 0; r--) { let t = y[r]; for (let q = r + 1; q < 3; q++) t -= A[r][q] * b[q]; b[r] = t / A[r][r]; }
-    let ss = 0; for (let i = 0; i < n; i++) { const e = pop.w[i] - b[0] - b[1] * pop.z1[i] - b[2] * pop.z2[i]; ss += e * e / n; }
-    return { b1: b[1], b2: b[2], sig: Math.sqrt(ss) }; };
-  let worst = 0, lean = 0, sdGap = 0, corr = 0, one = 0, view = 0;
-  const pops = E_ROUNDS.map((_, i) => E_popOf(i));
-  for (const pop of pops) {
-    const f = pop.fit, h = solve(pop);
-    worst = Math.max(worst, Math.abs(f.b1 - h.b1), Math.abs(f.b2 - h.b2), Math.abs(f.sig - h.sig));
-    const st = E_leftStats(pop, f.b1, f.b2);
-    lean = Math.max(lean, Math.abs(st.lean1), Math.abs(st.lean2)); sdGap = Math.max(sdGap, Math.abs(st.sd - f.sig));
-    corr = Math.max(corr, Math.abs(f.c12));
-    /* one trait at a time: slope, and the spread left around it */
-    for (const k of [1, 2]) { const z = k === 1 ? pop.z1 : pop.z2, m = k === 1 ? f.m1 : f.m2, v = k === 1 ? f.v1 : f.v2;
-      let c = 0; for (let i = 0; i < E_N; i++) c += (z[i] - m) * (pop.w[i] - f.mw) / E_N;
-      const slope = c / v; let ss = 0; for (let i = 0; i < E_N; i++) { const e = pop.w[i] - f.mw - slope * (z[i] - m); ss += e * e / E_N; }
-      one = Math.max(one, Math.abs(slope - (k === 1 ? f.b1 : f.b2)));
-      const keep = { b1: E.b1, b2: E.b2, sig: E.sig }; E.b1 = f.b1; E.b2 = f.b2; E.sig = f.sig;
-      view = Math.max(view, Math.abs(Math.sqrt(ss) - E_viewSpread(pop, k))); Object.assign(D, keep); }
-  }
-  check("E the page's least squares agrees with a hand solve", worst < 1e-9, "5 populations: largest gap " + worst.toExponential(1));
-  check("E at the least-squares arrows the leftover leans on neither trait, and its spread is the box", lean < 1e-9 && sdGap < 1e-9,
-        "largest lean " + lean.toExponential(1) + ", spread vs fit " + sdGap.toExponential(1));
-  check("E the traits are unrelated, so each one-trait slope is its arrow", corr < 1e-12 && one < 1e-9, "largest correlation " + corr.toExponential(1) + ", slope vs arrow " + one.toExponential(1));
-  check("E a one-trait picture's spread is the other arrow plus the box, as the band says", view < 1e-9, "measured vs printed: largest gap " + view.toExponential(1));
-  /* the least-squares arrows leave the least over */
-  let least = true; const eg = [];
-  pops.forEach((pop, i) => { const f = pop.fit, sd0 = E_leftStats(pop, f.b1, f.b2).sd;
-    for (const [d1, d2] of [[0.3, 0], [-0.3, 0], [0, 0.3], [0, -0.3]]) { const sd = E_leftStats(pop, f.b1 + d1, f.b2 + d2).sd; if (sd <= sd0) least = false; if (i === 1 && d1 > 0) eg.push(sd0.toFixed(3) + " → " + sd.toFixed(3)); } });
-  check("E the least-squares arrows leave the least over", least, "every arrow nudged 0.3 either way leaves more, all 5 populations (e.g. " + eg.join("") + ")");
-  const bands = pops.map(pop => { const f = pop.fit, keep = { b1: E.b1, b2: E.b2, sig: E.sig }; E.b1 = f.b1; E.b2 = f.b2; E.sig = f.sig;
-    const r = [E_inBand(pop, 1), E_inBand(pop, 2)]; Object.assign(D, keep); return r; });
-  check("E at the right diagram each band holds about two in three", bands.every(q => q.every(v => v >= 0.58 && v <= 0.78)),
-        bands.map(q => q.map(v => Math.round(100 * v) + "%").join("/")).join("  "));
-}
-/* ---- E: the rounds ------------------------------------------------------ */
-{
-  const pops = E_ROUNDS.map((_, i) => E_popOf(i)), r1 = v => Math.round(v * 10) / 10;
-  const hits = d => pops.map(pop => { const j = E_judge(pop, d(pop)); return j.ok1 && j.ok2 && j.ok3; });
-  const ls = hits(pop => ({ b1: r1(pop.fit.b1), b2: r1(pop.fit.b2), sig: r1(pop.fit.sig) }));
-  check("E every round is hit at its least-squares diagram, on the slider's steps", ls.every(Boolean), ls.map(v => v ? "hit" : "MISS").join(" / "));
-  const open = hits(() => ({ b1: 0, b2: 0, sig: 3 }));
-  check("E the opening diagram hits none", open.every(v => !v), open.map(v => v ? "HIT" : "miss").join(" / "));
-  /* the natural mistake: arrows right, the box read off the wider one-trait picture */
-  const naive = hits(pop => { const f = pop.fit, s1 = Math.sqrt(f.b2 * f.b2 * f.v2 + f.sig * f.sig), s2 = Math.sqrt(f.b1 * f.b1 * f.v1 + f.sig * f.sig);
-    return { b1: r1(f.b1), b2: r1(f.b2), sig: r1(Math.max(s1, s2)) }; });
-  check("E reading the box off one picture misses most rounds", naive.filter(Boolean).length <= 1,
-        naive.map((v, i) => E_ROUNDS[i].key + (v ? " hit" : " miss")).join("  ") + " (arrows right, box = the wider picture's spread)");
-  let most = 0, at = null;
-  for (let b1 = -4; b1 <= 4; b1 += 0.5) for (let b2 = -4; b2 <= 4; b2 += 0.5) for (let sg = 0; sg <= 6; sg += 0.5) {
-    const c = hits(() => ({ b1, b2, sig: sg })).filter(Boolean).length; if (c > most) { most = c; at = [b1, b2, sg]; } }
-  check("E no one diagram clears three rounds", most <= 2, "3757 diagrams on a 0.5 grid: the greediest (" + at + ") clears " + most);
-}
-/* ---- F: three causes tied by an allele ---------------------------------- */
-const F_popOf = i => F_makePop(F_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1) * 7919);
-{
-  const pops = F_ROUNDS.map((_, i) => F_popOf(i));
-  /* a hand solve: the 4 x 4 normal equations on raw sums, by elimination */
-  const solve = pop => { const n = pop.w.length, K = 4, A = [], y = [0,0,0,0];
-    for (let a = 0; a < K; a++) A.push([0,0,0,0]);
-    for (let i = 0; i < n; i++) { const x = [1, pop.x[0][i], pop.x[1][i], pop.x[2][i]];
-      for (let a = 0; a < K; a++) { y[a] += x[a] * pop.w[i]; for (let b = 0; b < K; b++) A[a][b] += x[a] * x[b]; } }
-    for (let c = 0; c < K; c++) for (let r = c + 1; r < K; r++) { const k = A[r][c] / A[c][c]; for (let q = c; q < K; q++) A[r][q] -= k * A[c][q]; y[r] -= k * y[c]; }
-    const b = [0,0,0,0]; for (let r = K - 1; r >= 0; r--) { let t = y[r]; for (let q = r + 1; q < K; q++) t -= A[r][q] * b[q]; b[r] = t / A[r][r]; }
-    return b.slice(1); };
-  let worst = 0, lean = 0, sdGap = 0, pic = 0;
-  for (const pop of pops) {
-    const f = pop.fit, h = solve(pop);
-    worst = Math.max(worst, ...h.map((v, j) => Math.abs(v - f.b[j])));
-    const st = F_leftStats(pop, f.b); lean = Math.max(lean, ...st.lean.map(Math.abs)); sdGap = Math.max(sdGap, Math.abs(st.sd - f.sig));
-    /* each picture on its own, measured, against what the fitted diagram draws there */
-    for (const k of [0, 1, 2]) { const m = f.m[k]; let c = 0, v = 0;
-      for (let i = 0; i < F_N; i++) { c += (pop.x[k][i] - m) * (pop.w[i] - f.mw) / F_N; v += (pop.x[k][i] - m) ** 2 / F_N; }
-      const slope = c / v; let ss = 0; for (let i = 0; i < F_N; i++) { const e = pop.w[i] - f.mw - slope * (pop.x[k][i] - m); ss += e * e / F_N; }
-      const im = F_implied(pop, k, f.b, f.sig); pic = Math.max(pic, Math.abs(im.slope - slope), Math.abs(im.spread - Math.sqrt(ss))); }
-  }
-  check("F the page's least squares agrees with a hand solve", worst < 1e-9, "5 populations, 3 slopes each: largest gap " + worst.toExponential(1));
-  check("F at the least-squares arrows the leftover leans on none of the three, and its spread is the box", lean < 1e-9 && sdGap < 1e-9,
-        "largest lean " + lean.toExponential(1) + ", spread vs fit " + sdGap.toExponential(1));
-  check("F at the fit, the line and band the diagram draws in each picture are that picture's own", pic < 1e-9, "slope and spread, 15 pictures: largest gap " + pic.toExponential(1));
-  const f1 = pops[0].fit, f2_ = pops[1].fit;
-  check("F a confounded trait and a mediated allele show slopes their own arrows lack",
-        f1.one[2] >= 1 && Math.abs(f1.b[2]) <= 0.5 && f2_.one[0] >= 2 && Math.abs(f2_.b[0]) <= 0.5,
-        "r1 stem height: picture " + f1.one[2].toFixed(2) + ", arrow " + f1.b[2].toFixed(2) + "  |  r2 allele: picture " + f2_.one[0].toFixed(2) + ", arrow " + f2_.b[0].toFixed(2));
-  const bands = pops.map(pop => { const keep = { b: F.b.slice(), sig: F.sig }; F.b = pop.fit.b.slice(); F.sig = pop.fit.sig;
-    const r = [0, 1, 2].map(k => F_inBand(pop, k)); F.b = keep.b; F.sig = keep.sig; return r; });
-  check("F at the right diagram each band holds about two in three", bands.every(q => q.every(v => v >= 0.58 && v <= 0.78)),
-        bands.map(q => q.map(v => Math.round(100 * v) + "%").join("/")).join("  "));
-  const r1 = v => Math.round(v * 10) / 10;
-  const hits = d => pops.map(pop => F_judge(pop, d(pop).b, d(pop).sig).ok.every(Boolean));
-  const ls = hits(pop => ({ b: pop.fit.b.map(r1), sig: r1(pop.fit.sig) }));
-  check("F every round is hit at its least-squares diagram, on the slider's steps", ls.every(Boolean), ls.map(v => v ? "hit" : "MISS").join(" / "));
-  const open = hits(() => ({ b: [0, 0, 0], sig: 3 }));
-  check("F the opening diagram hits none", open.every(v => !v), open.map(v => v ? "HIT" : "miss").join(" / "));
-  const naive = hits(pop => ({ b: pop.fit.one.map(r1), sig: r1(pop.fit.sig) }));
-  check("F reading each arrow off its own picture misses most rounds", naive.filter(Boolean).length <= 1,
-        naive.map((v, i) => F_ROUNDS[i].key + (v ? " hit" : " miss")).join("  ") + " (box right)");
-  let most = 0, at = null; const fits = pops.map(p => p.fit);
-  for (let a = -4; a <= 4; a += 0.5) for (let b = -4; b <= 4; b += 0.5) for (let c = -4; c <= 4; c += 0.5) for (let sg = 0; sg <= 6; sg += 0.5) {
-    let n = 0; for (const f of fits) if (Math.abs(a - f.b[0]) <= F_TOL && Math.abs(b - f.b[1]) <= F_TOL && Math.abs(c - f.b[2]) <= F_TOL && Math.abs(sg - f.sig) <= F_TOL) n++;
-    if (n > most) { most = n; at = [a, b, c, sg]; } }
-  check("F no one diagram clears three rounds", most <= 2, "63869 diagrams on a 0.5 grid: the greediest (" + at + ") clears " + most);
-}
-/* ---- G: the collider ---------------------------------------------------- */
-{
-  const pop = G_makePop(4321), all = G_slope(pop, null);
-  const counts = [0.25, 0.5, 0.8].map(k => G_alive(pop, 1, 1, k, pop.luck).alive.reduce((x, y) => x + y, 0));
-  check("G across all seedlings the traits are unrelated, and the drought kills exactly its share",
-        Math.abs(all.slope) < 1e-12 && counts[0] === 1500 && counts[1] === 1000 && counts[2] === 400,
-        "slope among all " + all.slope.toExponential(1) + "; survivors at 25/50/80% killed: " + counts.join(", "));
-  /* with no luck, equal arrows: survival cuts (f + h)/sqrt2 at c; lambda = phi(c)/(1 - Phi(c));
-     delta = lambda (lambda - c); the survivors' slope of stem on flower is -delta / (2 - delta) */
-  const erf = x => { const t = 1 / (1 + 0.3275911 * Math.abs(x)), y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
-    return x >= 0 ? y : -y; };
-  const Phi = x => 0.5 * (1 + erf(x / Math.SQRT2)), phi = x => Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI);
-  const qn = p => { let lo = -8, hi = 8; for (let k = 0; k < 80; k++) { const m = (lo + hi) / 2; if (Phi(m) < p) lo = m; else hi = m; } return (lo + hi) / 2; };
-  const rows = [0.3, 0.6, 0.9].map(k => { const c = qn(k), lam = phi(c) / (1 - Phi(c)), d = lam * (lam - c);
-    let m = 0; for (let q = 0; q < 8; q++) m += G_slope(G_makePop(5000 + q * 37), G_alive(G_makePop(5000 + q * 37), 1, 1, k, null).alive).slope / 8;
-    return { k, got: m, want: -d / (2 - d) }; });
-  check("G with no luck the survivors' slope is the truncated-normal value", rows.every(q => Math.abs(q.got - q.want) < 0.03),
-        rows.map(q => Math.round(q.k * 100) + "% killed: " + q.got.toFixed(3) + " [formula " + q.want.toFixed(3) + "]").join("  ") + "  (8 populations each)");
-  const mean = (wf, wh, k) => { let m = 0; for (let q = 0; q < 10; q++) { const pp = G_makePop(6000 + q * 41), rng = mulberry32(6100 + q * 43), lk = Float64Array.from({ length: G_N }, () => C_gauss(rng));
-    m += G_slope(pp, G_alive(pp, wf, wh, k, lk).alive).slope / 10; } return m; };
-  const eq = [0, 0.2, 0.5, 0.8].map(k => mean(1, 1, k)), flip = mean(1, -1, 0.5);
-  check("G the survivors' trade-off deepens with the drought, and flips sign with the rule",
-        Math.abs(eq[0]) < 0.02 && eq[1] < -0.1 && eq[2] < eq[1] && eq[3] < eq[2] && flip > 0.3,
-        "equal arrows, 0/20/50/80% killed: " + eq.map(v => v.toFixed(2)).join(", ") + "  |  flower +1, stem -1, 50%: " + flip.toFixed(2) + "  (10 runs each)");
+  const own = C_ROUNDS.map((r, i) => ({ k: r.key, v: C_rate(r, C_SOL[r.key], 20, 15000 + i * 97) }));
+  check("C every round is hit at its setting", own.every(q => q.v >= 0.8), own.map(q => q.k + " " + Math.round(100 * q.v) + "% at " + JSON.stringify(C_SOL[q.k])).join("  ") + "  (20 runs each)");
+  const open = C_ROUNDS.map((r, i) => C_rate(r, {}, 10, 15500 + i * 97));
+  check("C the opening hits none", open.every(v => v === 0), open.map(v => Math.round(100 * v) + "%").join(" / ") + "  (10 runs each)");
+  /* the cheap routes: selection read as if every seedling copied its parent
+     (weather at tall's arrow); the wet year left alone; the genes arrow left
+     where it opened */
+  const by = k => C_ROUNDS.find(r => r.key === k);
+  const copy = C_rate(by("weather"), { bb: 3.5 }, 10, 15700), still = C_rate(by("wet"), { bb: 0 }, 10, 15800), gOpen = C_rate(by("genes"), { a: 1 }, 10, 15900);
+  /* 2026-09-29: this route once hit 1 in 10 on a check page and never in 1500 runs over 150 starts since; the lowest end is printed to catch it */
+  let wetLow = 99; for (let q = 0; q < 10; q++) wetLow = Math.min(wetLow, C_endOf(C_SET(1, 0.6, 0, 1), 15800 + q * 7919));
+  check("C the cheap routes miss", copy <= 0.2 && still === 0 && gOpen <= 0.1,
+        "weather at tall's seeds arrow (3.5): " + Math.round(100 * copy) + "%; the wet year with no selection: " + Math.round(100 * still) + "% (lowest end " + wetLow.toFixed(2) + ", window from " + by("wet").lo + "); genes left at 1.0 in 'genes': " + Math.round(100 * gOpen) + "%");
+  const rng = mulberry32(4242), pick = a => a[Math.floor(rng() * a.length)], hist = [0, 0, 0, 0, 0, 0];
+  const sets = Object.values(C_SOL).map(s => Object.assign({}, C_OPEN, s));
+  for (let q = 0; q < 100; q++) sets.push(Object.assign({}, C_OPEN, { a: pick([0, 0.3, 0.5, 0.6, 0.7, 0.8, 1, 1.2, 1.5]), s: pick([0, 0.5, 1, 1.5]), bb: pick([-8, -5, -3, -2, -1, 0, 1, 1.5, 2, 2.5, 3, 4, 4.5, 5, 6, 7, 8]) }));
+  let most = 0; sets.forEach((s, q) => { const c = C_ROUNDS.filter((r, i) => C_rate(r, s, 2, 16000 + q * 13 + i) === 1).length; hist[c]++; most = Math.max(most, c); });
+  check("C no one setting clears three rounds", most <= 2, sets.length + " settings (the five answers and 100 at random), 2 runs a round, cleared when both hit: " + hist.map((v, k) => k + ":" + v).filter((_, k) => k <= 3).join(" ") + "; the greediest clears " + most);
 }
 {
-  const kills = []; for (let k = 0; k <= 0.95001; k += 0.05) kills.push(Math.round(k * 100) / 100);
-  const one = (r, k, seed) => { const pp = G_makePop(seed), rng = mulberry32(seed + 17), lk = new Float64Array(G_N);
-    for (let i = 0; i < G_N; i++) lk[i] = C_gauss(rng); return G_slope(pp, G_alive(pp, r.wf, r.wh, k, lk).alive).slope; };
-  const rate = (r, k, reps, seed) => { let c = 0; for (let q = 0; q < reps; q++) if (Math.abs(one(r, k, seed + q * 7919) - r.T) <= G_TOL) c++; return c / reps; };
-  const table = G_ROUNDS.map((r, i) => kills.map(k => rate(r, k, 10, 7000 + i * 97 + Math.round(k * 100) * 3)));
-  const best = G_ROUNDS.map((r, i) => { let j = 0; table[i].forEach((v, q) => { if (v > table[i][j]) j = q; });
-    return { k: r.key, kill: kills[j], v: rate(r, kills[j], 40, 9100 + i * 31) }; });
-  check("G every round is hit at its best drought", best.every(q => q.v >= 0.7),
-        best.map(q => q.k + " @" + Math.round(q.kill * 100) + "%: " + Math.round(100 * q.v) + "%").join("  ") + "  (best of 20 by 10 runs, then 40 fresh)");
-  const zero = G_ROUNDS.map((r, i) => rate(r, 0, 10, 9500 + i * 31));
-  check("G no drought, the opening, hits none", zero.every(v => v === 0), zero.map(v => Math.round(100 * v) + "%").join(" / "));
-  let most = 0, at = 0;
-  kills.forEach((k, j) => { const c = G_ROUNDS.filter((_, i) => table[i][j] >= 0.5).length; if (c > most) { most = c; at = k; } });
-  check("G no one drought clears three rounds", most <= 2, "20 droughts, 10 runs each: the greediest (" + Math.round(at * 100) + "%) hits half the time or more in " + most);
+  /* JM, 2026-09-29: the terms are not kept secret, and the diagram carries them ("Let the DAG carry
+     them to keep the plot layout tight"). In a scored round, practice off, the stem boxes read a
+     generation's cov(w, z) and E(wΔz) as the page computes them, and they move with the arrows;
+     the card prints no numbers, and no expected end anywhere */
+  const keep = { a: C.a, s: C.s, bb: C.bb }, r = C_round(), dag = () => document.getElementById("pathsC").textContent.replace(/−/g, "-");
+  const num = (txt, re) => { const m = re.exec(txt); return m ? +m[1] : NaN; };
+  const setB = v => { document.getElementById("C_bb").value = v; document.getElementById("C_bb").dispatchEvent(new Event("input")); };
+  C.run = null; setB(0); const flat = dag();
+  setB(3); const txt = dag(), card = document.getElementById("C_cardRead").textContent, ex = PD_expect(C_START, C_setNow())[0].per;
+  const got = [num(txt, /cov\\(w, z\\) ([-+][0-9.]+)/), num(txt, /E\\(wΔz\\) ([-+][0-9.]+)/)], want = [ex.cov, ex.E].map(v => +v.toFixed(2));
+  const arrowOn = /\\+3\\.0/.test(document.getElementById("pathsC").textContent);
+  Object.assign(C, keep); C_syncHold(); C_syncGo(); C_paint();
+  check("C in a round the diagram carries a generation's terms as the arrows set them; the card prints none, and no expected end", !!r && got.every((v, i) => v === want[i]) && num(flat, /cov\\(w, z\\) ([-+][0-9.]+)/) === 0 && arrowOn && !/[0-9]/.test(card) && !/(?<!w)Δz [-+−]/.test(txt),
+        "round " + (r || {}).key + ", practice off, birth arrow dragged 0 → 3: the boxes read cov(w, z) " + got[0] + ", E(wΔz) " + got[1] + "; computed " + want.join(", ") + "; at 0, cov(w, z) " + num(flat, /cov\\(w, z\\) ([-+][0-9.]+)/) +
+        "; the arrow redrawn at +3.0: " + arrowOn + "; numbers under the card: " + (/[0-9]/.test(card) ? "'" + card.slice(0, 40) + "'" : "none"));
+  /* the bells are trial generations at the arrows: their averages sit on the arrows' arithmetic */
+  const set = C_SET(1, 0.8, 5, 0.6), tr = PD_trials(C_START, set, 999)[0], e2 = PD_expect(C_START, set)[0].per;
+  const se = a => PD_sd(a) / Math.sqrt(a.length), zc = Math.abs(mn(tr.cov) - e2.cov) / se(tr.cov), ze = Math.abs(mn(tr.E) - e2.E) / se(tr.E), z1 = Math.abs(mn(tr.E1) - e2.E - 0.6) / se(tr.E1);
+  check("C the card's bells are trial generations, centred on the arrows' arithmetic", zc < 3.5 && ze < 3.5 && z1 < 3.5,
+        PD_TRIALS + " trial generations at genes 1, env 0.8, seeds 5, a +0.6 year: cov(w, z) " + mn(tr.cov).toFixed(3) + " ± " + PD_sd(tr.cov).toFixed(3) + " [" + e2.cov.toFixed(3) + "], E(wΔz) " + mn(tr.E).toFixed(3) + " [" + e2.E.toFixed(3) + "], first generation " + mn(tr.E1).toFixed(3) + " [" + (e2.E + 0.6).toFixed(3) + "]; " + [zc, ze, z1].map(v => v.toFixed(1)).join(", ") + " standard errors off");
+}
+/* ---- D: a second trait on the same diagram ------------------------------ */
+const D_SET = s => D_setOf(Object.assign({}, D_OPEN, s));
+const D_ends = (s, seed) => PD_run(D_SET(s), D_START, mulberry32(seed)).z[PD_T].map(z => PD_mean(z));
+const D_rate = (r, st, reps, seed) => { let k = 0; const s = Object.assign({}, D_OPEN, st, r.hold);
+  for (let q = 0; q < reps; q++) { const e = D_ends(s, seed + q * 7919); if (r.win.every((w, t) => !w || (e[t] >= w[0] && e[t] <= w[1]))) k++; } return k / reps; };
+{
+  const before = D.game.free() && D.game.current() == null;
+  document.getElementById("D_tnext").click();
+  const r0 = D.game.current(), held = Object.keys(r0.hold).every(k => D[k] === r0.hold[k]);
+  check("D opens on free play; Start deals the first target and holds its arrows", before && r0 === D_ROUNDS[0] && held && document.getElementById("D_run").textContent === "Go",
+        "free at load: " + before + "; after Start: round " + (r0 || {}).key + ", " + Object.keys(r0.hold).length + " arrows held: " + held);
+}
+{
+  /* no arrow between the traits: their tie at the start is the boxes they share, exactly */
+  const corr = (x, y) => { const mx = PD_mean(x), my = PD_mean(y); let c = 0, vx = 0, vy = 0; for (let i = 0; i < x.length; i++) { c += (x[i] - mx) * (y[i] - my); vx += (x[i] - mx) ** 2; vy += (y[i] - my) ** 2; } return c / Math.sqrt(vx * vy); };
+  let worst = 0; const rows = [];
+  for (const s of [{ gs: 1, gf: 0, es: 0.5, ef: 1 }, { gs: 0.8, gf: 1, es: 0.6, ef: 0.6 }, { gs: 0, gf: 1, es: 1, ef: 0.8 }, { gs: -0.8, gf: 1, es: 0.5, ef: 0.5 }]) {
+    const z = PD_traits(D_START, D_SET(s).cf), got = corr(z[0], z[1]);
+    const want = (s.gs * s.gf + s.es * s.ef) / Math.sqrt((s.gs ** 2 + s.es ** 2) * (s.gf ** 2 + s.ef ** 2));
+    worst = Math.max(worst, Math.abs(got - want)); rows.push(got.toFixed(3) + " [" + want.toFixed(3) + "]"); }
+  check("D the two traits are tied only through the genes and environment they share", worst < 1e-9,
+        "correlation at the start, four diagrams: " + rows.join(", ") + " [(genes × genes + environment × environment) ÷ both spreads]");
+}
+{
+  /* Price exact for each trait; the two responses keep the ratio of the genes arrows whichever trait is selected */
+  let gap = 0; const run = PD_run(D_SET({ gs: 0.8, gf: 1, es: 0.6, ef: 0.6, sb: 3, fb: -2 }), D_START, mulberry32(210));
+  for (const r of run.recs) for (const T of r.terms) gap = Math.max(gap, Math.abs(T.cov + T.E - T.dz), Math.abs(T.covG + T.covE - T.cov), Math.abs(T.eG + T.eEnv + T.eOff - T.E));
+  const ratio = st => { let ds = 0, df = 0; for (let q = 0; q < 6; q++) { const e = D_ends(Object.assign({ gs: 0.8, gf: 1, es: 0.6, ef: 0.6 }, st), 220 + q); ds += e[0] - 10; df += e[1] - 10; } return ds / df; };
+  const byStem = ratio({ sb: 5, fb: 0 }), byFlower = ratio({ sb: 0, fb: 4 });
+  check("D both traits' terms add up every generation, and the responses keep the genes arrows' ratio whichever trait is selected",
+        gap < 1e-9 && Math.abs(byStem - 0.8) < 0.1 && Math.abs(byFlower - 0.8) < 0.1,
+        "identity and splits, 10 generations × 2 traits: " + gap.toExponential(1) + "; stem ÷ flower change, genes arrows 0.8 and 1.0: selecting stem " + byStem.toFixed(2) + ", selecting flower " + byFlower.toFixed(2) + "  (6 runs each)");
+}
+{
+  /* a shared environment ties the traits, gives stem a cov(w, z) when flower is selected, and E(wΔz) takes it back */
+  const t = { cov: 0, E: 0, dz: 0 };
+  for (let q = 0; q < 6; q++) { const s = PD_sums(PD_run(D_SET({ gs: 0, gf: 1, es: 1, ef: 0.8, sb: 0, fb: 5 }), D_START, mulberry32(240 + q)), PD_T)[0]; for (const k in t) t[k] += s[k] / 6; }
+  check("D a shared environment gives stem height a cov(w, z) that E(wΔz) takes back", t.cov > 1 && Math.abs(t.dz) < 0.12,
+        "stem with no genes, environment shared with flower, flower selected (5): stem's cov(w, z) " + t.cov.toFixed(2) + " + E(wΔz) " + t.E.toFixed(2) + " = Δz " + t.dz.toFixed(2) + "  (6 runs)");
+}
+const D_SOL = { along: { fb: 4.5 }, eaten: { fd: 6 }, patch: { fb: -6.5 }, follow: { sb: -4 }, trade: { fb: -2.5 }, topple: { sd: 3.5 },
+                shared: { gs: 0.4 }, shared2: { gf: 0.4 }, build: { gs: -1, gf: 0.7 }, build2: { gs: 0.8, gf: -0.6 } };
+{
+  const own = D_ROUNDS.map((r, i) => ({ k: r.key, v: D_rate(r, D_SOL[r.key], 20, 17000 + i * 97) }));
+  check("D every round is hit at its setting", own.every(q => q.v >= 0.8), own.map(q => q.k + " " + Math.round(100 * q.v) + "% at " + JSON.stringify(D_SOL[q.k])).join("  ") + "  (20 runs each)");
+  const open = D_ROUNDS.map((r, i) => D_rate(r, {}, 10, 17500 + i * 97));
+  check("D the opening hits none", open.every(v => v === 0), open.map(v => Math.round(100 * v) + "%").join(" / ") + "  (10 runs each)");
+  /* the cheap routes: stem left alone because nothing selects it; one round's
+     push carried into the next (patch and trade at along's answer); the
+     shared genes left where they opened; build at trade's answer */
+  const by = k => D_ROUNDS.find(r => r.key === k);
+  const alone = D_rate(by("along"), { fb: 0 }, 10, 17700), carried = D_rate(by("patch"), { fb: 4.5 }, 10, 17800), tradeAt = D_rate(by("trade"), { fb: 4.5 }, 10, 17850),
+        gOpen = D_rate(by("shared"), { gs: 1 }, 10, 17900), buildAt = D_rate(by("build"), { gs: -0.8, gf: 1 }, 10, 17950);
+  const noCost = D_rate(by("eaten"), { fd: 0 }, 10, 17960), noStem = D_rate(by("follow"), { sb: 0 }, 10, 17970), build2At = D_rate(by("build2"), { gs: -1, gf: 0.7 }, 10, 17980);
+  check("D the cheap routes miss", alone === 0 && carried <= 0.2 && tradeAt <= 0.2 && gOpen === 0 && buildAt <= 0.2 && noCost === 0 && noStem === 0 && build2At <= 0.2,
+        "along with flower's birth arrow at 0: " + Math.round(100 * alone) + "%; patch and trade at along's answer (4.5): " + Math.round(100 * carried) + "%, " + Math.round(100 * tradeAt) +
+        "%; shared with genes → stem left at 1.0: " + Math.round(100 * gOpen) + "%; build at trade's answer: " + Math.round(100 * buildAt) + "%; eaten with no cost in deaths: " + Math.round(100 * noCost) + "%; follow with stem's births at 0: " + Math.round(100 * noStem) + "%; build2 at build's answer: " + Math.round(100 * build2At) + "%");
+  /* the lazy route with the reset: put whatever seeds arrow a round frees at one value, every round */
+  const single = D_ROUNDS.filter(r => { const f = D_KEYS.filter(k => !(k in r.hold)); return f.length === 1 && /^[sf][bd]$/.test(f[0]); });
+  let lazy = 0, lazyAt = 0, lazyWhich = "";
+  for (const x of [-7, -6.5, -6, -5, -4.5, -4, -3.5, -3, -2.5, -2, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7]) {
+    const hit = single.filter((r, i) => { const k = D_KEYS.find(q => !(q in r.hold)); return D_rate(r, { [k]: x }, 4, 19000 + i * 17 + Math.round(x * 10)) >= 0.5; });
+    if (hit.length > lazy) { lazy = hit.length; lazyAt = x; lazyWhich = hit.map(r => r.key).join(", "); } }
+  check("D one value on whatever seeds arrow is free clears at most two rounds", lazy <= 2,
+        single.length + " rounds free a single seeds arrow (" + single.map(r => r.key).join(", ") + "); the best single value (" + lazyAt + ") hits half the time or more in " + lazy + " (" + lazyWhich + ")");
+  const rng = mulberry32(5151), pick = a => a[Math.floor(rng() * a.length)], hist = [0, 0, 0, 0, 0, 0];
+  const sets = Object.values(D_SOL).map(s => Object.assign({}, D_OPEN, s)), gv = [-1, -0.7, -0.4, 0, 0.3, 0.4, 0.6, 1, 1.5], bv = [-6, -3, -1, 0, 1.5, 2.5, 3, 4, 5, 8];
+  for (let q = 0; q < 80; q++) sets.push(Object.assign({}, D_OPEN, { gs: pick(gv), gf: pick(gv), es: pick([0, 0.5, 1]), ef: pick([0, 0.5, 1]), sb: pick(bv), sd: pick(bv), fb: pick(bv), fd: pick(bv) }));
+  let most = 0, at = ""; sets.forEach((s, q) => { const hit = D_ROUNDS.filter((r, i) => D_rate(r, s, 2, 18000 + q * 13 + i) === 1); hist[hit.length]++;
+    if (hit.length > most) { most = hit.length; at = JSON.stringify(s) + " clears " + hit.map(r => r.key).join(", "); } });
+  check("D no one setting clears more than four of the ten rounds", most <= 4, sets.length + " settings (the ten answers and 80 at random), 2 runs a round, cleared when both hit: " + hist.map((v, k) => k + ":" + v).filter((_, k) => k <= 3).join(" ") + "; the greediest " + at);
 }
 /* ---- every plot inside its panel --------------------------------------- */
 {
-  document.getElementById("stageG").classList.remove("stage-locked");
-  document.getElementById("stageD").classList.remove("stage-locked");
-  document.getElementById("stageE").classList.remove("stage-locked");
-  document.getElementById("stageF").classList.remove("stage-locked");
+  for (const S of ["C", "D"]) document.getElementById("stage" + S).classList.remove("stage-locked");
   const over = () => { const bad = [];
     document.querySelectorAll("canvas").forEach(cv => {
       if (cv.dataset.fit === "off") return;
@@ -670,26 +640,27 @@ const F_popOf = i => F_makePop(F_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1
   let loop = false, stop = false;
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
-  const out = [], stages = { A, B, C, D, E, F, G };
-  let aBefore = "", aAfter = "", hidden = "", shown = "", leftBefore = "", leftAfter = "", dBefore = "", dAfter = "";
+  const out = [], stages = { A, B, C, D }, bitsSeen = [];
+  const read = id => document.getElementById(id).textContent;
+  let aBefore = "", aAfter = "", cBefore = "", cAfter = "", dBefore = "", dAfter = "";
   try {
-    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"], ["E", "E_run"], ["F", "F_run"], ["G", "G_run"]]) {
+    for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {
       document.getElementById("stage" + S).classList.remove("stage-locked");
       const g = stages[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(go);
       const tick = on => { box.checked = on; box.dispatchEvent(new Event("change")); };
       const n0 = g.st.hits.length;
-      if (S === "A") { tick(false); aBefore = document.getElementById("A_cardRead").textContent; }
-      if (S === "E") { tick(false); leftBefore = document.getElementById("E_leftRead").textContent; }
-      if (S === "F") { tick(false); dBefore = document.getElementById("F_leftRead").textContent; }
+      if (S === "A") { tick(false); aBefore = read("A_cardRead"); }
+      if (S === "C") { tick(false); cBefore = read("pathsC") + " | " + read("C_cardRead"); }
+      if (S === "D") { tick(false); dBefore = read("pathsD") + " | " + read("D_cardRead"); }
       tick(true); btn.click();
-      const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(document.getElementById(S + "_tflip").textContent);
-      if (S === "D") hidden = document.getElementById("D_ptsRead").textContent;
+      const pracOk = g.st.hits.length === n0 && g.st.last != null && /practice/.test(read(S + "_tflip"));
       tick(false); btn.click();
-      if (S === "A") aAfter = document.getElementById("A_cardRead").textContent;
-      if (S === "D") shown = document.getElementById("D_ptsRead").textContent;
-      if (S === "E") leftAfter = document.getElementById("E_leftRead").textContent;
-      if (S === "F") dAfter = document.getElementById("F_leftRead").textContent;
+      if (S === "A") aAfter = read("A_cardRead");
+      if (S === "C") cAfter = read("pathsC") + " | " + read("C_cardRead");
+      if (S === "D") dAfter = read("pathsD") + " | " + read("D_cardRead");
       const scored = g.st.hits.length === n0 + 1 && g.waiting(), blocked = btn.disabled;
+      /* the scored attempt wrote its own bit, and wrote what the page judged */
+      bitsSeen.push(S + (n0 + 1) + " " + (Score.getBit("scaffold", BIT[S + (n0 + 1)]) === (g.st.hits[n0] ? 1 : 0) ? "ok" : "WRONG"));
       tick(true); btn.click();
       const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
       tick(false);
@@ -698,16 +669,23 @@ const F_popOf = i => F_makePop(F_ROUNDS[i], pageSeed("l13Dp", 1, 99999) + (i + 1
                     ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") });
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
-  check("every stage has a practice switch that does not score", out.length === 7 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("every stage has a practice switch that does not score", out.length === 4 && out.every(q => q.ok), out.map(q => q.t).join("  |  "));
+  check("each scored attempt records its own bit, as the page judged it", bitsSeen.length === 4 && bitsSeen.every(t => / ok$/.test(t)), bitsSeen.join(", "));
+  /* a new target resets the arrows it frees: move every arrow off its opening, deal D's next round, read them back */
+  for (const k of D_KEYS) D[k] = D_OPEN[k] + 1;
+  document.getElementById("D_tnext").click();
+  const r2 = D.game.current(), free = D_KEYS.filter(k => !(k in r2.hold)), reset = free.every(k => D[k] === D_OPEN[k]), held = Object.keys(r2.hold).every(k => D[k] === r2.hold[k]);
+  check("a new target starts its free arrows where they opened", !!r2 && r2 !== D_ROUNDS[0] && free.length > 0 && reset && held,
+        "every arrow moved, Next target: D round " + (r2 || {}).key + ", free " + free.map(k => k + " " + D[k] + " [opening " + D_OPEN[k] + "]").join(", ") + "; held arrows at the round's values: " + held);
   check("A the offspring's average waits for Go in a round, and shows after it", /after Go/.test(aBefore) && !/offspring's [0-9]/.test(aBefore) && /offspring's [0-9]/.test(aAfter),
         "before: '" + aBefore.trim().slice(0, 60) + "'; after the scored run: '" + aAfter.trim().slice(0, 60) + "'");
-  check("E the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(leftBefore) && /left over: spread/.test(leftAfter) && /least squares on these plants/.test(leftAfter),
-        "before: '" + leftBefore.trim().slice(0, 40) + "'; after the scored run: '" + leftAfter.trim().slice(0, 40) + "…'");
-  check("F the leftover waits for Go in a round, and shows after it", !/left over: spread/.test(dBefore) && /left over: spread/.test(dAfter) && /least squares on these plants/.test(dAfter),
-        "before: '" + dBefore.trim().slice(0, 40) + "'; after the scored run: '" + dAfter.trim().slice(0, 40) + "…'");
-  const h1 = f2(D_ROUNDS[0].h2);
-  check("D a population's inherited share shows only after its scored run", /inherited share \\?/.test(hidden) && new RegExp("inherited share " + h1).test(shown),
-        "after a practice run: '" + (/population 1[^\\n]*/.exec(hidden) || [""])[0].trim() + "'; after the scored run: '" + (/population 1[^\\n]*/.exec(shown) || [""])[0].trim() + "'");
+  /* the diagram's boxes carry the terms before Go and after; the card, no numbers either way */
+  const onDag = (t, n) => (t.match(/cov\\(w, z\\) [-+−][0-9]/g) || []).length === n && (t.match(/E\\(wΔz\\) [-+−][0-9]/g) || []).length === n;
+  const cardBare = t => !/[0-9]/.test(t.split(" | ")[1] || "");
+  check("C the diagram carries the terms before Go and after; the card prints no numbers", onDag(cBefore, 1) && onDag(cAfter, 1) && cardBare(cBefore) && cardBare(cAfter),
+        "stem boxes before the scored run: '" + (/cov\\(w, z\\)[^]{0,40}/.exec(cBefore) || [""])[0] + "'; card text before / after: '" + (cBefore.split(" | ")[1] || "") + "' / '" + (cAfter.split(" | ")[1] || "") + "'");
+  check("D the diagram carries both traits' terms before Go and after; the card prints no numbers", onDag(dBefore, 2) && onDag(dAfter, 2) && cardBare(dBefore) && cardBare(dAfter),
+        "trait boxes carry " + (dBefore.match(/cov\\(w, z\\) [-+−][0-9.]+/g) || []).join(", ") + "; card text before / after: '" + (dBefore.split(" | ")[1] || "") + "' / '" + (dAfter.split(" | ")[1] || "") + "'");
 }
 
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");

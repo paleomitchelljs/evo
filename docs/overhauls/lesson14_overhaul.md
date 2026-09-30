@@ -2,10 +2,17 @@
 
 **File** · `app/lessons/lesson14.html` — new page, 2026-09-24
 **Checks** · `node scripts/check_lesson14_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · A-C built (`version: 3`, `scaffold: 3`, 25 bars in `check_lesson14_numbers.js`); locked; prose to come from JM
+**Status** · A-C built (`version: 3`, `scaffold: 3`, 25 bars in `check_lesson14_numbers.js`); locked; prose to come from JM. **JM, 2026-09-30: lesson 14 will be frequency-dependent selection, built on this births/deaths model**
 **Last touched** · 2026-09-24
 
 Third of three selection lessons: 12 the genetics, 13 the regression, this the births and deaths. Planned in `lesson13_overhaul.md` until it had a slot.
+
+## Frequency dependence (JM, 2026-09-30) — the plan, not built
+
+- *"I'd like the births/death model to be how we do frequency dependent selection. That is, I want them to explore it in the context of a trait influencing r/K or b/d (specifically b) but the arrow system will need some clever update to allow conditioning on the population. I'm imagining two or three traits all influencing birth rate, but with their arrows coupled so that sliding one changes the others. Possibly with some way to toggle how tightly they're linked? That's a future issue, though."*
+- Pieces to design: a trait → birth-rate arrow whose size depends on the population (how common the trait is); two or three traits into births with coupled arrows (moving one moves the others); a control for how tightly they are coupled. paths.js has no coupled arrows yet.
+- Lesson 13 C/D already carry trait → birth rate / death rate with chance on each, seeds set = births − deaths (`PD_` engine); a candidate base.
+- The meadow in 13 B measured the need: a split meadow is not stable without a rare-colour advantage (see `lesson13_overhaul.md`).
 
 ## What the lesson is
 
