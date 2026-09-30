@@ -221,6 +221,30 @@
   .controls .arow input[type=range] { width:100%; }
   .controls .arow output { font-family:ui-monospace,Menlo,monospace; font-size:12.5px; }
   .controls .arow .k { color:var(--muted); font-size:12px; text-align:right; }
+  /* ---- C and D: rows of two panels (pictures / predict + controls / code + tasks) ---- */
+  .grid2 { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-bottom:16px; align-items:start; }
+  @media (max-width:1040px) { .grid2 { grid-template-columns:minmax(0,1fr); } }
+  .toprow { scroll-margin-top:48px; }
+  /* ---- the diagrams, C and D (JM, 2026-09-30): "Pale red = locked & negative, Pale blue =
+     locked & positive, Red = negative & adjustable, Blue = positive & adjustable, Gray =
+     intrinsic and unadjustable". paths.js adds .locked (lockColours) and draws values only on
+     the selected arrow (valuesOnSelect). Selected draws in ink, since red now means negative. */
+  #pathsC .paths-arrow, #pathsD .paths-arrow { stroke:#2f6b8f; }
+  #pathsC .paths-arrow.down, #pathsD .paths-arrow.down { stroke:#b23a48; }
+  #pathsC .paths-arrow.locked, #pathsD .paths-arrow.locked { stroke:#a9c7da; }
+  #pathsC .paths-arrow.locked.down, #pathsD .paths-arrow.locked.down { stroke:#e8aab0; }
+  #pathsC .paths-arrow.zero, #pathsD .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  #pathsC .paths-arrow.zero.locked, #pathsD .paths-arrow.zero.locked { stroke:#a9c7da; opacity:1; }
+  #pathsC .paths-arrow.dark, #pathsD .paths-arrow.dark { stroke:#c4c0b4; }
+  #pathsC .paths-arrow.selected, #pathsD .paths-arrow.selected { stroke:#1d1d1b; opacity:1; }
+  #pathsC .paths-arrow-value.down, #pathsD .paths-arrow-value.down { fill:#b23a48; }
+  #pathsC .paths-arrow-value.selected, #pathsD .paths-arrow-value.selected { fill:#1d1d1b; }
+  #pathsC .paths-hit.ro, #pathsD .paths-hit.ro { cursor:pointer; }
+  #pathsC .paths-step circle, #pathsD .paths-step circle { stroke:#1d1d1b; }
+  #pathsC .paths-step text, #pathsD .paths-step text { fill:#1d1d1b; }
+  #pathsC .paths-step:hover circle, #pathsD .paths-step:hover circle { fill:#e7e4da; }
+  #paths-head-down path { fill:#b23a48; }
+  #paths-head-sel path { fill:#1d1d1b; }
 </style>
 </head>
 <body>
@@ -384,8 +408,10 @@
     </ul>
   </div>
 
-  <div class="stage-body grid">
-    <div class="col">
+  <!-- JM, 2026-09-30: the pictures on top (flowers left, the trait over time right), then Predict
+       beside the Controls, so both show at once; Go scrolls back up to the pictures. -->
+  <div class="stage-body">
+    <div class="grid2 toprow" id="C_top">
       <div class="panel">
         <canvas id="C_field" class="plot" width="680" height="240"></canvas>
         <div class="readout" id="C_fieldRead"></div>
@@ -394,12 +420,8 @@
         <canvas id="C_gens" class="plot" width="680" height="250"></canvas>
         <div class="readout" id="C_gensRead"></div>
       </div>
-      <div class="panel">
-        <h3>R code</h3>
-<pre class="code" id="codeC"></pre>
-      </div>
     </div>
-    <div class="col">
+    <div class="grid2">
       <div class="panel predict" id="predC">
         <h3 id="predC_h">Predict</h3>
         <div class="pred-slot" id="predC_slot"></div>
@@ -425,6 +447,12 @@
             <button id="C_dl" class="ghost">Download .R</button>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeC"></pre>
       </div>
       <div class="panel">
         <h3>To open Stage D</h3>
@@ -458,8 +486,10 @@
     </ul>
   </div>
 
-  <div class="stage-body grid">
-    <div class="col">
+  <!-- JM, 2026-09-30: the pictures on top (flowers left, the trait over time right), then Predict
+       beside the Controls, so both show at once; Go scrolls back up to the pictures. -->
+  <div class="stage-body">
+    <div class="grid2 toprow" id="D_top">
       <div class="panel">
         <canvas id="D_field" class="plot" width="680" height="250"></canvas>
         <div class="readout" id="D_fieldRead"></div>
@@ -468,12 +498,8 @@
         <canvas id="D_gens" class="plot" width="680" height="440"></canvas>
         <div class="readout" id="D_gensRead"></div>
       </div>
-      <div class="panel">
-        <h3>R code</h3>
-<pre class="code" id="codeD"></pre>
-      </div>
     </div>
-    <div class="col">
+    <div class="grid2">
       <div class="panel predict" id="predD">
         <h3 id="predD_h">Predict</h3>
         <div class="pred-slot" id="predD_slot"></div>
@@ -503,6 +529,12 @@
             <button id="D_dl" class="ghost">Download .R</button>
           </div>
         </div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>R code</h3>
+<pre class="code" id="codeD"></pre>
       </div>
       <div class="panel">
         <h3>To finish</h3>
@@ -1967,7 +1999,7 @@ function B_wire() {
    environment's part back every generation and adds the seedlings' shift
    once (the next parents grew in it too).
    ===================================================================== */
-const PD_N = 400, PD_L = 50, PD_W0 = 20, PD_T = 10, PD_FRAMES = 8, PD_TICK = 30, PD_SHOW = 48;
+const PD_N = 400, PD_L = 50, PD_W0 = 20, PD_T = 10, PD_FRAMES = 8, PD_TICK = 30, PD_SHOW = 36;
 /* seeds set = births - deaths (JM, 2026-09-29: "adding two causal arrows to 'seeds': birth rate &
    death rate ... Both birth and death get a random effect leading to them. ... This opens up
    tradeoff models and eventually sexual selection, too"; sexual selection waits for speciation, and
@@ -2411,7 +2443,7 @@ function C_syncHold() {
   Object.assign(C, hold); C.shift = r && r.shift ? r.shift : 0;
   for (const k of C_KEYS) document.getElementById("C_" + k).value = C[k];
   if (C.paths) C.paths.batch(() => {
-    for (const k of C_KEYS) C.paths.setArrow(k, { readonly: k in hold, label: k in hold ? "held" : "" });
+    for (const k of C_KEYS) C.paths.setArrow(k, { readonly: k in hold });
     C.paths.setBox("oe", { sub: C.shift ? (C.shift > 0 ? "a wet year: " : "a drought: ") + PD_sg(C.shift) : "its own, like the parents'" });
   });
   C_code(); C_syncDag();
@@ -2428,6 +2460,8 @@ function C_go() {
   bump("C");
   C.show = { gen: 0, frame: 0 }; C.running = true;
   lockStage("C", true); C_paint();
+  /* the run plays on the pictures at the top: bring them into view */
+  const top = document.getElementById("C_top"); if (top && top.scrollIntoView) top.scrollIntoView({ behavior: "smooth", block: "start" });
   C.timer = setInterval(() => {
     const sh = C.show;
     if (++sh.frame >= PD_FRAMES) { sh.frame = 0; sh.gen++; }
@@ -2481,8 +2515,8 @@ function C_drawGens() {
     : '<span class="label">every generation of a run lands here</span>';
 }
 function C_drawDag() {
-  document.getElementById("C_dagRead").innerHTML = '<span class="label">on the stem boxes: a generation\'s cov(w, z) and E(wΔz), as the arrows set them</span>' +
-    (C.shift ? '<br><span class="label">the seedlings\' environment:</span> <b>' + (C.shift > 0 ? "a wet year, every seedling " + C.shift.toFixed(1) + " taller" : "a drought, every seedling " + Math.abs(C.shift).toFixed(1) + " shorter") + '</b>' : '');
+  document.getElementById("C_dagRead").innerHTML =
+    (C.shift ? '<span class="label">the seedlings\' environment:</span> <b>' + (C.shift > 0 ? "a wet year, every seedling " + C.shift.toFixed(1) + " taller" : "a drought, every seedling " + Math.abs(C.shift).toFixed(1) + " shorter") + '</b>' : '');
 }
 function C_paint() { C_drawField(); C_drawGens(); C_drawCard(); C_drawDag(); }
 /* ---- the R panel, written from the diagram ---- */
@@ -2548,30 +2582,31 @@ function C_wire() {
       { id: "oe", label: "seedling's environment", sub: "its own, like the parents'", x: 360, y: 430, w: 154, h: 46 }
     ],
     arrows: [
-      { id: "a", edges: [["pg", "pz"], ["og", "oz"]], input: "C_a", label: "", fmt: v => v.toFixed(1), labelAt: { x: 92, y: 86 },
+      { id: "a", edges: [["pg", "pz"], ["og", "oz"]], input: "C_a", label: "genes → stem height", fmt: v => v.toFixed(1), labelAt: { x: 64, y: 92 },
         hint: "How far the genes spread stem height, in the parents and in the seedlings." },
-      { id: "s", edges: [["pe", "pz"], ["oe", "oz"]], input: "C_s", label: "", fmt: v => v.toFixed(1), labelAt: { x: 204, y: 80 },
+      { id: "s", edges: [["pe", "pz"], ["oe", "oz"]], input: "C_s", label: "environment → stem height", fmt: v => v.toFixed(1), labelAt: { x: 236, y: 80 },
         hint: "How far the environment spreads stem height, in the parents and in the seedlings." },
-      { id: "bb", from: "pz", to: "bB", input: "C_bb", signed: true, label: "", fmt: sf, labelAt: { x: 258, y: 98 },
-        hint: "The extra seeds a plant makes for each unit it stands above the average plant: blue more, brown fewer." },
-      { id: "bd", from: "pz", to: "bD", input: "C_bd", signed: true, label: "", fmt: sf, labelAt: { x: 252, y: 186 },
-        hint: "The extra seeds a plant loses for each unit it stands above the average plant: blue more lost, brown fewer." },
-      { id: "lb", from: "cB", to: "bB", input: "C_lb", label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 396, y: 64 },
+      { id: "bb", from: "pz", to: "bB", input: "C_bb", signed: true, label: "stem height → birth rate", fmt: sf, labelAt: { x: 262, y: 68 },
+        hint: "The extra seeds a plant makes for each unit it stands above the average plant: blue more, red fewer." },
+      { id: "bd", from: "pz", to: "bD", input: "C_bd", signed: true, label: "stem height → death rate", fmt: sf, labelAt: { x: 236, y: 196 },
+        hint: "The extra seeds a plant loses for each unit it stands above the average plant: blue more lost, red fewer." },
+      { id: "lb", from: "cB", to: "bB", input: "C_lb", label: "chance → birth rate", fmt: v => "± " + v.toFixed(1), labelAt: { x: 412, y: 62 },
         hint: "How far luck spreads the seeds plants make, whatever their stems." },
-      { id: "ld", from: "cD", to: "bD", input: "C_ld", label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 312, y: 244 },
+      { id: "ld", from: "cD", to: "bD", input: "C_ld", label: "chance → death rate", fmt: v => "± " + v.toFixed(1), labelAt: { x: 300, y: 250 },
         hint: "How far luck spreads the seeds plants lose, whatever their stems." },
-      { id: "pw", from: "bB", to: "w", input: "C_pw", readonly: true, signed: true, label: "", text: "+", labelAt: { x: 420, y: 112 },
+      { id: "pw", from: "bB", to: "w", input: "C_pw", readonly: true, dark: true, always: true, label: "births", text: "+", labelAt: { x: 420, y: 112 },
         hint: "Seeds made count toward seeds set." },
-      { id: "dw", from: "bD", to: "w", input: "C_dw", readonly: true, signed: true, label: "", text: "−", labelAt: { x: 420, y: 196 },
+      { id: "dw", from: "bD", to: "w", input: "C_dw", readonly: true, dark: true, always: true, label: "deaths", text: "−", labelAt: { x: 420, y: 196 },
         hint: "Seeds lost count against seeds set." },
-      { id: "gw", from: "w", to: "gm", input: "C_gw", readonly: true, signed: true, label: "", text: " ", labelAt: { x: 470, y: 208 },
+      { id: "gw", from: "w", to: "gm", input: "C_gw", readonly: true, dark: true, label: "seeds set → germination", text: " ", labelAt: { x: 470, y: 208 },
         hint: "Each seed set is a ticket in the draw." },
-      { id: "gc", from: "cG", to: "gm", input: "C_gc", readonly: true, label: "", text: "at random", labelAt: { x: 396, y: 320 },
+      { id: "gc", from: "cG", to: "gm", input: "C_gc", readonly: true, dark: true, width: 9, label: "chance → germination", text: "at random", labelAt: { x: 396, y: 320 },
         hint: "Which seeds grow is a draw: 400 of the 8,000 or so the plants set. Most of the chance in a run comes in here, whatever the other arrows say. Not yours to set." },
-      { id: "t", from: "pg", to: "og", readonly: true, dark: true, label: "", text: "copied", labelAt: { x: 64, y: 196 },
+      { id: "t", from: "pg", to: "og", readonly: true, dark: true, label: "genes copied", text: "half from each parent", labelAt: { x: 64, y: 196 },
         hint: "A seedling's genes are copied from its parents', one copy of each gene from each." }
     ],
-    idleNote: "Click an arrow, then drag it up or down. The genes and environment arrows act in both generations."
+    valuesOnSelect: true, lockColours: true,
+    idleNote: "Click an arrow to read it; drag it up or down to set it. Blue pushes up, red pulls down; pale is held this round; grey is fixed."
   });
   document.getElementById("C_run").addEventListener("click", C_go);
   document.getElementById("C_practice").addEventListener("change", () => { C_syncGo(); C_paint(); });
@@ -2659,9 +2694,9 @@ const D_ROUNDS = [
   { key: "along",   win: [[11.4, 11.95], null],            hold: Object.assign({ gs: 0.8, gf: 1.0, es: 0.6, ef: 0.6 }, D_LUCK) },
   { key: "eaten",   win: [null, [9.9, 10.5]],              hold: { gs: 0, gf: 1.0, es: 0.6, ef: 0.6, sb: 0, sd: 0, fb: 6, lb: 2, ld: 2 } },
   { key: "patch",   win: [[9.25, 9.65], [6.65, 7.45]],     hold: Object.assign({ gs: 0.2, gf: 1.0, es: 1.0, ef: 0.8 }, D_LUCK) },
-  { key: "follow",  win: [null, [8.5, 9.2]],               hold: { gs: 0.6, gf: 1.0, es: 0.6, ef: 0.6, sd: 0, fb: 0, fd: 0, lb: 2, ld: 2 } },
+  { key: "follow",  win: [null, [8.45, 9.25]],             hold: { gs: 0.6, gf: 1.0, es: 0.6, ef: 0.6, sd: 0, fb: 0, fd: 0, lb: 2, ld: 2 } },
   { key: "trade",   win: [[10.55, 11.4], [8.4, 9.15]],     hold: Object.assign({ gs: -0.8, gf: 1.0, es: 0.5, ef: 0.5 }, D_LUCK) },
-  { key: "topple",  win: [[10.2, 10.8], [10.3, 10.95]],    hold: { gs: 0.8, gf: 1.0, es: 0.5, ef: 0.5, sb: 0, fb: 4, fd: 0, lb: 2, ld: 2 } },
+  { key: "topple",  win: [[10.15, 10.85], [10.25, 11.0]],  hold: { gs: 0.8, gf: 1.0, es: 0.5, ef: 0.5, sb: 0, fb: 4, fd: 0, lb: 2, ld: 2 } },
   { key: "shared",  win: [[10.55, 11.05], null],           hold: Object.assign({ gf: 1.0, es: 0.6, ef: 0.6, fb: 4 }, D_LUCK) },
   { key: "shared2", win: [null, [10.55, 11.0]],            hold: { gs: 1.0, es: 0.6, ef: 0.6, sb: 4, sd: 0, fb: 0, fd: 0, lb: 2, ld: 2 } },
   { key: "build",   win: [[8.6, 9.4], [10.4, 10.95]],      hold: Object.assign({ es: 0.5, ef: 0.5, fb: 3 }, D_LUCK) },
@@ -2685,7 +2720,7 @@ function D_syncHold() {
   const r = D_round(), hold = r ? r.hold : {};
   Object.assign(D, hold);
   for (const k of D_KEYS) document.getElementById("D_" + k).value = D[k];
-  if (D.paths) D.paths.batch(() => { for (const k of D_KEYS) D.paths.setArrow(k, { readonly: k in hold, label: k in hold ? "held" : "" }); });
+  if (D.paths) D.paths.batch(() => { for (const k of D_KEYS) D.paths.setArrow(k, { readonly: k in hold }); });
   D_code(); D_syncDag();
 }
 function D_changed(line) {
@@ -2700,6 +2735,8 @@ function D_go() {
   bump("D");
   D.show = { gen: 0, frame: 0 }; D.running = true;
   lockStage("D", true); D_paint();
+  /* the run plays on the pictures at the top: bring them into view */
+  const top = document.getElementById("D_top"); if (top && top.scrollIntoView) top.scrollIntoView({ behavior: "smooth", block: "start" });
   D.timer = setInterval(() => {
     const sh = D.show;
     if (++sh.frame >= PD_FRAMES) { sh.frame = 0; sh.gen++; }
@@ -2752,7 +2789,7 @@ function D_drawGens() {
     : '<span class="label">every generation of a run lands here</span>';
 }
 function D_drawDag() {
-  document.getElementById("D_dagRead").innerHTML = '<span class="label">on each trait: a generation\'s cov(w, z) (parents) and E(wΔz) (seedlings), as the arrows set them. No arrow joins the two traits: whatever ties them is a box they share.</span>';
+  document.getElementById("D_dagRead").innerHTML = "";
 }
 function D_paint() { D_drawField(); D_drawGens(); D_drawCard(); D_drawDag(); }
 function D_lines() {
@@ -2816,27 +2853,31 @@ function D_wire() {
       { id: "os", label: "seedling's stem height", sub: "", x: 146, y: 516, w: 136, h: 54, kind: "outcome" },
       { id: "of", label: "seedling's flower size", sub: "", x: 318, y: 516, w: 136, h: 54, kind: "outcome" }
     ],
+    /* the four trait -> rate arrows cross; a selected one reads out in the open space above them */
     arrows: [
-      { id: "gs", edges: [["pg", "ps"], ["og", "os"]], input: "D_gs", signed: true, label: "", fmt: sf, labelAt: { x: 86, y: 80 } },
-      { id: "gf", edges: [["pg", "pf"], ["og", "of"]], input: "D_gf", signed: true, label: "", fmt: sf, labelAt: { x: 76, y: 176 } },
-      { id: "es", edges: [["pe", "ps"], ["oe", "os"]], input: "D_es", signed: true, label: "", fmt: sf, labelAt: { x: 214, y: 76 } },
-      { id: "ef", edges: [["pe", "pf"], ["oe", "of"]], input: "D_ef", signed: true, label: "", fmt: sf, labelAt: { x: 262, y: 150 } },
-      { id: "sb", from: "ps", to: "bB", input: "D_sb", signed: true, label: "", fmt: sf, labelAt: { x: 290, y: 104 } },
-      { id: "sd", from: "ps", to: "bD", input: "D_sd", signed: true, label: "", fmt: sf, labelAt: { x: 300, y: 212 } },
-      { id: "fb", from: "pf", to: "bB", input: "D_fb", signed: true, label: "", fmt: sf, labelAt: { x: 300, y: 168 } },
-      { id: "fd", from: "pf", to: "bD", input: "D_fd", signed: true, label: "", fmt: sf, labelAt: { x: 290, y: 270 } },
-      { id: "lb", from: "cB", to: "bB", input: "D_lb", label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 442, y: 70 } },
-      { id: "ld", from: "cD", to: "bD", input: "D_ld", label: "", fmt: v => "± " + v.toFixed(1), labelAt: { x: 442, y: 306 } },
-      { id: "pw", from: "bB", to: "w", input: "D_pw", readonly: true, signed: true, label: "", text: "+", labelAt: { x: 458, y: 140 } },
-      { id: "dw", from: "bD", to: "w", input: "D_dw", readonly: true, signed: true, label: "", text: "−", labelAt: { x: 458, y: 236 } },
-      { id: "gw", from: "w", to: "gm", input: "D_gw", readonly: true, signed: true, label: "", text: " ", labelAt: { x: 494, y: 300 },
+      { id: "gs", edges: [["pg", "ps"], ["og", "os"]], input: "D_gs", signed: true, label: "genes → stem height", fmt: sf, labelAt: { x: 86, y: 80 } },
+      { id: "gf", edges: [["pg", "pf"], ["og", "of"]], input: "D_gf", signed: true, label: "genes → flower size", fmt: sf, labelAt: { x: 76, y: 176 } },
+      { id: "es", edges: [["pe", "ps"], ["oe", "os"]], input: "D_es", signed: true, label: "environment → stem height", fmt: sf, labelAt: { x: 214, y: 76 } },
+      { id: "ef", edges: [["pe", "pf"], ["oe", "of"]], input: "D_ef", signed: true, label: "environment → flower size", fmt: sf, labelAt: { x: 262, y: 150 } },
+      { id: "sb", from: "ps", to: "bB", input: "D_sb", signed: true, label: "stem height → birth rate", fmt: sf, labelAt: { x: 300, y: 66 } },
+      { id: "sd", from: "ps", to: "bD", input: "D_sd", signed: true, label: "stem height → death rate", fmt: sf, labelAt: { x: 300, y: 66 } },
+      { id: "fb", from: "pf", to: "bB", input: "D_fb", signed: true, label: "flower size → birth rate", fmt: sf, labelAt: { x: 300, y: 66 } },
+      { id: "fd", from: "pf", to: "bD", input: "D_fd", signed: true, label: "flower size → death rate", fmt: sf, labelAt: { x: 300, y: 66 } },
+      { id: "lb", from: "cB", to: "bB", input: "D_lb", label: "chance → birth rate", fmt: v => "± " + v.toFixed(1), labelAt: { x: 442, y: 70 } },
+      { id: "ld", from: "cD", to: "bD", input: "D_ld", label: "chance → death rate", fmt: v => "± " + v.toFixed(1), labelAt: { x: 442, y: 306 } },
+      { id: "pw", from: "bB", to: "w", input: "D_pw", readonly: true, dark: true, always: true, label: "births", text: "+", labelAt: { x: 458, y: 140 },
+        hint: "Seeds made count toward seeds set." },
+      { id: "dw", from: "bD", to: "w", input: "D_dw", readonly: true, dark: true, always: true, label: "deaths", text: "−", labelAt: { x: 458, y: 236 },
+        hint: "Seeds lost count against seeds set." },
+      { id: "gw", from: "w", to: "gm", input: "D_gw", readonly: true, dark: true, label: "seeds set → germination", text: " ", labelAt: { x: 494, y: 300 },
         hint: "Each seed set is a ticket in the draw." },
-      { id: "gc", from: "cG", to: "gm", input: "D_gc", readonly: true, label: "", text: "at random", labelAt: { x: 414, y: 474 },
+      { id: "gc", from: "cG", to: "gm", input: "D_gc", readonly: true, dark: true, width: 9, label: "chance → germination", text: "at random", labelAt: { x: 414, y: 474 },
         hint: "Which seeds grow is a draw: 400 of the 8,000 or so the plants set. Most of the chance in a run comes in here, whatever the other arrows say. Not yours to set." },
-      { id: "t", from: "pg", to: "og", readonly: true, dark: true, label: "", text: "copied", labelAt: { x: 30, y: 300 },
+      { id: "t", from: "pg", to: "og", readonly: true, dark: true, label: "genes copied", text: "half from each parent", labelAt: { x: 30, y: 300 },
         hint: "A seedling's genes are copied from its parents', one copy of each gene from each." }
     ],
-    idleNote: "Click an arrow, then drag it up or down: blue up, brown down. The genes and environment arrows act in both generations."
+    valuesOnSelect: true, lockColours: true,
+    idleNote: "Click an arrow to read it; drag it up or down to set it. Blue pushes up, red pulls down; pale is held this round; grey is fixed."
   });
   document.getElementById("D_run").addEventListener("click", D_go);
   document.getElementById("D_practice").addEventListener("change", () => { D_syncGo(); D_paint(); });

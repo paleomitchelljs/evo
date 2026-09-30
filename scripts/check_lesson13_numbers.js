@@ -526,11 +526,29 @@ const C_SOL = { tall: { bb: 3.5 }, weather: { bb: 7 }, genes: { a: 0.7 }, wet: {
   C.run = null; setB(0); const flat = dag();
   setB(3); const txt = dag(), card = document.getElementById("C_cardRead").textContent, ex = PD_expect(C_START, C_setNow())[0].per;
   const got = [num(txt, /cov\\(w, z\\) ([-+][0-9.]+)/), num(txt, /E\\(wΔz\\) ([-+][0-9.]+)/)], want = [ex.cov, ex.E].map(v => +v.toFixed(2));
-  const arrowOn = /\\+3\\.0/.test(document.getElementById("pathsC").textContent);
+  /* the arrow redraws as it is set: its stroke thickens (numbers show only on a selected arrow) */
+  const visible = id => { const h = document.querySelector('#pathsC .paths-hit[data-arrow="' + id + '"]'); return h ? h.nextElementSibling : null; };
+  const arrowOn = +((visible("bb") || { getAttribute: () => 0 }).getAttribute("stroke-width")) > 4;
   Object.assign(C, keep); C_syncHold(); C_syncGo(); C_paint();
   check("C in a round the diagram carries a generation's terms as the arrows set them; the card prints none, and no expected end", !!r && got.every((v, i) => v === want[i]) && num(flat, /cov\\(w, z\\) ([-+][0-9.]+)/) === 0 && arrowOn && !/[0-9]/.test(card) && !/(?<!w)Δz [-+−]/.test(txt),
         "round " + (r || {}).key + ", practice off, birth arrow dragged 0 → 3: the boxes read cov(w, z) " + got[0] + ", E(wΔz) " + got[1] + "; computed " + want.join(", ") + "; at 0, cov(w, z) " + num(flat, /cov\\(w, z\\) ([-+][0-9.]+)/) +
-        "; the arrow redrawn at +3.0: " + arrowOn + "; numbers under the card: " + (/[0-9]/.test(card) ? "'" + card.slice(0, 40) + "'" : "none"));
+        "; the arrow redrawn thicker at +3: " + arrowOn + "; numbers under the card: " + (/[0-9]/.test(card) ? "'" + card.slice(0, 40) + "'" : "none"));
+  /* JM, 2026-09-30: numbers on the diagram only while an arrow is being adjusted; blue up, red down,
+     pale = held this round, grey = fixed. Read in a round (tall holds genes and environment). */
+  {
+    const root = document.getElementById("pathsC"), vals = () => [...root.querySelectorAll(".paths-arrow-value")].map(t => t.textContent.trim()).filter(Boolean);
+    const cls = id => { const h = root.querySelector('.paths-hit[data-arrow="' + id + '"]'); return h && h.nextElementSibling ? h.nextElementSibling.getAttribute("class") : ""; };
+    /* the round's free arrow is stem height -> birth rate; set it negative (red) and click it */
+    C.bb = -2; document.getElementById("C_bb").value = -2; C_syncDag(); C.paths.sync();
+    const idle = vals();
+    const hit = root.querySelector('.paths-hit[data-arrow="bb"]'); hit.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true })); window.dispatchEvent(new PointerEvent("pointerup"));
+    const picked = vals(), note = root.querySelector(".paths-note").textContent;
+    const held = C_round() && "a" in C_round().hold && /locked/.test(cls("a")) && /locked/.test(cls("s")) && /locked/.test(cls("bd")), neg = /down/.test(cls("bb"));
+    const grey = [...root.querySelectorAll(".paths-arrow.dark")].length >= 5;
+    C.bb = 0; document.getElementById("C_bb").value = 0; C_syncHold(); C_paint();
+    check("C the diagram shows numbers only on the arrow being set; held arrows pale, fixed ones grey", idle.join(" ") === "+ −" && picked.some(v => v.replace("−", "-") === "-2.0") && /is now/.test(note) && held && neg && grey,
+          "numbers on show with nothing selected: [" + idle.join(", ") + "]; after clicking stem height → birth rate at −2: [" + picked.join(", ") + "], note '" + note.slice(0, 40) + "'; red: " + neg + "; held arrows marked locked: " + held + "; fixed (grey) arrows: " + [...root.querySelectorAll(".paths-arrow.dark")].length);
+  }
   /* the bells are trial generations at the arrows: their averages sit on the arrows' arithmetic */
   const set = C_SET(1, 0.8, 5, 0.6), tr = PD_trials(C_START, set, 999)[0], e2 = PD_expect(C_START, set)[0].per;
   const se = a => PD_sd(a) / Math.sqrt(a.length), zc = Math.abs(mn(tr.cov) - e2.cov) / se(tr.cov), ze = Math.abs(mn(tr.E) - e2.E) / se(tr.E), z1 = Math.abs(mn(tr.E1) - e2.E - 0.6) / se(tr.E1);

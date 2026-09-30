@@ -43,6 +43,21 @@
 //   p.setArrow(id, {...})          // label, from, to, dark, readonly, text, hidden
 //   p.setBox(id, {...})            // label, sub, hidden
 //   p.selected()                   // id of the selected arrow, or null
+//
+// Two options, both off unless a page asks (lesson 13 C/D, 2026-09-30; JM:
+// "showing the numbers on the graph is not necessary except when that arrow
+// is being adjusted" and "Pale red = locked & negative, Pale blue = locked &
+// positive, Red = negative & adjustable, Blue = positive & adjustable, Gray
+// = intrinsic and unadjustable"):
+//   valuesOnSelect: true   an arrow's label and value show only while it is
+//                          selected; every arrow with an input or a hint can
+//                          be clicked to read it, held ones included (they
+//                          still cannot be dragged). An arrow with
+//                          `always: true` keeps its `text` on show.
+//   lockColours: true      a readonly arrow that is not `dark` gets the class
+//                          `locked` and pale heads, for the page's CSS to
+//                          colour as held.
+// And per arrow, `width` fixes a `dark` arrow's stroke (default 2.2).
 
 (function (global) {
   "use strict";
@@ -96,8 +111,9 @@
       readonly: !!a.readonly, dark: !!a.dark, ghost: !!a.ghost,
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
       hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null,
-      dragSpan: a.dragSpan || 0, signed: !!a.signed
+      dragSpan: a.dragSpan || 0, signed: !!a.signed, width: a.width || 0, always: !!a.always
     }));
+    const valuesOnSelect = !!opts.valuesOnSelect, lockColours = !!opts.lockColours;
 
     const state = { sel: null, drag: null, held: false, dirty: false };
 
@@ -112,7 +128,7 @@
 
     const defs = svg("defs");
     [["paths-head", "#2f6b8f"], ["paths-head-sel", "#b23a48"], ["paths-head-dark", "#c4c0b4"],
-     ["paths-head-down", "#9a6b1f"]]
+     ["paths-head-down", "#9a6b1f"]].concat(opts.lockColours ? [["paths-head-locked", "#a9c7da"], ["paths-head-locked-down", "#e8aab0"]] : [])
       .forEach(([id, fill]) => {
         // markerUnits is strokeWidth (the default), so the head grows with the
         // line. A fixed head is worse than a big one: past about 8px of stroke
@@ -232,7 +248,8 @@
         if (a.hidden) return;
         const sel = state.sel === a.id;
         const n = norm(a);
-        const width = a.ghost ? 1.6 : (a.dark ? 2.2 : MIN_W + (MAX_W - MIN_W) * n);
+        const width = a.ghost ? 1.6 : (a.dark ? (a.width || 2.2) : MIN_W + (MAX_W - MIN_W) * n);
+        const locked = lockColours && a.readonly && !a.dark && !a.ghost;
         const eds = edgesOf(a);
         const fork = isFork(eds);
         eds.forEach((ed, i) => {
@@ -249,11 +266,13 @@
           else if (a.dark) cls.push("dark");
           else if (n <= 0.0001) cls.push("zero");
           else if (neg) cls.push("down");
+          if (locked) cls.push("locked");
           if (sel) cls.push("selected");
           const head = a.ghost ? null
                      : (sel ? "url(#paths-head-sel)"
                             : (a.dark || n <= 0.0001 ? "url(#paths-head-dark)"
-                                                     : (neg ? "url(#paths-head-down)" : "url(#paths-head)")));
+                                                     : (neg ? (locked ? "url(#paths-head-locked-down)" : "url(#paths-head-down)")
+                                                            : (locked ? "url(#paths-head-locked)" : "url(#paths-head)"))));
           const path = svg("path", { d: g.d, class: cls.join(" "),
                                      "stroke-width": width.toFixed(2),
                                      "marker-end": head });
@@ -261,8 +280,9 @@
 
           // The hit target is a fat invisible copy of the same curve, so a thin
           // arrow at strength zero is still as easy to grab as a fat one.
-          if (!a.ghost && !a.readonly && a.input) {
-            const hit = svg("path", { d: g.d, class: "paths-hit", tabindex: "0",
+          const clickable = valuesOnSelect ? !!(a.input || a.hint) : (!a.readonly && !!a.input);
+          if (!a.ghost && clickable) {
+            const hit = svg("path", { d: g.d, class: "paths-hit" + (a.readonly ? " ro" : ""), tabindex: "0",
                                       role: "slider", "aria-label": a.label,
                                       "data-arrow": a.id });
             const s = spec(a);
@@ -278,8 +298,9 @@
 
           // Label and value ride on the first head only; the others are the
           // same control reaching somewhere else and saying so twice is noise.
-          if (i === 0) {
-            const lines = a.label ? wrap(a.label, 20) : [];
+          const showBlock = !valuesOnSelect || sel || (a.always && a.text != null);
+          if (i === 0 && showBlock) {
+            const lines = a.label && (!valuesOnSelect || sel) ? wrap(a.label, 20) : [];
             const showVal = !a.ghost;
             const blockH = lines.length * 13 + (showVal ? 15 : 0);
             // These diagrams are hand-laid, so an arrow may name where its
@@ -383,6 +404,7 @@
         note.innerHTML = opts.idleNote || "Click an arrow to pick it up, then drag it up or down to change how much that cause contributes.";
         return;
       }
+      if (a.readonly && valuesOnSelect && !a.dark && spec(a)) { note.innerHTML = "<b>" + a.label + "</b> is held at " + a.fmt(spec(a).v) + " this round." + (a.hint ? " " + a.hint : ""); return; }
       if (a.readonly) { note.innerHTML = a.hint || "<b>" + a.label + "</b> — this one is not yours to set."; return; }
       const s = spec(a);
       note.innerHTML = "<b>" + a.label + "</b> is now " + (s ? a.fmt(s.v) : "—")
@@ -400,6 +422,8 @@
       // what the SVG does underneath it.
       hit.addEventListener("pointerdown", ev => {
         ev.preventDefault();
+        /* valuesOnSelect: a held or fixed arrow can be clicked to read, not dragged */
+        if (valuesOnSelect && (a.readonly || !spec(a))) { if (state.sel !== a.id) { state.sel = a.id; render(); } return; }
         const s = spec(a); if (!s) return;
         state.sel = a.id;
         // dragSpan buys precision: an arrow whose useful window is a sliver of
