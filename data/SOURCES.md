@@ -518,3 +518,14 @@ consumption.
   the window is a one-line change to the embedded block.
 - **Redistribution.** Counts and climate summaries only; the project's per-kill and
   per-individual records are not redistributed here.
+
+## 1000 Genomes Project phase 3 — the lactase region (chromosome 2)
+
+- **Citation.** The 1000 Genomes Project Consortium (2015). A global reference for human genetic variation. *Nature* 526: 68–74. The lactase-persistence variant: Enattah, N. S. et al. (2002) *Nature Genetics* 30: 233–237; the long shared haplotype in Europeans: Bersaglieri, T. et al. (2004) *Am. J. Hum. Genet.* 74: 1111–1120.
+- **URL / DOI.** <https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/> — `ALL.chr2.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz` (+ `.tbi`) and `integrated_call_samples_v3.20130502.ALL.panel`. GRCh37. Open data (Fort Lauderdale rules; no use restrictions).
+- **What it is.** Phased genotypes for 2,504 people. Read here by HTTP range request through the tabix index, without htslib (`scripts/fetch_1000g_region.py`); 22.5 MB for chr2:134.5–138.7 Mb. Kept: CEU (Utah residents of northern and western European ancestry, 99 people) and YRI (Yoruba, Ibadan, 108 people).
+- **Used in.** **Lesson 14, Stage B, the last target**: diversity along 4 Mb around rs4988235 (−13910 C/T upstream of LCT; T = persistence, 0.737 in CEU, 0 in YRI), Europeans' as a share of Yoruba's, with 40 European chromosomes drawn as haplotypes. Measured on the page: rest of chromosome 2 at 0.76 of Yoruba's diversity; carriers of T share 1.57 Mb around the variant, non-carriers 0.29 Mb.
+- **Clean derivative.**
+  - `data/clean/lct_scan.json` — 21 windows of 200 kb (sum of 2pq per kb, CEU, YRI, ratio); three distant 500 kb background stretches (120.0, 133.0, 139.5 Mb; ratios 0.67, 0.75, 0.86); the site's alleles and 100 marker SNPs (one per 40 kb bin, YRI minor allele frequency ≥ 0.2) for all 198 CEU haplotypes. 25 KB.
+- **Cleaning script.** `scripts/make_lct_scan.py` (streams the region; ~15 s).
+- **Redistribution.** Derived summary and a 100-marker haplotype excerpt of open data.

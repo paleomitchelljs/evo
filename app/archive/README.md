@@ -20,4 +20,6 @@ somewhere and only use them as references/sources when needed."*
 
 ## Later additions
 
+- `lesson14_2026-09-30.html` — lesson 14 as births, deaths and crowding (A-C, r and K, `version: 3`), archived when JM made 14 the genetics-of-selection lesson (2026-09-30). r and K are built nowhere else; JM: *"r and K don't matter here."* Its checks are `scripts/check_lesson14_numbers.js` at `77e4149`.
+
 - `lesson13_2026-09-29.html` — lesson 13 as it stood at `287e3e0` (A-G, `version: 11`), kept whole and runnable when C (covariance: a fitness line through a dot cloud, signed rectangles, group colours), D (what responds: S against R point by point, one line per population) and E (the regression is the diagram: least-squares arrows, the leftover plot) were cut on 2026-09-29. JM: *"good but too arcane and superseded by the new parts A and B ... I like the visuals and features. I don't know if they can be reused or repurposed, but they seem archivable."* Its checks are `scripts/check_lesson13_numbers.js` at the same commit. On 2026-09-30 JM archived the mediator/confounder and collider stages too (they are F and G in this file).

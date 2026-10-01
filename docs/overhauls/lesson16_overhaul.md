@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson16.html` — new page, not started
 **Checks** · `node scripts/check_lesson16_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · planned 2026-09-25; nothing built; no LOCKS row until the page exists
+**Status** · **absorbed into lesson 14 (JM, 2026-09-30)**: linkage, sweeps and dN/dS are now 14's core; see `lesson14_overhaul.md`. Kept for its measurements. Planned 2026-09-25; nothing built
 **Last touched** · 2026-09-25
 
 After the selection lessons (12 genetics, 13 regression, 14 birth–death, 15 frequency dependence, pencilled). A bridge into the mutation lesson.
