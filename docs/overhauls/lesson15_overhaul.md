@@ -1,9 +1,72 @@
 # Lesson 15 — the bridge: coalescence and linkage through a snake game (slot pencilled: JM, 2026-10-01: "make the snake game lesson 15")
 
-**File** · `app/lessons/lesson15.html` — not started
+**File** · `app/lessons/lesson15.html` — Stage A playable, locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
 **Status** · Stage A playable (built 2026-10-01 night, game first: no stages gated, `scaffold: 0`, page locked); B, targets and scoring to come. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-01
+**Last touched** · 2026-10-02 (seventh pass)
+
+## Seventh pass (JM, 2026-10-02): lines for one gene copy only; glow, no boxes
+
+- *"The pedigree should only show lines for a highlighted locus, and should show those lines up & down. Descendants/ancestors of the player should just be highlighted with a glow. We don't need a rectangle around each, just show the chromosomes"*.
+- Read as: point at (or click to keep) one bead = one copy of one gene; up = where that copy came from, back to the founders; down = every copy passed on from it. Family lines, the always-on 14-copy trace, the blue tint, the player's boxes and the snake parent/young hover lines all go.
+- Glow: the player's snakes red; the snakes they descend from and that descend from them pale red. Cuts the sixth pass's "K of N" readout (it described the removed trace).
+
+| # | What | Status |
+|---|------|--------|
+| 7-1 | lines only for the highlighted copy, up (red) and down (blue); click a bead to keep it | done; readout says how many snakes now carry that copy (seen: 12 of 15, ten generations on) |
+| 7-2 | glow for the player's snakes and their ancestors/descendants; no rectangles | done; kin saturates within a few generations, so most snakes glow pale and the unrelated ones are the exceptions |
+
+## Sixth pass (JM, 2026-10-02, later): the game as a pop-up; grey start, one new colour a generation
+
+- Goal: *"The main goal I want to get across is that different loci in one individual coalesce to different individuals in the past. I want to build that intuition first before we actually do coalescence."*
+- Layout: *"put the game above the pedigree instead of beside"*, then *"Alternatively, having the game as a 'pop up' that covers the page could allow more freedom."* Built: the pop-up (pedigree gets the full width).
+- *"showing fewer past generations and more descendants ones could work. The player character begins with a mutation at some locus, but all other loci could start as gray with one new mutant each generation chosen at random to add a color"*: PRE 10 → 3; founders all grey; no new alleles before play; the player's one at generation 0; then exactly one a generation.
+- Added toward the goal (not asked; JM may cut): the current player's snake's 14 gene copies traced back, always (click any snake to trace it instead); the snakes it descends from tinted; the snake where each colour arose ringed.
+
+**Measured** (node model, 400 games, one snake's 14 copies traced back):
+
+        generations back   snakes holding its copies (crossover 0.1 / 0.2 / 0.5)   snakes it descends from there
+        3                  3.3 / 4.1 / 5.1                                        5.6
+        5                  4.0 / 5.0 / 6.1                                        7.8
+        10                 4.5 / 5.4 / 5.9                                        8.5
+
+- Different genes of one snake reach different ancestors at any rate; about half its ancestors five or more generations back passed it none of the 14. The family tree saturates at ~8 because ~10 snakes breed.
+
+| # | What | Status |
+|---|------|--------|
+| 6-1 | game in a pop-up over the page; pedigree full width, bigger beads | done: arena min(100vh − 60, 96vw − 290) px, HUD/buttons in a side column (~710 px on a 1300 x 860 window); "Back to the pedigree" / "Play the next season" at winter; Esc or the backdrop closes between seasons; beads ~7 px |
+| 6-2 | grey founders, PRE 3, the player's allele, then one new allele a generation | done: no new alleles before play; exactly one from generation 1 |
+| 6-3 | a snake's gene copies traced back (yours by default), its ancestors tinted, each colour's origin ringed | done: click a snake to trace it, again for yours; readout "Its 14 gene copies came from K of the N snakes it descends from in generation −3" (seen: 3 of 6, 3 of 10, 4 of 10, 5 of 8); a chromosome's genes draw as a band that splits at crossovers |
+
+## Fifth pass (JM, 2026-10-02): simpler genetics, random mating, the family always drawn, new sprites
+
+- *"the snakes shouldn't grow"*: found in the code: bodies were laid SEG apart at each season's start, then re-laid SEG + one frame's travel apart, so every snake stretched from 113 units to ~139 (60 fps) or ~186 (30 fps) in its first seconds each season. Fix: body points resampled at exactly SEG along the head's trail (112.5 at any frame rate, checked headless).
+- *"remove my idea about putting the genes directly on the snake icons"*: no allele dots in the arena.
+- *"a single chromosome with 7 loci represented as a string of circles ... color coded by allele"*: pedigree beads, two strings a snake (mother's above, father's below).
+- *"the player's offspring to be 'locked' as shown--so the full family tree of the player and all descendants always shown"*: lines from every descendant of a player's snake to its parents in that family, always drawn; the player's own chain bold. Hover lines stay.
+- *"Mating should be random--not a player choice"*: no winter den; the fed pair at random, the player included.
+- New sprite sheets (hawk, newt): four directions, two frames each (side, toward the viewer, away); the frame set picked by heading.
+
+**Measured** (node model of `modelSeason`, one chromosome of 7 genes, 600 games):
+
+        crossover per gap   generations   genes down to one ancestor   TMRCA   the two end genes, different ancestors   neighbours, different
+        0.1                 20            0.13                         16.5    1.00                                    0.57
+        0.1                 30            0.36                         22.4    0.93                                    0.74
+        0.2                 30            0.36                         22.5    0.96                                    0.91
+        0.3                 30            0.37                         22.3    0.96                                    0.94
+
+- 0.1 kept: ends nearly always differ, neighbours often share: the gradient along the chromosome shows.
+- At the game's present size (~15 born, 10 kept) only ~1/3 of genes reach one ancestor in 30 generations (the 80% in the first pass was 8 snakes). Not changed this pass.
+
+| # | What | Status |
+|---|------|--------|
+| 5-1 | snakes a fixed length | done |
+| 5-2 | no dots on snakes; one chromosome, 7 genes; pedigree beads | done; beads ~4 px (15 snakes x 7 genes in half the page); a full-width pedigree under the arena would double them: JM's call |
+| 5-3 | random mating (no den, no best-fed mate for the player or the autopilot) | done; spring message names the mate's catch and why a line broke |
+| 5-4 | the player's family drawn always | done: pale red to family parents, bold for the player's own line; ~everyone is family within ~5 generations, so the lines get dense |
+| 5-5 | JM's new hawk and newt sheets, by direction | done: side / up / down chosen by heading, side mirrored; 12 frames, 48 colours, 34 KB (the old six were 118 KB); his side-view and top-down frames all used |
+
+- Not re-measured: the player's edge. Most of it was choosing the best-fed mate (fourth pass); what is left is eating and dodging hawks.
 
 ## What the lesson is
 
