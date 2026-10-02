@@ -10,7 +10,8 @@
  * has to hold:
  *
  *   A. (rebuilt 2026-10-01, evening: the headcount is an outcome, the beak
- *      arrow lands on rainfall -> food, chance acts on births and deaths)
+ *      arrow lands on rainfall -> food, chance acts on births and deaths;
+ *      2026-10-02: only survivors breed)
  *      the rain is data/clean/grant_rainfall.csv; next year's birds are the
  *      survivors plus the new chicks, and the headcount swings; a
  *      population's frequency is its counts; the bars' "should change" is
@@ -26,7 +27,7 @@
  *      rounds; the opening and the cheap routes miss; the observed data is a
  *      run at its setting near its means, and no round's answer clears it;
  *      Start deals round 1 with the arrows at the opening and the held arrow
- *      pale; the beak arrow lands on the rainfall -> food arrow.
+ *      pale; the beak size arrow lands on the rainfall -> food arrow.
  *   B. as before (crossovers, assortment, Kimura's losses, the rest of the
  *      genome as chance alone, the stretch and windows by hand), the five
  *      rounds' stored readings and hidden settings, the lactase record is the
@@ -105,13 +106,13 @@ const A_rate = (r, g, sv, reps, seed) => { let k = 0; for (let q = 0; q < reps; 
         "after Start: round " + (r0 || {}).key + ", beak " + A.g + ", luck " + A.s + "; chance '" + cls("luck") + "', beak '" + cls("bk") + "'");
 }
 {
-  /* the beak arrow lands on the middle of the rainfall -> food arrow (JM: "the beak depth arrow should really point to the rainfall->food a bird gets arrow") */
+  /* the beak size arrow lands on the middle of the rainfall -> food arrow (JM: "the beak depth arrow should really point to the rainfall->food a bird gets arrow"; "beak size", 2026-10-02) */
   const d = id => (document.querySelector('#pathsA [data-of="' + id + '"]') || { getAttribute: () => "" }).getAttribute("d");
   const nums = id => (d(id).match(/-?[0-9.]+/g) || []).map(Number);
   const rf = nums("rf"), bk = nums("bk");
   const mid = { x: 0.25 * rf[0] + 0.5 * rf[2] + 0.25 * rf[4], y: 0.25 * rf[1] + 0.5 * rf[3] + 0.25 * rf[5] };
   const tip = { x: bk[4], y: bk[5] }, gap = Math.hypot(tip.x - mid.x, tip.y - mid.y);
-  check("A the beak depth arrow lands on the rainfall -> food arrow", rf.length === 6 && bk.length === 6 && gap < 16,
+  check("A the beak size arrow lands on the rainfall -> food arrow", rf.length === 6 && bk.length === 6 && gap < 16,
         "its line ends " + gap.toFixed(1) + " px from the middle of rainfall -> food (the head reaches past it)");
 }
 {

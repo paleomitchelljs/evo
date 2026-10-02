@@ -2,8 +2,31 @@
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (all four stages; ~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-E built (`version: 8`, `scaffold: 27`: A 5 + record, B 5 + lactase, C 5, D 5, E 5; one bit per attempt); E is a draft (JM asked for one, 2026-10-01); page locked; every voice block a placeholder
-**Last touched** · 2026-10-01
+**Status** · A-E built (`version: 8`, `scaffold: 27`: A 5 + record, B 5 + lactase, C 5, D 5, E 5; one bit per attempt); E is a draft (JM asked for one, 2026-10-01); page locked; A and B voice blocks are JM's dictation (2026-10-02), C-E placeholders
+**Last touched** · 2026-10-02 (A and B text dictated; A's survivors breed)
+
+## JM's notes, 2026-10-02 — A and B text, A's diagram
+
+- A intro = his dictation (minor edits only); A bullets = his four, verbatim-ish (*"those should be the bullets"*).
+- A diagram: *"beak size instead of beak depth"* (matches HMGA2's label in the genome picture); boxes *"genetics"* and *"non-genetic factors"* → beak size, *"they shouldn't have arrows that you can manipulate ... they don't even necessarily have to do anything"*; *"survivor → parents → new chicks. To make that clear."*
+- B intro = his dictation; B bullets *"highly simplified and adjusted"*.
+- Engine consequence: the page drew parents from every bird of the year (dead or alive: "they bred first"). Survivors → parents is only true if deaths come first, so the engine changes and A's targets are re-measured.
+
+| # | What | Status |
+|---|------|--------|
+| N-1 | A voice ← dictation; bullets ← his four; intro layout voice \| bullets over genome | done ("child to parent" → "parent to child"; "HGMA one" → HMGA2) |
+| N-2 | A diagram: beak size; genetics, non-genetic factors → beak size (grey, inert); survivors → parents | done; rows spread so chance and beak arrows read at full width (chance ~49 px → ~90 px) |
+| N-3 | A engine: deaths first, survivors breed (births weight 2q/(1−q) keeps 500 birds level); bars' expected = survival × (1 + chicks) | done |
+| N-4 | A rounds + observed data re-measured; check A green | done: 24 bars pass |
+| N-5 | B voice ← dictation; bullets cut down (7 → 6, no fitness formula, no "diagram is the controls") | done |
+| N-6 | `paths.js`: an `onto` arrow's tip lands on its point (it stopped 2 + 2.7 widths short, ~29 px at full width) | done; only lesson 14 A uses `onto` |
+
+- **Survivors breed, measured** (node, page engine, 500 runs, seeds 9001 + 7919 q): beak 0.30 / 0.5: −0.11691 ± 0.00705, 0.01489 ± 0.00196 · chance 0 / 2.2: −0.00056 ± 0.02050, 0.03281 ± 0.00653 · faint 0.08 / 0: −0.03258 ± 0.00670, 0.01296 ± 0.00180 · strong 0.50 / 0.5: −0.18683 ± 0.00880, 0.01788 ± 0.00292 · **both −0.18 / 1.8**: +0.05624 ± 0.01507, 0.02744 ± 0.00428 · data 0.45 / 2.0: −0.11567 ± 0.02949, 0.03338 ± 0.00568.
+- Selection compounds (the beak sets survival and then who of the survivors breeds): slopes ~10% steeper, errors ~10% larger, data's slope spread 0.022 → 0.029.
+- **"both" flipped sign.** At +0.18 its answer cleared the data 57% (the data's wider slope window reached −0.051). Tried: +0.12 (right luck, no beak cleared it 35%); data at 0.55/1.8 (right beak, no luck cleared the data 35%); data 0.5-0.6 at 2.0 (both's answer 35-40%). −0.18: every trap passes; the round now asks for the other direction (big beaks lose in droughts), which the signed arrow allows.
+- Headcount: harmonic mean 364 at no luck/no beak (was 374; real 372); peaks higher (median max 2,912 vs 2,089: a wet year now lifts survival and then the survivors' breeding). Birds strip ceiling 5,000 → 10,000 (the data run peaks at 5,204). Luck 3 explodes some runs past 100,000 birds; the old engine did too (top 179,114 of 100).
+- Not checked by a bar: that only survivors breed (the first-year headcount test cannot tell the two orders apart in an ordinary year). By construction: `pick()` draws from the survivor list.
+- Open for JM: "non-genetic factors → beak size" is drawn and does nothing (as he allowed). Making it real (beak = genotype + noise) means re-measuring all six targets. B's source (JM, 2026-10-02): Pollinger et al. 2005, *Genome Res.* 15:1809 (PMC1356119): 302 microsatellites, 8-12 dachshunds; *"three linked monomorphic microsatellite markers all within a 10-Mb region on chromosome 3"* (elsewhere *"a 15-Mb region"*), containing FGFR3, *"responsible for achondroplasia in humans, but not in dogs"*; cause *"a gene or regulatory region closely linked to FGFR3"*. His text says ~20 Mb on either side (~40 Mb): the paper's region is 10-15 Mb in all. Later: the breed's short legs map to an FGF4 retrogene on chromosome 18 (Parker et al. 2009), not chromosome 3. Text left as dictated. A lactase transition in the intro would name the one-shot before it is taken (2026-10-01: named only after); the solved banner is where it can go without that. No lactase-selection quote in the corpus (only 145_lec04_05, 336_lec07_03).
 
 ## JM's second pass, 2026-10-01 (evening) — A and B
 

@@ -237,8 +237,10 @@
       let ctrl = { x: straightMid.x + nx * bend, y: straightMid.y + ny * bend };
       const p1 = edgePoint(b1, ctrl), e2 = edgePoint(b2, ctrl);
       // the tip lands 2 + 1.28 widths off the box edge, as it did when the
-      // line ran on to 7.6 units into the head
-      let p2 = backOff(e2, ctrl, 2 + width * (1.28 + TIP_W)), fit = width;
+      // line ran on to 7.6 units into the head; on an `onto` point (no edge)
+      // the tip lands on the point itself, or a thick arrow stops short of
+      // the arrow it lands on (lesson 14 A, 2026-10-02)
+      let p2 = backOff(e2, ctrl, b2.kind === "point" ? width * TIP_W : 2 + width * (1.28 + TIP_W)), fit = width;
       // Between close boxes that pull-back can carry the line's end past the
       // control point: the curve doubles back and the head turns round (JM,
       // 2026-09-30). Such an arrow is redrawn from its own two ends, its tip
