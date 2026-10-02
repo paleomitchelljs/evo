@@ -39,7 +39,13 @@
 //     });
 //
 // Controller:
-//   p.sync()                       // re-read every bound input and redraw
+//   p.sync()                       // re-read every bound input and redraw.
+//                                  // Dragging an arrow writes its input and
+//                                  // fires "input" but does not redraw: the
+//                                  // page's input handler must call sync()
+//                                  // (or setArrow/setBox), or the arrow keeps
+//                                  // its old width and number (lesson 14 C,
+//                                  // 2026-10-01).
 //   p.setArrow(id, {...})          // label, from, to, dark, readonly, text, hidden
 //   p.setBox(id, {...})            // label, sub, hidden
 //   p.selected()                   // id of the selected arrow, or null
@@ -64,7 +70,12 @@
 //                          colour and head (red now means negative), and its
 //                          value is coloured by sign as it is dragged. An
 //                          arrow the student can set now gets `settable`.
-// And per arrow, `width` fixes a `dark` arrow's stroke (default 2.2).
+// And per arrow, `width` fixes a `dark` arrow's stroke (default 2.2), and
+// `onto: "<arrow id>"` in place of `to` lands it on the middle of that arrow
+// rather than on a box: one cause changing what another does (lesson 14 A,
+// 2026-10-01; JM: "the beak depth arrow should really point to the
+// rainfall->food a bird gets arrow"). The arrow landed on must run between
+// two boxes.
 
 (function (global) {
   "use strict";
@@ -116,7 +127,7 @@
       order.push(b.id);
     });
     const arrows = (opts.arrows || []).map(a => ({
-      id: a.id, from: a.from, to: a.to, edges: a.edges || null, input: a.input || null,
+      id: a.id, from: a.from, to: a.onto ? "@" + a.onto : a.to, onto: a.onto || null, edges: a.edges || null, input: a.input || null,
       label: a.label || "", fmt: a.fmt || (v => String(v)),
       readonly: !!a.readonly, dark: !!a.dark, ghost: !!a.ghost,
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
@@ -205,6 +216,17 @@
     }
     function isFork(eds) { return eds.length > 1 && eds.every(e => e.from === eds[0].from); }
 
+    // An arrow with `onto` lands on the middle of another arrow: that point is
+    // kept as a box of no size, "@" + its id, refreshed before each drawing.
+    function placeOnto() {
+      arrows.forEach(a => {
+        if (!a.onto) return;
+        const o = arrows.find(x => x.id === a.onto), e = o ? edgesOf(o)[0] : null;
+        const g = e && boxes[e.from] && boxes[e.to] ? geom(e.from, e.to, autoBend(o, e.from, e.to), 0) : null;
+        if (g) boxes["@" + a.onto] = { id: "@" + a.onto, x: g.mid.x, y: g.mid.y, w: 0, h: 0, kind: "point", hidden: true };
+      });
+    }
+
     function geom(fromId, toId, bend, width) {
       width = width || 2;
       const b1 = boxes[fromId], b2 = boxes[toId];
@@ -270,6 +292,7 @@
       const refocus = (ae && ae.classList && ae.classList.contains("paths-hit")
                        && gArrows.contains(ae)) ? ae.getAttribute("data-arrow") : null;
       gArrows.innerHTML = ""; gBoxes.innerHTML = ""; gTop.innerHTML = "";
+      placeOnto();
       // under valuesOnSelect the selected arrow's readout is placed after every
       // arrow is drawn, so it can be put where it hides none of them
       const drawn = [], labelRects = [], ownGeo = [];

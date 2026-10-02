@@ -3,25 +3,30 @@
  * check_lesson14_numbers.js -- the bar checks for app/lessons/lesson14.html.
  *
  * Lesson 14 is a draft: A one allele year by year in the real rain (births,
- * deaths, carry-over, meiosis), then one shot at the record; B what a sweep
- * leaves, then one shot at the real lactase scan; C what slows a sweep;
+ * deaths, carry-over, meiosis), then one shot at observed data; B what a
+ * sweep leaves, then one shot at the real lactase scan; C what slows a sweep;
  * D when the rare allele wins (pathogens and an MHC-like gene); E counting
  * what stuck (dN/dS; a draft). Rebuilt 2026-10-01 from JM's review. What
  * has to hold:
  *
- *   A. the rain is the record in data/clean/grant_rainfall.csv; the
- *      headcount never changes; a population's frequency is its counts;
- *      the bars' "should move" is exactly the covariance of birds-next-year
- *      with the copies (they average exactly 1), and many populations'
- *      first year moves by it on average; with no food effect the allele
- *      goes nowhere on average; the readings are the least-squares slope
- *      of each year's change on log10 of the rain and the mean absolute
- *      miss; each round's stored readings agree with a fresh measurement and
- *      its hidden setting hits its windows; no reachable setting clears two
- *      rounds; the opening and the cheap routes miss; the record is a run at
- *      its setting near its means, no round's answer and not the opening
- *      clear it; Start deals round 1 with the arrows at the opening and the
- *      held arrow pale.
+ *   A. (rebuilt 2026-10-01, evening: the headcount is an outcome, the beak
+ *      arrow lands on rainfall -> food, chance acts on births and deaths)
+ *      the rain is data/clean/grant_rainfall.csv; next year's birds are the
+ *      survivors plus the new chicks, and the headcount swings; a
+ *      population's frequency is its counts; the bars' "should change" is
+ *      exactly the covariance of birds-next-year with the copies over twice
+ *      their average, and many populations' first year changes by it (and
+ *      their headcount by the bars' average); with no beak effect the allele
+ *      goes nowhere on average; the observed data's headcount is like the
+ *      real fortis counts (harmonic mean computed here from
+ *      data/clean/finch_pop.csv); the readings are the least-squares slope of
+ *      each year's change on log10 of the rain and the mean absolute miss;
+ *      each target's stored readings agree with a fresh measurement and its
+ *      hidden setting hits its windows; no reachable setting clears two
+ *      rounds; the opening and the cheap routes miss; the observed data is a
+ *      run at its setting near its means, and no round's answer clears it;
+ *      Start deals round 1 with the arrows at the opening and the held arrow
+ *      pale; the beak arrow lands on the rainfall -> food arrow.
  *   B. as before (crossovers, assortment, Kimura's losses, the rest of the
  *      genome as chance alone, the stretch and windows by hand), the five
  *      rounds' stored readings and hidden settings, the lactase record is the
@@ -67,6 +72,7 @@ const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const ONLY = process.argv.slice(2).filter(a => /^[ABCDE]$/.test(a));
 
 const INNER = `
+JOBS_SYNC = true;   /* a Go and the observed data finish inside the call, as they did before they were sliced */
 const ONLY = ${JSON.stringify(ONLY)};
 const want = S => !ONLY.length || ONLY.includes(S);
 const L=[], say=s=>L.push(s);
@@ -87,16 +93,26 @@ check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && C &&
 
 /* ======================================================================= A */
 if (want("A")) {
-const A_rate = (r, d, b, v, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (A_judge(r, A_read(A_run(A_nAt(v), d, b, A_P0, mulberry32(seed + q * 7919)).P))) k++; return k / reps; };
+const A_rate = (r, g, sv, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (A_judge(r, A_read(A_run(g, sv, A_P0, mulberry32(seed + q * 7919)).P))) k++; return k / reps; };
 {
   const before = A.game.free() && A.game.current() == null, lab = document.getElementById("A_run").textContent;
-  A.d = -0.3; A.b = 0.4; A.v = 10;
+  A.g = -0.3; A.s = 2.5;
   document.getElementById("A_tnext").click();
   const r0 = A.game.current(), cls = id => (document.querySelector('#pathsA [data-of="' + id + '"]') || { getAttribute: () => "" }).getAttribute("class");
   check("A opens on free play; Start deals the first round with the arrows at the opening, its held arrow pale",
-        before && lab === "Practice run" && r0 === A_ROUNDS[0] && A.d === A_OPEN.d && A.b === A_OPEN.b && A.v === A_OPEN.v &&
-        /locked/.test(cls("fb")) && /settable/.test(cls("fd")) && document.getElementById("A_run").textContent === "Go",
-        "after Start: round " + (r0 || {}).key + ", death " + A.d + ", birth " + A.b + ", " + A_nAt(A.v) + " birds; food -> birth '" + cls("fb") + "', food -> death '" + cls("fd") + "'");
+        before && lab === "Practice run" && r0 === A_ROUNDS[0] && A.g === A_OPEN.g && A.s === r0.hold.s &&
+        /locked/.test(cls("luck")) && /settable/.test(cls("bk")) && document.getElementById("A_run").textContent === "Go",
+        "after Start: round " + (r0 || {}).key + ", beak " + A.g + ", luck " + A.s + "; chance '" + cls("luck") + "', beak '" + cls("bk") + "'");
+}
+{
+  /* the beak arrow lands on the middle of the rainfall -> food arrow (JM: "the beak depth arrow should really point to the rainfall->food a bird gets arrow") */
+  const d = id => (document.querySelector('#pathsA [data-of="' + id + '"]') || { getAttribute: () => "" }).getAttribute("d");
+  const nums = id => (d(id).match(/-?[0-9.]+/g) || []).map(Number);
+  const rf = nums("rf"), bk = nums("bk");
+  const mid = { x: 0.25 * rf[0] + 0.5 * rf[2] + 0.25 * rf[4], y: 0.25 * rf[1] + 0.5 * rf[3] + 0.25 * rf[5] };
+  const tip = { x: bk[4], y: bk[5] }, gap = Math.hypot(tip.x - mid.x, tip.y - mid.y);
+  check("A the beak depth arrow lands on the rainfall -> food arrow", rf.length === 6 && bk.length === 6 && gap < 16,
+        "its line ends " + gap.toFixed(1) + " px from the middle of rainfall -> food (the head reaches past it)");
 }
 {
   const x = new XMLHttpRequest(); x.open("GET", "/data/clean/grant_rainfall.csv", false); x.send();
@@ -108,37 +124,50 @@ const A_rate = (r, d, b, v, reps, seed) => { let k = 0; for (let q = 0; q < reps
         rows.length + " rows; dryness mean " + mn(A_DRY).toExponential(1) + ", sd " + sdv(A_DRY).toFixed(12) + "; the card's axis is log10(mm + 10)");
 }
 {
-  /* counts, constant headcount, and the bars' arithmetic */
-  let worstP = 0, worstN = 0, worstW = 0, worstD = 0;
+  /* the headcount is an outcome: next year's birds are this year's less the deaths plus the new chicks */
+  let worstP = 0, worstN = 0, worstW = 0, swing = 0;
   const rng = mulberry32(5);
   for (let q = 0; q < 30; q++) {
-    const n = 20 + Math.floor(rng() * 400), d = (rng() - 0.5) * 2, b = (rng() - 0.5) * 2;
-    const R = A_run(n, d, b, A_P0, mulberry32(100 + q));
-    R.C.forEach((c, t) => { worstP = Math.max(worstP, Math.abs((c[1] + 2 * c[2]) / (2 * n) - R.P[t])); worstN = Math.max(worstN, Math.abs(c[0] + c[1] + c[2] - n)); });
+    const g = (rng() - 0.5) * 1.2, sv = rng() * 3, R = A_run(g, sv, A_P0, mulberry32(100 + q));
+    R.C.forEach((c, t) => { const n = c[0] + c[1] + c[2]; worstP = Math.max(worstP, Math.abs((c[1] + 2 * c[2]) / (2 * n) - R.P[t]));
+                            worstN = Math.max(worstN, Math.abs(n - R.N[t]), t ? Math.abs(R.N[t] - (R.N[t - 1] - R.D[t - 1] + R.B[t - 1])) : 0); });
+    swing = Math.max(swing, Math.max(...R.N) / Math.min(...R.N));
     for (let t = 0; t < A_NY - 1; t += 5) {
-      const c = R.C[t], f = A_fit(c, d, b, t), wsum = c[0] * f.tot[0] + c[1] * f.tot[1] + c[2] * f.tot[2];
-      const pn = (c[1] * f.tot[1] + 2 * c[2] * f.tot[2]) / (2 * n);
-      worstW = Math.max(worstW, Math.abs(wsum - n));
-      worstD = Math.max(worstD, Math.abs(f.dp - (pn - R.P[t])));
+      const c = R.C[t], f = A_fit(c, g, sv, t), n = R.N[t];
+      const pn = (c[1] * f.tot[1] + 2 * c[2] * f.tot[2]) / (2 * (c[0] * f.tot[0] + c[1] * f.tot[1] + c[2] * f.tot[2]));
+      worstW = Math.max(worstW, Math.abs(f.dp - (pn - R.P[t])));
     }
   }
-  check("A the headcount never changes and a population's frequency is its counts", worstN === 0 && worstP < 1e-12, "30 runs, every year: headcount off by " + worstN + ", frequency " + worstP.toExponential(1));
-  check("A birds next year per bird average exactly 1, and 'should move' is their covariance with the copies", worstW < 1e-9 && worstD < 1e-12,
-        "every 5th year of 30 runs: sum off N by " + worstW.toExponential(1) + "; covariance / 2 against the weighted frequency " + worstD.toExponential(1));
+  check("A the headcount is survivors plus new chicks, it changes with the years, and a population's frequency is its counts", worstN === 0 && worstP < 1e-12 && swing > 3,
+        "30 runs, every year: headcount off by " + worstN + ", frequency " + worstP.toExponential(1) + "; largest swing in one run x" + swing.toFixed(1));
+  check("A 'should change' is the covariance of birds-next-year with the copies, over twice their average", worstW < 1e-12,
+        "every 5th year of 30 runs: against the weighted frequency " + worstW.toExponential(1));
 }
 {
-  /* the first year, over many populations, moves by 'should move' on average */
-  const d = -0.8, b = 0.8, n = 300, reps = 400, moved = [], should = [];
-  for (let q = 0; q < reps; q++) { const R = A_run(n, d, b, A_P0, mulberry32(700 + q)); moved.push(R.P[1] - R.P[0]); should.push(A_fit(R.C[0], d, b, 0).dp); }
+  /* the first year, over many populations, changes by 'should change' on average, and the headcount by the bars' average */
+  const g = 0.5, sv = 1, reps = 400, moved = [], should = [], nn = [], nShould = [];
+  for (let q = 0; q < reps; q++) { const R = A_run(g, sv, A_P0, mulberry32(700 + q)), f = A_fit(R.C[0], g, sv, 0);
+    moved.push(R.P[1] - R.P[0]); should.push(f.dp); nn.push(R.N[1]); nShould.push(R.N[0] * f.wb); }
   const gap = moved.map((m, i) => m - should[i]), se = sdv(gap) / Math.sqrt(reps);
-  check("A many populations' first year moves by 'should move' on average", Math.abs(mn(gap)) < 3.5 * se,
-        reps + " runs of " + n + " birds, 1973, death " + d + ", birth " + b + ": moved " + mn(moved).toFixed(5) + ", should " + mn(should).toFixed(5) + " (standard error of the gap " + se.toFixed(5) + ")");
-  const ends = []; for (let q = 0; q < 60; q++) ends.push(A_run(400, 0, 0, A_P0, mulberry32(300 + q)).P[A_NY - 1]);
+  const gapN = nn.map((m, i) => m - nShould[i]), seN = sdv(gapN) / Math.sqrt(reps);
+  check("A many populations' first year changes by 'should change' on average, and the headcount by the bars' average", Math.abs(mn(gap)) < 3.5 * se && Math.abs(mn(gapN)) < 3.5 * seN,
+        reps + " runs, 1973, beak " + g + ", luck " + sv + ": changed " + mn(moved).toFixed(5) + ", should " + mn(should).toFixed(5) + " (se of the gap " + se.toFixed(5) + "); birds " + mn(nn).toFixed(1) + ", expected " + mn(nShould).toFixed(1) + " (se " + seN.toFixed(1) + ")");
+  const ends = []; for (let q = 0; q < 60; q++) ends.push(A_run(0, 1, A_P0, mulberry32(300 + q)).P[A_NY - 1]);
   const se0 = sdv(ends) / Math.sqrt(60);
-  check("A with no food effect the allele goes nowhere on average", Math.abs(mn(ends) - A_P0) < 3 * se0, "60 runs of 400 birds: average end " + mn(ends).toFixed(3) + " (standard error " + se0.toFixed(3) + ")");
+  check("A with no beak effect the allele goes nowhere on average", Math.abs(mn(ends) - A_P0) < 3 * se0, "60 runs, luck 1: average end " + mn(ends).toFixed(3) + " (standard error " + se0.toFixed(3) + ")");
 }
 {
-  const R = A_run(300, -0.5, 0.3, A_P0, mulberry32(77)), q = A_read(R.P);
+  /* the headcount looks like the real fortis counts: harmonic mean of data/clean/finch_pop.csv, computed here */
+  const x = new XMLHttpRequest(); x.open("GET", "/data/clean/finch_pop.csv", false); x.send();
+  const rows = x.responseText.trim().split(/\\r?\\n/), head = rows[0].split(","), col = head.indexOf("fortis");
+  const real = rows.slice(1).map(l => +l.split(",")[col]).filter(v => v > 0), hm = a => a.length / a.reduce((s, v) => s + 1 / v, 0);
+  const sims = []; for (let q = 0; q < 60; q++) sims.push(hm(A_run(A_FINAL.g, A_FINAL.s, A_P0, mulberry32(1300 + q)).N));
+  const ratio = mn(sims) / hm(real);
+  check("A the observed data's headcount is like the real fortis counts (harmonic means within 25%)", ratio > 0.8 && ratio < 1.25,
+        "real " + hm(real).toFixed(0) + " (" + real.length + " years, " + Math.min(...real) + " to " + Math.max(...real) + "); the data's setting " + mn(sims).toFixed(0) + " over 60 runs");
+}
+{
+  const R = A_run(0.3, 1, A_P0, mulberry32(77)), q = A_read(R.P);
   const xs = A_RAIN.slice(0, 39).map(r => Math.log10(r + 10)), ys = R.P.slice(1).map((v, i) => v - R.P[i]);
   const mx = mn(xs), my = mn(ys), b = xs.reduce((s, x, i) => s + (x - mx) * (ys[i] - my), 0) / xs.reduce((s, x) => s + (x - mx) * (x - mx), 0), a = my - b * mx;
   const res = ys.map((y, i) => y - a - b * xs[i]), miss = mn(res.map(Math.abs));
@@ -149,45 +178,46 @@ const A_rate = (r, d, b, v, reps, seed) => { let k = 0; for (let q = 0; q < reps
   const S = 160, rows = [], hits = []; let agree = true;
   for (const r of A_ROUNDS.concat([A_FINAL])) {
     const T = [], M = []; let k = 0;
-    for (let q = 0; q < S; q++) { const z = A_read(A_run(A_nAt(r.v), r.d, r.b, A_P0, mulberry32(9001 + q * 7919)).P); T.push(z.slope); M.push(z.miss); if (A_judge(r, z)) k++; }
+    for (let q = 0; q < S; q++) { const z = A_read(A_run(r.g, r.s, A_P0, mulberry32(5003 + q * 7919)).P); T.push(z.slope); M.push(z.miss); if (A_judge(r, z)) k++; }
     const tm = mn(T), ts = sdv(T), mm = mn(M), ms = sdv(M);
-    /* a mean of 160 wobbles 0.08 sd; an sd, about 6% */
-    const ok = Math.abs(tm - r.sl[0]) < 0.3 * r.sl[1] && Math.abs(mm - r.ms[0]) < 0.3 * r.ms[1] && Math.abs(ts / r.sl[1] - 1) < 0.22 && Math.abs(ms / r.ms[1] - 1) < 0.22;
+    /* a mean of 160 wobbles 0.08 sd; an sd, about 6% (more for the error's long tail) */
+    const ok = Math.abs(tm - r.sl[0]) < 0.3 * r.sl[1] && Math.abs(mm - r.ms[0]) < 0.3 * r.ms[1] && Math.abs(ts / r.sl[1] - 1) < 0.22 && Math.abs(ms / r.ms[1] - 1) < 0.25;
     agree = agree && ok; r._rate = k / S;
     rows.push(r.key + " slope " + tm.toFixed(4) + "±" + ts.toFixed(4) + " [" + r.sl.join("±") + "], error " + mm.toFixed(5) + "±" + ms.toFixed(5) + " [" + r.ms.join("±") + "]" + (ok ? "" : " OFF"));
     hits.push(r.key + " " + r._rate.toFixed(2));
   }
   check("A every target's stored readings agree with a fresh measurement off the engine", agree, S + " runs each: " + rows.join("; "));
-  check("A every target's hidden setting hits its own windows", A_ROUNDS.concat([A_FINAL]).every(r => r._rate >= 0.85), "share inside both windows (expect ~0.94): " + hits.join(", "));
+  check("A every target's hidden setting hits its own windows", A_ROUNDS.concat([A_FINAL]).every(r => r._rate >= 0.85), "share inside both windows (expect ~0.93): " + hits.join(", "));
 }
 {
-  const rec = A_record(A_FINAL), q = A_FINAL.recQ;
+  const obs = A_observed(A_FINAL), q = A_FINAL.obsQ;
   const near = Math.abs(q.slope - A_FINAL.sl[0]) < 0.5 * A_FINAL.sl[1] && Math.abs(q.miss - A_FINAL.ms[0]) < 0.5 * A_FINAL.ms[1];
-  check("A the record is a run at its hidden setting, its readings within half a spread of the means", near && rec.n === A_nAt(A_FINAL.v) && rec.d === A_FINAL.d && rec.b === A_FINAL.b,
-        "slope " + q.slope.toFixed(4) + ", error " + q.miss.toFixed(5) + "; " + rec.n + " birds");
+  check("A the observed data is a run at its hidden setting, its readings within half a spread of the means", near && obs.g === A_FINAL.g && obs.s === A_FINAL.s,
+        "slope " + q.slope.toFixed(4) + ", error " + q.miss.toFixed(5) + "; birds " + Math.min(...obs.N) + " to " + Math.max(...obs.N));
 }
 {
   /* every setting a round can reach (its holds applied): no setting clears two rounds */
-  const REPS = 16, grid = []; for (let i = -10; i <= 10; i += 2) grid.push(i / 10);
-  const seen = new Map(), reach = (r, d, b) => Object.keys(r.hold).every(k => ({ d, b })[k] === r.hold[k]);
-  for (const r of A_ROUNDS) for (const x of grid) for (let v = 0; v <= 100; v += 10) {
-    const d = "d" in r.hold ? r.hold.d : x, b = "b" in r.hold ? r.hold.b : x; seen.set(d + "|" + b + "|" + v, [d, b, v]); }
+  const REPS = 16, G = [], Sx = []; for (let i = -6; i <= 6; i++) G.push(i / 10); for (let i = 0; i <= 6; i++) Sx.push(i / 2);
+  const seen = new Map(), reach = (r, g, sv) => Object.keys(r.hold).every(k => ({ g, s: sv })[k] === r.hold[k]);
+  for (const r of A_ROUNDS) for (const g0 of G) for (const s0 of Sx) {
+    const g = "g" in r.hold ? r.hold.g : g0, sv = "s" in r.hold ? r.hold.s : s0; seen.set(g + "|" + sv, [g, sv]); }
   let most = 0; const multi = [];
-  for (const [d, b, v] of seen.values()) {
-    const zs = []; for (let q = 0; q < REPS; q++) zs.push(A_read(A_run(A_nAt(v), d, b, A_P0, mulberry32(4242 + q * 104729)).P));
-    const rates = A_ROUNDS.map(r => reach(r, d, b) ? zs.filter(z => A_judge(r, z)).length / REPS : 0), c = rates.filter(x => x >= 0.5).length;
-    most = Math.max(most, c); if (c >= 2) multi.push("death " + d + ", birth " + b + ", " + A_nAt(v) + ": " + rates.map(x => x.toFixed(2)).join(" "));
+  for (const [g, sv] of seen.values()) {
+    const zs = []; for (let q = 0; q < REPS; q++) zs.push(A_read(A_run(g, sv, A_P0, mulberry32(4242 + q * 104729)).P));
+    const rates = A_ROUNDS.map(r => reach(r, g, sv) ? zs.filter(z => A_judge(r, z)).length / REPS : 0), c = rates.filter(x => x >= 0.5).length;
+    most = Math.max(most, c); if (c >= 2) multi.push("beak " + g + ", luck " + sv + ": " + rates.map(x => x.toFixed(2)).join(" "));
   }
   check("A no setting a round can reach clears two rounds", most <= 1, seen.size + " settings x " + REPS + " runs: most rounds one clears at 50%: " + most + (multi.length ? " -- " + multi.join("; ") : ""));
-  const open = A_ROUNDS.concat([A_FINAL]).map(r => A_rate(r, A_OPEN.d, A_OPEN.b, A_OPEN.v, 60, 777));
-  check("A the opening (no food effect, " + A_nAt(A_OPEN.v) + " birds) clears no target", open.every(x => x < 0.1), A_ROUNDS.concat([A_FINAL]).map((r, i) => r.key + " " + open[i].toFixed(2)).join(", "));
-  const sel = A_ROUNDS.concat([A_FINAL]).filter(r => r.d || r.b);
-  const halfS = sel.map(r => [r.key, A_rate(r, r.d, r.b, A_OPEN.v, 40, 991)]);
-  const halfN = sel.map(r => [r.key, A_rate(r, "d" in r.hold ? r.hold.d : 0, "b" in r.hold ? r.hold.b : 0, r.v, 40, 992)]);
-  check("A the right food arrows at the opening's headcount, or the right headcount with the free arrow at 0, misses", halfS.every(x => x[1] < 0.25) && halfN.every(x => x[1] < 0.15),
-        "food right: " + halfS.map(x => x[0] + " " + x[1].toFixed(2)).join(", ") + " | headcount right: " + halfN.map(x => x[0] + " " + x[1].toFixed(2)).join(", "));
-  const fromRounds = A_ROUNDS.map(r => [r.key, A_rate(A_FINAL, r.d, r.b, r.v, 40, 993)]);
-  check("A no round's answer clears the record", fromRounds.every(x => x[1] < 0.3), fromRounds.map(x => x[0] + "'s answer " + x[1].toFixed(2)).join(", "));
+  const all = A_ROUNDS.concat([A_FINAL]);
+  const open = all.map(r => A_rate(r, "g" in r.hold ? r.hold.g : A_OPEN.g, "s" in r.hold ? r.hold.s : A_OPEN.s, 60, 777));
+  check("A the opening (no beak effect, no luck; held arrows as held) clears no target", open.every(x => x < 0.1), all.map((r, i) => r.key + " " + open[i].toFixed(2)).join(", "));
+  /* where luck is free: the right beak with the luck left at the opening, and the right luck with the beak left there */
+  const both = all.filter(r => !("g" in r.hold) && !("s" in r.hold));
+  const halfG = both.map(r => [r.key, A_rate(r, r.g, A_OPEN.s, 60, 991)]), halfS = both.map(r => [r.key, A_rate(r, A_OPEN.g, r.s, 60, 992)]);
+  check("A where both arrows are free, the right beak with no luck, or the right luck with no beak effect, misses", halfG.every(x => x[1] < 0.25) && halfS.every(x => x[1] < 0.15),
+        "beak right: " + halfG.map(x => x[0] + " " + x[1].toFixed(2)).join(", ") + " | luck right: " + halfS.map(x => x[0] + " " + x[1].toFixed(2)).join(", "));
+  const fromRounds = A_ROUNDS.map(r => [r.key, A_rate(A_FINAL, r.g, r.s, 60, 993)]);
+  check("A no round's answer clears the observed data", fromRounds.every(x => x[1] < 0.3), fromRounds.map(x => x[0] + "'s answer " + x[1].toFixed(2)).join(", "));
 }
 }
 
@@ -562,9 +592,9 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
       check(S + " nothing is printed under the card", res[S].cardText.trim() === "", "'" + res[S].cardText + "'");
     }
     /* a new target puts the free arrows back where they opened */
-    if (want("A")) { A.d = 0.9; A.b = -0.9; A.v = 90; document.getElementById("A_tnext").click(); const r = A.game.current();
-      check("A a new target puts the free arrows back where they opened, and holds the rest", A.d === ("d" in r.hold ? r.hold.d : A_OPEN.d) && A.b === ("b" in r.hold ? r.hold.b : A_OPEN.b) && A.v === A_OPEN.v,
-            "round " + r.key + ": death " + A.d + ", birth " + A.b + ", chance " + A.v); }
+    if (want("A")) { A.g = 0.5; A.s = 2.9; document.getElementById("A_tnext").click(); const r = A.game.current();
+      check("A a new target puts the free arrows back where they opened, and holds the rest", A.g === ("g" in r.hold ? r.hold.g : A_OPEN.g) && A.s === ("s" in r.hold ? r.hold.s : A_OPEN.s),
+            "round " + r.key + ": beak " + A.g + ", luck " + A.s); }
     if (want("B")) { B.ai = 0; B.v = 90; document.getElementById("B_tnext").click(); const r = B.game.current();
       check("B a new target puts both arrows back where they opened", B.ai === B_OPEN.ai && B.v === B_OPEN.v, "round " + r.key); }
     if (want("C")) { C.beta = 0.4; C.h = -0.5; document.getElementById("C_tnext").click(); const r = C.game.current();
@@ -577,7 +607,7 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
     if (want("E")) { E.lh = 0; E.si = 4; E.help = 0.1; E.v = 0; document.getElementById("E_tnext").click(); const r = E.game.current();
       const ok = E.v === E_OPEN.v && ["lh", "si", "help"].every(k => E[k] === (k === r.free ? E_OPEN[k] : E_HELD[k]));
       check("E a new target frees its part of the curve at the opening and holds the rest", ok, "round " + r.key + ": harm 10^" + E.lh + ", spread " + E_SHAPES[E.si] + ", help " + E.help + ", chance " + E.v); }
-    /* the one-shot targets: play out the rounds, then the record can be shot once and not practised */
+    /* the one-shot targets: play out the rounds, then the observed data can be shot once and not practised */
     for (const S of ["A", "B"].filter(want)) {
       const st = ST[S], g = st.game, btn = document.getElementById(S + "_run"), nx = document.getElementById(S + "_tnext"), box = document.getElementById(S + "_practice");
       while (g.st.hits.length < 5) { if (g.waiting()) nx.click(); btn.click(); }
@@ -585,9 +615,9 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
       const one = g.oneShot(), boxOff = box.disabled && !box.checked, goLab = btn.textContent, named = read(S + "_ttab");
       btn.click();
       const done = g.st.done && g.st.hits.length === 6, bit6 = Score.getBit("scaffold", BIT[S + "6"]) === (g.st.hits[5] ? 1 : 0);
-      check(S + " the record is one shot: dealt by its own button, no practice, its own bit", lab0 === "The record" && one && boxOff && /one shot/.test(goLab) && done && bit6 && !box.disabled,
+      check(S + " the observed data is one shot: dealt by its own button, no practice, its own bit", lab0 === "Try to match actual data" && one && boxOff && /one shot/.test(goLab) && done && bit6 && !box.disabled,
             "button '" + lab0 + "', practice off " + boxOff + ", Go '" + goLab + "', taken " + done + ", bit " + bit6 + ", practice back after " + !box.disabled);
-      if (S === "B") check("B the lactase record is not named until it has been shot at", !/lactase/i.test(named) && /lactase/i.test(read("B_ttab")), "before: '" + named + "' | after: '" + read("B_ttab") + "'");
+      if (S === "B") check("B the lactase data is not named until it has been shot at", !/lactase/i.test(named) && /lactase/i.test(read("B_ttab")), "before: '" + named + "' | after: '" + read("B_ttab") + "'");
     }
   } finally { window.setInterval = realSI; window.clearInterval = realCI; }
 }

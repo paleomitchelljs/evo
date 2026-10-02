@@ -185,7 +185,8 @@ def undefined_calls(raw_html):
     js = re.sub(r"\"(?:\\.|[^\"\\\n])*\"", '""', js)
     js = re.sub(r"'(?:\\.|[^'\\\n])*'", '""', js)
 
-    defined = set(re.findall(r"\bfunction\s+([A-Za-z_$][\w$]*)", js))
+    # `function*` too: lesson 14's long runs are generators (2026-10-01)
+    defined = set(re.findall(r"\bfunction\s*\*?\s*([A-Za-z_$][\w$]*)", js))
     defined |= set(re.findall(r"\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)", js))
     # Any `name =` binding. Deliberately broad -- `const rng = mulberry32(1), nrm
     # = makeNormal(rng)` declares two names and the const regex above sees only
@@ -196,7 +197,7 @@ def undefined_calls(raw_html):
     for grp in re.findall(r"\b(?:const|let|var)\s*\{([^}]*)\}", js):
         defined |= {t.strip().split(":")[-1].strip() for t in grp.split(",") if t.strip()}
     # parameter lists
-    for grp in re.findall(r"\bfunction\s+[\w$]*\s*\(([^)]*)\)", js):
+    for grp in re.findall(r"\bfunction\s*\*?\s*[\w$]*\s*\(([^)]*)\)", js):
         defined |= {t.strip().split("=")[0].strip() for t in grp.split(",") if t.strip()}
     for grp in re.findall(r"\(([^()]*)\)\s*=>", js):
         defined |= {t.strip().split("=")[0].strip() for t in grp.split(",") if t.strip()}
