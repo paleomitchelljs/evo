@@ -1,9 +1,40 @@
 # Lesson 14 — the genetics of selection: reading real genetic data with the tools from 1-13
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
-**Checks** · `node scripts/check_lesson14_numbers.js` (37 bars, A and B; ~6.5 min, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A and B built (`version: 5`, `scaffold: 10`, one bit per attempt); C-E planned; page locked
-**Last touched** · 2026-09-30
+**Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (all four stages; ~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
+**Status** · A-E built (`version: 7`, `scaffold: 27`: A 5 + record, B 5 + lactase, C 5, D 5, E 5; one bit per attempt); E is a draft (JM asked for one, 2026-10-01); page locked; every voice block a placeholder
+**Last touched** · 2026-10-01
+
+## JM's review, 2026-10-01 (supersedes the stage plans below where they differ)
+
+- Lesson goals, in his order: *"(1) unite their prior experience with processes/widgets to predict real-ish data they could encounter going forward, (2) deepen & broaden their understanding of what influences selection, and (3) least & last of all, lay a simple groundwork for understanding loci-level changes in prep for the upcoming mutation lessons where MRCAs, identical-by-descent blocks, and coalesence all figure."* Future lessons' drafts: non-binding, non-guiding.
+- **A:** *"The solid dots should be removed ... putting dark purple dots and lines ontop of existed black dots and lines makes it hard to see"*; record shown only at the end. Labels: top right y *"fitness (relative to yellow)"*; card x *"total rainfall (mm)"*, gauges *"slope"*, *"error"*, card y *"change in frequency of big beak allele"*. Names: allele names everywhere, never purple/yellow (*"just use the name of the allele"*). DAG: *"(1) who lives/dies (carry-over), (2) reproduces and (3) how much the offspring resemble the parents ... meiotic chance (so an unalterable arrow) ... rain -> food -> death rate / birth rate with beak"*. **A2**: one shot, no practice, aim at the record's trajectory.
+- **B:** *"opens too hot"* → a static mock-up of a finch genome beside A's text (a few of the Grants' loci as blocks, heterozygous at A's locus). Top right y *"new allele frequency"*. **B2**: one shot at the real lactase data, the gene revealed after.
+- **C:** *"(1) the size of the selective sweep is a function of the **speed** of selection and (2) many things can slow selection down **other than** the selective strength on the phenotype (low h, fluctuating selective regimes, linked loci, etc)"*; each target *"based on, not identical to"* a specific empirical finding, same units.
+- **D:** *"frequency dependent selection, ideally with an immune or disease angle."*
+
+### As built, 2026-10-01 (supersedes "Plan for this pass" and the stage sections below where they differ)
+
+- **A** births/deaths engine: food = −dry + 0.5 (k − 1) dry; death = plogis(qlogis(0.35) + d·food); parent weight exp(b·food); survivors stay, chicks fill the room, one copy from each parent; N constant. Diagram: rain → food ← beak depth ← big-beak allele (grey); food → death rate, food → birth rate (settable, signed); chance → both (one control); death rate → (−), birth rate → (+), meiosis → next year (grey). Bars: survives + chicks per genotype, relative to the small-beak homozygote; blue covariance line. Card: change vs rain (log10(mm+10), wetter right), gauges "slope" (per tenfold rain) and "error". No record in rounds 1-5.
+- **A rounds** (d, b, birds; held arrow): deaths −0.6, 0 held, 1,002 · chance 0, 0 held, 32 · births 0 held, +0.6, 632 · both −0.5, +0.3 held, 796 · faint −0.2, 0 held, 1,589. Opening 0, 0, 126. **Record (one shot)**: −0.3, +0.2, 399 birds (harmonic mean of the real fortis counts: 372), all free; its trajectory, points and gauge ticks drawn, windows shown after.
+- **A traps measured:** both at 80 birds: right food arrows at the opening's headcount cleared it 75% → moved to 796. Record first at (−0.4, +0.3, 502): round 4's answer cleared it 60% → moved. Chance at 40 birds: opening cleared it 12% → 32. Grid of reachable settings (holds applied, 352 x 16): most 1. Deaths' answer clears the record 17%.
+- **A intro** gained a static genome canvas: four chromosome pairs, HMGA2 (heterozygous: big-beak / small-beak allele), ALX1, BMP4, CALM1 as blocks; no chromosome numbered (placement is a mock-up). Bullet "the rain you fitted in Lesson 7" was wrong (lesson 7's rain is synthetic): now "As in Lesson 7" on the mechanism only.
+- **B**: lactase is the one-shot last target, named only after it is shot at ("people, chromosome 2" before). Fifth round "partial": 0.1, 1,383, stopped at 50% (rest 0.957 ± 0.013, stretch 0.71 ± 0.07 Mb). Each round's answer clears only its own (8 Go's each). Top right y: "new allele frequency".
+- **C** what slows a sweep: B's chromosome (992 individuals) with a trait: 0, h, 1 for 0/1/2 copies + environment (sd se); parents by exp(beta x trait in its own sds) x (1 − harm)^copies; in the rain round beta x dryness in dry years, wet x dryness (the other way) in wet ones, Stage A's rain cycled. Go runs **six** populations (three let the opening through 40-50% on recessive and rain). Card: generations to 95% (log) against carriers' shared stretch; band on the stretch; every population's dot stays across rounds.
+- **C rounds** (free arrow, truth, stretch Mb): strong beta 0.2, 1.39 ± 0.11 (DDT resistance, fruit flies) · recessive h 0.05, 0.90 ± 0.09 (Duffy-null) · environment se 1.5, 0.75 ± 0.07 (red deer antlers, Rum) · rain wet 0.1, 0.53 ± 0.04 (Daphne beaks) · linked harm 0.1, 0.77 ± 0.07 (fruit flies, low crossing over). Held: beta 0.2, h 0.5, se 0.5, wet 0, harm 0; opening beta 0.05. h runs −0.5..1 so the recessive window is not at the slider's floor (h < 0 never sweeps).
+- **C record** = one population within 0.6 of a six-average spread of the mean, closest of 16 tries (at 1 spread the records sat at 0.97-0.99, too near the check's bar). D's: within 1 spread, closest of 12. Both capped because they are made on deal (a large population takes ~0.25 s).
+- **C measured:** slowers all fall near one footprint-vs-time curve; recessive sits above it (0.90 Mb at 161 gen vs ~0.70). A harmful neighbour 40-120 kb away did not slow the sweep that won (it had shed it): so the neighbour is "too close to split". Settings that never sweep end the Go at the first failed population (cap 1,500 gen., 200 restarts).
+- **D** when the rare allele wins: an MHC-like gene (pathogens: survival 1 − c x mean frequency of the host's two alleles) and a neutral gene, unlinked, both from 20 alleles, mutation 1/1,000 to new alleles, 500 generations; sample 100 individuals. Card: alleles at the neutral gene (across) vs at the immune gene (up), diagonal = as many at both. **First built on one gene (alleles + homozygosity): pull 0.2 at 502 cleared two rounds 100%, pull 0.3 at 2,000 cleared HLA 67%; the neutral gene pins N.**
+- **D rounds** (pull, individuals; immune / neutral alleles): HLA-B 1.0, 1,262 (39.2 / 20.9) · San Nicolas foxes 1.0, 50 (5.7 / 2.0) · cheetahs 0.4, 399 (16.0 / 9.0) · sticklebacks, few parasites 0.2, 1,262 (28.1 / 20.7) · Soay sheep 0.7, 632 (24.5 / 12.6). Opening 0, 200 (fox was cleared 25% from 126). Cheap routes ≤ 6%.
+- **Anchors are framing only** (rows on the card; no data files). JM to check: Aguilar et al. 2004 (island fox MHC), Hamblin & Di Rienzo 2000 (Duffy), Kruuk et al. 2002 (Rum antlers), Grant & Grant 2002 (Daphne), Betancourt & Presgraves 2002 (low recombination), Daborn et al. 2002 (Cyp6g1), Paterson et al. 1998 (Soay MHC), Wegner et al. 2003 (stickleback parasites → MHC).
+
+### Plan for this pass
+
+- A: births/deaths engine (constant N, survivors carry over, recruits fill the room, parents drawn by birth rate, meiosis); diagram rain → food ← beak ← allele; food → death rate, food → birth rate (settable), chance → both (one control), meiosis grey. Bars: survival + chicks per genotype, relative to the small-beak homozygote. Card x = rain (mm, log, wetter right); slope = change per tenfold more rain. A2 = record at a hidden realistic setting (N ≈ harmonic mean of the real fortis counts), trajectory + card drawn, windows hidden until the shot.
+- A intro: genome mock-up canvas (HMGA2 heterozygous; ALX1, BMP4, CALM1 as blocks; no chromosome numbers).
+- B: lactase out of the rounds → B2; a fifth round in B1 measured in; partial-stop round considered.
+- C: B's engine + one argument per slower; selection on the beak held strong in every round, one slower free per round; card = footprint (shared stretch) against generations, the record a band on the footprint; dots persist across rounds.
+- D: many-allele locus, new alleles by mutation (held), N, pathogens that adapt to common host alleles (rare-allele advantage); readings = alleles in a sample and homozygosity (Ewens–Watterson form); MHC / island fox / HLA anchors.
 
 ## What the lesson is
 
@@ -89,13 +120,19 @@
 - Real, ecology: ***Oenothera organensis*** ≥ 45 self-incompatibility alleles in ≤ 1,000 plants (Emerson 1938-39; Wright 1939). **Orchid *Dactylorhiza sambucina***, yellow/purple, rare colour reproduces better (Gigord et al. 2001, PNAS, open at PMC33454): array numbers to transcribe, JM checks.
 - Real, health: **HbS** (Piel et al. 2010 layer); **HLA** allele counts (IPD-IMGT/HLA, GitHub).
 
-### E — counting fixed changes (dN/dS) → mutation
+### E — counting what stuck (dN/dS) → mutation and coalescence — DRAFT, 2026-10-01
 
-- Data card: dN/dS for gene classes.
-- Tool: 12 D's mutation curve (drag the average s and spread of protein-changing mutations; silent ones are neutral) + 10's fixation (1/2N) + N.
-- Two readings: dS (silent changes fixed per site per generation = the mutation rate, measured on the page: the step into the mutation lessons) and dN/dS.
-- Rounds: purifying; relaxed (small N: drift lets the slightly bad through, measured); recurrent advantage (host immunity favours the rare antigen: D's frequency dependence again).
-- Real: **LTEE** fixed protein-changing vs silent (in repo; derive the neutral expectation from REL606 first); **flu H3N2 HA** epitope vs rest (Nextstrain JSON); **HLA** binding-site codons vs the rest (Hughes & Nei 1988).
+- JM, 2026-10-01: *"Let's draft up a dN/dS exercise that could, maybe, help bind selective sweeps (above) while prepping students for the mutation/coalesence work to come."*
+- Tool: 12 D's curve of new mutations' effects (drag the typical harm, bracket the spread; here on a log axis, so a step is ten times more harmful) + one argument, a bar for the share that help (+0.05 each); 10's 1/2N; B's lost copies; individuals. h held 0.5.
+- Engine: one gene = 300 silent + 900 protein-changing sites; each site changes in one copy in 100,000 a generation; 10,000 generations. Every new change runs its own story from one copy (frequency-level binomial, 1 − s/2, 1 − s) until lost or fixed — independent stories, no linkage between them (said so in the code). Go = ten genes, pooled.
+- Readings (the plane, like D's): **silent diversity within** (two copies' silent differences per 1,000 sites, sampled every 500 generations from 2,000 on and averaged: CV 3-6%, pins N; 4Nμ printed beside) and **dN/dS** (protein changes that took over per site ÷ silent ones; CV ~10%). Window = a box. Not judged, drawn: the same ratio among changes still varying (pN/pS, the McDonald-Kreitman comparison) as an open diamond.
+- Measured on the prototype (node, 10 genes): silent changes per site per generation = 1.0e-5 = μ at every N and selection (**the clock**, printed beside μ); diversity = 4Nμ; dN/dS 0.78 / 0.59 / 0.50 at N 30 / 100 / 300 (typical harm 0.01, spread 0.3) against Kimura 0.75 / 0.61 / 0.49. Help 5% at N 300: dN/dS 1.63, pN/pS 0.42 (sweeps go through fast, rarely caught varying); at N 50: 0.63 (help barely shows in a small population).
+- Binds sweeps: top-left draws every change that took over as it spread — silent ones wander for ~4N generations (printed beside 4N: the time back to the copies' common ancestor), helpful ones go up as sweeps in ~100-200. Prep: dS/time = μ ("distance over speed", 202_lec20_02); diversity = 4Nμ (lesson 11 E).
+- **As built** (rounds: free part, truth; dN/dS, diversity per 1,000; 40 runs, page engine): fly typical (harm, 0.1 at 248; 0.253 ± 0.021, 9.89 ± 0.39) · people vs chimps (harm, 0.1 at 30; 0.465 ± 0.035, 1.17 ± 0.09) · histone (spread, shape 1 at 248; 0.031 ± 0.006) · flu antibody sites (help, 5% at 248; 1.43 ± 0.08) · TRIM5α (help, 5% at 51; 0.64 ± 0.04, 1.97 ± 0.13). Opening harm 0.01, widest spread, no help, 101. The headcount is free in every round; the curve's other parts held (grey).
+- **Measured traps** (node, then the check): opening, right curve at the opening's headcount, right headcount with the curve at the opening, both ends of each free part: all 0; 209 reachable settings x 4 runs, none clears two rounds. People vs chimps' free harm is the same as flies': only the headcount differs, so the student finds that drift alone raised dN/dS.
+- Speed: a Go at 248 individuals ~0.45 s (≈10^6 stories); at the 400 maximum ~0.7 s.
+- **Check** (`node scripts/check_lesson14_numbers.js E`, 18 bars): clock = μ (1.009e-5 ± 0.012); diversity = 4Nμ (1.40/1.44, 3.93/4.04, 10.01/9.92); 1 in 2N and ~4N generations (981 vs 992); dN/dS vs Kimura's integral within 8% (0.617 vs 0.624; with help 0.999 vs 0.966); help 0 → 5%: dN/dS 0.27 → 1.47, still varying 0.40 → 0.46.
+- Open for JM: is the independent-stories engine enough (no hitchhiking inside a gene, so sweeps do not lower diversity here as they did in B)? A one-shot real record (McDonald & Kreitman's Adh table: fixed 7 protein / 17 silent, varying 2 / 42) would make the sweep link a target rather than a picture. Anchors to check: Chimpanzee Sequencing Consortium 2005; Sawyer et al. 2005 (TRIM5α); Bush et al. 1999 (flu HA).
 
 ## Links to earlier lessons (the "gold")
 
@@ -225,11 +262,13 @@
 | 2 | — | chromosome engine, bit-packed (B, C, D share it); painted chromosomes from 11 E | B's engine done; ancestry paint for C todo |
 | 3 | A | 12 B's locus with s set by the real rain; diagram; record-vs-run card; checks | done (voice is a placeholder: 202_lec10_01) |
 | 4 | B | chromosome engine (bit-packed); scan + shared stretch; LCT derivative `data/clean/lct_scan.json`; SOURCES row | done (voice placeholder: 202_lec19_04, banner 19_04 + 19_05) |
-| 5 | C | race on painted chromosomes; LTEE + Pf7 panels; trace-back | todo |
-| 6 | D | many-allele race with frequency rules; S-alleles, orchid, HbS | todo |
-| 7 | E | mutation curve → dN/dS; REL606 expectation; flu, HLA | todo |
-| 8 | — | `check_lesson14_numbers.js` rewritten (A, B: 37 bars); `data/SOURCES.md` rows before any panel ships (LCT done) | doing |
-| 9 | — | voice from JM | todo |
+| 5 | C | what slows a sweep (JM 2026-10-01 brief): B's engine + trait; one slower per round; anchors | done |
+| 6 | D | rare-allele advantage on an MHC-like gene + a neutral gene; HLA, foxes, cheetahs, sticklebacks, Soay | done |
+| 7 | E | dN/dS draft (JM 2026-10-01, later): 12 D's curve + help bar; diversity vs dN/dS plane; history of what took over | done (draft): 18 bars |
+| 8 | — | `check_lesson14_numbers.js` rewritten for A-D (stage filter by letter) | done: 65 bars, all pass (2026-10-01, full run ~15 min; C and D re-run after the last edits) |
+| 9 | — | voice from JM (A-D all placeholders; C: 202_lec17_01 + 19_03, banner 19_01; D: 231_lec33a_01 + 202_lec16_05, banner 461_lec28_01) | todo |
+| 10 | A | 2026-10-01 review: no record in rounds; labels; allele names; births/deaths diagram; one-shot record; genome mock-up | done |
+| 11 | B | 2026-10-01 review: axis label; lactase one shot, named after; fifth round | done |
 
 ## Do not
 

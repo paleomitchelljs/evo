@@ -35,3 +35,11 @@ can make a suite of changes all at once."*
 JM's words, 2026-09-24: *"lessons 1-8 could use bowling style games added,
 lessons 1-10 could use practice toggles, lessons 1-6 need new interactives
 beyond just sliders."*
+
+## Fixes noted in use (bugs, not features)
+
+Lessons students are working in now, whatever their number. One row each; fix in the end pass unless JM says sooner.
+
+| # | Lesson, stage | What | Where | Noted |
+|---|---------------|------|-------|-------|
+| F1 | **12 A** (the meadow) | Remove the h/s text drawn at the top of the Predict plot ("s at least 0.25 · h at most −0.25"), and scale the plot's y-axis to the targets so a target box never runs past the top of the axis (a student hit it when pink had to set more than 1.2 of red's seeds) | `app/lessons/lesson12.html`, `A_drawBars()`: the `ctx.fillText("s at least " ...)` line; `yTop` is set only from the run's own bars (`fin`) and is 1.6 before any season, and the target boxes are `clamp`ed to it | JM, 2026-10-01: *"lesson 12's Part A sometimes shows target fitnesses in the Predict panel that fall outside of the visible y-axis before simulation (noticed specifically when heterozygotes are supposed to have >1.2 fitness). I'd like the h/s text at the top removed & the y-axis on the predict plot scaled to the targets."* |
