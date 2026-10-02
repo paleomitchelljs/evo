@@ -364,7 +364,7 @@ function foundOnce() {
    season's count is always met: once the time is up, any still owed are
    taken from the others at random.
    ===================================================================== */
-const AR = { sal: [], emerge: [], hawks: [], t: 0, on: false, auto: false, last: 0, pointer: null, rng: null, phase: "ready", owed: 0 };
+const AR = { sal: [], emerge: [], hawks: [], t: 0, on: false, auto: false, last: 0, pointer: null, rng: null, phase: "ready", owed: 0, card: null };
 function placeSnake(s, rng) {
   s.x = 40 + rng() * (WORLD - 80); s.y = 40 + rng() * (WORLD - 80); s.ang = rng() * 6.2832;
   const tail = SEG * BODY;
@@ -503,6 +503,8 @@ function finishWinter() {
   const mine = me ? pairs.find(p => p[0] === me || p[1] === me) : null, mate = mine ? (mine[0] === me ? mine[1] : mine[0]) : null;
   const ate = me ? me.food : 0, fate = me ? me.fate : null;
   const row = breed(pairs, AR.rng);
+  /* the winter card: your snake, its mate, their young, and the one you play next */
+  AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, fate, kids: me.kids.slice(), next: YOU.has(GEN) ? YOU.get(GEN) : null } : null;
   AR.phase = row.length < 2 ? "over" : "ready"; AR.auto = false;
   placeGeneration();
   const why = fate === "hawk" ? "A hawk took your snake." : fate === "starved" ? "Your snake ate nothing." : fate === "no mate" ? "Your snake was the one left without a mate." : "Your snake left no young.";
@@ -536,7 +538,7 @@ function frame(ts) {
 }
 function startSeason(auto) {
   if (AR.phase !== "ready") return;
-  openArena();
+  openArena(); AR.card = null;
   newSeason(); AR.auto = !!auto; AR.on = true; AR.last = 0;
   setPhase(auto ? "The season plays itself." : "Eat as many salamanders as you can before winter. A hawk's shadow falls where its snake is heading: get out of it.");
   syncButtons(); requestAnimationFrame(frame);
@@ -594,6 +596,78 @@ function sprite(ctx, kind, k, x, y, a) {
   return true;
 }
 
+/* ---- the winter card (JM, 2026-10-02: "a card at the end of each season showing your snake & its
+   genes and your snake's random mate & its genes, and your offspring and their genes. The offspring the
+   next round starts as should have a glow"). Drawn in the arena's place once a season ends, in world
+   units. Each young's chromosome from you sits above the one from your mate, so a crossover shows as a
+   string that is part one of your strings and part the other. ---- */
+function drawWinterCard(ctx) {
+  const C = AR.card, me = SN.get(C.me), mate = C.mate != null ? SN.get(C.mate) : null;
+  ctx.fillStyle = "#fbfaf6"; ctx.fillRect(0, 0, WORLD, WORLD);
+  const origin = new Set(); for (const a of AL) if (a.from) origin.add(a.from.snake + "|" + a.from.side + "|" + a.locus);
+  const text = (t, x, y, o) => { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px -apple-system, sans-serif";
+    ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); };
+  /* one chromosome: seven beads on a thread */
+  const strand = (sn, side, x, y, k) => {
+    const rad = 8 * k, pitch = 21 * k;
+    ctx.strokeStyle = "#b9b4a6"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + pitch / 2, y); ctx.lineTo(x + pitch * (LOCI - 0.5), y); ctx.stroke();
+    for (let l = 0; l < LOCI; l++) {
+      const bx = x + pitch * (l + 0.5);
+      ctx.fillStyle = alCol(sn.g[side][l]) || PLAIN_BEAD; ctx.beginPath(); ctx.arc(bx, y, rad, 0, 6.2832); ctx.fill();
+      ctx.strokeStyle = "rgba(29,29,27,0.4)"; ctx.lineWidth = 1; ctx.stroke();
+      if (origin.has(sn.id + "|" + side + "|" + l)) { ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(bx, y, rad + 3, 0, 6.2832); ctx.stroke(); }
+    }
+  };
+  /* a snake's two chromosomes, in the order given; a red glow behind them for the one you play next */
+  const pairOf = (sn, sides, x, y, k, glow) => {
+    const pitch = 21 * k, gap = 22 * k;
+    if (glow) { ctx.save(); ctx.shadowColor = "rgba(178,58,72,0.95)"; ctx.shadowBlur = 14; ctx.fillStyle = "rgba(178,58,72,0.16)";
+                ctx.beginPath(); ctx.roundRect(x - 4, y - 13 * k, pitch * LOCI + 8, gap + 26 * k, 12 * k); ctx.fill(); ctx.restore(); }
+    strand(sn, sides[0], x, y, k); strand(sn, sides[1], x, y + gap, k);
+  };
+  /* a little garter snake in the game's colours, head to the right */
+  const icon = (x, y, you, dead) => {
+    const pts = []; for (let i = 0; i < 15; i++) pts.push({ x: x + i * 5, y: y + Math.sin(i * 0.75) * 5 });
+    const path = () => { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); };
+    ctx.save(); ctx.globalAlpha = dead ? 0.35 : 1; ctx.lineCap = "round"; ctx.lineJoin = "round";
+    if (you) { ctx.strokeStyle = HOT; ctx.lineWidth = 15; path(); ctx.stroke(); }
+    ctx.strokeStyle = SNAKE.line; ctx.lineWidth = 11; path(); ctx.stroke();
+    ctx.strokeStyle = SNAKE.mid; ctx.lineWidth = 8.6; path(); ctx.stroke();
+    ctx.strokeStyle = SNAKE.stripe; ctx.lineWidth = 2; path(); ctx.stroke();
+    const h = pts[pts.length - 1]; ctx.fillStyle = SNAKE.dark; ctx.strokeStyle = SNAKE.line; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.ellipse(h.x + 2, h.y, 7, 5.4, 0, 0, 6.2832); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  };
+  const FATE_SHORT = { hawk: "taken by a hawk", starved: "ate nothing", "no mate": "no mate this winter" };
+  /* top: you and your mate */
+  icon(24, 50, true, C.fate === "hawk");
+  text("you", 110, 30, { col: HOT, bold: true }); text(C.fate ? FATE_SHORT[C.fate] : "ate " + C.ate, 150, 30, { col: MUTED, size: 13 });
+  pairOf(me, [0, 1], 106, 60, 1, false);
+  if (mate) {
+    icon(314, 50, false, false);
+    text("your mate", 400, 30, { bold: true }); text("ate " + mate.food, 478, 30, { col: MUTED, size: 13 });
+    pairOf(mate, [0, 1], 396, 60, 1, false);
+  } else text("no mate", 400, 60, { col: MUTED });
+  ctx.strokeStyle = "#e2e0d9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, 116); ctx.lineTo(WORLD - 20, 116); ctx.stroke();
+  /* your young, two to a row, each: from you above, from your mate below */
+  const kids = C.kids.map(id => SN.get(id));
+  text(kids.length ? "your young: " + kids.length : "your young: none", 24, 140, { bold: true });
+  if (kids.length) {
+    const rows = Math.ceil(kids.length / 2), rowH = Math.min(70, (WORLD - 230) / rows), k = Math.min(1, rowH / 70);
+    kids.forEach((kid, i) => {
+      const x = 40 + (i % 2) * 290, y = 178 + Math.floor(i / 2) * rowH, fromMe = kid.src[0].p === me.id ? 0 : 1;
+      pairOf(kid, [fromMe, 1 - fromMe], x, y, k, kid.id === C.next);
+      if (kid.id === C.next) text("you, next season", x + 21 * k * LOCI + 14, y + 11 * k, { col: HOT, bold: true, size: 13 });
+    });
+    text("Each young: its chromosome from you on top, from your mate below.", 24, WORLD - 44, { col: MUTED, size: 13 });
+  } else if (C.next != null && SN.has(C.next)) {
+    text("Next season you play a young snake from another family:", 24, 180, { col: MUTED, size: 14 });
+    pairOf(SN.get(C.next), [0, 1], 40, 216, 1, true);
+    text("you, next season", 40 + 21 * LOCI + 14, 227, { col: HOT, bold: true, size: 13 });
+  }
+  text("A ringed bead is a brand-new allele.", 24, WORLD - 22, { col: MUTED, size: 13 });
+}
+
 /* ---- drawing the arena ---- */
 function drawArena() {
   if (popEl().hidden) return;                    /* sized only while it is on screen */
@@ -601,6 +675,7 @@ function drawArena() {
   const W = setupCanvas(cv, null).W, { ctx } = setupCanvas(cv, W);     /* square: as tall as the panel lets it be wide */
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr * W / WORLD, 0, 0, dpr * W / WORLD, 0, 0);
+  if (AR.card && AR.phase !== "season") { drawWinterCard(ctx); return; }
   ctx.fillStyle = "#efe8d4"; ctx.fillRect(0, 0, WORLD, WORLD);
   /* hawks' shadows on the ground */
   for (const h of AR.hawks) if (h.state === "warn" || h.state === "dive") {
@@ -663,6 +738,8 @@ function drawSnake(ctx, s, you) {
 function drawHud() {
   const me = youNow(), row = genOf(GEN).map(id => SN.get(id));
   const living = row.filter(s => s.alive).length;
+  /* while the winter card is up, the counts would describe next season: just say which generation it is */
+  if (AR.card && AR.phase !== "season") { document.getElementById("hud").innerHTML = "<span>next: generation <b>" + GEN + "</b>, " + row.length + " snakes</span>"; return; }
   document.getElementById("hud").innerHTML =
     "<span>generation <b>" + GEN + "</b></span><span>snakes <b>" + living + "</b> of " + row.length + "</span>" +
     "<span>salamanders out <b>" + AR.sal.length + "</b>" + (AR.emerge && AR.emerge.length ? ", " + AR.emerge.length + " to come" : "") + "</span><span>you ate <b>" + (me ? me.food : 0) + "</b></span>" +

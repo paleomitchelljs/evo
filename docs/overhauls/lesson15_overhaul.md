@@ -3,7 +3,16 @@
 **File** · `app/lessons/lesson15.html` — Stage A playable, locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
 **Status** · Stage A playable (built 2026-10-01 night, game first: no stages gated, `scaffold: 0`, page locked); B, targets and scoring to come. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-02 (seventh pass)
+**Last touched** · 2026-10-02 (eighth pass)
+
+## Eighth pass (JM, 2026-10-02): the winter card
+
+- *"a card at the end of each season showing your snake & its genes and your snake's random mate & its genes, and your offspring and their genes. The offspring the next round starts as should have a glow."*
+- Built in the pop-up, in place of the arena once the season ends (played or let play itself; not after Skip). Your snake (icon, catch or fate, two bead strings) | your mate | your young: each young's chromosome from you above the one from your mate, so a crossover shows as a mix of your two strings; the one you play next glows red. No young: the snake from another family you play next, glowing. New alleles ringed as in the pedigree.
+
+| # | What | Status |
+|---|------|--------|
+| 8-1 | winter card in the pop-up | done; checked headless after autopilot seasons (5 young, the next one glowing); the side counters show only the next generation while it is up |
 
 ## Seventh pass (JM, 2026-10-02): lines for one gene copy only; glow, no boxes
 
