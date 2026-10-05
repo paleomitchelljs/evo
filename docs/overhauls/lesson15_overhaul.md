@@ -3,7 +3,42 @@
 **File** · `app/lessons/lesson15.html` — Stage A playable, locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
 **Status** · Stage A playable (built 2026-10-01 night, game first: no stages gated, `scaffold: 0`, page locked); B, targets and scoring to come. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-02 (eighth pass)
+**Last touched** · 2026-10-04 (ninth pass)
+
+## Ninth pass (JM, 2026-10-04): no history before play; a mutant in every founder; questions and plots on the winter card
+
+- *"I would like the text at the bottom of the Pedigree totally removed."* Read as: the `#pedRead` readout under the pedigree canvas, and `pedRead()`. Hover and click lines stay.
+- *"I'd like the generations before the start removed & not displayed."* Read as: PRE goes (no seasons simulated before play); the founders are generation 0, with no parents. The dashed start line and its label go with them.
+- *"I'd like each individual in the starting generation to have one random mutation at a locus."* Every founder gets one new allele, random gene, random copy (14 colours at the start). The player is a random founder. One new allele a generation from generation 1 stays.
+- *"On each 'end season' card where the mate is shown I'd like three questions: Did any of your alleles **not** get passed on? Did you pass on a recombinant chromosome? Do any of your offspring have a new mutation?"*
+    - Shown only when there is a mate (a mate means ≥1 young: two fed snakes pay for at least one). Yes / No buttons in the pop-up's side column, locked after one pick, then right/wrong and the evidence marked on the card. Not gated, no bits (scoring later).
+    - Answers measured off the snakes, as the card shows them: an allele = one colour at one gene (plain grey counts), passed on if any young carries it on the chromosome from you; recombinant = a chromosome from you that matches neither of yours, before any new mutation (a crossover between identical stretches cannot be seen and does not count); new mutation = a ringed bead in your young.
+- *"two small plots displayed below the children: one showing frequency of each starting allele in the population so far and one showing the total number of distinct alleles in the population--both across all loci."*
+    - Plot 1: one line per founder allele (the 14 colours), its frequency at its gene, generation 0 to now, 0 to 1; a line stops where the allele is lost. Plain grey left out (seven identical grey lines near the top tell nothing apart).
+    - Plot 2: distinct alleles summed over the seven genes, grey included (21 at the start).
+
+| # | What | Status |
+|---|------|--------|
+| 9-1 | pedigree readout removed | done (div, CSS, `pedRead()`, `FATE`); hover/click lines kept |
+| 9-2 | no generations before play; founders = generation 0 | done: PRE gone, dashed start line and label gone, `found()` one pass (no retry: nothing to die out) |
+| 9-3 | one new allele in every founder | done; checked headless: 14 founders, one coloured bead each, 21 alleles at load; one new allele in each of generations 1-10 after two skips |
+| 9-4 | three questions on the winter card (when there is a mate); evidence marked after answering | done: `winterAnswers(me, kids)`; Yes / No in the side column, "correct" / "incorrect" as 10 and 11 word it, then × on your beads that went to none of your young, "mix of your two" under a recombinant young; hand-checked on four cards (a hidden crossover between matching stretches not counted; a new allele over an inherited grey counts as new and as not passed on). The pop-up now scrolls when the card plus questions outgrow a short window (the top was clipped out of reach) |
+| 9-5 | two plots under the young: founder-allele frequencies; distinct alleles | done: bottom band of the card, on every card; young three to a row from nine up; screenshots at broods 1 / 4 / 8 / 14, ~700 and ~450 px arena, no overlaps; small text sized up for the narrow card |
+| 9-6 | measure how often each answer is Yes (a question that is nearly always No teaches little) | done, table below |
+| 9-7 | the mate's relatedness beside the mate on the card | done: `relation(a, b)`, printed under the mate's chromosomes (above them it ran into a ringed bead) |
+
+- 9-7, JM (same day, later): *"the relatedness of the mate (sibling, 1st cousin, 2nd cousin, or distant) should be displayed next to the mate each season"*. Closest shared ancestor: parents → sibling, grandparents → 1st cousin, great-grandparents → 2nd cousin, none within three generations (or none on record: the founders have no parents) → distant. Every snake breeds once with one mate, so siblings are always full siblings.
+
+**Measured** (the population model, food handed out at random as Skip does; 6 games x 45 generations, 2,516 parent-seasons; each parent of a pair counted):
+
+        generation   n      Yes: not passed on   recombinant   new allele   mate: sibling / 1st cousin / 2nd cousin / distant   young
+        0            58     28%                  0%            21%          0 / 0 / 0 / 100%                                     3.1
+        1-4          224    28%                  12%           21%          16 / 40 / 13 / 31%                                   3.1
+        5-19         832    24%                  13%           22%          20 / 45 / 31 / 4%                                    3.1
+        20+          1402   29%                  19%           21%          19 / 50 / 28 / 3%                                    3.1
+
+- No question is nearly always No, but the recombinant one can never be Yes in generation 0 (a founder differs between its chromosomes at one gene at most) and is Yes about one season in eight until diversity builds. A played snake eats more and has more young, which lowers "not passed on" and raises the other two.
+- Past generation 5 nearly every mate is a sibling or cousin: one in five a sibling.
 
 ## Eighth pass (JM, 2026-10-02): the winter card
 

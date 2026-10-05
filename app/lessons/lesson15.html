@@ -35,19 +35,32 @@
   .controls button.ghost:disabled { color:#aaa; background:transparent; }
   .controls button.accent { background:var(--accent); }
   .controls button.accent:disabled { background:#bbb; }
-  .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; min-height:22px; }
-  .readout .label { color:var(--muted); }
 
   /* ---- the game opens over the page; the pedigree has the page (JM, 2026-10-02: "having the game
      as a 'pop up' that covers the page could allow more freedom") ---- */
-  .arena-pop { position:fixed; inset:0; z-index:50; background:rgba(29,29,27,0.6); display:flex; align-items:center; justify-content:center; }
+  /* the card centres vertically via its own auto margins, not align-items -- that still allows a
+     scroll to every part of it on a short viewport, where align-items:center plus overflow would
+     clip the top unreachably (JM, 2026-10-04 pass: the three questions can make the card taller
+     than a short viewport) */
+  .arena-pop { position:fixed; inset:0; z-index:50; background:rgba(29,29,27,0.6); display:flex; justify-content:center; overflow-y:auto; padding:16px 0; }
   .arena-pop[hidden] { display:none; }
-  .arena-card { background:var(--panel); border-radius:8px; padding:12px 14px; box-shadow:0 10px 40px rgba(0,0,0,0.35); display:flex; gap:16px; align-items:flex-start; }
+  .arena-card { background:var(--panel); border-radius:8px; padding:12px 14px; box-shadow:0 10px 40px rgba(0,0,0,0.35); display:flex; gap:16px; align-items:flex-start; margin:auto 0; }
   .arena-box { width:min(calc(100vh - 60px), calc(96vw - 290px)); }
-  .arena-side { width:230px; }
+  .arena-side { width:230px; max-height:calc(100vh - 40px); overflow-y:auto; }
   .arena-side .hud { flex-direction:column; gap:3px; margin-top:0; }
   .arena-side .buttons { flex-direction:column; align-items:stretch; }
   @media (max-width:900px) { .arena-card { flex-direction:column; } .arena-box { width:min(92vw, calc(100vh - 220px)); } .arena-side { width:auto; } }
+  /* the winter questions (JM, 2026-10-04): three Yes/No picks in the 230px side column */
+  #winterQs { margin-top:10px; display:flex; flex-direction:column; gap:10px; }
+  #winterQs[hidden] { display:none; }
+  #winterQs .wq-q { font-size:12.5px; line-height:1.35; margin-bottom:5px; }
+  #winterQs .wq-btns { display:flex; gap:6px; }
+  #winterQs .wq-btns button { flex:1; background:#333; color:#fff; border:0; border-radius:4px; padding:4px 0; cursor:pointer; font-size:12px; }
+  #winterQs .wq-btns button:disabled { cursor:default; opacity:0.5; }
+  #winterQs .wq-btns button.picked { opacity:1; outline:2px solid var(--ink); outline-offset:1px; }
+  #winterQs .wq-fb { font-size:11.5px; margin-top:5px; min-height:14px; }
+  #winterQs .wq-fb .ok { color:var(--good); font-weight:600; }
+  #winterQs .wq-fb .off { color:var(--bad); font-weight:600; }
   #arena { display:block; border-radius:4px; touch-action:none; cursor:crosshair; }
   .hud { display:flex; gap:16px; flex-wrap:wrap; font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--muted); }
   .hud b { color:var(--ink); font-weight:600; }
@@ -77,8 +90,8 @@
     <ul class="setup">
       <li>A season on the island: garter snakes hunt salamanders, and hawks hunt snakes. You are the snake outlined in red; steer with the mouse. A season opens over the page; at winter you come back to the pedigree.</li>
       <li>The hawks come early in the season and take every snake above ten: a hawk's shadow falls where its snake is heading, so get out of it. Then 30 salamanders come out over the season, and a young snake costs 2. A snake that eats nothing dies before winter. At winter the fed snakes pair at random, yours too; each pair has as many young as their salamanders pay for.</li>
-      <li>Every snake carries one chromosome from each parent, with seven genes on it. In the pedigree each chromosome is a string of seven beads; every gene starts plain grey.</li>
-      <li>Your first snake carries one new allele, a colour. After that, one new allele turns up each generation, in a young snake at random, at a gene at random. A ring marks the bead where each one arose. None of them does anything.</li>
+      <li>Every snake carries one chromosome from each parent, with seven genes on it. In the pedigree each chromosome is a string of seven beads.</li>
+      <li>Every snake in the first generation carries one new allele, a colour, at a gene at random; the rest start plain grey. After that, one new allele turns up each generation, in a young snake at random, at a gene at random. A ring marks the bead where each one arose. None of them does anything.</li>
       <li>Next season you play one of your young.</li>
       <li><b>Pedigree</b>, below: every snake that has lived, one row a generation, mother's chromosome above, father's below. Your snakes glow red; the snakes you descend from, or that descend from you, glow pale red.</li>
       <li>Point at a bead, one gene on one chromosome, and lines show where that copy came from (red, up) and where it went (blue, down). Click a bead to keep its lines.</li>
@@ -95,7 +108,6 @@
       <div class="phase" id="phase"></div>
       <h3 style="margin-top:12px">Pedigree</h3>
       <div class="pedwrap" id="pedwrap"><canvas id="ped" width="1300" height="600"></canvas></div>
-      <div class="readout" id="pedRead"></div>
     </div>
   </div>
 </section>
@@ -107,6 +119,7 @@
     <div class="arena-side">
       <div class="hud" id="hud"></div>
       <div class="phase" id="popPhase"></div>
+      <div id="winterQs" hidden></div>
       <div class="controls"><div class="buttons">
         <button id="btnBack" class="accent" hidden>Back to the pedigree</button>
         <button id="btnNext" class="ghost" hidden>Play the next season</button>
@@ -153,13 +166,14 @@
    new allele a generation, from generation 1, lands in one of the young at
    random. The player is born again as one of their own young.
 
-   The pedigree starts PRE generations before play: those seasons are run
-   by the same rules with the food handed out at random, and give the first
-   snakes parents and grandparents to trace back to (JM, 2026-10-02:
-   "fewer past generations and more descendants ones"). JM's goal for the
-   stage: "different loci in one individual coalesce to different
-   individuals in the past" (measured: one snake's 14 gene copies are held
-   by ~4.0 snakes five generations back, of the ~7.8 it descends from there).
+   The pedigree starts at the founders, generation 0, with no history before
+   them (JM, 2026-10-04: "I'd like the generations before the start removed
+   & not displayed" -- the three seasons once run before play are gone; each
+   founder carries its own new allele instead, see "the alleles" below). JM's
+   goal for the stage: "different loci in one individual coalesce to
+   different individuals in the past" (measured: one snake's 14 gene copies
+   are held by ~4.0 snakes five generations back, of the ~7.8 it descends
+   from there).
    ===================================================================== */
 const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48";
 const LOCI = 7, LPC = 7, CHR = 1;        // one chromosome of seven genes (JM, 2026-10-02; was three of three)
@@ -167,7 +181,7 @@ const XO = 0.1;                          // crossing over between neighbouring g
                                          // different ancestors in 93% of 30-generation games, neighbours in 74%
 const FOOD = 30, COST = 2, KEEP = 10;    // salamanders a season (more than ten snakes need); a chick's cost; the hawks take all but KEEP
 const SAL0 = 3, SAL_SPAN = 16;           // salamanders out at the start; the rest come out over this many seconds
-const N0 = 14, PRE = 3;                  // founders; generations run before play (-3 .. -1; was 10: JM, "fewer past generations and more descendants")
+const N0 = 14;                           // founders, generation 0 (JM, 2026-10-04: no generations run before play any more)
 const WORLD = 600;                       // the arena in its own units
 const SEASON_MAX = 25, GRACE = 8;        // seconds; a season ends sooner when the salamanders are gone and the hawks are done
 const HAWK_SPAN = 4;                     // seconds over which the season's hawks arrive: early, before most of the eating
@@ -208,8 +222,11 @@ function setupCanvas(canvas, h) {
 /* ====== alleles ======================================================
    Every gene starts with one allele, plain grey, in every founder (JM,
    2026-10-02: "all other loci could start as gray with one new mutant each
-   generation chosen at random to add a color"). The player's snake begins
-   with one new allele; from then on exactly one new allele a generation.
+   generation chosen at random to add a color"); then every founder also gets
+   one new allele of its own (JM, 2026-10-04: "I'd like each individual in
+   the starting generation to have one random mutation at a locus") -- a
+   colour, at a random gene, on a random copy. From generation 1 on, exactly
+   one new allele a generation, in one young snake at random.
    Colours from far ends of the spectrum, alternating (JM), and never grey:
    a fixed run of twelve, then hues round the wheel. */
 const AL = [];                           // id -> { locus, born, from: {snake, side} | null, col }
@@ -230,7 +247,7 @@ const alCol = id => AL[id].col;
 
 /* ====== snakes and generations ====================================== */
 const SN = new Map();                    // id -> snake
-const ROWS = [];                         // ROWS[t + PRE] = ids of generation t
+const ROWS = [];                         // ROWS[t] = ids of generation t
 const YOU = new Map();                   // generation -> the player's snake id in it
 let NEXT = 0;
 function mkSnake(gen, g, src, parents) {
@@ -238,8 +255,8 @@ function mkSnake(gen, g, src, parents) {
   SN.set(s.id, s);
   return s;
 }
-const genOf = t => ROWS[t + PRE] || [];
-let GEN = -PRE;                          // the generation now living
+const genOf = t => ROWS[t] || [];
+let GEN = 0;                             // the generation now living
 
 /* one gamete: for each chromosome, start on a random copy and switch at XO between neighbouring genes */
 function gamete(P, rng) {
@@ -272,7 +289,7 @@ function breed(pairs, rng) {
     const kid = SN.get(row[(rng() * row.length) | 0]), side = rng() < 0.5 ? 0 : 1, l = (rng() * LOCI) | 0;
     kid.g[side][l] = newAllele(l, t, { snake: kid.id, side }, false);
   }
-  ROWS[t + PRE] = row;
+  ROWS[t] = row;
   GEN = t;
   /* the player is born again as one of their own young; if they had none, as someone else's */
   const prev = YOU.get(t - 1);
@@ -324,30 +341,24 @@ function modelSeason(rng) {
   return breed(pairUp(fed, rng), rng);
 }
 
-/* ====== the founders and the history before play ===================== */
+/* ====== the founders ===================== */
 const RNG = mulberry32(pageSeed("l15", 1, 999999));
-/* the founders and PRE seasons before play; started again (fresh draws) in the rare history that dies out */
+/* generation 0, no parents: fourteen founders, each with one new allele (JM, 2026-10-04: "I'd like
+   each individual in the starting generation to have one random mutation at a locus"). One pass --
+   with no pre-play history, there is nothing left for the old retry loop to guard against. */
 function found() {
-  for (let attempt = 0; attempt < 20; attempt++) {
-    AL.length = 0; SN.clear(); ROWS.length = 0; YOU.clear(); NEXT = 0; colI = 0;
-    if (foundOnce()) return true;
-  }
-  return false;
-}
-function foundOnce() {
-  const plain = []; for (let l = 0; l < LOCI; l++) plain.push(newAllele(l, -PRE, null, true));
+  AL.length = 0; SN.clear(); ROWS.length = 0; YOU.clear(); NEXT = 0; colI = 0;
+  const plain = []; for (let l = 0; l < LOCI; l++) plain.push(newAllele(l, 0, null, true));
   const row = [];
   for (let i = 0; i < N0; i++) {
     const g = [0, 1].map(() => Int32Array.from(plain));
-    row.push(mkSnake(-PRE, g, null, null).id);
+    const s = mkSnake(0, g, null, null);
+    const l = (RNG() * LOCI) | 0, side = RNG() < 0.5 ? 0 : 1;
+    s.g[side][l] = newAllele(l, 0, { snake: s.id, side }, false);
+    row.push(s.id);
   }
-  ROWS[0] = row; GEN = -PRE;
-  for (let t = -PRE; t < 0; t++) { modelSeason(RNG); if (genOf(GEN).length < 2) return false; }
-  /* play starts: you are one of generation 0, carrying one brand-new allele (JM: "you begin the game with one mutation") */
-  const row0 = genOf(0), me = SN.get(row0[(RNG() * row0.length) | 0]), l = (RNG() * LOCI) | 0, side = RNG() < 0.5 ? 0 : 1;
-  me.g[side][l] = newAllele(l, 0, { snake: me.id, side }, false);
-  YOU.set(0, me.id);
-  return true;
+  ROWS[0] = row; GEN = 0;
+  YOU.set(0, row[(RNG() * row.length) | 0]);
 }
 
 /* =====================================================================
@@ -389,7 +400,7 @@ function layBody(s) {
   s.body = B;
 }
 function newSeason() {
-  const rng = AR.rng = mulberry32(pageSeed("l15season", 1, 999999) + 7919 * (GEN + PRE + 1));
+  const rng = AR.rng = mulberry32(pageSeed("l15season", 1, 999999) + 7919 * (GEN + 1));
   const row = genOf(GEN).map(id => SN.get(id));
   for (const s of row) { s.food = 0; s.alive = true; s.fate = null; placeSnake(s, rng); }
   AR.sal = []; AR.emerge = [];
@@ -492,7 +503,7 @@ function winter() {
 }
 /* between seasons: the new generation in the arena, no salamanders or hawks yet */
 function placeGeneration() {
-  const rng = mulberry32(pageSeed("l15place", 1, 999999) + 7919 * (GEN + PRE));
+  const rng = mulberry32(pageSeed("l15place", 1, 999999) + 7919 * GEN);
   for (const id of genOf(GEN)) { const s = SN.get(id); s.food = 0; s.alive = true; s.fate = null; placeSnake(s, rng); }
   AR.sal = []; AR.emerge = []; AR.hawks = []; AR.t = 0; AR.owed = 0;
 }
@@ -504,7 +515,9 @@ function finishWinter() {
   const ate = me ? me.food : 0, fate = me ? me.fate : null;
   const row = breed(pairs, AR.rng);
   /* the winter card: your snake, its mate, their young, and the one you play next */
-  AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, fate, kids: me.kids.slice(), next: YOU.has(GEN) ? YOU.get(GEN) : null } : null;
+  AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, fate, kids: me.kids.slice(), next: YOU.has(GEN) ? YOU.get(GEN) : null,
+                   rel: mate ? relation(me, mate) : null } : null;
+  buildWinterQs();
   AR.phase = row.length < 2 ? "over" : "ready"; AR.auto = false;
   placeGeneration();
   const why = fate === "hawk" ? "A hawk took your snake." : fate === "starved" ? "Your snake ate nothing." : fate === "no mate" ? "Your snake was the one left without a mate." : "Your snake left no young.";
@@ -538,7 +551,7 @@ function frame(ts) {
 }
 function startSeason(auto) {
   if (AR.phase !== "ready") return;
-  openArena(); AR.card = null;
+  openArena(); AR.card = null; hideWinterQs();
   newSeason(); AR.auto = !!auto; AR.on = true; AR.last = 0;
   setPhase(auto ? "The season plays itself." : "Eat as many salamanders as you can before winter. A hawk's shadow falls where its snake is heading: get out of it.");
   syncButtons(); requestAnimationFrame(frame);
@@ -548,6 +561,7 @@ function skip(n) {
   let over = false;
   for (let i = 0; i < n; i++) { const row = modelSeason(AR.rng || RNG); if (row.length < 2) { over = true; break; } }
   AR.phase = over ? "over" : "ready";
+  AR.card = null; hideWinterQs();
   placeGeneration();
   setPhase(over ? "Game over: too few snakes were fed and left alive to breed." : "Skipped ahead: those seasons played themselves, your snake no better than any other.", over);
   syncButtons(); paintAll(true);
@@ -596,6 +610,133 @@ function sprite(ctx, kind, k, x, y, a) {
   return true;
 }
 
+/* ---- the winter questions (JM, 2026-10-04): "Did any of your alleles not get passed on? Did you pass
+   on a recombinant chromosome? Do any of your offspring have a new mutation?" -- measured off the snakes
+   the card already shows, not asserted. No scoring bits yet (JM: scoring later). ---- */
+function winterAnswers(me, kids) {
+  /* lost: a distinct allele of yours (plain grey counts) that reached none of your young on the side
+     it would have come from you; keep which of your two chromosomes carried it, for marking */
+  const lost = [];
+  for (let l = 0; l < LOCI; l++) {
+    const reached = new Set();
+    for (const kid of kids) { const fromMe = kid.src[0].p === me.id ? 0 : 1; reached.add(kid.g[fromMe][l]); }
+    const seen = new Set();
+    for (const side of [0, 1]) { const id = me.g[side][l]; if (seen.has(id)) continue; seen.add(id);
+      if (!reached.has(id)) lost.push({ locus: l, id, sides: [0, 1].filter(s => me.g[s][l] === id) }); }
+  }
+  /* recomb: a young's chromosome from you, read before any new mutation, drawn from both of your
+     chromosomes -- a crossover between stretches that already match cannot be seen and does not count */
+  const recomb = kids.filter(kid => {
+    const fromMe = kid.src[0].p === me.id ? 0 : 1, h = kid.src[fromMe].h;
+    let d0 = false, d1 = false;
+    for (let l = 0; l < LOCI; l++) { const v = me.g[h[l]][l]; if (v !== me.g[0][l]) d0 = true; if (v !== me.g[1][l]) d1 = true; }
+    return d0 && d1;
+  }).map(k => k.id);
+  /* fresh: a young carrying the allele that arose in it this generation */
+  const fresh = kids.filter(kid => AL.some(a => a.from && a.from.snake === kid.id)).map(k => k.id);
+  return { lost: { items: lost, yes: lost.length > 0 },
+           recomb: { ids: recomb, yes: recomb.length > 0 },
+           fresh: { ids: fresh, yes: fresh.length > 0 } };
+}
+const WINTER_Q = [
+  { key: "lost",   q: "Did any of your alleles <b>not</b> get passed on?" },
+  { key: "recomb", q: "Did you pass on a recombinant chromosome?" },
+  { key: "fresh",  q: "Do any of your offspring have a new mutation?" },
+];
+function winterEvidence(key, yes) {
+  if (key === "lost") return yes ? "look for the × beside a bead of yours" : "every allele you carry reached at least one young";
+  if (key === "recomb") return yes ? 'look for "mix of your two" beside a young' : "none of your young carry a mix of your two chromosomes";
+  return yes ? "the ringed bead, among your young, is brand new" : "this generation's new allele is in another family";
+}
+/* built fresh in finishWinter; hidden when a season starts and on Skip (JM: only on a card with a mate) */
+function hideWinterQs() { const el = document.getElementById("winterQs"); el.hidden = true; el.innerHTML = ""; }
+function buildWinterQs() {
+  const el = document.getElementById("winterQs"), C = AR.card;
+  if (!C || C.mate == null) { hideWinterQs(); return; }
+  const me = SN.get(C.me), kids = C.kids.map(id => SN.get(id));
+  C.answers = winterAnswers(me, kids);
+  C.reveal = { lost: false, recomb: false, fresh: false };
+  el.innerHTML = WINTER_Q.map(({ key, q }) =>
+    '<div class="wq" data-key="' + key + '"><div class="wq-q">' + q + '</div>' +
+    '<div class="wq-btns"><button data-v="yes">Yes</button><button data-v="no">No</button></div>' +
+    '<div class="wq-fb"></div></div>').join("");
+  el.hidden = false;
+  el.querySelectorAll(".wq").forEach(block => block.querySelectorAll("button").forEach(btn =>
+    btn.addEventListener("click", () => answerWinterQ(block, btn))));
+}
+function answerWinterQ(block, btn) {
+  if (btn.disabled) return;
+  const key = block.dataset.key, said = btn.dataset.v === "yes", yes = AR.card.answers[key].yes, ok = said === yes;
+  block.querySelectorAll("button").forEach(b => { b.disabled = true; if (b === btn) b.classList.add("picked"); });
+  block.querySelector(".wq-fb").innerHTML = (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>') + " — " + winterEvidence(key, yes);
+  AR.card.reveal[key] = true;
+  drawArena();
+}
+
+/* a text helper shared by the winter card and its two plots */
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px -apple-system, sans-serif";
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+
+/* ---- the two small plots under the young, on every card (JM, 2026-10-04: "two small plots displayed
+   below the children: one showing frequency of each starting allele in the population so far and one
+   showing the total number of distinct alleles in the population--both across all loci"). Both measured
+   off ROWS at draw time, generation by generation. ---- */
+function founderAlleles() { const out = []; AL.forEach((a, id) => { if (a.born === 0 && a.col) out.push({ id, locus: a.locus, col: a.col }); }); return out; }
+function alleleFreqSeries(id, locus) {
+  const out = [];
+  for (let t = 0; t <= GEN; t++) {
+    const row = genOf(t); let c = 0;
+    for (const sid of row) { const s = SN.get(sid); if (s.g[0][locus] === id) c++; if (s.g[1][locus] === id) c++; }
+    const f = row.length ? c / (2 * row.length) : 0;
+    out.push(f);
+    if (f === 0) break;      /* lost for good: no back mutation brings it back */
+  }
+  return out;
+}
+function distinctAlleleSeries() {
+  const out = [];
+  for (let t = 0; t <= GEN; t++) {
+    const row = genOf(t); let total = 0;
+    for (let l = 0; l < LOCI; l++) { const seen = new Set(); for (const sid of row) { const s = SN.get(sid); seen.add(s.g[0][l]); seen.add(s.g[1][l]); } total += seen.size; }
+    out.push(total);
+  }
+  return out;
+}
+function plotFrame(ctx, x0, y0, w, h, title, ymin, ymax, xmax, stat, draw) {
+  cardText(ctx, title, x0, y0 + 7, { col: MUTED, size: 12, bold: true });
+  if (stat) cardText(ctx, stat, x0, y0 + 21, { col: MUTED, size: 11 });
+  const ax = x0 + 2, ay = y0 + 32, aw = w - 4, ah = h - 62;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, ay + ah); ctx.lineTo(ax + aw, ay + ah); ctx.stroke();
+  const xs = t => ax + (xmax ? t / xmax : 0) * aw, ys = v => ay + ah - ((v - ymin) / ((ymax - ymin) || 1)) * ah;
+  draw(xs, ys);
+  cardText(ctx, String(ymax), ax - 4, ay + 2, { col: MUTED, size: 10.5, align: "right" });
+  cardText(ctx, String(ymin), ax - 4, ay + ah, { col: MUTED, size: 10.5, align: "right" });
+  cardText(ctx, "0", ax, ay + ah + 11, { col: MUTED, size: 10.5 });
+  cardText(ctx, String(xmax), ax + aw, ay + ah + 11, { col: MUTED, size: 10.5, align: "right" });
+  cardText(ctx, "generation", ax + aw / 2, ay + ah + 23, { col: MUTED, size: 10.5, align: "center" });
+}
+function drawPopPlots(ctx) {
+  const bandH = 140, y0 = WORLD - bandH, pad = 24, gap = 18, pw = (WORLD - 2 * pad - gap) / 2;
+  const xmax = Math.max(GEN, 5);
+  const founders = founderAlleles();
+  plotFrame(ctx, pad, y0, pw, bandH, "each starting allele, frequency", 0, 1, xmax, null, (xs, ys) => {
+    for (const f of founders) {
+      const series = alleleFreqSeries(f.id, f.locus);
+      ctx.strokeStyle = f.col; ctx.lineWidth = 1.6; ctx.beginPath();
+      series.forEach((v, t) => { const px = xs(t), py = ys(v); t ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.stroke();
+    }
+  });
+  const distinct = distinctAlleleSeries(), dmax = Math.max(...distinct);
+  plotFrame(ctx, pad + pw + gap, y0, pw, bandH, "distinct alleles, all genes", 0, dmax, xmax,
+    "start " + distinct[0] + "  now " + distinct[distinct.length - 1], (xs, ys) => {
+      ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath();
+      distinct.forEach((v, t) => { const px = xs(t), py = ys(v); t ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.stroke();
+    });
+}
+
 /* ---- the winter card (JM, 2026-10-02: "a card at the end of each season showing your snake & its
    genes and your snake's random mate & its genes, and your offspring and their genes. The offspring the
    next round starts as should have a glow"). Drawn in the arena's place once a season ends, in world
@@ -605,8 +746,7 @@ function drawWinterCard(ctx) {
   const C = AR.card, me = SN.get(C.me), mate = C.mate != null ? SN.get(C.mate) : null;
   ctx.fillStyle = "#fbfaf6"; ctx.fillRect(0, 0, WORLD, WORLD);
   const origin = new Set(); for (const a of AL) if (a.from) origin.add(a.from.snake + "|" + a.from.side + "|" + a.locus);
-  const text = (t, x, y, o) => { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px -apple-system, sans-serif";
-    ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); };
+  const text = (t, x, y, o) => cardText(ctx, t, x, y, o);
   /* one chromosome: seven beads on a thread */
   const strand = (sn, side, x, y, k) => {
     const rad = 8 * k, pitch = 21 * k;
@@ -639,33 +779,54 @@ function drawWinterCard(ctx) {
     ctx.restore();
   };
   const FATE_SHORT = { hawk: "taken by a hawk", starved: "ate nothing", "no mate": "no mate this winter" };
+  const REL_WORD = { sibling: "your sibling", "1st cousin": "your 1st cousin", "2nd cousin": "your 2nd cousin", distant: "a distant relative" };
   /* top: you and your mate */
   icon(24, 50, true, C.fate === "hawk");
   text("you", 110, 30, { col: HOT, bold: true }); text(C.fate ? FATE_SHORT[C.fate] : "ate " + C.ate, 150, 30, { col: MUTED, size: 13 });
   pairOf(me, [0, 1], 106, 60, 1, false);
+  /* an "x" over or under a bead of yours that reached none of your young (JM, 2026-10-04: question 1) */
+  if (C.reveal && C.reveal.lost) {
+    ctx.save(); ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+    for (const it of C.answers.lost.items) for (const side of it.sides) {
+      const bx = 106 + 21 * (it.locus + 0.5), by = side === 0 ? 60 - 8 - 7 : 60 + 22 + 8 + 7, r = 3.4;
+      ctx.beginPath(); ctx.moveTo(bx - r, by - r); ctx.lineTo(bx + r, by + r); ctx.moveTo(bx + r, by - r); ctx.lineTo(bx - r, by + r); ctx.stroke();
+    }
+    ctx.restore();
+  }
   if (mate) {
     icon(314, 50, false, false);
     text("your mate", 400, 30, { bold: true }); text("ate " + mate.food, 478, 30, { col: MUTED, size: 13 });
     pairOf(mate, [0, 1], 396, 60, 1, false);
+    if (C.rel) text(REL_WORD[C.rel], 400, 104, { size: 12.5 });     /* under its chromosomes: above them it ran into a ringed bead */
   } else text("no mate", 400, 60, { col: MUTED });
   ctx.strokeStyle = "#e2e0d9"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(20, 116); ctx.lineTo(WORLD - 20, 116); ctx.stroke();
-  /* your young, two to a row, each: from you above, from your mate below */
+  /* your young: from you above, from your mate below; two to a row, three once a brood is big, so that
+     a fourteen-snake brood still leaves room for the two plots at the foot of the card (JM, 2026-10-04).
+     The captions sit right under the heading now, to make that room. */
   const kids = C.kids.map(id => SN.get(id));
   text(kids.length ? "your young: " + kids.length : "your young: none", 24, 140, { bold: true });
+  let capY = 156;
+  if (kids.length) { text("Each young: its chromosome from you on top, from your mate below.", 24, capY, { col: MUTED, size: 12.5 }); capY += 15; }
+  text("A ringed bead is a brand-new allele.", 24, capY, { col: MUTED, size: 12.5 });
+  const PLOT_BAND = 140, gridTop = capY + 18, gridBottom = WORLD - PLOT_BAND - 12;
   if (kids.length) {
-    const rows = Math.ceil(kids.length / 2), rowH = Math.min(70, (WORLD - 230) / rows), k = Math.min(1, rowH / 70);
+    const cols = kids.length >= 9 ? 3 : 2, colW = (WORLD - 80) / cols;
+    const rows = Math.ceil(kids.length / cols), rowH = Math.min(70, (gridBottom - gridTop) / rows), k = Math.min(1, rowH / 70);
     kids.forEach((kid, i) => {
-      const x = 40 + (i % 2) * 290, y = 178 + Math.floor(i / 2) * rowH, fromMe = kid.src[0].p === me.id ? 0 : 1;
+      const x = 40 + (i % cols) * colW, y = gridTop + Math.floor(i / cols) * rowH, fromMe = kid.src[0].p === me.id ? 0 : 1;
       pairOf(kid, [fromMe, 1 - fromMe], x, y, k, kid.id === C.next);
-      if (kid.id === C.next) text("you, next season", x + 21 * k * LOCI + 14, y + 11 * k, { col: HOT, bold: true, size: 13 });
+      /* "next season" and a recombinant tag stack below the pair, left-aligned, never beside it --
+         that is how two labels can land on the same young without colliding (JM, 2026-10-04) */
+      let ly = y + 30 * k + 9;
+      if (kid.id === C.next) { text("you, next season", x, ly, { col: HOT, bold: true, size: 10.5 }); ly += 12; }
+      if (C.reveal && C.reveal.recomb && C.answers.recomb.ids.includes(kid.id)) text("mix of your two", x, ly, { col: INK, size: 10.5 });
     });
-    text("Each young: its chromosome from you on top, from your mate below.", 24, WORLD - 44, { col: MUTED, size: 13 });
   } else if (C.next != null && SN.has(C.next)) {
-    text("Next season you play a young snake from another family:", 24, 180, { col: MUTED, size: 14 });
-    pairOf(SN.get(C.next), [0, 1], 40, 216, 1, true);
-    text("you, next season", 40 + 21 * LOCI + 14, 227, { col: HOT, bold: true, size: 13 });
+    text("Next season you play a young snake from another family:", 24, gridTop, { col: MUTED, size: 13.5 });
+    pairOf(SN.get(C.next), [0, 1], 40, gridTop + 36, 1, true);
+    text("you, next season", 40 + 21 * LOCI + 10, gridTop + 47, { col: HOT, bold: true, size: 11.5 });
   }
-  text("A ringed bead is a brand-new allele.", 24, WORLD - 22, { col: MUTED, size: 13 });
+  drawPopPlots(ctx);
 }
 
 /* ---- drawing the arena ---- */
@@ -764,8 +925,8 @@ function drawHud() {
    generation back to the first; down, in blue, every copy passed on from it.
    A snake that left no young is drawn faint once its generation is past.
    ===================================================================== */
-const PD = { rowH: 40, left: 44, top: 12, gap: 18, hover: null, lock: null, lay: null };
-const rowY = ri => PD.top + ri * PD.rowH + (ri >= PRE ? PD.gap : 0);   /* a gap where play starts */
+const PD = { rowH: 40, left: 44, top: 12, hover: null, lock: null, lay: null };
+const rowY = ri => PD.top + ri * PD.rowH;
 const STR_Y = [5, 14];                                                  /* the two strings' centres below a snake's top */
 function pedLayout(W) {
   let most = 1; for (const r of ROWS) if (r) most = Math.max(most, r.length);
@@ -786,6 +947,27 @@ function ancestors(ids) {
   const out = new Set(); let front = [...ids];
   while (front.length) { const nx = []; for (const a of front) for (const p of SN.get(a).parents || []) if (!out.has(p)) { out.add(p); nx.push(p); } front = nx; }
   return out;
+}
+/* a snake's two ancestors exactly `depth` generations back, or [] once the record runs out
+   (generation-0 founders have parents null -- there is nothing before them, JM 2026-10-04) */
+function ancestorsBack(s, depth) {
+  let front = [s.id];
+  for (let d = 0; d < depth; d++) {
+    const nx = []; for (const id of front) { const p = SN.get(id).parents; if (p) nx.push(p[0], p[1]); }
+    front = nx; if (!front.length) return [];
+  }
+  return front;
+}
+/* mate relatedness (JM, 2026-10-04: "the relatedness of the mate (sibling, 1st cousin, 2nd cousin, or
+   distant) should be displayed next to the mate each season"): the nearest generation back in which the
+   two share an ancestor. Every snake breeds once with one mate, so a shared parent always makes full
+   siblings -- there are no half-siblings in this model. */
+function relation(a, b) {
+  for (let d = 1; d <= 3; d++) {
+    const A = new Set(ancestorsBack(a, d));
+    if (ancestorsBack(b, d).some(id => A.has(id))) return d === 1 ? "sibling" : d === 2 ? "1st cousin" : "2nd cousin";
+  }
+  return "distant";
 }
 /* one copy (snake, side) of gene l: the copies it came from, back to the first generation */
 function copyUp(id, side, l) {
@@ -811,20 +993,14 @@ function copyDown(id, side, l) {
 const PLAYED = () => new Set([...YOU.values()].filter(id => id != null));
 function drawPed(scroll) {
   const wrap = document.getElementById("pedwrap"), cv = document.getElementById("ped");
-  const H = PD.top * 2 + ROWS.length * PD.rowH + PD.gap;
+  const H = PD.top * 2 + ROWS.length * PD.rowH;
   cv.dataset.cssW = String(Math.max(200, wrap.clientWidth)); delete cv.dataset.fitW;
   const { ctx, W } = setupCanvas(cv, H);
   ctx.clearRect(0, 0, W, H);
   const L = PD.lay = pedLayout(W);
-  /* generation labels; the line where play starts */
+  /* generation labels */
   ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
-  ROWS.forEach((r, ri) => { const t = ri - PRE; ctx.fillStyle = t === 0 ? INK : MUTED; ctx.fillText(String(t), PD.left - 10, rowY(ri) + L.gh / 2); });
-  const ly = rowY(PRE) - PD.gap / 2 - 5;
-  ctx.strokeStyle = "#d9d5c8"; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(4, ly); ctx.lineTo(W - 4, ly); ctx.stroke(); ctx.setLineDash([]);
-  ctx.textAlign = "right"; ctx.textBaseline = "middle"; ctx.font = "10px -apple-system, sans-serif";
-  const lab = "above, the seasons before you; below, you play";
-  ctx.fillStyle = "#fff"; ctx.fillRect(W - 10 - ctx.measureText(lab).width - 4, ly - 6, ctx.measureText(lab).width + 8, 12);
-  ctx.fillStyle = MUTED; ctx.fillText(lab, W - 10, ly);
+  ROWS.forEach((r, ri) => { ctx.fillStyle = ri === 0 ? INK : MUTED; ctx.fillText(String(ri), PD.left - 10, rowY(ri) + L.gh / 2); });
   const bead = (c, l) => { const Q = L.pos.get(c.id); return { x: Q.x + beadX(L, l), y: Q.y + STR_Y[c.side] }; };
   const seg = (A, B) => { ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y); ctx.stroke(); };
   const played = PLAYED(), kin = new Set([...descendants(played), ...ancestors(played)]);
@@ -866,30 +1042,6 @@ function drawPed(scroll) {
     ctx.restore();
   }
   if (scroll) wrap.scrollTop = wrap.scrollHeight;
-  pedRead();
-}
-const FATE = { hawk: "taken by a hawk", starved: "ate nothing", "no mate": "had no mate" };
-function pedRead() {
-  const el = document.getElementById("pedRead");
-  const h = PD.hover && PD.hover.locus != null ? PD.hover : (PD.lock || PD.hover);
-  if (!h || !SN.has(h.id)) {
-    el.innerHTML = '<span class="label">point at a bead (one gene on one chromosome) to see where that copy came from and where it went; click to keep it.' +
-                   ' Your snakes glow red; the snakes you descend from or that descend from you, pale red. A ringed bead is where a new allele arose.</span>';
-    return;
-  }
-  const sn = SN.get(h.id), played = PLAYED(), you = played.has(sn.id), kin = !you && (descendants(played).has(sn.id) || ancestors(played).has(sn.id));
-  let t = '<span class="label">generation</span> <b>' + sn.gen + '</b>' + (you ? ' <b style="color:' + HOT + '">· you</b>' : kin ? ' <span style="color:' + HOT + '">· your kin</span>' : '') +
-          ' &nbsp;·&nbsp; <span class="label">young</span> <b>' + sn.kids.length + '</b>' + (sn.fate ? ' <span class="label">(' + FATE[sn.fate] + ')</span>' : '');
-  if (h.locus != null) {
-    const a = AL[sn.g[h.side][h.locus]], down = copyDown(h.id, h.side, h.locus);
-    const now = new Set(down.filter(([, b]) => SN.get(b.id).gen === GEN).map(([, b]) => b.id)).size;
-    t += '<br><span class="label">gene ' + (h.locus + 1) + ' of ' + LOCI + ', the copy from its ' + (h.side ? "father" : "mother") + ':</span> <b>' +
-         (a.col ? '<span style="color:' + a.col + '">●</span> arose in generation ' + a.born : "plain grey, there from the start") + '</b>' +
-         '<br><span class="label">red: the copy it came from, generation by generation; blue: the copies passed on from it' +
-         (sn.gen < GEN ? '; in generation ' + GEN + ', ' : '') + '</span>' + (sn.gen < GEN ? '<b>' + now + '</b> <span class="label">of ' + genOf(GEN).length + ' snakes carry it</span>' : '') +
-         (PD.lock && PD.lock.id === h.id && PD.lock.side === h.side && PD.lock.locus === h.locus ? '<span class="label"> · kept: click it again to let go</span>' : '');
-  }
-  el.innerHTML = t;
 }
 function pedHit(e) {
   const cv = document.getElementById("ped"), r = cv.getBoundingClientRect(), L = PD.lay;
@@ -931,7 +1083,7 @@ function wire() {
 found();
 placeGeneration();
 wire(); syncButtons();
-setPhase("Generation 0. Your snake carries one brand-new allele: the ringed bead. Play the season when you are ready.");
+setPhase("Generation 0. Every snake carries one brand-new allele, ringed; yours glows red. Play the season when you are ready.");
 paintAll(true);
 
 Score.init({
