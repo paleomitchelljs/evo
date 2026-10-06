@@ -75,7 +75,13 @@
 // rather than on a box: one cause changing what another does (lesson 14 A,
 // 2026-10-01; JM: "the beak depth arrow should really point to the
 // rainfall->food a bird gets arrow"). The arrow landed on must run between
-// two boxes.
+// two boxes. `ontoAt: 0..1` moves that landing point off the middle (0.5
+// default) along the arrow, so two different onto arrows can land on the
+// same arrow at two different points (lesson 14 D, 2026-10-05: "how common
+// an allele is" and "pathogens" both scale the same host-alleles ->
+// survival arrow). `both: true` draws a head on both ends, for a relation
+// with no direction (lesson 14 C's linkage arrow between two neighbouring
+// genes).
 
 (function (global) {
   "use strict";
@@ -127,12 +133,14 @@
       order.push(b.id);
     });
     const arrows = (opts.arrows || []).map(a => ({
-      id: a.id, from: a.from, to: a.onto ? "@" + a.onto : a.to, onto: a.onto || null, edges: a.edges || null, input: a.input || null,
+      id: a.id, from: a.from, to: a.onto ? pointId(a.onto, a.ontoAt) : a.to, onto: a.onto || null,
+      ontoAt: a.ontoAt != null ? a.ontoAt : null, edges: a.edges || null, input: a.input || null,
       label: a.label || "", fmt: a.fmt || (v => String(v)),
       readonly: !!a.readonly, dark: !!a.dark, ghost: !!a.ghost,
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
       hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null,
-      dragSpan: a.dragSpan || 0, signed: !!a.signed, width: a.width || 0, always: !!a.always
+      dragSpan: a.dragSpan || 0, signed: !!a.signed, width: a.width || 0, always: !!a.always,
+      both: !!a.both
     }));
     const valuesOnSelect = !!opts.valuesOnSelect, lockColours = !!opts.lockColours;
 
@@ -216,14 +224,23 @@
     }
     function isFork(eds) { return eds.length > 1 && eds.every(e => e.from === eds[0].from); }
 
-    // An arrow with `onto` lands on the middle of another arrow: that point is
-    // kept as a box of no size, "@" + its id, refreshed before each drawing.
+    // An arrow with `onto` lands on another arrow, by default at its middle:
+    // that point is kept as a box of no size, keyed by its id and (if given)
+    // its `ontoAt`, so two onto arrows can share a target arrow at two
+    // different points without overwriting each other's point.
+    function pointId(ontoId, at) { return "@" + ontoId + (at != null ? ":" + at : ""); }
+    function quadAt(g, t) {
+      return { x: (1 - t) * (1 - t) * g.p1.x + 2 * (1 - t) * t * g.ctrl.x + t * t * g.p2.x,
+               y: (1 - t) * (1 - t) * g.p1.y + 2 * (1 - t) * t * g.ctrl.y + t * t * g.p2.y };
+    }
     function placeOnto() {
       arrows.forEach(a => {
         if (!a.onto) return;
         const o = arrows.find(x => x.id === a.onto), e = o ? edgesOf(o)[0] : null;
         const g = e && boxes[e.from] && boxes[e.to] ? geom(e.from, e.to, autoBend(o, e.from, e.to), 0) : null;
-        if (g) boxes["@" + a.onto] = { id: "@" + a.onto, x: g.mid.x, y: g.mid.y, w: 0, h: 0, kind: "point", hidden: true };
+        if (!g) return;
+        const t = a.ontoAt != null ? a.ontoAt : 0.5, p = quadAt(g, t), key = pointId(a.onto, a.ontoAt);
+        boxes[key] = { id: key, x: p.x, y: p.y, w: 0, h: 0, kind: "point", hidden: true };
       });
     }
 
@@ -342,7 +359,7 @@
           if (lockColours && !a.readonly && !a.dark && !a.ghost && inp(a) && !inp(a).disabled) cls.push("settable");
           const path = svg("path", { d: g.d, class: cls.join(" "),
                                      "stroke-width": (g.fit < width ? g.fit : width).toFixed(2),
-                                     "marker-end": head });
+                                     "marker-end": head, "marker-start": a.both ? head : null });
           // Under lockColours a held arrow has no hit target, so the drawn
           // curve carries its id for a page (or a check) to read its state.
           if (lockColours) path.setAttribute("data-of", a.id);
@@ -574,11 +591,20 @@
       }
       if (a.readonly) { note.innerHTML = a.hint || "<b>" + a.label + "</b> — this one is not yours to set."; return; }
       const s = spec(a);
+      // A signed arrow runs through zero in both directions, so "bigger" and
+      // "smaller" are not what dragging does: dragging up always raises the
+      // raw value (see wireArrow's move handler), which for a signed arrow
+      // can mean growing less negative -- thinning the line, not thickening
+      // it. Say what actually happens instead (lesson 9's beak-size arrows,
+      // among others, show this note; lesson 14 hides it but the sentence
+      // still has to be true for lessons that do not).
+      const how = a.signed
+        ? "Drag it up to raise the value, down to lower it, or use the &minus; and + on it. The farther from zero, the thicker the line; red means it is below zero."
+        : "Drag it up to make it bigger, down to make it smaller, or use the &minus; and + on it.";
       note.innerHTML = "<b>" + a.label + "</b> is now " + (s ? a.fmt(s.v) : "—")
         // comma, not an em-dash: a dash sitting two words from the &minus;
         // glyph reads as part of the control rather than as punctuation
-        + ". Drag it up to make it bigger, down to make it smaller, or use the &minus; and + on it."
-        + (a.hint ? " " + a.hint : "");
+        + ". " + how + (a.hint ? " " + a.hint : "");
     }
 
     function wireArrow(hit, a) {

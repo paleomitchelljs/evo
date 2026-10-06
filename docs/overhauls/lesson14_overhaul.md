@@ -1,9 +1,45 @@
 # Lesson 14 — the genetics of selection: reading real genetic data with the tools from 1-13
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
-**Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (all four stages; ~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-E built (`version: 8`, `scaffold: 27`: A 5 + record, B 5 + lactase, C 5, D 5, E 5; one bit per attempt); E is a draft (JM asked for one, 2026-10-01); page locked; A and B voice blocks are JM's dictation (2026-10-02), C-E placeholders
-**Last touched** · 2026-10-02 (A and B text dictated; A's survivors breed)
+**Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
+**Status** · A-D built (`version: 9`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 5; one bit per attempt); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
+**Last touched** · 2026-10-05 (JM's review: E, the diagrams, A's targets, the sweep display)
+
+## JM's review, 2026-10-05 — E out?, the diagrams, A's signs, the sweep display
+
+- *"I'm also leaning towards removing part E from lesson 14"*
+- *"review the DAGs in lesson 14. Some of them felt glitchy to me. I also dislike their arrangement—for part B, having two arrows with no mediators felt off. For the piggy backing one, the arrow arrangement is inconsistent for the beneficial & nearby harmful genes."*
+- *"I'd also like the finch example to have more diverse targets (two positive, two negative, one neutral)"*
+- *"I think the format of the sweep part to be brought more in line & simplified to connect nicer with the visualization style used in Lesson 15."*
+
+Seen (headless screenshots, every stage open, one Go each): B's diagram is advantage → new allele ← chance, nothing between; C's new allele (top left) acts through trait → survival, its harmful neighbour (top right) runs one long diagonal straight to survival, so two genes on one chromosome sit at opposite corners and act in different ways; B and C's chromosome panel is a 40 x 100 barcode (dark = rarer allele). A's rounds are +0.30, 0, +0.08, +0.50, −0.18 on the beak arrow: three positive, one neutral, one negative.
+
+Plan:
+- **Glitches first, measured**: drive every diagram headless (drag each settable arrow end to end, deal every round, Go, resize) and list what misbehaves before changing anything.
+- **A**: "beak" round +0.30 → −0.30 (then +0.08, +0.50 positive; −0.30, −0.18 negative; chance 0 neutral); re-measure its readings and every trap with the A check.
+- **B diagram**: give it the skeleton C and D already have: new allele → survival (advantage) ← chance; survival → new allele next generation ← crossovers. Same engine (parents drawn by weight is survival or fecundity alike, as C and D call it).
+- **C diagram**: the two genes drawn as neighbours on one chromosome and acting in the same way (JM to pick the arrangement).
+- **Sweep display (B, C)**: Lesson 15's bead strings: fewer chromosomes, a subset of markers as beads, plain grey for the common allele and a colour for the other, the new allele's bead at the gene; readings still off every marker.
+- **E**: JM to confirm; if out, the stage moves to `app/archive/` whole (a source for the mutation lesson), `scaffold` 27 → 22, version bumped, the E check dropped.
+
+- JM's answers (2026-10-05): E out, *"Remove, archive it"*; C, *"Both through a trait"*: the two genes side by side on one chromosome, each gene → its own trait → survival (new allele → trait ← environment; harmful allele → health), survival → new allele next generation ← crossovers; the harm round's settable arrow is health → survival (the engine's (1 − harm) per copy is that trait).
+
+- JM, later the same day: *"Have a linkage arrow between the beneficial & harmful alleles. Also 'how common an allele is' isn't caused by the allele directly—it's a separate box that modulates the trait/reproduction arrow"*. Read as: C gains a grey linkage arrow between the new allele and the harmful allele (both ways); D loses "host's alleles → how common they are": host's alleles → survival is the arrow, "how common they are" lands on it (grey), and the settable pathogens arrow lands on it too (the engine: survival = 1 − c × how common the host's alleles are, so both scale the allele's effect).
+
+- JM, later still: *"For the selective sweep predict panel—let's scrap the Mb framing, and just have a 'number of alleles' for each locus with the beads shown as a basically a stacked dot plot. That might be easier to interpret as students can see the bars fall."* Asked what is judged: *"Whole profile"* (one reading: how far the run's column heights sit from the observed data's, locus by locus); C *"too, to match"*. A marker is two-allele, so a locus = 4 neighbouring markers and an allele = a distinct 4-marker sequence (25 loci, one per bead; works the same on the real lactase haplotypes, engine unchanged).
+
+| # | What | Status |
+|---|------|--------|
+| R-1 | diagram glitch audit, A-D | done (real pointer events, hit-testing): (1) every diagram's arrows stayed draggable during a Go — `.paths-hit { pointer-events: stroke }` beat the locked panel's `none` (seen: beak 0.00 → 0.56, trait → survival 0.05 → 0.24 mid-run, drawing frozen, snapping back at the end); (2) C's "one copy → trait" (−0.5..1) not signed, so −0.5 drew dashed like zero; (3) the drag note said "up = bigger" for signed arrows. Clean: hit targets (no wrong arrow picked), round deals, `onto` landing, resize. Lesson 13 has bug (1) too (not edited) |
+| R-2 | A: two positive, two negative, one neutral; re-measured | done: "beak" +0.30 → −0.30 (s 0.5 held): slope +0.11636 ± 0.00737, error 0.01492 ± 0.00195 (500 runs, seeds 9001 + 7919 q; the recipe reproduced the old +0.30 numbers exactly first). Now faint +0.08, strong +0.50; beak −0.30, both −0.18; chance 0. Check A: 24 bars pass; no round's answer clears the observed data more than 12% (strong); beak's answer clears both's windows 0.2%, both's clears beak's 0% |
+| R-3 | B diagram with mediators | done: new allele → survival (advantage) ← chance (right); survival → new allele next generation ← crossovers |
+| R-4 | C diagram: the two genes consistent; linkage arrow between them | done: new allele ⟷ a harmful allele beside it (grey, both heads); new allele → trait ← environment, trait → survival; harmful allele → health (grey, "each copy counts") → survival (settable); chance right; crossovers box moved clear of the outcome (they touched) |
+| R-4b | D diagram: how common → (host's alleles → survival); pathogens onto the same arrow | done (`ontoAt` 0.3 / 0.65); chance moved right |
+| R-5 | B/C chromosome panel as Lesson 15 bead strings | done (built on a copy, applied as a patch): 16 of the 40 sampled chromosomes, 25 beads (every 4th marker), grey the commoner allele, Lesson 15's colours for the other, the gene bead purple and ringed on carriers; checks B 22/22, C 14/14 on the copy. To be re-coloured by locus allele with R-8 |
+| R-6 | E removed (JM confirmed) | done: the page as committed (E intact) is `app/archive/lesson14_with_E_2026-10-05.html`; E's section, code, CSS, gate, check part gone; D finishes the lesson; `version` 9, `scaffold` 22 (bits A 0-5, B 6-11, C 12-16, D 17-21); a bypass code decodes 22/22; check D 16 bars pass |
+| R-7 | fixes from R-1; full check green | fixes done: lesson CSS `.controls.pending .paths-hit, .paths-step { pointer-events:none }` + blur in `lockStage`; `h` signed; `renderNote` true for signed arrows (lesson 9 shows that note). `paths.js` gained opt-in `ontoAt` and `both`; lessons 8, 9, 13 and 14 A's diagrams byte-identical before/after. Checks A 24/24, D 16/16. Full check after R-8/R-9 |
+| R-8 | B card: alleles per locus as a stacked dot plot, judged on the whole profile; lactase target in the same terms | todo |
+| R-9 | C card in allele counts to match B | todo |
 
 ## JM's notes, 2026-10-02 — A and B text, A's diagram
 

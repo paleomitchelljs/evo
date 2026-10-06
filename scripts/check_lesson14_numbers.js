@@ -5,9 +5,10 @@
  * Lesson 14 is a draft: A one allele year by year in the real rain (births,
  * deaths, carry-over, meiosis), then one shot at observed data; B what a
  * sweep leaves, then one shot at the real lactase scan; C what slows a sweep;
- * D when the rare allele wins (pathogens and an MHC-like gene); E counting
- * what stuck (dN/dS; a draft). Rebuilt 2026-10-01 from JM's review. What
- * has to hold:
+ * D when the rare allele wins (pathogens and an MHC-like gene), the last
+ * stage (Stage E, a dN/dS draft, was removed 2026-10-05; see
+ * app/archive/lesson14_with_E_2026-10-05.html). Rebuilt 2026-10-01 from JM's
+ * review. What has to hold:
  *
  *   A. (rebuilt 2026-10-01, evening: the headcount is an outcome, the beak
  *      arrow lands on rainfall -> food, chance acts on births and deaths;
@@ -28,11 +29,14 @@
  *      run at its setting near its means, and no round's answer clears it;
  *      Start deals round 1 with the arrows at the opening and the held arrow
  *      pale; the beak size arrow lands on the rainfall -> food arrow.
- *   B. as before (crossovers, assortment, Kimura's losses, the rest of the
- *      genome as chance alone, the stretch and windows by hand), the five
- *      rounds' stored readings and hidden settings, the lactase record is the
- *      1000 Genomes file inside its windows and is not named until shot at,
- *      no setting clears two rounds, the opening clears none, no round's
+ *   B. (2026-10-05: alleles per locus, judged on the whole profile, not Mb)
+ *      crossovers, assortment, Kimura's losses, the shared stretch by hand
+ *      (Stage C still calls it); a locus is 5 markers either side of the
+ *      gene, B_profile ranks its alleles; the five rounds' stored target
+ *      profiles and bars agree with a fresh measurement and their hidden
+ *      settings hit their own windows; the lactase record is the 1000
+ *      Genomes file inside its window and is not named until shot at; no
+ *      setting clears two rounds, the opening clears none, no round's
  *      answer clears the lactase target.
  *   C. selection follows the rain only in the rain round; each round's stored
  *      stretch agrees with a fresh measurement and its setting hits it; each
@@ -45,12 +49,6 @@
  *      the neutral one; each round's stored readings agree and its setting
  *      hits them; no setting clears two rounds; the opening and the cheap
  *      routes miss.
- *   E. silent changes taken over per site per generation average the
- *      mutation rate whatever N and selection do; silent diversity is 4N mu;
- *      a silent change takes over 1 in 2N and takes about 4N generations to;
- *      dN/dS matches Kimura's chance of taking over, averaged over the curve
- *      (computed here); help raises dN/dS and leaves the ratio among changes
- *      still varying nearly where it was; the rounds as in D.
  *   All. every plot fits its panel; every stage has a practice switch that
  *      does not score; each scored attempt records its own bit; the one-shot
  *      targets cannot be practised; nothing prints under a card; a new target
@@ -60,7 +58,7 @@
  * same-origin iframe against the page's own functions; the report comes back
  * in a <pre>, and the runner fails if fewer checks come back than ran.
  *
- * Usage:  node scripts/check_lesson14_numbers.js [A] [B] [C] [D] [E]
+ * Usage:  node scripts/check_lesson14_numbers.js [A] [B] [C] [D]
  *         (no letters: everything, ~15 minutes; run it in the background)
  * Exit 0 iff every bar passes. Needs Google Chrome and python3.
  */
@@ -70,7 +68,7 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = 8795;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const ONLY = process.argv.slice(2).filter(a => /^[ABCDE]$/.test(a));
+const ONLY = process.argv.slice(2).filter(a => /^[ABCD]$/.test(a));
 
 const INNER = `
 JOBS_SYNC = true;   /* a Go and the observed data finish inside the call, as they did before they were sliced */
@@ -83,12 +81,12 @@ const mn = a => a.reduce((x,y)=>x+y,0)/a.length;
 const sdv = a => { const m = mn(a); return Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/Math.max(1,a.length-1)); };
 const unlock = S => { document.getElementById("stage" + S).classList.remove("stage-locked"); Gates[S].open = true; };
 
-check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && C && C.game && C.paths && D && D.game && D.paths && E && E.game && typeof Score !== "undefined"),
-      "Stages A-E, their controls and Score are defined");
+check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && C && C.game && C.paths && D && D.game && D.paths && typeof Score !== "undefined"),
+      "Stages A-D, their controls and Score are defined");
 {
-  const keys = ["A1","A2","A3","A4","A5","A6","B1","B2","B3","B4","B5","B6","C1","C2","C3","C4","C5","D1","D2","D3","D4","D5","E1","E2","E3","E4","E5"];
-  check("one bit per scored attempt: A and B five rounds and a last target each, C, D and E five rounds", Object.keys(BIT).length === 27 && keys.every((k, i) => BIT[k] === i) &&
-        A_ROUNDS.length === 5 && B_ROUNDS.length === 5 && C_ROUNDS.length === 5 && D_ROUNDS.length === 5 && E_ROUNDS.length === 5 && !!A_FINAL && !!B_FINAL,
+  const keys = ["A1","A2","A3","A4","A5","A6","B1","B2","B3","B4","B5","B6","C1","C2","C3","C4","C5","D1","D2","D3","D4","D5"];
+  check("one bit per scored attempt: A and B five rounds and a last target each, C and D five rounds", Object.keys(BIT).length === 22 && keys.every((k, i) => BIT[k] === i) &&
+        A_ROUNDS.length === 5 && B_ROUNDS.length === 5 && C_ROUNDS.length === 5 && D_ROUNDS.length === 5 && !!A_FINAL && !!B_FINAL,
         Object.keys(BIT).join(", "));
 }
 
@@ -255,62 +253,75 @@ unlock("B");
   check("B the losses before a new copy spreads match the chance of spreading", Math.abs(m - wantL) < 3.5 * se,
         "advantage " + adv + ", " + n + " individuals, 60 sweeps: " + m.toFixed(1) + " lost (standard error " + se.toFixed(1) + "); " + wantL.toFixed(1) + " expected");
 }
-{
-  const out = []; let ok = true;
-  for (const [ai, n] of [[6, 150], [2, 400]]) {
-    const R = [], E = [];
-    for (let q = 0; q < 30; q++) { const rng = mulberry32(5000 + q * 17 + n), run = B_run(B_found(n, rng), B_ADV[ai], 0.95, rng, 0); R.push(B_read(run).bg); E.push(Math.pow(1 - 1 / (2 * n), run.t)); }
-    const d = R.map((x, i) => x - E[i]), se = sdv(d) / Math.sqrt(d.length);
-    ok = ok && Math.abs(mn(d)) < 3.5 * se;
-    out.push(B_ADV[ai] + ", " + n + ": " + mn(R).toFixed(3) + " vs (1 - 1/2N)^t " + mn(E).toFixed(3));
-  }
-  check("B the rest of the genome loses diversity as chance alone would", ok, out.join("; "));
-}
+/* bg (the unlinked-markers' diversity share) and the by-position windows are
+   retired (JM, 2026-10-05: one profile reading, "whole profile", not two);
+   B_stretch/B_mb stay -- Stage C still calls them directly -- so test
+   B_stretch by hand on its own. */
 {
   const K = 3, ch = new Uint32Array(K * B_WD), set = (k, m) => { ch[k * B_WD + (m >> 5)] |= 1 << (m & 31); };
   set(0, B_SITE); set(1, B_SITE); set(0, B_SITE + 7); set(1, B_SITE - 12);
-  const st = B_stretch(ch, K, 1, mulberry32(1), 10), w = B_windows(Array.from({ length: B_M }, (_, m) => m));
-  check("B the shared stretch and the windows by hand", st === 17 && w.length === 21 && w[10] === 50 && w[0] === 1 && w[20] === 99, "stretch " + st + " (17), windows " + w.length);
+  const st = B_stretch(ch, K, 1, mulberry32(1), 10);
+  check("B the shared stretch, by hand (Stage C still calls it directly)", st === 17, "stretch " + st + " (want 17)");
 }
-const B_avg = (ai, v, stop, seed) => { const rng = mulberry32(seed); let bg = 0, st = 0;
-  for (let j = 0; j < 3; j++) { const q = B_read(B_run(B_found(B_nAt(v), rng), B_ADV[ai], stop, rng, 0)); bg += q.bg; st += q.st; }
-  return { bg: bg / 3, st: st / 3 }; };
 {
-  const S = 24, rows = [], hits = []; let agree = true;
+  /* B_LOCI: 21 columns, 5-marker flanking loci either side, the gene alone
+     in the middle; B_profile ranks each locus's alleles among the rows
+     passed in, commonest (rank 0, drawn grey) first */
+  const okShape = B_LOCI.length === 21 && B_GENE_COL === 10 &&
+        B_LOCI[0].join(",") === "0,1,2,3,4" && B_LOCI[9].join(",") === "45,46,47,48,49" &&
+        B_LOCI[10].join(",") === String(B_SITE) &&
+        B_LOCI[11].join(",") === "51,52,53,54,55" && B_LOCI[20].join(",") === "96,97,98,99,100";
+  const mkRow = bits => { const r = new Uint8Array(B_M); for (const [m, v] of bits) r[m] = v; return r; };
+  const rows = [mkRow([[0, 1], [1, 1]]), mkRow([[0, 1], [1, 1]]), mkRow([]), mkRow([[0, 1]])];
+  const prof = B_profile(rows), keys0 = rows.map(r => B_locusKey(r, B_LOCI[0]));
+  const okProf = prof.counts[0] === 3 && prof.ranks[0].get(keys0[0]) === 0 && prof.ranks[0].get(keys0[2]) === 1 && prof.ranks[0].get(keys0[3]) === 2;
+  check("B a locus is 5 neighbouring markers, one at the gene; B_profile ranks its alleles, commonest first", okShape && okProf,
+        "columns " + B_LOCI.length + ", gene at " + B_GENE_COL + "; 4 hand-built chromosomes, locus 0: " + prof.counts[0] + " alleles, ranks " + keys0.map(k => prof.ranks[0].get(k)).join(","));
+}
+/* the three-population average profile at a setting, and the share of reps
+   whose profile difference from a round's target clears its bar */
+const B_avgLoc = (ai, v, stop, seed) => { const rng = mulberry32(seed);
+  const qs = []; for (let j = 0; j < 3; j++) { const run = B_run(B_found(B_nAt(v), rng), B_ADV[ai], stop, rng, 0); qs.push(B_read(run, B_rows(run.ch, 2 * run.n, rng))); }
+  return B_LOCI.map((_, c) => qs.reduce((s, q) => s + q.loc[c], 0) / 3); };
+const B_rateLoc = (r, ai, v, stop, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (B_judge(r, { loc: B_avgLoc(ai, v, stop, seed + q * 7919) })) k++; return k / reps; };
+{
+  const S = 30, rows = [], hits = []; let agree = true;
   for (const r of B_ROUNDS.concat([B_FINAL])) {
-    const Q = []; for (let q = 0; q < S; q++) Q.push(B_avg(r.ai, r.v, r.stop, 7000 + q * 7919));
-    const bm = mn(Q.map(q => q.bg)), bs = sdv(Q.map(q => q.bg)), sm = mn(Q.map(q => q.st)), ss = sdv(Q.map(q => q.st));
-    const ok = Math.abs(bm - r.bg[0]) < 0.6 * r.bg[1] && Math.abs(sm - r.st[0]) < 0.6 * r.st[1] && Math.abs(bs / r.bg[1] - 1) < 0.45 && Math.abs(ss / r.st[1] - 1) < 0.45;
-    agree = agree && ok; r._rate = Q.filter(q => B_judge(r, q)).length / S;
-    rows.push(r.key + " rest " + bm.toFixed(3) + "±" + bs.toFixed(3) + " [" + r.bg.map(x => x.toFixed(3)).join("±") + "], stretch " + sm.toFixed(2) + "±" + ss.toFixed(2) + " [" + r.st.map(x => x.toFixed(2)).join("±") + "]" + (ok ? "" : " OFF"));
+    const Q = []; for (let q = 0; q < S; q++) Q.push(B_avgLoc(r.ai, r.v, r.stop, 7000 + q * 7919));
+    const freshMean = B_LOCI.map((_, c) => mn(Q.map(p => p[c])));
+    const agreeD = B_profDist(freshMean, r.loc), dists = Q.map(p => B_profDist(p, r.loc));
+    /* the stored target is itself a mean over many Go's, so a fresh mean of S should land much
+       closer to it than a single Go's own spread (r.bar, a high percentile of that spread) does */
+    const ok = agreeD < 0.4 * r.bar;
+    agree = agree && ok; r._rate = dists.filter(d => d <= r.bar).length / S;
+    rows.push(r.key + " target-vs-fresh-mean " + agreeD.toFixed(3) + " (bar " + r.bar.toFixed(2) + ")" + (ok ? "" : " OFF"));
     hits.push(r.key + " " + r._rate.toFixed(2));
   }
-  check("B every target's stored readings (averages of three populations) agree with a fresh measurement", agree, S + " each: " + rows.join("; "));
-  check("B every target's hidden setting hits its own windows", B_ROUNDS.concat([B_FINAL]).every(r => r._rate >= 0.8), hits.join(", "));
+  check("B every target's stored profile (the mean at the hidden setting) agrees with a fresh measurement", agree, S + " three-population averages each: " + rows.join("; "));
+  check("B every target's hidden setting hits its own window", B_ROUNDS.concat([B_FINAL]).every(r => r._rate >= 0.8), hits.join(", "));
 }
 {
-  const w = B_win(B_FINAL);
-  const ok = !!B_REAL && B_REAL.real && Math.abs(B_REAL.stop - 0.737) < 0.001 && B_REAL.win.length === 21 && B_judge(B_FINAL, B_REAL);
-  check("B the lactase record is the 1000 Genomes file, inside its windows", ok,
-        B_REAL ? "T at " + B_REAL.stop.toFixed(3) + "; rest " + B_REAL.bg.toFixed(3) + " (" + w.bg.map(x => x.toFixed(2)).join("-") + "); carriers " + B_REAL.st.toFixed(2) + " Mb (" + w.st.map(x => x.toFixed(2)).join("-") + "), non-carriers " + B_REAL.stC.toFixed(2) + " Mb" : "not loaded");
+  const ok = !!B_REAL && B_REAL.real && Math.abs(B_REAL.stop - 0.737) < 0.001 && B_REAL.loc.length === 21 && B_judge(B_FINAL, B_REAL);
+  check("B the lactase record is the 1000 Genomes file, inside its window", ok,
+        B_REAL ? "T at " + B_REAL.stop.toFixed(3) + "; profile difference from the target " + B_profDist(B_REAL.loc, B_FINAL.loc).toFixed(2) + " (bar " + B_FINAL.bar.toFixed(2) + ")" : "not loaded");
   const out = []; let near = true;
-  for (const r of B_ROUNDS) { const q = B_record(r); const z = Math.max(Math.abs(q.bg - r.bg[0]) / r.bg[1], Math.abs(q.st - r.st[0]) / r.st[1]);
+  for (const r of B_ROUNDS) { const q = B_record(r); const z = B_profDist(q.loc, r.loc) / r.bar;
     near = near && z < 1 && B_judge(r, q); out.push(r.key + " " + z.toFixed(2)); }
-  check("B each made record sits within one spread of its setting's means, inside its windows", near, out.join(", "));
+  check("B each made record sits within its setting's window", near, out.join(", "));
 }
 {
   let most = 0; const multi = [];
   const stops = [...new Set(B_ROUNDS.map(r => r.stop))];
   for (let ai = 0; ai < B_ADV.length; ai++) for (let v = 0; v <= 100; v += 20) {
-    const by = {}; for (const stop of stops) { by[stop] = []; for (let q = 0; q < 6; q++) by[stop].push(B_avg(ai, v, stop, 333 + q * 104729)); }
-    const rates = B_ROUNDS.map(r => by[r.stop].filter(q => B_judge(r, q)).length / 6), c = rates.filter(x => x >= 0.5).length;
+    const by = {}; for (const stop of stops) { by[stop] = []; for (let q = 0; q < 6; q++) by[stop].push(B_avgLoc(ai, v, stop, 333 + q * 104729)); }
+    const rates = B_ROUNDS.map(r => by[r.stop].filter(loc => B_judge(r, { loc })).length / 6), c = rates.filter(x => x >= 0.5).length;
     most = Math.max(most, c); if (c >= 2) multi.push(B_ADV[ai] + ", " + B_nAt(v) + ": " + rates.map(x => x.toFixed(2)).join(" "));
   }
   check("B no setting on a grid of the controls clears two rounds", most <= 1, "60 settings x 6 Go's: most " + most + (multi.length ? " -- " + multi.join("; ") : ""));
   const all = B_ROUNDS.concat([B_FINAL]);
-  const op = all.map(r => { let k = 0; for (let q = 0; q < 10; q++) if (B_judge(r, B_avg(B_OPEN.ai, B_OPEN.v, r.stop, 4444 + q * 7919))) k++; return k / 10; });
+  const op = all.map(r => B_rateLoc(r, B_OPEN.ai, B_OPEN.v, r.stop, 10, 4444));
   check("B the opening clears no target", op.every(x => x < 0.2), all.map((r, i) => r.key + " " + op[i].toFixed(2)).join(", "));
-  const fin = B_ROUNDS.map(r => { let k = 0; for (let q = 0; q < 8; q++) if (B_judge(B_FINAL, B_avg(r.ai, r.v, B_FINAL.stop, 5555 + q * 7919))) k++; return [r.key, k / 8]; });
+  const fin = B_ROUNDS.map(r => [r.key, B_rateLoc(B_FINAL, r.ai, r.v, B_FINAL.stop, 8, 5555)]);
   check("B no round's answer clears the lactase target", fin.every(x => x[1] < 0.3), fin.map(x => x[0] + "'s answer " + x[1].toFixed(2)).join(", "));
 }
 }
@@ -446,100 +457,6 @@ const D_rateAt = (r, c, v, n, seed) => { let k = 0; for (let q = 0; q < n; q++) 
 }
 }
 
-/* ======================================================================= E */
-if (want("E")) {
-unlock("E");
-const E_at = o => E_setOf(Object.assign({}, E_OPEN, o));
-const E_rateAt = (r, o, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if (E_judge(r, E_run(E_at(o), mulberry32(seed + q * 7919)).q)) k++; return k / n; };
-const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k !== r.free) h[k] = E_HELD[k]; return h; };
-{
-  const before = E.game.free() && E.game.current() == null;
-  E.lh = 0; E.help = 0.08; E.v = 3;
-  document.getElementById("E_tnext").click();
-  const r0 = E.game.current();
-  check("E opens on free play; Start deals the first round: its free part at the opening, the rest held", before && r0 === E_ROUNDS[0] &&
-        E.lh === E_OPEN.lh && E.v === E_OPEN.v && E.si === E_HELD.si && E.help === E_HELD.help && E_heldNow().join() === "si,help",
-        "round " + (r0 || {}).key + ": harm 10^" + E.lh + ", spread " + E_SHAPES[E.si] + ", help " + E.help + ", " + E_nAt(E.v) + " individuals; held " + E_heldNow().join(", "));
-}
-{
-  /* the clock: silent changes taken over per site per generation, whatever N and selection */
-  const sets = [{ v: 90, lh: -2 }, { v: 46, lh: -1, si: 2 }, { v: 16, help: 0.05 }, { v: 70, lh: -3 }];
-  const cl = [], out = [];
-  for (const o of sets) for (let q = 0; q < 3; q++) { const run = E_run(E_at(o), mulberry32(100 + q * 7919 + o.v)); cl.push(run.q.clock); if (!q) out.push(E_nAt(o.v) + ": " + (run.q.clock * 1e5).toFixed(2)); }
-  const se = sdv(cl) / Math.sqrt(cl.length);
-  check("E silent changes taken over, per site per generation, average the mutation rate whatever N and selection do", Math.abs(mn(cl) - E_MU) < 3.5 * se,
-        "12 runs over four settings: " + (mn(cl) * 1e5).toFixed(3) + " x 10^-5 (standard error " + (se * 1e5).toFixed(3) + "); mu 1 x 10^-5; e.g. " + out.join(", "));
-}
-{
-  /* silent diversity is 4N mu; a silent change takes over 1 in 2N, in about 4N generations */
-  const out = []; let okP = true, okF = true, okT = true;
-  for (const v of [80, 46, 16]) {
-    const n = E_nAt(v), P = [], A = [], T = [], D = [];
-    for (let q = 0; q < 4; q++) { const run = E_run(E_at({ v, lh: -1 }), mulberry32(300 + q * 7919 + v)); P.push(run.q.pi); A.push(run.arose.s); T.push(run.took.s); D.push(run.dur.s); }
-    const pi = mn(P), want4 = 4 * n * E_MU * 1000, fr = mn(T) / mn(A), dur = mn(D);
-    okP = okP && Math.abs(pi / want4 - 1) < 0.1; okF = okF && Math.abs(fr * 2 * n - 1) < 0.12; okT = okT && Math.abs(dur / (4 * n) - 1) < 0.12;
-    out.push(n + " individuals: diversity " + pi.toFixed(2) + " vs 4N mu " + want4.toFixed(2) + "; 1 in " + Math.round(1 / fr) + " vs 1 in " + 2 * n + "; " + Math.round(dur) + " generations vs 4N " + 4 * n);
-  }
-  check("E silent diversity is 4N mu per site", okP, out.map(x => x.split(";")[0]).join(" | "));
-  check("E a silent change takes over 1 in 2N, and takes about 4N generations to", okF && okT, out.map(x => x.split(";").slice(1).join(";")).join(" | "));
-}
-{
-  /* dN/dS against Kimura: 2N u(s) averaged over the curve, u = (1 - e^s) / (1 - e^(2Ns)) for fitness 1, 1 - s/2, 1 - s */
-  const kim = o => { const n = o.n, rng = mulberry32(5), M = 40000; let t = 0;
-    for (let i = 0; i < M; i++) { const s = rng() < o.help ? -E_SB : Math.min(1, E_gamma(o.shape, rng) * o.harm / o.shape);
-      t += Math.abs(s) < 1e-9 ? 1 : 2 * n * (1 - Math.exp(s)) / (1 - Math.exp(2 * n * s)); }
-    return t / M; };
-  const out = []; let ok = true;
-  for (const st of [{ v: 80, lh: -2 }, { v: 46, lh: -2 }, { v: 16, lh: -1 }, { v: 16, lh: -1, si: 2 }, { v: 16, lh: -1, help: 0.03 }]) {
-    const o = E_at(st), D = []; for (let q = 0; q < 4; q++) D.push(E_run(o, mulberry32(500 + q * 7919 + st.v)).q.dnds);
-    const m = mn(D), k = kim(o), se = sdv(D) / 2;
-    ok = ok && Math.abs(m - k) < Math.max(3.5 * se, 0.08 * k);
-    out.push(o.n + ", harm " + o.harm + ", spread " + o.shape + ", help " + o.help + ": " + m.toFixed(3) + " vs " + k.toFixed(3));
-  }
-  check("E dN/dS matches Kimura's chance of taking over, averaged over the curve", ok, out.join(" | "));
-}
-{
-  /* help goes through as sweeps: dN/dS rises, the ratio among changes still varying barely moves */
-  const R0 = [], R1 = [];
-  for (let q = 0; q < 4; q++) { R0.push(E_run(E_at({ v: 16, lh: -1 }), mulberry32(700 + q * 7919)).q); R1.push(E_run(E_at({ v: 16, lh: -1, help: 0.05 }), mulberry32(700 + q * 7919)).q); }
-  const d0 = mn(R0.map(q => q.dnds)), d1 = mn(R1.map(q => q.dnds)), p0 = mn(R0.map(q => q.pnps)), p1 = mn(R1.map(q => q.pnps));
-  check("E help raises dN/dS and leaves the ratio among changes still varying nearly where it was", d1 > 3 * d0 && p1 / p0 < 1.5,
-        E_nAt(16) + " individuals, help 0 -> 5%: dN/dS " + d0.toFixed(3) + " -> " + d1.toFixed(3) + "; still varying " + p0.toFixed(3) + " -> " + p1.toFixed(3));
-}
-{
-  const S = 16, rows = [], hits = []; let agree = true;
-  for (const r of E_ROUNDS) {
-    const Q = []; for (let q = 0; q < S; q++) Q.push(E_run(E_truth(r), mulberry32(9000 + q * 7919)).q);
-    const dm = mn(Q.map(q => q.dnds)), ds = sdv(Q.map(q => q.dnds)), pm = mn(Q.map(q => q.pi)), ps = sdv(Q.map(q => q.pi));
-    /* a mean of 16 wobbles 0.25 sd; an sd of 16, about 18% */
-    const ok = Math.abs(dm - r.dnds[0]) < 0.7 * r.dnds[1] && Math.abs(pm - r.pi[0]) < 0.7 * r.pi[1] && Math.abs(ds / r.dnds[1] - 1) < 0.5 && Math.abs(ps / r.pi[1] - 1) < 0.5;
-    agree = agree && ok; r._rate = Q.filter(q => E_judge(r, q)).length / S;
-    rows.push(r.key + " dN/dS " + dm.toFixed(3) + "±" + ds.toFixed(3) + " [" + r.dnds.join("±") + "], diversity " + pm.toFixed(2) + "±" + ps.toFixed(2) + " [" + r.pi.join("±") + "]" + (ok ? "" : " OFF"));
-    hits.push(r.key + " " + r._rate.toFixed(2));
-  }
-  check("E every round's stored readings (ten genes a run) agree with a fresh measurement", agree, S + " each: " + rows.join("; "));
-  check("E every round's hidden setting hits its own window", E_ROUNDS.every(r => r._rate >= 0.75), hits.join(", "));
-}
-{
-  const op = E_ROUNDS.map(r => E_rateAt(r, E_OPEN, 6, 77));
-  check("E the opening clears no round", op.every(x => x < 0.2), E_ROUNDS.map((r, i) => r.key + " " + op[i].toFixed(2)).join(", "));
-  const half = E_ROUNDS.map(r => [r.key, E_rateAt(r, Object.assign({}, heldFor(r), { [r.free]: r.set[r.free] }), 4, 78), E_rateAt(r, Object.assign({}, heldFor(r), { v: r.set.v }), 4, 79)]);
-  check("E the right curve at the opening's headcount, or the right headcount with the curve at the opening, misses", half.every(x => x[1] < 0.3 && x[2] < 0.3),
-        half.map(x => x[0] + " " + x[1].toFixed(2) + " / " + x[2].toFixed(2)).join(", "));
-  const grids = { lh: [-4, -3, -2, -1, 0], si: [0, 2, 4], help: [0, 0.025, 0.05, 0.1] };
-  const seen = new Map();
-  for (const r of E_ROUNDS) for (const x of grids[r.free]) for (let v = 0; v <= 100; v += 20) { const o = Object.assign({}, heldFor(r), { v, [r.free]: x }); seen.set(JSON.stringify(o), o); }
-  const reach = (r, o) => Object.entries(heldFor(r)).every(([k, v]) => o[k] === v);
-  let most = 0; const multi = [];
-  for (const o of seen.values()) {
-    const Q = []; for (let q = 0; q < 3; q++) Q.push(E_run(E_at(o), mulberry32(4242 + q * 104729)).q);
-    const rates = E_ROUNDS.map(r => reach(r, o) ? Q.filter(q => E_judge(r, q)).length / 3 : 0), c = rates.filter(x => x >= 0.5).length;
-    most = Math.max(most, c); if (c >= 2) multi.push(JSON.stringify(o) + ": " + rates.map(x => x.toFixed(2)).join(" "));
-  }
-  check("E no setting a round can reach clears two rounds", most <= 1, seen.size + " settings x 3 runs: most " + most + (multi.length ? " -- " + multi.join("; ") : ""));
-}
-}
-
 /* ===================================================================== all */
 {
   const over = () => { const out = [];
@@ -551,7 +468,7 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
       if (o > 0.5) out.push((cv.id || "card") + " +" + Math.round(o));
     });
     return out; };
-  ["A", "B", "C", "D", "E"].forEach(unlock);
+  ["A", "B", "C", "D"].forEach(unlock);
   const fe = window.frameElement, w0 = fe ? fe.width : null, res = [];
   for (const w of [w0, 1100, 900]) {
     if (fe && w) { fe.width = w; void document.body.offsetWidth; FIT_EPOCH++; repaintAll(); }
@@ -567,9 +484,9 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
   const read = id => document.getElementById(id).textContent;
-  const ST = { A, B, C, D, E }, res = {};
+  const ST = { A, B, C, D }, res = {};
   try {
-    for (const S of ["A", "B", "C", "D", "E"].filter(want)) {
+    for (const S of ["A", "B", "C", "D"].filter(want)) {
       unlock(S);
       const g = ST[S].game, box = document.getElementById(S + "_practice"), btn = document.getElementById(S + "_run");
       if (g.free()) document.getElementById(S + "_tnext").click();
@@ -587,7 +504,7 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
       res[S] = { bit, cardText, line: (pracOk && scored && blocked && stillPrac ? "OK " : "BAD ") + "practice " + (pracOk ? "unscored" : "SCORED") + ", ticked off " + (scored ? "scored" : "NOT scored") +
                  ", waiting " + (blocked ? "Go off" : "GO ON") + (stillPrac ? " but practice runs" : ", practice BLOCKED") };
     }
-    for (const S of ["A", "B", "C", "D", "E"].filter(want)) {
+    for (const S of ["A", "B", "C", "D"].filter(want)) {
       check(S + " has a practice switch that does not score", /^OK /.test(res[S].line), res[S].line);
       check(S + " each scored attempt records its own bit, as the page judged it", / ok$/.test(res[S].bit), res[S].bit);
       check(S + " nothing is printed under the card", res[S].cardText.trim() === "", "'" + res[S].cardText + "'");
@@ -605,9 +522,6 @@ const heldFor = r => { const h = {}; for (const k of ["lh", "si", "help"]) if (k
             "round " + r.key + ": " + C_KEYS.map(k => k + " " + C[k]).join(", ") + "; rain arrow drawn " + rainShown); }
     if (want("D")) { D.c = 1.4; D.v = 0; document.getElementById("D_tnext").click(); const r = D.game.current();
       check("D a new target puts both arrows back where they opened", D.c === D_OPEN.c && D.v === D_OPEN.v, "round " + r.key); }
-    if (want("E")) { E.lh = 0; E.si = 4; E.help = 0.1; E.v = 0; document.getElementById("E_tnext").click(); const r = E.game.current();
-      const ok = E.v === E_OPEN.v && ["lh", "si", "help"].every(k => E[k] === (k === r.free ? E_OPEN[k] : E_HELD[k]));
-      check("E a new target frees its part of the curve at the opening and holds the rest", ok, "round " + r.key + ": harm 10^" + E.lh + ", spread " + E_SHAPES[E.si] + ", help " + E.help + ", chance " + E.v); }
     /* the one-shot targets: play out the rounds, then the observed data can be shot once and not practised */
     for (const S of ["A", "B"].filter(want)) {
       const st = ST[S], g = st.game, btn = document.getElementById(S + "_run"), nx = document.getElementById(S + "_tnext"), box = document.getElementById(S + "_practice");
