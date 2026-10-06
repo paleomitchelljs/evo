@@ -5,7 +5,7 @@
  * Lesson 14 is a draft: A one allele year by year in the real rain (births,
  * deaths, carry-over, meiosis), then one shot at observed data; B what a
  * sweep leaves, then one shot at the real lactase scan; C what slows a sweep;
- * D when the rare allele wins (pathogens and an MHC-like gene), the last
+ * D rock, paper, scissors in lizards (rebuilt 2026-10-05 with C), the last
  * stage (Stage E, a dN/dS draft, was removed 2026-10-05; see
  * app/archive/lesson14_with_E_2026-10-05.html). Rebuilt 2026-10-01 from JM's
  * review. What has to hold:
@@ -38,20 +38,21 @@
  *      Genomes file inside its window and is not named until shot at; no
  *      setting clears two rounds, the opening clears none, no round's
  *      answer clears the lactase target.
- *   C. selection follows the rain only in the rain round; each round's stored
- *      stretch agrees with a fresh measurement and its setting hits it; each
- *      free arrow at the opening and at both ends of its range misses (the
- *      window is two-sided); each slower slows the sweep and narrows the
- *      stretch; the rain box shows only where the rain matters.
- *   D. new alleles arrive at the stated rate; the neutral gene loses alleles
- *      as drift and mutation say it should (the recursion is computed here,
- *      not stored); the pathogens add alleles at the immune gene and not at
- *      the neutral one; each round's stored readings agree and its setting
- *      hits them; no setting clears two rounds; the opening and the cheap
- *      routes miss.
+ *   C. (rebuilt 2026-10-05, evening: two genes, two traits) the loci part in
+ *      ind / 2 of gametes; pleiotropy that exactly cancels goes nowhere;
+ *      Locus 2's epistatic allele does nothing without Locus 1's; each round's
+ *      stored data (average course) agrees with a fresh measurement; each
+ *      round lands at its setting and a step beside it, never at the opening
+ *      or either end of its free arrow (windows on the idea, JM 2026-10-05).
+ *   D. (rebuilt 2026-10-05, evening: side-blotched lizards) throats from the
+ *      three alleles; with no game the colours only drift; orange beating
+ *      blue harder leaves orange where it was and moves blue and yellow; each
+ *      target's window sits on a fresh measurement; each lands across the
+ *      idea's range and not at the opening, the other way or the far ends;
+ *      no round's setting lands another.
  *   All. every plot fits its panel; every stage has a practice switch that
  *      does not score; each scored attempt records its own bit; the one-shot
- *      targets cannot be practised; nothing prints under a card; a new target
+ *      targets (A, B, D) cannot be practised; nothing prints under a card; a new target
  *      puts the free arrows back where they opened.
  *
  * Same harness as check_lesson13_numbers.js: the checks run inside a
@@ -85,8 +86,8 @@ check("page loaded", !!(A && A.game && A.paths && B && B.game && B.paths && C &&
       "Stages A-D, their controls and Score are defined");
 {
   const keys = ["A1","A2","A3","A4","A5","A6","B1","B2","B3","B4","B5","B6","C1","C2","C3","C4","C5","D1","D2","D3","D4","D5"];
-  check("one bit per scored attempt: A and B five rounds and a last target each, C and D five rounds", Object.keys(BIT).length === 22 && keys.every((k, i) => BIT[k] === i) &&
-        A_ROUNDS.length === 5 && B_ROUNDS.length === 5 && C_ROUNDS.length === 5 && D_ROUNDS.length === 5 && !!A_FINAL && !!B_FINAL,
+  check("one bit per scored attempt: A and B five rounds and a last target each, C five rounds, D four and a last target", Object.keys(BIT).length === 22 && keys.every((k, i) => BIT[k] === i) &&
+        A_ROUNDS.length === 5 && B_ROUNDS.length === 5 && C_ROUNDS.length === 5 && D_ROUNDS.length === 4 && !!A_FINAL && !!B_FINAL && !!D_FINAL,
         Object.keys(BIT).join(", "));
 }
 
@@ -329,131 +330,156 @@ const B_rateLoc = (r, ai, v, stop, reps, seed) => { let k = 0; for (let q = 0; q
 /* ======================================================================= C */
 if (want("C")) {
 unlock("C");
-const C_avgOf = (o, seed) => C_three(o, mulberry32(seed), 0).q;
-const C_rateAt = (r, o, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if (C_judge(r, C_avgOf(o, seed + q * 7919))) k++; return k / n; };
+const C_rate = (r, vals, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if (C_judge(r, C_three(C_par(vals, r.start), mulberry32(seed + q * 104729)).q)) k++; return k / n; };
+const C_STEP_OF = { ii: 1, a12: 0.05, e: 0.05 };
+const C_at = (r, d) => { const v = C_setOf(r); v[r.free] = r.free === "ii" ? v.ii + d : +(v[r.free] + d * C_STEP_OF[r.free]).toFixed(2); return v; };
 {
   const before = C.game.free() && C.game.current() == null;
-  C.beta = 0.33; C.h = 0.1;
+  C.ii = 2; C.a12 = 0.4; C.e = -0.3;
   document.getElementById("C_tnext").click();
   const r0 = C.game.current(), cls = id => (document.querySelector('#pathsC [data-of="' + id + '"]') || { getAttribute: () => "" }).getAttribute("class");
+  const held = C_setOf(r0), okV = C_KEYS.every(k => C[k] === (k === r0.free ? C_HELD[k] : held[k]));
   check("C opens on free play; Start deals the first round: its free arrow at the opening, the rest held and pale",
-        before && r0 === C_ROUNDS[0] && C.beta === C_OPEN.beta && C.h === C_HELD.h && /settable/.test(cls("beta")) && /locked/.test(cls("h")) && /locked/.test(cls("se")),
-        "round " + (r0 || {}).key + ", selection " + C.beta + ", one copy " + C.h + "; trait -> survival '" + cls("beta") + "', one copy -> trait '" + cls("h") + "'");
+        before && r0 === C_ROUNDS[0] && okV && /settable/.test(cls("ii")) && /locked/.test(cls("a11")) && /locked/.test(cls("e")),
+        "round " + (r0 || {}).key + ", " + C_KEYS.map(k => k + " " + C[k]).join(", ") + "; independence '" + cls("ii") + "', Locus 1 -> Trait 1 '" + cls("a11") + "'");
 }
 {
-  const o = { beta: 0.2, wet: 0.1, rain: true }, okR = A_DRY.every((D, t) => Math.abs(C_selAt(o, t) - (D > 0 ? 0.2 * D : 0.1 * D)) < 1e-15);
-  const okC = [0, 7, 23].every(t => C_selAt({ beta: 0.2, wet: 0.1, rain: false }, t) === 0.2);
-  check("C selection follows the rain only in the rain round: dry years by its strength x dryness, wet ones the other way", okR && okC,
-        "rain regime matches beta x dryness / wet x dryness every year: " + okR + "; constant otherwise: " + okC);
-}
-{
-  const S = 24, rows = [], hits = []; let agree = true;
-  for (const r of C_ROUNDS) {
-    const Q = []; for (let q = 0; q < S; q++) Q.push(C_avgOf(C_setOf(r), 7000 + q * 7919));
-    const st = Q.filter(q => q.ok).map(q => q.st), m = mn(st), s = sdv(st);
-    /* a mean of 24 wobbles 0.2 sd; an sd of 24, about 15% */
-    const ok = st.length === S && Math.abs(m - r.st[0]) < 0.6 * r.st[1] && Math.abs(s / r.st[1] - 1) < 0.45;
-    agree = agree && ok; r._rate = Q.filter(q => C_judge(r, q)).length / S;
-    rows.push(r.key + " " + m.toFixed(3) + "±" + s.toFixed(3) + " Mb [" + r.st.join("±") + "], " + mn(Q.map(q => q.t)).toFixed(0) + " generations" + (ok ? "" : " OFF"));
-    hits.push(r.key + " " + r._rate.toFixed(2));
+  /* the loci part in ind / 2 of gametes: with every chromosome carrying both new alleles or neither (half and half)
+     and no selection, the association D = p11 - p1 p2 falls by the share of gametes that part */
+  const out = []; let ok = true;
+  for (const ii of [3, 6, 8, 9]) {
+    const ind = C_IND[ii], o = { N: 2000, ind, a11: 0, a12: 0, a21: 0, a22: 0, e: 0, b1: 0, b2: 0, q1: 0.5, q2: 0.5, link: true };
+    let D0 = 0, D1 = 0;
+    for (let q = 0; q < 30; q++) { const run = C_run(o, mulberry32(300 + q * 7919)), Dt = t => run.hk[t][3] - run.f1[t] * run.f2[t]; D0 += Dt(0); D1 += Dt(1); }
+    const lost = 1 - D1 / D0, want = ind / 2;
+    ok = ok && Math.abs(lost - want) < 0.02;
+    out.push("ind " + ind + ": falls by " + lost.toFixed(3) + " (ind / 2 = " + want.toFixed(3) + ")");
   }
-  check("C every round's stored stretch (averages of six) agrees with a fresh measurement", agree, S + " each: " + rows.join("; "));
-  check("C every round's hidden setting hits its own window", C_ROUNDS.every(r => r._rate >= 0.8), hits.join(", "));
+  check("C the loci part in ind / 2 of gametes (two loci's association falls by that each generation)", ok, "30 populations of 2,000, one generation: " + out.join("; "));
 }
 {
-  /* two-sided: the free arrow at the opening, at the bottom and at the top of its range all miss */
-  const range = { beta: [0, 0.4], h: [-0.5, 1], se: [0.25, 4], wet: [0, 0.2], harm: [0, 0.2] };
+  /* pleiotropy that exactly cancels: Locus 1 -> Trait 2 as large as Locus 1 -> Trait 1, and Trait 2 -> fitness opposite: the allele only drifts */
+  const o = { N: 1000, ind: 1, a11: 0.3, a12: 0.3, a21: 0, a22: 0, e: 0, b1: 1, b2: -1, q1: 0.3, q2: 0.15, link: false };
+  const ch = []; for (let q = 0; q < 60; q++) { const run = C_run(o, mulberry32(700 + q * 7919)); ch.push(run.f1[C_G] - run.f1[0]); }
+  const m = mn(ch), se = sdv(ch) / Math.sqrt(ch.length);
+  check("C pleiotropy that cancels: an allele that raises a trait that helps and, as much, one that hurts goes nowhere on average", Math.abs(m) < 3.5 * se,
+        "60 populations, 150 generations: change " + m.toFixed(4) + " (standard error " + se.toFixed(4) + ")");
+}
+{
+  /* epistasis: the onto arrow does nothing where Locus 1's new allele is absent */
+  const o = { N: 1000, ind: 1, a11: 0.3, a12: 0, a21: 0, a22: 0, e: 0.4, b1: 1, b2: -1, q1: 0, q2: 0.3, link: false };
+  const ch = []; for (let q = 0; q < 60; q++) { const run = C_run(o, mulberry32(900 + q * 7919)); ch.push(run.f2[C_G] - run.f2[0]); }
+  const m = mn(ch), se = sdv(ch) / Math.sqrt(ch.length);
+  check("C epistasis: Locus 2's allele, acting only through Locus 1's, goes nowhere where Locus 1's new allele is absent", Math.abs(m) < 3.5 * se,
+        "60 populations: change " + m.toFixed(4) + " (standard error " + se.toFixed(4) + ")");
+}
+{
+  /* the stored data: each round's average course every 5 generations, against 80 fresh populations */
+  const rows = []; let ok = true;
+  for (const r of C_ROUNDS) {
+    const n = 80, m1 = new Array(31).fill(0), m2 = new Array(31).fill(0);
+    for (let q = 0; q < n; q++) { const run = C_run(C_par(C_setOf(r), r.start), mulberry32(40000 + q * 7919)); const a = C_sample(run.f1), b = C_sample(run.f2); for (let k = 0; k < 31; k++) { m1[k] += a[k] / n; m2[k] += b[k] / n; } }
+    let worst = 0; for (let k = 0; k < 31; k++) worst = Math.max(worst, Math.abs(m1[k] - r.m1[k]), Math.abs(m2[k] - r.m2[k]));
+    ok = ok && worst < 0.05; rows.push(r.key + " " + worst.toFixed(3));
+  }
+  check("C every round's stored data agree with a fresh measurement (largest gap at any sample, 80 populations)", ok, rows.join(", "));
+}
+{
+  /* windows on the idea: the data's setting lands, a step to one side or the other lands at least half the time, the opening never */
   const out = []; let ok = true;
   for (const r of C_ROUNDS) {
-    const base = C_setOf(r), at = v => Object.assign({}, base, { [r.free]: v });
-    const vals = [["opening", C_OPEN[r.free]], ["bottom", range[r.free][0]], ["top", range[r.free][1]]].filter((x, i, a) => a.findIndex(y => y[1] === x[1]) === i);
-    const rates = vals.map(([lab, v]) => [lab + " " + v, C_rateAt(r, at(v), 8, 333)]);
-    ok = ok && rates.every(x => x[1] < 0.2);
-    out.push(r.key + ": " + rates.map(x => x[0] + " " + x[1].toFixed(2)).join(", "));
+    const t = C_rate(r, C_setOf(r), 20, 101), lo = C_rate(r, C_at(r, -1), 20, 202), hi = C_rate(r, C_at(r, 1), 20, 303);
+    const op = Object.assign(C_setOf(r), { [r.free]: C_HELD[r.free] }), o = C_rate(r, op, 12, 404);
+    const fine = t >= 0.85 && Math.max(lo, hi) >= 0.6 && o <= 0.1;
+    ok = ok && fine;
+    out.push(r.key + ": setting " + t.toFixed(2) + ", a step down " + lo.toFixed(2) + ", up " + hi.toFixed(2) + ", opening " + o.toFixed(2) + (fine ? "" : " OFF"));
   }
-  check("C each free arrow at the opening and at both ends of its range misses", ok, "8 Go's each: " + out.join(" | "));
+  check("C every round lands at its setting and a step beside it, never at the opening", ok, "20 Go's (opening 12): " + out.join(" | "));
 }
 {
-  /* each slower slows the sweep and narrows the stretch, from the held setting to the round's */
-  const out = []; let ok = true;
-  for (const r of C_ROUNDS.slice(1)) {
-    const Q0 = [], Q1 = [];
-    for (let q = 0; q < 6; q++) { Q0.push(C_avgOf(Object.assign({}, C_HELD, { rain: !!r.rain }), 600 + q * 7919)); Q1.push(C_avgOf(C_setOf(r), 600 + q * 7919)); }
-    const t0 = mn(Q0.map(q => q.t)), t1 = mn(Q1.map(q => q.t)), s0 = mn(Q0.map(q => q.st)), s1 = mn(Q1.map(q => q.st));
-    ok = ok && t1 > t0 && s1 < s0;
-    out.push(r.key + " " + t0.toFixed(0) + " -> " + t1.toFixed(0) + " generations, " + s0.toFixed(2) + " -> " + s1.toFixed(2) + " Mb");
+  /* the far ends of each free arrow's range miss: a window on the idea is still closed to "anything" */
+  const ends = { ii: [0, 9], a12: [-0.5, 0.5], e: [-0.5, 0.5] }, out = []; let ok = true;
+  for (const r of C_ROUNDS) {
+    const rs = ends[r.free].map(v => C_rate(r, Object.assign(C_setOf(r), { [r.free]: v }), 10, 505));
+    ok = ok && rs.every(x => x <= 0.1);
+    out.push(r.key + " " + ends[r.free].map((v, i) => v + ": " + rs[i].toFixed(2)).join(", "));
   }
-  check("C each slower slows the sweep and narrows the stretch", ok, out.join("; "));
-}
-{
-  const out = []; let near = true;
-  for (const r of C_ROUNDS) { const q = C_record(r), z = Math.abs(q.st - r.st[0]) / r.st[1]; near = near && q.ok && z < 1; out.push(r.key + " " + q.st.toFixed(2) + " Mb (" + z.toFixed(2) + " spreads)"); }
-  check("C each record sits within one spread of its setting's mean", near, out.join(", "));
+  check("C both ends of each free arrow's range miss", ok, "10 Go's: " + out.join(" | "));
 }
 }
 
 /* ======================================================================= D */
 if (want("D")) {
 unlock("D");
-const D_rateAt = (r, c, v, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if (D_judge(r, D_three(c, v, mulberry32(seed + q * 7919)).q)) k++; return k / n; };
+const D_rate = (r, vals, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if (D_judge(r, D_three(D_par(vals), mulberry32(seed + q * 104729)).q)) k++; return k / n; };
 {
   const before = D.game.free() && D.game.current() == null;
-  D.c = 1.2; D.v = 5;
+  D.ob = 9; D.by = 1; D.v = 70;
   document.getElementById("D_tnext").click();
   const r0 = D.game.current();
-  check("D opens on free play; Start deals the first round with the arrows at the opening", before && r0 === D_ROUNDS[0] && D.c === D_OPEN.c && D.v === D_OPEN.v,
-        "round " + (r0 || {}).key + ", pathogens " + D.c + ", " + D_nAt(D.v) + " individuals");
+  check("D opens on free play; Start deals the first round with the arrows at the opening", before && r0 === D_ROUNDS[0] && D_KEYS.every(k => D[k] === (r0.free.includes(k) ? D_OPEN[k] : D_setOf(r0)[k])),
+        "round " + (r0 || {}).key + ", " + D_KEYS.map(k => k + " " + D[k]).join(", "));
 }
 {
-  /* new alleles at the immune gene: 2N x mu a generation */
-  const n = 150, made = []; for (let q = 0; q < 40; q++) made.push(D_run(n, 0.5, mulberry32(40 + q)).made);
-  const wantM = 2 * n * D_MU * D_T, se = sdv(made) / Math.sqrt(made.length);
-  check("D new alleles arrive at one copy in " + Math.round(1 / D_MU) + " a generation", Math.abs(mn(made) - wantM) < 3.5 * se, "40 runs of " + n + ": " + mn(made).toFixed(1) + " made (" + wantM + " expected, standard error " + se.toFixed(1) + ")");
+  const want3 = [[0, 0, 0], [0, 1, 0], [0, 2, 0], [1, 1, 1], [1, 2, 2], [2, 2, 2]], got = want3.map(([x, y]) => D_morph(x, y));
+  check("D throats: any o orange, else any y yellow, else (bb) blue", want3.every((w, i) => got[i] === w[2]), want3.map(([x, y], i) => "obyg"[x] + "obyg"[y] + " " + D_NAME[got[i]]).join(", "));
 }
 {
-  /* the neutral gene: two copies match as drift and mutation say. F' = (1/2N + (1 - 1/2N) F)(1 - mu)^2 for two different
-     copies, from F = (2N/20 - 1)/(2N - 1) at the start; the sum of squares counts a copy with itself, so add 1/2N of the rest */
-  const n = 100, K = 2 * n, homo = [];
-  for (let q = 0; q < 200; q++) { const run = D_run(n, 0.8, mulberry32(60 + q)), last = run.snaps[run.snaps.length - 1].su; homo.push(last.reduce((s, e) => s + (e[1] / K) * (e[1] / K), 0)); }
-  let F = (K / D_K0 - 1) / (K - 1);
-  for (let t = 0; t < D_T; t++) F = (1 / K + (1 - 1 / K) * F) * (1 - D_MU) * (1 - D_MU);
-  const wantH = F * (1 - 1 / K) + 1 / K, se = sdv(homo) / Math.sqrt(homo.length);
-  check("D the neutral gene's copies match as drift and mutation alone say, whatever the pathogens do", Math.abs(mn(homo) - wantH) < 3.5 * se,
-        "200 runs of " + n + ", pathogens 0.8: two copies match " + mn(homo).toFixed(4) + " vs " + wantH.toFixed(4) + " from the recursion (standard error " + se.toFixed(4) + ")");
+  /* with no game, the alleles only drift: their shares go nowhere on average */
+  const ch = [[], [], []];
+  for (let q = 0; q < 80; q++) { const run = D_run({ N: 300, ob: 0, by: 0, yo: 0 }, mulberry32(60 + q * 7919)), f0 = run.f[0], f1 = run.f[30]; for (let k = 0; k < 3; k++) ch[k].push(f1[k] - f0[k]); }
+  const ok = ch.every(c => Math.abs(mn(c)) < 3.5 * sdv(c) / Math.sqrt(c.length));
+  check("D with no game, the throat colours go nowhere on average", ok, "80 populations of 300, 30 years: " + ch.map((c, k) => D_NAME[k] + " " + sg(mn(c), 3) + " (se " + (sdv(c) / Math.sqrt(c.length)).toFixed(3) + ")").join(", "));
 }
 {
-  const Q0 = [], Q1 = []; for (let q = 0; q < 10; q++) { Q0.push(D_three(0, 40, mulberry32(80 + q * 7919)).q); Q1.push(D_three(1, 40, mulberry32(80 + q * 7919)).q); }
-  const k0 = mn(Q0.map(q => q.k)), k1 = mn(Q1.map(q => q.k)), u0 = mn(Q0.map(q => q.ku)), u1 = mn(Q1.map(q => q.ku));
-  const se = Math.sqrt((sdv(Q0.map(q => q.ku)) ** 2 + sdv(Q1.map(q => q.ku)) ** 2) / 10);
-  check("D the pathogens add alleles at the immune gene and not at the neutral one", k1 > k0 + 4 && Math.abs(u1 - u0) < 3.5 * se,
-        D_nAt(40) + " individuals, 10 Go's: immune " + k0.toFixed(1) + " -> " + k1.toFixed(1) + ", neutral " + u0.toFixed(1) + " -> " + u1.toFixed(1) + " (standard error " + se.toFixed(1) + ")");
+  /* rock, paper, scissors: orange beating blue harder leaves orange where it was, lowers blue, raises yellow */
+  const Q = v => { const qs = []; for (let q = 0; q < 6; q++) qs.push(D_three(D_par({ ob: v, by: 4, yo: 4, v: 15 }), mulberry32(77 + q * 7919)).q); return [0, 1, 2].map(k => mn(qs.map(x => x.cen[k]))); };
+  const a = Q(2), b = Q(8);
+  check("D orange beating blue harder leaves orange's share where it was; blue falls, yellow rises", Math.abs(b[0] - a[0]) < 0.04 && b[1] < a[1] - 0.1 && b[2] > a[2] + 0.1,
+        "orange beats blue 2 -> 8 (others 4): orange " + f3(a[0]) + " -> " + f3(b[0]) + ", blue " + f3(a[1]) + " -> " + f3(b[1]) + ", yellow " + f3(a[2]) + " -> " + f3(b[2]));
 }
 {
-  const S = 30, rows = [], hits = []; let agree = true;
-  for (const r of D_ROUNDS) {
-    const Q = []; for (let q = 0; q < S; q++) Q.push(D_three(r.c, r.v, mulberry32(7000 + q * 7919)).q);
-    const km = mn(Q.map(q => q.k)), ks = sdv(Q.map(q => q.k)), um = mn(Q.map(q => q.ku)), us = sdv(Q.map(q => q.ku));
-    const ok = Math.abs(km - r.k[0]) < 0.6 * r.k[1] && Math.abs(um - r.ku[0]) < 0.6 * r.ku[1] && Math.abs(ks / r.k[1] - 1) < 0.45 && Math.abs(us / r.ku[1] - 1) < 0.45;
-    agree = agree && ok; r._rate = Q.filter(q => D_judge(r, q)).length / S;
-    rows.push(r.key + " immune " + km.toFixed(2) + "±" + ks.toFixed(2) + " [" + r.k.join("±") + "], neutral " + um.toFixed(2) + "±" + us.toFixed(2) + " [" + r.ku.join("±") + "]" + (ok ? "" : " OFF"));
-    hits.push(r.key + " " + r._rate.toFixed(2));
+  /* the stored windows' middles agree with a fresh measurement */
+  const rows = []; let ok = true;
+  for (const r of D_ROUNDS.concat([D_FINAL])) {
+    const qs = []; for (let q = 0; q < 24; q++) qs.push(D_three(D_par(D_setOf(r)), mulberry32(30000 + q * 104729)).q);
+    const cen = [0, 1, 2].map(k => mn(qs.map(x => x.cen[k]))), per = mn(qs.map(x => x.per).filter(x => !isNaN(x))), lost = mn(qs.map(x => x.lost));
+    let fine = true, txt = r.key;
+    if (r.cen) { const d = D_cd(cen, r.cen); fine = fine && d < 0.015; txt += " middle off by " + d.toFixed(3); }
+    if (r.per) { const m = (r.per[0] + r.per[1]) / 2; fine = fine && Math.abs(per - m) < 0.15 * (r.per[1] - r.per[0]) + 0.5; txt += ", cycle " + per.toFixed(2) + " in [" + r.per.join(", ") + "]"; }
+    if (r.lost) { fine = fine && lost >= r.lost[0] && lost <= r.lost[1]; txt += ", lost " + lost.toFixed(0) + " in [" + r.lost.join(", ") + "]"; }
+    ok = ok && fine; rows.push(txt + (fine ? "" : " OFF"));
   }
-  check("D every round's stored readings (averages of three) agree with a fresh measurement", agree, S + " each: " + rows.join("; "));
-  check("D every round's hidden setting hits its own window", D_ROUNDS.every(r => r._rate >= 0.8), hits.join(", "));
+  check("D every target's window sits on a fresh measurement at its setting", ok, "24 Go's each: " + rows.join("; "));
 }
 {
-  let most = 0; const multi = [];
-  for (let ci = 0; ci <= 15; ci += 1) for (let v = 0; v <= 100; v += 10) {
-    const c = ci / 10, Q = []; for (let q = 0; q < 4; q++) Q.push(D_three(c, v, mulberry32(4242 + q * 104729)).q);
-    const rates = D_ROUNDS.map(r => Q.filter(q => D_judge(r, q)).length / 4), n = rates.filter(x => x >= 0.5).length;
-    most = Math.max(most, n); if (n >= 2) multi.push(c + ", " + D_nAt(v) + ": " + rates.map(x => x.toFixed(2)).join(" "));
+  /* windows on the idea: [what, Go's at it, the rule it must meet] */
+  const R = D_ROUNDS, S = r => D_setOf(r), at = (r, o) => Object.assign(S(r), o), out = []; let ok = true;
+  const t = (lab, r, vals, n, seed, rule) => { const x = D_rate(r, vals, n, seed), fine = rule(x); ok = ok && fine; out.push(lab + " " + x.toFixed(2) + (fine ? "" : " OFF")); };
+  const hit = x => x >= 0.9, most = x => x >= 0.6, never = x => x <= 0.1;
+  t("even at 6/6/6", R[0], S(R[0]), 12, 11, hit);
+  t("even at 5/5/5", R[0], at(R[0], { ob: 5, by: 5, yo: 5 }), 12, 12, most);
+  t("even at 8/8/8", R[0], at(R[0], { ob: 8, by: 8, yo: 8 }), 12, 13, most);
+  t("even at the opening", R[0], D_OPEN, 12, 14, never);
+  t("even at 8/6/6", R[0], at(R[0], { ob: 8, by: 6, yo: 6 }), 12, 15, x => x <= 0.2);
+  for (const [i, key] of [[1, "ob"], [2, "by"]]) {
+    t(R[i].key + " at 8", R[i], S(R[i]), 12, 20, hit);
+    for (const v of [7, 10]) t(R[i].key + " at " + v, R[i], at(R[i], { [key]: v }), 12, 21 + v, most);
+    for (const v of [2, 4]) t(R[i].key + " at " + v, R[i], at(R[i], { [key]: v }), 12, 31 + v, never);
   }
-  check("D no setting on the controls' grid clears two rounds", most <= 1, "176 settings x 4 Go's: most " + most + (multi.length ? " -- " + multi.join("; ") : ""));
-  const op = D_ROUNDS.map(r => D_rateAt(r, D_OPEN.c, D_OPEN.v, 10, 777));
-  check("D the opening (no pathogens, " + D_nAt(D_OPEN.v) + " individuals) clears no round", op.every(x => x < 0.15), D_ROUNDS.map((r, i) => r.key + " " + op[i].toFixed(2)).join(", "));
-  const half = D_ROUNDS.map(r => [r.key, D_rateAt(r, r.c, D_OPEN.v, 8, 778), D_rateAt(r, 0, r.v, 8, 779)]);
-  check("D the right pathogens at the opening's headcount, or the right headcount with no pathogens, misses", half.every(x => x[1] < 0.25 && x[2] < 0.25),
-        half.map(x => x[0] + " " + x[1].toFixed(2) + " / " + x[2].toFixed(2)).join(", "));
+  t("collapse at " + D_nAt(55) + " lizards", R[3], S(R[3]), 16, 95, x => x >= 0.75);   /* a colour lost at 110 +- 36 years: the window holds ~0.9 */
+  for (const v of [50, 60]) t("collapse at " + D_nAt(v) + " lizards", R[3], at(R[3], { v }), 16, 40 + v, most);
+  for (const v of [15, 80]) t("collapse at " + D_nAt(v) + " lizards", R[3], at(R[3], { v }), 16, 50 + v, never);
+  t("observed data at its setting", D_FINAL, S(D_FINAL), 12, 60, hit);
+  t("observed data at the opening", D_FINAL, D_OPEN, 12, 61, never);
+  t("observed data at 5/5/5", D_FINAL, { ob: 5, by: 5, yo: 5, v: 15 }, 12, 62, never);
+  check("D every target lands at its setting and across the idea's range, not at the opening, the other way, or the far ends", ok, "12-16 Go's: " + out.join(", "));
+}
+{
+  /* no round's answer lands another round: each teaches its own thing */
+  const R = D_ROUNDS.slice(0, 3), multi = [];
+  for (const a of R) for (const b of R) if (a !== b) { const x = D_rate(b, D_setOf(a), 8, 70); if (x > 0.25) multi.push(a.key + "'s setting lands " + b.key + " " + x.toFixed(2)); }
+  check("D no round's setting lands another round", !multi.length, multi.length ? multi.join("; ") : "even, orange, blue: none");
 }
 }
 
@@ -515,21 +541,22 @@ const D_rateAt = (r, c, v, n, seed) => { let k = 0; for (let q = 0; q < n; q++) 
             "round " + r.key + ": beak " + A.g + ", luck " + A.s); }
     if (want("B")) { B.ai = 0; B.v = 90; document.getElementById("B_tnext").click(); const r = B.game.current();
       check("B a new target puts both arrows back where they opened", B.ai === B_OPEN.ai && B.v === B_OPEN.v, "round " + r.key); }
-    if (want("C")) { C.beta = 0.4; C.h = -0.5; document.getElementById("C_tnext").click(); const r = C.game.current();
-      const ok = C_KEYS.every(k => C[k] === (k === r.free ? C_OPEN[k] : C_HELD[k]));
-      const rainShown = !!document.querySelector('#pathsC [data-of="wet"]');
-      check("C a new target frees one arrow at its opening and holds the rest; the rain shows only in the rain round", ok && rainShown === !!r.rain,
-            "round " + r.key + ": " + C_KEYS.map(k => k + " " + C[k]).join(", ") + "; rain arrow drawn " + rainShown); }
-    if (want("D")) { D.c = 1.4; D.v = 0; document.getElementById("D_tnext").click(); const r = D.game.current();
-      check("D a new target puts both arrows back where they opened", D.c === D_OPEN.c && D.v === D_OPEN.v, "round " + r.key); }
+    if (want("C")) { C.ii = 0; C.a12 = -0.5; C.e = 0.5; document.getElementById("C_tnext").click(); const r = C.game.current(), h = C_setOf(r);
+      const ok = C_KEYS.every(k => C[k] === (k === r.free ? C_HELD[k] : h[k])) && C.start === r.start;
+      check("C a new target frees one arrow at its opening, holds the rest at the target's, and starts where its data start", ok,
+            "round " + r.key + ": " + C_KEYS.map(k => k + " " + C[k]).join(", ") + "; start " + JSON.stringify(C.start)); }
+    if (want("D")) { D.ob = 9; D.by = 0.5; D.yo = 7; D.v = 90; document.getElementById("D_tnext").click(); const r = D.game.current(), h = D_setOf(r);
+      check("D a new target puts its free arrows back where they opened and holds the rest", D_KEYS.every(k => D[k] === (r.free.includes(k) ? D_OPEN[k] : h[k])),
+            "round " + r.key + ": " + D_KEYS.map(k => k + " " + D[k]).join(", ")); }
     /* the one-shot targets: play out the rounds, then the observed data can be shot once and not practised */
-    for (const S of ["A", "B"].filter(want)) {
+    for (const S of ["A", "B", "D"].filter(want)) {
       const st = ST[S], g = st.game, btn = document.getElementById(S + "_run"), nx = document.getElementById(S + "_tnext"), box = document.getElementById(S + "_practice");
-      while (g.st.hits.length < 5) { if (g.waiting()) nx.click(); btn.click(); }
+      const RN = S === "D" ? D_ROUNDS.length : 5;
+      while (g.st.hits.length < RN) { if (g.waiting()) nx.click(); btn.click(); }
       const lab0 = nx.textContent; nx.click();
       const one = g.oneShot(), boxOff = box.disabled && !box.checked, goLab = btn.textContent, named = read(S + "_ttab");
       btn.click();
-      const done = g.st.done && g.st.hits.length === 6, bit6 = Score.getBit("scaffold", BIT[S + "6"]) === (g.st.hits[5] ? 1 : 0);
+      const done = g.st.done && g.st.hits.length === RN + 1, bit6 = Score.getBit("scaffold", BIT[S + (RN + 1)]) === (g.st.hits[RN] ? 1 : 0);
       check(S + " the observed data is one shot: dealt by its own button, no practice, its own bit", lab0 === "Try to match actual data" && one && boxOff && /one shot/.test(goLab) && done && bit6 && !box.disabled,
             "button '" + lab0 + "', practice off " + boxOff + ", Go '" + goLab + "', taken " + done + ", bit " + bit6 + ", practice back after " + !box.disabled);
       if (S === "B") check("B the lactase data is not named until it has been shot at", !/lactase/i.test(named) && /lactase/i.test(read("B_ttab")), "before: '" + named + "' | after: '" + read("B_ttab") + "'");

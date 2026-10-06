@@ -2,8 +2,67 @@
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-D built (`version: 9`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 5; one bit per attempt); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
-**Last touched** · 2026-10-05 (JM's review: E, the diagrams, A's targets, the sweep display)
+**Status** · A-D built (`version: 10`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
+**Last touched** · 2026-10-06 (C two genes, two traits; D lizards; windows on the idea)
+
+## JM's pivot, 2026-10-05 (evening) — C and D rebuilt from zero
+
+- C: *"I'd like the DAG to just have Locus 1 -> Trait 1 -> Fitness <- Trait 2 <- Locus 2 as a DAG, with the arrow between them being "Prob. of independent inheritance" and have that be adjustable. I'd also like cross arrows that potentially allow locus 1 to affect both Traits and Locus 2 to affect both traits. I'd like the targets revised to illustrate hitchhiking & selective sweeps still, but also pleiotropy and epistasis with a cleaner structural model."*
+- D: *"I think Part D on frequency dependence could be streamlined and simplified. I think using an animal example with more than 2 alleles/traits might help, and a more interactive/diagrammatic way of illustrating the process & outcome. Something simple like frequency over generation plots revealing oscillations. A simple model that lets drift get ramped up which creatres the possibility of a total system collapse, too, would be good."*
+- His picks (asked): epistasis = **Locus 2 → onto the Locus 1 → Trait 1 arrow** (gene × gene on a trait); C's card judges the **whole trajectories** (both loci's allele frequency by generation, one distance reading, as B's whole profile); D = **side-blotched lizards** (orange / blue / yellow, rock-paper-scissors, one locus, three alleles); D's display = **frequency lines + a triangle** (the population traces a loop; a collapse runs to a corner).
+- Supersedes R-9 (C card in allele counts) and the old C and D below.
+
+Plan:
+- **C engine**: two loci, two alleles each, diploid individuals; traits additive in copies; fitness from the two traits; one gamete per parent, Locus 2 taken from a random one of the parent's two chromosomes with probability = independence (so recombination fraction = half of it; 1 = different chromosomes). Chance = headcount. Locus 1's new allele starts in a few % of chromosomes, all one founder's, carrying Locus 2's allele.
+- **C diagram**: Locus 1 → Trait 1 → Fitness ← Trait 2 ← Locus 2; Locus 1 ⟷ Locus 2 "prob. of independent inheritance" (settable); cross arrows Locus 1 → Trait 2, Locus 2 → Trait 1; Locus 2 → onto (Locus 1 → Trait 1); chance. One arrow glows per target.
+- **C rounds** (proposed, to measure): a neutral hitchhiker (independence free); a harmful hitchhiker dragged up (independence free); pleiotropy (Locus 1 → Trait 2 free); epistasis (the onto arrow free: Locus 2's allele sweeps second, once Locus 1's is common; beach mice Mc1r × Agouti, Steiner et al. 2007); one more after measuring.
+- **D engine**: lizards, annual; one locus o / b / y; throat orange if any o, else yellow if any y, else blue (dominance order to check with JM / Sinervo et al. 2001); males' mating success from the colours they beat and are beaten by (orange beats blue, blue beats yellow, yellow beats orange: three settable "beats" arrows); chance = headcount; a colour lost = the cycle collapses.
+- **D readings** (to measure): where the loop centres (each colour's average frequency: in rock-paper-scissors a stronger orange makes **yellow** commoner), how fast it cycles, how far it swings, years until a colour is lost.
+
+- JM, mid-build: *"Targets, questions, and objectives in lessons should be built to enhance student understanding, rather than to assess it."* So windows are sized on the idea a round teaches (right direction, rough size: a neighbouring slider step passes), closed only to the misconception or naive answer the round is built around. Noise sets the floor of a window, never its width.
+
+### Measured, 2026-10-05 evening (scratch prototypes `l14cd/c_proto.js`, `d_proto.js`)
+
+**C** (N 1,000; Locus 1 → Trait 1 0.3, Trait 1 → fitness +1, Trait 2 → fitness −1; Locus 1's allele from 5%, all on chromosomes carrying Locus 2's; 150 generations; fitness exp(T1 − T2); ~30 ms a population):
+- Hitchhiker (Locus 2 neutral, from 15%): where it ends tracks independence on a log scale: 0 → 1.00, 0.005 → 0.95, 0.01 → 0.92, 0.02 → 0.83, 0.05 → 0.66, 0.1 → 0.48, 0.2 → 0.31, 1 → 0.15. All the action is below 0.2, so the arrow steps are 0, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1.
+- Dragged (Locus 2 → Trait 2 0.1, harmful): at independence 0.02 it rises to ~0.45 with the sweep, then is purged; at 0 it is carried to fixation and slows the sweep; at 0.1 it barely rises.
+- Pleiotropy (Locus 1 → Trait 2): 0.1 / 0.2 slow the sweep (half-way at ~20 / ~45 generations vs ~15); 0.3 cancels it; 0.4 reverses it.
+- Epistasis, second sweep (Locus 2 → onto (Locus 1 → Trait 1), Locus 2 from 5%, unlinked): 0.1 / 0.2 / 0.4: Locus 2 at 0.30 / 0.70 / 0.99 by generation 50, after Locus 1.
+- Epistasis, masking (onto −0.1 to −0.3, Locus 2 from 60%): Locus 2 is purged once Locus 1 is common; Locus 1's sweep slows.
+- Reading: mean |run − data| over generations and both loci, Go = three populations averaged. A noise-sized window (95% of the truth's) passed the truth 93-100% and one log step either side 0-53%; two steps away ~0. Windows will be widened so one step either side passes.
+- A drift round does not work here: below ~100 individuals the sweep is lost often enough (from 5%) that averages of three can't be judged.
+
+**D** (lizards; fitness exp(gain from the colour you beat × its frequency − loss to the colour that beats you × its frequency), zero-sum; males only; o > y > b dominance):
+- The linear form (1 + s f) runs away even at 20,000 lizards (the loop grows to an edge in 70-210 years): collapse would not be drift's doing. A win worth more than a loss damps the loop to the centre (colours wander, no clear cycles). The exponential zero-sum form holds a steady loop: cycle length 20.7 / 12.4 / 9.7 / 8.6 years at strength 2 / 4 / 6 / 8 (spread 0.1-0.8), the same at 300-3,000 lizards; swings ~±0.25.
+- The centre follows the rock-paper-scissors rule: orange beats blue harder (2 → 8, others 4): orange stays 0.38, blue 0.44 → 0.25, yellow 0.18 → 0.37. Yellow beats orange harder (2 → 8): orange 0.51 → 0.25, blue 0.22 → 0.49, yellow stays 0.27. A colour's average is set by the arrow two steps round the loop, not its own.
+- Collapse (an allele lost for good, strength 4; average of three): 50 lizards 22 ± 8 years, 80 39 ± 20, 100 53 ± 23, 130 78 ± 27, 160 107 ± 40, 200 138 ± 40 (2 of 40 never in 200 years). Below ~200 the game collapses faster than no game (the big swings carry each colour near zero); above it, slower.
+- Real cycles are 4-5 years (Sinervo & Lively 1996); this engine's fastest is ~8. Framed "based on".
+
+| # | What | Status |
+|---|------|--------|
+| P-1 | C engine prototype (node): hitchhiking vs independence, pleiotropy, epistasis; trajectory distance spread | done (above) |
+| P-2 | D engine prototype: deterministic behaviour (damped / steady / runaway loop), drift collapse vs neutral, readings' spread | done (above) |
+| P-3 | C, D rounds chosen from P-1/P-2; traps measured | C: hitchhiker (independence), dragged (independence), pleiotropy (Locus 1 → Trait 2), second sweep (onto +), masking (onto −). D: even fight (all three arrows: cycle speed + centre), orange beats blue harder (centre), yellow beats orange less (centre), collapse in about a century (chance), observed data one shot (Los Baños-like, all free). Windows on the idea |
+| P-4 | page: C and D sections, engines, diagrams, cards, triangle; `scaffold`/`version` | done: C = Locus 1/2, Trait 1/2, fitness, chance; independence on log steps (0, 0.002 … 1); card = both alleles' course (data dots every 5 generations, a band as wide as the window), gauge "average gap" = the larger locus's mean absolute gap; top: chromosomes by which new alleles they carry, the two traits' averages. D = ring of three "beats" arrows + "mates won" (grey) → next year's lizards ← chance; top: colour shares by year, the triangle path; card: the loop's middle on a triangle, gauges for years a cycle and the year a colour was lost; 4 rounds + a one-shot. `version` 10, `scaffold` 22 unchanged (D1-D4 + D5 the one shot) |
+| P-5 | `check_lesson14_numbers.js` C and D rewritten | done (results below) |
+| P-6 | B agent (R-8) cancelled by JM mid-fix | its first pass is in the committed page (05dc829: alleles per locus, stacked dot plot); its notes say 2 of B's 22 bars failed then (the lactase observed data 2.56 vs bar 1.14, and one more); its later work (six populations, re-derived bars) never landed. R-8 stays open |
+
+**C as built, 2026-10-06** (windows chosen off each step's gaps, 30 Go's a step; q50 / q95 of the gap):
+- hitch (independence 0.02, Locus 2 neutral, from 15% on Locus 1's chromosomes): bar 0.10. 0.01 → 0.062 / 0.095, 0.005 → 0.096 / 0.125, 0.05 → 0.144 / 0.215; opening 0.59.
+- dragged (0.01, Locus 2 → Trait 2 0.1): bar 0.12. 0.02 → 0.082 / 0.123, 0.005 → 0.115 / 0.198, 0.05 → 0.154; opening 0.22. Rises to ~0.58, purged by generation 150.
+- pleio (Locus 1 → Trait 2 0.2): bar 0.14. 0.15 → 0.132 / 0.156, 0.25 → 0.316, 0.1 → 0.197; opening 0.26.
+- second (onto +0.15, Locus 2 from 5%, unlinked): bar 0.12. 0.2 → 0.083 / 0.116, 0.1 → 0.143 / 0.271; opening 0.56.
+- mask (onto −0.2, Locus 2 from 60%): bar 0.06. −0.1 to −0.3 land (q50 0.038-0.053), −0.05 → 0.151; opening 0.43.
+- First tried: the gap averaged over both loci. In rounds where Locus 2 does nothing it halved the signal, and the pleiotropy window then let the opening in 100%. Now the larger of the two loci's gaps.
+- Anchors (framing, JM to check): Cyp6g1 neighbourhood in *Drosophila* (Schlenke & Begun 2004); deleterious variants near dog-breed sweeps (Marsden et al. 2016); VKORC1 warfarin resistance and vitamin K need in rats; beach mice Agouti × Mc1r (Steiner et al. 2007); masking: E over B in Labradors (a mechanism, not a sweep study).
+
+**D as built, 2026-10-06** (60 Go's a setting for the middles; 12-16 Go's per hit rate):
+- even (6/6/6, 1,002 lizards): middle (0.366, 0.362, 0.273), cycle 9.79 ± 0.08; window cycle 8.5-11.5 + middle within 0.05. Equal arrows 5-8 land; 4 and 10 do not; 6/6/4, 8/6/6, 5/6/7 do not; 6/7/6 does.
+- orange (orange beats blue 8, others 4): middle (0.376, 0.254, 0.370); 6.5-10 land, ≤ 6 do not.
+- blue (blue beats yellow 8): middle (0.499, 0.318, 0.183); 6.5-10 land (10: 0.92).
+- collapse (159 lizards, arrows 4): lost at 110 ± 36 (average of three); window 50-180 (first 60-170: 126 and 200 lizards landed only 63-69% in the check). 50 and 1,002 lizards never.
+- observed data, one shot (5/3/6, 252 lizards): middle (0.257, 0.404, 0.340), cycle 10.87 ± 0.11; window cycle 9.2-12.5 + middle 0.05. Most settings within ±0.5 on each arrow land; 6/3/5, 5/5/5, 4/4/4 do not; 159 lizards or fewer sometimes collapse and miss.
+- Open for JM: the dominance order (o > y > b) is our reading of Sinervo et al. 2001; real Los Baños cycles run 4-5 years and this engine's fastest is ~8 (strength 8-10); the anchors (Sinervo & Lively 1996, Sinervo et al. 2000 testosterone, Sinervo et al. 2006 blue cooperation, Corl et al. 2010 morph loss) are framing only.
 
 ## JM's review, 2026-10-05 — E out?, the diagrams, A's signs, the sweep display
 

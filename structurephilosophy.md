@@ -15,3 +15,5 @@ No vocabulary should be taught in the lessons, and jargon should be avoided wher
 Activities should strive to build intuition and enforce interpretation. Activities should require interaction and interpretation of the graph/displays and ideally direct manipulation where possible. Embracing uncertainty and determining causal effects are major goals.
 
 Text should be extremely light, with a focus on discovery through engagement with the data, models, and diagrams.
+
+Targets, questions, and objectives in lessons should be built to enhance student understanding, rather than to assess it. 
