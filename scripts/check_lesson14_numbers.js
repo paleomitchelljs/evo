@@ -457,22 +457,28 @@ const D_rate = (r, vals, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if
   const R = D_ROUNDS, S = r => D_setOf(r), at = (r, o) => Object.assign(S(r), o), out = []; let ok = true;
   const t = (lab, r, vals, n, seed, rule) => { const x = D_rate(r, vals, n, seed), fine = rule(x); ok = ok && fine; out.push(lab + " " + x.toFixed(2) + (fine ? "" : " OFF")); };
   const hit = x => x >= 0.9, most = x => x >= 0.6, never = x => x <= 0.1;
+  /* JM, 2026-10-07: his orange-beats-blue 4.5 (others 4) missed and "seems
+     too tight"; windows widened so a step the right way lands (rough size),
+     equal or the wrong way does not */
   t("even at 6/6/6", R[0], S(R[0]), 12, 11, hit);
-  t("even at 5/5/5", R[0], at(R[0], { ob: 5, by: 5, yo: 5 }), 12, 12, most);
-  t("even at 8/8/8", R[0], at(R[0], { ob: 8, by: 8, yo: 8 }), 12, 13, most);
+  for (const v of [4, 5, 8, 10]) t("even at " + v + "/" + v + "/" + v, R[0], at(R[0], { ob: v, by: v, yo: v }), 12, 12 + v, most);
+  t("even at 8/6/6", R[0], at(R[0], { ob: 8, by: 6, yo: 6 }), 12, 15, most);
   t("even at the opening", R[0], D_OPEN, 12, 14, never);
-  t("even at 8/6/6", R[0], at(R[0], { ob: 8, by: 6, yo: 6 }), 12, 15, x => x <= 0.2);
+  t("even at 3/3/3", R[0], at(R[0], { ob: 3, by: 3, yo: 3 }), 12, 16, never);
+  t("even at 6/6/4", R[0], at(R[0], { ob: 6, by: 6, yo: 4 }), 12, 17, never);
   for (const [i, key] of [[1, "ob"], [2, "by"]]) {
     t(R[i].key + " at 8", R[i], S(R[i]), 12, 20, hit);
-    for (const v of [7, 10]) t(R[i].key + " at " + v, R[i], at(R[i], { [key]: v }), 12, 21 + v, most);
+    for (const v of [4.5, 5, 7, 10]) t(R[i].key + " at " + v, R[i], at(R[i], { [key]: v }), 12, 21 + v, most);
     for (const v of [2, 4]) t(R[i].key + " at " + v, R[i], at(R[i], { [key]: v }), 12, 31 + v, never);
   }
-  t("collapse at " + D_nAt(55) + " lizards", R[3], S(R[3]), 16, 95, x => x >= 0.75);   /* a colour lost at 110 +- 36 years: the window holds ~0.9 */
+  t("collapse at " + D_nAt(55) + " lizards", R[3], S(R[3]), 16, 95, x => x >= 0.75);   /* a colour lost at 110 +- 36 years: the window [40, 190] holds ~0.97 */
   for (const v of [50, 60]) t("collapse at " + D_nAt(v) + " lizards", R[3], at(R[3], { v }), 16, 40 + v, most);
   for (const v of [15, 80]) t("collapse at " + D_nAt(v) + " lizards", R[3], at(R[3], { v }), 16, 50 + v, never);
   t("observed data at its setting", D_FINAL, S(D_FINAL), 12, 60, hit);
   t("observed data at the opening", D_FINAL, D_OPEN, 12, 61, never);
   t("observed data at 5/5/5", D_FINAL, { ob: 5, by: 5, yo: 5, v: 15 }, 12, 62, never);
+  for (const [a, b, c] of [[6, 3, 5], [5, 2, 6], [5, 4, 6], [4, 3, 6]]) t("observed data at " + a + "/" + b + "/" + c, D_FINAL, { ob: a, by: b, yo: c, v: 25 }, 12, 63 + a + b + c, most);
+  for (const [a, b, c] of [[4, 4, 4], [3, 2, 4], [8, 4, 10]]) t("observed data at " + a + "/" + b + "/" + c, D_FINAL, { ob: a, by: b, yo: c, v: 25 }, 12, 83 + a + b + c, never);
   check("D every target lands at its setting and across the idea's range, not at the opening, the other way, or the far ends", ok, "12-16 Go's: " + out.join(", "));
 }
 {

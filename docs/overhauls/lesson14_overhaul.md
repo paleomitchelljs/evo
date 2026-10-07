@@ -2,8 +2,37 @@
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-D built (`version: 10`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
-**Last touched** · 2026-10-06 (C two genes, two traits; D lizards; windows on the idea)
+**Status** · A-D built, JM's 2026-10-07 pass applied (`version: 11`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
+**Last touched** · 2026-10-07 (JM's pre-posting pass: B, C, D text and cards; D windows widened)
+
+## JM's review, 2026-10-07 — cleanup before posting
+
+- B: *"Part B's bullets are far too wordy, there are too many, and they reference things the students haven't seen (like Lesson 15)."* His three: a whole chromosome with one locus of interest; each locus has multiple alleles, only one affects fitness; manipulate the focal locus to see its effect on diversity across the chromosome.
+- B card: *"Remove the 'measured when the new allele reached' line ... drop the 'profile different mean|your count|...' ... remove the box below showing the 0 to 2 profile difference measure--instead just have that happen silently behind the scenes. Ditch the legend as well."*
+- C: bullets too wordy; the independence arrow's readout text (*"never parting or different chromosomes"*) too long: *"A single line of text beside the arrow arranged vertically that says 'recombination rate' would be fine, and keep the dial to just numbers"*; its tip pokes under Locus 1 and stands off Locus 2; *"The 'glow' for selectable arrows could also be tightened--maybe a black outline for unelectable ones?"*
+- D card: text cut off, *"especially the legend ... reducing the problem text rather than futzing with the margins"*; cut the subtitle and the legend; *"The tuning of this also seems off"* (his screenshot: the orange round, a miss).
+
+Read off his screenshot: the ring sits 32 px from the data's dot on a 398 px triangle (window radius 14 px), a centre distance of ≈ 0.114, which is orange-beats-blue 4.5 with the others 4 (measured 0.111-0.116). One step in the right direction missed.
+
+| # | What | Status |
+|---|------|--------|
+| V-1 | B bullets → JM's three | done (punctuation only) |
+| V-2 | B card: no "measured when" row, no gauge, no legend; the profile difference still judges | done: plot 230 px tall (`pictureH` 280); lactase rows kept (named after the shot); `B_win` gone |
+| V-3 | C bullets cut to three | done |
+| V-4 | C arrow: "recombination rate", upright beside it; readout a bare number (recombination fraction = independence / 2, engine unchanged); R code in r | done: dial 0, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5 |
+| V-5 | `paths.js` `both`: the start head backs off its box as the end head does | done; plus opt-in `caption` / `captionAt` / `captionUpright` (always-on name beside an arrow; the readout avoids it). Arrows without either draw exactly as before (same expressions) |
+| V-6 | glow tightened; held and fixed arrows outlined in ink (lesson 14 CSS) | done: glow 1.2 + 2.4 px (was 2 + 5); outline = four 0.7 px offset shadows on `.locked:not(.zero)` and `.dark` (held at zero left dashed: the outline made its dashes a heavy dark line). Applies to every diagram on the page, A-D |
+| V-7 | D card: no subtitle, no legend, shorter gauge label, "never" tick clear of 200, shorter "based on" rows | done: "year a colour was lost"; tick labels drawn right to left, one that would hit its neighbour dropped (at ~1060 px "200" drops, "never" stays); gauges moved to 0.3 / 0.62 of the card |
+| V-8 | D windows widened on the idea (measured); check D re-pinned | done, below; check D 15/15 |
+
+**D windows, 2026-10-07** (node, the page's engine; a Go's middle spreads ~0.005, so each window is a cut on the arrow; edges set in the gaps between neighbouring settings):
+- orange middle 0.05 → **0.124**: ob 4.5 (others 4) 0.105-0.118 lands, ob 4 (equal) 0.131-0.142 does not (40 Go's each); 5 0.090, 6 0.055, 8 0.004, 10 0.040.
+- blue middle 0.05 → **0.141**: by 4.5 0.122-0.136 lands, by 4 0.147-0.166 does not.
+- even cycle 8.5-11.5 → **7.5-13**, middle 0.05 → **0.09**: equal 4 (12.3) to 10 (7.9) land; 3.5 (13.5), 3 (15.1), 2 (20.8) do not; one or two steps unequal land (7/6/6 0.031, 6/6/5 0.053, 8/6/6 0.056, 5/6/7 0.071, 6/6/8 0.082), 6/6/4 (0.115) does not.
+- collapse lost 50-180 → **40-190** (mean of three; 40 Go's): 200 lizards 0.95, 159 0.97, 126 0.93; 252 and 100 ~0.6; 80 0.45; 317 0.10; 63 and fewer, 399 and more ≤ 0.07.
+- observed data cycle 9.2-12.5 → **8.8-13.6**, middle 0.05 → **0.09**: one step on any one arrow lands (6/3/5 0.079, 5/2/6 0.076, 5/4/6 0.057, 4/3/6 0.051); equal arrows 4/4/4-6/6/6 (0.134-0.148), 3/2/4 (cycle 15.0) and 8/4/10 (8.6) do not.
+- Full check 2026-10-07: A, C, D and every all-stage bar pass (63 of 66). B fails 2 bars B-only, the same 2 as the committed page (run on HEAD's files the same day): the lactase observed data sits 2.7-2.8 from its target profile (bar 1.14), and on the grid slow and mid share settings. In the full run a third, "each made record sits within its setting's window", fails at partial 1.02 (needs < 1): run order, not today's edits. All three are R-8, still open.
+- Check D (12-16 Go's): even 4/5/6/8/10 equal and 8/6/6 1.00, opening / 3/3/3 / 6/6/4 0.00; orange and blue at 4.5, 5, 7, 8, 10 1.00, at 2 and 4 0.00; collapse 159 0.88, 200 0.81, 126 1.00, 1,002 and 50 0.00; observed data at its setting 1.00, 6/3/5 1.00, 5/2/6 0.83, opening / 5/5/5 0.00; no round's setting lands another.
 
 ## JM's pivot, 2026-10-05 (evening) — C and D rebuilt from zero
 

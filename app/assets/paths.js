@@ -81,7 +81,9 @@
 // an allele is" and "pathogens" both scale the same host-alleles ->
 // survival arrow). `both: true` draws a head on both ends, for a relation
 // with no direction (lesson 14 C's linkage arrow between two neighbouring
-// genes).
+// genes); both heads stand off their boxes alike. `caption: "..."` with
+// `captionAt: {x, y}` writes the arrow's name beside it, always on show
+// (`captionUpright: true` turns it to run up the page, for an upright arrow).
 
 (function (global) {
   "use strict";
@@ -140,7 +142,7 @@
       text: a.text || null, bend: a.bend || 0, hidden: !!a.hidden,
       hint: a.hint || null, labelDx: a.labelDx || 0, labelAt: a.labelAt || null,
       dragSpan: a.dragSpan || 0, signed: !!a.signed, width: a.width || 0, always: !!a.always,
-      both: !!a.both
+      both: !!a.both, caption: a.caption || null, captionAt: a.captionAt || null, captionUpright: !!a.captionUpright
     }));
     const valuesOnSelect = !!opts.valuesOnSelect, lockColours = !!opts.lockColours;
 
@@ -237,14 +239,14 @@
       arrows.forEach(a => {
         if (!a.onto) return;
         const o = arrows.find(x => x.id === a.onto), e = o ? edgesOf(o)[0] : null;
-        const g = e && boxes[e.from] && boxes[e.to] ? geom(e.from, e.to, autoBend(o, e.from, e.to), 0) : null;
+        const g = e && boxes[e.from] && boxes[e.to] ? geom(e.from, e.to, autoBend(o, e.from, e.to), 0, o.both) : null;
         if (!g) return;
         const t = a.ontoAt != null ? a.ontoAt : 0.5, p = quadAt(g, t), key = pointId(a.onto, a.ontoAt);
         boxes[key] = { id: key, x: p.x, y: p.y, w: 0, h: 0, kind: "point", hidden: true };
       });
     }
 
-    function geom(fromId, toId, bend, width) {
+    function geom(fromId, toId, bend, width, both) {
       width = width || 2;
       const b1 = boxes[fromId], b2 = boxes[toId];
       if (!b1 || !b2) return null;
@@ -252,22 +254,29 @@
       const dx = b2.x - b1.x, dy = b2.y - b1.y, len = Math.hypot(dx, dy) || 1;
       const nx = -dy / len, ny = dx / len;
       let ctrl = { x: straightMid.x + nx * bend, y: straightMid.y + ny * bend };
-      const p1 = edgePoint(b1, ctrl), e2 = edgePoint(b2, ctrl);
+      const e1 = edgePoint(b1, ctrl), e2 = edgePoint(b2, ctrl);
       // the tip lands 2 + 1.28 widths off the box edge, as it did when the
       // line ran on to 7.6 units into the head; on an `onto` point (no edge)
       // the tip lands on the point itself, or a thick arrow stops short of
       // the arrow it lands on (lesson 14 A, 2026-10-02)
-      let p2 = backOff(e2, ctrl, b2.kind === "point" ? width * TIP_W : 2 + width * (1.28 + TIP_W)), fit = width;
+      const tipGap = 2 + width * (1.28 + TIP_W);
+      // A head at the start too (`both`) stands off its box by the same gap;
+      // it used to start on the box edge, so its tip ran under the box
+      // (lesson 14 C, JM 2026-10-07: "pokes under the Locus 1 box, but is
+      // well separated from the Locus 2 box")
+      let p1 = both ? backOff(e1, ctrl, tipGap) : e1;
+      let p2 = backOff(e2, ctrl, b2.kind === "point" ? width * TIP_W : tipGap), fit = width;
       // Between close boxes that pull-back can carry the line's end past the
       // control point: the curve doubles back and the head turns round (JM,
       // 2026-09-30). Such an arrow is redrawn from its own two ends, its tip
       // nearer the box, and no thicker than a head can fit in the room.
       const dot = (u, v, w) => (u.x - w.x) * (v.x - w.x) + (u.y - w.y) * (v.y - w.y);
       if (dot(p2, e2, ctrl) <= 0 || dot(ctrl, e2, p1) <= 0 || dot(p2, e2, p1) <= 0) {
-        const L = Math.hypot(e2.x - p1.x, e2.y - p1.y) || 1, ux = (e2.x - p1.x) / L, uy = (e2.y - p1.y) / L;
-        fit = Math.max(1.6, Math.min(width, (L - 10) / (0.3 + TIP_W)));
+        const L = Math.hypot(e2.x - e1.x, e2.y - e1.y) || 1, ux = (e2.x - e1.x) / L, uy = (e2.y - e1.y) / L;
+        fit = Math.max(1.6, Math.min(width, (L - 10) / ((both ? 2 : 1) * (0.3 + TIP_W))));
         const gap = 2 + fit * (0.3 + TIP_W);
         p2 = { x: e2.x - ux * gap, y: e2.y - uy * gap };
+        if (both) p1 = { x: e1.x + ux * gap, y: e1.y + uy * gap };
         ctrl = { x: (p1.x + p2.x) / 2 + nx * bend * 0.5, y: (p1.y + p2.y) / 2 + ny * bend * 0.5 };
       }
       // the point the label rides on: the curve at t = 0.5
@@ -331,14 +340,14 @@
           // than as two arrows that happen to share a tail. A tier has no
           // shared tail to fan out from, so its edges keep their own bend.
           const b = autoBend(a, ed.from, ed.to);
-          const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b, width);
+          const g = geom(ed.from, ed.to, fork && i > 0 ? -b : b, width, a.both);
           if (!g) return;
           if (valuesOnSelect) {
             // what covering it costs: an arrow the student could click next
             // most, a held one less, a fixed grey one least
             const k = a.dark || a.ghost ? 0.4 : (!a.readonly && inp(a) && !inp(a).disabled ? 2.5 : 1);
             drawn.push({ id: a.id, g, w: g.fit < width ? g.fit : width, k });
-            if (sel) ownGeo.push(geom(ed.from, ed.to, fork && i > 0 ? -b : b, 0));
+            if (sel) ownGeo.push(geom(ed.from, ed.to, fork && i > 0 ? -b : b, 0, a.both));
           }
           const neg = isNeg(a);
           const cls = ["paths-arrow"];
@@ -425,6 +434,20 @@
             if (showVal && sel && !a.readonly && spec(a)) stepper(tx, ty + 2, a, spec(a));
           }
         });
+      });
+      // A fixed caption beside an arrow (`caption` at `captionAt`, turned to
+      // run up the page with `captionUpright`): the arrow's name, always on
+      // show, for one whose bare number would not say what it is (lesson 14
+      // C, JM 2026-10-07: "A single line of text beside the arrow arranged
+      // vertically that says 'recombination rate'"). The readout keeps off it.
+      arrows.forEach(a => {
+        if (a.hidden || !a.caption || !a.captionAt) return;
+        const c = a.captionAt, outer = svg("g");
+        const inner = svg("g", a.captionUpright ? { transform: `rotate(-90 ${c.x} ${c.y})` } : null);
+        const t = svg("text", { x: c.x, y: c.y, class: "paths-arrow-caption" });
+        t.textContent = a.caption;
+        inner.appendChild(t); outer.appendChild(inner); gTop.appendChild(outer);
+        if (valuesOnSelect) { try { labelRects.push(outer.getBBox()); } catch (e) {} }
       });
       if (pending) readout(pending.a, placeReadout(pending.a, pending.g, ownGeo, drawn, labelRects));
 
