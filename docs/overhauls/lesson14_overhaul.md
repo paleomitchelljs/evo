@@ -2,8 +2,29 @@
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-D built, JM's 2026-10-07 pass applied (`version: 11`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
+**Status** · A-D built, JM's 2026-10-07 pass applied (`version: 12`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
 **Last touched** · 2026-10-07 (JM's pre-posting pass: B, C, D text and cards; D windows widened)
+
+## JM, 2026-10-07 (afternoon) — "Let's please fix Part B next then" (R-8's two failing bars)
+
+- Lactase: the real 1000 Genomes profile is jagged (real haplotypes carry LD the engine's founders lack: loci at −4, −3 hold ~2-3 alleles, +6 ~13); every 40-haplotype sample sits 2.2-2.9 from any smooth simulated mean, so no window fits it. The profile cannot pin the setting either (dozens of settings sit 2.19-2.33 from it). Fix, on JM's realish-data ruling (2026-09-30): the hidden setting stays (0.15, 126 individuals; fitted earlier to the file's diversity loss and carriers' stretch, which do identify it), stop the file's 0.737; the observed data shown is a run at that setting, the one of 40 tries closest to the real profile among those typical of the setting. Named lactase after the shot as before.
+- Grid: slow (0.02, 992) and mid (0.1, 492) share a level (a slow sweep's long run erodes diversity like a smaller population) and slow's window is the widest; fast's answer reaches partial (0.1, 1383) because at 50% the profile is set by N, and 40 chromosomes saturate there. Fix: 6 populations a Go (bars ~0.7×); mid to 263 individuals; partial to 739. Sample stays 40.
+- Opening (0.05, 380) then lands mid 0.75: opening to (0.05, 2,000), which clears nothing.
+- Records: one population inside a six-population window is rare (0-3%), so the record is the closest of 12 (lactase: as above) and is checked against single populations (closer than the median), not against the six-population bar.
+
+| # | What | Status |
+|---|------|--------|
+| B-1 | `B_POPS` 6; mid (0.1, 263), partial (0.1, 739, 50%); opening (0.05, 2,000); targets and bars re-derived (80 Go's) | done: bars fast 0.986, slow 1.127, mid 0.772, small 0.653, partial 0.97, lactase 0.795; fresh 30 Go's at each setting 0.93-1.00 |
+| B-2 | lactase: no fetch; observed data a run at the hidden setting shaped on the file (`shape`), stop 0.737 | done: the pick sits 2.24 from the file's profile (a typical run 2.75); `data/SOURCES.md` says so |
+| B-3 | records: closest of 12; check re-pinned (records vs single populations; lactase shape vs the file) | done |
+| B-4 | check B green; screenshots | done: check B 22/22 (grid most 1; fresh hit rates 0.93-1.00; opening 0 everywhere; lactase shape vs file 0.07). Screenshots: a round, the lactase shot. R-8 closed |
+
+Measured (node, the page's engine; scratch `l14b/`):
+- Screening, 6 populations, 40 Go's a setting: same-stop target gaps minus the two bars, best set slow (0.02, 992) + mid (0.1, 263): margin +0.25 at 40 chromosomes, +0.45 at 150. 40 kept (what the card already says).
+- Grid (10 advantages x chance 0-100 by 20, 6 Go's, stops 0.95 and 0.5): with partial at 739 (or 0.3 at 457), no cell clears two rounds; 1,383 (the old) collides with fast at 956; 457 (0.1) with slow.
+- Openings, 12 Go's each against all six targets: (0.05, 380) mid 0.75; (0.05, 219) lactase 1.00; (0.07, 219) lactase 0.92; (0.03, 219) small 0.58; (0.05, 2,000) none (nearest partial, 2.20 vs bar 0.97).
+- Single populations against a six-population window: inside 0-3%; median 1.5-1.9 bars off. Best of 12 always under the median population (fast's worst 1.52 vs median 1.65).
+- Rounds' answers against lactase 0 (8 Go's each); cross-round 0 except partial's answer on fast 0.125.
 
 ## JM's review, 2026-10-07 — cleanup before posting
 
@@ -126,7 +147,7 @@ Plan:
 | R-5 | B/C chromosome panel as Lesson 15 bead strings | done (built on a copy, applied as a patch): 16 of the 40 sampled chromosomes, 25 beads (every 4th marker), grey the commoner allele, Lesson 15's colours for the other, the gene bead purple and ringed on carriers; checks B 22/22, C 14/14 on the copy. To be re-coloured by locus allele with R-8 |
 | R-6 | E removed (JM confirmed) | done: the page as committed (E intact) is `app/archive/lesson14_with_E_2026-10-05.html`; E's section, code, CSS, gate, check part gone; D finishes the lesson; `version` 9, `scaffold` 22 (bits A 0-5, B 6-11, C 12-16, D 17-21); a bypass code decodes 22/22; check D 16 bars pass |
 | R-7 | fixes from R-1; full check green | fixes done: lesson CSS `.controls.pending .paths-hit, .paths-step { pointer-events:none }` + blur in `lockStage`; `h` signed; `renderNote` true for signed arrows (lesson 9 shows that note). `paths.js` gained opt-in `ontoAt` and `both`; lessons 8, 9, 13 and 14 A's diagrams byte-identical before/after. Checks A 24/24, D 16/16. Full check after R-8/R-9 |
-| R-8 | B card: alleles per locus as a stacked dot plot, judged on the whole profile; lactase target in the same terms | todo |
+| R-8 | B card: alleles per locus as a stacked dot plot, judged on the whole profile; lactase target in the same terms | done 2026-10-07 (B-1 to B-4 above) |
 | R-9 | C card in allele counts to match B | todo |
 
 ## JM's notes, 2026-10-02 — A and B text, A's diagram

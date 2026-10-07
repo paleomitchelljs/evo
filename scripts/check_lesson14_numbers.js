@@ -29,7 +29,9 @@
  *      run at its setting near its means, and no round's answer clears it;
  *      Start deals round 1 with the arrows at the opening and the held arrow
  *      pale; the beak size arrow lands on the rainfall -> food arrow.
- *   B. (2026-10-05: alleles per locus, judged on the whole profile, not Mb)
+ *   B. (2026-10-05: alleles per locus, judged on the whole profile, not Mb;
+ *      2026-10-07: six populations a Go, mid and partial moved, the lactase
+ *      observed data a run shaped on the file)
  *      crossovers, assortment, Kimura's losses, the shared stretch by hand
  *      (Stage C still calls it); a locus is 5 markers either side of the
  *      gene, B_profile ranks its alleles; the five rounds' stored target
@@ -279,11 +281,11 @@ unlock("B");
   check("B a locus is 5 neighbouring markers, one at the gene; B_profile ranks its alleles, commonest first", okShape && okProf,
         "columns " + B_LOCI.length + ", gene at " + B_GENE_COL + "; 4 hand-built chromosomes, locus 0: " + prof.counts[0] + " alleles, ranks " + keys0.map(k => prof.ranks[0].get(k)).join(","));
 }
-/* the three-population average profile at a setting, and the share of reps
+/* the B_POPS-population average profile at a setting, and the share of reps
    whose profile difference from a round's target clears its bar */
 const B_avgLoc = (ai, v, stop, seed) => { const rng = mulberry32(seed);
-  const qs = []; for (let j = 0; j < 3; j++) { const run = B_run(B_found(B_nAt(v), rng), B_ADV[ai], stop, rng, 0); qs.push(B_read(run, B_rows(run.ch, 2 * run.n, rng))); }
-  return B_LOCI.map((_, c) => qs.reduce((s, q) => s + q.loc[c], 0) / 3); };
+  const qs = []; for (let j = 0; j < B_POPS; j++) { const run = B_run(B_found(B_nAt(v), rng), B_ADV[ai], stop, rng, 0); qs.push(B_read(run, B_rows(run.ch, 2 * run.n, rng))); }
+  return B_LOCI.map((_, c) => qs.reduce((s, q) => s + q.loc[c], 0) / qs.length); };
 const B_rateLoc = (r, ai, v, stop, reps, seed) => { let k = 0; for (let q = 0; q < reps; q++) if (B_judge(r, { loc: B_avgLoc(ai, v, stop, seed + q * 7919) })) k++; return k / reps; };
 {
   const S = 30, rows = [], hits = []; let agree = true;
@@ -298,17 +300,38 @@ const B_rateLoc = (r, ai, v, stop, reps, seed) => { let k = 0; for (let q = 0; q
     rows.push(r.key + " target-vs-fresh-mean " + agreeD.toFixed(3) + " (bar " + r.bar.toFixed(2) + ")" + (ok ? "" : " OFF"));
     hits.push(r.key + " " + r._rate.toFixed(2));
   }
-  check("B every target's stored profile (the mean at the hidden setting) agrees with a fresh measurement", agree, S + " three-population averages each: " + rows.join("; "));
+  check("B every target's stored profile (the mean at the hidden setting) agrees with a fresh measurement", agree, S + " " + B_POPS + "-population averages each: " + rows.join("; "));
   check("B every target's hidden setting hits its own window", B_ROUNDS.concat([B_FINAL]).every(r => r._rate >= 0.8), hits.join(", "));
 }
+/* one population at a round's hidden setting: its distance from the target, and from a shape */
+const B_one = (r, seed, shape) => { const rng = mulberry32(seed), run = B_run(B_found(B_nAt(r.v), rng), B_ADV[r.ai], r.stop, rng, 0);
+  const loc = B_read(run, B_rows(run.ch, 2 * run.n, rng)).loc; return { dT: B_profDist(loc, r.loc), dS: shape ? B_profDist(loc, shape) : NaN }; };
+const B_med = a => a.slice().sort((x, y) => x - y)[a.length >> 1];
 {
-  const ok = !!B_REAL && B_REAL.real && Math.abs(B_REAL.stop - 0.737) < 0.001 && B_REAL.loc.length === 21 && B_judge(B_FINAL, B_REAL);
-  check("B the lactase record is the 1000 Genomes file, inside its window", ok,
-        B_REAL ? "T at " + B_REAL.stop.toFixed(3) + "; profile difference from the target " + B_profDist(B_REAL.loc, B_FINAL.loc).toFixed(2) + " (bar " + B_FINAL.bar.toFixed(2) + ")" : "not loaded");
+  /* 2026-10-07 (R-8): the lactase observed data is a run at the hidden
+     setting shaped on the 1000 Genomes file (JM's realish-data ruling; the
+     file's jagged profile sits 2.2-2.9 from any setting's mean). Re-derive
+     the file's profile here and hold the page's shape to it; the run shown
+     must be more like the file than a typical run, and typical of its setting. */
+  const xhr = new XMLHttpRequest(); xhr.open("GET", "../../data/clean/lct_scan.json", false); xhr.send();
+  const d = JSON.parse(xhr.responseText), K = d.haps.length, ch = new Uint32Array(K * B_WD);
+  for (let k = 0; k < K; k++) {
+    d.marker_bins.forEach((bin, j) => { if (d.haps[k][j] === "1") { const m = B_SITE + bin; ch[k * B_WD + (m >> 5)] |= 1 << (m & 31); } });
+    if (d.site_haps[k] === "1") ch[k * B_WD + 1] |= 1 << 18;
+  }
+  const P = []; for (let q = 1; q <= 200; q++) P.push(B_profile(B_rows(ch, K, mulberry32(q * 31 + 7))).counts);
+  const shape = B_LOCI.map((_, c) => mn(P.map(p => p[c]))), dShape = B_profDist(shape, B_FINAL.shape);
+  const rec = B_record(B_FINAL), rT = B_profDist(rec.loc, B_FINAL.loc), rS = B_profDist(rec.loc, B_FINAL.shape);
+  const S = []; for (let i = 0; i < 40; i++) S.push(B_one(B_FINAL, 61000 + i * 104729, B_FINAL.shape));
+  const mT = B_med(S.map(x => x.dT)), mS = B_med(S.map(x => x.dS)), fileGap = P.map(p => B_profDist(p, B_FINAL.loc));
+  check("B the lactase observed data is a run at its setting shaped on the 1000 Genomes file", Math.abs(d.t_freq.CEU - B_FINAL.stop) < 0.001 && dShape < 0.3 && rS < mS && rT < mT,
+        "file: " + K + " haplotypes, T at " + d.t_freq.CEU + "; page shape vs file " + dShape.toFixed(2) + "; the run shown is " + rS.toFixed(2) + " from the file's profile (a typical run " + mS.toFixed(2) +
+        ") and " + rT.toFixed(2) + " from the target (a typical run " + mT.toFixed(2) + ", bar " + B_FINAL.bar + "); the file's own samples sit " + B_med(fileGap).toFixed(2) + " from the target");
   const out = []; let near = true;
-  for (const r of B_ROUNDS) { const q = B_record(r); const z = B_profDist(q.loc, r.loc) / r.bar;
-    near = near && z < 1 && B_judge(r, q); out.push(r.key + " " + z.toFixed(2)); }
-  check("B each made record sits within its setting's window", near, out.join(", "));
+  for (const r of B_ROUNDS) { const q = B_record(r), dr = B_profDist(q.loc, r.loc);
+    const m = B_med(Array.from({ length: 30 }, (_, i) => B_one(r, 62000 + i * 104729).dT));
+    near = near && dr < m; out.push(r.key + " " + dr.toFixed(2) + " (median population " + m.toFixed(2) + ")"); }
+  check("B each made record is closer to its target than the median population at its setting", near, out.join(", "));
 }
 {
   let most = 0; const multi = [];

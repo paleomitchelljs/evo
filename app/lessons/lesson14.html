@@ -1510,17 +1510,22 @@ function A_wire() {
    leaves 0.97), so nothing on the chromosome read chance alone; hence the
    unlinked markers, and 0.001.
 
-   The last round is real (data/clean/lct_scan.json, scripts/make_lct_scan.py):
-   lactase persistence (rs4988235) in 1000 Genomes Utah Europeans, diversity
-   as a share of Yoruba's in 200 kb windows; 40 kb per gap is the file's
-   marker spacing too. Its readings, measured off the file on the page:
-   rest of the genome 0.76 (three distant 500 kb stretches of chromosome 2),
-   carriers' shared stretch ~1.6 Mb, at 74%. The hidden setting that
-   reproduces them (advantage 0.15, 126 individuals, stopped at 74%) sets the
-   windows. If the file does not load, that round's record is a run at the
-   setting, as the other rounds' are.
-   Measured on the page: the file gives the rest of the genome 0.76 and the
-   carriers' stretch 1.57 Mb (non-carriers 0.29), both inside the windows.
+   The last round is shaped on real data (data/clean/lct_scan.json,
+   scripts/make_lct_scan.py): lactase persistence (rs4988235) in 1000
+   Genomes Utah Europeans; 40 kb per gap is the file's marker spacing too.
+   Its readings, measured off the file: rest of the genome 0.76 (three
+   distant 500 kb stretches of chromosome 2), carriers' shared stretch
+   1.57 Mb, at 73.7%. The hidden setting that reproduces them (advantage
+   0.15, 126 individuals, stopped at 73.7%) sets the window.
+   2026-10-07: the observed data shown for it is a run at that setting, not
+   the file's haplotypes (JM, 2026-09-30: realish data is fine, never
+   flagged). Real haplotypes carry linkage the founders here lack, so the
+   real allele profile is jagged (loci at -4, -3 hold 2-3 alleles, +6 about
+   13): every 40-haplotype sample of the file sits 2.2-2.9 from the
+   setting's mean profile, beyond any window, and the profile cannot pin a
+   setting (dozens sit 2.19-2.33 from it). The run shown is the one of 40
+   most like the file's profile (B_FINAL.shape) among those typical of the
+   setting.
    ===================================================================== */
 const B_M = 101, B_SITE = 50, B_WD = 6, B_U = 64, B_H = 0.5, B_R = 0.001, B_KB = 40, B_CAP = 6000, B_MAXLOST = 3000;
 const B_LNR = Math.log(1 - B_R);
@@ -1683,99 +1688,86 @@ const B_profDist = (a, b) => { let s = 0, c = 0;
    and neighbouring loci don't share a palette */
 const B_alleleCol = (c, key) => B_beadCol(c * 32 + key);
 
-/* The rounds: (advantage index, chance step, stop). Earlier (bg/st, retired
-   2026-10-05) measured means and sds of averages of three populations; the
-   hidden settings (advantage, individuals, stop) are unchanged from that
-   pass -- only the reading is new. `loc` is the target profile: the mean,
-   locus by locus, of a three-population average over 80 Go's of this engine
-   (node, seeds 8000 + 7919q); `bar` is the 95th percentile of a single
-   three-population average's profile difference from that mean (a fresh
-   60-Go validation at the same setting cleared it 92-95% of the time, as
-   wanted). The check re-measures both off the page.
-   Over the controls' grid (10 advantages x 6 population steps, 6 Go's each):
-   no setting clears two rounds at 50%; the opening (advantage 0.05, 380
-   individuals) clears none; no round's answer clears another's. Measured
-   2026-10-05 (node via the Chrome harness, scratch/l14/Bcard/measure_B.js):
-     fast    0.3,  992, 95%: far loci ~12.3-12.5, gene column 1.83, nearest
-             flanking locus 4.25-4.31 -- the steepest fall
-     slow    0.02, 992, 95%: ~8.0-8.3 almost everywhere, gene 1.88, nearest
-             flanking 6.08-6.10 -- barely a dip
-     mid     0.1,  492, 95%: ~8.4-9.1 far, gene 1.89, nearest flanking 4.3-4.5
-     small   0.05, 105, 95%: ~3.0-3.3 far (small N holds fewer alleles to
-             begin with), gene 1.83, nearest flanking 2.43-2.48
-     partial 0.1, 1383, 50%: ~13.7-14.6 far (big N, and only half swept),
-             gene 2.00, nearest flanking 11.73-12.02 -- shallowest fall
-   Rounds separate on both level (set mostly by N and by how long the sweep
-   ran) and shape (how far the fall reaches), which is why the grid above
-   finds no shared setting. */
+/* The rounds: (advantage index, chance step, stop). `loc` is the target
+   profile: the mean, locus by locus, of a B_POPS-population average over 80
+   Go's of this engine (node, seeds 8000 + 7919q); `bar` is the 95th
+   percentile of a single Go's profile difference from that mean (a fresh 30
+   Go's at the setting cleared it 93-100%). The check re-measures both off
+   the page.
+   2026-10-07 (R-8): three populations a Go let one setting clear two rounds
+   -- slow (0.02, 992) and the old mid (0.1, 492) share a level (a slow
+   sweep's long run erodes diversity as a smaller population does) and
+   slow's window was the widest; fast's answer reached partial (0.1, 1,383)
+   because at 50% the profile is set by the headcount and 40 chromosomes
+   saturate up there. Now six populations a Go (bars ~0.7x), mid at 263
+   individuals, partial at 739. Over the controls' grid (10 advantages x 6
+   chance steps, 6 Go's a cell, 60 cells) no setting clears two rounds; the
+   opening clears none; no round's answer clears another (partial's reaches
+   fast 1 in 8):
+     fast    0.3,  992, 95%: far ~12.3, nearest flanking 4.3 -- the deepest fall
+     slow    0.02, 992, 95%: ~8.1 everywhere, nearest 6.1 -- barely a dip
+     mid     0.1,  263, 95%: ~6.5 far, nearest 3.5
+     small   0.05, 105, 95%: ~3.1 far (fewer alleles to begin with), nearest 2.5
+     partial 0.1,  739, 50%: ~12.1 far, nearest 10.4 -- half swept, shallowest
+   Rounds separate on level (the headcount, and how long the sweep ran) and
+   shape (how far the fall reaches). */
+const B_POPS = 6;
 const B_ROUNDS = [
   { key: "fast",    ai: 9, v: 19, stop: 0.95,
-    loc: [12.45, 12.26, 11.99, 11.26, 10.68, 10.10, 9.20, 7.99, 6.35, 4.31, 1.83, 4.25, 6.34, 8.01, 9.02, 9.97, 10.66, 11.50, 11.90, 12.12, 12.40], bar: 1.282 },
+    loc: [12.61, 12.33, 11.99, 11.33, 10.75, 10.16, 9.08, 8.02, 6.35, 4.32, 1.82, 4.32, 6.34, 7.92, 9.01, 10.04, 10.72, 11.45, 11.82, 12.17, 12.56], bar: 0.986 },
   { key: "slow",    ai: 2, v: 19, stop: 0.95,
-    loc: [8.20, 8.12, 8.25, 8.03, 7.89, 8.01, 8.07, 8.05, 7.44, 6.10, 1.88, 6.08, 7.62, 7.94, 7.94, 8.30, 8.09, 8.29, 8.02, 8.07, 8.25], bar: 1.513 },
-  { key: "mid",     ai: 6, v: 38, stop: 0.95,
-    loc: [8.82, 9.00, 8.78, 8.76, 8.42, 8.12, 7.71, 7.27, 6.19, 4.50, 1.89, 4.34, 6.35, 7.25, 7.87, 8.28, 8.53, 8.73, 8.51, 9.06, 8.90], bar: 1.236 },
+    loc: [8.31, 8.14, 8.14, 8.09, 7.99, 8.14, 8.05, 8.09, 7.55, 6.17, 1.88, 6.00, 7.72, 7.84, 8.10, 8.25, 8.01, 8.30, 8.11, 8.15, 8.24], bar: 1.127 },
+  { key: "mid",     ai: 6, v: 55, stop: 0.95,
+    loc: [6.65, 6.69, 6.40, 6.48, 6.17, 5.99, 5.65, 5.32, 4.47, 3.49, 1.83, 3.48, 4.59, 5.11, 5.62, 6.00, 6.06, 6.34, 6.51, 6.59, 6.63], bar: 0.772 },
   { key: "small",   ai: 4, v: 80, stop: 0.95,
-    loc: [3.24, 3.30, 3.27, 3.17, 3.09, 3.02, 3.01, 2.84, 2.66, 2.43, 1.83, 2.48, 2.67, 2.97, 2.86, 2.98, 3.11, 3.11, 3.15, 3.09, 3.19], bar: 0.916 },
-  { key: "partial", ai: 6, v: 10, stop: 0.5,
-    loc: [14.11, 14.40, 14.50, 13.90, 13.91, 13.69, 13.39, 13.12, 12.57, 12.02, 2.00, 11.73, 12.38, 13.18, 13.54, 14.05, 14.20, 14.37, 14.49, 14.56, 14.29], bar: 1.328 }
+    loc: [3.10, 3.13, 3.09, 3.02, 3.01, 2.93, 2.93, 2.77, 2.66, 2.47, 1.84, 2.45, 2.72, 2.90, 2.93, 3.00, 3.09, 3.13, 3.16, 3.09, 3.03], bar: 0.653 },
+  { key: "partial", ai: 6, v: 27, stop: 0.5,
+    loc: [12.27, 12.28, 12.17, 12.16, 11.95, 11.64, 11.55, 11.17, 10.73, 10.32, 2.00, 10.42, 10.89, 11.26, 11.41, 11.78, 11.73, 12.08, 11.94, 12.09, 12.14], bar: 0.97 }
 ];
 /* The last target, one shot (JM, 2026-10-01: "a second-part after hitting
    the targets where the goal is to hit the 'real' data directly with the
-   reveal of the 'new' allele as a lactase gene"). Its target profile and bar
-   are the hidden setting's (0.15, 126 individuals, stopped at 74%), measured
-   the same way as the rounds above; shown after the shot. */
-const B_FINAL = { key: "lactase", ai: 7, v: 75, stop: 0.74,
-  loc: [5.84, 5.97, 5.63, 5.62, 5.64, 5.53, 5.47, 5.09, 4.96, 4.79, 2.00, 4.80, 4.95, 5.28, 5.38, 5.35, 5.55, 5.65, 5.71, 5.74, 5.91], bar: 1.144,
+   reveal of the 'new' allele as a lactase gene"). Target profile and bar at
+   the hidden setting (0.15, 126 individuals, stopped at 73.7%), measured as
+   above; no round's answer clears it. `shape`: the file's own profile, the
+   mean over 1,000 samples of 40 of its 198 haplotypes (B_rows), which picks
+   the run shown (see the header). Named after the shot. */
+const B_FINAL = { key: "lactase", ai: 7, v: 75, stop: 0.737,
+  loc: [5.81, 5.95, 5.81, 5.73, 5.71, 5.61, 5.59, 5.28, 5.07, 4.84, 2.00, 4.87, 5.04, 5.34, 5.48, 5.48, 5.58, 5.63, 5.65, 5.73, 5.85], bar: 0.795,
+  shape: [11.4, 6.5, 8.7, 9.0, 5.9, 6.4, 2.2, 2.8, 3.7, 5.3, 2.0, 4.9, 8.9, 7.1, 8.1, 10.7, 9.6, 12.7, 4.3, 6.4, 4.9],
   real: true, final: true };
 /* the profile difference: mean |your count - the target's count|, the gene
    left out, judged against the round's bar (silently: no gauge, JM 2026-10-07) */
 const B_judge = (r, q) => !!r && !!q && B_profDist(q.loc, r.loc) <= r.bar;
-const B_OPEN = { ai: 4, v: 45 };
+/* the opening: (0.05, 2,000). (0.05, 380) landed the new mid 0.75 of the time,
+   and 219 individuals landed lactase; this clears nothing (nearest: partial, 2.2 off) */
+const B_OPEN = { ai: 4, v: 0 };
 const B = Object.assign({ run: null, q: null, ghosts: [], frame: null, running: false, timer: 0, serial: 0,
                           game: null, paths: null }, B_OPEN);
 const B_every = adv => Math.max(1, Math.round(0.4 / adv));
 
-/* the real record: lactase, 1000 Genomes. Loaded once; B_REAL is null while
-   loading, false if it failed (the round then uses a run at its setting). */
-let B_REAL = null;
-function B_loadReal() {
-  fetch("../../data/clean/lct_scan.json").then(r => r.ok ? r.json() : Promise.reject(r.status)).then(d => {
-    const K = d.haps.length, ch = new Uint32Array(K * B_WD);
-    for (let k = 0; k < K; k++) {
-      d.marker_bins.forEach((bin, j) => { if (d.haps[k][j] === "1") { const m = B_SITE + bin; ch[k * B_WD + (m >> 5)] |= 1 << (m & 31); } });
-      if (d.site_haps[k] === "1") ch[k * B_WD + 1] |= 1 << 18;
-    }
-    /* marker_bins checked by hand (2026-10-05): covers every one of the 100
-       flanking positions, -50..-1 and 1..50; only 0 (the gene itself) is
-       absent, which is right -- it comes from site_haps instead. No marker
-       is uncovered, so every locus has its full 5 markers on both sides. */
-    const rows = B_rows(ch, K, mulberry32(pageSeed("l14Blct", 1, 99999)));
-    B_REAL = { real: true, rows, loc: B_profile(rows).counts, stop: d.t_freq.CEU };
-    B_FINAL.rec = null;
-    if (!B.running) B_paint();
-  }).catch(() => { B_REAL = false; B_FINAL.rec = null; if (!B.running) B_paint(); });
-}
-/* A round's observed data: the real one, or a run at the hidden setting whose
-   profile sits close to the setting's typical one (the closest of 40 tries,
-   if none gets within half the round's bar). Made in slices when the round
-   is dealt (B_obs: the page draws a placeholder meanwhile); B_record makes
-   it straight through. */
+/* A round's observed data: one population at the hidden setting, the one
+   of 12 closest to the setting's typical profile (one population sits ~1.7
+   bars from a six-population target, so it is picked, not hoped for; the
+   check holds it closer than the median population). The last target: the
+   one of 40 most like the 1000 Genomes profile (r.shape) among those within
+   1.3 bars. Made in slices when the round is dealt (B_obs: the page draws a
+   placeholder meanwhile); B_record makes it straight through. */
 function* B_recordGen(r) {
-  let best = null, bestZ = Infinity;
-  for (let i = 0; i < 40; i++) {
+  let best = null, bestZ = Infinity, real = null, realD = Infinity;
+  const tries = r.shape ? 40 : 12;
+  for (let i = 0; i < tries; i++) {
     const rng = mulberry32(pageSeed("l14Brec_" + r.key + "#" + i, 1, 999999));
     const run = yield* B_runGen(B_found(B_nAt(r.v), rng), B_ADV[r.ai], r.stop, rng, 0);
-    const rows = B_rows(run.ch, 2 * run.n, rng), q = B_read(run, rows);
+    const rows = B_rows(run.ch, 2 * run.n, rng), q = Object.assign(B_read(run, rows), { rows, stop: r.stop, P: run.P, lost: run.lost });
     const z = B_profDist(q.loc, r.loc) / r.bar;
-    if (z < bestZ) { bestZ = z; best = Object.assign(q, { rows, stop: r.stop, P: run.P, lost: run.lost }); }
-    if (z < 0.5) break;
+    if (z < bestZ) { bestZ = z; best = q; }
+    if (r.shape && z <= 1.3) { const d = B_profDist(q.loc, r.shape); if (d < realD) { realD = d; real = q; } }
+    if (!r.shape && z < 1.1) break;
   }
-  return best;
+  return real || best;
 }
 function B_record(r) {
   if (!r) return null;
-  if (r.real && B_REAL) return B_REAL;
   if (r.rec) return r.rec;
   if (r.job) { r.job.dead = true; r.job = null; }
   r.rec = drain(B_recordGen(r));
@@ -1783,14 +1775,13 @@ function B_record(r) {
 }
 function B_obs(r) {
   if (!r) return null;
-  if (r.real && B_REAL) return B_REAL;
   if (r.rec) return r.rec;
   if (!r.job) { const job = startJob(B_recordGen(r), rec => { r.rec = rec; r.job = null; if (!B.running) B_paint(); }); if (!r.rec) r.job = job; }
   return null;
 }
 /* the round on the card: none in free play; the record stays once dealt */
 const B_round = () => (B.game && !B.game.free()) ? B.game.current() : null;
-const B_stop = () => { const r = B_round(); return r ? (r.real && B_REAL ? B_REAL.stop : r.stop) : 0.95; };
+const B_stop = () => { const r = B_round(); return r ? r.stop : 0.95; };
 /* the last target's windows, and what it is, show once it has been shot at */
 const B_shot = () => !!(B.game && B.game.st.done);
 const B_practising = () => !!(B.game && (B.game.st.done || B.game.st.free ||
@@ -1823,16 +1814,16 @@ function B_go() {
   B.prog = { pop: 1, t: 0 }; B.running = true;
   lockStage("B", true); B_paint();
   const top = document.getElementById("B_top"); if (top && top.scrollIntoView) top.scrollIntoView({ behavior: "smooth", block: "start" });
-  /* three populations with the same settings, made in slices; the first is the one drawn */
+  /* B_POPS populations with the same settings, made in slices; the first is the one drawn */
   startJob((function* () {
     const runs = [];
-    for (let j = 0; j < 3; j++) { B.prog.pop = j + 1; runs.push(yield* B_runGen(B_found(n, rng), adv, stop, rng, j ? 0 : B_every(adv), B.prog)); }
+    for (let j = 0; j < B_POPS; j++) { B.prog.pop = j + 1; runs.push(yield* B_runGen(B_found(n, rng), adv, stop, rng, j ? 0 : B_every(adv), B.prog)); }
     return runs;
   })(), runs => B_play(runs, rng, practice), B_progress);
 }
 function B_progress() {
   const el = document.getElementById("B_freqRead");
-  if (el && B.prog) el.innerHTML = '<span class="label">running… population ' + B.prog.pop + ' of 3, generation ' + B.prog.t + '</span>';
+  if (el && B.prog) el.innerHTML = '<span class="label">running… population ' + B.prog.pop + ' of ' + B_POPS + ', generation ' + B.prog.t + '</span>';
 }
 /* the populations are made: play the first one's frames */
 function B_play(runs, rng, practice) {
@@ -1936,7 +1927,7 @@ function B_drawHaps() {
   const { ctx, W, H } = setupCanvas(cv);
   ctx.clearRect(0, 0, W, H);
   const r = B_round(), rec = B_obs(r), gap = 22, bw = (W - 20 - gap) / 2, y0 = 22, bh = H - 58;
-  const recLab = r && r.real && B_REAL && B_shot() ? "observed data: Utah Europeans" : "observed data";
+  const recLab = r && r.real && B_shot() ? "observed data: Utah Europeans" : "observed data";
   B_drawBlock(ctx, 10, y0, bw, bh, rec ? rec.rows : null, recLab, r ? "drawing the observed data…" : "start the targets for observed data");
   B_drawBlock(ctx, 10 + bw + gap, y0, bw, bh, !B.running && B.run ? B.rows : null, "your run", B.running ? "running…" : "Go to see your chromosomes");
   /* the axis: loci from the gene, under both blocks */
@@ -1948,7 +1939,7 @@ function B_drawHaps() {
   const varying = loc => loc.filter((c, k) => k !== B_GENE_COL && c > 1).length;
   document.getElementById("B_hapsRead").innerHTML =
     (rec ? '<span class="label">observed data: loci still holding more than one allele</span> <b>' + varying(rec.loc) + ' of 20</b>' : '<span class="label">' + (r ? "drawing the observed data…" : "start the targets for observed data") + '</span>') +
-    (q ? '<br><span class="label">your run (the first of three): </span> <b>' + varying(q.loc) + ' of 20</b>' : '');
+    (q ? '<br><span class="label">your run (the first population): </span> <b>' + varying(q.loc) + ' of 20</b>' : '');
 }
 function B_drawFreq() {
   const cv = document.getElementById("B_freq");
@@ -1984,8 +1975,8 @@ function B_drawFreq() {
    gene marked; y = how many alleles turn up in the sample of 40. Observed
    data stacks a bead per allele, commonest at the bottom, in that allele's
    colour (B_alleleCol, the same mapping B_drawBlock uses); your run draws a
-   tick at each locus's three-population average, joined so the fall reads
-   at a glance, the three populations faintly. Judged on the whole profile
+   tick at each locus's B_POPS-population average, joined so the fall reads
+   at a glance, the populations faintly. Judged on the whole profile
    (JM: "Whole profile"): the profile difference -- mean |your count - the
    target's count| over the 20 flanking loci -- against the round's bar.
    JM, 2026-10-07: no gauge for it ("have that happen silently behind the
@@ -3017,13 +3008,12 @@ document.addEventListener("score:bypass", () => {
 
 A_wire(); A_paint();
 B_wire(); B_paint();
-B_loadReal();
 C_wire(); C_paint();
 D_wire(); D_paint();
 
 Score.init({
   moduleId: "lesson14",
-  version: 11,  /* 11: D's windows widened on the idea (JM's review), 2026-10-07 */
+  version: 12,  /* 12: B's rounds re-set (six populations a Go; mid, partial, opening moved; lactase shaped on the file), 2026-10-07 */
   scaffold: 22,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
