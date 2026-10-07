@@ -69,7 +69,7 @@ const { spawn, spawnSync } = require("child_process");
 const fs = require("fs"), path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
-const PORT = 8795;
+const PORT = +process.env.PORT || 8795;   /* PORT=8796 ... lets stages run side by side */
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const ONLY = process.argv.slice(2).filter(a => /^[ABCD]$/.test(a));
 
@@ -613,7 +613,7 @@ document.getElementById("f").addEventListener("load", () => setTimeout(() => {
 }, 3000));
 </script>`;
 
-const probePath = path.join(ROOT, "_check_l14.html");
+const probePath = path.join(ROOT, "_check_l14_" + PORT + ".html");
 fs.writeFileSync(probePath, probe);
 const server = spawn("python3", ["-m", "http.server", String(PORT), "--directory", ROOT],
                      { stdio: "ignore", detached: true });
@@ -622,7 +622,7 @@ process.on("exit", cleanup);
 
 setTimeout(() => {
   const r = spawnSync(CHROME, ["--headless=new", "--disable-gpu", "--virtual-time-budget=1800000",
-                               "--dump-dom", `http://127.0.0.1:${PORT}/_check_l14.html`],
+                               "--dump-dom", `http://127.0.0.1:${PORT}/_check_l14_${PORT}.html`],
                       { encoding: "utf8", maxBuffer: 1 << 28 });
   const m = /<pre id="out">([\s\S]*?)<\/pre>/.exec(r.stdout || "");
   if (!m) { console.error("no result -- is Chrome at " + CHROME + " ?"); cleanup(); process.exit(2); }

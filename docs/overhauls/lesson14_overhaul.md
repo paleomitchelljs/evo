@@ -2,8 +2,31 @@
 
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
-**Status** · A-D built, JM's 2026-10-07 pass applied (`version: 12`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page locked; A and B voice blocks are JM's dictation (2026-10-02), C and D placeholders
+**Status** · A-D built, JM's 2026-10-07 pass applied (`version: 12`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page **unlocked 2026-10-07**; A and B voice blocks are JM's dictation (2026-10-02), C and D his dictation (2026-10-07)
 **Last touched** · 2026-10-07 (JM's pre-posting pass: B, C, D text and cards; D windows widened)
+
+## JM, 2026-10-07 (night) — C and D intros dictated; D bullets
+
+- C and D voice blocks = his dictation, transcription and punctuation only ("loci" for "low si", "alleles" for "illeges", "additive" for "added", "ternary" for "turnary", and the like); C's bullets kept (*"otherwise, I think it's pretty good"*); D's bullets *"greatly cleaned up and shortened"*.
+- **One content edit, flagged to JM:** the dictation had blue and yellow swapped (his blue = the female-mimic sneaker, his yellow = the small-territory guarder; "yellow beats blue, blue beats orange, orange beats yellow"). The lizards (Sinervo & Lively 1996) and this page's ring are orange beats blue, blue beats yellow, yellow beats orange, so the two colour names are swapped in the text; and "the fitness of orange is going to control the fitness of [yellow]" reads "how common orange is going to control the fitness of yellow". Left as dictated: epistasis defined as "a trait influenced by more than one gene" (the page's epistasis arrow is the interaction: Locus 2 changes what Locus 1 does) — noted to JM, not changed.
+
+| # | What | Status |
+|---|------|--------|
+| T-1 | C voice → dictation | done (five paragraphs) |
+| T-2 | D voice → dictation (blue/yellow corrected) | done (four paragraphs; the edit is in an HTML comment above the block) |
+| T-3 | D bullets cut to three | done |
+
+## JM, 2026-10-07 (evening) — buttons moved; unlock
+
+- *"I'd like the "Next target" button from the Predict panel moved over to where the "Download .R" button currently is (next to "Go" in the Control Panel). The "Download R" should be at the bottom of the R code panel, or even replace the "R CODE" title of that panel with the button. Also please unlock lesson 14 and push those changes. Only make that adjustment for 14 for now and going forward--we'll need a note to add that revision to past lessons when we make those passes."*
+
+| # | What | Status |
+|---|------|--------|
+| U-1 | "Next target" in each stage's Controls row beside Go (`mountRounds` uses the page's button instead of making one in the card) | done: `lockStage` turns it off during a run with the rest of the row; `paint()` sets it after |
+| U-2 | "Download .R" replaces the "R code" title of the R code panel | done (`button.code-dl`, ghost style) |
+| U-3 | `LOCKS.txt`: lesson14 open | done |
+| U-4 | `docs/REVISIONS_PLANNED.md` row for 10-13 (and the default going forward) | done: row 12 |
+| U-5 | checks | A 24/24, B 22/22, C 14/14, D 15/15 (practice, scoring, one-shot flows drive the moved button). The check takes `PORT` from the environment so stages run side by side |
 
 ## JM, 2026-10-07 (afternoon) — "Let's please fix Part B next then" (R-8's two failing bars)
 
