@@ -1,0 +1,373 @@
+#!/usr/bin/env node
+/*
+ * check_lesson15_numbers.js -- the checks for app/lessons/lesson15.html.
+ *
+ * Lesson 15 is a draft (tenth pass, 2026-10-07): A the snake game on a
+ * neutral island, fifteen generations, a pedigree in three views and six
+ * reads of it; B the same on an island whose new alleles carry s and h; C
+ * one allele's change split among snakes and then among the copies inside
+ * each snake (a hierarchical Price equation), and B's island read back
+ * winter by winter. What has to hold:
+ *
+ *   Engine. fourteen founders, one new allele each; A's alleles do nothing,
+ *      B's carry s and h on the 0.05 grid inside their ranges, s drawn from
+ *      the curve the page draws (share below 0 re-derived here); a snake's
+ *      multiplier is 1 - s, 1 - h s, 1 - h_a s_a - h_b s_b, multiplied
+ *      across genes; a pair's young average (f1 m1 + f2 m2) / 2; a played
+ *      snake with no young ends play and names why; a game always reaches
+ *      generation 15.
+ *   Pedigree. past rows show exactly the snakes that had young, the living
+ *      row every snake; mates side by side; no lines without a click; a
+ *      click on a bead / circle / snake selects that copy or snake in each
+ *      view; lock adds, unlocking keeps the last.
+ *   Reads. each island's six targets re-derived here from the snakes: the
+ *      traced copy's parent, grandparent and great-grandparent copies; the
+ *      pair's meeting copy (the first copy both lines share) and its depth;
+ *      the commonest coloured allele, its origin, and the most recent copy
+ *      every living copy passes through; first answers record their own
+ *      bit, misses do not shut a door; over fresh islands the meeting copy
+ *      sits after the origin most of the time (the measured 83%).
+ *   C. the identity holds exactly for random families (Δz = cov + E, the
+ *      snakes' E(wΔz) = the copies' cov + E, and the snakes' cov plus the
+ *      copies' cov is the covariance over all twelve copies); a fair coin
+ *      for which copy leaves the copies' cov at 0 on average; each round has
+ *      an answer that hits and one step the right way of the opening hits
+ *      where that is the idea; the opening hits none; no family hits two
+ *      rounds; practice records nothing, Go records one bit and waits for
+ *      Next target; the R panel computes the page's own numbers (Rscript).
+ *   Island read-back. every winter's three parts add to that winter's
+ *      change, and the change lands on the next generation's share.
+ *   All. every canvas fits its panel; a full run writes all 17 bits.
+ *
+ * Same harness as check_lesson14_numbers.js: the checks run inside a
+ * same-origin iframe against the page's own functions; the report comes back
+ * in a <pre>; the runner fails if fewer checks come back than ran.
+ *
+ * Usage:  node scripts/check_lesson15_numbers.js      (~1 minute)
+ * Exit 0 iff every check passes. Needs Google Chrome and python3; Rscript
+ * for the R panel's check (skipped, and said so, without it).
+ */
+const { spawn, spawnSync } = require("child_process");
+const fs = require("fs"), path = require("path");
+
+const ROOT = path.resolve(__dirname, "..");
+const PORT = +process.env.PORT || 8797;
+const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+
+const INNER = `
+const L=[], say=s=>L.push(s);
+let bad=0, ran=0;
+const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
+const near=(a,b,e)=>Math.abs(a-b)<=(e==null?1e-9:e);
+for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+FIT_EPOCH++;
+
+/* ================= engine ================= */
+for (const key of ["A","B"]) {
+  const w = WD[key], row = rowSnakes(w, 0);
+  const one = row.every(s => { let c = 0; for (let l=0;l<LOCI;l++) for (const sd of [0,1]) if (w.AL[s.g[sd][l]].col) c++; return c === 1; });
+  check(key+" fourteen founders, one new allele each, seven plain", row.length === N0 && one && w.AL.filter(a=>!a.col).length === LOCI, row.length+" founders");
+}
+check("A's alleles do nothing", WD.A.AL.every(a => a.s === 0 && a.h === 0));
+{
+  const ok = WD.B.AL.filter(a=>a.col).every(a => a.s >= S_LO-1e-9 && a.s <= S_HI+1e-9 && a.h >= 0 && a.h <= 1 && near(a.s*20, Math.round(a.s*20), 1e-6) && near(a.h*20, Math.round(a.h*20), 1e-6));
+  check("B's alleles: s and h on the 0.05 grid, inside their ranges", ok);
+  /* the curve the page draws is normal(S_MU, S_SD) clipped; the share rounding below -0.025 re-derived */
+  const scratch = makeWorld("B"); scratch.srng = mulberry32(4242); scratch.rng = mulberry32(17);
+  let neg = 0, n = 20000; for (let i=0;i<n;i++) { const id = newAllele(scratch, 0, 1, null, false); if (scratch.AL[id].s < 0) neg++; }
+  const erf = x => { const t = 1/(1+0.3275911*Math.abs(x)); const y = 1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return x<0?-y:y; };
+  const want = 0.5*(1+erf((-0.025 - S_MU)/S_SD/Math.SQRT2));
+  check("B's s comes from the drawn curve: share helpful "+(neg/n).toFixed(3)+" against "+want.toFixed(3), near(neg/n, want, 0.015));
+}
+{
+  const w = makeWorld("B"); w.srng = mulberry32(5); found(w, 0);
+  const mk = (s, h) => { w.AL.push({ locus: 0, born: 1, from: null, col: "#000", s, h }); return w.AL.length - 1; };
+  const a = mk(-0.5, 0.5), b = mk(0.5, 0.2), c = mk(0.2, 1);
+  const sn = { g: [Int32Array.from(rowSnakes(w,0)[0].g[0]), Int32Array.from(rowSnakes(w,0)[0].g[0])] };
+  for (let l=0;l<LOCI;l++) { sn.g[0][l] = l; sn.g[1][l] = l; }       /* plain everywhere: the founders' plain ids are 0..6 */
+  const m0 = multOf(w, sn);
+  sn.g[0][0] = a; sn.g[1][0] = a; const m1 = multOf(w, sn);
+  sn.g[1][0] = 0; const m2 = multOf(w, sn);
+  sn.g[1][0] = b; const m3 = multOf(w, sn);
+  sn.g[0][1] = c; sn.g[1][1] = c; const m4 = multOf(w, sn);
+  check("multiplier: plain 1; two copies of s -0.5 = 1.5; one copy, h 0.5 = 1.25; two new alleles = 1 - h_a s_a - h_b s_b; across genes it multiplies",
+        near(m0,1) && near(m1,1.5) && near(m2,1.25) && near(m3,1.15) && near(m4,1.15*0.8), [m0,m1,m2,m3,m4].map(x=>x.toFixed(3)).join(" "));
+  sn.g[0][1] = mk(1, 1); sn.g[1][1] = sn.g[0][1];
+  check("multiplier never below 0", multOf(w, sn) === 0);
+  const A_ = { food: 3, g: [new Int32Array(LOCI).fill(0), new Int32Array(LOCI).fill(0)] }; for (let l=0;l<LOCI;l++){A_.g[0][l]=l;A_.g[1][l]=l;}
+  const B_ = { food: 3, g: [Int32Array.from(A_.g[0]), Int32Array.from(A_.g[1])] }; B_.g[0][0] = a; B_.g[1][0] = a;
+  const rng = mulberry32(9); let sum = 0; const N = 40000; for (let i=0;i<N;i++) sum += broodOf(w, A_, B_, rng);
+  check("a pair's young average (f1 m1 + f2 m2) / 2: "+(sum/N).toFixed(3)+" against "+((3+3*1.5)/2).toFixed(3), near(sum/N, 3.75, 0.02));
+}
+{
+  /* a played snake with no young ends play, and says why; with young, the player is one of them */
+  const w = makeWorld("A"); found(w, 3);
+  const row = rowSnakes(w, 0), me = w.SN.get(w.YOU.get(0)), others = row.filter(s => s !== me);
+  for (const s of row) s.food = 2;
+  me.fate = "hawk";
+  breed(w, [[others[0], others[1]], [others[2], others[3]]], mulberry32(1));
+  const ended = w.ended === "hawk" && !w.YOU.has(1);
+  const w2 = makeWorld("A"); found(w2, 4);
+  const r2 = rowSnakes(w2, 0), me2 = w2.SN.get(w2.YOU.get(0)), o2 = r2.filter(s => s !== me2); for (const s of r2) s.food = 2;
+  breed(w2, [[me2, o2[0]]], mulberry32(2));
+  const kid = w2.YOU.get(1);
+  check("a played snake with no young ends play and names why; one with young is born again as one of them",
+        ended && w2.ended == null && me2.kids.includes(kid), "ended " + w.ended + ", next " + kid);
+}
+
+/* ================= island A: a whole game ================= */
+fastForward("A");
+const wA = WD.A;
+check("A runs to generation " + LAST + " and opens its reads", wA.gen === LAST && wA.phase === "done" && !!CH.A, "gen " + wA.gen + ", phase " + wA.phase);
+{
+  let ok = true, why = "";
+  for (let t = 0; t <= wA.gen; t++) {
+    const shown = new Set(shownRow(wA, t)), all = genOf(wA, t);
+    for (const id of all) { const want = t === wA.gen || wA.SN.get(id).kids.length > 0; if (shown.has(id) !== want) { ok = false; why = "gen " + t + " snake " + id; } }
+  }
+  check("past rows show exactly the snakes that had young; the living row every snake", ok, why);
+  const P = PV.A, Lay = pedLayout(wA, P, 1200); let adj = true;
+  for (let t = 0; t < wA.gen; t++) for (const id of shownRow(wA, t)) { const m = mateOf(wA, id); if (m == null) { adj = false; continue; }
+    if (Math.abs(Math.abs(Lay.pos.get(id).x - Lay.pos.get(m).x) - Lay.slot) > 1e-6) adj = false; }
+  check("mates sit side by side", adj);
+}
+/* clicks: no lines without one; each view selects what was clicked; lock adds, unlock keeps the last */
+{
+  const key = "A", P = PV.A, cv = document.getElementById("A_ped"); P.sel = []; P.last = null; P.lock = false;
+  document.getElementById("A_lock").checked = false;
+  const at = (xy) => { const r = cv.getBoundingClientRect(); return { clientX: r.left + xy.x, clientY: r.top + xy.y, bubbles: true }; };
+  const last = genOf(wA, wA.gen), id0 = last[2], id1 = last[5];
+  let res = [];
+  for (const v of ["chr", "loc", "org"]) {
+    setView(key, v); P.locus = 3; setView(key, v);
+    const c = v === "org" ? { kind: "snake", id: id0 } : { kind: "copy", id: id0, side: 1, locus: 3 };
+    const xy = v === "org" ? snakeXY(P.lay, id0) : copyXY(P.lay, P, c);
+    cv.dispatchEvent(new MouseEvent("mousemove", at(xy)));
+    const noHover = P.sel.length === 0;
+    cv.dispatchEvent(new MouseEvent("click", at(xy)));
+    res.push(v + ":" + (noHover && P.last && itemKey(P.last) === itemKey(c) ? "ok" : "no"));
+    P.sel = []; P.last = null;
+  }
+  check("no lines without a click; a click selects that copy or snake in each view", res.every(s => /ok$/.test(s)), res.join(" "));
+  setView(key, "chr");
+  const c0 = { kind: "copy", id: id0, side: 0, locus: 2 }, c1 = { kind: "copy", id: id1, side: 1, locus: 4 };
+  cv.dispatchEvent(new MouseEvent("click", at(copyXY(P.lay, P, c0))));
+  cv.dispatchEvent(new MouseEvent("click", at(copyXY(P.lay, P, c1))));
+  const replaced = P.sel.length === 1 && itemKey(P.sel[0]) === itemKey(c1);
+  const lk = document.getElementById("A_lock"); lk.checked = true; lk.dispatchEvent(new Event("change"));
+  cv.dispatchEvent(new MouseEvent("click", at(copyXY(P.lay, P, c0))));
+  const added = P.sel.length === 2;
+  lk.checked = false; lk.dispatchEvent(new Event("change"));
+  const kept = P.sel.length === 1 && itemKey(P.sel[0]) === itemKey(c0);
+  check("unlocked a click replaces; lock adds; unlocking keeps the last click", replaced && added && kept, [replaced, added, kept].join(" "));
+  P.sel = []; P.last = null;
+}
+
+/* the reads, re-derived from the snakes */
+function upBy(w, c, k) { let id = c.id, side = c.side; for (let i = 0; i < k; i++) { const o = w.SN.get(id).src[side]; side = o.h[c.locus]; id = o.p; } return { id, side, locus: c.locus }; }
+function fullUp(w, c) { const out = [{ id: c.id, side: c.side }]; let s = w.SN.get(c.id), side = c.side; while (s.src) { const o = s.src[side]; side = o.h[c.locus]; s = w.SN.get(o.p); out.push({ id: s.id, side }); } return out; }
+const same = (a, b) => a && b && a.id === b.id && a.side === b.side && a.locus === b.locus;
+function checkReads(key) {
+  const w = WD[key], c = CH[key];
+  const ups = [1,2,3].map(k => upBy(w, c.trace, k));
+  check(key + " the traced copy's parent, grandparent, great-grandparent copies", ups.every((u, i) => same(u, c.up[i])) && ups.every((u, i) => w.SN.get(u.id).gen === w.gen - 1 - i));
+  const p = c.pair, A = fullUp(w, p.a), B = fullUp(w, p.b);
+  let d = -1; for (let i = 0; i < Math.min(A.length, B.length); i++) if (A[i].id === B[i].id && A[i].side === B[i].side) { d = i; break; }
+  const m = d >= 0 ? Object.assign({ locus: p.a.locus }, A[d]) : null;
+  let inBand = 0; const last = genOf(w, w.gen);
+  for (let l = 0; l < LOCI; l++) for (let i = 0; i < last.length; i++) for (let j = i+1; j < last.length; j++) for (const si of [0,1]) for (const sj of [0,1]) {
+    const q = coalesce(w, { id: last[i], side: si }, { id: last[j], side: sj }, l); if (q && q.d >= 3 && q.d <= 8) inBand++; }
+  check(key + " the pair's meeting copy is the first both lines share, " + d + " generations back (3-8 where the record has such a pair: " + inBand + " do)",
+        m && same(m, p.m) && p.a.id !== p.b.id && p.a.locus === p.b.locus && (inBand === 0 || (d >= 3 && d <= 8)));
+  const al = c.allele;
+  if (!al) { check(key + " the commonest coloured allele (none with three copies: Run one more generation)", !!document.getElementById(key + "_more") && !document.getElementById(key + "_more").hidden); return; }
+  const cnt = new Map(); for (const id of last) { const s = w.SN.get(id); for (let l=0;l<LOCI;l++) for (const sd of [0,1]) { const v = s.g[sd][l]; if (w.AL[v].col) cnt.set(v, (cnt.get(v)||0)+1); } }
+  const mx = Math.max(...cnt.values());
+  check(key + " the read allele is the commonest coloured one: " + al.n + " of " + al.of + " copies", cnt.get(al.id) === al.n && al.n === mx && al.of === 2 * last.length);
+  const a = w.AL[al.id];
+  check(key + " its origin is the copy where it arose", same(al.origin, { id: a.from.snake, side: a.from.side, locus: a.locus }) && w.SN.get(a.from.snake).g[a.from.side][a.locus] === al.id);
+  const mg = w.SN.get(al.mrca.id).gen, through = al.copies.every(cp => { const u = fullUp(w, { id: cp.id, side: cp.side, locus: al.locus }); const x = u[w.gen - mg]; return x.id === al.mrca.id && x.side === al.mrca.side; });
+  const below = new Set(al.copies.map(cp => { const u = fullUp(w, { id: cp.id, side: cp.side, locus: al.locus }); const x = u[w.gen - mg - 1]; return x.id + "|" + x.side; }));
+  check(key + " every living copy passes through its meeting copy (generation " + mg + "), and a generation later they are " + below.size + " copies, not one",
+        through && (mg === w.gen || below.size > 1) && mg >= a.born);
+}
+checkReads("A");
+{
+  /* answering: a first miss records 0 and the door stays open; the rest are first-time hits */
+  const c = CH.A, P = PV.A;
+  P.last = { kind: "copy", id: c.trace.id, side: c.trace.side, locus: c.trace.locus }; Chal.answer("A");
+  const missed = c.step === 0 && Score.getBit("scaffold", BIT.A1) === 0;
+  P.last = { kind: "snake", id: c.up[0].id }; Chal.answer("A");
+  const snakeRefused = c.step === 0;
+  while (!c.done) { const wnt = Chal.want(c); if (!wnt) break; P.last = { kind: "copy", id: wnt.id, side: wnt.side, locus: wnt.locus }; Chal.answer("A"); }
+  const bits = ["A1","A2","A3","A4","A5","A6"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("A: a first miss records 0 and the read stays open; a snake is not a copy; then each first hit records 1; B opens",
+        missed && snakeRefused && c.done && bits === "011111" && Gates.B.open, "bits " + bits);
+}
+
+/* ================= island B ================= */
+fastForward("B");
+check("B runs to generation " + LAST, WD.B.gen === LAST && !!CH.B);
+{
+  const c = CH.B; let extra = 0;
+  if (!c.allele) { c.step = 4; Chal.sync("B"); const before = WD.B.gen; while (!c.allele && extra < 30) { Chal.more("B"); extra++; } check("B: Run one more generation runs one, until an allele has three copies", WD.B.gen === before + extra && !!c.allele, extra + " more"); c.step = 0; }
+  checkReads("B");
+  const P = PV.B;
+  while (!c.done) { const wnt = Chal.want(c); if (!wnt) break; P.last = { kind: "copy", id: wnt.id, side: wnt.side, locus: wnt.locus }; Chal.answer("B"); }
+  check("B: six first hits record 1; C opens", c.done && ["B1","B2","B3","B4","B5","B6"].every(k => Score.getBit("scaffold", BIT[k]) === 1) && Gates.C.open);
+}
+{
+  /* over fresh islands: where the read allele's living copies meet, against where it arose */
+  let later = 0, n = 0;
+  for (let salt = 10; salt < 70; salt++) { const w = makeWorld("A"); found(w, salt); runRest(w); const t = alleleTarget(w); if (!t) continue; n++; if (t.mrcaGen > t.bornGen) later++; }
+  check("fresh islands: the living copies' meeting copy is younger than the mutant in " + later + " of " + n + " (model: 83%)", n >= 50 && later / n > 0.65);
+}
+
+/* ================= C ================= */
+{
+  const rng = mulberry32(77); let worst = 0, worstFlat = 0;
+  for (let it = 0; it < 600; it++) {
+    const y = [0,1,2].map(() => { const n = (rng() * 6) | 0; return Array.from({ length: n }, () => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: rng() < .2, cb: rng() < .2 })); });
+    const t = C_terms(y); if (t.dead) continue;
+    worst = Math.max(worst, Math.abs(t.covS + t.ES - t.dz), Math.abs(t.ES - t.covC - t.EC));
+    /* the covariance over all twelve copies, each copy's w its young over the average copy's */
+    const ws = [], zs = []; for (let i = 0; i < 6; i++) for (const j of [0,1]) { ws.push(t.m[i][j] / (t.n.reduce((a,b)=>a+b,0) / 12)); zs.push(C_PAR[i][j]); }
+    const mw = ws.reduce((a,b)=>a+b,0)/12, mz = zs.reduce((a,b)=>a+b,0)/12; let cv = 0; for (let k=0;k<12;k++) cv += (ws[k]-mw)*(zs[k]-mz)/12;
+    worstFlat = Math.max(worstFlat, Math.abs(cv - t.covS - t.covC));
+  }
+  check("C: Δz = cov + E(wΔz) for the snakes, and their E(wΔz) = the copies' cov + E, exactly (600 random families)", worst < 1e-12, "worst " + worst.toExponential(1));
+  check("C: the snakes' cov plus the copies' cov is the covariance over all twelve copies", worstFlat < 1e-12, "worst " + worstFlat.toExponential(1));
+  let s = 0, se = 0; const N = 4000;
+  for (let it = 0; it < N; it++) { const y = [0,1,2].map(() => [0,1].map(() => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: false, cb: false }))); const t = C_terms(y); s += t.covC; se += Math.abs(t.EC); }
+  check("C: a fair coin for which copy leaves the copies' cov at 0 on average (" + (s/N).toFixed(4) + "), and faithful copies leave E at 0", Math.abs(s / N) < 0.006 && se === 0);
+}
+const K = (a, b, ca, cb) => ({ a, b, ca: !!ca, cb: !!cb });
+const ANSWERS = [
+  [[K(0,0),K(0,1)], [K(0,1),K(1,0)], [K(0,0),K(1,1)]],                                      /* hets pass gold twice */
+  [[K(0,0),K(0,0)], [K(0,0),K(0,1),K(0,0)], [K(0,1)]],                                      /* fewer young for gold, gold copies reach more */
+  [[K(0,1),K(1,0)], [K(0,1),K(1,0,0,1)], [K(0,1),K(1,0)]],                                  /* a grey copy comes out gold */
+  [[K(1,0),K(0,1)], [K(0,0)], [K(0,0),K(1,0),K(0,0)]],                                      /* more young for gold, grey copies reach more */
+  [[K(0,0),K(0,1,1)], [K(0,1),K(1,0)], [K(0,1),K(1,0)]]                                     /* gold copy reaches both; one comes out grey */
+];
+const OPEN = () => [0,1,2].map(() => [C_kid(0), C_kid(1)]);
+{
+  const hits = ANSWERS.map((y, i) => C_judge(C_ROUNDS[i], y).ok);
+  check("C: each round has an answer that hits", hits.every(Boolean), hits.join(" "));
+  const open = C_ROUNDS.map(r => C_judge(r, OPEN()).ok);
+  check("C: the opening hits no round", open.every(x => !x), open.join(" "));
+  /* one step the right way of the opening: one het passes gold to both its young (round 1), one grey copy comes out gold (round 3) */
+  const s1 = OPEN(); s1[0][1].a = 0; const s3 = OPEN(); s3[1][0].cb = true;
+  check("C: one step the right way hits rounds 1 and 3", C_judge(C_ROUNDS[0], s1).ok && C_judge(C_ROUNDS[2], s3).ok,
+        C_terms(s1).p2.toFixed(3) + " / " + C_terms(s3).p2.toFixed(3));
+  /* no family hits two rounds: random search plus the answers themselves */
+  const rng = mulberry32(31); let two = 0, found = C_ROUNDS.map(() => 0);
+  const fams = ANSWERS.slice();
+  for (let it = 0; it < 30000; it++) fams.push([0,1,2].map(() => { const n = (rng() * 6) | 0; return Array.from({ length: n }, () => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: rng() < .15, cb: rng() < .15 })); }));
+  for (const y of fams) { const h = C_ROUNDS.map(r => C_judge(r, y).ok); h.forEach((x, i) => { if (x) found[i]++; }); if (h.filter(Boolean).length > 1) two++; }
+  check("C: no family hits two rounds (30,000 random families); each round is hit by some: " + found.join(" / "), two === 0 && found.every(x => x > 0));
+}
+{
+  /* Go: practice records nothing; a scored Go records its bit and waits for Next target */
+  C.round = 0; C.results = []; C.waiting = false; C.done = false;
+  const pr = document.getElementById("C_practice"), go = document.getElementById("C_go"), nx = document.getElementById("C_next");
+  C.young = ANSWERS[0].map(k => k.map(x => Object.assign({}, x)));
+  pr.checked = true; go.click();
+  const practiced = C.results.length === 0 && !C.waiting;
+  pr.checked = false; C_drawTarget();
+  C.young = OPEN(); go.click();
+  const miss = C.results.length === 1 && C.results[0] === false && Score.getBit("scaffold", BIT.C1) === 0 && C.waiting && !nx.hidden;
+  C_flip(0, 1, 0); const locked = C_terms(C.young).p2 === 0.5;
+  nx.click();
+  for (let i = 1; i < 5; i++) { C.young = ANSWERS[i].map(k => k.map(x => Object.assign({}, x))); go.click(); if (i < 4) nx.click(); }
+  const bits = ["C1","C2","C3","C4","C5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("C: practice records nothing; Go records one bit and locks the family until Next target; five attempts finish the lesson",
+        practiced && miss && locked && C.done && bits === "01111" && document.getElementById("done-banner").classList.contains("shown"), "bits " + bits);
+}
+{
+  let n = 0; for (let i = 0; i < 17; i++) if (Score.isAnswered("scaffold", i)) n++;
+  check("all 17 declared bits written", n === 17, n + " written");
+}
+/* the R panel, for a family that moves every term */
+C.young = [[K(0,0),K(0,0,1,0)], [K(0,1),K(1,0),K(0,0)], [K(0,1)]];
+const RT = C_terms(C.young);
+const RCODE = C_RCODE();
+
+/* ================= island read-back ================= */
+{
+  C_drawIsle();
+  const w = WD.B, a = isleAllele(w), T = isleTerms(w, a.id, a.locus);
+  let worst = 0, land = 0;
+  T.forEach((q, i) => { if (!q) return; worst = Math.max(worst, Math.abs(q.covS + q.covC + q.EC - (q.p2 - q.p)));
+    const nx = rowSnakes(w, q.t + 1); let c = 0; for (const s of nx) c += (s.g[0][a.locus] === a.id) + (s.g[1][a.locus] === a.id); land = Math.max(land, Math.abs(c / (2 * nx.length) - q.p2)); });
+  check("read-back: each winter's three parts add to its change, and the change lands on the next generation's share", worst < 1e-12 && land < 1e-12, "worst " + worst.toExponential(1) + ", " + land.toExponential(1));
+}
+{
+  FIT_EPOCH++; paintAll(null, false);
+  const over = [];
+  for (const id of ["A_ped","B_ped","B_dist","C_fam","C_card","C_isle"]) { const cv = document.getElementById(id), host = cv.parentElement;
+    if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
+  check("every canvas fits its panel", over.length === 0, over.join(", "));
+}
+
+say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
+say("RAN " + ran);
+say("RTERMS " + JSON.stringify([RT.covS, RT.ES, RT.covS + RT.ES, RT.dz]));
+say("RCODE " + RCODE.replace(/\\n/g, "\\\\n"));
+L.join(" ;; ");
+`;
+
+const probe = `<!doctype html><meta charset="utf-8"><title>pending</title>
+<iframe id="f" src="http://127.0.0.1:${PORT}/app/lessons/lesson15.html?preview=1" width="1500" height="1000"></iframe>
+<pre id="out"></pre>
+<script>
+const SRC = ${JSON.stringify(INNER)};
+document.getElementById("f").addEventListener("load", () => setTimeout(() => {
+  const w = document.getElementById("f").contentWindow;
+  let res;
+  try { res = String(w.eval(SRC)); }
+  catch (e) { res = "THREW " + e.message + " @ " + (e.stack||"").split("\\n")[1]; }
+  document.getElementById("out").textContent = res;
+  document.title = "done";
+}, 3000));
+</script>`;
+
+const probePath = path.join(ROOT, "_check_l15_" + PORT + ".html");
+fs.writeFileSync(probePath, probe);
+const server = spawn("python3", ["-m", "http.server", String(PORT), "--directory", ROOT],
+                     { stdio: "ignore", detached: true });
+const cleanup = () => { try { process.kill(-server.pid); } catch (e) {} try { fs.unlinkSync(probePath); } catch (e) {} };
+process.on("exit", cleanup);
+
+setTimeout(() => {
+  const r = spawnSync(CHROME, ["--headless=new", "--disable-gpu", "--virtual-time-budget=600000",
+                               "--dump-dom", `http://127.0.0.1:${PORT}/_check_l15_${PORT}.html`],
+                      { encoding: "utf8", maxBuffer: 1 << 28 });
+  const m = /<pre id="out">([\s\S]*?)<\/pre>/.exec(r.stdout || "");
+  if (!m) { console.error("no result -- is Chrome at " + CHROME + " ?"); cleanup(); process.exit(2); }
+  const text = m[1].replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+  const lines = text.split(" ;; ");
+  let bad = !/ALL BARS PASS/.test(text);
+  const rterms = lines.find(l => /^RTERMS /.test(l)), rcode = lines.find(l => /^RCODE /.test(l));
+  for (const line of lines) if (!/^(RTERMS|RCODE) /.test(line)) console.log(line);
+  const reported = lines.filter(l => /^(ok|FAIL)\s/.test(l)).length;
+  const ranLine = /^RAN (\d+)$/.exec((lines.find(l => /^RAN \d+$/.test(l)) || ""));
+  if (!ranLine || +ranLine[1] !== reported) {
+    console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported + " came back -- the report was truncated");
+    cleanup(); process.exit(1);
+  }
+  /* the R panel computes the page's own four numbers */
+  if (rterms && rcode) {
+    const want = JSON.parse(rterms.slice(7)), code = rcode.slice(6).replace(/\\n/g, "\n");
+    const rs = spawnSync("Rscript", ["-e", code + "\ncat(sprintf('%.12f', c(cov_snakes, E_snakes, cov_snakes + E_snakes, mean(zy) - mean(z))), sep=' ')"], { encoding: "utf8" });
+    if (rs.error) console.log("skip R panel  (no Rscript)");
+    else {
+      /* the panel's own last line prints too ([1] ...); the four numbers asked for come last */
+      const got = (rs.stdout || "").trim().split(/\s+/).slice(-4).map(Number);
+      const ok = got.length === 4 && got.every((v, i) => Math.abs(v - want[i]) < 1e-9);
+      console.log((ok ? "ok   " : "FAIL ") + "the R panel computes the page's numbers: " + got.map(v => v.toFixed(4)).join(" ") + (ok ? "" : "  -- page " + want.map(v => v.toFixed(4)).join(" ") + " " + (rs.stderr || "").slice(0, 300)));
+      if (!ok) bad = true;
+    }
+  }
+  cleanup();
+  process.exit(bad ? 1 : 0);
+}, 1800);

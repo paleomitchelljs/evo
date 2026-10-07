@@ -2,8 +2,62 @@
 
 **File** · `app/lessons/lesson15.html` — Stage A playable, locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · Stage A playable (built 2026-10-01 night, game first: no stages gated, `scaffold: 0`, page locked); B, targets and scoring to come. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-04 (ninth pass)
+**Status** · tenth pass building (2026-10-07): A = 15-generation game + views + challenges; B = A with selected mutations; C = hierarchical Price. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**Last touched** · 2026-10-07 (tenth pass)
+
+## Tenth pass (JM, 2026-10-07): 15 generations, three views, challenges; B selected; C hierarchical Price
+
+JM, verbatim:
+- *"if the player dies or fails to mate, that's the end. Otherwise it should go 15 generations to produce a clean pedigree."*
+- *"get rid of the red glow on player snakes & lineage--or add a toggle for it so students can see offspring lines for each played individual."*
+- *"an 'organism view' (where each individual is a snake icon) and 'chromosome view' (where we have it as it is now--with the ability to trace where each gene came from), and also a 'locus view' (where each individual is a pair of circles representing one locus with a dropdown-menu to select which of loci 1-7)."*
+- *"highlighting a specific allele and asking the student to select the parent and grandparent and great-grandparent of that allele on the pedigree, then selecting two loci from the last generation & asking the student to locate their most recent common ancestor, then finding any alleles at fixation in the final generation (if none, have the student run a few more generations until one hits) and find the origin of the fixed allele & the most recent common ancestor of living individuals with it."*
+- B: *"new mutations are not selectively neutral: instead they have a random heritability (h) and fitness effect (s) pulled from a shown distribution. The s vallue refers explicitly to the newts-to-offspring ratio: a bb snake with b_s = -0.5 gets 1-(-0.5) offspring per consumed newt (so 1.5) ... a snake consumes 2 newts and it counts as 3 ... Then repeat."*
+- C: *"a hierarchical Price equation example. I want to drill in that the E(wdz) term for individual organsisms has, within it, a cov(w,z)+E(wdz) at the level of DNA strands--that is, how DNA strands copy themselves relates directly to how we expect organisms to transmit said strands."*
+- Later: *"have the lines only appear when an individual/locus gets clicked in the pedgiree view for parts A & B--a the omnipresent hover-over option can get laggy. I'm imagining clicking to show the lines, and a 'lock' toggle at the bottom to let you click another."*
+- Later: *"individuals that did not reproduce can be removed from the pedigrees instead of just paled out. Only those that reproduced need to be shown"*
+
+Read as (mine; JM may overrule):
+- Death or no mate ends play; the seasons left to generation 15 then run themselves (random food, as Skip did) so the pedigree is whole. Skip 5 goes.
+- "two loci from the last generation" = two copies of one gene, in two snakes of the last generation; their MRCA = the copy where their lines join.
+- A fixed allele = a coloured one (plain grey has no origin on the pedigree). Its MRCA = the copy every living copy at that gene descends from.
+- Answering: click a bead (selects it, shows its lines), then "This one". While a target is open its own lines up stay hidden (they would draw the answer); a candidate's blue lines down are how to test it.
+- Lock ticked: a click adds lines, the old stay. Unticked: a click replaces.
+- Past generations show breeders only; the living generation shows everyone.
+- Glow toggle "your snakes": glow + lines to each played snake's young. Kin glow gone.
+- B: a snake's newts count x product over genes of (1 − s) for two copies, (1 − h s) for one, (1 − hₐsₐ − h_b s_b) for two different new alleles; grey s = 0. s and h drawn per new allele, distributions drawn on the page.
+- C: organism w = young / mean young, z = share of its two copies with the allele; copy w = young that got that copy / (mean young / 2), z = 0 or 1, Δz = mutation. Exact: E_snakes(w Δz) = E_snakes[cov over its two copies] + E_copies(w Δz). Built as lesson 13 A's demo (three pairs, one gene; set young, which copy each got, mutation; rounds on the young's frequency).
+
+| # | What | Status |
+|---|------|--------|
+| 10-1 | game ends at death / no mate / no young (rest runs itself) or generation 15 | done; `w.ended` names why; Skip 5 gone; instructor-only "Run to generation 15" under bypass / study |
+| 10-2 | views: organism / chromosome / locus (locus 1-7 menu) | done; mates side by side, each pair under the middle of its parents' places, rows centred |
+| 10-3 | lines on click only; lock toggle; "your snakes" toggle; kin glow gone | done; no hover redraws (cursor only); a copy clicked in organism view draws its path snake to snake; "Clear the lines" beside lock |
+| 10-4 | non-breeders dropped from past rows | done; the living row shows everyone |
+| 10-5 | A reads: trace 3 back; MRCA of two copies; commonest coloured allele: origin + MRCA | done, **fixation swapped for the commonest coloured allele** (measured below); "Run one more generation" only when none has 3 copies |
+| 10-6 | B: the game again, new alleles with s and h; distributions drawn; salamanders "count as" | done; HUD, heads, winter card and spring message say what a catch counts as; clicked copy's s and h tagged on the pedigree and its tick lifted on the curves |
+| 10-7 | C: hierarchical Price demo + rounds | done: three pairs, one gene; + / − young, click a young's copy to switch its parent copy, diamond = came out changed; nested arrows; 5 rounds; R panel; plus "your island in B, winter by winter" (not asked) |
+| 10-8 | scoring, gates, done banner | done: `version: 2`, `scaffold: 17` (A1-6, B1-6, C1-5), first click on This one / each scored Go; misses never shut a door |
+| 10-9 | `check_lesson15_numbers.js` | done: 39 + R panel (Rscript), all pass, ~1 min |
+
+Measured (model of `modelSeason`, 1,000 games, 14 founders, 15 generations):
+
+        coloured allele fixed in gen 15        1.8%   (B: 2.7%)
+        more generations until one fixes       median 21, 80% 32, 95% 38; none in +40: 44% (B: 34%)
+        commonest coloured allele, gen 15      median 12 copies (10th pct 5) of ~29, in ~10 snakes; < 3 copies ~3%
+        its copies' MRCA later than its origin 83% of games, 4.0 generations later on average (fresh islands in the check: 47 of 59)
+        pairs, same locus, two snakes, gen 15  any that meet in the record: 100%; meeting 3-8 back: 100%
+        B: s ~ N(0.1, 0.3) clipped [-0.5, 1]   no game over in 2,000; s < -0.25 lost 91%, s > 0.25 lost 99.6% by gen 55; gen-15 row 15 (95th pct 20, max 29)
+
+- So "a few more generations" does not reach fixation at ten snakes. The commonest coloured allele keeps the point fixation was for (its living copies meet in a copy younger than the mutant).
+- C's island panel: a big share of each winter's change sits in the copies-inside-snakes term (which copy each young got: segregation), i.e. drift lives partly inside the snakes' E(wΔz). Not measured as a share yet.
+
+Open for JM:
+- Fixation → commonest coloured allele (above). Or a smaller island (KEEP 6?) if fixation itself matters.
+- After a death the seasons left run themselves (no restart). Restart instead?
+- Reads use the lines (click the marked copy and follow red; lock + two clicks show where a and b meet). Hide the target's own up-line during a read, so a candidate's blue down-lines are the test?
+- C is lesson 13 A's demo one level down; the rounds teach "the snakes' E(wΔz) is made of which copy reached more young + copies that came out changed". A meiotic-drive round (gold costs its snakes young and still spreads) is round 2.
+- Voice blocks: none yet for A, B, C.
 
 ## Ninth pass (JM, 2026-10-04): no history before play; a mutant in every founder; questions and plots on the winter card
 
