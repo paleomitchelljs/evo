@@ -52,9 +52,11 @@ Measured (model of `modelSeason`, 1,000 games, 14 founders, 15 generations):
 - So "a few more generations" does not reach fixation at ten snakes. The commonest coloured allele keeps the point fixation was for (its living copies meet in a copy younger than the mutant).
 - C's island panel: a big share of each winter's change sits in the copies-inside-snakes term (which copy each young got: segregation), i.e. drift lives partly inside the snakes' E(wΔz). Not measured as a share yet.
 
-Open for JM:
-- Fixation → commonest coloured allele (above). Or a smaller island (KEEP 6?) if fixation itself matters.
-- After a death the seasons left run themselves (no restart). Restart instead?
+Rulings (JM, 2026-10-07, after the build):
+- *"Most common is great"*: the commonest coloured allele stays in place of fixation.
+- *"having the remaining seasons play themselves is solid"*: no restart after a death.
+
+Open for JM (he is looking into these):
 - Reads use the lines (click the marked copy and follow red; lock + two clicks show where a and b meet). Hide the target's own up-line during a read, so a candidate's blue down-lines are the test?
 - C is lesson 13 A's demo one level down; the rounds teach "the snakes' E(wΔz) is made of which copy reached more young + copies that came out changed". A meiotic-drive round (gold costs its snakes young and still spreads) is round 2.
 - Voice blocks: none yet for A, B, C.
