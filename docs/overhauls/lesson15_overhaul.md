@@ -3,7 +3,39 @@
 **File** · `app/lessons/lesson15.html` — A, B, C built (v3, scaffold 16), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
 **Status** · eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-07 (eleventh pass)
+**Last touched** · 2026-10-08 (JM's drive note parked, not built)
+
+## Note (JM, 2026-10-08): an allele that kills the other sperm (parked; placement open)
+
+JM, verbatim: *"I don't know where to put that exactly, but I wanted to put it down to remember and it seems relevant for how I want to structure the lesson."*
+
+> Imagine a locus where one allele makes a pigment protein and the other doesn't, so that aa = brown eyes, ab = hazel eyes, and bb = blue eyes (no pigment). Does the b allele have to do **nothing**? It doesn't code for pigment anymore, but what if it codes for something else? What if it now codes for, say, a toxin that harms other sperm. In that hypothetical case, in the population the covariance between fitness (w) and blue eyes (z) is negative--say -0.1. What controls the transmission bias (E(wdz))? Well it's proximally controlled by what gametes end up fusing. That is, cov(w,z) is about which organisms reproduce, while E(wdz) can be thought of as which gamete cells fuse. If sperm that carries the b locus **kills all of the sperm that don't carry the b locus** though....then anytime an ab/bb male reproduces, nearly 100% of their gametes will carry b. Which means b is very likely to be transmitted, even though individuals who are ab/bb are less likely to reproduce than aa individuals, the b allele is more likely to be transmitted. It has a positive bias to its transmission. So the balance tilts and you expect the frequency of b to increase so long as the transmission bias is greater than the selection against.
+
+Where it could go (mine):
+- C round 2 is already this case without the story: *"The snakes with more gold have fewer young, and still gold gets commoner."* (rules cov(w, z) snakes < 0, no copy changes). The only way to clear it is drive: a gold/grey snake's gold copy reaches most of its young. The sperm killer can be that round's story, or C's intro (C has no voice block yet).
+- "Which gamete cells fuse" is the **inner cov(w, z)** in C's split (copies reaching more young), not the inner E(wΔz) (copies that came out changed). The killer is selection one level down, inside the snakes' E(wΔz).
+- Bigger, not measured: a driving allele in B's game. B's mean-fitness plot would fall while that allele rises.
+
+To raise with JM:
+- The bias comes only from **ab** fathers. A bb father passes b to every young, toxin or not. The transmission term scales with the number of heterozygous fathers and goes to 0 as b nears fixation.
+- So "so long as" holds at some frequencies and fails at others. The balance sits at a frequency (table). Rare b, father-only drive k: b spreads if (1 − hs)(k + ½) > 1; full drive → the heterozygote's cost hs below 1/3.
+- z: the drive acts in hazel (ab) males. z = share of b copies (0, ½, 1), as C scores it, catches that. z = "blue eyes" (bb only) does not. Eye paleness works as z only because hazel is halfway.
+- The kill has a cost, and Price books it in cov(w, z): a male that kills half his sperm may sire fewer young. One act, both terms. (+/t house mice lose sperm contests against +/+ males.)
+- A killer needs immunity: a b sperm must survive its own toxin. The house-mouse t-haplotype holds its killer genes and the gene they spare together in four inversions; a crossover between them makes a chromosome that kills its own sperm. Ties to 14's recombination and to 15's one chromosome. Not needed for the hypothetical.
+
+Measured (scratchpad `drive.py`; deterministic, random mating, drive in fathers only, aa 1 / ab 1 − hs / bb 1 − s, b from 0.01; share of b in adults where it settles):
+
+        k      h     s      settles at
+        0.5    0.5   0.2    0       no drive: selection alone
+        1      0.5   0.2    1
+        1      0.5   0.5    1       hs 0.25
+        1      0.5   0.8    0       hs 0.40, above 1/3
+        1      0     1      0.50    bb dies: every adult ab, half of every brood dies
+        0.95   0     1      0.39
+        1      0.3   1      0.13
+        1      0.4   1      0
+
+- JM's −0.1: with bb lethal and full drive, one generation from young in random-mating proportions at p 0.4 gives cov(w, z) −0.11 and E(wΔz) +0.14: b still rises. At p 0.6, −0.23 against +0.19: it falls.
 
 ## Eleventh pass (JM, 2026-10-07, later): a plot over time; B's reads on the plots; top score; run to 15
 
