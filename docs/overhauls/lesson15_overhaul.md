@@ -1,9 +1,51 @@
 # Lesson 15 — the bridge: coalescence and linkage through a snake game (slot pencilled: JM, 2026-10-01: "make the snake game lesson 15")
 
-**File** · `app/lessons/lesson15.html` — A, B, C built (v3, scaffold 16), locked
+**File** · `app/lessons/lesson15.html` — A, B, C, D built (v4, scaffold 21), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
-**Status** · twelfth pass built (2026-10-08): Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-08 (twelfth pass: Run to generation 100 on B)
+**Status** · thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**Last touched** · 2026-10-08 (thirteenth pass: a new C; old C is D)
+
+## Thirteenth pass (JM, 2026-10-08, later): a new C — play as a gamete; old C becomes D
+
+JM, verbatim: *"What is up with Part C? It seems to still be the old offspring clicking activity. A fine activity, could be a decent part D, but we were plotting an interactive part C where the students play as a gamete. At present, the concept of "gametes compete, and even genes compete" is beyond the students. It needs to be built, even if the build itself is dead simple: some gametes move faster than others is fine. I'd like a simple gamete racing game, and maybe a simple meiosis game where genes (transposons) try to jump around."*
+
+- No plan for a gamete C was written down in this doc, memory or git; the only brief for C was the tenth pass's hierarchical Price line, and that is what was built. Told JM.
+
+Read as (mine; JM may overrule):
+- New C, two games, each played first and then a few bowling rounds:
+    - **The race.** A snake with one gold and one grey copy of a gene; its sperm, half gold and half grey, race to an egg; gold sperm swim faster. You are one sperm (dealt gold or grey), steered with the mouse. First to the egg is the young's copy from its father. Rounds: set how much faster gold sperm swim, Go, and the island runs.
+    - **The jump.** A snake's two chromosomes, seven genes each; you are a jumping gene. Before the cell divides you copy yourself once, anywhere: a gap, or into a gene (which breaks it). Then meiosis plays: the chromosomes copy, cross over once, divide twice into four gametes. A gene that never jumps is in two of the four.
+- Old C (the hierarchical Price demo + B's island read back) becomes D, untouched apart from its letter. C's play is the intuition, D's split is the evaluation.
+- Honest-science flag for JM: in animals most of a sperm's make-up comes from its father's two copies (the developing sperm share cytoplasm), so a sperm's own copy setting its speed is the exception (t-haplotype; some sperm-expressed genes). In plants, pollen tubes race on their own genes as a rule. Kept as snakes' sperm: a hypothetical, as JM's sperm-killer note is.
+
+| # | What | Status |
+|---|------|--------|
+| 13-1 | old C → D: ids, stage, gates, BIT D1-D5, toc, the check script | done; D's code untouched apart from names (`C_` → `D_`, the state object `C` → `D`) |
+| 13-2 | race engine: sperm with vigour, start spread, wobble; the player steers; one brood of six played, then 100 more raced by the computer | done: closed-form times (distance / speed × vigour × straightness), the wiggle drawn along each path so a sperm reaches the egg exactly at its time; a computer race is 2 µs (a stepped model was 250 µs and gave the same curve). Play at ×1.10 |
+| 13-3 | race rounds (bowling, practice): gold sperm speed slider; the island's gold over generations, its change split into who had young (cost) and which sperm won (the race) | done: slider ×1.00-×1.30 by 0.05; three rounds (below); the island plot shows gold's share and the summed cov(w, z) + E(wΔz) |
+| 13-4 | the jump: two chromosomes, one copy-and-paste, meiosis animated (copy, cross over, two divisions), four gametes counted | done: 2.6 s animation; after it, the cell keeps the chromosomes faint, the four gametes carry two-tone strands; ten-division rounds add a tally column |
+| 13-5 | jump rounds: more than half of the gametes; all four in each of ten meioses; no gene broken | done; the first division is a free try |
+| 13-6 | scoring: C's new bits, D's five after; scaffold and version bumped | done: C1-C3 race, C4-C5 jump, D1-D5 (16-20); `scaffold: 21`, `version: 4` |
+| 13-7 | measure every bar before setting it; checks for both games | done: 14 new checks (74 in all), including the animation loop on a pumped frame clock |
+
+Measured (the page's engine; 40,000 races a speed, 400 islands a setting):
+
+        gold sperm swim                ×1.00   ×1.05   ×1.10   ×1.15   ×1.20   ×1.30
+        gold wins a race               0.50    0.74    0.89    0.96    0.99    1.00
+        R1 hits (≥ 60% of 400 young)   0%      100%    100%    100%    100%    100%
+        R2 hits (0.3 → ≥ 0.4, 25 gen)  0%      13%     100%    100%    100%    100%
+        R3 hits (0.05 → 0.3-0.85, 30)  0%      12%     100%    100%    100%    100%
+        R3 where gold ends (median)    0.01    0.24    0.45    0.58    0.67    0.73
+
+- R2 (s 0.4, h 0.5): the race must beat the cost. Rare gold spreads only if (1 − hs)(k + ½) > 1, k > 0.75; ×1.05 gives 0.74, so gold barely holds (median 0.26 from 0.3). Summed over a ×1.10 run: cov(w, z) −0.96, E(wΔz) +1.64.
+- R3 (s 1, h 0): any race spreads rare gold (its cost is only in gold/gold snakes, which are rare), and it levels off below every copy because gold/gold young leave none. The 0.85 ceiling never binds (99th percentile 0.78 at ×1.30); it is there to say "not all".
+- The jump: staying put, 2 of 4 always; a copy on the other chromosome, never fewer than 3; at the matching place, 4 always; on your own chromosome d genes away, 3 of 4 with chance d/7. One gap off the matching place passes ten divisions by luck (6/7)^10 = 21%.
+
+Open for JM:
+- The jump's ten-division round rewards the matching place on the other chromosome: what homing genes (and CRISPR gene drives) do. A transposon proper lands at random; it is not named on the page.
+- No R panel for C yet (A and B have none either; D does).
+- Voice blocks: none for C.
+- Not built: an island where jumping genes spread while breaking genes (copies per snake up, fitness down). JM's "maybe".
 
 ## Twelfth pass (JM, 2026-10-08): Run to generation 100, island B only
 

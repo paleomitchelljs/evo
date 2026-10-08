@@ -2,13 +2,14 @@
 /*
  * check_lesson15_numbers.js -- the checks for app/lessons/lesson15.html.
  *
- * Lesson 15 is a draft (eleventh pass, 2026-10-07): A the snake game on a
+ * Lesson 15 is a draft (thirteenth pass, 2026-10-08): A the snake game on a
  * neutral island, fifteen generations, a pedigree in three views and six
  * reads of it, then the island over time; B the same on an island whose new
  * alleles carry s and h, its plot, s and h in generation N, and five reads
- * of the plots; C one allele's change split among snakes and then among the
- * copies inside each snake (a hierarchical Price equation), and B's island
- * read back winter by winter. What has to hold:
+ * of the plots; C play as a gamete -- a sperm race, then a jumping gene in
+ * a division; D (C until 2026-10-08) one allele's change split among snakes
+ * and then among the copies inside each snake (a hierarchical Price
+ * equation), and B's island read back winter by winter. What has to hold:
  *
  *   Engine. fourteen founders, one new allele each; A's alleles do nothing,
  *      B's carry s and h on the 0.05 grid inside their ranges, s drawn from
@@ -54,7 +55,19 @@
  *      first deals rarely die (measured 0.6%). At 100 the series are
  *      re-derived again, s and h's dot strips grow rows instead of
  *      overlapping, lifespans keep 3 px a row, and every pedigree row fits.
- *   C. the identity holds exactly for random families (Δz = cov + E, the
+ *   C, the race. half of every snake's sperm gold; each sperm reaches the
+ *      egg's edge at its own time; gold's wins re-derived at four speeds;
+ *      the drawn race's winner is the computer's, and a player steering at
+ *      the egg arrives as an average sperm; Go waits for six races and a
+ *      hundred more; each round: ×1.00 never hits, the right idea does
+ *      (round 2 and 3 measured at ×1.05 too); each generation's change is
+ *      exactly cov + E; practice records nothing, Go locks and records.
+ *   C, the jump. the four gametes re-derived strand by strand; staying put
+ *      2 of 4, the other chromosome at least 3, the matching place 4; a copy
+ *      on its own chromosome gets 3 at d/7; one gap off the matching place
+ *      passes ten divisions only by luck; the first division is a free try;
+ *      a copy inside a gene fails; C done opens D.
+ *   D. the identity holds exactly for random families (Δz = cov + E, the
  *      snakes' E(wΔz) = the copies' cov + E, and the snakes' cov plus the
  *      copies' cov is the covariance over all twelve copies); a fair coin
  *      for which copy leaves the copies' cov at 0 on average; each round has
@@ -64,7 +77,7 @@
  *      Next target; the R panel computes the page's own numbers (Rscript).
  *   Island read-back. every winter's three parts add to that winter's
  *      change, and the change lands on the next generation's share.
- *   All. every canvas fits its panel; a full run writes all 16 bits.
+ *   All. every canvas fits its panel; a full run writes all 21 bits.
  *
  * Same harness as check_lesson14_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -86,7 +99,7 @@ const L=[], say=s=>L.push(s);
 let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
 const near=(a,b,e)=>Math.abs(a-b)<=(e==null?1e-9:e);
-for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 FIT_EPOCH++;
 
 /* ================= engine ================= */
@@ -443,23 +456,123 @@ checkSeries("B");
   check("fresh islands: the living copies' meeting copy is younger than the mutant in " + later + " of " + n + " (model: 83%)", n >= 50 && later / n > 0.65);
 }
 
-/* ================= C ================= */
+/* ================= C: the race ================= */
+{
+  /* every deal: half gold; a sperm the computer swims is at the egg's edge exactly at its time */
+  const rng = mulberry32(5); let half = true, edge = 0;
+  for (let i = 0; i < 300; i++) { const sp = raceDeal(rng, 1 + rng() * 0.3); if (sp.filter(s => s.gold).length !== RC.N / 2) half = false;
+    for (const s of sp) { const q = spermAt(s, s.T); edge = Math.max(edge, Math.abs(Math.hypot(q.x - RC.EX, q.y - RC.EY) - RC.ER)); } }
+  check("race: half of every snake's sperm carry gold; each sperm reaches the egg's edge at its own time", half && edge < 1e-6, "worst " + edge.toExponential(1));
+  /* gold's wins, re-derived (measured 0.50 / 0.74 / 0.89 / 0.99) */
+  const want = [[1, 0.50, 0.025], [1.05, 0.74, 0.03], [1.1, 0.89, 0.025], [1.2, 0.99, 0.012]], got = [];
+  for (const [G, k, e] of want) { const r = mulberry32(Math.round(G * 1000)); let g = 0; for (let i = 0; i < 4000; i++) if (raceWinner(r, G)) g++; got.push([g / 4000, k, e]); }
+  check("race: gold wins " + got.map(x => x[0].toFixed(3)).join(" / ") + " at ×1.00 / 1.05 / 1.10 / 1.20 (measured 0.50 / 0.74 / 0.89 / 0.99)", got.every(([v, k, e]) => near(v, k, e)));
+  /* the animation agrees with the computer's race; a player steering at the egg arrives as an average sperm does */
+  let agree = 0; for (let i = 0; i < 20; i++) { const r = CR_newRace(900 + i, 1.1, null); while (!r.over) CR_tick(r, 1 / 60); if (r.winner === raceFirst(r.sp) && near(r.tWin, r.sp[r.winner].T, 1 / 60 + 1e-9)) agree++; }
+  let late = 0; CR.aim = null;
+  for (let i = 0; i < 20; i++) { const r = CR_newRace(950 + i, 1.1, 3), s = r.sp[3]; while (!Number.isFinite(s.T)) CR_tick(r, 1 / 60); late = Math.max(late, Math.abs(s.T - s.D / (s.v * RC.EFF))); }
+  check("race: the drawn race's winner and time are the computer's (" + agree + " of 20); steered straight at the egg, you arrive in distance / (speed × " + RC.EFF + ") (worst " + late.toFixed(3) + " s)", agree === 20 && late < 0.12);
+}
+{
+  /* play: six eggs, then a hundred; the targets wait for both */
+  const goBefore = document.getElementById("C_go").disabled;
+  CR.aim = { x: RC.EX, y: RC.EY };
+  for (let e = 0; e < RC_BROOD; e++) { CR_startRace(); const r = CR.race; while (!r.over) CR_tick(r, 1 / 60); CR_endRace(); }
+  const moreShown = !document.getElementById("C_more").hidden;
+  document.getElementById("C_more").click();
+  const share = CR.more.filter(Boolean).length / RC_MORE;
+  check("C: Go waits for the six races and the hundred more (" + CR.brood.length + " young, gold in " + Math.round(share * 100) + " of 100 at ×" + RC_PLAY_G + "), then opens",
+        goBefore && CR.brood.length === RC_BROOD && moreShown && CR.more.length === RC_MORE && share > 0.75 && !document.getElementById("C_go").disabled);
+}
+{
+  /* the rounds: the opening (×1.00) never hits; the right idea does; the island's split adds up exactly */
+  const rate = (i, G, n) => { let h = 0; for (let k = 0; k < n; k++) if (CR_result(CR_ROUNDS[i], G, 31337 + 7919 * k).ok) h++; return h / n; };
+  const r1 = [rate(0, 1, 100), rate(0, 1.05, 100)], r2 = [rate(1, 1, 60), rate(1, 1.05, 60), rate(1, 1.1, 60)], r3 = [rate(2, 1, 60), rate(2, 1.05, 60), rate(2, 1.1, 60), rate(2, 1.3, 60)];
+  check("C round 1 hits " + r1.map(pct).join(" / ") + " at ×1.00 / ×1.05 (measured 0 / 100%)", r1[0] === 0 && r1[1] === 1);
+  check("C round 2 hits " + r2.map(pct).join(" / ") + " at ×1.00 / 1.05 / 1.10 (measured 0 / 13 / 100%): the race must beat the cost", r2[0] === 0 && r2[1] < 0.35 && r2[2] >= 0.95);
+  check("C round 3 hits " + r3.map(pct).join(" / ") + " at ×1.00 / 1.05 / 1.10 / 1.30 (measured 0 / 12 / 100 / 100%): gold spreads, never takes over", r3[0] === 0 && r3[1] < 0.35 && r3[2] >= 0.95 && r3[3] >= 0.95);
+  let worst = 0;
+  for (let k = 0; k < 20; k++) { const o = islandRun(mulberry32(77 + k), 1 + 0.05 * (k % 6), 0.4, 0.5, 0.3, 20); for (let t = 1; t < o.length; t++) worst = Math.max(worst, Math.abs(o[t].cov + o[t].E - (o[t].p - o[t - 1].p))); }
+  check("C: each generation's change in gold is exactly cov(w, z) + E(wΔz)", worst < 1e-12, "worst " + worst.toExponential(1));
+  /* scoring: practice nothing; a miss, then two hits */
+  const sl = document.getElementById("C_speed"), pr = document.getElementById("C_practice");
+  const setG = G => { sl.value = String(G); sl.dispatchEvent(new Event("input")); CR.demo = null; };
+  pr.checked = true; C_sync(); setG(1.05); CR_go(); CR_endRun();
+  const practiced = CR.results.length === 0 && !CR.waiting;
+  pr.checked = false; C_sync(); setG(1); CR_go(); const locked = sl.disabled; CR_endRun();
+  const miss = CR.results.length === 1 && !CR.results[0] && Score.getBit("scaffold", BIT.C1) === 0 && CR.waiting && !document.getElementById("C_next").hidden;
+  CR_nextRound(); setG(1.1); CR_go(); CR_endRun(); CR_nextRound(); setG(1.1); CR_go(); CR_endRun();
+  const bits = ["C1","C2","C3"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("C race: practice records nothing; Go locks the slider while it runs and records one bit; three attempts", practiced && locked && miss && CR.done && bits === "011", "bits " + bits);
+}
+
+/* ================= C: the jump ================= */
+{
+  /* the four gametes, re-derived strand by strand */
+  const rng = mulberry32(12); let agree = true;
+  for (let i = 0; i < 3000; i++) {
+    const xc = rng() * CJ_LEN, items = [{ chr: (rng() * 2) | 0, x: Math.round(rng() * 14) / 2 }]; if (rng() < 0.7) items.push({ chr: (rng() * 2) | 0, x: Math.round(rng() * 14) / 2 });
+    const src = [x => 0, x => x < xc ? 0 : 1, x => x < xc ? 1 : 0, x => 1];
+    const g = src.map(f => items.some(c => f(c.x === CJ_LEN ? CJ_LEN - 1e-9 : c.x) === c.chr && !(c.x === xc)));
+    if (JSON.stringify(g) !== JSON.stringify(CJ_meiosis(xc, items).g)) agree = false;
+  }
+  const o = CJ.orig, cnt = (items, n) => { const r = mulberry32(99); const c = [0, 0, 0, 0, 0]; for (let i = 0; i < n; i++) c[CJ_meiosis(r() * CJ_LEN, items).n]++; return c; };
+  const stay = cnt([o], 2000), other = [0, 1, 2, 3, 4, 5, 6, 7].map(x => cnt([o, { chr: 1, x }], 2000)), same = cnt([o, { chr: 0, x: o.x === 2 ? 6 : 1 }], 20000);
+  const d = Math.abs((o.x === 2 ? 6 : 1) - o.x);
+  check("jump: the four gametes re-derived strand by strand; staying put, always 2 of 4; a copy on the other chromosome, never fewer than 3; at the matching place, always 4",
+        agree && stay[2] === 2000 && other.every(c => c[0] + c[1] + c[2] === 0) && other[o.x][4] === 2000);
+  check("jump: a copy on your own chromosome, " + d + " genes away, gets you into 3 of 4 when the crossover falls between: " + (same[3] / 20000).toFixed(3) + " (that is " + d + "/7 = " + (d / 7).toFixed(3) + ")", near(same[3] / 20000, d / 7, 0.012) && same[3] + same[2] === 20000);
+  const off1 = Math.pow(other[o.x + 1][4] / 2000, 10);
+  check("jump: one gap off the matching place, all four in each of ten divisions only by luck (" + pct(off1) + "; (6/7)^10 = 21%)", off1 < 0.4);
+}
+{
+  /* the jump's scoring: a free try first; a miss; a hit at the matching place; a broken gene fails */
+  const go = document.getElementById("C_jgo"), pr = document.getElementById("C_jpractice");
+  CJ.copy = null; CJ_go(); CJ_endAnim();
+  const tried = CJ.tried && CJ.results.length === 0 && !CJ.waiting;
+  CJ.last = null; CJ.copy = { chr: 1, x: CJ.orig.x + 0.5 };       /* inside a gene on the other chromosome */
+  pr.checked = true; C_sync(); CJ_go(); const brokeAll = CJ.anim.divs.every(d => d.n >= 3) && !CJ.anim.ok; CJ_endAnim(); pr.checked = false;
+  CJ.last = null; CJ.copy = null; C_sync(); CJ_go(); CJ_endAnim();
+  const miss = CJ.results.length === 1 && !CJ.results[0] && CJ.waiting && Score.getBit("scaffold", BIT.C4) === 0;
+  CJ_nextRound(); CJ.copy = { chr: 1, x: CJ.orig.x }; CJ_go(); CJ_endAnim();
+  const bits = ["C4","C5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("C jump: the first division is a free try; a copy inside a gene fails though it reaches the gametes; staying put misses; the matching place hits ten of ten; C done, D opens",
+        tried && brokeAll && miss && bits === "01" && CJ.done && Gates.C.done && Gates.D.open, "bits " + bits);
+}
+
+{
+  /* the animation loop itself, on a frame clock pumped here (headless Chrome does not run frames under virtual time):
+     a race at the slider's speed, an island run and a division each play to their end */
+  const realRAF = window.requestAnimationFrame, q = []; let ts = 1000, frames = 0;
+  window.requestAnimationFrame = f => { q.push(f); return q.length; };
+  const pump = (until, max) => { let n = 0; while (!until() && q.length && n < max) { const f = q.shift(); ts += 1000 / 60; f(ts); n++; } frames = n; return until(); };
+  C_on = false; CR.demo = null; CR.race = null;
+  document.getElementById("C_speed").value = "1.1"; CR_demo(); const demo = CR.demo;
+  const raced = pump(() => !CR.demo, 4000), raceFrames = frames;
+  const prR = document.getElementById("C_practice"), prJ = document.getElementById("C_jpractice");
+  prR.checked = true; C_sync(); CR_go(); const ran = pump(() => !CR.run, 4000) && /practice/.test(document.getElementById("C_verdict").textContent);
+  prJ.checked = true; CJ.last = null; C_sync(); CJ_go(); const divided = pump(() => !CJ.anim, 4000) && !!CJ.last;
+  window.requestAnimationFrame = realRAF; prR.checked = false; prJ.checked = false; C_sync();
+  check("C: the loop plays a race to its end (" + raceFrames + " frames for a " + (demo.tWin / 1.6).toFixed(1) + " s win shown at 1.6×), an island run to its verdict, a division to its gametes", raced && ran && divided && !C_on);
+}
+
+/* ================= D (C until 2026-10-08) ================= */
 {
   const rng = mulberry32(77); let worst = 0, worstFlat = 0;
   for (let it = 0; it < 600; it++) {
     const y = [0,1,2].map(() => { const n = (rng() * 6) | 0; return Array.from({ length: n }, () => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: rng() < .2, cb: rng() < .2 })); });
-    const t = C_terms(y); if (t.dead) continue;
+    const t = D_terms(y); if (t.dead) continue;
     worst = Math.max(worst, Math.abs(t.covS + t.ES - t.dz), Math.abs(t.ES - t.covC - t.EC));
     /* the covariance over all twelve copies, each copy's w its young over the average copy's */
-    const ws = [], zs = []; for (let i = 0; i < 6; i++) for (const j of [0,1]) { ws.push(t.m[i][j] / (t.n.reduce((a,b)=>a+b,0) / 12)); zs.push(C_PAR[i][j]); }
+    const ws = [], zs = []; for (let i = 0; i < 6; i++) for (const j of [0,1]) { ws.push(t.m[i][j] / (t.n.reduce((a,b)=>a+b,0) / 12)); zs.push(D_PAR[i][j]); }
     const mw = ws.reduce((a,b)=>a+b,0)/12, mz = zs.reduce((a,b)=>a+b,0)/12; let cv = 0; for (let k=0;k<12;k++) cv += (ws[k]-mw)*(zs[k]-mz)/12;
     worstFlat = Math.max(worstFlat, Math.abs(cv - t.covS - t.covC));
   }
-  check("C: Δz = cov + E(wΔz) for the snakes, and their E(wΔz) = the copies' cov + E, exactly (600 random families)", worst < 1e-12, "worst " + worst.toExponential(1));
-  check("C: the snakes' cov plus the copies' cov is the covariance over all twelve copies", worstFlat < 1e-12, "worst " + worstFlat.toExponential(1));
+  check("D: Δz = cov + E(wΔz) for the snakes, and their E(wΔz) = the copies' cov + E, exactly (600 random families)", worst < 1e-12, "worst " + worst.toExponential(1));
+  check("D: the snakes' cov plus the copies' cov is the covariance over all twelve copies", worstFlat < 1e-12, "worst " + worstFlat.toExponential(1));
   let s = 0, se = 0; const N = 4000;
-  for (let it = 0; it < N; it++) { const y = [0,1,2].map(() => [0,1].map(() => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: false, cb: false }))); const t = C_terms(y); s += t.covC; se += Math.abs(t.EC); }
-  check("C: a fair coin for which copy leaves the copies' cov at 0 on average (" + (s/N).toFixed(4) + "), and faithful copies leave E at 0", Math.abs(s / N) < 0.006 && se === 0);
+  for (let it = 0; it < N; it++) { const y = [0,1,2].map(() => [0,1].map(() => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: false, cb: false }))); const t = D_terms(y); s += t.covC; se += Math.abs(t.EC); }
+  check("D: a fair coin for which copy leaves the copies' cov at 0 on average (" + (s/N).toFixed(4) + "), and faithful copies leave E at 0", Math.abs(s / N) < 0.006 && se === 0);
 }
 const K = (a, b, ca, cb) => ({ a, b, ca: !!ca, cb: !!cb });
 const ANSWERS = [
@@ -469,52 +582,52 @@ const ANSWERS = [
   [[K(1,0),K(0,1)], [K(0,0)], [K(0,0),K(1,0),K(0,0)]],                                      /* more young for gold, grey copies reach more */
   [[K(0,0),K(0,1,1)], [K(0,1),K(1,0)], [K(0,1),K(1,0)]]                                     /* gold copy reaches both; one comes out grey */
 ];
-const OPEN = () => [0,1,2].map(() => [C_kid(0), C_kid(1)]);
+const OPEN = () => [0,1,2].map(() => [D_kid(0), D_kid(1)]);
 {
-  const hits = ANSWERS.map((y, i) => C_judge(C_ROUNDS[i], y).ok);
-  check("C: each round has an answer that hits", hits.every(Boolean), hits.join(" "));
-  const open = C_ROUNDS.map(r => C_judge(r, OPEN()).ok);
-  check("C: the opening hits no round", open.every(x => !x), open.join(" "));
+  const hits = ANSWERS.map((y, i) => D_judge(D_ROUNDS[i], y).ok);
+  check("D: each round has an answer that hits", hits.every(Boolean), hits.join(" "));
+  const open = D_ROUNDS.map(r => D_judge(r, OPEN()).ok);
+  check("D: the opening hits no round", open.every(x => !x), open.join(" "));
   /* one step the right way of the opening: one het passes gold to both its young (round 1), one grey copy comes out gold (round 3) */
   const s1 = OPEN(); s1[0][1].a = 0; const s3 = OPEN(); s3[1][0].cb = true;
-  check("C: one step the right way hits rounds 1 and 3", C_judge(C_ROUNDS[0], s1).ok && C_judge(C_ROUNDS[2], s3).ok,
-        C_terms(s1).p2.toFixed(3) + " / " + C_terms(s3).p2.toFixed(3));
+  check("D: one step the right way hits rounds 1 and 3", D_judge(D_ROUNDS[0], s1).ok && D_judge(D_ROUNDS[2], s3).ok,
+        D_terms(s1).p2.toFixed(3) + " / " + D_terms(s3).p2.toFixed(3));
   /* no family hits two rounds: random search plus the answers themselves */
-  const rng = mulberry32(31); let two = 0, found = C_ROUNDS.map(() => 0);
+  const rng = mulberry32(31); let two = 0, found = D_ROUNDS.map(() => 0);
   const fams = ANSWERS.slice();
   for (let it = 0; it < 30000; it++) fams.push([0,1,2].map(() => { const n = (rng() * 6) | 0; return Array.from({ length: n }, () => ({ a: rng() < .5 ? 0 : 1, b: rng() < .5 ? 0 : 1, ca: rng() < .15, cb: rng() < .15 })); }));
-  for (const y of fams) { const h = C_ROUNDS.map(r => C_judge(r, y).ok); h.forEach((x, i) => { if (x) found[i]++; }); if (h.filter(Boolean).length > 1) two++; }
-  check("C: no family hits two rounds (30,000 random families); each round is hit by some: " + found.join(" / "), two === 0 && found.every(x => x > 0));
+  for (const y of fams) { const h = D_ROUNDS.map(r => D_judge(r, y).ok); h.forEach((x, i) => { if (x) found[i]++; }); if (h.filter(Boolean).length > 1) two++; }
+  check("D: no family hits two rounds (30,000 random families); each round is hit by some: " + found.join(" / "), two === 0 && found.every(x => x > 0));
 }
 {
   /* Go: practice records nothing; a scored Go records its bit and waits for Next target */
-  C.round = 0; C.results = []; C.waiting = false; C.done = false;
-  const pr = document.getElementById("C_practice"), go = document.getElementById("C_go"), nx = document.getElementById("C_next");
-  C.young = ANSWERS[0].map(k => k.map(x => Object.assign({}, x)));
+  D.round = 0; D.results = []; D.waiting = false; D.done = false;
+  const pr = document.getElementById("D_practice"), go = document.getElementById("D_go"), nx = document.getElementById("D_next");
+  D.young = ANSWERS[0].map(k => k.map(x => Object.assign({}, x)));
   pr.checked = true; go.click();
-  const practiced = C.results.length === 0 && !C.waiting;
-  pr.checked = false; C_drawTarget();
-  C.young = OPEN(); go.click();
-  const miss = C.results.length === 1 && C.results[0] === false && Score.getBit("scaffold", BIT.C1) === 0 && C.waiting && !nx.hidden;
-  C_flip(0, 1, 0); const locked = C_terms(C.young).p2 === 0.5;
+  const practiced = D.results.length === 0 && !D.waiting;
+  pr.checked = false; D_drawTarget();
+  D.young = OPEN(); go.click();
+  const miss = D.results.length === 1 && D.results[0] === false && Score.getBit("scaffold", BIT.D1) === 0 && D.waiting && !nx.hidden;
+  D_flip(0, 1, 0); const locked = D_terms(D.young).p2 === 0.5;
   nx.click();
-  for (let i = 1; i < 5; i++) { C.young = ANSWERS[i].map(k => k.map(x => Object.assign({}, x))); go.click(); if (i < 4) nx.click(); }
-  const bits = ["C1","C2","C3","C4","C5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
-  check("C: practice records nothing; Go records one bit and locks the family until Next target; five attempts finish the lesson",
-        practiced && miss && locked && C.done && bits === "01111" && document.getElementById("done-banner").classList.contains("shown"), "bits " + bits);
+  for (let i = 1; i < 5; i++) { D.young = ANSWERS[i].map(k => k.map(x => Object.assign({}, x))); go.click(); if (i < 4) nx.click(); }
+  const bits = ["D1","D2","D3","D4","D5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("D: practice records nothing; Go records one bit and locks the family until Next target; five attempts finish the lesson",
+        practiced && miss && locked && D.done && bits === "01111" && document.getElementById("done-banner").classList.contains("shown"), "bits " + bits);
 }
 {
-  let n = 0; for (let i = 0; i < 16; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all 16 declared bits written", n === 16, n + " written");
+  let n = 0; for (let i = 0; i < 21; i++) if (Score.isAnswered("scaffold", i)) n++;
+  check("all 21 declared bits written", n === 21, n + " written");
 }
 /* the R panel, for a family that moves every term */
-C.young = [[K(0,0),K(0,0,1,0)], [K(0,1),K(1,0),K(0,0)], [K(0,1)]];
-const RT = C_terms(C.young);
-const RCODE = C_RCODE();
+D.young = [[K(0,0),K(0,0,1,0)], [K(0,1),K(1,0),K(0,0)], [K(0,1)]];
+const RT = D_terms(D.young);
+const RCODE = D_RCODE();
 
 /* ================= island read-back ================= */
 {
-  C_drawIsle();
+  D_drawIsle();
   const w = WD.B, a = isleAllele(w), T = isleTerms(w, a.id, a.locus);
   let worst = 0, land = 0;
   T.forEach((q, i) => { if (!q) return; worst = Math.max(worst, Math.abs(q.covS + q.covC + q.EC - (q.p2 - q.p)));
@@ -524,7 +637,7 @@ const RCODE = C_RCODE();
 {
   FIT_EPOCH++; paintAll(null, false);
   const over = [];
-  for (const id of ["A_ped","B_ped","A_time","B_time","B_dist","C_fam","C_card","C_isle"]) { const cv = document.getElementById(id), host = cv.parentElement;
+  for (const id of ["A_ped","B_ped","A_time","B_time","B_dist","C_race","C_pop","C_jump","D_fam","D_card","D_isle"]) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel", over.length === 0, over.join(", "));
 }
