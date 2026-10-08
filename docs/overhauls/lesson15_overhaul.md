@@ -1,8 +1,8 @@
 # Lesson 15 — the bridge: coalescence and linkage through a snake game (slot pencilled: JM, 2026-10-01: "make the snake game lesson 15")
 
-**File** · `app/lessons/lesson15.html` — Stage A playable, locked
-**Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score; Run to generation 15 after one played season. Checks pass. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**File** · `app/lessons/lesson15.html` — A, B, C built (v3, scaffold 16), locked
+**Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
+**Status** · eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
 **Last touched** · 2026-10-07 (eleventh pass)
 
 ## Eleventh pass (JM, 2026-10-07, later): a plot over time; B's reads on the plots; top score; run to 15
@@ -18,7 +18,7 @@ Read as (mine; JM may overrule):
 - A whole locus coalesces within 15 generations in 4.5% of islands (measured below), so "MRCA times" are per allele: a coloured allele's copies always meet, at or after its mutant.
 - Click a line to pick an allele (others fade); hover for the values at a generation. Clicking a copy in the pedigree picks its allele too.
 - B's "h/s distribution that exists at generation N" = the s and h of the coloured copies alive in generation N, as bars over the curves new alleles are drawn from ("the generation distributions"); N on a slider. Alleles shown as dots in two strips (alive in generation N / gone by then), clickable.
-- Top score = the young your played snakes have had, summed over the seasons. It stops when your line ends (death, no mate, Run to generation 15). The best game kept in this browser (localStorage); a reload is a new game on the same founders.
+- Top score = the young your played snakes have had, summed over the seasons you steer (11-10). It stops when your line ends (death, no mate, Run to generation 15). The best game is kept in the student's saved state and carried in the code (11-11); Play again or a reload is a new game on the same founders.
 - "Run to generation 15" appears once a season on that island has been steered to winter (not "Let this season play itself"). It ends play, as a death does.
 
 B's reads (proposal; JM "not yet sure what"), each one bit, first answer:
@@ -33,17 +33,24 @@ B's reads (proposal; JM "not yet sure what"), each one bit, first answer:
 | 11-2 | B: mean fitness on the plot | done: mean line, lowest-highest snake band, dashed 1; B's default view |
 | 11-3 | B: s and h of the copies alive in generation N, over the drawing curves; slider; alleles as clickable dots | done: curve = density new alleles are drawn from, bars = density of coloured copies in N (0.1 bins); ▲ means (blue new, ink copies) on the axis and in numbers under it; dots packed three rows a strip; panel moved below B's plot |
 | 11-4 | B's reads rebuilt (B1-B5), "Run one more generation" when fewer than two coloured alleles are left | done: `ChalB`; allele steps take a dot, a line or a copy; copy steps only a pedigree copy; reveals: the allele's copies' lines on the pedigree, then best and worst labelled on time to MRCA (all loci), then best ever on the lifespans; the 200 islands run when B4 is found (84 ms, real time) |
-| 11-5 | top score, A and B: HUD and island panel; freezes when the line ends; best kept in localStorage | done: `w.tally` adds the played snake's young at each winter in the arena (played or let play itself); the seasons after a death / Run add nothing; re-founded island = new game |
+| 11-5 | top score, A and B: HUD and island panel; freezes when the line ends | done: `w.tally` adds the played snake's young at each winter of a steered season (11-10); the seasons after a death / Run add nothing; re-founded island = new game; kept per student (11-11, 11-12) |
 | 11-6 | Run to generation 15 after one steered season (instructor bypass/study: from the start) | done: island panel and the winter card's side column; ends play as a death does |
 | 11-7 | scoring: B 6 → 5 bits, scaffold 16, version 3; C's island read-back follows B's best allele | done |
-| 11-8 | checks: series re-derived, B reads re-derived, top score freeze, Run button, canvases fit | done: 48 + R panel, all pass, ~40 s |
+| 11-8 | checks: series re-derived, B reads re-derived, top score freeze, Run button, canvases fit | done: ~40 s; see 11-12 for the count |
 
 Open for JM (eleventh pass):
 - "the right axis" read as the y-axis (dictation). If he meant a second axis drawn on the right, the menus move, nothing else.
-- Top score keeps the best game in this browser across reloads; there is no "play again" button (a reload is the replay). Add one?
-- Seasons let play themselves count toward the score (the line is still the player's). Steered seasons only?
-- B's reads are my proposal on his "Maybe something like ...". Best-left vs worst-left time to MRCA is a coin toss on one island (57%), so the page prints 200 more islands beside it. B5 (best ever, gone 79%) is mine.
+- B's reads are my proposal on his "Maybe something like ...". Best-left vs worst-left time to MRCA is a coin toss on one island (57%), so the page prints 200 more islands beside it. B5 (best ever, gone 79%) is mine. JM: *"B's reads seem fine for now, I'll live test it in the morning."*
 - B now has 5 bits, not 6 (scaffold 16, version 3).
+
+Follow-up (JM, same evening): *"A 'play again' button is great, and no--letting the season play out shouldn't improve the score. I would like the score recorded, though, in the code--maybe using the notes column or something else."*
+
+| # | What | Status |
+|---|------|--------|
+| 11-9 | Play again: island panel and the winter card, once the line has ended; same founders, new seasons (`dealt(w)` adds the game to every seed after the founders); score from 0, top score kept; reads dealt anew | done |
+| 11-10 | a season let play itself adds nothing to the score (it still counts as the line going on) | done |
+| 11-11 | the top score in the code: `Score.setNote` / `getNote` (score.js), an eighth payload field `topScoreA=…;topScoreB=…`, only when a lesson sets notes, so every other lesson's codes keep seven fields; `decode_codes.py` prints it first in the notes column (table and CSV), `verify_code.html` as "Lesson notes", `aggregate.html` CSV gains a notes column; a code already on screen is rebuilt when the top score changes after the lesson is finished | done; `test_codec.py` has a lesson 15 case with notes, read back by both sides |
+| 11-12 | tightening: the top score kept in the student's own saved state (per name and lesson version), not a bare localStorage key a shared lab computer would hand to the next student; a read's bit is its first answer ever (`Score.isAnswered`), so Play again or a reload cannot re-take a missed read; the plot cache keyed by game; read ticks cleared for a new game; the generation-N slider counts a move on release, not every pixel | done; checks 49-50 (one runs only when the steered season leaves the line alive), 23 clean runs |
 
 Measured before building (the page's own engine, `found` + `runRest`, computer-played; B unless said):
 

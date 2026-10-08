@@ -21,9 +21,12 @@
  *      row every snake; mates side by side; no lines without a click; a
  *      click on a bead / circle / snake selects that copy or snake in each
  *      view; lock adds, unlocking keeps the last.
- *   Score. a steered season counts its young and opens Run to generation
- *      15 (hidden before); the count stops when play ends, though the
- *      seasons after it breed the played snake's line on.
+ *   Score. a steered season counts its young, keeps the top score as the
+ *      code's note, and opens Run to generation 15 (hidden before); a season
+ *      let play itself adds nothing; the count stops when play ends, though
+ *      the seasons after it breed the played snake's line on. Play again:
+ *      the same founders, new seasons, the score from 0, the top score
+ *      kept, and a read already answered keeps its first answer.
  *   Plot. every series re-derived from the rows: frequencies at a locus sum
  *      to 1; heterozygosity counted; distinct alleles as the winter card's;
  *      an allele's loss is its first generation with no copy; its time to
@@ -133,17 +136,23 @@ check("A's alleles do nothing", WD.A.AL.every(a => a.s === 0 && a.h === 0));
 
 /* ================= one steered season: the score and Run to generation 15 ================= */
 {
-  try { localStorage.removeItem("l15topA"); } catch (e) {}
-  delete TOP.A;
+  Score._state.notes = {}; delete TOP.A;
   const fast = document.getElementById("A_fast"), hiddenBefore = fast.hidden;
   startSeason("A", false);
   let k = 0; while (AR.on && k < 3000) { const me = youNow(); if (me && AR.sal.length) { let b = AR.sal[0]; for (const f of AR.sal) if (Math.hypot(f.x-me.x,f.y-me.y) < Math.hypot(b.x-me.x,b.y-me.y)) b = f; AR.pointer = { x: b.x, y: b.y }; } step(0.03); k++; }
   const card = AR.card, w = WD.A, young = card ? card.kids.length : -1;
-  const counted = w.steered === 1 && w.tally === young && topScore(w) === young;
+  const counted = w.steered === 1 && w.tally === young && topScore(w) === young && (young ? Score.getNote("topScoreA") === String(young) : Score.getNote("topScoreA") == null);
   const runShown = w.phase === "ready" ? !document.getElementById("btnRun").hidden && !fast.hidden : fast.hidden;
   check("a steered season counts its young (" + young + ") and the top score keeps them; Run to generation 15 hidden before, shown after while play goes on",
         hiddenBefore && counted && runShown, "phase " + w.phase + ", tally " + w.tally);
   closeArena();
+  if (w.phase === "ready") {
+    /* a season let play itself: the line goes on, the score does not move */
+    const t0 = w.tally, s0 = w.steered;
+    startSeason("A", true); k = 0; while (AR.on && k < 3000) { step(0.03); k++; }
+    check("a season let play itself adds nothing to the score", w.tally === t0 && w.steered === s0, w.tally + " / " + t0);
+    closeArena();
+  }
 }
 
 /* ================= island A: a whole game ================= */
@@ -281,6 +290,21 @@ checkReads("A");
   check("A: a first miss records 0 and the read stays open; a snake is not a copy; then each first hit records 1; B opens",
         missed && snakeRefused && c.done && bits === "011111" && Gates.B.open, "bits " + bits);
 }
+{
+  /* Play again: the same founders, new seasons; score from 0, top score kept; reads dealt anew, first answers kept */
+  const w = WD.A, founders = JSON.stringify(rowSnakes(w, 0).map(s => [Array.from(s.g[0]), Array.from(s.g[1])]));
+  const row1 = JSON.stringify(rowSnakes(w, 1).map(s => s.parents)), top = topScore(w), bits0 = Score.getBit("scaffold", BIT.A1);
+  const again = document.getElementById("A_again"), shown = !again.hidden;
+  again.click();
+  const fresh = w.gen === 0 && w.games === 1 && w.tally === 0 && topScore(w) === top && CH.A === null && again.hidden &&
+                JSON.stringify(rowSnakes(w, 0).map(s => [Array.from(s.g[0]), Array.from(s.g[1])])) === founders;
+  fastForward("A");
+  const c = CH.A, P = PV.A;
+  P.last = { kind: "copy", id: c.up[0].id, side: c.up[0].side, locus: c.up[0].locus }; Chal.answer("A");
+  const kept = c.step === 1 && Score.getBit("scaffold", BIT.A1) === bits0;
+  check("Play again (shown once the line ends): the same founders, the score from 0, the top score kept; new seasons; a read answered before keeps its first answer",
+        shown && fresh && JSON.stringify(rowSnakes(w, 1).map(s => s.parents)) !== row1 && kept && Gates.B.open);
+}
 
 /* ================= island B ================= */
 fastForward("B");
@@ -304,11 +328,10 @@ checkSeries("B");
 }
 {
   /* "Run one more generation" when fewer than two alleles with different s are left */
-  const c0 = CH.B, g0 = WD.B.gen; c0.short = true; c0.tried = { x: 1 }; ChalB.sync("B");
+  const c0 = CH.B, g0 = WD.B.gen; c0.short = true; ChalB.sync("B");
   const shown = !document.getElementById("B_more").hidden && document.getElementById("B_this").disabled;
   ChalB.more("B");
-  check("B: with fewer than two alleles to compare, Run one more generation runs one and the reads are dealt again", shown && WD.B.gen === g0 + 1 && CH.B !== c0 && CH.B.tried.x === 1);
-  CH.B.tried = {};
+  check("B: with fewer than two alleles to compare, Run one more generation runs one and the reads are dealt again", shown && WD.B.gen === g0 + 1 && CH.B !== c0);
 }
 {
   const w = WD.B, c = CH.B, G = w.gen;

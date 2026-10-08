@@ -166,8 +166,8 @@
       <li>Every snake carries one chromosome from each parent, with seven genes on it: loci 1 to 7. Every snake in the first generation carries one new allele, a colour; the rest start plain grey. After that, one new allele turns up each generation, in a young snake at random. None of them does anything.</li>
       <li><b>Pedigree</b>, below: one row a generation, and only the snakes that had young. Three views: each snake as a snake; as its two chromosomes (mother's above, father's below); or as its two copies of one locus. A ring marks the copy where each allele arose.</li>
       <li>Click a snake, or a copy, for lines to where it came from (red, up) and where it went (blue, down). Tick <b>lock</b> to keep those lines while you click another.</li>
-      <li><b>Top score</b>: the young your snakes have had, added up over your seasons. It stops counting when your line ends. Your best game in this browser is kept; reloading the page starts a new game.</li>
-      <li>Once you have played a season yourself, <b>Run to generation 15</b> ends your play and lets the seasons left play themselves.</li>
+      <li><b>Top score</b>: the young your snakes have had, added up over the seasons you steer yourself. A season you let play itself adds nothing, and the count stops when your line ends. Your best game goes into your completion code.</li>
+      <li>Once you have played a season yourself, <b>Run to generation 15</b> ends your play and lets the seasons left play themselves. When your game is over, <b>Play again</b> starts a new one on the same island; the reads start over with it.</li>
       <li><b>Island A over time</b>, at the end of this part: pick what the y-axis shows, and at which locus. Hover for the numbers at one generation. Click a line to pick that allele; clicking a copy in the pedigree picks its allele too.</li>
     </ul>
   </div>
@@ -271,6 +271,7 @@
         <button id="btnBack" class="accent" hidden>Back to the pedigree</button>
         <button id="btnNext" class="ghost" hidden>Play the next season</button>
         <button id="btnRun" class="ghost" hidden>Run to generation 15</button>
+        <button id="btnAgain" class="ghost" hidden>Play again</button>
       </div></div>
     </div>
   </div>
@@ -383,11 +384,14 @@ function setupCanvas(canvas, h) {
    snake in each generation. */
 /* steered: seasons the student has played to winter themselves (not let play itself); one opens
    "Run to generation 15" (JM, 2026-10-07: "after students have played one generation of each game
-   themselves. That way they aren't forced"). It survives a re-founded island. */
+   themselves. That way they aren't forced"). It survives a re-founded island and Play again.
+   games: Play again's count. A new game keeps the island's founders and deals new seasons. */
 function makeWorld(key) {
   return { key, sel: key === "B", salt: 0, AL: [], SN: new Map(), ROWS: [], YOU: new Map(), next: 0, gen: 0, colI: 0,
-           broken: false, ended: null, phase: "ready", rng: null, srng: null, steered: 0, tally: 0, series: null };
+           broken: false, ended: null, phase: "ready", rng: null, srng: null, steered: 0, tally: 0, games: 0, series: null };
 }
+/* the seed offset for everything dealt after the founders: the island, and which game on it */
+const dealt = w => 104729 * w.salt + 15485863 * w.games;
 const WD = { A: makeWorld("A"), B: makeWorld("B") };
 let W = WD.A;                            // the island the arena plays
 
@@ -508,7 +512,7 @@ function modelSeason(w, rng) {
    re-deals the island in the (unmeasured, never seen in 2,000 model games) case it dies out. */
 function found(w, salt) {
   Object.assign(w, { salt: salt || 0, AL: [], SN: new Map(), ROWS: [], YOU: new Map(), next: 0, gen: 0, colI: 0,
-                     broken: false, ended: null, phase: "ready", tally: 0 });
+                     broken: false, ended: null, phase: "ready", tally: 0, series: null });
   const tag = w.key === "A" ? "" : w.key;
   w.rng = mulberry32(pageSeed("l15" + tag, 1, 999999) + 104729 * w.salt);
   w.srng = mulberry32(pageSeed("l15s" + w.key, 1, 999999) + 104729 * w.salt);
@@ -527,7 +531,7 @@ function found(w, salt) {
 /* the seasons left once play is over, to generation LAST, played as modelSeason plays them */
 function runRest(w) {
   while (w.gen < LAST) {
-    const rng = mulberry32(pageSeed("l15rest" + w.key, 1, 999999) + 7919 * (w.gen + 1) + 104729 * w.salt);
+    const rng = mulberry32(pageSeed("l15rest" + w.key, 1, 999999) + 7919 * (w.gen + 1) + dealt(w));
     if (modelSeason(w, rng).length < 2) return false;
   }
   return true;
@@ -570,7 +574,7 @@ function layBody(s) {
 }
 function newSeason() {
   const tag = W.key === "A" ? "" : W.key;
-  const rng = AR.rng = mulberry32(pageSeed("l15season" + tag, 1, 999999) + 7919 * (W.gen + 1) + 104729 * W.salt);
+  const rng = AR.rng = mulberry32(pageSeed("l15season" + tag, 1, 999999) + 7919 * (W.gen + 1) + dealt(W));
   const row = rowSnakes(W, W.gen);
   for (const s of row) { s.food = 0; s.alive = true; s.fate = null; placeSnake(s, rng); }
   AR.sal = []; AR.emerge = [];
@@ -667,7 +671,7 @@ function winter() {
 }
 /* between seasons: the new generation in the arena, no salamanders or hawks yet */
 function placeGeneration(w) {
-  const rng = mulberry32(pageSeed("l15place", 1, 999999) + 7919 * w.gen + (w.key === "B" ? 31 : 0));
+  const rng = mulberry32(pageSeed("l15place", 1, 999999) + 7919 * w.gen + (w.key === "B" ? 31 : 0) + dealt(w));
   for (const s of rowSnakes(w, w.gen)) { s.food = 0; s.alive = true; s.fate = null; placeSnake(s, rng); }
   if (w === W) { AR.sal = []; AR.emerge = []; AR.hawks = []; AR.t = 0; AR.owed = 0; }
 }
@@ -677,9 +681,10 @@ function finishWinter() {
   const pairs = pairUp(fed, AR.rng);
   const mine = me ? pairs.find(p => p[0] === me || p[1] === me) : null, mate = mine ? (mine[0] === me ? mine[1] : mine[0]) : null;
   const ate = me ? me.food : 0, fate = me ? me.fate : null, mult = me ? multOf(w, me) : 1, mateMult = mate ? multOf(w, mate) : 1;
-  if (!AR.auto && me) w.steered++;
+  const steered = !AR.auto && !!me;
+  if (steered) w.steered++;
   const row = breed(w, pairs, AR.rng);
-  if (me) { w.tally += me.kids.length; saveTop(w); }
+  if (steered) { w.tally += me.kids.length; saveTop(w); }
   AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, mult, mateMult, fate, kids: me.kids.slice(),
                    next: w.gen < LAST && w.YOU.has(w.gen) ? w.YOU.get(w.gen) : null, rel: mate ? relation(w, me, mate) : null } : null;
   buildWinterQs();
@@ -700,20 +705,23 @@ function finishWinter() {
 }
 /* ---- the score (JM, 2026-10-07: "a 'Top score' should be displayed with the number of offspring
    produced ... if a lineage dies, it stops updating so it's the 'best run' instead of a continuous
-   tally"): the young the played snakes had, added at each winter in the arena (played or let play
-   itself). The played line ends at a death, no mate or Run to generation 15, and the sum stops with it:
-   the seasons that run themselves after that add nothing. The best game is kept in this browser; a
-   re-founded island is a new game. Browser storage can be missing (a private window): then the top
-   score is this game's. ---- */
+   tally"; later: "letting the season play out shouldn't improve the score. I would like the score
+   recorded, though, in the code"). The young the played snakes had, added at each winter of a season
+   the student steered; a season let play itself adds nothing. The played line ends at a death, no
+   mate or Run to generation 15, and the sum stops with it. The top score is the best game, kept as a
+   note in the student's own saved state (Score.setNote: per name and lesson version, so a shared lab
+   computer does not hand one student's score to the next) and carried in the completion code as
+   topScoreA / topScoreB. Play again (or a re-founded island) is a new game. ---- */
 const youngTally = w => w.tally;
-const TOP = {};
+const TOP = {};                          /* the best game this page has seen, if Score cannot keep it */
 function readTop(key) {
-  if (TOP[key] == null) { let v = 0; try { v = +localStorage.getItem("l15top" + key) || 0; } catch (e) { /* none kept */ } TOP[key] = v; }
-  return TOP[key];
+  const v = typeof Score !== "undefined" && Score.getNote ? +Score.getNote("topScore" + key) || 0 : 0;
+  return Math.max(v, TOP[key] || 0);
 }
 function saveTop(w) {
   const n = youngTally(w); if (n <= readTop(w.key)) return;
-  TOP[w.key] = n; try { localStorage.setItem("l15top" + w.key, String(n)); } catch (e) { /* not kept */ }
+  TOP[w.key] = n;
+  if (typeof Score !== "undefined" && Score.setNote) Score.setNote("topScore" + w.key, n);
 }
 const topScore = w => Math.max(readTop(w.key), youngTally(w));
 const lineOver = w => !!w.ended || w.phase === "done" || w.gen >= LAST;
@@ -764,6 +772,23 @@ function startSeason(key, auto) {
   setPhase(key, auto ? "The season plays itself." : "Eat as many salamanders as you can before winter. A hawk's shadow falls where its snake is heading: get out of it.");
   syncButtons(); requestAnimationFrame(frame);
 }
+/* Play again (JM, 2026-10-07): a new game on the same island -- the same founders, new seasons. The
+   score starts at 0; the top score stays. The reads start over when the new game ends; a read already
+   answered keeps its first answer (firstTry). */
+function playAgain(key) {
+  const w = WD[key];
+  if (AR.on) return;
+  if (!popEl().hidden) { popEl().hidden = true; FIT_EPOCH++; }
+  w.games++;
+  found(w, w.salt); placeGeneration(w);
+  CH[key] = null; PICK[key] = null;
+  const P = PV[key]; P.sel = []; P.last = null;
+  Object.assign(TP[key], { hover: null, marks: [] });
+  if (key === "B") DN.n = null;
+  $(key + "_fb").innerHTML = "";
+  setPhase(key, "Game " + (w.games + 1) + " on the same island: the same first generation, new seasons. Play the season when you are ready.");
+  syncButtons(); READS[key].sync(key); paintAll(key, true);
+}
 /* Run to generation 15: play ends, as a death ends it, and the seasons left run themselves */
 function fastForward(key) {
   const w = WD[key];
@@ -776,14 +801,19 @@ function fastForward(key) {
    an instructor (bypass) or in study mode */
 let INSTRUCTOR = false;
 const canRun = w => !AR.on && w.phase === "ready" && !w.ended && w.gen < LAST && (w.steered > 0 || INSTRUCTOR);
+/* Play again once the student's line has ended: a death, no mate, Run to generation 15, or the game
+   played to its end */
+const canAgain = w => !AR.on && w.phase !== "over" && (!!w.ended || w.gen >= LAST);
 function syncButtons() {
   for (const key of ["A", "B"]) {
     const w = WD[key], ready = !AR.on && w.phase === "ready";
-    for (const id of ["_go", "_auto"]) { const b = $(key + id); if (b) b.disabled = !ready; }
+    for (const id of ["_go", "_auto"]) { const b = $(key + id); if (b) { b.disabled = !ready; b.hidden = !ready && canAgain(w); } }
     const f = $(key + "_fast"); if (f) { f.hidden = !canRun(w); f.disabled = !ready; }
+    const g = $(key + "_again"); if (g) g.hidden = !canAgain(w);
     drawScore(key);
   }
   $("btnRun").hidden = !canRun(W) || $("btnNext").hidden;
+  $("btnAgain").hidden = popEl().hidden || !canAgain(W);
 }
 
 /* ---- sprites (JM's sheets, 2026-10-02: a hawk and a newt, each in four directions -- side (drawn
@@ -1403,6 +1433,7 @@ function buildIsland(key) {
         '<button id="' + key + '_go" class="accent">Play the season</button>' +
         '<button id="' + key + '_auto" class="ghost">Let this season play itself</button>' +
         '<button id="' + key + '_fast" class="ghost" hidden>Run to generation ' + LAST + '</button>' +
+        '<button id="' + key + '_again" class="accent" hidden>Play again</button>' +
       '</div></div>' +
       '<div class="score-line" id="' + key + '_score"></div>' +
       '<div class="phase" id="' + key + '_phase"></div>' +
@@ -1423,6 +1454,7 @@ function wireIsland(key) {
   $(key + "_go").addEventListener("click", () => startSeason(key, false));
   $(key + "_auto").addEventListener("click", () => startSeason(key, true));
   $(key + "_fast").addEventListener("click", () => fastForward(key));
+  $(key + "_again").addEventListener("click", () => playAgain(key));
   $(key + "_views").querySelectorAll("button").forEach(b => b.addEventListener("click", () => setView(key, b.dataset.v)));
   $(key + "_locus").addEventListener("change", e => { PV[key].locus = +e.target.value; setView(key, "loc"); });
   $(key + "_mine").addEventListener("change", e => { PV[key].mine = e.target.checked; drawPed(key, false); });
@@ -1444,7 +1476,8 @@ function wireIsland(key) {
   tc.addEventListener("click", e => { pickAllele(key, timeHit(key, e)); bump(key); });
   if (key === "B") {
     const sl = $("B_distN");
-    sl.addEventListener("input", () => { DN.n = +sl.value >= WD.B.gen ? null : +sl.value; drawDist(); bump("B"); });
+    sl.addEventListener("input", () => { DN.n = +sl.value >= WD.B.gen ? null : +sl.value; drawDist(); });
+    sl.addEventListener("change", () => bump("B"));
     const dc = $("B_dist");
     dc.addEventListener("click", e => { const id = distHit(e); pickAllele("B", id); bump("B"); });
     dc.addEventListener("mousemove", e => { dc.style.cursor = distHit(e) != null ? "pointer" : "default"; });
@@ -1511,7 +1544,7 @@ function alleleTarget(w) {
            bornGen: a.born, mrcaGen: w.SN.get(m.id).gen };
 }
 function makeChal(w, key) {
-  const rng = mulberry32(pageSeed("l15ch" + key, 1, 999999) + 104729 * w.salt);
+  const rng = mulberry32(pageSeed("l15ch" + key, 1, 999999) + dealt(w));
   const last = genOf(w, w.gen), all = [];
   for (const id of last) for (const side of [0, 1]) for (let l = 0; l < LOCI; l++) all.push({ kind: "copy", id, side, locus: l });
   const coloured = all.filter(c => w.AL[w.SN.get(c.id).g[c.side][c.locus]].col);
@@ -1526,7 +1559,7 @@ function makeChal(w, key) {
     }
   const band = pairs.filter(p => p.m.d >= 3 && p.m.d <= 8), wide = pairs.filter(p => p.m.d >= 2);
   const pair = band.length ? pick(band) : wide.length ? pick(wide) : pairs.length ? pick(pairs) : null;
-  return { key, step: 0, tried: {}, trace: T, up, pair, allele: alleleTarget(w), done: false };
+  return { key, step: 0, trace: T, up, pair, allele: alleleTarget(w), done: false };
 }
 const Chal = {
   start: function (key) {
@@ -1554,7 +1587,8 @@ const Chal = {
     if (it.kind !== "copy") { fb.innerHTML = "Pick a copy of a gene, in the chromosome or locus view."; return; }
     const want = this.want(c); if (!want) return;
     const ok = it.id === want.id && it.side === want.side && it.locus === want.locus;
-    if (!c.tried[c.step]) { c.tried[c.step] = true; record(BIT[key + (c.step + 1)], ok); bump(key); }
+    if (firstTry(BIT[key + (c.step + 1)])) record(BIT[key + (c.step + 1)], ok);
+    bump(key);
     if (!ok) { fb.innerHTML = '<span class="off">incorrect</span> — try again'; return; }
     fb.innerHTML = '<span class="ok">correct</span>';
     c.step++;
@@ -1566,7 +1600,7 @@ const Chal = {
   },
   more: function (key) {
     const w = WD[key], c = CH[key]; if (!c || c.step !== 4 || c.allele) return;
-    const rng = mulberry32(pageSeed("l15more" + key, 1, 999999) + 7919 * (w.gen + 1) + 104729 * w.salt);
+    const rng = mulberry32(pageSeed("l15more" + key, 1, 999999) + 7919 * (w.gen + 1) + dealt(w));
     if (modelSeason(w, rng).length < 2) return;
     c.allele = alleleTarget(w);
     placeGeneration(w); this.sync(key);
@@ -1578,7 +1612,7 @@ const Chal = {
     task("play", w.gen >= LAST && (w.ended || w.phase === "done"), "generation " + w.gen + " of " + LAST);
     const ask = $(key + "_ask"), btn = $(key + "_this"), more = $(key + "_more");
     document.querySelectorAll("#tasks" + key + " li").forEach(li => li.classList.remove("now"));
-    if (!c) { ask.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed(key, false); return; }
+    if (!c) { for (const t of ["trace", "pair", "allele"]) task(t, false, ""); ask.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed(key, false); return; }
     const now = c.done ? null : c.step < 3 ? "trace" : c.step === 3 ? "pair" : "allele";
     if (now) document.querySelector("#tasks" + key + ' li[data-task="' + now + '"]').classList.add("now");
     task("trace", c.step >= 3, Math.min(c.step, 3) + " of 3 found");
@@ -1619,6 +1653,9 @@ function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
 }
+/* a read's bit is its first answer ever: a later game (Play again) or a reload deals new targets, and
+   answering them records nothing more */
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
 function unlockNext(stage) {
   const nx = NEXT_STAGE[stage];
@@ -1698,7 +1735,7 @@ function alleleMrca(w, id, l, t) {
 }
 /* everything the plot draws, from the rows; kept until the island breeds again */
 function islandSeries(w) {
-  const sig = w.salt + ":" + w.gen + ":" + w.next;
+  const sig = w.salt + ":" + w.games + ":" + w.gen + ":" + w.next;
   if (w.series && w.series.sig === sig) return w.series;
   const G = w.gen, nA = w.AL.length, cnt = [], het = [], div = [], size = [], bred = [], fit = [];
   for (let t = 0; t <= G; t++) {
@@ -2051,7 +2088,7 @@ function makeChalB(w) {
   w.AL.forEach((a, id) => { if (a.col && cnt[id]) alive.push(id); });
   const ss = alive.map(id => w.AL[id].s), lo = Math.min(...ss), hi = Math.max(...ss);
   let ev = Infinity; w.AL.forEach(a => { if (a.col) ev = Math.min(ev, a.s); });
-  return { key: "B", step: 0, tried: {}, done: false, short: alive.length < 2 || lo === hi,
+  return { key: "B", step: 0, done: false, short: alive.length < 2 || lo === hi,
            best: alive.filter(id => w.AL[id].s === lo), worst: alive.filter(id => w.AL[id].s === hi),
            ever: w.AL.map((a, id) => a.col && a.s === ev ? id : -1).filter(id => id >= 0),
            bestId: null, worstId: null, everId: null, bestM: null, worstM: null, pool: null };
@@ -2094,7 +2131,8 @@ const ChalB = {
       if (!it || it.kind !== "copy") { fb.innerHTML = "Click a copy in the pedigree first, in the chromosome or locus view."; return; }
       ok = it.id === want.id && it.side === want.side && it.locus === want.locus;
     }
-    if (!c.tried[c.step]) { c.tried[c.step] = true; record(BIT["B" + (c.step + 1)], ok); bump("B"); }
+    if (firstTry(BIT["B" + (c.step + 1)])) record(BIT["B" + (c.step + 1)], ok);
+    bump("B");
     if (!ok) { fb.innerHTML = '<span class="off">incorrect</span> — try again'; return; }
     fb.innerHTML = '<span class="ok">correct</span>';
     if (c.step === 0) { c.bestId = got; c.bestM = alleleMrca(w, got, w.AL[got].locus, w.gen); }
@@ -2117,9 +2155,9 @@ const ChalB = {
   },
   more: function () {
     const w = WD.B, c = CH.B; if (!c || !c.short) return;
-    const rng = mulberry32(pageSeed("l15moreB", 1, 999999) + 7919 * (w.gen + 1) + 104729 * w.salt);
+    const rng = mulberry32(pageSeed("l15moreB", 1, 999999) + 7919 * (w.gen + 1) + dealt(w));
     if (modelSeason(w, rng).length < 2) return;
-    CH.B = Object.assign(makeChalB(w), { tried: c.tried });
+    CH.B = makeChalB(w);
     placeGeneration(w); paintAll("B", false); this.sync("B");
   },
   sync: function () {
@@ -2129,7 +2167,7 @@ const ChalB = {
     task("play", w.gen >= LAST && (w.ended || w.phase === "done"), "generation " + w.gen + " of " + LAST);
     const ask = $("B_ask"), btn = $("B_this"), more = $("B_more"), rev = $("B_reveal");
     document.querySelectorAll("#tasksB li").forEach(li => li.classList.remove("now"));
-    if (!c) { ask.innerHTML = ""; rev.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed("B", false); return; }
+    if (!c) { for (const t of ["best", "worst", "ever"]) task(t, false, ""); ask.innerHTML = ""; rev.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed("B", false); return; }
     const now = c.done ? null : c.step < 2 ? "best" : c.step < 4 ? "worst" : "ever";
     if (now) document.querySelector('#tasksB li[data-task="' + now + '"]').classList.add("now");
     task("best", c.step >= 2, c.step >= 2 ? "both found" : c.step === 1 ? "1 of 2 found" : "");
@@ -2490,6 +2528,7 @@ function wire() {
   $("btnBack").addEventListener("click", closeArena);
   $("btnNext").addEventListener("click", () => startSeason(W.key, false));
   $("btnRun").addEventListener("click", () => fastForward(W.key));
+  $("btnAgain").addEventListener("click", () => playAgain(W.key));
   popEl().addEventListener("click", e => { if (e.target === popEl()) closeArena(); });
   window.addEventListener("keydown", e => { if (e.key === "Escape") closeArena(); });
   for (const key of ["A", "B"]) { buildIsland(key); wireIsland(key); }

@@ -29,17 +29,20 @@ sys.path.insert(0, HERE)
 from decode_codes import decode, default_salt, parse_manipulations, pretty_name  # noqa: E402
 
 # name, module, version, pretest bits, checkpoint bits, posttest bits,
-# manipulations, wall seconds, active seconds
+# manipulations, wall seconds, active seconds, notes (a lesson's unscored values)
 CASES = [
     ("Ada Lovelace-Byron", "lesson7", 2, [1, 0], [1, 1, 0, 1, 1, 0, 1, 1, 1], [1],
-     {"A": 14, "B": 3, "C": 27}, 7200, 1450),
-    ("bo", "s01", 1, [1, 1], [], [0, 1], {}, 65, 65),
+     {"A": 14, "B": 3, "C": 27}, 7200, 1450, {}),
+    ("bo", "s01", 1, [1, 1], [], [0, 1], {}, 65, 65, {}),
     ("Ann-Marie  O'Hara", "lesson27", 2, [], [1, 0, 1, 0, 1], [],
-     {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}, 3661, 900),
+     {"A": 1, "B": 2, "C": 3, "D": 4, "E": 5}, 3661, 900, {}),
     # Every bit wrong, no activity: the shape of a student who clicked through.
-    ("Zed", "lesson13", 2, [], [0, 0, 0, 0], [], {}, 40, 0),
+    ("Zed", "lesson13", 2, [], [0, 0, 0, 0], [], {}, 40, 0, {}),
     # Unicode in, slug out.
-    ("José Ñuñez", "lesson3", 5, [], [1] * 12, [], {"A": 99}, 100000, 3600),
+    ("José Ñuñez", "lesson3", 5, [], [1] * 12, [], {"A": 99}, 100000, 3600, {}),
+    # Lesson 15 carries its snake game's top scores as notes: an eighth field.
+    ("Kim Lee", "lesson15", 3, [], [1, 0] * 8, [], {"A": 40, "B": 12, "C": 9}, 2400, 1800,
+     {"topScoreA": "17", "topScoreB": "9"}),
 ]
 
 NODE_SCRIPT = r"""
@@ -58,7 +61,9 @@ const cases = JSON.parse(process.argv[2]);
     S._state.manipulations = Object.assign({}, c.manip);
     S._state.startTime = Date.now() - c.wall * 1000;
     S._state.activeMs = c.active * 1000;
-    out.push({ code: await S._buildCodeAsync(), nameToken: S.nameToken(c.name) });
+    S._state.notes = Object.assign({}, c.notes);
+    const code = await S._buildCodeAsync(), back = await S.decodeCode(code, S.DEFAULT_SALT);
+    out.push({ code, nameToken: S.nameToken(c.name), jsNotes: back.notes, jsOk: back.ok });
   }
   process.stdout.write(JSON.stringify(out));
 })();
@@ -75,8 +80,8 @@ def run_node_cases(salt):
         return None
     payload = [
         {"name": n, "module": m, "version": v, "pre": pre, "sc": sc, "post": post,
-         "manip": manip, "wall": wall, "active": active}
-        for (n, m, v, pre, sc, post, manip, wall, active) in CASES
+         "manip": manip, "wall": wall, "active": active, "notes": notes}
+        for (n, m, v, pre, sc, post, manip, wall, active, notes) in CASES
     ]
     proc = subprocess.run(
         [node, "-e", NODE_SCRIPT, os.path.join(ROOT, "app", "assets", "score.js"),
@@ -109,7 +114,7 @@ def main():
     if minted is None:
         print("SKIP  node not available — cross-implementation cases not run")
     else:
-        for (name, mod, ver, pre, sc, post, manip, wall, active), got in zip(CASES, minted):
+        for (name, mod, ver, pre, sc, post, manip, wall, active, notes), got in zip(CASES, minted):
             d = decode(got["code"], salt)
             tag = f"{mod}v{ver} ({name})"
             check(f"{tag} decodes", d["ok"], True)
@@ -121,6 +126,8 @@ def main():
             check(f"{tag} posttest", d.get("posttest"), bits_str(post))
             check(f"{tag} manipulations", d.get("manipulations"), manip)
             check(f"{tag} active seconds", d.get("active_sec"), active)
+            check(f"{tag} notes", d.get("notes"), notes)
+            check(f"{tag} notes, read back by score.js", (got["jsOk"], got["jsNotes"]), (True, notes))
             # Wall clock is measured against Date.now() in node, so allow the
             # second or two the subprocess takes.
             if abs(d.get("elapsed_sec", 0) - wall) > 5:

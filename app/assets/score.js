@@ -36,6 +36,11 @@
 // over lunch inflates the first and not the second. Codes emitted before
 // ACTIVESEC existed carry six fields; the decoder accepts both.
 //
+// A lesson that sets notes (Score.setNote) gets an eighth field, NOTES, as
+// key=value pairs joined by ";" -- lesson 15 carries its snake game's top
+// scores there. Unscored. A code with no notes keeps seven fields, so no other
+// lesson's codes change; the decoders accept six, seven or eight.
+//
 // which is XOR'd with a keystream derived from (salt | module | version) and
 // base64url-encoded, so a student staring at the code cannot read their own
 // name or score off it. A 6-hex MAC over the cleartext payload makes the code
@@ -132,6 +137,9 @@
     // Tracks how much the student actually engaged with each interactive panel —
     // independent of whether their predictions were correct.
     manipulations: {},
+    // Short unscored values a lesson carries in the code beside the bits (see
+    // setNote). Persisted with the rest, so a reload keeps them.
+    notes: {},
     studentName: null,
     passcode: null,
     bypass: false,
@@ -161,7 +169,7 @@
       localStorage.setItem(storageKey(), JSON.stringify({
         bits: state.bits, answered: state.answered, finished: state.finished,
         manipulations: state.manipulations, startedAt: state.startTime,
-        activeMs: state.activeMs
+        activeMs: state.activeMs, notes: state.notes
       }));
     } catch (e) { /* storage full or disabled — fail silent */ }
   }
@@ -187,6 +195,10 @@
           const v = obj.manipulations[k];
           if (typeof v === "number" && isFinite(v) && v >= 0) state.manipulations[k] = v | 0;
         });
+      }
+      if (obj.notes && typeof obj.notes === "object") {
+        state.notes = {};
+        Object.keys(obj.notes).forEach(k => { const kk = noteKey(k); if (kk) state.notes[kk] = noteVal(obj.notes[k]); });
       }
       if (typeof obj.startedAt === "number" && isFinite(obj.startedAt)) {
         state.startTime = obj.startedAt;
@@ -544,6 +556,31 @@
     return out;
   }
 
+  // ---- Lesson notes -------------------------------------------------------------
+  // A few short values a lesson wants in the code beside the bits: lesson 15's
+  // snake-game top scores (JM, 2026-10-07: "I would like the score recorded,
+  // though, in the code--maybe using the notes column or something else").
+  // Unscored; they print in the notes column of decode_codes.py and the
+  // verifier. Keys keep letters, digits and _; values keep letters, digits,
+  // _ . and - (no "|" or ";" can reach the payload). A code already on screen is
+  // rebuilt when a note changes, so it never carries a stale value.
+  function noteKey(k) { return String(k == null ? "" : k).replace(/[^A-Za-z0-9_]/g, "").slice(0, 24); }
+  function noteVal(v) { return String(v == null ? "" : v).replace(/[^A-Za-z0-9_.\-]/g, "").slice(0, 24); }
+  function setNote(key, value) {
+    const k = noteKey(key); if (!k) return;
+    const v = noteVal(value);
+    if (state.notes[k] === v) return;
+    state.notes[k] = v; save();
+    if (state.finished && state.mountFinalCode && !state.study) finish();
+  }
+  function getNote(key) { const v = state.notes[noteKey(key)]; return v == null ? null : v; }
+  function notesToken(map) { return Object.keys(map).sort().map(k => k + "=" + map[k]).join(";"); }
+  function parseNotesToken(s) {
+    const out = {};
+    (s || "").split(";").forEach(p => { const i = p.indexOf("="); if (i > 0) out[p.slice(0, i)] = p.slice(i + 1); });
+    return out;
+  }
+
   // ---- Elapsed working time -------------------------------------------------
   // Wall-clock seconds between name-confirm and finish(). This is an upper
   // bound on effort (a student who leaves the tab open inflates it);
@@ -596,7 +633,7 @@
 
   // Internal payload — the only place the cleartext fields live together.
   function payloadString() {
-    return [
+    const f = [
       nameToken(state.studentName),
       state.bits.pretest.join(""),
       state.bits.scaffold.join(""),
@@ -604,7 +641,9 @@
       String(elapsedSeconds()),
       manipulationsToken(state.manipulations),
       String(activeSeconds())
-    ].join("|");
+    ];
+    if (Object.keys(state.notes).length) f.push(notesToken(state.notes));
+    return f.join("|");
   }
 
   async function buildCodeAsync() {
@@ -640,13 +679,14 @@
     catch (e) { return null; }
     const f = payload.split("|");
     const base = { moduleId: m[1], version: parseInt(m[2], 10), raw: code.trim() };
-    // Six fields is the original layout; seven adds active seconds. Anything
-    // else means the payload did not decrypt to a record at all.
-    if (f.length !== 6 && f.length !== 7) {
+    // Six fields is the original layout; seven adds active seconds; eight adds
+    // a lesson's notes. Anything else means the payload did not decrypt to a
+    // record at all.
+    if (f.length < 6 || f.length > 8) {
       return Object.assign(base, { ok: false, macOk: false, reason: "wrong salt or corrupt code" });
     }
     const expectMac = await macHex(payload, salt, modVer);
-    const [nameTok, pre, sc, po, elapsed, manip, active] = f;
+    const [nameTok, pre, sc, po, elapsed, manip, active, notes] = f;
     const bitsOk = /^[01]*$/.test(pre) && /^[01]*$/.test(sc) && /^[01]*$/.test(po);
     const elapsedSec = parseInt(elapsed, 10) || 0;
     return Object.assign(base, {
@@ -658,14 +698,18 @@
       // null, not 0, for the older six-field codes: "this code predates the
       // attention clock" and "this student was never active" must not print
       // the same way in the instructor's tools.
-      activeSec: (f.length === 7) ? (parseInt(active, 10) || 0) : null,
+      activeSec: (f.length >= 7) ? (parseInt(active, 10) || 0) : null,
       manipulationsToken: manip,
-      manipulations: parseManipulationsToken(manip)
+      manipulations: parseManipulationsToken(manip),
+      notesToken: notes || "",
+      notes: parseNotesToken(notes)
     });
   }
 
+  let finishSeq = 0;
   async function finish() {
     state.finished = true; save();
+    const seq = ++finishSeq;        /* a later call (a note changed) wins over one still encoding */
     if (!state.mountFinalCode) {
       console.warn("Score: finish() called but no mountFinalCode container.");
       return;
@@ -690,6 +734,7 @@
         '<p class="score-card-p">Generating…</p>' +
       '</div>';
     const code = await buildCodeAsync();
+    if (seq !== finishSeq) return;
     if (!code) {
       state.mountFinalCode.innerHTML =
         '<div class="score-card score-final-card">' +
@@ -794,6 +839,7 @@
     isAnswered, allAnswered, getBit,
     carry, recall, recallInfo, clearCarry,   // cross-lesson carryover
     bumpManipulation, getManipulations, manipulationCount,
+    setNote, getNote,      // unscored values carried in the code (lesson 15's top scores)
     scoring, nameToken, elapsedSeconds, activeSeconds,
     isBypass,              // instructor bypass: every stage open, code in JM's name
     isStudy,               // study mode: every stage open, no code at all

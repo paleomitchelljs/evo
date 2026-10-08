@@ -13,8 +13,10 @@ A code looks like
      version
 
 and unpacks to: name, per-question right/wrong bits for the pretest, the
-in-lesson checkpoints and the posttest, wall-clock and active working time, and
-a per-stage count of how many times the student actually moved a control.
+in-lesson checkpoints and the posttest, wall-clock and active working time, a
+per-stage count of how many times the student actually moved a control, and any
+unscored notes the lesson carries (lesson 15: its snake game's top scores,
+e.g. topScoreA=12), printed first in the notes column.
 
 This file reimplements app/assets/score.js's codec in the standard library --
 same SHA-256 keystream, same MAC -- so grading needs no browser and no network.
@@ -108,6 +110,16 @@ def parse_manipulations(token):
     return {k: int(v) for k, v in re.findall(r"([A-Za-z]+)(\d+)", token or "")}
 
 
+def parse_notes(token):
+    """`topScoreA=12;topScoreB=9` -> {'topScoreA': '12', 'topScoreB': '9'}."""
+    out = {}
+    for part in (token or "").split(";"):
+        k, sep, v = part.partition("=")
+        if sep and k:
+            out[k] = v
+    return out
+
+
 def decode(code, salt):
     """Decode one code. Returns a dict; `ok` is True only when the tamper tag
     matches and the payload is well formed. A wrong salt lands as ok=False with
@@ -129,12 +141,14 @@ def decode(code, salt):
     ks = keystream(len(cipher), salt, modver)
     payload = bytes(c ^ k for c, k in zip(cipher, ks)).decode("utf-8", "replace")
     fields = payload.split("|")
-    # Six fields is the original layout; seven adds active seconds.
-    if len(fields) not in (6, 7):
+    # Six fields is the original layout; seven adds active seconds; eight adds
+    # a lesson's notes.
+    if len(fields) not in (6, 7, 8):
         return dict(rec, ok=False, reason="wrong salt or corrupt code")
 
     name, pre, sc, post, elapsed, manip = fields[:6]
-    active = fields[6] if len(fields) == 7 else None
+    active = fields[6] if len(fields) >= 7 else None
+    notes = fields[7] if len(fields) == 8 else ""
     bits_ok = all(re.fullmatch(r"[01]*", b) for b in (pre, sc, post))
     mac_ok = mac_hex(payload, salt, modver) == mac.lower()
 
@@ -157,6 +171,8 @@ def decode(code, salt):
         active_sec=(as_int(active) if active is not None else None),
         manip_token=manip,
         manipulations=parse_manipulations(manip),
+        notes_token=notes,
+        notes=parse_notes(notes),
     )
 
 
@@ -199,6 +215,16 @@ def manip_total(rec):
     return sum(rec.get("manipulations", {}).values())
 
 
+def lesson_notes(rec):
+    """The lesson's own unscored values, `topScoreA=12 topScoreB=9`."""
+    return " ".join(f"{k}={v}" for k, v in sorted(rec.get("notes", {}).items()))
+
+
+def notes_column(rec):
+    """The notes column: the lesson's values first, then the flags."""
+    return "; ".join(x for x in [lesson_notes(rec)] + flags(rec) if x)
+
+
 def flags(rec):
     """Short notes worth the instructor's eye. Not verdicts -- prompts to look."""
     out = []
@@ -234,7 +260,7 @@ def report(records, out=sys.stdout):
                                         r.get("scaffold") or "·",
                                         r.get("posttest") or "·"))
             stages = " ".join(f"{k}{v}" for k, v in sorted(r.get("manipulations", {}).items()))
-            note = "; ".join(flags(r))
+            note = notes_column(r)
             print(f"  {pretty_name(r.get('name_token')):<22} "
                   f"{score:>7} {pct:>4}  "
                   f"{fmt_time(r.get('active_sec')):>9} {fmt_time(r.get('elapsed_sec')):>8}  "
@@ -340,7 +366,7 @@ def write_csv(records, out):
             manip_total(r),
             " ".join(f"{k}{v}" for k, v in sorted(r.get("manipulations", {}).items())),
             1 if r.get("ok") else 0,
-            "; ".join(flags(r)),
+            notes_column(r),
         ])
 
 
