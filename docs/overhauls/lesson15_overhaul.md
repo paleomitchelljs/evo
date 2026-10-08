@@ -2,8 +2,43 @@
 
 **File** · `app/lessons/lesson15.html` — A, B, C built (v3, scaffold 16), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
-**Status** · eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-08 (JM's drive note parked, not built)
+**Status** · twelfth pass built (2026-10-08): Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**Last touched** · 2026-10-08 (twelfth pass: Run to generation 100 on B)
+
+## Twelfth pass (JM, 2026-10-08): Run to generation 100, island B only
+
+JM, verbatim: *"Would it be easy to add a 'Run to generation 100' button for Part B? I like keeping A tractable, and I like having the Run to 15 for both...but the ability to go further would be nice."*
+
+Read as (mine; JM may overrule):
+- B only. Run to 15 stays on both islands. The 100 button shows once B's five reads are done (instructor bypass / study: once the 15-generation game is over). It records nothing.
+- The reads stay with the generation they were dealt in (15, or 16+ after Run one more generation). Their reveals keep saying what they said.
+- The island runs on as the seasons after a death do (food at random). Island B dies out before 100 on 0.6% of first deals (3 of 500), so that run is dealt again (same island up to 15, new seasons after).
+
+Measured before building (the page's engine, 500 computer-played B islands, run on from 15 to 100):
+
+        generation                         15       50       100
+        mean fitness (10-90%)              1.05     1.23     1.47 (0.94-2.08)
+        snakes born                        15.0     17.7     21.1
+        coloured alleles alive             5.0      5.8      6.5
+        a coloured allele fixed            2.7%     ·        72% (1.2 on average)
+        a whole locus meets in the record  4.5%     ·        98%
+        best allele ever drawn gone        79%      ·        88%
+        fitness lower at 100 than at 0     10%
+        coloured alleles drawn by 100      114; up to 18 share one s value, 16 one h value
+        widest pedigree row                median 23, 90% 34, max 65 (at 15: 16 / 20 / 29)
+
+- So 100 shows what 15 cannot: fixation (72%) and whole loci meeting (98%). Mean fitness rises by about half.
+- What breaks at 100 as built: B's dot strips hold three rows (up to 18 needed); the lifespan plot gives 114 alleles under 2 px each; a 34-px pedigree slot cuts off a 35+ snake row; the time axis labels every 5.
+
+| # | What | Status |
+|---|------|--------|
+| 12-1 | `LONG = 100`; Run to generation 100 beside Play again, B only, after B's reads; dealt again if the island dies out | done: `cloneWorld` / `longAttempt` / `runLong`; each deal runs on a copy with its own seasons and its own s/h stream, adopted only if it reaches 100; up to 20 deals; the played line marked ended ("ran on") so no snake past it is the player's |
+| 12-2 | B's reads pinned to the generation they were dealt in (`c.at`); marks on B's plots cleared by the run | done; the best-ever reveal now says "still here in generation 15, N copies" (it said "still here") |
+| 12-3 | dot strips under s and h: as many rows as needed, canvas taller to fit | done: `packDots`; seen at 100: ~10 rows, canvas 342 px |
+| 12-4 | lifespan plot: at least 3 px a row, canvas taller to fit; time axis labelled every 10 past 50 | done; 114 alleles → 394 px |
+| 12-5 | pedigree slot narrows (chromosome view to 25 px, others to 18) when the widest row would not fit | done; also covers the rare wide row at 15 that used to be cut off |
+| 12-6 | B intro bullet; phase line after the run; the play task's hint past 15 | done |
+| 12-7 | checks | done: 8 new (60 in all), two clean runs; screenshots at 100 (pedigree, lifespans, s and h) looked over |
 
 ## Note (JM, 2026-10-08): an allele that kills the other sperm (parked; placement open)
 

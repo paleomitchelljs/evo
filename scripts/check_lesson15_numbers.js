@@ -46,6 +46,14 @@
  *      pick, a copy step only a pedigree copy; the 200 islands agree with
  *      the measured direction (best left's copies meet further back; the
  *      best ever mostly gone).
+ *   Run to generation 100 (B only). hidden until B's reads are done; then
+ *      it runs the island to 100 with no generation below two snakes; the
+ *      generations up to the reads' are untouched, no snake past the line's
+ *      end is the player's, the reveal and every bit unchanged; the same
+ *      island gives the same run; a deal that dies out is dealt again, and
+ *      first deals rarely die (measured 0.6%). At 100 the series are
+ *      re-derived again, s and h's dot strips grow rows instead of
+ *      overlapping, lifespans keep 3 px a row, and every pedigree row fits.
  *   C. the identity holds exactly for random families (Δz = cov + E, the
  *      snakes' E(wΔz) = the copies' cov + E, and the snakes' cov plus the
  *      copies' cov is the covariance over all twelve copies); a fair coin
@@ -308,7 +316,7 @@ checkReads("A");
 
 /* ================= island B ================= */
 fastForward("B");
-check("B runs to generation " + LAST, WD.B.gen === LAST && !!CH.B);
+check("B runs to generation " + LAST + "; Run to generation " + LONG + " hidden until its reads are done", WD.B.gen === LAST && !!CH.B && document.getElementById("B_long").hidden);
 checkSeries("B");
 {
   /* s and h in generation N: the bars count the coloured copies alive, their mean is the copies' */
@@ -365,6 +373,68 @@ checkSeries("B");
   const q = c.pool;
   check("B: the 200 islands (" + q.n + " compared): best left's copies meet " + q.best.toFixed(1) + " back, worst left's " + q.worst.toFixed(1) +
         "; best ever gone " + pct(q.gone) + " (measured 4.0 / 2.0 / 79%)", q.n >= 180 && q.best > q.worst + 0.8 && q.gone > 0.65);
+}
+
+/* ================= B: Run to generation 100 ================= */
+{
+  const w = WD.B, c = CH.B, btn = document.getElementById("B_long"), at = c.at;
+  const shown = !btn.hidden;
+  const snap = (x, upto) => JSON.stringify(x.ROWS.slice(0, upto + 1).map(r => r.map(id => { const s = x.SN.get(id); return [id, s.parents, Array.from(s.g[0]), Array.from(s.g[1])]; })));
+  const before = snap(w, at), you0 = JSON.stringify([...w.YOU]), rev0 = document.getElementById("B_reveal").innerHTML;
+  const bits0 = Object.values(BIT).map(b => Score.getBit("scaffold", b)).join("");
+  /* the same deal run on a copy first: the button must give exactly this */
+  let twin = null; for (let k = 0; !twin && k < 20; k++) twin = longAttempt(w, k);
+  btn.click();
+  let rowsOk = true; for (let t = 0; t <= w.gen; t++) if (genOf(w, t).length < 2) rowsOk = false;
+  check("Run to generation " + LONG + ": shown once B's reads are done; runs the island to " + LONG + " with no generation below two snakes, then hides",
+        shown && w.gen === LONG && rowsOk && btn.hidden, "gen " + w.gen);
+  check("Run to " + LONG + ": generations 0-" + at + " untouched; no snake past the line's end is the player's; the reveal and every bit unchanged",
+        snap(w, at) === before && JSON.stringify([...w.YOU]) === you0 && document.getElementById("B_reveal").innerHTML === rev0 &&
+        Object.values(BIT).map(b => Score.getBit("scaffold", b)).join("") === bits0);
+  check("Run to " + LONG + ": the same island and game give the same run", !!twin && snap(twin, LONG) === snap(w, LONG));
+  check("Run to " + LONG + ": the phase line says where the reads stay", new RegExp("reads stay with generation " + at).test(document.getElementById("B_phase").textContent));
+}
+checkSeries("B");
+{
+  /* s and h at generation 100: bars still the copies alive; the dot strips grow rows rather than overlap */
+  const w = WD.B; DN.n = null; drawDist();
+  const D = distStats(w, w.gen); let n = 0; for (const s of rowSnakes(w, w.gen)) for (let l = 0; l < LOCI; l++) for (const sd of [0, 1]) if (w.AL[s.g[sd][l]].col) n++;
+  const cv = document.getElementById("B_dist"), H = +cv.dataset.drawH;
+  let clash = 0; for (let i = 0; i < DH.hits.length; i++) for (let j = i + 1; j < DH.hits.length; j++) { const a = DH.hits[i], b = DH.hits[j]; if (a.y === b.y && Math.abs(a.x - b.x) <= 2 * DOT_R + 1 - 1e-9) clash++; }
+  const inside = DH.hits.every(h => h.y + DOT_R <= H);
+  check("s and h at generation " + LONG + ": " + D.alive.length + " alive, " + D.gone.length + " gone; no two dots in a row overlap, all inside the canvas (" + H + " px)",
+        D.copies === n && clash === 0 && inside && DH.hits.length === D.alive.length * 2 + D.gone.length * 2, "clashes " + clash);
+  /* the lifespans: at least 3 px an allele */
+  setMeasure("B", "life", -1);
+  const boxes = TP.B.hits.filter(h => h.box), tc = document.getElementById("B_time");
+  check("lifespans at " + LONG + ": " + boxes.length + " alleles, each row at least 3 px, all inside the plot",
+        boxes.length === w.AL.filter(a => a.col).length && boxes.every(b => b.box[3] - b.box[1] >= 3 - 1e-9 && b.box[3] <= +tc.dataset.drawH));
+  setMeasure("B", "fit", -1);
+  /* the pedigree: the widest row fits the room, in every view */
+  const P = PV.B, fits = [];
+  for (const v of ["chr", "loc", "org"]) { setView("B", v); const L = P.lay, Wd = +document.getElementById("B_ped").dataset.drawW;
+    let right = 0; for (const Q of L.pos.values()) right = Math.max(right, Q.x + L.slot / 2); fits.push(v + ":" + (right <= Wd + 0.5 ? "ok" : Math.round(right) + ">" + Wd)); }
+  setView("B", "chr");
+  /* and a room too narrow for the roomy slot: the slot narrows to fit, down to its floor (25 chromosome, 18 the others) */
+  const most = Math.max(...w.ROWS.map((r, t) => shownRow(w, t).length));
+  for (const [v, per] of [["chr", 28], ["loc", 21], ["org", 21]]) { const Wd = PD_LEFT + 10 + most * per, L = pedLayout(w, Object.assign({}, P, { view: v }), Wd);
+    let right = 0; for (const Q of L.pos.values()) right = Math.max(right, Q.x + L.slot / 2); fits.push(v + "@" + Wd + ":" + (right <= Wd + 0.5 && near(L.slot, per, 1e-9) ? "ok" : Math.round(right) + "/" + L.slot.toFixed(1))); }
+  check("pedigree at " + LONG + ": every row inside the canvas in every view (widest " + most + "), and in a room too narrow for 34 / 26 px slots", fits.every(s => /ok$/.test(s)), fits.join(" "));
+}
+{
+  /* a first deal that dies out is dealt again; twenty that die leave the island where it was */
+  const orig = window.longAttempt, calls = [];
+  window.longAttempt = (x, k) => { calls.push(k); return k === 0 ? null : orig(x, k); };
+  const w1 = makeWorld("B"); found(w1, 31); runRest(w1); w1.phase = "done";
+  const ok1 = runLong(w1);
+  window.longAttempt = () => null;
+  const w2 = makeWorld("B"); found(w2, 32); runRest(w2);
+  const ok2 = runLong(w2);
+  window.longAttempt = orig;
+  let died = 0, n = 0; for (let i = 0; i < 200; i++) { const x = makeWorld("B"); found(x, 700 + i); if (!runRest(x)) continue; n++; if (!longAttempt(x, 0)) died++; }
+  check("Run to " + LONG + ": a deal that dies out is dealt again (calls " + calls.join(",") + "); if every deal dies the island stays at " + LAST +
+        "; first deals that die: " + died + " of " + n + " (measured 0.6%)",
+        ok1 && w1.gen === LONG && calls.join(",") === "0,1" && !ok2 && w2.gen === LAST && n >= 190 && died / n < 0.03);
 }
 {
   /* over fresh islands: where the read allele's living copies meet, against where it arose */
