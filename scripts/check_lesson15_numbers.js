@@ -2,12 +2,13 @@
 /*
  * check_lesson15_numbers.js -- the checks for app/lessons/lesson15.html.
  *
- * Lesson 15 is a draft (tenth pass, 2026-10-07): A the snake game on a
+ * Lesson 15 is a draft (eleventh pass, 2026-10-07): A the snake game on a
  * neutral island, fifteen generations, a pedigree in three views and six
- * reads of it; B the same on an island whose new alleles carry s and h; C
- * one allele's change split among snakes and then among the copies inside
- * each snake (a hierarchical Price equation), and B's island read back
- * winter by winter. What has to hold:
+ * reads of it, then the island over time; B the same on an island whose new
+ * alleles carry s and h, its plot, s and h in generation N, and five reads
+ * of the plots; C one allele's change split among snakes and then among the
+ * copies inside each snake (a hierarchical Price equation), and B's island
+ * read back winter by winter. What has to hold:
  *
  *   Engine. fourteen founders, one new allele each; A's alleles do nothing,
  *      B's carry s and h on the 0.05 grid inside their ranges, s drawn from
@@ -20,13 +21,28 @@
  *      row every snake; mates side by side; no lines without a click; a
  *      click on a bead / circle / snake selects that copy or snake in each
  *      view; lock adds, unlocking keeps the last.
- *   Reads. each island's six targets re-derived here from the snakes: the
+ *   Score. a steered season counts its young and opens Run to generation
+ *      15 (hidden before); the count stops when play ends, though the
+ *      seasons after it breed the played snake's line on.
+ *   Plot. every series re-derived from the rows: frequencies at a locus sum
+ *      to 1; heterozygosity counted; distinct alleles as the winter card's;
+ *      an allele's loss is its first generation with no copy; its time to
+ *      MRCA is where all its living copies' lines first coincide, never more
+ *      than its age, 0 when it arises; B's mean fitness is the mean
+ *      multiplier. A click on a line, a dot or a copy picks that allele.
+ *   s and h. generation N's bars count exactly the coloured copies alive.
+ *   Reads, A. the six targets re-derived here from the snakes: the
  *      traced copy's parent, grandparent and great-grandparent copies; the
  *      pair's meeting copy (the first copy both lines share) and its depth;
  *      the commonest coloured allele, its origin, and the most recent copy
  *      every living copy passes through; first answers record their own
  *      bit, misses do not shut a door; over fresh islands the meeting copy
  *      sits after the origin most of the time (the measured 83%).
+ *   Reads, B. the best and worst coloured alleles left (ties all count),
+ *      their meeting copies, the best ever drawn; an allele step takes any
+ *      pick, a copy step only a pedigree copy; the 200 islands agree with
+ *      the measured direction (best left's copies meet further back; the
+ *      best ever mostly gone).
  *   C. the identity holds exactly for random families (Δz = cov + E, the
  *      snakes' E(wΔz) = the copies' cov + E, and the snakes' cov plus the
  *      copies' cov is the covariance over all twelve copies); a fair coin
@@ -37,7 +53,7 @@
  *      Next target; the R panel computes the page's own numbers (Rscript).
  *   Island read-back. every winter's three parts add to that winter's
  *      change, and the change lands on the next generation's share.
- *   All. every canvas fits its panel; a full run writes all 17 bits.
+ *   All. every canvas fits its panel; a full run writes all 16 bits.
  *
  * Same harness as check_lesson14_numbers.js: the checks run inside a
  * same-origin iframe against the page's own functions; the report comes back
@@ -115,10 +131,70 @@ check("A's alleles do nothing", WD.A.AL.every(a => a.s === 0 && a.h === 0));
         ended && w2.ended == null && me2.kids.includes(kid), "ended " + w.ended + ", next " + kid);
 }
 
+/* ================= one steered season: the score and Run to generation 15 ================= */
+{
+  try { localStorage.removeItem("l15topA"); } catch (e) {}
+  delete TOP.A;
+  const fast = document.getElementById("A_fast"), hiddenBefore = fast.hidden;
+  startSeason("A", false);
+  let k = 0; while (AR.on && k < 3000) { const me = youNow(); if (me && AR.sal.length) { let b = AR.sal[0]; for (const f of AR.sal) if (Math.hypot(f.x-me.x,f.y-me.y) < Math.hypot(b.x-me.x,b.y-me.y)) b = f; AR.pointer = { x: b.x, y: b.y }; } step(0.03); k++; }
+  const card = AR.card, w = WD.A, young = card ? card.kids.length : -1;
+  const counted = w.steered === 1 && w.tally === young && topScore(w) === young;
+  const runShown = w.phase === "ready" ? !document.getElementById("btnRun").hidden && !fast.hidden : fast.hidden;
+  check("a steered season counts its young (" + young + ") and the top score keeps them; Run to generation 15 hidden before, shown after while play goes on",
+        hiddenBefore && counted && runShown, "phase " + w.phase + ", tally " + w.tally);
+  closeArena();
+}
+
 /* ================= island A: a whole game ================= */
+const tallyBefore = WD.A.tally;
 fastForward("A");
 const wA = WD.A;
 check("A runs to generation " + LAST + " and opens its reads", wA.gen === LAST && wA.phase === "done" && !!CH.A, "gen " + wA.gen + ", phase " + wA.phase);
+check("the score stops when play ends: the seasons after add nothing, Run is gone",
+      wA.tally === tallyBefore && document.getElementById("A_fast").hidden && /final/.test(document.getElementById("A_score").textContent), wA.tally + " / " + tallyBefore);
+
+/* ================= the plot over time, re-derived ================= */
+function checkSeries(key) {
+  const w = WD[key], S = islandSeries(w), G = w.gen;
+  let sum1 = true, hetOk = true, divOk = true, lossOk = true, tmOk = true, ageOk = true, fitOk = true;
+  const dis = distinctAlleleSeries(w);
+  for (let t = 0; t <= G; t++) {
+    const row = rowSnakes(w, t);
+    for (let l = 0; l < LOCI; l++) {
+      let f = 0; for (const a of S.al) if (a.locus === l && a.f[t] != null) f += a.f[t];
+      if (!near(f, 1, 1e-9)) sum1 = false;
+      const h = row.filter(s => s.g[0][l] !== s.g[1][l]).length / row.length; if (!near(h, S.het[t][l])) hetOk = false;
+    }
+    if (S.div[t].reduce((a, b) => a + b, 0) !== dis[t]) divOk = false;
+    if (w.sel && !near(S.fit[t].mean, row.reduce((a, s) => a + multOf(w, s), 0) / row.length)) fitOk = false;
+  }
+  for (const a of S.al) {
+    const copies = t => { let c = 0; for (const s of rowSnakes(w, t)) c += (s.g[0][a.locus] === a.id) + (s.g[1][a.locus] === a.id); return c; };
+    let first = null; for (let t = a.born; t <= G; t++) if (!copies(t)) { first = t; break; }
+    if (first !== a.lost || (a.lost != null && a.f[a.lost] !== 0)) lossOk = false;
+    if (!a.col) continue;
+    for (let t = a.born; t < (a.lost == null ? G + 1 : a.lost); t++) { if (a.tm[t] > t - a.born || a.tm[t] < 0) ageOk = false; }
+    if (a.tm[a.born] !== 0) ageOk = false;
+    if (a.lost == null) {
+      const ups = []; for (const sid of genOf(w, G)) for (const sd of [0, 1]) if (w.SN.get(sid).g[sd][a.locus] === a.id) ups.push(fullUp(w, { id: sid, side: sd, locus: a.locus }));
+      let k = 0; while (new Set(ups.map(u => u[k].id + "|" + u[k].side)).size > 1) k++;
+      if (k !== a.tm[G]) tmOk = false;
+    }
+  }
+  check(key + " plot: frequencies at each locus sum to 1; heterozygosity counted; distinct alleles as the winter card's" + (w.sel ? "; mean fitness the mean multiplier" : ""), sum1 && hetOk && divOk && fitOk);
+  check(key + " plot: an allele is lost in its first generation with no copy; time to MRCA re-derived from the copies' lines, 0 when it arises, never past its age", lossOk && tmOk && ageOk, [lossOk, tmOk, ageOk].join(" "));
+  /* every measure draws, at every locus choice; a click on a line picks its allele */
+  let drew = true; for (const m of TMEAS) if (!m.sel || w.sel) for (const l of [-1, 0, 6]) { try { setMeasure(key, m.k, l); } catch (e) { drew = false; } }
+  setMeasure(key, "freq", 2); PICK[key] = null; drawTime(key);
+  const h = TP[key].hits.find(x => x.pts && x.pts.length > 2), cv = document.getElementById(key + "_time"), r = cv.getBoundingClientRect();
+  const pt = h.pts[1];
+  cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + pt[0], clientY: r.top + pt[1], bubbles: true }));
+  const picked = PICK[key] === h.id || TP[key].hits.some(o => o.id === PICK[key] && o.pts && o.pts.some(q => Math.hypot(q[0] - pt[0], q[1] - pt[1]) < 6));
+  check(key + " plot: every measure draws at every locus choice; a click on a line picks that allele", drew && picked, "picked " + PICK[key] + " / " + h.id);
+  PICK[key] = null; TP[key].hover = null;
+}
+checkSeries("A");
 {
   let ok = true, why = "";
   for (let t = 0; t <= wA.gen; t++) {
@@ -160,6 +236,7 @@ check("A runs to generation " + LAST + " and opens its reads", wA.gen === LAST &
   lk.checked = false; lk.dispatchEvent(new Event("change"));
   const kept = P.sel.length === 1 && itemKey(P.sel[0]) === itemKey(c0);
   check("unlocked a click replaces; lock adds; unlocking keeps the last click", replaced && added && kept, [replaced, added, kept].join(" "));
+  check("a copy clicked in the pedigree picks its allele on the plot", PICK.A === wA.SN.get(c0.id).g[c0.side][c0.locus]);
   P.sel = []; P.last = null;
 }
 
@@ -208,13 +285,63 @@ checkReads("A");
 /* ================= island B ================= */
 fastForward("B");
 check("B runs to generation " + LAST, WD.B.gen === LAST && !!CH.B);
+checkSeries("B");
 {
-  const c = CH.B; let extra = 0;
-  if (!c.allele) { c.step = 4; Chal.sync("B"); const before = WD.B.gen; while (!c.allele && extra < 30) { Chal.more("B"); extra++; } check("B: Run one more generation runs one, until an allele has three copies", WD.B.gen === before + extra && !!c.allele, extra + " more"); c.step = 0; }
-  checkReads("B");
+  /* s and h in generation N: the bars count the coloured copies alive, their mean is the copies' */
+  const w = WD.B;
+  let ok = true;
+  for (let N = 0; N <= w.gen; N++) {
+    const D = distStats(w, N); let n = 0, sm = 0;
+    for (const s of rowSnakes(w, N)) for (let l = 0; l < LOCI; l++) for (const sd of [0, 1]) { const a = w.AL[s.g[sd][l]]; if (a.col) { n++; sm += a.s; } }
+    if (D.copies !== n || (n && !near(D.sCopies, sm / n))) ok = false;
+    if (D.alive.some(id => w.AL[id].born > N) || D.gone.some(id => D.cnt[id])) ok = false;
+  }
+  DN.n = null; drawDist();
+  const h = DH.hits[0], cv = document.getElementById("B_dist"), r = cv.getBoundingClientRect();
+  cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + h.x, clientY: r.top + h.y, bubbles: true }));
+  check("B s and h: generation N's bars are exactly the coloured copies alive, their mean the copies' mean; a dot picks its allele", ok && PICK.B === h.id);
+  PICK.B = null;
+}
+{
+  /* "Run one more generation" when fewer than two alleles with different s are left */
+  const c0 = CH.B, g0 = WD.B.gen; c0.short = true; c0.tried = { x: 1 }; ChalB.sync("B");
+  const shown = !document.getElementById("B_more").hidden && document.getElementById("B_this").disabled;
+  ChalB.more("B");
+  check("B: with fewer than two alleles to compare, Run one more generation runs one and the reads are dealt again", shown && WD.B.gen === g0 + 1 && CH.B !== c0 && CH.B.tried.x === 1);
+  CH.B.tried = {};
+}
+{
+  const w = WD.B, c = CH.B, G = w.gen;
+  const alive = []; for (const sid of genOf(w, G)) for (let l = 0; l < LOCI; l++) for (const sd of [0, 1]) { const v = w.SN.get(sid).g[sd][l]; if (w.AL[v].col && !alive.includes(v)) alive.push(v); }
+  const lo = Math.min(...alive.map(id => w.AL[id].s)), hi = Math.max(...alive.map(id => w.AL[id].s));
+  let ev = Infinity; w.AL.forEach(a => { if (a.col) ev = Math.min(ev, a.s); });
+  const eq = (x, y) => x.length === y.length && x.every(v => y.includes(v));
+  check("B reads: the best left, the worst left and the best ever, re-derived (ties all count)",
+        eq(c.best, alive.filter(id => w.AL[id].s === lo)) && eq(c.worst, alive.filter(id => w.AL[id].s === hi)) &&
+        eq(c.ever, w.AL.map((a, id) => a.col && a.s === ev ? id : -1).filter(id => id >= 0)) && !c.short, c.best + " / " + c.worst + " / " + c.ever);
   const P = PV.B;
-  while (!c.done) { const wnt = Chal.want(c); if (!wnt) break; P.last = { kind: "copy", id: wnt.id, side: wnt.side, locus: wnt.locus }; Chal.answer("B"); }
-  check("B: six first hits record 1; C opens", c.done && ["B1","B2","B3","B4","B5","B6"].every(k => Score.getBit("scaffold", BIT[k]) === 1) && Gates.C.open);
+  /* a first miss records 0 and the door stays open */
+  PICK.B = c.worst[0]; ChalB.answer("B");
+  const missed = c.step === 0 && Score.getBit("scaffold", BIT.B1) === 0;
+  PICK.B = c.best[c.best.length - 1]; ChalB.answer("B");
+  /* the meeting copy: re-derived from the copies' lines; an allele pick is not a copy */
+  const meet = id => { const l = w.AL[id].locus, ups = []; for (const sid of genOf(w, G)) for (const sd of [0, 1]) if (w.SN.get(sid).g[sd][l] === id) ups.push(fullUp(w, { id: sid, side: sd, locus: l }));
+    let k = 0; while (new Set(ups.map(u => u[k].id + "|" + u[k].side)).size > 1) k++; return { id: ups[0][k].id, side: ups[0][k].side, locus: l }; };
+  const m1 = meet(c.bestId);
+  P.last = null; ChalB.answer("B");
+  const refused = c.step === 1 && !Score.isAnswered("scaffold", BIT.B2);
+  check("B: a first miss records 0 and the read stays open; an allele pick does not answer a copy step; the best's meeting copy re-derived",
+        missed && refused && same(m1, c.bestM.mrca), JSON.stringify(m1));
+  P.last = Object.assign({ kind: "copy" }, m1); ChalB.answer("B");
+  PICK.B = c.worst[0]; ChalB.answer("B");
+  const m2 = meet(c.worstId);
+  P.last = Object.assign({ kind: "copy" }, m2); ChalB.answer("B");
+  PICK.B = c.ever[0]; ChalB.answer("B");
+  const bits = ["B1","B2","B3","B4","B5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("B: then four first hits record 1; the worst's meeting copy re-derived; C opens", c.done && bits === "01111" && same(m2, c.worstM.mrca) && Gates.C.open, "bits " + bits);
+  const q = c.pool;
+  check("B: the 200 islands (" + q.n + " compared): best left's copies meet " + q.best.toFixed(1) + " back, worst left's " + q.worst.toFixed(1) +
+        "; best ever gone " + pct(q.gone) + " (measured 4.0 / 2.0 / 79%)", q.n >= 180 && q.best > q.worst + 0.8 && q.gone > 0.65);
 }
 {
   /* over fresh islands: where the read allele's living copies meet, against where it arose */
@@ -284,8 +411,8 @@ const OPEN = () => [0,1,2].map(() => [C_kid(0), C_kid(1)]);
         practiced && miss && locked && C.done && bits === "01111" && document.getElementById("done-banner").classList.contains("shown"), "bits " + bits);
 }
 {
-  let n = 0; for (let i = 0; i < 17; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all 17 declared bits written", n === 17, n + " written");
+  let n = 0; for (let i = 0; i < 16; i++) if (Score.isAnswered("scaffold", i)) n++;
+  check("all 16 declared bits written", n === 16, n + " written");
 }
 /* the R panel, for a family that moves every term */
 C.young = [[K(0,0),K(0,0,1,0)], [K(0,1),K(1,0),K(0,0)], [K(0,1)]];
@@ -304,7 +431,7 @@ const RCODE = C_RCODE();
 {
   FIT_EPOCH++; paintAll(null, false);
   const over = [];
-  for (const id of ["A_ped","B_ped","B_dist","C_fam","C_card","C_isle"]) { const cv = document.getElementById(id), host = cv.parentElement;
+  for (const id of ["A_ped","B_ped","A_time","B_time","B_dist","C_fam","C_card","C_isle"]) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel", over.length === 0, over.join(", "));
 }

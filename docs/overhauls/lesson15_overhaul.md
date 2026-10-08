@@ -2,8 +2,62 @@
 
 **File** · `app/lessons/lesson15.html` — Stage A playable, locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · tenth pass building (2026-10-07): A = 15-generation game + views + challenges; B = A with selected mutations; C = hierarchical Price. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-07 (tenth pass)
+**Status** · eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score; Run to generation 15 after one played season. Checks pass. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**Last touched** · 2026-10-07 (eleventh pass)
+
+## Eleventh pass (JM, 2026-10-07, later): a plot over time; B's reads on the plots; top score; run to 15
+
+JM, verbatim:
+- *"an interactive plot where the x-axis is time (generations) and the right axis has drop down toggles for allele frequency (e.g., frequency of ___ locus ____ with lines for alleles at that locus over time, so two drop-downs), heterozygosity, population size, total genetic diversity, and extinction times (or MRCA times? Or both?). This should appear between parts A & B, with an additional version between B and C."*
+- *"For Part B, the h/s distribution that exists at generation N should be shown along with the generation distributions. An additional toggle on the plot showing mean fitness over time should be added, too. The activities here should not be clones of those from Part A. Rather we should have them ask about interpretations of the plot and graphs--though I am not yet sure what. Maybe something like finding the worst alleles and best alleles present in the final generation & comparing their time-to-MRCA?"*
+- *"For A & B: A 'run 15 generations' button should also always be available after students have played one generation of each game themselves. That way they aren't forced. BUT: For both Part A and B a 'Top score' should be displayed with the number of offspring produced to try and encourage students to play for keeps--if a lineage dies, it stops updating so it's the 'best run' instead of a continuous tally."*
+
+Read as (mine; JM may overrule):
+- "the right axis" = the y-axis (dictation). Two menus over the plot: what the y-axis shows, and which locus (for the per-locus measures; "all loci" where a sum or mean means something).
+- Measures: allele frequency (every allele at the locus, plain grey included, a line ending where the allele is lost); heterozygosity (the share of snakes carrying two different alleles, counted, as lesson 11 D); snakes (born, and those that had young); distinct alleles ("total genetic diversity", as the winter card's plot); alleles' lifespans (each allele a bar from the generation it arose to the one it was lost: the extinction times); time to MRCA (each coloured allele: how many generations back its living copies meet, every generation it is alive). Both, as JM asked. B adds mean fitness (the average snake's multiplier).
+- A whole locus coalesces within 15 generations in 4.5% of islands (measured below), so "MRCA times" are per allele: a coloured allele's copies always meet, at or after its mutant.
+- Click a line to pick an allele (others fade); hover for the values at a generation. Clicking a copy in the pedigree picks its allele too.
+- B's "h/s distribution that exists at generation N" = the s and h of the coloured copies alive in generation N, as bars over the curves new alleles are drawn from ("the generation distributions"); N on a slider. Alleles shown as dots in two strips (alive in generation N / gone by then), clickable.
+- Top score = the young your played snakes have had, summed over the seasons. It stops when your line ends (death, no mate, Run to generation 15). The best game kept in this browser (localStorage); a reload is a new game on the same founders.
+- "Run to generation 15" appears once a season on that island has been steered to winter (not "Let this season play itself"). It ends play, as a death does.
+
+B's reads (proposal; JM "not yet sure what"), each one bit, first answer:
+- B1 the best allele left in the last generation (lowest s): pick it (dot, line or a copy). B2 where its living copies meet: click that copy.
+- B3 the worst left (highest s); B4 where its copies meet (one copy is its own).
+- The reveal after B4: both on the time-to-MRCA plot, with 200 computer-played islands run on the page for the comparison (one island is a coin toss, see below).
+- B5 the best allele that ever arose on the island: pick it. Reveal: when it was lost, or its copies now; and the 200 islands' share lost.
+
+| # | What | Status |
+|---|------|--------|
+| 11-1 | time plot, A (after A's reads) and B (after B's game), measures and menus as above; hover, click to pick | done: `islandSeries` (cached until the island breeds), `drawTime`; y-axis menu + locus menu ("all loci" off for frequency, menu hidden for snakes / fitness); hover = dashed guide + numbers under the plot; click picks (others fade to 0.28); a pedigree copy picks its allele and turns a one-locus plot to its locus; time to MRCA draws the picked allele's age dashed beside it (where they part, the copies no longer meet at the mutant) |
+| 11-2 | B: mean fitness on the plot | done: mean line, lowest-highest snake band, dashed 1; B's default view |
+| 11-3 | B: s and h of the copies alive in generation N, over the drawing curves; slider; alleles as clickable dots | done: curve = density new alleles are drawn from, bars = density of coloured copies in N (0.1 bins); ▲ means (blue new, ink copies) on the axis and in numbers under it; dots packed three rows a strip; panel moved below B's plot |
+| 11-4 | B's reads rebuilt (B1-B5), "Run one more generation" when fewer than two coloured alleles are left | done: `ChalB`; allele steps take a dot, a line or a copy; copy steps only a pedigree copy; reveals: the allele's copies' lines on the pedigree, then best and worst labelled on time to MRCA (all loci), then best ever on the lifespans; the 200 islands run when B4 is found (84 ms, real time) |
+| 11-5 | top score, A and B: HUD and island panel; freezes when the line ends; best kept in localStorage | done: `w.tally` adds the played snake's young at each winter in the arena (played or let play itself); the seasons after a death / Run add nothing; re-founded island = new game |
+| 11-6 | Run to generation 15 after one steered season (instructor bypass/study: from the start) | done: island panel and the winter card's side column; ends play as a death does |
+| 11-7 | scoring: B 6 → 5 bits, scaffold 16, version 3; C's island read-back follows B's best allele | done |
+| 11-8 | checks: series re-derived, B reads re-derived, top score freeze, Run button, canvases fit | done: 48 + R panel, all pass, ~40 s |
+
+Open for JM (eleventh pass):
+- "the right axis" read as the y-axis (dictation). If he meant a second axis drawn on the right, the menus move, nothing else.
+- Top score keeps the best game in this browser across reloads; there is no "play again" button (a reload is the replay). Add one?
+- Seasons let play themselves count toward the score (the line is still the player's). Steered seasons only?
+- B's reads are my proposal on his "Maybe something like ...". Best-left vs worst-left time to MRCA is a coin toss on one island (57%), so the page prints 200 more islands beside it. B5 (best ever, gone 79%) is mine.
+- B now has 5 bits, not 6 (scaffold 16, version 3).
+
+Measured before building (the page's own engine, `found` + `runRest`, computer-played; B unless said):
+
+        coloured alleles alive in gen 15           mean 5.1; fewer than 2 in 0.5% of 1,000 islands (A: none of 400)
+        best left vs worst left (s)                 s -0.28 vs +0.38; best helps 93%, worst hurts 95%
+          age (generations since it arose)          7.5 vs 4.9; best older in 58% (tie 3%)
+          time to MRCA of its living copies         4.0 vs 2.0; best further back in 57% (tie 14%)
+          copies                                    7.7 vs 3.2; worst has one copy 40%, best 27%; ties on s 10% / 7%
+        best allele ever drawn, alive at gen 15     21% (gone in 79%)
+        mean multiplier, gen 0 -> 15                0.946 -> 1.037 (average); higher at 15 in 69% of islands
+        mean s: drawn / alleles alive / copies      0.105 / 0.052 / -0.047; copies' mean below the drawn mean in 74%
+        whole locus (all copies) meets by gen 15    4.5% of locus-islands
+
+- So best-vs-worst time to MRCA is a coin toss on one island (57%) though the averages differ twofold: the reveal pools 200 islands. The best allele ever drawn being gone is the reliable one (79%).
 
 ## Tenth pass (JM, 2026-10-07): 15 generations, three views, challenges; B selected; C hierarchical Price
 

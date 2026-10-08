@@ -119,7 +119,18 @@
   .chal .ask { font-size:14px; margin:12px 0 4px; min-height:20px; }
   .chal .fb { font-size:13px; }
   .swatch { display:inline-block; width:12px; height:12px; border-radius:50%; vertical-align:-1px; border:1px solid rgba(0,0,0,.35); }
-  .dist { margin-bottom:16px; }
+  .dist, .tpanel { margin-top:16px; }
+  .chal .reveal { font-size:13.5px; margin:10px 0 0; line-height:1.55; }
+  .chal .reveal:empty { display:none; }
+  /* the island over time (JM, 2026-10-07, eleventh pass): two menus over the plot */
+  .tbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 0 8px; font-size:12.5px; }
+  .tbar label { display:flex; align-items:center; gap:6px; }
+  .tbar select { font-size:12.5px; padding:2px 4px; }
+  .tbar input[type=range] { width:180px; accent-color:var(--accent2); }
+  .tpanel canvas, .dist canvas { display:block; }
+  .score-line { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--muted); }
+  .score-line b { color:var(--ink); }
+  .score-line b.top { color:var(--accent); }
 
   /* ---- Stage C's target card ---- */
   .tcard .ttext { font-size:14px; margin:0 0 8px; }
@@ -155,6 +166,9 @@
       <li>Every snake carries one chromosome from each parent, with seven genes on it: loci 1 to 7. Every snake in the first generation carries one new allele, a colour; the rest start plain grey. After that, one new allele turns up each generation, in a young snake at random. None of them does anything.</li>
       <li><b>Pedigree</b>, below: one row a generation, and only the snakes that had young. Three views: each snake as a snake; as its two chromosomes (mother's above, father's below); or as its two copies of one locus. A ring marks the copy where each allele arose.</li>
       <li>Click a snake, or a copy, for lines to where it came from (red, up) and where it went (blue, down). Tick <b>lock</b> to keep those lines while you click another.</li>
+      <li><b>Top score</b>: the young your snakes have had, added up over your seasons. It stops counting when your line ends. Your best game in this browser is kept; reloading the page starts a new game.</li>
+      <li>Once you have played a season yourself, <b>Run to generation 15</b> ends your play and lets the seasons left play themselves.</li>
+      <li><b>Island A over time</b>, at the end of this part: pick what the y-axis shows, and at which locus. Hover for the numbers at one generation. Click a line to pick that allele; clicking a copy in the pedigree picks its allele too.</li>
     </ul>
   </div>
 
@@ -173,16 +187,13 @@
       <li>This time every new allele does something. Each comes with an <b>s</b> and an <b>h</b>, drawn at random from the curves below. A snake with two copies of it has its salamanders count &times; (1 &minus; s); with one copy, &times; (1 &minus; h&middot;s). Across its seven genes the numbers multiply.</li>
       <li>s = &minus;0.5 with two copies: 2 salamanders count as 3, and pay for one and a half young. s = 0.5: they count as 1.</li>
       <li>Click a copy in the pedigree to see its allele's s and h.</li>
+      <li><b>Island B over time</b> has one more choice for the y-axis: <b>mean fitness</b>, the average snake's multiplier on its salamanders.</li>
+      <li>Under it, <b>s and h</b>: the curves are where new alleles are drawn from; the bars are the coloured copies alive in generation N, set by the slider. Each allele is a dot: filled if it is alive in generation N, hollow if it is gone by then. Click a dot to pick that allele.</li>
+      <li>The reads this time are about the plots: the best and worst alleles left at the end, where their copies meet, and the best allele your island ever had.</li>
     </ul>
   </div>
 
-  <div class="stage-body">
-    <div class="panel dist">
-      <h3>New alleles: where s and h come from</h3>
-      <canvas id="B_dist" width="1260" height="170"></canvas>
-    </div>
-    <div id="B_body"></div>
-  </div>
+  <div class="stage-body" id="B_body"></div>
 </section>
 
 <!-- ========== STAGE C — the change in one allele, split among snakes and among copies ========== -->
@@ -259,6 +270,7 @@
       <div class="controls"><div class="buttons">
         <button id="btnBack" class="accent" hidden>Back to the pedigree</button>
         <button id="btnNext" class="ghost" hidden>Play the next season</button>
+        <button id="btnRun" class="ghost" hidden>Run to generation 15</button>
       </div></div>
     </div>
   </div>
@@ -369,9 +381,12 @@ function setupCanvas(canvas, h) {
 /* ====== the two islands ==============================================
    Each world holds its own alleles, snakes, generations and the player's
    snake in each generation. */
+/* steered: seasons the student has played to winter themselves (not let play itself); one opens
+   "Run to generation 15" (JM, 2026-10-07: "after students have played one generation of each game
+   themselves. That way they aren't forced"). It survives a re-founded island. */
 function makeWorld(key) {
   return { key, sel: key === "B", salt: 0, AL: [], SN: new Map(), ROWS: [], YOU: new Map(), next: 0, gen: 0, colI: 0,
-           broken: false, ended: null, phase: "ready", rng: null, srng: null };
+           broken: false, ended: null, phase: "ready", rng: null, srng: null, steered: 0, tally: 0, series: null };
 }
 const WD = { A: makeWorld("A"), B: makeWorld("B") };
 let W = WD.A;                            // the island the arena plays
@@ -493,7 +508,7 @@ function modelSeason(w, rng) {
    re-deals the island in the (unmeasured, never seen in 2,000 model games) case it dies out. */
 function found(w, salt) {
   Object.assign(w, { salt: salt || 0, AL: [], SN: new Map(), ROWS: [], YOU: new Map(), next: 0, gen: 0, colI: 0,
-                     broken: false, ended: null, phase: "ready" });
+                     broken: false, ended: null, phase: "ready", tally: 0 });
   const tag = w.key === "A" ? "" : w.key;
   w.rng = mulberry32(pageSeed("l15" + tag, 1, 999999) + 104729 * w.salt);
   w.srng = mulberry32(pageSeed("l15s" + w.key, 1, 999999) + 104729 * w.salt);
@@ -662,7 +677,9 @@ function finishWinter() {
   const pairs = pairUp(fed, AR.rng);
   const mine = me ? pairs.find(p => p[0] === me || p[1] === me) : null, mate = mine ? (mine[0] === me ? mine[1] : mine[0]) : null;
   const ate = me ? me.food : 0, fate = me ? me.fate : null, mult = me ? multOf(w, me) : 1, mateMult = mate ? multOf(w, mate) : 1;
+  if (!AR.auto && me) w.steered++;
   const row = breed(w, pairs, AR.rng);
+  if (me) { w.tally += me.kids.length; saveTop(w); }
   AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, mult, mateMult, fate, kids: me.kids.slice(),
                    next: w.gen < LAST && w.YOU.has(w.gen) ? w.YOU.get(w.gen) : null, rel: mate ? relation(w, me, mate) : null } : null;
   buildWinterQs();
@@ -680,6 +697,30 @@ function finishWinter() {
            (me ? me.kids.length : 0) + " young of yours among " + row.length + ". You are one of them now.", over || !!w.ended);
   $("btnBack").hidden = false; $("btnNext").hidden = w.phase !== "ready";
   syncButtons(); paintAll(w.key, true);
+}
+/* ---- the score (JM, 2026-10-07: "a 'Top score' should be displayed with the number of offspring
+   produced ... if a lineage dies, it stops updating so it's the 'best run' instead of a continuous
+   tally"): the young the played snakes had, added at each winter in the arena (played or let play
+   itself). The played line ends at a death, no mate or Run to generation 15, and the sum stops with it:
+   the seasons that run themselves after that add nothing. The best game is kept in this browser; a
+   re-founded island is a new game. Browser storage can be missing (a private window): then the top
+   score is this game's. ---- */
+const youngTally = w => w.tally;
+const TOP = {};
+function readTop(key) {
+  if (TOP[key] == null) { let v = 0; try { v = +localStorage.getItem("l15top" + key) || 0; } catch (e) { /* none kept */ } TOP[key] = v; }
+  return TOP[key];
+}
+function saveTop(w) {
+  const n = youngTally(w); if (n <= readTop(w.key)) return;
+  TOP[w.key] = n; try { localStorage.setItem("l15top" + w.key, String(n)); } catch (e) { /* not kept */ }
+}
+const topScore = w => Math.max(readTop(w.key), youngTally(w));
+const lineOver = w => !!w.ended || w.phase === "done" || w.gen >= LAST;
+function drawScore(key) {
+  const w = WD[key], el = $(key + "_score"); if (!el) return;
+  el.innerHTML = "your young so far <b>" + youngTally(w) + "</b> &nbsp;·&nbsp; top score <b class=\"top\">" + topScore(w) + "</b>" +
+    (lineOver(w) ? " &nbsp;·&nbsp; your line has ended: this game's count is final" : "");
 }
 function setPhase(key, t, ask) { for (const id of [key + "_phase", "popPhase"]) { const el = $(id); if (!el) continue; el.textContent = t; el.classList.toggle("ask", !!ask); } }
 /* the season plays over the page; the pedigree keeps the page */
@@ -700,7 +741,7 @@ function afterSeason(key) {
   if (w.phase === "over") { found(w, w.salt + 1); placeGeneration(w); setPhase(key, "A new island: generation 0. Play the season when you are ready."); }
   else if (w.phase === "done") {
     if (w.gen < LAST && !runRest(w)) { found(w, w.salt + 1); placeGeneration(w); setPhase(key, "That island died out before generation " + LAST + ". A new one: generation 0."); }
-    else { placeGeneration(w); setPhase(key, "Generation " + w.gen + ": the pedigree is complete. Read it, below."); Chal.start(key); }
+    else { placeGeneration(w); setPhase(key, "Generation " + w.gen + ": the pedigree is complete. Read it, below."); READS[key].start(key); }
   }
   syncButtons(); paintAll(key, true);
 }
@@ -723,18 +764,26 @@ function startSeason(key, auto) {
   setPhase(key, auto ? "The season plays itself." : "Eat as many salamanders as you can before winter. A hawk's shadow falls where its snake is heading: get out of it.");
   syncButtons(); requestAnimationFrame(frame);
 }
-/* instructor / study only: the whole game at once, as the seasons left after a death run */
+/* Run to generation 15: play ends, as a death ends it, and the seasons left run themselves */
 function fastForward(key) {
   const w = WD[key];
   if (AR.on || w.phase !== "ready") return;
   w.ended = w.ended || "skipped"; w.phase = "done";
+  if (!popEl().hidden) { popEl().hidden = true; FIT_EPOCH++; }
   afterSeason(key);
 }
+/* Run to generation 15: once a season has been played to winter on that island, or from the start for
+   an instructor (bypass) or in study mode */
+let INSTRUCTOR = false;
+const canRun = w => !AR.on && w.phase === "ready" && !w.ended && w.gen < LAST && (w.steered > 0 || INSTRUCTOR);
 function syncButtons() {
   for (const key of ["A", "B"]) {
-    const ready = !AR.on && WD[key].phase === "ready";
-    for (const id of ["_go", "_auto", "_fast"]) { const b = $(key + id); if (b) b.disabled = !ready; }
+    const w = WD[key], ready = !AR.on && w.phase === "ready";
+    for (const id of ["_go", "_auto"]) { const b = $(key + id); if (b) b.disabled = !ready; }
+    const f = $(key + "_fast"); if (f) { f.hidden = !canRun(w); f.disabled = !ready; }
+    drawScore(key);
   }
+  $("btnRun").hidden = !canRun(W) || $("btnNext").hidden;
 }
 
 /* ---- sprites (JM's sheets, 2026-10-02: a hawk and a newt, each in four directions -- side (drawn
@@ -1046,9 +1095,10 @@ function drawSnake(ctx, s, you) {
 function drawHud() {
   const me = youNow(), row = rowSnakes(W, W.gen);
   const living = row.filter(s => s.alive).length;
-  if (AR.card && AR.phase !== "season") { $("hud").innerHTML = "<span>" + (W.phase === "ready" ? "next: " : "") + "generation <b>" + W.gen + "</b> of " + LAST + ", " + row.length + " snakes</span>"; return; }
+  const score = "<span>your young <b>" + youngTally(W) + "</b> · top score <b style=\"color:" + HOT + "\">" + topScore(W) + "</b></span>";
+  if (AR.card && AR.phase !== "season") { $("hud").innerHTML = "<span>" + (W.phase === "ready" ? "next: " : "") + "generation <b>" + W.gen + "</b> of " + LAST + ", " + row.length + " snakes</span>" + score; return; }
   const ate = me ? me.food : 0, m = me ? multOf(W, me) : 1;
-  $("hud").innerHTML =
+  $("hud").innerHTML = score +
     "<span>generation <b>" + W.gen + "</b> of " + LAST + "</span><span>snakes <b>" + living + "</b> of " + row.length + "</span>" +
     "<span>salamanders out <b>" + AR.sal.length + "</b>" + (AR.emerge && AR.emerge.length ? ", " + AR.emerge.length + " to come" : "") + "</span>" +
     "<span>you ate <b>" + ate + "</b>" + (W.sel ? ", counting as <b>" + (ate * m).toFixed(1) + "</b> (×" + m.toFixed(2) + ")" : "") + "</span>" +
@@ -1245,7 +1295,7 @@ function drawPed(key, scroll) {
     ctx.beginPath(); ctx.arc(B.x, B.y, r, 0, 6.2832); ctx.stroke();
   }
   /* the challenge's marks: a dashed ring and its letter */
-  for (const mk of Chal.marks(key)) {
+  for (const mk of READS[key].marks(key)) {
     const B = P.view === "org" ? snakeXY(L, mk.c.id) : copyXY(L, P, mk.c); if (!B) continue;
     const r = P.view === "org" ? Math.min(L.slot / 2 - 2, 24) : (P.view === "loc" ? L.lr : L.rad) + 5;
     ctx.save(); ctx.setLineDash([3, 2]); ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(B.x, B.y, r, 0, 6.2832); ctx.stroke(); ctx.restore();
@@ -1292,7 +1342,8 @@ function pedClick(key, e) {
     else { P.sel.push(h); P.last = h; }
   } else if (!h || (i >= 0 && P.sel.length === 1)) { P.sel = []; P.last = null; }
   else { P.sel = [h]; P.last = h; }
-  drawPed(key, false); if (key === "B") drawDist();
+  drawPed(key, false);
+  if (h && h.kind === "copy") pickAllele(key, WD[key].SN.get(h.id).g[h.side][h.locus]); else if (key === "B") drawDist();
 }
 function setView(key, v) {
   const P = PV[key]; P.view = v;
@@ -1300,17 +1351,60 @@ function setView(key, v) {
   drawPed(key, false);
 }
 
-/* the island's panel: game buttons, pedigree with its views and toggles, and the challenges */
+/* the island's panels: game buttons and score, pedigree with its views and toggles, the island over
+   time, (B) s and h in generation N, and the reads. A: game, reads, plot. B: game, plot, s and h, reads
+   (B's reads are about the plots). */
 function buildIsland(key) {
   const loci = Array.from({ length: LOCI }, (_, l) => '<option value="' + l + '">locus ' + (l + 1) + '</option>').join("");
   const next = key === "A" ? "Stage B is open." : "Stage C is open.";
-  $(key + "_body").innerHTML =
+  const meas = TMEAS.filter(m => !m.sel || key === "B").map(m => '<option value="' + m.k + '">' + m.name + '</option>').join("");
+  const tpanel =
+    '<div class="panel tpanel">' +
+      '<h3>Island ' + key + ' over time</h3>' +
+      '<div class="tbar">' +
+        '<label>y-axis <select id="' + key + '_meas">' + meas + '</select></label>' +
+        '<label id="' + key + '_tlocw">at <select id="' + key + '_tloc"><option value="-1">all loci</option>' + loci + '</select></label>' +
+      '</div>' +
+      '<canvas id="' + key + '_time" width="1260" height="270"></canvas>' +
+      '<div class="readout" id="' + key + '_tread"></div>' +
+    '</div>';
+  const dist = key !== "B" ? "" :
+    '<div class="panel dist">' +
+      '<h3>s and h: new alleles, and the copies alive in generation N</h3>' +
+      '<div class="tbar"><label>generation N <input type="range" id="B_distN" min="0" max="' + LAST + '" step="1" value="0"> <b id="B_distNv">0</b></label></div>' +
+      '<canvas id="B_dist" width="1260" height="256"></canvas>' +
+      '<div class="readout" id="B_distRead"></div>' +
+    '</div>';
+  const tasks = key === "A"
+    ? '<li data-task="trace">Follow one copy back three generations. <span class="hint" id="A_trace_now"></span></li>' +
+      '<li data-task="pair">Find where two copies\' lines meet. <span class="hint" id="A_pair_now"></span></li>' +
+      '<li data-task="allele">Find where an allele arose, and where its living copies\' lines meet. <span class="hint" id="A_allele_now"></span></li>'
+    : '<li data-task="best">Find the best allele left in the last generation, and where its living copies\' lines meet. <span class="hint" id="B_best_now"></span></li>' +
+      '<li data-task="worst">Find the worst allele left, and where its living copies\' lines meet. <span class="hint" id="B_worst_now"></span></li>' +
+      '<li data-task="ever">Find the best allele your island ever had. <span class="hint" id="B_ever_now"></span></li>';
+  const reads =
+    '<div class="panel chal" id="' + key + '_chal">' +
+      '<h3>' + (key === "A" ? "Reading the pedigree" : "Reading the plots") + '</h3>' +
+      '<ul class="tasks" id="tasks' + key + '">' +
+        '<li data-task="play">Play to generation ' + LAST + '. <span class="hint" id="' + key + '_play_now"></span></li>' + tasks +
+      '</ul>' +
+      '<div class="reveal" id="' + key + '_reveal"></div>' +
+      '<div class="ask" id="' + key + '_ask"></div>' +
+      '<div class="controls"><div class="buttons">' +
+        '<button id="' + key + '_this" class="accent" disabled>This one</button>' +
+        '<button id="' + key + '_more" class="ghost" hidden>Run one more generation</button>' +
+        '<span class="fb" id="' + key + '_fb"></span>' +
+      '</div></div>' +
+      '<div class="solved-banner" id="solved' + key + '">' + next + '</div>' +
+    '</div>';
+  const game =
     '<div class="panel">' +
       '<div class="controls"><div class="buttons">' +
         '<button id="' + key + '_go" class="accent">Play the season</button>' +
         '<button id="' + key + '_auto" class="ghost">Let this season play itself</button>' +
-        '<button id="' + key + '_fast" class="ghost" hidden>Run to generation ' + LAST + ' (instructor)</button>' +
+        '<button id="' + key + '_fast" class="ghost" hidden>Run to generation ' + LAST + '</button>' +
       '</div></div>' +
+      '<div class="score-line" id="' + key + '_score"></div>' +
       '<div class="phase" id="' + key + '_phase"></div>' +
       '<div class="pedbar"><h3>Pedigree</h3>' +
         '<div class="viewsw" id="' + key + '_views"><button data-v="org">Organism view</button><button data-v="chr" class="on">Chromosome view</button><button data-v="loc">Locus view</button></div>' +
@@ -1322,23 +1416,8 @@ function buildIsland(key) {
         '<label><input type="checkbox" id="' + key + '_lock"> lock: keep these lines when you click another</label>' +
         '<button id="' + key + '_clear">Clear the lines</button>' +
       '</div>' +
-    '</div>' +
-    '<div class="panel chal" id="' + key + '_chal">' +
-      '<h3>Reading the pedigree</h3>' +
-      '<ul class="tasks" id="tasks' + key + '">' +
-        '<li data-task="play">Play to generation ' + LAST + '. <span class="hint" id="' + key + '_play_now"></span></li>' +
-        '<li data-task="trace">Follow one copy back three generations. <span class="hint" id="' + key + '_trace_now"></span></li>' +
-        '<li data-task="pair">Find where two copies\' lines meet. <span class="hint" id="' + key + '_pair_now"></span></li>' +
-        '<li data-task="allele">Find where an allele arose, and where its living copies\' lines meet. <span class="hint" id="' + key + '_allele_now"></span></li>' +
-      '</ul>' +
-      '<div class="ask" id="' + key + '_ask"></div>' +
-      '<div class="controls"><div class="buttons">' +
-        '<button id="' + key + '_this" class="accent" disabled>This one</button>' +
-        '<button id="' + key + '_more" class="ghost" hidden>Run one more generation</button>' +
-        '<span class="fb" id="' + key + '_fb"></span>' +
-      '</div></div>' +
-      '<div class="solved-banner" id="solved' + key + '">' + next + '</div>' +
     '</div>';
+  $(key + "_body").innerHTML = key === "A" ? game + reads + tpanel : game + tpanel + dist + reads;
 }
 function wireIsland(key) {
   $(key + "_go").addEventListener("click", () => startSeason(key, false));
@@ -1352,8 +1431,25 @@ function wireIsland(key) {
   const cv = $(key + "_ped");
   cv.addEventListener("click", e => pedClick(key, e));
   cv.addEventListener("mousemove", e => { cv.style.cursor = pedHit(key, e) ? "pointer" : "default"; });
-  $(key + "_this").addEventListener("click", () => Chal.answer(key));
-  $(key + "_more").addEventListener("click", () => Chal.more(key));
+  $(key + "_this").addEventListener("click", () => READS[key].answer(key));
+  $(key + "_more").addEventListener("click", () => READS[key].more(key));
+  /* the plot over time */
+  const T = TP[key], tc = $(key + "_time");
+  $(key + "_meas").value = T.meas; $(key + "_tloc").value = String(T.locus);
+  $(key + "_meas").addEventListener("change", e => { setMeasure(key, e.target.value, null); bump(key); });
+  $(key + "_tloc").addEventListener("change", e => { setMeasure(key, null, +e.target.value); bump(key); });
+  tc.addEventListener("mousemove", e => { const t = timeAt(key, e); if (t !== T.hover) { T.hover = t; drawTime(key); }
+    tc.style.cursor = timeHit(key, e) != null ? "pointer" : "default"; });
+  tc.addEventListener("mouseleave", () => { if (T.hover != null) { T.hover = null; drawTime(key); } });
+  tc.addEventListener("click", e => { pickAllele(key, timeHit(key, e)); bump(key); });
+  if (key === "B") {
+    const sl = $("B_distN");
+    sl.addEventListener("input", () => { DN.n = +sl.value >= WD.B.gen ? null : +sl.value; drawDist(); bump("B"); });
+    const dc = $("B_dist");
+    dc.addEventListener("click", e => { const id = distHit(e); pickAllele("B", id); bump("B"); });
+    dc.addEventListener("mousemove", e => { dc.style.cursor = distHit(e) != null ? "pointer" : "default"; });
+  }
+  setMeasure(key, null, null);
 }
 
 /* =====================================================================
@@ -1365,7 +1461,8 @@ function wireIsland(key) {
    final generation (if none, have the student run a few more generations
    until one hits) and find the origin of the fixed allele & the most
    recent common ancestor of living individuals with it."
-   Six answers an island, each one bit, the first click on This one:
+   Island A (B has its own reads, after the plots). Six answers, each one
+   bit, the first click on This one:
      1-3 one copy in the last generation, marked ?: the copy it was copied
          from in its parent, grandparent, great-grandparent;
      4   two copies of one locus in two snakes of the last generation, a and
@@ -1515,9 +1612,9 @@ const Chal = {
    A stage opens the next by being read; getting one wrong never shuts a door. */
 const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
 const NEXT_STAGE = { A: "B", B: "C", C: null };
-/* One bit per scored attempt (JM, 2026-09-30): six reads an island, five targets in C. */
-const BIT = { A1:0, A2:1, A3:2, A4:3, A5:4, A6:5, B1:6, B2:7, B3:8, B4:9, B5:10, B6:11,
-              C1:12, C2:13, C3:14, C4:15, C5:16 };
+/* One bit per scored attempt (JM, 2026-09-30): six reads on island A, five on B's plots, five targets in C. */
+const BIT = { A1:0, A2:1, A3:2, A4:3, A5:4, A6:5, B1:6, B2:7, B3:8, B4:9, B5:10,
+              C1:11, C2:12, C3:13, C4:14, C5:15 };
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
@@ -1544,37 +1641,534 @@ function finishStage(stage) {
 }
 
 /* =====================================================================
-   STAGE B's distributions (JM, 2026-10-07: "pulled from a shown
-   distribution"): s's curve on the left, h's on the right, a tick for every
-   allele that has arisen on island B in its colour, the clicked one tall.
+   THE ISLAND OVER TIME (JM, 2026-10-07, eleventh pass): "an interactive
+   plot where the x-axis is time (generations) and the right axis has drop
+   down toggles for allele frequency (e.g., frequency of ___ locus ____ with
+   lines for alleles at that locus over time, so two drop-downs),
+   heterozygosity, population size, total genetic diversity, and extinction
+   times (or MRCA times? Or both?)"; on B, "An additional toggle on the plot
+   showing mean fitness over time".
+   Read as: "the right axis" = the y-axis; two menus, what it shows and at
+   which locus. Every number from the island's rows when drawn:
+     freq   every allele at the locus, plain grey included: its share of the
+            locus's copies; a line ends at 0 where the allele is lost
+     het    the share of snakes carrying two different alleles there,
+            counted (lesson 11 D); all loci = the mean of the seven
+     size   snakes born each generation, and those that had young
+     div    distinct alleles, at one locus or summed over all seven (the
+            winter card's plot)
+     life   each new allele a bar from the generation it arose to the one it
+            was lost in: the extinction times
+     tmrca  each new allele, every generation it is alive: how many
+            generations back its living copies' lines meet. A coloured
+            allele's copies always meet, at its mutant or later; all the
+            copies at a locus meet within 15 generations in only 4.5% of
+            islands (measured), so the times are per allele.
+     fit    (B) the average snake's multiplier on its salamanders, the
+            lowest and highest snake's as a band
+   Click a line or bar to pick that allele; the others fade. A copy clicked
+   in the pedigree, or a dot under B's s and h, picks its allele too.
    ===================================================================== */
-function drawDist() {
-  const cv = $("B_dist"); if (!cv) return;
+const TMEAS = [
+  { k: "freq",  name: "allele frequency",        loc: "one" },
+  { k: "het",   name: "heterozygosity",          loc: "all" },
+  { k: "size",  name: "snakes",                  loc: null },
+  { k: "div",   name: "distinct alleles",        loc: "all" },
+  { k: "life",  name: "alleles: arose and lost", loc: "all" },
+  { k: "tmrca", name: "time to MRCA",            loc: "all" },
+  { k: "fit",   name: "mean fitness",            loc: null, sel: true },
+];
+const TMEAS_BY = Object.fromEntries(TMEAS.map(m => [m.k, m]));
+const TP = { A: { meas: "freq", locus: 0, hover: null, hits: [], frame: null, marks: [] },
+             B: { meas: "fit",  locus: 0, hover: null, hits: [], frame: null, marks: [] } };
+const PICK = { A: null, B: null };      /* the picked allele, each island */
+const PLAIN_LINE = "#a9a597";           /* plain grey, drawn dark enough to see as a line */
+
+/* the copies of allele `id` alive in generation t, and the most recent copy they all came from */
+function alleleMrca(w, id, l, t) {
+  let front = [];
+  for (const sid of genOf(w, t)) for (const sd of [0, 1]) if (w.SN.get(sid).g[sd][l] === id) front.push({ id: sid, side: sd });
+  if (!front.length) return null;
+  const copies = front.slice(); let back = 0;
+  while (new Set(front.map(c => c.id + "|" + c.side)).size > 1) {
+    if (!w.SN.get(front[0].id).src) return { copies, mrca: null, gen: null };
+    front = front.map(c => { const o = w.SN.get(c.id).src[c.side]; return { id: o.p, side: o.h[l] }; }); back++;
+  }
+  return { copies, mrca: { kind: "copy", id: front[0].id, side: front[0].side, locus: l }, gen: t - back };
+}
+/* everything the plot draws, from the rows; kept until the island breeds again */
+function islandSeries(w) {
+  const sig = w.salt + ":" + w.gen + ":" + w.next;
+  if (w.series && w.series.sig === sig) return w.series;
+  const G = w.gen, nA = w.AL.length, cnt = [], het = [], div = [], size = [], bred = [], fit = [];
+  for (let t = 0; t <= G; t++) {
+    const row = rowSnakes(w, t), c = new Int32Array(nA), h = new Array(LOCI).fill(0), d = new Array(LOCI).fill(0);
+    for (const s of row) for (let l = 0; l < LOCI; l++) { c[s.g[0][l]]++; c[s.g[1][l]]++; if (s.g[0][l] !== s.g[1][l]) h[l]++; }
+    for (let id = 0; id < nA; id++) if (c[id]) d[w.AL[id].locus]++;
+    cnt.push(c); het.push(h.map(x => row.length ? x / row.length : 0)); div.push(d);
+    size.push(row.length); bred.push(t < G ? row.filter(s => s.kids.length).length : null);
+    if (w.sel) { let sum = 0, lo = Infinity, hi = -Infinity; for (const s of row) { const m = multOf(w, s); sum += m; lo = Math.min(lo, m); hi = Math.max(hi, m); }
+                 fit.push({ mean: row.length ? sum / row.length : 1, lo, hi }); }
+  }
+  const al = w.AL.map((a, id) => {
+    const f = [], tm = []; let lost = null, peak = 0;
+    for (let t = a.born; t <= G; t++) {
+      const n = cnt[t][id]; f[t] = size[t] ? n / (2 * size[t]) : 0; peak = Math.max(peak, n);
+      if (!n) { lost = t; break; }
+      if (a.col) tm[t] = t - alleleMrca(w, id, a.locus, t).gen;
+    }
+    return { id, locus: a.locus, born: a.born, col: a.col, f, tm, lost, peak, now: cnt[G][id] };
+  });
+  return w.series = { sig, G, cnt, het, div, size, bred, fit, al };
+}
+
+const sw = col => '<span class="swatch" style="background:' + (col || PLAIN_BEAD) + '"></span>';
+const plural = (n, one, many) => n + " " + (n === 1 ? one : many);
+function niceStep(span) { const raw = span / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+function timeFrame(Wd, H) { return { ax: 56, ay: 14, aw: Wd - 56 - 20, ah: H - 14 - 38 }; }
+function drawTime(key) {
+  const cv = $(key + "_time"); if (!cv) return;
+  const w = WD[key], T = TP[key], S = islandSeries(w), m = TMEAS_BY[T.meas], l = m.loc ? T.locus : -1;
   const { ctx, W: Wd, H } = setupCanvas(cv, null);
   ctx.clearRect(0, 0, Wd, H);
-  const w = WD.B, P = PV.B, gap = 40, pw = (Wd - gap - 40) / 2;
-  const sel = P.last && P.last.kind === "copy" ? w.SN.get(P.last.id).g[P.last.side][P.last.locus] : null;
-  const panel = (x0, lo, hi, dens, val, title, under) => {
-    const top = 26, base = H - 42, f = v => x0 + 10 + (v - lo) / (hi - lo) * (pw - 20);
-    cardText(ctx, title, x0, 10, { col: MUTED, size: 12, bold: true });
-    let mx = 0; for (let i = 0; i <= 200; i++) mx = Math.max(mx, dens(lo + (hi - lo) * i / 200));
-    ctx.fillStyle = "rgba(47,107,143,0.12)"; ctx.strokeStyle = BLUE; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(f(lo), base);
-    for (let i = 0; i <= 200; i++) { const v = lo + (hi - lo) * i / 200; ctx.lineTo(f(v), base - dens(v) / mx * (base - top - 18)); }
-    ctx.lineTo(f(hi), base); ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(f(lo), base); ctx.lineTo(f(hi), base); ctx.stroke();
-    w.AL.forEach((a, id) => { if (!a.col) return; const big = id === sel, v = val(a);
-      ctx.strokeStyle = a.col; ctx.lineWidth = big ? 3 : 2; ctx.beginPath(); ctx.moveTo(f(v), base + 2); ctx.lineTo(f(v), base + (big ? 16 : 9)); ctx.stroke();
-      if (big) cardText(ctx, (title[0] === "s" ? "s " + sg(v) : "h " + v.toFixed(2)), f(v), base + 24, { size: 11, bold: true, align: "center" }); });
-    for (const v of under.ticks) cardText(ctx, under.fmt(v), f(v), base - 8 > 0 ? H - 6 : H - 6, { col: MUTED, size: 10.5, align: "center" });
-    if (under.zero != null) { ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = "#9a968a"; ctx.beginPath(); ctx.moveTo(f(under.zero), top); ctx.lineTo(f(under.zero), base); ctx.stroke(); ctx.restore(); }
-    if (under.ends) { cardText(ctx, under.ends[0], f(lo), top + 2, { col: MUTED, size: 11 }); cardText(ctx, under.ends[1], f(hi), top + 2, { col: MUTED, size: 11, align: "right" }); }
-  };
-  const nd = v => Math.exp(-0.5 * ((v - S_MU) / S_SD) ** 2);
-  panel(20, S_LO, S_HI, nd, a => a.s, "s, the new allele's effect: two copies multiply salamanders by 1 − s",
-        { ticks: [-0.5, 0, 0.5, 1], fmt: v => sg(v, 1).replace("+", ""), zero: 0, ends: ["helps", "hurts"] });
-  panel(20 + pw + gap, 0, 1, () => 1, a => a.h, "h: one copy multiplies them by 1 − h·s",
-        { ticks: [0, 0.5, 1], fmt: v => v.toFixed(1), ends: ["one copy does nothing", "one copy does all"] });
+  const F = T.frame = timeFrame(Wd, H), xmax = Math.max(LAST, S.G), G = S.G;
+  const xs = t => F.ax + t / xmax * F.aw;
+  const pick = PICK[key], marks = new Map(T.marks.map(k => [k.id, k.label]));
+  const lit = id => pick == null && !marks.size ? true : id === pick || marks.has(id);
+  T.hits = [];
+  /* the y-range, its label and the lines, by measure */
+  let ymin = 0, ymax = 1, ylab = "", draw = null;
+  const atLocus = a => l < 0 || a.locus === l;
+  if (T.meas === "freq") {
+    ylab = "frequency, locus " + (l + 1);
+    draw = ys => {
+      for (const a of S.al) if (a.locus === l) {
+        const pts = []; for (let t = a.born; t <= (a.lost == null ? G : a.lost); t++) pts.push([xs(t), ys(a.f[t])]);
+        T.hits.push({ id: a.id, pts }); polyline(ctx, pts, a.col || PLAIN_LINE, lit(a.id) ? (a.id === pick ? 3 : 2) : 1.2, lit(a.id) ? 1 : 0.28);
+        if (a.lost != null) cross(ctx, xs(a.lost), ys(0), a.col || PLAIN_LINE, lit(a.id) ? 1 : 0.28);
+      }
+    };
+  } else if (T.meas === "het") {
+    ylab = l < 0 ? "heterozygosity, mean of 7 loci" : "heterozygosity, locus " + (l + 1);
+    draw = ys => {
+      if (l < 0) for (let q = 0; q < LOCI; q++) polyline(ctx, S.het.map((h, t) => [xs(t), ys(h[q])]), "#d9d6cd", 1, 1);
+      polyline(ctx, S.het.map((h, t) => [xs(t), ys(l < 0 ? h.reduce((a, b) => a + b, 0) / LOCI : h[l])]), INK, 2.2, 1);
+    };
+  } else if (T.meas === "size") {
+    ymax = Math.max(...S.size) + 2; ylab = "snakes";
+    draw = ys => {
+      polyline(ctx, S.size.map((n, t) => [xs(t), ys(n)]), INK, 2.2, 1);
+      ctx.save(); ctx.setLineDash([5, 3]); polyline(ctx, S.bred.slice(0, G).map((n, t) => [xs(t), ys(n)]), BLUE, 2, 1); ctx.restore();
+      legend(ctx, F, [[INK, "born", false], [BLUE, "had young", true]]);
+    };
+  } else if (T.meas === "div") {
+    const v = S.div.map(d => l < 0 ? d.reduce((a, b) => a + b, 0) : d[l]);
+    ymax = Math.max(...v) + 1; ylab = l < 0 ? "distinct alleles, all loci" : "distinct alleles, locus " + (l + 1);
+    draw = ys => polyline(ctx, v.map((n, t) => [xs(t), ys(n)]), INK, 2.2, 1);
+  } else if (T.meas === "life") {
+    const rows = S.al.filter(a => a.col && atLocus(a)).sort((a, b) => a.born - b.born || a.id - b.id);
+    ylab = "new alleles, oldest at the top";
+    draw = () => {
+      const rh = Math.min(14, F.ah / Math.max(rows.length, 1));
+      rows.forEach((a, i) => {
+        const y = F.ay + (i + 0.5) * rh, x0 = xs(a.born), x1 = xs(a.lost == null ? G : a.lost), on = lit(a.id), al = on ? 1 : 0.28;
+        ctx.save(); ctx.globalAlpha = al; ctx.strokeStyle = a.col; ctx.lineCap = "round"; ctx.lineWidth = Math.max(2, Math.min(6, rh * 0.55)) + (a.id === pick ? 1.5 : 0);
+        ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(Math.max(x1, x0 + 0.5), y); ctx.stroke();
+        ctx.fillStyle = a.col; ctx.beginPath(); ctx.arc(x0, y, Math.min(4, rh * 0.4), 0, 6.2832); ctx.fill(); ctx.restore();
+        if (a.lost != null) cross(ctx, x1, y, INK, al); else { ctx.save(); ctx.globalAlpha = al; ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(x1, y, Math.min(4, rh * 0.4) + 1, 0, 6.2832); ctx.stroke(); ctx.restore(); }
+        if (marks.has(a.id)) cardText(ctx, marks.get(a.id), Math.min(x1 + 8, F.ax + F.aw - 60), y, { col: INK, size: 11, bold: true });
+        T.hits.push({ id: a.id, box: [x0 - 5, y - rh / 2, x1 + 5, y + rh / 2] });
+      });
+      if (!rows.length) cardText(ctx, "no new allele at this locus yet", F.ax + F.aw / 2, F.ay + F.ah / 2, { col: MUTED, size: 12, align: "center" });
+      legend(ctx, F, [[null, "● arose   × lost   ○ alive now", false]]);
+    };
+  } else if (T.meas === "tmrca") {
+    const rows = S.al.filter(a => a.col && atLocus(a));
+    let mx = 4; for (const a of rows) for (const v of a.tm) if (v != null) mx = Math.max(mx, v);
+    if (pick != null && w.AL[pick].col) mx = Math.max(mx, G - w.AL[pick].born);
+    ymax = mx + 1; ylab = "generations back to where its copies meet";
+    draw = ys => {
+      for (const a of rows) {
+        const pts = []; for (let t = a.born; t < (a.lost == null ? G + 1 : a.lost); t++) pts.push([xs(t), ys(a.tm[t])]);
+        T.hits.push({ id: a.id, pts }); polyline(ctx, pts, a.col, lit(a.id) ? (a.id === pick || marks.has(a.id) ? 3 : 2) : 1.2, lit(a.id) ? 1 : 0.28);
+        if (pts.length === 1) { ctx.save(); ctx.globalAlpha = lit(a.id) ? 1 : 0.28; ctx.fillStyle = a.col; ctx.beginPath(); ctx.arc(pts[0][0], pts[0][1], 2.5, 0, 6.2832); ctx.fill(); ctx.restore(); }
+        if (marks.has(a.id) && pts.length) cardText(ctx, marks.get(a.id), pts[pts.length - 1][0] + 6, pts[pts.length - 1][1] - 8, { col: INK, size: 11, bold: true, align: pts[pts.length - 1][0] > F.ax + F.aw - 40 ? "right" : "left" });
+      }
+      /* the picked allele's age, dashed: where the two lines part, its copies no longer meet at the mutant */
+      if (pick != null && w.AL[pick].col && atLocus(w.AL[pick])) {
+        const a = S.al[pick], pts = []; for (let t = a.born; t < (a.lost == null ? G + 1 : a.lost); t++) pts.push([xs(t), ys(t - a.born)]);
+        ctx.save(); ctx.setLineDash([4, 3]); polyline(ctx, pts, a.col, 1.4, 1); ctx.restore();
+        legend(ctx, F, [[a.col, "dashed: generations since it arose", true]]);
+      }
+    };
+  } else if (T.meas === "fit") {
+    let lo = 1, hi = 1; for (const q of S.fit) { lo = Math.min(lo, q.lo); hi = Math.max(hi, q.hi); }
+    const st = niceStep(Math.max(0.2, hi - lo)); ymin = Math.floor(lo / st) * st; ymax = Math.ceil(hi / st) * st; ylab = "fitness: multiplier on salamanders";
+    draw = ys => {
+      ctx.fillStyle = "rgba(47,107,143,0.12)"; ctx.beginPath();
+      S.fit.forEach((q, t) => t ? ctx.lineTo(xs(t), ys(q.hi)) : ctx.moveTo(xs(t), ys(q.hi)));
+      for (let t = S.fit.length - 1; t >= 0; t--) ctx.lineTo(xs(t), ys(S.fit[t].lo));
+      ctx.closePath(); ctx.fill();
+      ctx.save(); ctx.setLineDash([3, 3]); polyline(ctx, [[xs(0), ys(1)], [xs(xmax), ys(1)]], "#9a968a", 1, 1); ctx.restore();
+      polyline(ctx, S.fit.map((q, t) => [xs(t), ys(q.mean)]), INK, 2.2, 1);
+      legend(ctx, F, [[INK, "mean", false], ["rgba(47,107,143,0.5)", "band: lowest to highest snake", false]]);
+    };
+  }
+  const ys = v => F.ay + F.ah - (v - ymin) / ((ymax - ymin) || 1) * F.ah;
+  /* axes */
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(F.ax, F.ay); ctx.lineTo(F.ax, F.ay + F.ah); ctx.lineTo(F.ax + F.aw, F.ay + F.ah); ctx.stroke();
+  for (let t = 0; t <= xmax; t++) {
+    ctx.beginPath(); ctx.moveTo(xs(t), F.ay + F.ah); ctx.lineTo(xs(t), F.ay + F.ah + (t % 5 ? 3 : 5)); ctx.stroke();
+    if (t % 5 === 0 || t === xmax) cardText(ctx, String(t), xs(t), F.ay + F.ah + 13, { col: t === G ? INK : MUTED, size: 10.5, align: "center" });
+  }
+  cardText(ctx, "generation", F.ax + F.aw / 2, F.ay + F.ah + 28, { col: MUTED, size: 11, align: "center" });
+  if (T.meas !== "life") {
+    const st = T.meas === "fit" ? niceStep(Math.max(0.2, ymax - ymin)) : ymax <= 1 ? 0.25 : niceStep(ymax - ymin);
+    for (let v = ymin; v <= ymax + 1e-9; v += st) {
+      cardText(ctx, +v.toFixed(2) + "", F.ax - 6, ys(v), { col: MUTED, size: 10.5, align: "right" });
+      ctx.strokeStyle = "#f0eee8"; ctx.beginPath(); ctx.moveTo(F.ax + 1, ys(v)); ctx.lineTo(F.ax + F.aw, ys(v)); ctx.stroke();
+    }
+  }
+  ctx.save(); ctx.translate(13, F.ay + F.ah / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, ylab, 0, 0, { col: MUTED, size: 11, align: "center" }); ctx.restore();
+  /* the hovered generation */
+  if (T.hover != null) { ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = "#9a968a"; ctx.beginPath(); ctx.moveTo(xs(T.hover), F.ay); ctx.lineTo(xs(T.hover), F.ay + F.ah); ctx.stroke(); ctx.restore(); }
+  draw(ys);
+  timeRead(key, S, l);
 }
+function polyline(ctx, pts, col, lw, alpha) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+function cross(ctx, x, y, col, alpha) {
+  ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.lineCap = "round";
+  ctx.beginPath(); ctx.moveTo(x - 3.5, y - 3.5); ctx.lineTo(x + 3.5, y + 3.5); ctx.moveTo(x + 3.5, y - 3.5); ctx.lineTo(x - 3.5, y + 3.5); ctx.stroke(); ctx.restore();
+}
+function legend(ctx, F, items) {
+  let x = F.ax + F.aw;
+  ctx.font = "11px -apple-system, sans-serif";
+  for (let i = items.length - 1; i >= 0; i--) {
+    const [col, txt, dash] = items[i], tw = ctx.measureText(txt).width;
+    x -= tw; cardText(ctx, txt, x, F.ay - 4, { col: MUTED, size: 11 });
+    if (col) { ctx.save(); if (dash) ctx.setLineDash([4, 3]); ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x - 22, F.ay - 4); ctx.lineTo(x - 5, F.ay - 4); ctx.stroke(); ctx.restore(); x -= 34; }
+    else x -= 14;
+  }
+}
+/* the numbers under the plot: the hovered generation (else the latest), and the picked allele */
+function timeRead(key, S, l) {
+  const w = WD[key], T = TP[key], t = T.hover == null ? S.G : T.hover, el = $(key + "_tread"); if (!el) return;
+  const lab = s => '<span class="label">' + s + '</span>';
+  const sOf = id => w.sel && w.AL[id].col ? " s " + sg(w.AL[id].s) : "";
+  let out = lab("generation " + t + ":") + " ";
+  if (T.meas === "freq") {
+    const al = S.al.filter(a => a.locus === l && a.f[t] > 0).sort((a, b) => b.f[t] - a.f[t]);
+    out += al.map(a => sw(a.col) + " <b>" + a.f[t].toFixed(2) + "</b>" + sOf(a.id)).join(" &nbsp; ") || lab("no alleles");
+  } else if (T.meas === "het") {
+    const h = S.het[t];
+    out += l < 0 ? lab("mean") + " <b>" + (h.reduce((a, b) => a + b, 0) / LOCI).toFixed(2) + "</b> " + lab("· by locus") + " " + h.map(v => v.toFixed(2)).join(" ")
+                 : "<b>" + h[l].toFixed(2) + "</b> " + lab("of the snakes carry two different alleles at locus " + (l + 1));
+  } else if (T.meas === "size") {
+    out += "<b>" + S.size[t] + "</b> " + lab("snakes born") + (t < S.G ? ", <b>" + S.bred[t] + "</b> " + lab("of them had young") : " " + lab("(the living generation: none has bred yet)"));
+  } else if (T.meas === "div") {
+    const d = S.div[t]; out += "<b>" + (l < 0 ? d.reduce((a, b) => a + b, 0) : d[l]) + "</b> " + lab("distinct alleles " + (l < 0 ? "over the seven loci" : "at locus " + (l + 1)));
+  } else if (T.meas === "life") {
+    const rows = S.al.filter(a => a.col && (l < 0 || a.locus === l) && a.born <= t);
+    const alive = rows.filter(a => a.lost == null || a.lost > t).length;
+    out += lab("new alleles so far") + " <b>" + rows.length + "</b>, " + lab("alive") + " <b>" + alive + "</b>, " + lab("lost") + " <b>" + (rows.length - alive) + "</b>";
+  } else if (T.meas === "tmrca") {
+    const al = S.al.filter(a => a.col && (l < 0 || a.locus === l) && a.tm[t] != null).sort((a, b) => b.tm[t] - a.tm[t]);
+    out += al.map(a => sw(a.col) + " <b>" + a.tm[t] + "</b>").join(" &nbsp; ") + (al.length ? " " + lab("generations back") : lab("no new allele alive"));
+  } else if (T.meas === "fit") {
+    const q = S.fit[t]; out += lab("mean") + " <b>" + q.mean.toFixed(3) + "</b> " + lab("· lowest") + " " + q.lo.toFixed(2) + " " + lab("· highest") + " " + q.hi.toFixed(2);
+  }
+  const p = PICK[key];
+  if (p != null) {
+    const a = S.al[p], A = w.AL[p];
+    out += "<br>" + lab("picked:") + " " + sw(A.col) + " " + lab("locus " + (A.locus + 1) + ",") + " " +
+      (A.col ? lab("arose in generation") + " <b>" + A.born + "</b>, " : lab("there from the start, ")) +
+      (a.lost != null ? lab("lost in generation") + " <b>" + a.lost + "</b> " + lab("(at most " + plural(a.peak, "copy", "copies") + ")") : "<b>" + a.now + "</b> " + lab(a.now === 1 ? "copy now" : "copies now")) +
+      (A.col && a.lost == null ? ", " + lab("its copies meet") + " <b>" + a.tm[S.G] + "</b> " + lab(a.tm[S.G] === 1 ? "generation back" : "generations back") : "") +
+      (w.sel ? (A.col ? " · s <b>" + sg(A.s) + "</b>, h <b>" + A.h.toFixed(2) + "</b>" : " · s 0") : "");
+  }
+  el.innerHTML = out;
+}
+function timeXY(key, e) { const r = $(key + "_time").getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+function timeAt(key, e) {
+  const F = TP[key].frame; if (!F) return null;
+  const { x, y } = timeXY(key, e), G = WD[key].gen, xmax = Math.max(LAST, G);
+  if (x < F.ax - 6 || x > F.ax + F.aw + 6 || y < F.ay - 6 || y > F.ay + F.ah + 6) return null;
+  return clamp(Math.round((x - F.ax) / F.aw * xmax), 0, G);
+}
+/* the allele whose line (or bar) is nearest the pointer, within 6 px */
+function timeHit(key, e) {
+  const { x, y } = timeXY(key, e); let best = null, bd = 6;
+  for (const h of TP[key].hits) {
+    if (h.box) { if (x >= h.box[0] && x <= h.box[2] && y >= h.box[1] && y <= h.box[3]) return h.id; continue; }
+    for (let i = 0; i < h.pts.length; i++) {
+      const [x0, y0] = h.pts[i], [x1, y1] = h.pts[Math.min(i + 1, h.pts.length - 1)];
+      const dx = x1 - x0, dy = y1 - y0, L2 = dx * dx + dy * dy, u = L2 ? clamp(((x - x0) * dx + (y - y0) * dy) / L2, 0, 1) : 0;
+      const d = Math.hypot(x - x0 - u * dx, y - y0 - u * dy); if (d < bd) { bd = d; best = h.id; }
+    }
+  }
+  return best;
+}
+function setMeasure(key, meas, locus) {
+  const T = TP[key];
+  if (meas != null) T.meas = meas;
+  if (locus != null) T.locus = locus;
+  const m = TMEAS_BY[T.meas];
+  if (m.loc === "one" && T.locus < 0) T.locus = PICK[key] != null ? WD[key].AL[PICK[key]].locus : 0;
+  $(key + "_meas").value = T.meas; $(key + "_tloc").value = String(T.locus);
+  $(key + "_tlocw").style.visibility = m.loc ? "visible" : "hidden";
+  $(key + "_tloc").querySelector('option[value="-1"]').disabled = m.loc === "one";
+  drawTime(key);
+}
+/* pick an allele (null clears): a line on the plot, a dot under s and h, or a copy in the pedigree. A
+   plot showing one locus turns to the picked allele's. */
+function pickAllele(key, id) {
+  PICK[key] = id;
+  const T = TP[key];
+  if (id != null && TMEAS_BY[T.meas].loc && T.locus >= 0 && WD[key].AL[id].locus !== T.locus) T.locus = WD[key].AL[id].locus;
+  setMeasure(key, null, null);
+  if (key === "B") drawDist();
+}
+
+/* =====================================================================
+   STAGE B's s and h (JM, 2026-10-07: "pulled from a shown distribution";
+   later: "the h/s distribution that exists at generation N should be shown
+   along with the generation distributions"). Each panel: the curve new
+   alleles are drawn from, and as bars the coloured copies alive in
+   generation N (N on the slider); the means of both on the axis. Under
+   the axis every coloured allele that has arisen by N, a dot in its colour:
+   filled in the top strip if it is alive in generation N, hollow in the
+   lower strip if it is gone. Click a dot to pick its allele.
+   Measured (1,000 computer-played islands): new alleles' mean s 0.105;
+   coloured copies alive in generation 15, -0.047; below the island's own
+   new alleles' mean in 74% of islands.
+   ===================================================================== */
+const DN = { n: null };                  /* generation N; null follows the latest */
+const DH = { hits: [] };
+const distGen = () => DN.n == null || DN.n > WD.B.gen ? WD.B.gen : DN.n;
+function distStats(w, N) {
+  const S = islandSeries(w), cnt = S.cnt[N], alive = [], gone = [];
+  w.AL.forEach((a, id) => { if (a.col && a.born <= N) (cnt[id] ? alive : gone).push(id); });
+  let copies = 0, cs = 0, ch = 0, ds = 0, dh = 0;
+  for (const id of alive) { copies += cnt[id]; cs += cnt[id] * w.AL[id].s; ch += cnt[id] * w.AL[id].h; }
+  for (const id of alive.concat(gone)) { ds += w.AL[id].s; dh += w.AL[id].h; }
+  const nd = alive.length + gone.length;
+  return { cnt, alive, gone, copies, sCopies: copies ? cs / copies : null, hCopies: copies ? ch / copies : null,
+           sNew: nd ? ds / nd : null, hNew: nd ? dh / nd : null };
+}
+function drawDist() {
+  const cv = $("B_dist"); if (!cv) return;
+  const w = WD.B, N = distGen(), sl = $("B_distN");
+  sl.max = String(w.gen); sl.value = String(N); $("B_distNv").textContent = String(N);
+  const { ctx, W: Wd, H } = setupCanvas(cv, null);
+  ctx.clearRect(0, 0, Wd, H);
+  const D = distStats(w, N), gap = 40, pw = (Wd - gap - 40) / 2, pick = PICK.B;
+  DH.hits = [];
+  const panel = (x0, lo, hi, pdf, key, title, ticks, fmt, ends, zero) => {
+    const top = 36, base = 130, f = v => x0 + 10 + (v - lo) / (hi - lo) * (pw - 20), bin = 0.1, nb = Math.round((hi - lo) / bin);
+    cardText(ctx, title, x0, 10, { col: MUTED, size: 12, bold: true });
+    const bars = new Array(nb).fill(0);
+    for (const id of D.alive) bars[clamp(Math.floor((w.AL[id][key] - lo) / bin + 1e-9), 0, nb - 1)] += D.cnt[id];
+    const dens = bars.map(c => D.copies ? c / D.copies / bin : 0);
+    let mx = Math.max(...dens); for (let i = 0; i <= 200; i++) mx = Math.max(mx, pdf(lo + (hi - lo) * i / 200));
+    const yv = d => base - d / mx * (base - top);
+    ctx.fillStyle = "rgba(29,29,27,0.14)"; ctx.strokeStyle = "rgba(29,29,27,0.5)"; ctx.lineWidth = 1;
+    dens.forEach((d, i) => { if (!d) return; const xa = f(lo + i * bin) + 1, xb = f(lo + (i + 1) * bin) - 1; ctx.fillRect(xa, yv(d), xb - xa, base - yv(d)); ctx.strokeRect(xa, yv(d), xb - xa, base - yv(d)); });
+    ctx.strokeStyle = BLUE; ctx.lineWidth = 1.8; ctx.beginPath();
+    for (let i = 0; i <= 200; i++) { const v = lo + (hi - lo) * i / 200; i ? ctx.lineTo(f(v), yv(pdf(v))) : ctx.moveTo(f(v), yv(pdf(v))); }
+    ctx.stroke();
+    ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(f(lo), base); ctx.lineTo(f(hi), base); ctx.stroke();
+    if (zero != null) { ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = "#9a968a"; ctx.beginPath(); ctx.moveTo(f(zero), top); ctx.lineTo(f(zero), base); ctx.stroke(); ctx.restore(); }
+    cardText(ctx, ends[0], f(lo), top - 8, { col: MUTED, size: 11 }); cardText(ctx, ends[1], f(hi), top - 8, { col: MUTED, size: 11, align: "right" });
+    for (const v of ticks) cardText(ctx, fmt(v), f(v), base + 10, { col: MUTED, size: 10.5, align: "center" });
+    /* the two means on the axis: new alleles (blue), copies alive in N (ink) */
+    const tri = (v, col) => { if (v == null) return; const X = f(v); ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(X, base - 1); ctx.lineTo(X - 5, base - 9); ctx.lineTo(X + 5, base - 9); ctx.closePath(); ctx.fill(); };
+    tri(key === "s" ? D.sNew : D.hNew, BLUE); tri(key === "s" ? D.sCopies : D.hCopies, INK);
+    /* the dots: alive in N above, gone below, packed into three rows each */
+    const strip = (ids, y0, filled, label) => {
+      cardText(ctx, label, x0 + 10, y0, { col: MUTED, size: 10.5 });
+      const r = 3.6, rowsX = [[], [], []];
+      ids.slice().sort((a, b) => w.AL[a][key] - w.AL[b][key] || a - b).forEach(id => {
+        const X = f(w.AL[id][key]); let k = rowsX.findIndex(xs => !xs.length || X - xs[xs.length - 1] > 2 * r + 1); if (k < 0) k = 2;
+        rowsX[k].push(X); const Y = y0 + 14 + k * 9, big = id === pick;
+        ctx.fillStyle = w.AL[id].col; ctx.strokeStyle = w.AL[id].col; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(X, Y, big ? r + 1.5 : r, 0, 6.2832); filled ? ctx.fill() : ctx.stroke();
+        if (big) { ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(X, Y, r + 4, 0, 6.2832); ctx.stroke(); }
+        DH.hits.push({ id, x: X, y: Y, r: r + 2 });
+      });
+    };
+    strip(D.alive, base + 24, true, "alive in generation " + N);
+    strip(D.gone, base + 66, false, "gone by then");
+    /* the picked allele: a line up to the curve, and its value */
+    if (pick != null && w.AL[pick].col && w.AL[pick].born <= N) {
+      const X = f(w.AL[pick][key]);
+      ctx.save(); ctx.setLineDash([2, 2]); ctx.strokeStyle = w.AL[pick].col; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(X, top + 4); ctx.lineTo(X, base); ctx.stroke(); ctx.restore();
+      const t = key + " " + (key === "s" ? sg(w.AL[pick].s) : w.AL[pick].h.toFixed(2));
+      cardText(ctx, t, clamp(X, x0 + 30, x0 + pw - 30), top - 8 + (Math.abs(X - f(lo)) < 70 || Math.abs(X - f(hi)) < 70 ? 14 : 0), { size: 11, bold: true, align: "center" });
+    }
+  };
+  const nd = v => Math.exp(-0.5 * ((v - S_MU) / S_SD) ** 2) / (S_SD * Math.sqrt(2 * Math.PI));
+  panel(20, S_LO, S_HI, nd, "s", "s: two copies multiply salamanders by 1 − s", [-0.5, 0, 0.5, 1], v => sg(v, 1).replace("+", ""), ["helps", "hurts"], 0);
+  panel(20 + pw + gap, 0, 1, () => 1, "h", "h: one copy multiplies them by 1 − h·s", [0, 0.5, 1], v => v.toFixed(1), ["one copy does nothing", "one copy does all"], null);
+  const lab = s => '<span class="label">' + s + '</span>', f2 = v => v == null ? "–" : v.toFixed(2);
+  $("B_distRead").innerHTML = lab("generation " + N + ":") + " <b>" + D.copies + "</b> " + lab("coloured copies, of") + " <b>" + D.alive.length + "</b> " +
+    lab("alleles alive;") + " <b>" + D.gone.length + "</b> " + lab("gone") + "<br>" +
+    '<span style="color:' + BLUE + '">▲</span> ' + lab("new alleles so far (curve): mean s") + " <b>" + f2(D.sNew) + "</b>, " + lab("h") + " <b>" + f2(D.hNew) + "</b> &nbsp; " +
+    "▲ " + lab("copies alive in generation " + N + " (bars): mean s") + " <b>" + f2(D.sCopies) + "</b>, " + lab("h") + " <b>" + f2(D.hCopies) + "</b>";
+}
+function distHit(e) {
+  const r = $("B_dist").getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, bd = Infinity;
+  for (const h of DH.hits) { const d = Math.hypot(x - h.x, y - h.y); if (d <= h.r && d < bd) { bd = d; best = h.id; } }
+  return best;
+}
+
+/* =====================================================================
+   B's READS (JM, 2026-10-07: "The activities here should not be clones of
+   those from Part A. Rather we should have them ask about interpretations
+   of the plot and graphs--though I am not yet sure what. Maybe something
+   like finding the worst alleles and best alleles present in the final
+   generation & comparing their time-to-MRCA?"). Five answers, each one
+   bit, the first click on This one:
+     1 the best coloured allele alive in the last generation (lowest s):
+       picked anywhere -- a dot, a line, a copy (ties: any of them);
+     2 the most recent copy all its living copies came from;
+     3 the worst (highest s); 4 its copies' meeting copy;
+     5 the best allele the island ever had, alive or gone.
+   MEASURED (1,000 computer-played islands, generation 15): ~5 coloured
+   alleles alive; fewer than two in 0.5% (Run one more generation then).
+   The best left's copies meet 4.0 generations back on average, the worst
+   left's 2.0, but the best's further back on only 57% of islands (14%
+   tie): one island is close to a coin toss. So the reveal runs 200 more
+   islands on the page and prints the comparison from them. The best
+   allele ever drawn is gone by generation 15 on 79% of islands.
+   ===================================================================== */
+function makeChalB(w) {
+  const S = islandSeries(w), cnt = S.cnt[w.gen], alive = [];
+  w.AL.forEach((a, id) => { if (a.col && cnt[id]) alive.push(id); });
+  const ss = alive.map(id => w.AL[id].s), lo = Math.min(...ss), hi = Math.max(...ss);
+  let ev = Infinity; w.AL.forEach(a => { if (a.col) ev = Math.min(ev, a.s); });
+  return { key: "B", step: 0, tried: {}, done: false, short: alive.length < 2 || lo === hi,
+           best: alive.filter(id => w.AL[id].s === lo), worst: alive.filter(id => w.AL[id].s === hi),
+           ever: w.AL.map((a, id) => a.col && a.s === ev ? id : -1).filter(id => id >= 0),
+           bestId: null, worstId: null, everId: null, bestM: null, worstM: null, pool: null };
+}
+/* the 200 more islands, played by the computer as the seasons after a death are */
+let POOL = null;
+function poolB() {
+  if (POOL) return POOL;
+  let n = 0, bt = 0, wt = 0, further = 0, tie = 0, gone = 0;
+  for (let i = 0; i < 200; i++) {
+    const w = makeWorld("B"); found(w, 9000 + i); if (!runRest(w)) continue;
+    const c = makeChalB(w); if (c.short) continue; n++;
+    const tb = w.gen - alleleMrca(w, c.best[0], w.AL[c.best[0]].locus, w.gen).gen, tw = w.gen - alleleMrca(w, c.worst[0], w.AL[c.worst[0]].locus, w.gen).gen;
+    bt += tb; wt += tw; if (tb > tw) further++; else if (tb === tw) tie++;
+    if (!islandSeries(w).cnt[w.gen][c.ever[0]]) gone++;
+  }
+  return POOL = { n, best: bt / n, worst: wt / n, further: further / n, tie: tie / n, gone: gone / n };
+}
+const pct = v => Math.round(v * 100) + "%";
+const ChalB = {
+  start: function () { if (!CH.B) CH.B = makeChalB(WD.B); this.sync("B"); },
+  want: function (c) {
+    if (c.step === 0) return { kind: "allele", ids: c.best };
+    if (c.step === 1) return c.bestM.mrca;
+    if (c.step === 2) return { kind: "allele", ids: c.worst };
+    if (c.step === 3) return c.worstM.mrca;
+    if (c.step === 4) return { kind: "allele", ids: c.ever };
+    return null;
+  },
+  marks: function () { return []; },
+  answer: function () {
+    const c = CH.B, w = WD.B, P = PV.B, fb = $("B_fb"); if (!c || c.done || c.short) return;
+    const want = this.want(c); let ok, got = null;
+    if (want.kind === "allele") {
+      got = PICK.B;
+      if (got == null) { fb.innerHTML = "Pick an allele first: a dot under s and h, its line on the plot, or a copy of it in the pedigree."; return; }
+      ok = want.ids.includes(got);
+    } else {
+      const it = P.last;
+      if (!it || it.kind !== "copy") { fb.innerHTML = "Click a copy in the pedigree first, in the chromosome or locus view."; return; }
+      ok = it.id === want.id && it.side === want.side && it.locus === want.locus;
+    }
+    if (!c.tried[c.step]) { c.tried[c.step] = true; record(BIT["B" + (c.step + 1)], ok); bump("B"); }
+    if (!ok) { fb.innerHTML = '<span class="off">incorrect</span> — try again'; return; }
+    fb.innerHTML = '<span class="ok">correct</span>';
+    if (c.step === 0) { c.bestId = got; c.bestM = alleleMrca(w, got, w.AL[got].locus, w.gen); }
+    if (c.step === 2) { c.worstId = got; c.worstM = alleleMrca(w, got, w.AL[got].locus, w.gen); }
+    if (c.step === 4) c.everId = got;
+    c.step++;
+    const copiesOf = M => M.copies.map(x => ({ kind: "copy", id: x.id, side: x.side, locus: M.mrca.locus }));
+    /* reveal what was found: the allele's copies and their lines; then both on the time-to-MRCA plot;
+       then the best ever on the lifespans */
+    if (c.step === 2) { P.sel = copiesOf(c.bestM); P.last = null; }
+    if (c.step === 4) {
+      P.sel = copiesOf(c.worstM); P.last = null; c.pool = poolB();
+      TP.B.marks = [{ id: c.bestId, label: "best left" }, { id: c.worstId, label: "worst left" }]; PICK.B = null; setMeasure("B", "tmrca", -1);
+    }
+    if (c.step === 5) {
+      TP.B.marks = [{ id: c.everId, label: "best ever" }]; PICK.B = c.everId; setMeasure("B", "life", -1); drawDist();
+      c.done = true; finishStage("B");
+    }
+    this.sync("B");
+  },
+  more: function () {
+    const w = WD.B, c = CH.B; if (!c || !c.short) return;
+    const rng = mulberry32(pageSeed("l15moreB", 1, 999999) + 7919 * (w.gen + 1) + 104729 * w.salt);
+    if (modelSeason(w, rng).length < 2) return;
+    CH.B = Object.assign(makeChalB(w), { tried: c.tried });
+    placeGeneration(w); paintAll("B", false); this.sync("B");
+  },
+  sync: function () {
+    const c = CH.B, w = WD.B;
+    const task = (t, on, hint) => { const li = document.querySelector('#tasksB li[data-task="' + t + '"]'); if (!li) return;
+      li.classList.toggle("done", !!on); const h = $("B_" + t + "_now"); if (h && hint != null) h.textContent = hint; };
+    task("play", w.gen >= LAST && (w.ended || w.phase === "done"), "generation " + w.gen + " of " + LAST);
+    const ask = $("B_ask"), btn = $("B_this"), more = $("B_more"), rev = $("B_reveal");
+    document.querySelectorAll("#tasksB li").forEach(li => li.classList.remove("now"));
+    if (!c) { ask.innerHTML = ""; rev.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed("B", false); return; }
+    const now = c.done ? null : c.step < 2 ? "best" : c.step < 4 ? "worst" : "ever";
+    if (now) document.querySelector('#tasksB li[data-task="' + now + '"]').classList.add("now");
+    task("best", c.step >= 2, c.step >= 2 ? "both found" : c.step === 1 ? "1 of 2 found" : "");
+    task("worst", c.step >= 4, c.step >= 4 ? "both found" : c.step === 3 ? "1 of 2 found" : "");
+    task("ever", c.step >= 5, c.step >= 5 ? "found" : "");
+    more.hidden = !c.short; btn.disabled = c.done || c.short;
+    const al = id => w.AL[id], at = id => " at locus " + (al(id).locus + 1) + ", s " + sg(al(id).s);
+    const meetAsk = (id, M) => sw(al(id).col) + at(id) + ": " + M.copies.length + (M.copies.length === 1 ? " living copy." : " living copies.") +
+      " Click the most recent copy " + (M.copies.length === 1 ? "every living copy came from (with one living copy, that is the copy itself)" : "all " + M.copies.length + " were copied from") + ", then <b>This one</b>.";
+    if (c.short) ask.innerHTML = "Fewer than two new alleles with different s are alive in the last generation. Run one more generation.";
+    else if (c.step === 0) ask.innerHTML = "Of the new alleles alive in the last generation, which helps its carriers most: the lowest s? Pick it (a filled dot under s, its line on the plot, or a copy of it in the pedigree), then <b>This one</b>.";
+    else if (c.step === 1) ask.innerHTML = meetAsk(c.bestId, c.bestM);
+    else if (c.step === 2) ask.innerHTML = "Now the one that hurts its carriers most: the highest s, alive in the last generation.";
+    else if (c.step === 3) ask.innerHTML = meetAsk(c.worstId, c.worstM);
+    else if (c.step === 4) ask.innerHTML = "Last: the best allele your island ever had, alive or gone (a hollow dot is gone).";
+    else ask.innerHTML = "";
+    /* what has been found, kept above the question */
+    const found = (lab, id, M) => "<b>" + lab + "</b> " + sw(al(id).col) + at(id) + ", h " + al(id).h.toFixed(2) + ": arose in generation " + al(id).born + "; " +
+      (M.copies.length === 1 ? "one living copy, so nothing to meet: 0 generations back."
+                             : "its " + M.copies.length + " living copies meet in generation " + M.gen + ", " + plural(w.gen - M.gen, "generation", "generations") + " back.");
+    const parts = [];
+    if (c.step >= 2) parts.push(found("Best left:", c.bestId, c.bestM));
+    if (c.step >= 4) {
+      parts.push(found("Worst left:", c.worstId, c.worstM));
+      const q = c.pool;
+      parts.push("On " + q.n + " more islands, played by the computer to generation " + LAST + ": the best left's copies meet " + q.best.toFixed(1) +
+        " generations back on average, the worst left's " + q.worst.toFixed(1) + "; the best's further back on " + pct(q.further) + " of islands, as far back on " + pct(q.tie) + ".");
+    }
+    if (c.step >= 5) {
+      const a = islandSeries(w).al[c.everId];
+      parts.push("<b>Best ever:</b> " + sw(al(c.everId).col) + at(c.everId) + ": arose in generation " + a.born + "; " +
+        (a.lost != null ? "lost in generation " + a.lost + ", after at most " + plural(a.peak, "copy.", "copies.") : "still here, " + plural(a.now, "copy.", "copies.")) +
+        " On the " + c.pool.n + " islands, the best allele ever drawn was gone by generation " + LAST + " on " + pct(c.pool.gone) + ".");
+    }
+    rev.innerHTML = parts.join("<br>");
+    drawPed("B", false);
+  }
+};
+const READS = { A: Chal, B: ChalB };
 
 /* =====================================================================
    STAGE C — one allele's change, split among snakes and then among the
@@ -1816,8 +2410,8 @@ function C_code() {
 }
 const C_RCODE = () => "# Lesson 15, Stage C -- one allele's change, split among snakes and among the copies inside each snake\n" + C_lines().join("\n") + "\n";
 
-/* ---- your island in B, winter by winter: the same three parts, for the allele B's last reads were about
-   (the commonest coloured one), every snake of a generation counted, those that had no young included ---- */
+/* ---- your island in B, winter by winter: the same three parts, for the allele B's first reads were about
+   (the best left in the last generation), every snake of a generation counted, those that had no young included ---- */
 function isleTerms(w, id, l) {
   const out = [];
   for (let t = 0; t < w.gen; t++) {
@@ -1838,10 +2432,10 @@ function isleTerms(w, id, l) {
   }
   return out;
 }
-/* B's read allele; failing that, the coloured allele with the most copies in the last generation, or the
-   one that once had the most */
+/* B's best allele left, once found; failing that, the coloured allele with the most copies in the last
+   generation, or the one that once had the most */
 function isleAllele(w) {
-  if (CH.B && CH.B.allele) return CH.B.allele;
+  if (CH.B && CH.B.bestId != null) return { id: CH.B.bestId, locus: WD.B.AL[CH.B.bestId].locus };
   const t = alleleTarget(w); if (t) return t;
   let best = null, bv = 0;
   w.AL.forEach((a, id) => { if (!a.col) return; let c = 0, peak = 0;
@@ -1882,8 +2476,8 @@ function C_drawIsle() {
 
 function paintAll(key, scroll) {
   if (!popEl().hidden) { drawArena(); drawHud(); }
-  if (key === "A" || key == null) drawPed("A", scroll);
-  if (key === "B" || key == null) { drawPed("B", scroll); drawDist(); }
+  if (key === "A" || key == null) { drawPed("A", scroll); drawTime("A"); drawScore("A"); }
+  if (key === "B" || key == null) { drawPed("B", scroll); drawTime("B"); drawDist(); drawScore("B"); }
   if (key === "C" || key === "B" || key == null) { C_paint(); C_drawIsle(); }
 }
 
@@ -1895,6 +2489,7 @@ function wire() {
   cv.addEventListener("pointerdown", e => { AR.pointer = toWorld(e); });
   $("btnBack").addEventListener("click", closeArena);
   $("btnNext").addEventListener("click", () => startSeason(W.key, false));
+  $("btnRun").addEventListener("click", () => fastForward(W.key));
   popEl().addEventListener("click", e => { if (e.target === popEl()) closeArena(); });
   window.addEventListener("keydown", e => { if (e.key === "Escape") closeArena(); });
   for (const key of ["A", "B"]) { buildIsland(key); wireIsland(key); }
@@ -1910,7 +2505,7 @@ function wire() {
   $("C_dl").addEventListener("click", () => downloadText("lesson15_stageC.R", C_RCODE()));
   let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(null, false); }, 120); });
   /* instructor bypass / study mode: every stage open, and a button that runs a game to its end */
-  const reveal = () => { for (const key of ["A", "B"]) $(key + "_fast").hidden = false; FIT_EPOCH++; paintAll(null, false); };
+  const reveal = () => { INSTRUCTOR = true; syncButtons(); FIT_EPOCH++; paintAll(null, false); };
   document.addEventListener("score:bypass", reveal);
   window.__l15reveal = reveal;
 }
@@ -1919,13 +2514,13 @@ for (const key of ["A", "B"]) { found(WD[key], 0); placeGeneration(WD[key]); }
 wire(); syncButtons();
 setPhase("A", "Generation 0. Every snake carries one brand-new allele, ringed. Play the season when you are ready.");
 setPhase("B", "Generation 0 on a new island. Every snake carries one brand-new allele, ringed, and this time each does something.");
-for (const key of ["A", "B"]) Chal.sync(key);
+for (const key of ["A", "B"]) READS[key].sync(key);
 paintAll(null, true);
 
 Score.init({
   moduleId: "lesson15",
-  version: 2,      /* 2: tenth pass -- six reads an island, five targets in C (2026-10-07) */
-  scaffold: 17,
+  version: 3,      /* 3: eleventh pass -- B's reads are five, on the plots (2026-10-07); 2: tenth pass */
+  scaffold: 16,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
