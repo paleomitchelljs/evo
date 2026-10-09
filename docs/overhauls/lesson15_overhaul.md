@@ -3,7 +3,7 @@
 **File** · `app/lessons/lesson15.html` — A, B, C, D built (v6, scaffold 15), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (~40 s; islands differ run to run, the page seed is random per load) · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
 **Status** · fifteenth pass built (2026-10-09): JM's intros for A, B, C; the questions in a card under the pedigree; the jump + a pedigree of cells as D; old D archived. Thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-09 (fifteenth pass)
+**Last touched** · 2026-10-09 (fifteenth pass; B doubled and to 30: the version for students)
 
 ## Fifteenth pass (JM, 2026-10-09): his intros, the questions in the pedigree, the jump as D, old D archived
 
@@ -30,6 +30,7 @@ JM, dictated (speech-to-text as given; the intro texts themselves go into the pa
 | 15-10 | checks rewritten for the reads, C, the new D | done |
 | 15-11 | JM 2026-10-09: "increase the recombination rate for the snakes ... more recombinant chromosome examples" | done: XO 0.1 → 0.25 a gap. Measured (60 islands): chromosomes crossed over 47% → 82%; visibly recombinant 7% → 13%; winter cards with one 16% → 24% (0.5: 23%). The limit is allele differences, not crossovers: most beads are plain grey. More new alleles a generation would show more |
 | 15-12 | JM 2026-10-09: "Part A doesn't seem to clear" | done: a second click on the copy already picked cleared it, so when an allele's origin is also where its living copies meet (3 of 12 islands) its last answer could not be given ("Click a copy first"). A click now always picks; Clear clears. Check: all six answers with real clicks on such an island |
+| 15-13 | JM 2026-10-09: "double the mutation rate for 15b" and "let 15b's island run to 30 generations instead of 15"; the final version for students | done: B two new alleles a generation (each in its own copy), A one; B to 30, A to 15 (LASTS); the 200 islands: highest left meets 6.8 back, lowest 2.6, highest ever gone 88% |
 
 - C round 3 made JM's system (his C intro: heterozygotes low fitness, homozygotes sterile): s 1, h 0.2 (was h 0). Measured (300 islands): gold within 0.3-0.85 at 30 generations ×1.0 0%, ×1.05 0%, ×1.1 4%, ×1.2 91%, ×1.3 94%. The window now needs ×1.2: two steps past the first step the right way, against the "one step lands" rule (targets teach). JM to say if it should be looser.
 - Questions: a question finished moves the card on to the next one left; "correct — on to question N". What was found shows when the student goes back to it.

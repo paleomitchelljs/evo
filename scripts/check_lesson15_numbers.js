@@ -187,7 +187,7 @@ check("A's alleles do nothing", WD.A.AL.every(a => a.s === 0 && a.h === 0));
 const tallyBefore = WD.A.tally;
 fastForward("A");
 const wA = WD.A;
-check("A runs to generation " + LAST + " and opens its reads", wA.gen === LAST && wA.phase === "done" && !!CH.A, "gen " + wA.gen + ", phase " + wA.phase);
+check("A runs to generation " + LASTS.A + " and opens its reads", wA.gen === LASTS.A && wA.phase === "done" && !!CH.A, "gen " + wA.gen + ", phase " + wA.phase);
 check("the score stops when play ends: the seasons after add nothing, Run is gone",
       wA.tally === tallyBefore && document.getElementById("A_fast").hidden && /final/.test(document.getElementById("A_score").textContent), wA.tally + " / " + tallyBefore);
 
@@ -399,8 +399,14 @@ checkReads("A");
 
 /* ================= island B ================= */
 fastForward("B");
-check("B runs to generation " + LAST + "; Run to generation " + LONG + " hidden until its reads are done", WD.B.gen === LAST && !!CH.B && document.getElementById("B_long").hidden);
+check("B runs to generation " + LASTS.B + " (JM 2026-10-09: 30, A stays at " + LASTS.A + "); Run to generation " + LONG + " hidden until its reads are done", LASTS.B === 30 && WD.B.gen === LASTS.B && !!CH.B && document.getElementById("B_long").hidden);
 checkSeries("B");
+{
+  /* JM 2026-10-09: "double the mutation rate for 15b": two new alleles a generation on B, one on A, each in its own copy */
+  const per = w => { const n = []; for (let t = 1; t <= w.gen; t++) n.push(w.AL.filter(a => a.col && a.born === t).length); return n; };
+  const nB = per(WD.B), nA = per(WD.A);
+  check("new alleles a generation: island B " + nB.join("") + ", island A " + nA.join(""), nB.length >= 15 && nB.every(v => v === 2) && nA.length >= 1 && nA.every(v => v === 1));
+}
 {
   /* s and h in generation N: the bars count the coloured copies alive, their mean is the copies' */
   const w = WD.B;
@@ -466,7 +472,7 @@ checkSeries("B");
         movedOn && c.done && bits === "01111" && !!m2 && same(m2, c.worstM.mrca) && Gates.C.open, "bits " + bits);
   const q = c.pool;
   check("B: the 200 islands (" + q.n + " compared): the highest left's copies meet " + q.best.toFixed(1) + " back, the lowest's " + q.worst.toFixed(1) +
-        "; the highest ever gone " + pct(q.gone) + " (measured 4.0 / 2.0 / 79%)", q.n >= 180 && q.best > q.worst + 0.8 && q.gone > 0.65);
+        "; the highest ever gone " + pct(q.gone) + " (measured at 30 generations, two new alleles a generation: 6.8 / 2.6 / 88%; at 15 and one, 4.0 / 2.0 / 79%)", q.n >= 180 && q.best > q.worst + 0.8 && q.gone > 0.65);
 }
 
 /* ================= B: Run to generation 100 ================= */
@@ -527,9 +533,9 @@ checkSeries("B");
   const ok2 = runLong(w2);
   window.longAttempt = orig;
   let died = 0, n = 0; for (let i = 0; i < 200; i++) { const x = makeWorld("B"); found(x, 700 + i); if (!runRest(x)) continue; n++; if (!longAttempt(x, 0)) died++; }
-  check("Run to " + LONG + ": a deal that dies out is dealt again (calls " + calls.join(",") + "); if every deal dies the island stays at " + LAST +
+  check("Run to " + LONG + ": a deal that dies out is dealt again (calls " + calls.join(",") + "); if every deal dies the island stays at " + LASTS.B +
         "; first deals that die: " + died + " of " + n + " (measured 0.6%)",
-        ok1 && w1.gen === LONG && calls.join(",") === "0,1" && !ok2 && w2.gen === LAST && n >= 190 && died / n < 0.03);
+        ok1 && w1.gen === LONG && calls.join(",") === "0,1" && !ok2 && w2.gen === LASTS.B && n >= 190 && died / n < 0.03);
 }
 {
   /* over fresh islands: where the read allele's living copies meet, against where it arose */

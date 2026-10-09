@@ -428,14 +428,14 @@
    sum of their food units divided by the units needed per kid."
    Every young snake gets one gamete from each parent: one chromosome of
    seven genes, crossing over at XO between neighbouring genes. Exactly one
-   new allele a generation, from generation 1, lands in one of the young at
+   new allele a generation (two on island B since 2026-10-09), from generation 1, lands in one of the young at
    random. The player is born again as one of their own young.
 
    THE GAME'S LENGTH (JM, 2026-10-07: "if the player dies or fails to mate,
    that's the end. Otherwise it should go 15 generations to produce a clean
    pedigree"). A played snake that leaves no young -- taken, starved, the
    odd one out, or (island B) a pair whose salamanders paid for none -- ends
-   play; the seasons left to LAST then run themselves, as Skip once did, so
+   play; the seasons left to the island's last generation then run themselves, as Skip once did, so
    the pedigree is always fifteen generations deep.
    ===================================================================== */
 const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", HOT_SOFT = "#f4d3d7";   /* HOT_SOFT as lesson 16 has it */
@@ -449,7 +449,8 @@ const XO = 0.25;                         // crossing over between neighbouring g
 const FOOD = 30, COST = 2, KEEP = 10;    // salamanders a season (more than ten snakes need); a chick's cost; the hawks take all but KEEP
 const SAL0 = 3, SAL_SPAN = 16;           // salamanders out at the start; the rest come out over this many seconds
 const N0 = 14;                           // founders, generation 0 (JM, 2026-10-04: no generations run before play)
-const LAST = 15;                         // generations a game runs (JM, 2026-10-07)
+const LASTS = { A: 15, B: 30 };          // generations a game runs (JM, 2026-10-07: 15; 2026-10-09: "let 15b's island run to 30")
+const lastOf = w => LASTS[w.key];
 const LONG = 100;                        // island B can run on to here once its reads are done (JM, 2026-10-08)
 const WORLD = 600;                       // the arena in its own units
 const SEASON_MAX = 25, GRACE = 8;        // seconds; a season ends sooner when the salamanders are gone and the hawks are done
@@ -569,7 +570,11 @@ function broodOf(w, a, b, rng) {
   const x = (counted(w, a) + counted(w, b)) / COST, k = Math.floor(x);
   return k + (rng() < x - k ? 1 : 0);
 }
-/* winter for the pairs given: the young, their one new allele, and the player's next snake */
+/* new alleles a generation, from generation 1: one on island A, two on B (JM, 2026-10-09: "double the mutation rate
+   for 15b"). Each in a young at random, at a random gene of a random copy; two never land on the same copy of a gene,
+   or the first would vanish before anyone carried it. */
+const NEW_PER_GEN = { A: 1, B: 2 };
+/* winter for the pairs given: the young, their new alleles, and the player's next snake */
 function breed(w, pairs, rng) {
   const t = w.gen + 1, row = [];
   for (const [a, b] of pairs) {
@@ -581,8 +586,13 @@ function breed(w, pairs, rng) {
     }
   }
   if (row.length) {
-    const kid = w.SN.get(row[(rng() * row.length) | 0]), side = rng() < 0.5 ? 0 : 1, l = (rng() * LOCI) | 0;
-    kid.g[side][l] = newAllele(w, l, t, { snake: kid.id, side }, false);
+    const used = new Set();
+    for (let m = 0; m < NEW_PER_GEN[w.key]; m++) {
+      let kid, side, l, k, tries = 0;
+      do { kid = w.SN.get(row[(rng() * row.length) | 0]); side = rng() < 0.5 ? 0 : 1; l = (rng() * LOCI) | 0; k = kid.id + "|" + side + "|" + l; } while (used.has(k) && ++tries < 20);
+      if (used.has(k)) break;
+      used.add(k); kid.g[side][l] = newAllele(w, l, t, { snake: kid.id, side }, false);
+    }
   }
   w.ROWS[t] = row;
   w.gen = t;
@@ -644,9 +654,9 @@ function found(w, salt) {
   w.ROWS[0] = row; w.gen = 0;
   w.YOU.set(0, row[(w.rng() * row.length) | 0]);
 }
-/* the seasons left once play is over, to generation LAST, played as modelSeason plays them */
+/* the seasons left once play is over, to the island's last generation, played as modelSeason plays them */
 function runRest(w) {
-  while (w.gen < LAST) {
+  while (w.gen < lastOf(w)) {
     const rng = mulberry32(pageSeed("l15rest" + w.key, 1, 999999) + 7919 * (w.gen + 1) + dealt(w));
     if (modelSeason(w, rng).length < 2) return false;
   }
@@ -829,17 +839,17 @@ function finishWinter() {
   const row = breed(w, pairs, AR.rng);
   if (steered) { w.tally += me.kids.length; saveTop(w); }
   AR.card = me ? { me: me.id, mate: mate ? mate.id : null, ate, mult, mateMult, fate, kids: me.kids.slice(),
-                   next: w.gen < LAST && w.YOU.has(w.gen) ? w.YOU.get(w.gen) : null, rel: mate ? relation(w, me, mate) : null } : null;
+                   next: w.gen < lastOf(w) && w.YOU.has(w.gen) ? w.YOU.get(w.gen) : null, rel: mate ? relation(w, me, mate) : null } : null;
   buildWinterQs();
   AR.auto = false;
   const over = row.length < 2;
-  w.phase = over ? "over" : (w.ended || w.gen >= LAST) ? "done" : "ready";
+  w.phase = over ? "over" : (w.ended || w.gen >= lastOf(w)) ? "done" : "ready";
   AR.phase = w.phase;
   placeGeneration(w);
   const WHY = { hawk: "A hawk took your snake.", starved: "Your snake ate nothing.", "no mate": "Your snake was the one left without a mate.", "no young": "Your pair's salamanders paid for no young." };
   setPhase(w.key, over ? "Too few snakes were fed and left alive to breed. Back at the pedigree, a new island starts." :
-           w.ended ? WHY[w.ended] + " Your game is over: back at the pedigree, the seasons left to generation " + LAST + " play themselves." :
-           w.gen >= LAST ? "Generation " + LAST + ": the pedigree is complete. Back at the pedigree, read it." :
+           w.ended ? WHY[w.ended] + " Your game is over: back at the pedigree, the seasons left to generation " + lastOf(w) + " play themselves." :
+           w.gen >= lastOf(w) ? "Generation " + lastOf(w) + ": the pedigree is complete. Back at the pedigree, read it." :
            "Spring. You ate " + ate + (w.sel ? " (counting as " + (ate * mult).toFixed(1) + ")" : "") +
            (mate ? " and were paired with a snake that ate " + mate.food + (w.sel ? " (" + (mate.food * mateMult).toFixed(1) + ")" : "") : "") + ": " +
            (me ? me.kids.length : 0) + " young of yours among " + row.length + ". You are one of them now.", over || !!w.ended);
@@ -867,7 +877,7 @@ function saveTop(w) {
   if (typeof Score !== "undefined" && Score.setNote) Score.setNote("topScore" + w.key, n);
 }
 const topScore = w => Math.max(readTop(w.key), youngTally(w));
-const lineOver = w => !!w.ended || w.phase === "done" || w.gen >= LAST;
+const lineOver = w => !!w.ended || w.phase === "done" || w.gen >= lastOf(w);
 function drawScore(key) {
   const w = WD[key], el = $(key + "_score"); if (!el) return;
   el.innerHTML = "your young so far <b>" + youngTally(w) + "</b> &nbsp;·&nbsp; top score <b class=\"top\">" + topScore(w) + "</b>" +
@@ -891,7 +901,7 @@ function afterSeason(key) {
   const w = WD[key];
   if (w.phase === "over") { found(w, w.salt + 1); placeGeneration(w); setPhase(key, "A new island: generation 0. Play the season when you are ready."); }
   else if (w.phase === "done") {
-    if (w.gen < LAST && !runRest(w)) { found(w, w.salt + 1); placeGeneration(w); setPhase(key, "That island died out before generation " + LAST + ". A new one: generation 0."); }
+    if (w.gen < lastOf(w) && !runRest(w)) { found(w, w.salt + 1); placeGeneration(w); setPhase(key, "That island died out before generation " + lastOf(w) + ". A new one: generation 0."); }
     else { placeGeneration(w); setPhase(key, "Generation " + w.gen + ": the pedigree is complete. Read it, below."); READS[key].start(key); }
   }
   syncButtons(); paintAll(key, true);
@@ -956,12 +966,12 @@ function longRun(key) {
 /* Run to generation 15: once a season has been played to winter on that island, or from the start for
    an instructor (bypass) or in study mode */
 let INSTRUCTOR = false;
-const canRun = w => !AR.on && w.phase === "ready" && !w.ended && w.gen < LAST && (w.steered > 0 || INSTRUCTOR);
-const canLong = w => w.key === "B" && !AR.on && w.phase === "done" && w.gen >= LAST && w.gen < LONG &&
+const canRun = w => !AR.on && w.phase === "ready" && !w.ended && w.gen < lastOf(w) && (w.steered > 0 || INSTRUCTOR);
+const canLong = w => w.key === "B" && !AR.on && w.phase === "done" && w.gen >= lastOf(w) && w.gen < LONG &&
                      !!CH.B && !CH.B.short && (CH.B.done || INSTRUCTOR);
 /* Play again once the student's line has ended: a death, no mate, Run to generation 15, or the game
    played to its end */
-const canAgain = w => !AR.on && w.phase !== "over" && (!!w.ended || w.gen >= LAST);
+const canAgain = w => !AR.on && w.phase !== "over" && (!!w.ended || w.gen >= lastOf(w));
 function syncButtons() {
   for (const key of ["A", "B"]) {
     const w = WD[key], ready = !AR.on && w.phase === "ready";
@@ -972,6 +982,7 @@ function syncButtons() {
     drawScore(key);
   }
   $("btnRun").hidden = !canRun(W) || $("btnNext").hidden;
+  $("btnRun").textContent = "Run to generation " + lastOf(W);
   $("btnAgain").hidden = popEl().hidden || !canAgain(W);
 }
 
@@ -1048,7 +1059,7 @@ const WINTER_Q = [
 function winterEvidence(key, yes) {
   if (key === "lost") return yes ? "look for the × beside a bead of yours" : "every allele you carry reached at least one young";
   if (key === "recomb") return yes ? 'look for "mix of your two" beside a young' : "none of your young carry a mix of your two chromosomes";
-  return yes ? "the ringed bead, among your young, is brand new" : "this generation's new allele is in another family";
+  return yes ? "the ringed bead, among your young, is brand new" : NEW_PER_GEN[W.key] > 1 ? "this generation's new alleles are in other families" : "this generation's new allele is in another family";
 }
 function hideWinterQs() { const el = $("winterQs"); el.hidden = true; el.innerHTML = ""; }
 function buildWinterQs() {
@@ -1214,7 +1225,7 @@ function drawWinterCard(ctx) {
       if (C.reveal && C.reveal.recomb && C.answers.recomb.ids.includes(kid.id)) text("mix of your two", x, ly, { col: INK, size: 10.5 });
     });
   } else {
-    text(W.gen >= LAST ? "" : "Your game is over: no young of yours to play next.", 24, gridTop + 6, { col: MUTED, size: 13.5 });
+    text(W.gen >= lastOf(W) ? "" : "Your game is over: no young of yours to play next.", 24, gridTop + 6, { col: MUTED, size: 13.5 });
   }
   drawPopPlots(ctx);
 }
@@ -1285,10 +1296,10 @@ function drawHud() {
   const me = youNow(), row = rowSnakes(W, W.gen);
   const living = row.filter(s => s.alive).length;
   const score = "<span>your young <b>" + youngTally(W) + "</b> · top score <b style=\"color:" + HOT + "\">" + topScore(W) + "</b></span>";
-  if (AR.card && AR.phase !== "season") { $("hud").innerHTML = "<span>" + (W.phase === "ready" ? "next: " : "") + "generation <b>" + W.gen + "</b> of " + LAST + ", " + row.length + " snakes</span>" + score; return; }
+  if (AR.card && AR.phase !== "season") { $("hud").innerHTML = "<span>" + (W.phase === "ready" ? "next: " : "") + "generation <b>" + W.gen + "</b> of " + lastOf(W) + ", " + row.length + " snakes</span>" + score; return; }
   const ate = me ? me.food : 0, m = me ? multOf(W, me) : 1;
   $("hud").innerHTML = score +
-    "<span>generation <b>" + W.gen + "</b> of " + LAST + "</span><span>snakes <b>" + living + "</b> of " + row.length + "</span>" +
+    "<span>generation <b>" + W.gen + "</b> of " + lastOf(W) + "</span><span>snakes <b>" + living + "</b> of " + row.length + "</span>" +
     "<span>salamanders out <b>" + AR.sal.length + "</b>" + (AR.emerge && AR.emerge.length ? ", " + AR.emerge.length + " to come" : "") + "</span>" +
     "<span>you ate <b>" + ate + "</b>" + (W.sel ? ", counting as <b>" + (ate * m).toFixed(1) + "</b> (×" + m.toFixed(2) + ")" : "") + "</span>" +
     (AR.phase === "season" ? "<span>hawks still to come <b>" + AR.owed + "</b></span><span>winter in <b>" + Math.max(0, Math.ceil(SEASON_MAX - AR.t)) + " s</b></span>"
@@ -1565,7 +1576,7 @@ function buildIsland(key) {
   const dist = key !== "B" ? "" :
     '<div class="panel dist">' +
       '<h3>s and h: new alleles, and the copies alive in generation N</h3>' +
-      '<div class="tbar"><label>generation N <input type="range" id="B_distN" min="0" max="' + LAST + '" step="1" value="0"> <b id="B_distNv">0</b></label></div>' +
+      '<div class="tbar"><label>generation N <input type="range" id="B_distN" min="0" max="' + LASTS.B + '" step="1" value="0"> <b id="B_distNv">0</b></label></div>' +
       '<canvas id="B_dist" width="1260" height="256"></canvas>' +
       '<div class="readout" id="B_distRead"></div>' +
     '</div>';
@@ -1574,7 +1585,7 @@ function buildIsland(key) {
       '<div class="controls"><div class="buttons">' +
         '<button id="' + key + '_go" class="accent">Play the season</button>' +
         '<button id="' + key + '_auto" class="ghost">Let this season play itself</button>' +
-        '<button id="' + key + '_fast" class="ghost" hidden>Run to generation ' + LAST + '</button>' +
+        '<button id="' + key + '_fast" class="ghost" hidden>Run to generation ' + LASTS[key] + '</button>' +
         '<button id="' + key + '_again" class="accent" hidden>Play again</button>' +
         (key === "B" ? '<button id="B_long" class="ghost" hidden>Run to generation ' + LONG + '</button>' : '') +
       '</div></div>' +
@@ -1815,7 +1826,7 @@ const Chal = {
     $(key + "_qprev").disabled = $(key + "_qnext").disabled = !c;
     if (!c) {
       $(key + "_qno").textContent = "Questions";
-      qt.textContent = "Play to generation " + LAST + " first."; ask.textContent = "Generation " + w.gen + " of " + LAST + ".";
+      qt.textContent = "Play to generation " + lastOf(w) + " first."; ask.textContent = "Generation " + w.gen + " of " + lastOf(w) + ".";
       rev.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed(key, false); return;
     }
     $(key + "_qno").textContent = "Question " + (q + 1) + " of 3";
@@ -1980,7 +1991,7 @@ function drawTime(key) {
   const nLife = T.meas === "life" ? S.al.filter(a => a.col && (l < 0 || a.locus === l)).length : 0;
   const { ctx, W: Wd, H } = setupCanvas(cv, nLife * 3 + 52 > +cv.dataset.cssH ? nLife * 3 + 52 : null);
   ctx.clearRect(0, 0, Wd, H);
-  const F = T.frame = timeFrame(Wd, H), xmax = Math.max(LAST, S.G), G = S.G;
+  const F = T.frame = timeFrame(Wd, H), xmax = Math.max(LASTS[key], S.G), G = S.G;
   const xs = t => F.ax + t / xmax * F.aw;
   const pick = PICK[key], marks = new Map(T.marks.map(k => [k.id, k.label]));
   const lit = id => pick == null && !marks.size ? true : id === pick || marks.has(id);
@@ -2145,7 +2156,7 @@ function timeRead(key, S, l) {
 function timeXY(key, e) { const r = $(key + "_time").getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function timeAt(key, e) {
   const F = TP[key].frame; if (!F) return null;
-  const { x, y } = timeXY(key, e), G = WD[key].gen, xmax = Math.max(LAST, G);
+  const { x, y } = timeXY(key, e), G = WD[key].gen, xmax = Math.max(LASTS[key], G);
   if (x < F.ax - 6 || x > F.ax + F.aw + 6 || y < F.ay - 6 || y > F.ay + F.ah + 6) return null;
   return clamp(Math.round((x - F.ax) / F.aw * xmax), 0, G);
 }
@@ -2307,6 +2318,8 @@ function distHit(e) {
      2 the most recent copy all its living copies came from;
      3 the worst (highest s); 4 its copies' meeting copy;
      5 the best allele the island ever had, alive or gone.
+   (2026-10-09: island B runs to 30 with two new alleles a generation; the page's 200 islands now give the highest
+   left's copies meeting 6.8 generations back, the lowest's 2.6, the highest ever gone 88%.)
    MEASURED (1,000 computer-played islands, generation 15): ~5 coloured
    alleles alive; fewer than two in 0.5% (Run one more generation then).
    The best left's copies meet 4.0 generations back on average, the worst
@@ -2407,7 +2420,7 @@ const ChalB = {
     $("B_qprev").disabled = $("B_qnext").disabled = !c;
     if (!c) {
       $("B_qno").textContent = "Questions";
-      qt.textContent = "Play to generation " + LAST + " first."; ask.textContent = "Generation " + w.gen + " of " + LAST + ".";
+      qt.textContent = "Play to generation " + lastOf(w) + " first."; ask.textContent = "Generation " + w.gen + " of " + lastOf(w) + ".";
       rev.innerHTML = ""; btn.disabled = true; more.hidden = true; drawPed("B", false); return;
     }
     $("B_qno").textContent = "Question " + (q + 1) + " of 3";
@@ -2429,7 +2442,7 @@ const ChalB = {
     if (q === 1 && done) parts.push(found("Lowest fitness left:", c.worstId, c.worstM));
     if (q < 2 && this.solved(c, 0) && this.solved(c, 1)) {
       const P = c.pool;
-      parts.push("On " + P.n + " more islands, played by the computer to generation " + LAST + ": the highest fitness allele left has its copies meet " + P.best.toFixed(1) +
+      parts.push("On " + P.n + " more islands, played by the computer to generation " + lastOf(w) + ": the highest fitness allele left has its copies meet " + P.best.toFixed(1) +
         " generations back on average, the lowest " + P.worst.toFixed(1) + "; the highest's further back on " + pct(P.further) + " of islands, as far back on " + pct(P.tie) + ".");
     }
     if (q === 2 && done) {
@@ -2439,7 +2452,7 @@ const ChalB = {
       parts.push("<b>Highest fitness ever:</b> " + sw(al(c.everId).col) + at(c.everId) + ": arose in generation " + a.born + "; " +
         (a.lost != null && a.lost <= c.at ? "lost in generation " + a.lost + ", after at most " + plural(peak, "copy.", "copies.")
                                           : "still here in generation " + c.at + ", " + plural(S.cnt[c.at][c.everId], "copy.", "copies.")) +
-        " On the " + c.pool.n + " islands, the highest fitness allele ever drawn was gone by generation " + LAST + " on " + pct(c.pool.gone) + ".");
+        " On the " + c.pool.n + " islands, the highest fitness allele ever drawn was gone by generation " + lastOf(w) + " on " + pct(c.pool.gone) + ".");
     }
     if (w.gen > c.at) parts.push("These questions are about generation " + c.at + "; the island has run on to " + w.gen + ".");
     qt.innerHTML = title; ask.innerHTML = prompt; rev.innerHTML = parts.join("<br>");
