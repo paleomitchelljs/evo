@@ -272,7 +272,13 @@ checkSeries("A");
   const added = P.sel.length === 2;
   lk.checked = false; lk.dispatchEvent(new Event("change"));
   const kept = P.sel.length === 1 && itemKey(P.sel[0]) === itemKey(c0);
-  check("unlocked a click replaces; lock adds; unlocking keeps the last click", replaced && added && kept, [replaced, added, kept].join(" "));
+  /* a second click on the same copy keeps it picked (it used to clear it: an answer that is the same copy twice could
+     not be given, JM 2026-10-09); Clear is what clears */
+  cv.dispatchEvent(new MouseEvent("click", at(copyXY(P.lay, P, c0))));
+  const twice = P.sel.length === 1 && P.last && itemKey(P.last) === itemKey(c0);
+  document.getElementById("A_clear").click();
+  const cleared = P.sel.length === 0 && !P.last;
+  check("unlocked a click replaces; lock adds; unlocking keeps the last click; a second click keeps the copy picked; Clear clears", replaced && added && kept && twice && cleared, [replaced, added, kept, twice, cleared].join(" "));
   check("a copy clicked in the pedigree picks its allele on the plot", PICK.A === wA.SN.get(c0.id).g[c0.side][c0.locus]);
   P.sel = []; P.last = null;
 }
@@ -364,6 +370,31 @@ checkReads("A");
   }
   check("A: an allele that arose in a founder (island " + (salt - 1) + "): its origin is in generation 0, and a click on it there is right",
         !!res && res.gen0 && res.ringed && /^correct/.test(res.fb) && res.prog === 1, JSON.stringify(res));
+}
+{
+  /* JM 2026-10-09: "Part A doesn't seem to clear". Every question answered with real clicks and This one, on an island
+     where the allele's origin is also where its living copies meet (the same copy picked twice running) */
+  const w = WD.A, P = PV.A, txt = id => document.getElementById(id).textContent.replace(/\\s+/g, " ").trim();
+  let c = null, salt = 0;
+  for (salt = 1; salt < 80; salt++) {
+    found(w, salt); CH.A = null; QV.A = 0; P.sel = []; P.last = null; P.lock = false; document.getElementById("A_lock").checked = false;
+    fastForward("A"); c = CH.A;
+    if (c && c.allele && same(c.allele.origin, c.allele.mrca)) break;
+    c = null;
+  }
+  let log = [];
+  if (c) {
+    setView("A", "chr");
+    const cv = document.getElementById("A_ped");
+    let guard = 0;
+    while (!c.done && guard++ < 12) {
+      const wnt = Chal.want(c, QV.A), r = cv.getBoundingClientRect(), xy = copyXY(P.lay, P, { id: wnt.id, side: wnt.side, locus: wnt.locus });
+      cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + xy.x, clientY: r.top + xy.y, bubbles: true }));
+      document.getElementById("A_this").click(); log.push(txt("A_fb").slice(0, 12));
+    }
+  }
+  check("A: every question answered with real clicks closes the card, on an island where the origin is the meeting copy too (island " + salt + ")",
+        !!c && c.done && log.length === 6 && log.every(t => /^correct/.test(t)), log.join(" | "));
 }
 
 /* ================= island B ================= */

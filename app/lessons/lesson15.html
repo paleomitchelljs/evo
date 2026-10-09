@@ -1525,14 +1525,16 @@ function pedHit(key, e) {
   }
   return null;
 }
+/* a click always selects what it lands on (JM 2026-10-09 gave the pedigree a Clear button; a second click on the same
+   copy used to clear it, so an answer that is the same copy twice -- an allele's origin that is also where its living
+   copies meet -- could not be picked the second time, and question 3 never closed) */
 function pedClick(key, e) {
   const P = PV[key], h = pedHit(key, e), k = h ? itemKey(h) : null;
-  const i = k ? P.sel.findIndex(s => itemKey(s) === k) : -1;
   if (P.lock) {
     if (!h) return;
-    if (i >= 0) { P.sel.splice(i, 1); if (P.last && itemKey(P.last) === k) P.last = null; }
-    else { P.sel.push(h); P.last = h; }
-  } else if (!h || (i >= 0 && P.sel.length === 1)) { P.sel = []; P.last = null; }
+    if (!P.sel.some(s => itemKey(s) === k)) P.sel.push(h);
+    P.last = h;
+  } else if (!h) { P.sel = []; P.last = null; }
   else { P.sel = [h]; P.last = h; }
   drawPed(key, false);
   if (h && h.kind === "copy") pickAllele(key, WD[key].SN.get(h.id).g[h.side][h.locus]); else if (key === "B") drawDist();
