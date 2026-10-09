@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson17.html` — not started
 **Checks** · `node scripts/check_lesson17_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · outline, JM's rulings of 2026-10-09 applied; four open points; nothing built
+**Status** · outline, JM's rulings of 2026-10-09 applied (beads, hue by population); three open points; nothing built
 **Last touched** · 2026-10-09
 
 ## What the lesson is
@@ -34,11 +34,29 @@ Two populations of N 25, one chromosome of 100 loci, origin painted per locus; W
 - **Chunk size against migration rate is flat.** Under steady migration a chunk's length is set by how long it has been cut (generations × crossovers); migration rate sets how many chunks and how much of the genome, not how long they are. (JM's end plot is now against time since a pulse and against r.)
 - Recombination and time since arrival both move chunk length strongly. The foreign share moves with m.
 - Length stops shrinking after ~40 generations at N 25: a chunk can only be cut against a chromosome of the other colour, and drift makes both copies the same colour more and more often.
-- Not yet measured: mutations (orange / blue spectra) as the only marker; selection (h/s); F_ST.
+- Not yet measured: selection (h/s); F_ST.
+
+At bead-string scale (same prototype, N 25, 20 runs a setting):
+
+        40 beads, steady, 100 gens, R 1    m 0.001 / 0.002 / 0.005 / 0.01 / 0.02 / 0.05
+          fragments a population            97 / 139 / 231 / 300 / 341 / 333        more with m, level once fully mixed
+          mean size (beads)                 2.6 / 2.8 / 2.9 / 3.0 / 2.9 / 3.1        flat
+          other hue                         12 / 18 / 33 / 43 / 48 / 51 %
+        40 beads, one pulse                 t 5 / 10 / 20 / 40 generations after
+          R 0.5                             19 / 10.5 / 6.3 / 3.8 beads
+          R 1                               11 / 6.0 / 3.7 / 2.3
+          R 2                               7.7 / 3.4 / 2.1 / 1.8
+        60 beads: the same shapes (steady 3.2-3.8 beads; pulse R 1: 18 / 9.3 / 4.4 / 3.0)
+
+- 40 beads is enough: steady fragments are 2-4 beads, a fresh pulse's are a quarter to half a chromosome. A pulse's fragments are whole until the first hybrids make gametes (a pure migrant's gametes are all one hue), so cutting starts a generation or two after the pulse.
+- Fragment count rises with m and stops once the two populations are fully mixed (m ~0.02 at N 25 over 100 generations): keep m's slider below that, or let E show the mixing as F_ST falling to 0.
 
 ## Stages (outline; JM's rulings of 2026-10-09 applied)
 
-One interactive throughout: two populations side by side, every chromosome painted in its population's colour (orange / blue), each new mutation a dot in its population's spectrum; a stretch of the other colour is a chunk, visible at a glance. Sliders kept free to explore wherever they make sense; targets, where any, generous and on outcomes.
+One interactive throughout, 15's snake chromosomes with more loci (JM, 2026-10-09): beads on a string, each bead an allele in its own shade, the hue (blue / orange) the population the allele arose in. A genome from one population is all blue or all orange; a mix shows as fragments of the other hue. Sliders free to explore wherever they make sense; targets, where any, generous and on outcomes.
+- Every bead needs an allele from generation 0: each population starts with a few founder alleles a locus, in its own hue (15 started loci with 1-3 alleles).
+- A new mutation takes the hue of the population it arises in, even on a fragment from the other one: a lone off-hue bead inside a fragment, rare at low U.
+- Shades of the course's blue and of 14's orange (`#e8730c`, lesson 14 B's bead list): no new palette.
 
     A  Steady migration. Sliders m and r. Many small chunks, and more of them the higher m; lower r, longer chunks. A plot beside the populations: the share of each population in the other's colour, and the average chunk size, generation by generation.
     B  One pulse. A batch of migrants once, then none. A few long chunks, cut shorter every generation; lower r, slower. The same plot: chunk size falling with time since the pulse, one line per run so two r's sit on one axis.
@@ -50,13 +68,13 @@ Notes for the build:
 - A pulse's chunks shrink as 1/(r · time) only while the populations are still mixed: at N 25 the cutting stops after ~40 generations (drift makes both copies of a stretch the same colour, and a crossover between two same-colour copies cuts nothing). Keep a pulse's window to ~5-40 generations at N 25, or measure a larger N.
 - The textbook mean, L / (1 + R t), understates a pulse's chunks here (measured 30 loci at t 5 against 17): a chunk is cut only when paired with the other colour. Measure before printing any formula beside it.
 - Under steady migration the average chunk size settles at a level set by r (and the run's length), whatever m is: say nothing that ties chunk size to m.
+- On the page: fragments get *smaller* the longer since the migrant ancestor and the higher r (JM's "size proportional to time since migrant ancestor + recombination rate" is the dependence, inverse).
 
 ## Open for JM
 
 1. N: a slider throughout, or held (e.g. 25: 4N = 100 generations a run, 50 rows a population) until E, where 4Nm needs it?
 2. 16 D (IBD blocks, dating an arrival from its blocks): fold into 17 B instead of building it in 16?
 3. The inversion from 16 C riding in a migrant (its stretch never cut): in B, or not at all?
-4. Painting by origin is my reading of "it should be visual": the chromosome is coloured by where each stretch came from, so chunks show at any U; the mutation dots ride on top.
 
 ## Sources (earlier plans, archive, data)
 
@@ -71,7 +89,7 @@ Notes for the build:
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
-| 1 | — | JM settles the four open points | todo |
+| 1 | — | JM settles the three open points | todo |
 | 2 | — | prototype the pulse at N 25 / 50 (window where chunks keep shrinking), and with h/s on | todo |
 | 3 | A-E | build, A first | todo |
 
@@ -83,6 +101,7 @@ Notes for the build:
 - 2026-10-09: *"It should be visual, the goal is the color choice is to make it visible to students who don't need to quantify it precisely to understand what's happening."*
 - 2026-10-09: *"The h/s slider just allows students to investigate how selection interacts with these processes."*
 - 2026-10-09: F_ST is stage E of 17.
+- 2026-10-09: *"I'm envisioning a system just like the snakes, but with more loci. So a beads-on-a-string style of chromosome, where each bead is color coded by its mutation (given a different shade), with the hue (blue vs orange) based on the population. So that when you look at a genome you see all blue (if purely pop 1) alleles at each locus, or all orange (if purely pop 2), or a mix (number of fragments proportional to migration rate, size of fragments proportional to time since migrant ancestor + recombination rate)."*
 - 2026-10-09: *"we aren't trying to trick or assess students in these homeworks, we're trying to give them adaptable interactives that clearly illustrate processes, and give them the freedom to explore the setups we give them ... We're trying to build intuition."*
 
 ## Do not

@@ -36,3 +36,5 @@ for (const T of [50,100]) for (const R of [0.5,1,2]) { console.log("--- T",T,"R"
   for(const m of [0.002,0.005,0.01,0.02,0.05,0.1,0.2]) console.log("m",String(m).padEnd(6),summ(()=>run(N,L,R,m,T,rng)));}
 console.log("--- one pulse (5 of 25 swap at t=0), R 1, mean length by T");
 for(const T of [5,10,20,40,80]) console.log("T",String(T).padEnd(4),summ(()=>run(N,L,1,0,T,rng,0.2)));
+/* 2026-10-09, at bead-string scale (L 40 and 60, N 25): run(N, L, R, m, 100, rng) for m 0.001-0.05, and
+   run(N, L, R, 0, T, rng, 0.2) for a pulse T generations back, R 0.5 / 1 / 2. Numbers in the overhaul doc. */
