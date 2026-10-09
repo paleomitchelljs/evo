@@ -1,9 +1,38 @@
 # Lesson 15 — the bridge: coalescence and linkage through a snake game (slot pencilled: JM, 2026-10-01: "make the snake game lesson 15")
 
-**File** · `app/lessons/lesson15.html` — A, B, C, D built (v5, scaffold 22), locked
-**Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
-**Status** · thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-08 (thirteenth pass: a new C; old C is D)
+**File** · `app/lessons/lesson15.html` — A, B, C, D built (v6, scaffold 15), locked
+**Checks** · `node scripts/check_lesson15_numbers.js` (~40 s; islands differ run to run, the page seed is random per load) · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
+**Status** · fifteenth pass built (2026-10-09): JM's intros for A, B, C; the questions in a card under the pedigree; the jump + a pedigree of cells as D; old D archived. Thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
+**Last touched** · 2026-10-09 (fifteenth pass)
+
+## Fifteenth pass (JM, 2026-10-09): his intros, the questions in the pedigree, the jump as D, old D archived
+
+JM, dictated (speech-to-text as given; the intro texts themselves go into the page's voice blocks, speech errors fixed):
+- Top note: *"for this new part D I'd like a 'number of jumps per division' slider, and that's it. The pedigree of cells should be allowed to crash and die. They should start with one cell and have it run for at least 5 generations. A second part, where a slider allows students to set a 'preference' for transposons to land between genes should be added."*
+- A: an intro (*"This lesson we're going to explore mutation ... it doesn't always go up. That's worth pondering over."*); *"the bullet points should be greatly, greatly, greatly reduced. I'm thinking just an island with snakes that eat salamanders and hawks that eat snakes. Steer your snake using the mouse, gather as much food as you can, before producing a set of offspring with a random mate. Repeat for 15 generations or have the computer finished the generations off for you and then examine the pedigree answering the questions below. Done."*
+- A's questions: *"all good. Um, except for the last one ... instead of saying like 10 of 30 copies, it should say, The frequency of 10 out of 30. And click the copy where it arose, should say, Select the origin of the allele. Also, it doesn't seem to be working here ... I have a situation where The allele 1st arose in the founding generation. But selecting the founding generation is listed as incorrect."*
+- A and B: *"If we could have the question, text, and then this one button pop up beneath the lock ... the lock thing should just be like, Lock pedigree lines when you click them ... It should be a lock and a clear ... Find the highest fitness allele in the final generation. And the most recent common ancestor for that allele ... find the lowest fitness, allele left, and its most recent common ancestor ... find the highest fitness allele. That ever emerged on the island ... instead of being a stack, they just switch out as it goes on, maybe with an arrow button on the right. And left toggle forward and backwards in them so you don't have to do them in order."*
+- B: an intro (*"This is the same as part A, but with one very small difference ... can be quite informative."*).
+- C: an intro (*"The price equation describes the observed change ... Observe how its frequency changes over time."*); *"the question shouldn't be shown at the beginning. It should show up at the end ... I don't know that we need finish boxes in general. Each question should be presented on its own ... because genomes that didn't solve this problem, made fewer of themselves, and so became rarer."*
+- The jump: *"a little text box replace the target exactly"* (*"DNA copies itself. Within the cell ... relative to other loci."*); *"The cell doesn't need to exist, your copy is in a gap, no gene is broken. Or your copy is inside a gene for that gene is broken, that subtext shouldn't be there ... maybe we should just replace stage D with the jump ... a simple toggle that allows jumping genes to jump at random ... they jump once per cell division ... we start with one jumping gene ... if the jumping gene lands in a gene, that cell fails to divide ... the transposon is jumping at random, but where it ends up in the cells that survive at the end is not random. And we archive the current stage D and lock it away."*
+
+| # | What | Status |
+|---|------|--------|
+| 15-1 | archive: the page as it stands → `app/archive/lesson15_with_D_2026-10-09.html` (runnable), README note | done |
+| 15-2 | A: JM's intro (voice); bullets cut to his three lines | done |
+| 15-3 | A, B: the reads move into the pedigree panel, under "Lock pedigree lines when you click them" + Clear; one question at a time, ‹ › to move between them in any order; no stacked list, no "Reading the pedigree" panel | done |
+| 15-4 | A: the last question in his words ("... with a frequency of 10 out of 30", "Select the origin of the allele"); the founder bug: not reproduced (origin marked correct on 24 test islands, both views, lock on/off, after a wrong answer, 1000 px); likely the MRCA step after it, which swapped into the same box; each step now named in the card, and a wrong answer says what was clicked | done; the check clicks a founder origin for real |
+| 15-5 | B: JM's intro; questions in his words (highest fitness in the final generation + its MRCA; lowest fitness left + its MRCA; highest fitness ever on the island) | done |
+| 15-6 | C: JM's intro (Price); the jump out of C; no To finish panel; the question on its own after the race targets; last option reworded | done |
+| 15-7 | D (new): the jump (from C) with JM's text in the target's place, no targets, the gap/gene caption gone; then a pedigree of cells: one cell, one jumping gene, k jumps a division (slider), a copy in a gene stops that cell; 5 divisions; may crash; where the jumps landed vs where the copies sit in the survivors; then the same with a preference slider | done: genes 25% of the strand, 5 divisions, k 0-5 (opening 1), part two opens at k 3 with preference 0 |
+| 15-8 | old D (hierarchical Price + "your island in B") removed from the page | done |
+| 15-9 | scoring: A1-A6, B1-B5, C1-C3 race, C4 the question; D unscored (finishes on one run of each part); `version: 6`, `scaffold: 15` | done |
+| 15-10 | checks rewritten for the reads, C, the new D | done |
+
+- C round 3 made JM's system (his C intro: heterozygotes low fitness, homozygotes sterile): s 1, h 0.2 (was h 0). Measured (300 islands): gold within 0.3-0.85 at 30 generations ×1.0 0%, ×1.05 0%, ×1.1 4%, ×1.2 91%, ×1.3 94%. The window now needs ×1.2: two steps past the first step the right way, against the "one step lands" rule (targets teach). JM to say if it should be looser.
+- Questions: a question finished moves the card on to the next one left; "correct — on to question N". What was found shows when the student goes back to it.
+
+Measured for D (node prototype, genes 25% of the DNA, 5 divisions, 4,000 runs): lineage alive at the end, no preference — k 0: 100% (32 cells), 1: 67% (7.7), 2: 33% (1.8), 3: 12% (0.4), 4: 4%, 5: 1%; preference 0.5: k 3 54%; 0.8: k 3 84%, k 5 71%. Genes 35%: k 1 48%, k 2 13%; 50%: k 1 22%.
 
 ## Fourteenth pass (JM, 2026-10-08, night): a question after the race
 
