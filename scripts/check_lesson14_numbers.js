@@ -296,12 +296,22 @@ const B_rateLoc = (r, ai, v, stop, reps, seed) => { let k = 0; for (let q = 0; q
     /* the stored target is itself a mean over many Go's, so a fresh mean of S should land much
        closer to it than a single Go's own spread (r.bar, a high percentile of that spread) does */
     const ok = agreeD < 0.4 * r.bar;
-    agree = agree && ok; r._rate = dists.filter(d => d <= r.bar).length / S;
+    agree = agree && ok; r._rate = Q.filter(p => B_judge(r, { loc: p })).length / S;
     rows.push(r.key + " target-vs-fresh-mean " + agreeD.toFixed(3) + " (bar " + r.bar.toFixed(2) + ")" + (ok ? "" : " OFF"));
     hits.push(r.key + " " + r._rate.toFixed(2));
   }
   check("B every target's stored profile (the mean at the hidden setting) agrees with a fresh measurement", agree, S + " " + B_POPS + "-population averages each: " + rows.join("; "));
-  check("B every target's hidden setting hits its own window", B_ROUNDS.concat([B_FINAL]).every(r => r._rate >= 0.8), hits.join(", "));
+  /* 2026-10-08: judged on the drawn sum against the round's line; the observed data is stored, so this is the same on
+     every load. Measured (40 Go's at each hidden setting): 0.93, slow 0.88; 30 fresh Go's here, binomial spread ~0.05 */
+  check("B every target's hidden setting clears its own line (measured 0.93, slow 0.88)",
+        B_ROUNDS.concat([B_FINAL]).every(r => r._rate >= (r.key === "slow" ? 0.7 : 0.75)), hits.join(", "));
+  /* the card draws what is judged: the boxes are the gaps to the stack, the column their sum, the line the round's */
+  const r0 = B_ROUNDS[0], rec0 = B_record(r0), Q0 = B_avgLoc(r0.ai, r0.v, r0.stop, 4242);
+  let sum = 0; for (let c = 0; c < B_LOCI.length; c++) if (c !== B_GENE_COL) sum += Math.abs(Q0[c] - rec0.loc[c]);
+  const okRows = B_ROUNDS.concat([B_FINAL]).every(r => { const rc = B_record(r); return rc.rows.length === 40 && JSON.stringify(B_profile(rc.rows).counts) === JSON.stringify(rc.loc); });
+  check("B the judge is the drawn sum of the gaps to the stored stack, against the round's line",
+        okRows && Math.abs(B_gapSum(Q0, rec0.loc) - sum) < 1e-9 && B_line(r0) === r0.line && B_judge(r0, { loc: Q0 }) === (sum <= r0.line),
+        "fast: sum " + sum.toFixed(1) + ", line " + r0.line + "; every stored stack is 40 chromosomes whose profile is its counts");
 }
 /* one population at a round's hidden setting: its distance from the target, and from a shape */
 const B_one = (r, seed, shape) => { const rng = mulberry32(seed), run = B_run(B_found(B_nAt(r.v), rng), B_ADV[r.ai], r.stop, rng, 0);

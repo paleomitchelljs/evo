@@ -3,7 +3,40 @@
 **File** · `app/lessons/lesson14.html` — rebuilt from zero 2026-09-30; the births/deaths page is `app/archive/lesson14_2026-09-30.html`
 **Checks** · `node scripts/check_lesson14_numbers.js [A] [B] [C] [D]` (~15 min with no letters, run in the background) · `python3 scripts/check_lessons.py`
 **Status** · A-D built, JM's 2026-10-07 pass applied (`version: 12`, `scaffold: 22`: A 5 + observed data, B 5 + observed data, C 5, D 4 + observed data; one bit per attempt); C and D rebuilt from zero 2026-10-05/06 (JM's pivot, below); E removed 2026-10-05 (archived); page **unlocked 2026-10-07**; A and B voice blocks are JM's dictation (2026-10-02), C and D his dictation (2026-10-07)
-**Last touched** · 2026-10-07 (JM's pre-posting pass: B, C, D text and cards; D windows widened)
+**Last touched** · 2026-10-08 (B's card: gaps drawn, their sum against a line; the observed data stored; `version: 13`. Study mode leaves targets to be done)
+
+
+## JM, 2026-10-08 — B's card: the gaps drawn, their sum against a line
+
+- *"the selective sweep predict diagram is hard for students to target. After each round, I'd like a red box drawn between the target (stack of alleles) and the mean produced by the student's simulation. I'd like the sum of those stacked boxes shown to the right of the panel along with a target line. The goal is for their summed absolute errors to not exceed that line. I don't want additional text, just a simple target line to the right of the plot with a red bar representing their summed errors added after the run, with the origin of those errors (gap between mean and target) displayed."*
+
+Read as (mine):
+- The judge moves to what is drawn: the sum over the 20 flanking loci of |your six-population mean − the observed data's stack|, against a line. It was the mean gap from the hidden setting's average profile (`r.loc`), which is not on the card; a bar on the card that disagreed with the verdict would be worse than none. The gene's own column has no box (it was never judged). Flag for JM: this costs a little at the right setting (0.93 / slow 0.88, from 0.93-1.00), and the observed data is now one stored stack per round.
+- The bar on the right: the per-locus gaps stacked in locus order, so each box on the plot has its slice in the bar.
+- Needs a new line per round, measured: the stack is one population (picked near `r.loc`), so the sum to it carries that population's noise too.
+
+| # | What | Status |
+|---|------|--------|
+| G-1 | red boxes stack → mean at each flanking locus, after a run (practice runs too) | done |
+| G-2 | the summed bar right of the plot, gaps stacked locus by locus; the line; no text | done: its own scale (1.5 x the line, or the sum if larger); the final's line and bar wait for its shot |
+| G-3 | the judge = the drawn sum ≤ the line; lines measured; separation re-checked | done: the observed data is now stored (one stack per round, picked offline); line = one number per round |
+| G-4 | checks updated | done: the hidden setting's rate on the drawn sum; the judge = the drawn sum against the round's line; the stored stacks decode to their counts |
+
+Measured (node on the page's engine sliced out of the HTML, 8 workers; 40 Go's at each hidden setting, the check's own grid of 10 advantages x 6 chance steps x 6 Go's, 30 Go's at 18 settings near slow's):
+
+        sum of |your mean - the stack| over 20 loci at the hidden setting, p50 / p90 (the old window x 20)
+        per-load stack (one of 12 runs):  fast 26.7 / 32.2 (19.7)   slow 34.0 / 41.3 (22.5)   mid 23.5 / 28.0 (15.4)   small 16.7 / 20.8 (13.1)   partial 29.3 / 35.2 (19.4)   lactase 21.3 / 25.8 (15.9)
+        stored stack (nearest of 480):    fast 20.3 / 23.5         slow 27.2 / 32.5         mid 15.8 / 21.0         small 12.5 / 14.5         partial 20.0 / 24.5         lactase 15.5 / 20.5
+
+- First tried per load (12 runs, the nearest; then 31 samples a run; then the line = an allowance + the stack's own offset): the stack sat 0.8-1.4 bars off `r.loc`, and the check's grid test failed on 16-28 of 30 simulated loads (0.15-0.3 / 457 read as slow and partial; 0.05-0.15 / 956 as fast and partial). More samples a run did not help: the offset is the population's, not the sample's.
+- So the observed data is stored: 480 runs at each hidden setting, 60 samples each, the sample nearest `r.loc` kept (offsets fast 13.8 / slow 19.6 / mid 12.6 / small 7.1 / partial 14.4 / lactase 11.8, against a median run's 21.1 / 31.5 / 21.0 / 16.2 / 23.3 / 17.3). Slow keeps its 5th nearest: its nearest let 0.07 / 457 clear it 1.00; this one keeps every setting at 0.05-0.3 with 457-956 individuals at 0.43 or under. The lactase stack: the most file-like of the nearest tenth.
+- Lines: the 90th percentile of the hidden setting's sums; slow the 85th (at the 90th, 0.01 / 2,000 cleared slow 3 of 6 and partial 4 of 6 on the check's runs). fast 23.5, slow 31.0, mid 21.0, small 14.5, partial 24.5, lactase 20.5.
+- Result: right setting 0.93 (slow 0.88; was 0.93-1.00); the opening 0 everywhere; no round's answer clears another's line; the check's grid: no setting clears two rounds.
+- Every student now sees the same observed data in B (real data would be the same for everyone). The rounds' answers were already the same for everyone.
+
+## Study mode (JM, 2026-10-08)
+
+- The `score:bypass` handler skips `game.show()` when `Score.isStudy()`: study mode opens every stage and leaves the targets to be done; the instructor bypass still fills them. Done; REVISIONS_PLANNED row 13.
 
 ## JM, 2026-10-07 (night) — C and D intros dictated; D bullets
 
