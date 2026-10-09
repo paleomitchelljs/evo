@@ -28,6 +28,7 @@ JM, dictated (speech-to-text as given; the intro texts themselves go into the pa
 | 15-8 | old D (hierarchical Price + "your island in B") removed from the page | done |
 | 15-9 | scoring: A1-A6, B1-B5, C1-C3 race, C4 the question; D unscored (finishes on one run of each part); `version: 6`, `scaffold: 15` | done |
 | 15-10 | checks rewritten for the reads, C, the new D | done |
+| 15-11 | JM 2026-10-09: "increase the recombination rate for the snakes ... more recombinant chromosome examples" | done: XO 0.1 → 0.25 a gap. Measured (60 islands): chromosomes crossed over 47% → 82%; visibly recombinant 7% → 13%; winter cards with one 16% → 24% (0.5: 23%). The limit is allele differences, not crossovers: most beads are plain grey. More new alleles a generation would show more |
 
 - C round 3 made JM's system (his C intro: heterozygotes low fitness, homozygotes sterile): s 1, h 0.2 (was h 0). Measured (300 islands): gold within 0.3-0.85 at 30 generations ×1.0 0%, ×1.05 0%, ×1.1 4%, ×1.2 91%, ×1.3 94%. The window now needs ×1.2: two steps past the first step the right way, against the "one step lands" rule (targets teach). JM to say if it should be looser.
 - Questions: a question finished moves the card on to the next one left; "correct — on to question N". What was found shows when the student goes back to it.
