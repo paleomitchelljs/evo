@@ -5,6 +5,11 @@
 **Status** · 2026-09-28 "last updates" built (`version: 9`, rounds unchanged); unlocked and pushed
 **Last touched** · 2026-09-28
 
+
+## Study mode (JM, 2026-10-08)
+
+- The `score:bypass` handler skips `game.show()` when `Score.isStudy()`: study mode opens every stage and leaves the targets to be done; the instructor bypass still fills them. Done; REVISIONS_PLANNED row 13.
+
 ## 2026-09-28 last updates (JM, after testing `version: 9`)
 
 - A: *"The birds/bees N selector should be vertical instead of horizontal to provide more room."*

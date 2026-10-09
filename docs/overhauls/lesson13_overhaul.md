@@ -5,6 +5,11 @@
 **Status** · A-D (`version: 13`, `scaffold: 25`: one bit per scored attempt, D ten targets; uncommitted). 2026-09-29: old C, D, E archived, C/D rebuilt on JM's DAG; 2026-09-30: E (mediator/confounder) and F (collider) archived; locked; prose to come from JM
 **Last touched** · 2026-09-30
 
+
+## Study mode (JM, 2026-10-08)
+
+- The `score:bypass` handler skips `game.show()` when `Score.isStudy()`: study mode opens every stage and leaves the targets to be done; the instructor bypass still fills them. Done; REVISIONS_PLANNED row 13.
+
 ## Revision 2026-09-29 (JM's review of v11)
 
 - JM: A solid. B solid, *"though I think butterfly count or spread could use slightly more constrained--it's a bit too easy to just set the butterfly on the target with narrow preference spread."*

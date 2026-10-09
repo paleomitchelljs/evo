@@ -5,6 +5,11 @@
 **Status** · five stages; B rebuilt 2026-09-23 (round 3); C's tree redrawn as matings (round 4); D rebuilt as heterozygosity-to-zero (round 5); `version: 9`; prose in; **open** 2026-09-25
 **Last touched** · 2026-09-25 (E's recombination passage rewritten by JM; unlocked; 56 bars pass)
 
+
+## Study mode (JM, 2026-10-08)
+
+- The `score:bypass` handler skips `game.show()` when `Score.isStudy()`: study mode opens every stage and leaves the targets to be done; the instructor bypass still fills them. Done; REVISIONS_PLANNED row 13.
+
 ## What the lesson is
 
 Inbreeding and F. JM, 2026-09-22: *"The core of it is ok, but the interactives,
