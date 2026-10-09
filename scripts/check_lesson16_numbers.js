@@ -71,7 +71,7 @@ let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
 const near=(a,b,e)=>Math.abs(a-b)<=(e==null?1e-9:e);
 const pct=x=>Math.round(100*x)+"%";
-for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 Gates.A.open = true; FIT_EPOCH++;
 
 /* ================= A: the reading ================= */
@@ -253,7 +253,19 @@ Gates.A.open = true; FIT_EPOCH++;
   check("bench: four gametes, two whole and two joined after the crossover", g[0].src.every(x => x === 0) && g[3].src.every(x => x === 1) && g[1].src.join("") === "0000011111" && g[2].src.join("") === "1111100000" &&
         g[1].m.join() === "2,4,8" && g[2].m.length === 0);
   B_copy(); BB.xo.P = 6; BB.xo.M = 4; B_makeGametes(); B_pickGamete("P", 2); B_pickGamete("M", 1);
-  check("bench: a copy keeps the parent's 3; the right gametes make a young with none; the rounds open", BB.young[0].n === 0 && B_ready() && !document.getElementById("B_go").disabled);
+  const waits = !B_ready() && document.getElementById("B_go").disabled;
+  B_twenty();
+  check("bench: a copy keeps the parent's 3; the right gametes make a young with none; the rounds wait for twenty young each, then open", waits && BB.young[0].n === 0 && B_ready() && !document.getElementById("B_go").disabled);
+  /* twenty young each (JM 2026-10-09): copies all carry the parent's 3; young from sex spread round it, each carrying
+     half of the parent: twenty of them carry ten copies' worth */
+  const S = BB.spread, nP = P[0].length + P[1].length, sd = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / a.length); };
+  let lo = 99, hi = -1, many = []; const r0 = BB.twentyRuns;
+  for (let k = 0; k < 30; k++) { B_twenty(); many = many.concat(BB.spread.sex); }
+  lo = Math.min(...many); hi = Math.max(...many);
+  const rd = document.getElementById("B_spreadRead").textContent.replace(/\\s+/g, " ");
+  check("twenty young each: copies all " + nP + " harmful; young from sex " + lo + " to " + hi + " over 600 (spread " + sd(many).toFixed(2) + ", copies 0); the readout: 20 copies against 10",
+        S.asex.length === 20 && S.asex.every(v => v === nP) && S.sex.length === 20 && lo < nP && hi > nP && sd(many) > 0.8 && /20 copies/.test(rd) && /10 copies' worth/.test(rd));
+
 }
 
 /* ================= B: the populations ================= */
@@ -288,8 +300,41 @@ Gates.A.open = true; FIT_EPOCH++;
   B_nextRound(); const held = document.getElementById("B_N").disabled && document.getElementById("B_N").value === "2" && !document.getElementById("B_U").disabled;
   document.getElementById("B_U").value = "0.5"; B_go(); B_finishNow(); B_nextRound();
   document.getElementById("B_s").value = "1"; B_go(); B_finishNow();
-  check("B: practice records nothing; a scored Go records its bit when the run ends; the next target holds its sliders; three attempts finish B and open C",
-        practiced && pend && first && held && BRd.done && Gates.B.done && Gates.C.open);
+  check("B: practice records nothing; a scored Go records its bit when the run ends; the next target holds its sliders; three attempts, and B waits for the one-population targets",
+        practiced && pend && first && held && BRd.done && !Gates.B.done);
+}
+
+/* ================= B: one population, two ways to breed ================= */
+{
+  /* the targets, re-measured on the page's engine (30 runs a setting): the intended setting hits, the opening misses */
+  const rate = (i, every, by) => { let h = 0; for (let k = 0; k < 30; k++) { const o = envRun({ every, by }, 4001 + 7919 * k); if (E_ROUNDS[i].ok(o[EV.G].share)) h++; } return h / 30; };
+  const e1 = [rate(0, 5, 4), rate(0, 0, 4)], e2 = [rate(1, 0, 4), rate(1, 5, 4), rate(1, 10, 6)], e3 = [rate(2, 10, 2), rate(2, 10, 6)];
+  check("B one population, round 1 (the asexual line takes over): moving every 5 / never hits " + e1.map(pct).join(" / ") + " (measured 15 / 100%)", e1[0] <= 0.35 && e1[1] >= 0.9);
+  check("B one population, round 2 (the sexual line holds): never / every 5 by 4 / every 10 by 6 hits " + e2.map(pct).join(" / ") + " (measured 0 / 85 / 86%)", e2[0] === 0 && e2[1] >= 0.65 && e2[2] >= 0.65);
+  check("B one population, round 3 (asexual under half, every 10): by 2 / by 6 hits " + e3.map(pct).join(" / ") + " (measured 1 / 86%)", e3[0] <= 0.1 && e3[1] >= 0.65);
+  /* one run read: the best value moves as set; once a line is gone it stays gone; the spread with sex is wider */
+  const o = envRun({ every: 10, by: 4 }, 777), moves = o.slice(1).map(S => S.best);
+  const steps = moves.every((b, t) => b === (Math.floor(t / 10) % 2 === 0 ? 12 : 4));
+  let gone = true; for (let t = 1; t <= EV.G; t++) { if (o[t - 1].share === 1 && o[t].share !== 1) gone = false; if (o[t - 1].share === 0 && o[t].share !== 0) gone = false; }
+  const st = envRun({ every: 0, by: 4 }, 778); let sexSd = 0, asexSd = 0, n = 0;
+  for (let t = 1; t <= 40; t++) if (st[t].sex.n && st[t].asex.n) { sexSd += st[t].sex.sd; asexSd += st[t].asex.sd; n++; }
+  check("B one population: the best value moves every 10 between 12 and 4; a line once gone stays gone; the first 40 generations, the trait's spread with sex " + (sexSd / n).toFixed(2) + " against without " + (asexSd / n).toFixed(2),
+        steps && gone && n >= 5 && sexSd > asexSd);   /* stable, the asexual line takes over in ~10 generations, so the two overlap briefly */
+  /* scoring: practice nothing; a scored Go records B4 when the run ends; the next target holds its sliders; three attempts finish B */
+  const pr = document.getElementById("B_epractice"), ev = document.getElementById("B_every"), by = document.getElementById("B_by");
+  const fin = () => { ER.run.t = 99; ER.run.shown = EV.G; E_endRun(); };
+  const open1 = ev.value === "4" && by.value === "1" && by.disabled && !ev.disabled;
+  pr.checked = true; E_sync(); E_go(); fin(); const practiced = ER.results.length === 0 && !ER.waiting;
+  pr.checked = false; E_sync(); ev.value = "0"; E_sync(); E_go(); fin();
+  const first = ER.results.length === 1 && ER.waiting && Score.getBit("scaffold", BIT.B4) === 1;
+  const said = document.getElementById("B_envRead").textContent.replace(/\\s+/g, " ").match(/asexual (\\d+)% of the females/);
+  const agrees = !!said && +said[1] === Math.round(100 * ER.last.out[EV.G].share);
+  E_next(); const open2 = ev.value === "0" && by.value === "1" && !ev.disabled && !by.disabled;
+  ev.value = "4"; E_go(); fin(); E_next();
+  const open3 = ev.value === "3" && ev.disabled && by.value === "0" && !by.disabled;
+  by.value = "2"; E_go(); fin();
+  check("B one population: each target opens at its own settings, the held slider held; practice records nothing; a scored Go records its bit; the readout agrees with the run; three attempts finish B and open C",
+        open1 && practiced && first && agrees && open2 && open3 && ER.done && Gates.B.done && Gates.C.open, [open1, practiced, first, agrees, open2, open3, ER.done, Gates.B.done].join(" "));
 }
 
 /* ================= C ================= */
@@ -325,6 +370,29 @@ const ids = p => p.map(e => e.k === "cen" ? "o" : e.k === "r" ? (e.d > 0 ? ">" :
   check("C: every target has a pairing that hits (" + hits.join(" ") + "); a crossover next to the centre hits none (" + triv.join(" ") + "); inside the reversed stretch misses the last", hits.every(Boolean) && triv.every(x => !x) && !inside5);
 }
 {
+  /* the watch (JM 2026-10-09): every event makes what its name says, on the page's own rules */
+  const want = { xo: rs => rs.every(r => r.one && r.order && r.mix),
+                 deldup: rs => rs.some(r => r.one && r.missing.join("") === "BCDEF") && rs.some(r => r.one && r.dup.join("") === "BCDEF"),
+                 loop: rs => rs.some(r => r.one && r.missing.join("") === "BCDEF") && rs.some(r => r.p.ring),
+                 invBCD: rs => rs.some(r => r.one && r.all && ids(r.p) === "oA>D'C'B'<EF>GH"),
+                 invEF: rs => rs.some(r => r.one && r.all && !r.order && ids(r.p).indexOf("F'E'") >= 0),
+                 dic: rs => rs.some(r => r.cens === 2) && rs.some(r => r.cens === 0),
+                 hetOut: rs => rs.every(r => r.one && r.all),
+                 hetIn: rs => rs.some(r => r.cens === 2) && rs.some(r => r.cens === 0) };
+  const sel = document.getElementById("C_event"), names = [], shut0 = !C_ready() && C_practising();
+  let ok = true;
+  for (let i = 0; i < C_EVENTS.length; i++) {
+    sel.value = String(i); C_play(); let n = 0; while (CW.ev && n++ < 400) C_watchTick(0.02);
+    const e = C_EVENTS[i]; if (!C.out || !C.out.watch || !want[e.id](C.out.rs)) { ok = false; names.push("✗" + e.id); } else names.push(e.id);
+  }
+  check("C watch: each of the " + C_EVENTS.length + " events plays and makes what it says (" + names.join(" ") + "); the targets wait until all are watched, then open",
+        ok && shut0 && C_ready() && CW.watched.size === C_EVENTS.length && !/First watch/.test(document.getElementById("C_ttext").textContent));
+  /* the last event watched was on the reversed board: the first touch puts the target's board back */
+  const cv = document.getElementById("C_pair"), r = cv.getBoundingClientRect();
+  const was = C.board; cv.dispatchEvent(new PointerEvent("pointerdown", { clientX: r.left + 20, clientY: r.top + 20, bubbles: true, pointerId: 1 }));
+  check("C watch: after watching on the reversed board, the first touch puts the first target's board back", was === "inv" && C.board === "std" && !C.pair);
+}
+{
   /* the flow: no pairing, no Go; a free try; five attempts */
   C_setBoard("std"); C_paint();
   const shut = document.getElementById("C_go").disabled;
@@ -336,17 +404,44 @@ const ids = p => p.map(e => e.k === "cen" ? "o" : e.k === "r" ? (e.d > 0 ? ">" :
   const plan = [{ t: "rr", i: 2, j: 9 }, { t: "rr", i: 2, j: 9 }, { t: "self", c: "top", i: 2, j: 6 }, { t: "al" }];
   for (let k = 0; k < 4; k++) { C_nextRound(); C.pair = plan[k]; C.gap = plan[k].t === "al" ? 8 : null; C_go(); }
   const bits = ["C1","C2","C3","C4","C5"].map(k => Score.getBit("scaffold", BIT[k])).join("");
-  check("C: no pairing, no Cross over; the first is a free try; practice records nothing; a miss records 0; five attempts finish the lesson (bits " + bits + ")",
-        shut && tried && practiced && miss && bits === "01111" && C.board === "inv" && Gates.C.done && document.getElementById("done-banner").classList.contains("shown"));
+  check("C: no pairing, no Cross over; the first is a free try; practice records nothing; a miss records 0; five attempts finish C and open D (bits " + bits + ")",
+        shut && tried && practiced && miss && bits === "01111" && C.board === "inv" && Gates.C.done && Gates.D.open && !document.getElementById("done-banner").classList.contains("shown"));
+}
+
+/* ================= D: an inversion in one population ================= */
+{
+  /* inside the inversion, every allele moves with it: no crossover inside it in a heterozygote, so the new allele at
+     genes 4-8 is only ever on inverted chromosomes, and exactly as common as the inversion, every generation */
+  let tied = true, fixedIn = 0, nIn = 0, gapsOut = 0, fixedOut = 0, nOut = 0, gapNoInv = 0;
+  for (let i = 0; i < 60; i++) {
+    const o = invRun({ inv: true, s: -0.3 }, 6000 + 13 * i);
+    for (const S of o) for (let l = IV.A; l < IV.B; l++) if (Math.abs(S.f[l] - S.inv) > 1e-12) tied = false;
+    nIn++; if (o[o.length - 1].f[IV.GOOD] === 1) { fixedIn++; const e = o[o.length - 1].f; gapsOut += (e[2] + e[8]) / 2; }
+    const q = invRun({ inv: false, s: -0.3 }, 7000 + 13 * i); nOut++;
+    if (q[q.length - 1].f[IV.GOOD] === 1) { fixedOut++; const e = q[q.length - 1].f; gapNoInv += 1 - (e[4] + e[6]) / 2; }
+  }
+  check("D: with the inversion, genes 4-8 carry the new allele exactly as often as the inversion, every generation of 60 runs; once it fixes, genes 3 and 9 average " + (gapsOut / Math.max(1, fixedIn)).toFixed(2),
+        tied && fixedIn > 0 && gapsOut / fixedIn < 0.6);
+  check("D: without it, genes 5 and 7 fall short of gene 6 by " + (gapNoInv / Math.max(1, fixedOut)).toFixed(2) + " on average once gene 6 fixes (measured 0.71); fixed " + fixedIn + " / " + fixedOut + " of 60 (measured ~61 / 57%)",
+        fixedOut > 0 && gapNoInv / fixedOut > 0.4 && fixedIn / 60 > 0.4 && fixedIn / 60 < 0.8);
+  const drift = (() => { let f = 0; for (let i = 0; i < 100; i++) { const o = invRun({ inv: true, s: 0 }, 8000 + 7 * i); if (o[o.length - 1].f[IV.GOOD] === 1) f++; } return f / 100; })();
+  check("D: with s at 0 the inversion rarely fixes in " + IV.MAXG + " generations: " + pct(drift) + " (measured 1%)", drift <= 0.06);
+  /* the flow: a run with the inversion and one without finish D, and the lesson */
+  const txt = id => document.getElementById(id).textContent.replace(/\\s+/g, " ").trim(), inv = document.getElementById("D_inv");
+  inv.checked = true; D_go(); DV.run.shown = DV.run.out.length - 1; D_endRun();
+  const q1 = DV.last, rd = txt("D_read"), m = rd.match(/the inversion in (\\d+)%/);
+  const agrees = !!m && +m[1] === Math.round(100 * q1.out[q1.out.length - 1].inv) && !Gates.D.done;
+  inv.checked = false; D_go(); DV.run.shown = DV.run.out.length - 1; D_endRun();
+  check("D: the readout agrees with the run; a run with the inversion and one without finish D, and the lesson", agrees && !/the inversion in/.test(txt("D_read")) && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"), rd);
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 16 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 19 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();
   const over = [];
-  for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
+  for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_spread","B_hist","B_plot","B_env","C_pair","C_out","D_pop","D_freq"]) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
 }
@@ -366,10 +461,10 @@ L.join(" ;; ");
 
 /* the fit check alone, in a narrower frame */
 const INNER_NARROW = `
-for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 FIT_EPOCH++; paintAll();
 const over = [];
-for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
+for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_spread","B_hist","B_plot","B_env","C_pair","C_out","D_pop","D_freq"]) { const cv = document.getElementById(id), host = cv.parentElement;
   if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
 (over.length ? "FAIL " : "ok   ") + "every canvas fits its panel (" + window.innerWidth + " wide)" + (over.length ? "  -- " + over.join(", ") : "");
 `;

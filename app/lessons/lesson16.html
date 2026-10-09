@@ -88,6 +88,13 @@
   /* A: the sequence, the pop-up for one letter, the table */
   .seqpanel { position:relative; }
   .seqbar { margin:0 0 4px; }
+  /* C: the menu of events to watch (JM, 2026-10-09) */
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .watchbar button { background:var(--accent); color:#fff; border:0; border-radius:4px; padding:5px 12px; cursor:pointer; font-size:13px; }
+  .watchbar button:disabled { background:#bbb; cursor:not-allowed; }
+  .watchbar .hint { color:var(--muted); font-size:12.5px; }
   #A_seq { cursor:pointer; }
   .seqpop { position:absolute; z-index:4; background:#fff; border:1px solid var(--ink); border-radius:6px; padding:10px 12px;
             box-shadow:0 6px 24px rgba(0,0,0,0.18); font-size:13px; width:252px; }
@@ -119,6 +126,7 @@
   <a href="#stageA" id="tocA">A</a>
   <a href="#stageB" id="tocB" class="locked">B</a>
   <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
 </nav>
 
 <!-- ========== STAGE A — make the change a target asks for, watch it in 1,000 populations (JM, 2026-10-08; targets 2026-10-09) ========== -->
@@ -210,8 +218,10 @@
       <li>Each individual: two chromosomes, ten genes on each. A red gene carries a harmful change. Each harmful change multiplies an individual's young by 1 &minus; s; here s = 0.1, so three of them leave 0.9 &times; 0.9 &times; 0.9 = 0.73 as many young.</li>
       <li><b>Without sex</b>, a young is a copy of its one parent, both chromosomes whole. Press <b>Copy</b>.</li>
       <li><b>With sex</b>, each parent makes four gametes: click a gap between two genes to put that parent's crossover there, then <b>Make gametes</b>. Click one gamete from each parent and the two fuse into a young.</li>
+      <li><b>Twenty young each</b>: the parent copied twenty times, and twenty young of the parent and its mate, crossovers at random. Each copy carries all of its parent; each young from sex carries half of each parent.</li>
       <li>Then whole populations, one without sex and one with: every young also picks up new harmful changes, U of them on average, and none is ever undone. The plot follows the best individual in each: the fewest harmful changes anyone carries.</li>
       <li>Each target: set the slider that is open, press <b>Go</b>, and both populations run for 200 generations. Tick practice for a run that does not count.</li>
+      <li><b>Then one population, two ways to breed.</b> A trait set by eight genes on each chromosome; the closer an individual is to the best value, the more young it has. Most females mate; a few copy themselves, and so do their daughters. A female makes the same number of young either way, so each of an asexual female's young carries all of her, and each of a sexual female's carries half. Set how often the best value moves, and how far.</li>
     </ul>
   </div>
 
@@ -221,6 +231,8 @@
         <div class="panel">
           <canvas id="B_bench" width="760" height="380"></canvas>
           <div class="phase" id="B_benchPhase"></div>
+          <canvas id="B_spread" width="760" height="210"></canvas>
+          <div class="readout" id="B_spreadRead"></div>
         </div>
       </div>
       <div class="col">
@@ -230,6 +242,7 @@
             <button id="B_copy">Copy</button>
             <button id="B_meio" class="accent">Make gametes</button>
             <button id="B_reset" class="ghost">Start over</button>
+            <button id="B_twenty">Twenty young each</button>
           </div>
         </div>
         <div class="panel">
@@ -237,7 +250,9 @@
           <ul class="tasks" id="tasksB">
             <li data-task="copy">Copy the parent without sex. <span class="hint" id="B_copy_now"></span></li>
             <li data-task="clean">With sex, make a young with no harmful changes at all. <span class="hint" id="B_clean_now"></span></li>
+            <li data-task="spread">Twenty young each, without sex and with. <span class="hint" id="B_spread_now"></span></li>
             <li data-task="rounds">Three targets for the two populations: every one you hit counts. <span class="hint" id="B_rounds_now">0 of 3 attempts</span></li>
+            <li data-task="env">Three targets for one population, two ways to breed. <span class="hint" id="B_env_now">0 of 3 attempts</span></li>
           </ul>
           <div class="solved-banner" id="solvedB">Stage C is open.</div>
         </div>
@@ -278,6 +293,37 @@
         </div>
       </div>
     </div>
+
+    <!-- one population, sexual and asexual females competing; the best trait value holds or moves (JM, 2026-10-09) -->
+    <div class="grid" style="margin-top:16px">
+      <div class="col">
+        <div class="panel">
+          <h3>One population, two ways to breed</h3>
+          <canvas id="B_env" width="760" height="360"></canvas>
+          <div class="readout" id="B_envRead"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel tcard">
+          <h3>Target <span class="pips" id="B_epips"></span></h3>
+          <p class="ttext" id="B_etext"></p>
+          <ul class="rules" id="B_erules"></ul>
+          <div class="verdict" id="B_everdict"></div>
+        </div>
+        <div class="panel">
+          <h3>Controls</h3>
+          <div class="controls" id="B_econtrols">
+            <div class="tbar" id="B_everyRow"><label>the best value moves <input type="range" id="B_every" min="0" max="4" step="1" value="4"></label><b id="B_everyV"></b></div>
+            <div class="tbar" id="B_byRow"><label>by <input type="range" id="B_by" min="0" max="2" step="1" value="1"></label><b id="B_byV"></b></div>
+            <div class="practice-row"><input type="checkbox" id="B_epractice" /><label for="B_epractice">practice — a run with this ticked does not count</label></div>
+            <div class="buttons">
+              <button id="B_ego" class="accent">Go</button>
+              <button id="B_enext" class="ghost" hidden>Next target</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -289,6 +335,7 @@
   <div class="panel stage-intro">
     <!-- voice: none yet; JM to dictate -->
     <ul class="setup">
+      <li><b>Watch first.</b> Pick an event from the menu and press <b>Play</b>: the chromosomes move into the pairing that makes it, cross over once, and come apart into what it makes. Watch each one; then make them yourself.</li>
       <li>One individual's two chromosomes before meiosis: eight genes, A to H, each with an arrow for the way it reads. The grey arrows between some genes are copies of one jumping gene (Lesson 15): the same stretch of DNA, facing one way or the other. The black dot is the centre the chromosome is pulled by when the cell divides.</li>
       <li>Drag the lower chromosome along the upper one. It snaps where the genes line up with their partners, or where a grey arrow sits over a grey arrow.</li>
       <li>Or drag a grey arrow onto another grey arrow on the same chromosome: that chromosome loops round so the two touch.</li>
@@ -300,6 +347,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
+        <div class="watchbar"><label>Watch <select id="C_event"></select></label><button id="C_play" class="accent">Play</button><span class="hint" id="C_watched"></span></div>
         <canvas id="C_pair" width="800" height="250"></canvas>
         <div class="phase" id="C_phase"></div>
       </div>
@@ -333,10 +381,59 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksC">
+          <li data-task="watch">Watch each event in the menu. <span class="hint" id="C_watch_now"></span></li>
           <li data-task="try">Pair them any way you like and cross over once. <span class="hint" id="C_try_now"></span></li>
           <li data-task="rounds">Five targets: every one you hit counts. <span class="hint" id="C_rounds_now">0 of 5 attempts</span></li>
         </ul>
-        <div class="solved-banner" id="solvedC">That is the last target.</div>
+        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE D — an inversion in one population: its alleles ride together (JM, 2026-10-09) ========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Finish Stage C to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <ul class="setup">
+      <li>Fifty individuals, each with two chromosomes of twelve genes. Three of them carry one copy of a new chromosome: its alleles are blue. On it, genes 4 to 8 are the other way round: an inversion (the red bracket).</li>
+      <li>The new chromosome's allele at gene 6 helps: one copy multiplies an individual's young by 1 &minus; s/2, two by 1 &minus; s (s below 0 helps; 0 is drift alone).</li>
+      <li>An individual with one inverted chromosome and one standard crosses over outside genes 4 to 8 as usual; a crossover inside them makes no working gamete (the last event in C). Two inverted chromosomes cross over anywhere.</li>
+      <li><b>Run</b> plays the population generation by generation until the helpful allele is in every chromosome or in none. Then untick the inversion and run it again.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body">
+    <div class="panel">
+      <h3>The population</h3>
+      <canvas id="D_pop" width="1260" height="236"></canvas>
+    </div>
+    <div class="grid" style="margin-top:16px">
+      <div class="col">
+        <div class="panel">
+          <canvas id="D_freq" width="760" height="300"></canvas>
+          <div class="readout" id="D_read"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <h3>Controls</h3>
+          <div class="controls">
+            <div class="tbar"><label><input type="checkbox" id="D_inv" checked> genes 4 to 8 inverted on the new chromosome</label></div>
+            <div class="tbar"><label>s <input type="range" id="D_s" min="0" max="5" step="1" value="3"></label><b id="D_sV"></b></div>
+            <div class="buttons"><button id="D_go" class="accent">Run</button></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>To finish</h3>
+          <ul class="tasks" id="tasksD">
+            <li data-task="with">Run it with the inversion. <span class="hint" id="D_with_now"></span></li>
+            <li data-task="without">Run it without. <span class="hint" id="D_without_now"></span></li>
+          </ul>
+          <div class="solved-banner" id="solvedD">That is the end of the lesson.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -432,11 +529,11 @@ function codeInto(id, lines) {
    shuts a door. One bit per scored attempt (JM, 2026-09-30): A's eight
    targets (the first scored try at each), B's three ratchet targets, C's five
    crossing-over targets. */
-const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
-const NEXT_STAGE = { A: "B", B: "C", C: null };
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
 const BIT = { A1:0, A2:1, A3:2, A4:3, A5:4, A6:5, A7:6, A8:7,
-              B1:8, B2:9, B3:10,
-              C1:11, C2:12, C3:13, C4:14, C5:15 };
+              B1:8, B2:9, B3:10, B4:11, B5:12, B6:13,
+              C1:14, C2:15, C3:16, C4:17, C5:18 };
 let INSTRUCTOR = false;
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
@@ -1044,8 +1141,8 @@ function A_code() {
 const BG = 10, B_BENCH_S = 0.1;
 /* the bench's parents: genes (1-10) with a harmful change, chromosome from its mother first */
 const B_PAR = { P: [[2, 4], [8]], M: [[6], [1, 3]] };
-const BB = { xo: { P: null, M: null }, gam: null, pick: { P: null, M: null }, young: [], copies: 0, hits: [], hover: null };
-const B_ready = () => (BB.copies > 0 && BB.young.some(y => y.n === 0)) || INSTRUCTOR;
+const BB = { xo: { P: null, M: null }, gam: null, pick: { P: null, M: null }, young: [], copies: 0, hits: [], hover: null, spread: null, twentyRuns: 0 };
+const B_ready = () => (BB.copies > 0 && BB.young.some(y => y.n === 0) && !!BB.spread) || INSTRUCTOR;
 /* four gametes from one crossover after gene x (null: none): each its harmful genes, and which of the
    parent's two chromosomes each gene came from (0 its mother's, 1 its father's) */
 function B_gametes(par, x) {
@@ -1138,10 +1235,44 @@ function B_pickGamete(who, i) {
 }
 function B_makeGametes() { BB.gam = { P: B_gametes(B_PAR.P, BB.xo.P), M: B_gametes(B_PAR.M, BB.xo.M) }; BB.pick = { P: null, M: null }; bump("B"); B_paintBench(); }
 function B_copy() { BB.copies++; bump("B"); B_paintBench(); }
+/* Twenty young each (JM, 2026-10-09: "sex produces high variance in offspring relative to asexual ... each sexually
+   reproduced offspring is only ~50% of a given parent"): twenty copies of the parent, and twenty young of the
+   parent and its mate, each gamete one crossover at a random gap and one of the four drawn at random. */
+function B_twenty() {
+  const rng = mulberry32(pageSeed("l16twenty", 1, 999999) + 7919 * BB.twentyRuns++);
+  const nP = B_PAR.P[0].length + B_PAR.P[1].length, meio = par => B_gametes(par, 1 + Math.floor(rng() * (BG - 1)))[Math.floor(rng() * 4)];
+  BB.spread = { asex: Array(20).fill(nP), sex: Array.from({ length: 20 }, () => meio(B_PAR.P).m.length + meio(B_PAR.M).m.length) };
+  bump("B"); B_paintBench(); B_checkDone();
+}
+const B_SP = { W: 760, H: 210 };
+function B_drawSpread() {
+  const cv = $("B_spread"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, B_SP.W, B_SP.H);
+  const S = BB.spread, halves = [{ k: "asex", name: "Without sex: twenty copies of the parent", x0: 30, col: HOT }, { k: "sex", name: "With sex: twenty young of the parent and its mate", x0: 410, col: BLUE }];
+  for (const h of halves) {
+    const pw = 320, base = 160, bw = pw / 8;
+    cardText(ctx, h.name, h.x0, 14, { size: 12, bold: true, col: h.col });
+    ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(h.x0, base); ctx.lineTo(h.x0 + pw, base); ctx.stroke();
+    for (let k = 0; k <= 7; k++) cardText(ctx, String(k), h.x0 + (k + 0.5) * bw, base + 12, { size: 10.5, col: MUTED, align: "center" });
+    cardText(ctx, "harmful changes a young carries", h.x0 + pw / 2, base + 28, { size: 10.5, col: MUTED, align: "center" });
+    if (!S) continue;
+    const n = new Array(8).fill(0);
+    for (const v of S[h.k]) { const k = Math.min(7, v), y = base - 7 - n[k]++ * 6.2; ctx.fillStyle = h.col; ctx.beginPath(); ctx.arc(h.x0 + (k + 0.5) * bw, y, 2.8, 0, 6.2832); ctx.fill(); }
+    cardText(ctx, h.k === "asex" ? "each carries all of the parent" : "each carries half of each parent", h.x0 + pw, 32, { size: 11, col: MUTED, align: "right" });
+  }
+  if (!S) cardText(ctx, "Twenty young each shows here.", B_SP.W / 2, 90, { size: 12, col: MUTED, align: "center" });
+  ctx.restore();
+  const rd = $("B_spreadRead");
+  if (!S) { rd.innerHTML = ""; return; }
+  const sd = a => { const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / a.length); };
+  rd.innerHTML = '<span style="color:' + HOT + '">' + lab("without sex:") + "</span> " + lab("every young") + " <b>" + S.asex[0] + "</b> " + lab("harmful; the parent's chromosomes in the twenty:") + " <b>20</b> " + lab("copies") + "<br>" +
+    '<span style="color:' + BLUE + '">' + lab("with sex:") + "</span> <b>" + Math.min(...S.sex) + "</b> " + lab("to") + " <b>" + Math.max(...S.sex) + "</b> " + lab("harmful (spread") + " <b>" + sd(S.sex).toFixed(1) + "</b>" + lab("); the parent's chromosomes in the twenty:") + " <b>10</b> " + lab("copies' worth");
+}
 function B_resetBench() { BB.xo = { P: null, M: null }; BB.gam = null; BB.pick = { P: null, M: null }; BB.young = []; B_paintBench(); }
 function B_paintBench() {
-  B_drawBench();
+  B_drawBench(); B_drawSpread();
   const clean = BB.young.some(y => y.n === 0);
+  tick("B", "spread", !!BB.spread, BB.spread ? "done" : "");
   tick("B", "copy", BB.copies > 0, BB.copies ? BB.copies + " cop" + (BB.copies === 1 ? "y" : "ies") + ", each " + (B_PAR.P[0].length + B_PAR.P[1].length) + " harmful" : "");
   tick("B", "clean", clean, BB.young.length ? "fewest so far: " + Math.min(...BB.young.map(y => y.n)) : "");
   $("B_benchPhase").textContent = !BB.gam ? (BB.xo.P == null && BB.xo.M == null ? "" : "Crossover after gene " + (BB.xo.P || "–") + " in the parent, after gene " + (BB.xo.M || "–") + " in its mate.") :
@@ -1242,7 +1373,7 @@ function B_endRun() {
   B_checkDone(); B_sync(); B_drawPlot(); B_drawHist();
 }
 function B_nextRound() { if (!BRd.waiting || BRd.run) return; BRd.waiting = false; BRd.round = Math.min(BRd.round + 1, BR_ROUNDS.length - 1); BRd.last = null; $("B_verdict").innerHTML = ""; BR_hold(); B_sync(); B_drawPlot(); B_drawHist(); B_code(); }
-function B_checkDone() { if (BRd.results.length >= BR_ROUNDS.length && B_ready()) finishStage("B"); }
+function B_checkDone() { if (BRd.results.length >= BR_ROUNDS.length && ER.results.length >= E_ROUNDS.length && B_ready()) finishStage("B"); }
 let B_on = false, B_last = 0;
 function B_loop() { if (B_on) return; B_on = true; B_last = 0; requestAnimationFrame(B_frame); }
 function B_frame(ts) {
@@ -1256,7 +1387,9 @@ function B_frame(ts) {
     B_drawPlot(); B_drawHist();
     if (q.res && q.shown >= RT_T) B_endRun();
   }
-  if (BRd.run) requestAnimationFrame(B_frame); else B_on = false;
+  const e = ER.run;
+  if (e) { e.t += dt; e.shown = Math.min(EV.G, Math.floor(e.t * 55)); E_draw(); if (e.shown >= EV.G) E_endRun(); }
+  if (BRd.run || ER.run) requestAnimationFrame(B_frame); else B_on = false;
 }
 const B_PL = { W: 440, H: 240, px: 44, py: 12, pw: 380, ph: 190 };
 function B_drawPlot() {
@@ -1339,6 +1472,7 @@ function B_sync() {
     li(j && j.okA, "without sex: " + (r.A[0] ? r.A[0] + " to " + r.A[1] : "at most " + r.A[1]), j ? j.a : "") +
     (r.X ? li(j && j.okX, "with sex: at most " + r.X[1], j ? j.x : "") : "");
   tick("B", "rounds", BRd.results.length >= BR_ROUNDS.length, BRd.results.length + " of " + BR_ROUNDS.length + " attempts");
+  if (typeof ER !== "undefined") { E_sync(); if (!ER.run) E_draw(); }
 }
 function B_code() {
   const st = B_setNow();
@@ -1362,7 +1496,160 @@ function B_code() {
     ["", "c(without = min(sapply(asex, load)), with = min(sapply(sex, load)))   # the best one in each"],
   ]);
 }
-function B_paint() { B_paintBench(); B_drawPlot(); B_drawHist(); B_sync(); B_code(); }
+function B_paint() { B_paintBench(); B_drawPlot(); B_drawHist(); B_sync(); B_code(); E_draw(); E_sync(); }
+
+/* ---- one population, two ways to breed (JM, 2026-10-09: "(2) simulations that let some (stable) environments show
+   low variation is good and others (unstable) environments show it is bad ... the core of sexual reproduction is
+   reducing an individual's number of offspring (since each sexually reproduced offspring is only ~50% of a given
+   parent)").
+   THE MODEL. EV.N individuals, two chromosomes of EV.L genes, each gene a 0 or a 1; the trait z is the 1s on both
+   (0 to 2L). An individual's young go as exp(-(z - best)² / (2 VS)). Half are male. A female has young in
+   proportion to that, whatever she is; a sexual female's are by a sexual male chosen the same way, each a gamete
+   from each (a crossover between neighbouring genes with chance XO), half of them male; an asexual female's are
+   daughters, her copies. So an asexual female puts all of herself into every young and a sexual one half: the
+   twofold cost. New changes: each gene flips with chance U a copy. First BURN generations all sexual at the best
+   value 8; then P0 of the females turn asexual (and their daughters after them); then G generations with the best
+   value at 8, or jumping to 8 + by and 8 - by in turn every `every` generations.
+   MEASURED (node prototype of this engine, 100 runs a setting): asexual line takes over by 300 -- never moves
+   100%, every 40 69%, 20 69%, 10 45%, 5 15% (by 4); sexual females left at 300 -- never 0%, every 40 by 4 31%,
+   20 by 4 31%, 10 by 4 55%, 5 by 4 85%, 10 by 6 86%, 5 by 6 93%, 20 by 6 80%, 5 by 2 1%; asexual under half at
+   300, every 10 -- by 2 1%, by 4 55%, by 6 86%. ~40 ms a run (the prototype stopped once a line was gone; the
+   page runs all G generations, which changes no outcome: a line gone stays gone). ---- */
+const EV = { N: 200, L: 8, U: 0.01, VS: 2, BURN: 200, G: 300, P0: 0.1, XO: 0.5 };
+const EV_EVERY = [0, 40, 20, 10, 5], EV_BY = [2, 4, 6];
+function envRun(set, seed) {
+  const rng = mulberry32(seed), { N, L, U, VS, BURN, G, P0, XO } = EV, T = set.every, J = set.by;
+  const mut = h => { for (let i = 0; i < L; i++) if (rng() < U) h[i] ^= 1; return h; };
+  const gam = g => { let k = rng() < 0.5 ? 0 : 1; const h = new Uint8Array(L); for (let i = 0; i < L; i++) { if (i && rng() < XO) k ^= 1; h[i] = g[k][i]; } return mut(h); };
+  const zOf = g => { let z = 0; for (let i = 0; i < L; i++) z += g[0][i] + g[1][i]; return z; };
+  let pop = []; for (let i = 0; i < N; i++) pop.push({ g: [0, 1].map(() => Uint8Array.from({ length: L }, () => rng() < 0.5 ? 1 : 0)), male: i % 2 === 0, asex: false });
+  const step = best => {
+    const fem = [], fc = [], mal = [], mc = []; let fs = 0, ms = 0;
+    for (const x of pop) { const w = Math.exp(-((zOf(x.g) - best) ** 2) / (2 * VS));
+      if (x.male) { if (!x.asex) { ms += w; mal.push(x); mc.push(ms); } } else { fs += w; fem.push(x); fc.push(fs); } }
+    const pick = (arr, c, tot) => { const r = rng() * tot; let lo = 0, hi = arr.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] >= r) hi = m; else lo = m + 1; } return arr[lo]; };
+    const nx = [];
+    while (nx.length < N) { const m = pick(fem, fc, fs);
+      if (m.asex) nx.push({ g: [mut(Uint8Array.from(m.g[0])), mut(Uint8Array.from(m.g[1]))], male: false, asex: true });
+      else { if (!mal.length) continue; const f = pick(mal, mc, ms); nx.push({ g: [gam(m.g), gam(f.g)], male: rng() < 0.5, asex: false }); } }
+    pop = nx;
+  };
+  for (let t = 0; t < BURN; t++) step(L);
+  for (const x of pop) if (!x.male && rng() < P0) x.asex = true;
+  const out = []; let best = L;
+  const stat = () => { const S = { best }; for (const k of ["sex", "asex"]) { const zs = pop.filter(x => !x.male && x.asex === (k === "asex")).map(x => zOf(x.g));
+      const n = zs.length, m = n ? zs.reduce((a, b) => a + b, 0) / n : null; S[k] = { n, m, sd: n ? Math.sqrt(zs.reduce((a, z) => a + (z - m) * (z - m), 0) / n) : null }; }
+    S.share = S.asex.n / (S.asex.n + S.sex.n); return S; };
+  out.push(stat());
+  for (let t = 1; t <= G; t++) {
+    if (T && (t - 1) % T === 0) best = Math.floor((t - 1) / T) % 2 === 0 ? L + J : L - J;
+    step(best); out.push(stat());     /* every generation run, a line gone or not, so the one left is seen following */
+  }
+  return out;
+}
+const E_ROUNDS = [
+  { free: ["every"], hold: { by: 4 }, open: { every: 5 }, ok: e => e === 1, rule: "no sexual female left at generation 300",
+    text: "Let the asexual line take over: no sexual female left at generation 300. The best value moves by 4 each time; you set how often it moves." },
+  { free: ["every", "by"], hold: {}, open: { every: 0, by: 4 }, ok: e => e < 1, rule: "sexual females still there at generation 300",
+    text: "Keep the sexual line going: sexual females still there at generation 300. You set how often the best value moves, and how far." },
+  { free: ["by"], hold: { every: 10 }, open: { by: 2 }, ok: e => e < 0.5, rule: "asexual females under half of the females at generation 300",
+    text: "The best value moves every 10 generations. Keep the asexual line under half of the females at generation 300: you set how far it moves." },
+];
+const ER = { round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0 };
+const E_rule = () => E_ROUNDS[Math.min(ER.round, E_ROUNDS.length - 1)];
+const E_practising = () => $("B_epractice").checked || ER.done;
+const E_set = () => ({ every: EV_EVERY[+$("B_every").value], by: EV_BY[+$("B_by").value] });
+/* a round opens at its own settings: held sliders where the round holds them, free ones at its opening */
+function E_open() {
+  if (ER.done) return;
+  const r = E_rule(), v = Object.assign({}, r.open, r.hold);
+  if (v.every != null) $("B_every").value = String(EV_EVERY.indexOf(v.every));
+  if (v.by != null) $("B_by").value = String(EV_BY.indexOf(v.by));
+}
+function E_go() {
+  if (ER.run || !B_ready()) return;
+  const practice = E_practising(); if (!practice && ER.waiting) return;
+  const r = E_rule(), set = E_set(), out = envRun(set, pageSeed("l16env", 1, 999999) + 104729 * ER.runs++ + 7919 * ER.round);
+  ER.run = { r, set, out, practice, t: 0, shown: 0 };
+  $("B_everdict").innerHTML = ""; bump("B");
+  E_sync(); B_loop();
+}
+function E_endRun() {
+  const q = ER.run; if (!q) return;
+  ER.run = null; q.shown = EV.G; ER.last = q;
+  q.end = q.out[EV.G].share; q.ok = q.r.ok(q.end);
+  if (!q.practice) { record(BIT["B" + (4 + ER.round)], q.ok); ER.results.push(q.ok); ER.waiting = true; if (ER.results.length >= E_ROUNDS.length) { ER.done = true; ER.waiting = false; } }
+  $("B_everdict").innerHTML = (q.practice ? "practice: " : "") + (q.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
+  B_checkDone(); E_sync(); E_draw();
+}
+function E_next() { if (!ER.waiting || ER.run) return; ER.waiting = false; ER.round = Math.min(ER.round + 1, E_ROUNDS.length - 1); ER.last = null; $("B_everdict").innerHTML = ""; E_open(); E_sync(); E_draw(); }
+/* the trait over time (the best value, each line's mean and its spread), and the asexual share of the females */
+const EP = { W: 760, H: 360, px: 50, pw: 690, ty: 20, th: 180, sy: 250, sh: 80 };
+function E_draw() {
+  const cv = $("B_env"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, EP.W, EP.H);
+  const q = ER.run || ER.last, O = q ? q.out : null, g = ER.run ? q.shown : EV.G, top = 2 * EV.L;
+  const xs = t => EP.px + t / EV.G * EP.pw, yT = z => EP.ty + EP.th - z / top * EP.th, yS = v => EP.sy + EP.sh - v * EP.sh;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(EP.px, EP.ty); ctx.lineTo(EP.px, EP.ty + EP.th); ctx.lineTo(EP.px + EP.pw, EP.ty + EP.th); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(EP.px, EP.sy); ctx.lineTo(EP.px, EP.sy + EP.sh); ctx.lineTo(EP.px + EP.pw, EP.sy + EP.sh); ctx.stroke();
+  for (const v of [0, 4, 8, 12, 16]) cardText(ctx, String(v), EP.px - 6, yT(v), { size: 10.5, col: MUTED, align: "right" });
+  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), EP.px - 6, yS(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= EV.G; t += 50) cardText(ctx, String(t), xs(t), EP.sy + EP.sh + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", EP.px + EP.pw / 2, EP.H - 6, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(12, EP.ty + EP.th / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "trait", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.save(); ctx.translate(12, EP.sy + EP.sh / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "asexual share", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  cardText(ctx, "of the females", EP.px + 6, EP.sy - 8, { size: 10.5, col: MUTED });
+  /* the round's window on the share at 300 */
+  if (!ER.done) {
+    const r = E_rule(), lo = r === E_ROUNDS[0] ? 1 : 0, hi = r === E_ROUNDS[0] ? 1 : r === E_ROUNDS[1] ? 0.995 : 0.5;
+    ctx.fillStyle = "rgba(178,58,72,0.12)"; ctx.strokeStyle = HOT; ctx.lineWidth = 1.3;
+    const x0 = xs(EV.G - 10), w = xs(EV.G) - x0 + 6, y0 = yS(hi) - (lo === hi ? 3 : 0), h = Math.max(6, yS(lo) - yS(hi) + (lo === hi ? 6 : 0));
+    ctx.fillRect(x0, y0, w, h); ctx.strokeRect(x0, y0, w, h);
+  }
+  if (O) {
+    const upto = Math.min(g, O.length - 1);
+    /* the best value: a step line */
+    ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.beginPath();
+    for (let t = 0; t <= upto; t++) { const x = xs(t), y = yT(O[t].best); if (!t) ctx.moveTo(x, y); else { ctx.lineTo(x, yT(O[t - 1].best)); ctx.lineTo(x, y); } }
+    ctx.stroke(); ctx.restore();
+    /* each line's mean, with its spread (± 1 sd) as a band */
+    for (const [k, col, soft] of [["sex", BLUE, "rgba(47,107,143,0.18)"], ["asex", HOT, "rgba(178,58,72,0.18)"]]) {
+      ctx.fillStyle = soft; ctx.beginPath(); let started = false; const back = [];
+      for (let t = 0; t <= upto; t++) { const S = O[t][k]; if (!S.n) continue; const x = xs(t); if (!started) { ctx.moveTo(x, yT(S.m + S.sd)); started = true; } else ctx.lineTo(x, yT(S.m + S.sd)); back.push([x, yT(S.m - S.sd)]); }
+      for (let i = back.length - 1; i >= 0; i--) ctx.lineTo(back[i][0], back[i][1]);
+      if (started) { ctx.closePath(); ctx.fill(); }
+      const pts = []; for (let t = 0; t <= upto; t++) if (O[t][k].n) pts.push([xs(t), yT(O[t][k].m)]);
+      polyline(ctx, pts, col, 1.8, 1);
+    }
+    polyline(ctx, O.slice(0, upto + 1).map((S, t) => [xs(t), yS(S.share)]), HOT, 2, 1);
+  } else cardText(ctx, B_ready() ? "Go runs the population at the settings on the right." : "First the bench, above.", EP.px + EP.pw / 2, EP.ty + EP.th / 2, { size: 12.5, col: MUTED, align: "center" });
+  cardText(ctx, "with sex", EP.px + 8, EP.ty + 6, { size: 11, col: BLUE, bold: true });
+  cardText(ctx, "without", EP.px + 70, EP.ty + 6, { size: 11, col: HOT, bold: true });
+  cardText(ctx, "- - the best value", EP.px + 128, EP.ty + 6, { size: 11, col: INK });
+  ctx.restore();
+  const rd = $("B_envRead");
+  if (!O) { rd.innerHTML = lab("the bands are each line's spread: one sd either side of its mean"); return; }
+  const S = O[Math.min(g, O.length - 1)], f = v => v == null ? "–" : v.toFixed(1);
+  rd.innerHTML = lab("generation") + " <b>" + Math.min(g, O.length - 1) + "</b> " + lab("· asexual") + " <b>" + Math.round(100 * S.share) + "%</b> " + lab("of the females · spread of the trait: with sex") +
+    ' <b style="color:' + BLUE + '">' + f(S.sex.sd) + "</b>" + lab(", without") + ' <b style="color:' + HOT + '">' + f(S.asex.sd) + "</b>";
+}
+function E_sync() {
+  const rd = B_ready(), r = E_rule(), busy = !!ER.run, held = k => !ER.done && !r.free.includes(k);
+  $("B_ego").disabled = !rd || busy || (ER.waiting && !E_practising());
+  $("B_ego").textContent = E_practising() ? "Practice run" : "Go";
+  $("B_enext").hidden = !ER.waiting || busy;
+  for (const k of ["every", "by"]) { $("B_" + k).disabled = !rd || busy || held(k); $("B_" + k + "Row").classList.toggle("held", held(k)); }
+  $("B_epractice").disabled = !rd;
+  const st = E_set();
+  $("B_everyV").textContent = st.every ? "every " + st.every + " generations" : "never"; $("B_byV").textContent = "±" + st.by;
+  $("B_epips").innerHTML = E_ROUNDS.map((_, i) => i < ER.results.length ? '<span class="' + (ER.results[i] ? "ok" : "off") + '">●</span>' : i === ER.round && !ER.done ? "◉" : "○").join(" ");
+  $("B_etext").textContent = !rd ? "First the bench above: copy, make a young with no harmful changes, and twenty young each." : ER.done ? "All three targets taken. The population is yours to play with." : r.text;
+  const q = ER.last && ER.last.r === r ? ER.last : null;
+  $("B_erules").innerHTML = !rd || ER.done ? "" : '<li><span class="' + (q ? (q.ok ? "ok" : "off") : "") + '">' + (q ? (q.ok ? "✓" : "✗") : "·") + "</span> " + r.rule +
+    ' <span style="color:var(--muted)">(' + (q ? "this run: asexual " + Math.round(100 * q.end) + "%" : "not run yet") + ")</span></li>";
+  tick("B", "env", ER.results.length >= E_ROUNDS.length, ER.results.length + " of " + E_ROUNDS.length + " attempts");
+}
 function B_wire() {
   const bc = $("B_bench");
   const hitAt = e => { const p = framePt(bc, e, BCH.W); return BB.hits.find(h => p.x >= h.x0 && p.x <= h.x1 && p.y >= h.y0 && p.y <= h.y1) || null; };
@@ -1382,7 +1669,12 @@ function B_wire() {
     $("B_" + k).addEventListener("change", () => bump("B"));
   }
   $("B_dl").addEventListener("click", () => downloadText("lesson16_stageB.R", RTEXT.codeB));
-  BR_hold();
+  $("B_twenty").addEventListener("click", B_twenty);
+  $("B_ego").addEventListener("click", E_go);
+  $("B_enext").addEventListener("click", E_next);
+  $("B_epractice").addEventListener("change", E_sync);
+  for (const k of ["every", "by"]) { $("B_" + k).addEventListener("input", E_sync); $("B_" + k).addEventListener("change", () => bump("B")); }
+  BR_hold(); E_open();
 }
 
 /* =====================================================================
@@ -1486,7 +1778,24 @@ const C_ROUNDS = [
     rule: "a chromosome with one centre: every gene once, a mix of the two", ok: rs => rs.some(r => r.one && r.all && r.mix) },
 ];
 const C_rule = () => C_ROUNDS[Math.min(C.round, C_ROUNDS.length - 1)];
-const C_practising = () => $("C_practice").checked || C.done || !C.tried;
+/* WATCH (JM, 2026-10-09: "a 'drop down & watch' where the student chooses an event from a dropdown menu (gene X
+   deleted, genes XYZ inverted) and the diagram moves dynamically to show while also having a manipulation mode").
+   Each event is a pairing and a crossover on this board; Play slides the lower chromosome into the pairing (or folds
+   the one chromosome), puts the crossover in, and shows what comes out below. Nothing is scored; the targets count
+   once every event has been watched. Gaps: g lies between top[g - 1] and top[g] (cen A r1 B C D r2 E F r3 G H). */
+const C_EVENTS = [
+  { id: "xo", name: "Crossing over: genes lined up, one crossover between D and E", board: "std", pair: { t: "al" }, gap: 7 },
+  { id: "deldup", name: "B to F lost from one chromosome, and doubled on the other", board: "std", pair: { t: "rr", i: 2, j: 9 } },
+  { id: "loop", name: "B to F lost: one chromosome loops out", board: "std", pair: { t: "self", c: "top", i: 2, j: 9 } },
+  { id: "invBCD", name: "B, C and D inverted", board: "std", pair: { t: "self", c: "top", i: 2, j: 6 } },
+  { id: "invEF", name: "E and F inverted", board: "std", pair: { t: "self", c: "top", i: 6, j: 9 } },
+  { id: "dic", name: "Two centres on one chromosome, none on the other", board: "std", pair: { t: "rr", i: 2, j: 6 } },
+  { id: "hetOut", name: "B to D reversed on one: a crossover outside the reversed stretch", board: "inv", pair: { t: "al" }, gap: 8 },
+  { id: "hetIn", name: "B to D reversed on one: a crossover inside the reversed stretch", board: "inv", pair: { t: "al" }, gap: 4 },
+];
+const CW = { ev: null, t: 0, from: 96, to: 96, watched: new Set(), dirty: false };
+const C_ready = () => CW.watched.size >= C_EVENTS.length || INSTRUCTOR;
+const C_practising = () => $("C_practice").checked || C.done || !C.tried || !C_ready();
 const C_products = () => C_cross(C.top, C.bot, C.pair, C.gap);
 const C_canGo = () => !!C.pair && (C.pair.t !== "al" || (C.gap != null && C_gapOK(C.gap)));
 function C_setBoard(b) {
@@ -1504,7 +1813,7 @@ function C_scanGaps() {
   return { ok, bad, all };
 }
 function C_go() {
-  if (!C_canGo()) return;
+  if (CW.ev || !C_canGo()) return;
   const practice = C_practising(), first = !C.tried;
   if (!practice && C.waiting) return;
   const rs = C_products().map(C_read), r = C_rule(), ok = r.ok(rs);
@@ -1522,7 +1831,42 @@ function C_nextRound() {
   if (C_rule().board !== C.board) C_setBoard(C_rule().board); else { C.pair = null; C.gap = null; C.off = 96; }
   C.out = null; C_paint();
 }
-function C_reset() { if (C.waiting && !C_practising()) return; C.pair = null; C.gap = null; C.off = 96; C.out = null; C_paint(); }
+function C_reset() { if (CW.ev || (C.waiting && !C_practising())) return; if (C.board !== C_rule().board) C_setBoard(C_rule().board); C.pair = null; C.gap = null; C.off = 96; C.out = null; CW.dirty = false; C_paint(); }
+/* the offset that puts the lower chromosome where an event pairs it */
+function C_evOff(ev) {
+  if (ev.pair.t === "self") return 96;
+  if (ev.pair.t === "al") return 0;
+  return C_xs(C.top, C_TX)[ev.pair.i] - C_xs(C.bot, C_TX)[ev.pair.j];
+}
+function C_play() {
+  if (CW.ev || (C.waiting && !C_practising())) return;
+  const ev = C_EVENTS[+$("C_event").value];
+  C_setBoard(ev.board);
+  CW.ev = ev; CW.t = 0; CW.from = C.off; CW.to = C_evOff(ev); CW.dirty = true;
+  bump("C"); C_paint(); C_loop();
+}
+const C_ease = u => u < 0 ? 0 : u > 1 ? 1 : u * u * (3 - 2 * u);
+function C_watchTick(dt) {
+  const ev = CW.ev; if (!ev) return;
+  CW.t += dt;
+  C.off = CW.from + (CW.to - CW.from) * C_ease(CW.t / 1.2);
+  if (CW.t >= 1.3 && !C.pair) { C.off = CW.to; C.pair = Object.assign({}, ev.pair); C.gap = ev.gap != null ? ev.gap : null; }
+  if (CW.t >= 2.4 && !C.out) C.out = { rs: C_products().map(C_read), ok: false, practice: true, first: false, r: C_rule(), watch: ev };
+  if (CW.t >= 2.6) { CW.ev = null; CW.watched.add(ev.id); C_watchedSync(); }
+  C_drawPair(); C_drawOut(); C_sync();
+}
+function C_watchedSync() {
+  const sel = $("C_event"), v = sel.value;
+  sel.innerHTML = C_EVENTS.map((e, i) => '<option value="' + i + '">' + (CW.watched.has(e.id) ? "✓ " : "") + e.name + "</option>").join("");
+  sel.value = v || "0";
+}
+let C_on = false, C_last = 0;
+function C_loop() { if (C_on) return; C_on = true; C_last = 0; requestAnimationFrame(C_frame); }
+function C_frame(ts) {
+  const dt = Math.min(0.05, (ts - (C_last || ts)) / 1000); C_last = ts;
+  if (CW.ev) C_watchTick(dt);
+  if (CW.ev) requestAnimationFrame(C_frame); else C_on = false;
+}
 /* ---- drawing ---- */
 function C_drawEl(ctx, e, x, y, o) {
   o = o || {};
@@ -1589,6 +1933,8 @@ function C_drawPair() {
   if (C.drag && C.drag.kind === "rep") { const e = (C.drag.c === "top" ? C.top : C.bot)[C.drag.i]; ctx.globalAlpha = 0.6; C_drawEl(ctx, e, C.drag.x - C_W.r / 2, C.drag.y - C_EH / 2, { lit: true }); ctx.globalAlpha = 1; }
   ctx.restore();
   const ph = $("C_phase");
+  if (CW.ev) { ph.textContent = CW.t < 1.3 ? (CW.ev.pair.t === "self" ? "One chromosome folds so two of its grey arrows touch…" : CW.ev.pair.t === "al" ? "The lower chromosome slides until every gene sits under its partner…" : "The lower chromosome slides until a grey arrow sits under a grey arrow that is not its partner…")
+                                 : CW.t < 2.4 ? "Paired. One crossover there: the chromosomes break where they touch and join the other way." : "What comes out, below."; return; }
   ph.textContent = !P ? "Drag the lower chromosome to line it up, or drag a grey arrow onto another." :
     P.t === "al" ? (C.gap == null ? "Lined up, gene to gene" + (C.board === "inv" ? " (the reversed stretch pairs gene to gene too, so the two twist round there)" : "") + ". Click a gap to put the crossover there." :
                     C_gapOK(C.gap) ? "Crossover after " + C.top[C.gap - 1].id.replace(/^r\d/, "the grey arrow") + ". Cross over when ready." : "Those two genes do not sit side by side on the other chromosome: no crossover there.") :
@@ -1604,7 +1950,7 @@ function C_drawOut() {
   o.rs.forEach((r, k) => {
     const y = 14 + k * 66, len = C_len(r.p), sc = Math.min(1, (CO.W - 40) / len);
     ctx.save(); ctx.translate(20, y); ctx.scale(sc, sc); C_drawChrom(ctx, r.p, 0, 0, null); ctx.restore();
-    const hit = o.r.ok([r]);
+    const hit = !o.watch && o.r.ok([r]);
     cardText(ctx, r.text, 20, y + C_EH * sc + 14, { size: 14, col: r.one ? INK : HOT, bold: hit && !o.first });
   });
   ctx.restore();
@@ -1614,14 +1960,18 @@ function C_drawOut() {
 }
 function C_sync() {
   const r = C_rule();
-  $("C_go").disabled = !C_canGo() || (C.waiting && !C_practising());
+  $("C_play").disabled = !!CW.ev || (C.waiting && !C_practising());
+  $("C_watched").textContent = CW.watched.size + " of " + C_EVENTS.length + " watched";
+  tick("C", "watch", CW.watched.size >= C_EVENTS.length, CW.watched.size + " of " + C_EVENTS.length);
+  $("C_go").disabled = !!CW.ev || !C_canGo() || (C.waiting && !C_practising());
   $("C_go").textContent = !C.tried ? "Cross over (a try)" : C_practising() ? "Practice run" : "Cross over";
   $("C_next").hidden = !C.waiting;
   $("C_reset").disabled = C.waiting && !C_practising();
   $("C_pips").innerHTML = C_ROUNDS.map((_, i) => i < C.results.length ? '<span class="' + (C.results[i] ? "ok" : "off") + '">●</span>' : i === C.round && !C.done && C.tried ? "◉" : "○").join(" ");
-  $("C_ttext").textContent = !C.tried ? "Pair the two any way you like and cross over once to see what comes out. It does not count." : C.done ? "All five targets taken. The chromosomes are yours to play with." : r.text;
+  $("C_ttext").textContent = !C_ready() ? "First watch each event in the menu above the chromosomes (" + CW.watched.size + " of " + C_EVENTS.length + "). Between them, pair the two any way you like: nothing counts yet." :
+    !C.tried ? "Pair the two any way you like and cross over once to see what comes out. It does not count." : C.done ? "All five targets taken. The chromosomes are yours to play with." : r.text;
   const o = C.out && !C.out.first && C.out.r === r ? C.out : null;
-  $("C_rules").innerHTML = !C.tried || C.done ? "" : '<li><span class="' + (o ? (o.ok ? "ok" : "off") : "") + '">' + (o ? (o.ok ? "✓" : "✗") : "·") + "</span> " + r.rule + "</li>";
+  $("C_rules").innerHTML = !C_ready() || !C.tried || C.done ? "" : '<li><span class="' + (o ? (o.ok ? "ok" : "off") : "") + '">' + (o ? (o.ok ? "✓" : "✗") : "·") + "</span> " + r.rule + "</li>";
   tick("C", "try", C.tried, C.tried ? "done" : "");
   tick("C", "rounds", C.results.length >= C_ROUNDS.length, C.results.length + " of " + C_ROUNDS.length + " attempts");
 }
@@ -1653,7 +2003,9 @@ function C_wire() {
   const elAt = (p, ch, x0, y) => { if (p.y < y - 4 || p.y > y + C_EH + 4) return -1; const xs = C_xs(ch, x0); return ch.findIndex((e, i) => p.x >= xs[i] - 1 && p.x <= xs[i] + C_W[e.k] + 1); };
   const locked = () => C.waiting && !C_practising();
   cv.addEventListener("pointerdown", e => {
-    if (locked()) return;
+    if (locked() || CW.ev) return;
+    /* the first touch after watching an event puts the target's board back */
+    if (CW.dirty) { CW.dirty = false; if (C.board !== C_rule().board) { C_setBoard(C_rule().board); C_paint(); return; } C.out = null; }
     const p = where(e), ti = elAt(p, C.top, C_TX, C_Y.top), bi = elAt(p, C.bot, C_TX + C.off, C_Y.bot);
     if (ti >= 0 && C.top[ti].k === "r") C.drag = { kind: "rep", c: "top", i: ti, x: p.x, y: p.y, x0: p.x, y0: p.y };
     else if (bi >= 0 && C.bot[bi].k === "r") C.drag = { kind: "rep", c: "bot", i: bi, x: p.x, y: p.y, x0: p.x, y0: p.y };
@@ -1697,14 +2049,153 @@ function C_wire() {
   cv.addEventListener("pointercancel", () => { C.drag = null; C_drawPair(); });
   cv.addEventListener("mouseleave", () => { if (C.hoverGap != null) { C.hoverGap = null; C_drawPair(); } });
   $("C_go").addEventListener("click", C_go);
+  $("C_play").addEventListener("click", C_play);
+  C_watchedSync();
   $("C_next").addEventListener("click", C_nextRound);
   $("C_reset").addEventListener("click", C_reset);
   $("C_practice").addEventListener("change", C_sync);
   $("C_dl").addEventListener("click", () => downloadText("lesson16_stageC.R", RTEXT.codeC));
 }
 
+/* =====================================================================
+   STAGE D — an inversion in one population (JM, 2026-10-09: "a Stage D that
+   cannibalizes the snake pedigree style graph we used in 15 ... to
+   illustrate one population and having multiple alleles rising and falling
+   together due to the inversion until the inversion itself reaches high
+   frequency"). Bead strings, as 15's chromosomes, for the population now;
+   the alleles' frequencies over time under it.
+   THE MODEL. IV.N individuals, two chromosomes of IV.L genes; each gene the
+   new chromosome's allele (1) or the old one (0). Three individuals start
+   with one copy of the new chromosome (one copy arose too seldom spreads: 27%
+   at s -0.3, against 61% from three). Its allele at gene 6 multiplies young
+   by 1 - s/2 for one copy, 1 - s for two (JM's 1 - s; s < 0 helps). A
+   gamete: a crossover with chance IV.XO, at a gap drawn at random; in an
+   individual with one inverted chromosome and one standard, a crossover
+   inside genes 4-8 makes no working gamete, so another is drawn. Runs until
+   the allele at gene 6 is in every chromosome or none, or IV.MAXG.
+   MEASURED (node prototype of this engine, 300 runs a setting): the allele
+   fixed from three copies at s 0 / -0.2 / -0.3 / -0.5: 1 / 43 / 61 / 74%,
+   in ~92 / 67 / 54 / 39 generations. In 60 runs where it fixed (s -0.3),
+   the new chromosome's alleles at genes 1-12 at the end: with the inversion
+   .06 .09 .23 1 1 1 1 1 .31 .10 .06 .01; without .05 .08 .11 .17 .28 1 .30
+   .09 .03 .04 .05 .03.
+   ===================================================================== */
+const IV = { N: 50, L: 12, A: 3, B: 8, GOOD: 5, XO: 0.6, MAXG: 120, COPIES: 3 };
+const IV_SS = [0, -0.1, -0.2, -0.3, -0.4, -0.5];
+function invRun(set, seed) {
+  const rng = mulberry32(seed), { N, L, A, B, GOOD, XO, MAXG, COPIES } = IV;
+  const mk = f => ({ a: new Uint8Array(L).fill(f), inv: false });
+  let pop = []; for (let i = 0; i < N; i++) pop.push([mk(0), mk(0)]);
+  for (let c = 0; c < COPIES; c++) { const n = mk(1); n.inv = set.inv; pop[c * 7][0] = n; }
+  const fit = g => 1 - set.s * (g[0].a[GOOD] + g[1].a[GOOD]) / 2;
+  const gam = g => { const het = g[0].inv !== g[1].inv;
+    for (;;) { const k = rng() < 0.5 ? 0 : 1; if (rng() >= XO) return { a: Uint8Array.from(g[k].a), inv: g[k].inv };
+      const x = 1 + Math.floor(rng() * (L - 1));             /* the crossover falls between gene x and gene x + 1 (counting from 1) */
+      if (het && x > A && x < B) continue;                     /* inside the inverted stretch: no working gamete */
+      const a = new Uint8Array(L); for (let i = 0; i < L; i++) a[i] = (i < x ? g[k] : g[1 - k]).a[i];
+      return { a, inv: (x <= A ? g[1 - k] : g[k]).inv }; } };
+  const snap = () => pop.map(g => g.map(c => ({ a: c.a, inv: c.inv })));
+  const stat = () => { let inv = 0; const f = new Array(L).fill(0); for (const g of pop) for (const c of g) { inv += c.inv; for (let i = 0; i < L; i++) f[i] += c.a[i]; }
+    return { inv: inv / (2 * N), f: f.map(v => v / (2 * N)), pop: snap() }; };
+  const out = [stat()];
+  for (let t = 1; t <= MAXG; t++) {
+    const w = pop.map(fit); let S = 0; const c = w.map(v => (S += v));
+    const pick = () => { const r = rng() * S; let lo = 0, hi = N - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] >= r) hi = m; else lo = m + 1; } return pop[lo]; };
+    pop = Array.from({ length: N }, () => [gam(pick()), gam(pick())]);
+    const st = stat(); out.push(st); if (st.f[GOOD] === 0 || st.f[GOOD] === 1) break;
+  }
+  return out;
+}
+const DV = { run: null, last: null, runs: 0, with: false, without: false };
+const D_set = () => ({ inv: $("D_inv").checked, s: IV_SS[+$("D_s").value] });
+function D_go() {
+  if (DV.run) return;
+  const set = D_set(), out = invRun(set, pageSeed("l16inv", 1, 999999) + 104729 * DV.runs++);
+  DV.run = { set, out, t: 0, shown: 0 }; bump("D"); D_sync(); D_loop();
+}
+function D_endRun() {
+  const q = DV.run; if (!q) return;
+  DV.run = null; q.shown = q.out.length - 1; DV.last = q;
+  if (q.set.inv) DV.with = true; else DV.without = true;
+  if (DV.with && DV.without) finishStage("D");
+  D_paint();
+}
+let D_on = false, D_last = 0;
+function D_loop() { if (D_on) return; D_on = true; D_last = 0; requestAnimationFrame(D_frame); }
+function D_frame(ts) {
+  const dt = Math.min(0.05, (ts - (D_last || ts)) / 1000); D_last = ts;
+  const q = DV.run;
+  if (q) { q.t += dt; q.shown = Math.min(q.out.length - 1, Math.floor(q.t * 15)); D_drawPop(); D_drawFreq(); if (q.shown >= q.out.length - 1) D_endRun(); }
+  if (DV.run) requestAnimationFrame(D_frame); else D_on = false;
+}
+/* the population now: fifty individuals, ten to a row, each two bead strings; on an inverted chromosome genes 4-8
+   are drawn the other way round under a red bracket */
+const DP = { W: 1260, H: 236, x0: 24, y0: 22, cw: 122, rh: 42, bead: 8 };
+function D_drawPop() {
+  const cv = $("D_pop"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DP.W, DP.H);
+  const q = DV.run || DV.last, gen = q ? q.out[q.shown] : null;
+  const pop = gen ? gen.pop : Array.from({ length: IV.N }, (_, i) => [0, 1].map(k => ({ a: new Uint8Array(IV.L).fill(k === 0 && i % 7 === 0 && i / 7 < IV.COPIES ? 1 : 0), inv: k === 0 && i % 7 === 0 && i / 7 < IV.COPIES && $("D_inv").checked })));
+  cardText(ctx, gen ? "generation " + q.shown : "generation 0", DP.x0, 10, { size: 11, col: MUTED });
+  pop.forEach((g, i) => {
+    const cx = DP.x0 + (i % 10) * DP.cw, cy = DP.y0 + Math.floor(i / 10) * DP.rh;
+    g.forEach((c, k) => {
+      const y = cy + k * 12, order = Array.from({ length: IV.L }, (_, j) => c.inv && j >= IV.A && j < IV.B ? IV.A + IV.B - 1 - j : j);
+      ctx.strokeStyle = "#b9b4a6"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cx, y + DP.bead / 2); ctx.lineTo(cx + IV.L * (DP.bead + 1), y + DP.bead / 2); ctx.stroke();
+      order.forEach((locus, j) => { const x = cx + j * (DP.bead + 1);
+        ctx.fillStyle = c.a[locus] ? BLUE : PLAIN; ctx.fillRect(x, y, DP.bead, DP.bead);
+        if (locus === IV.GOOD && c.a[locus]) { ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, DP.bead - 1, DP.bead - 1); } });
+      if (c.inv) { const xa = cx + IV.A * (DP.bead + 1) - 1, xb = cx + IV.B * (DP.bead + 1) - 1, yb = k ? y + DP.bead + 2 : y - 2;
+        ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(xa, yb + (k ? -2 : 2)); ctx.lineTo(xa, yb); ctx.lineTo(xb, yb); ctx.lineTo(xb, yb + (k ? -2 : 2)); ctx.stroke(); }
+    });
+  });
+  ctx.restore();
+}
+/* the new chromosome's allele at each gene over the generations: genes 4-8 blue, gene 6 heavier; the rest grey;
+   the inversion's own share dashed red */
+const DF = { W: 760, H: 300, px: 46, py: 30, pw: 690, ph: 220 };
+function D_drawFreq() {
+  const cv = $("D_freq"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DF.W, DF.H);
+  const q = DV.run || DV.last, O = q ? q.out : null, T = O ? Math.max(40, O.length - 1) : IV.MAXG, upto = q ? q.shown : 0;
+  const xs = t => DF.px + t / T * DF.pw, ys = v => DF.py + DF.ph - v * DF.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(DF.px, DF.py); ctx.lineTo(DF.px, DF.py + DF.ph); ctx.lineTo(DF.px + DF.pw, DF.py + DF.ph); ctx.stroke();
+  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), DF.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= T; t += T > 80 ? 20 : 10) cardText(ctx, String(t), xs(t), DF.py + DF.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", DF.px + DF.pw / 2, DF.H - 6, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(12, DF.py + DF.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "share of chromosomes with the new allele", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (O) {
+    for (let l = 0; l < IV.L; l++) { if (l >= IV.A && l < IV.B) continue; polyline(ctx, O.slice(0, upto + 1).map((S, t) => [xs(t), ys(S.f[l])]), "#a9a597", 1.2, 0.9); }
+    for (let l = IV.A; l < IV.B; l++) polyline(ctx, O.slice(0, upto + 1).map((S, t) => [xs(t), ys(S.f[l])]), BLUE, l === IV.GOOD ? 2.6 : 1.4, 0.9);
+    if (q.set.inv) { ctx.save(); ctx.setLineDash([5, 4]); polyline(ctx, O.slice(0, upto + 1).map((S, t) => [xs(t), ys(S.inv)]), HOT, 1.6, 1); ctx.restore(); }
+  } else cardText(ctx, "Run plays the population here.", DF.px + DF.pw / 2, DF.py + DF.ph / 2, { size: 12.5, col: MUTED, align: "center" });
+  cardText(ctx, "genes 4 to 8", DF.px + 8, 10, { size: 11, col: BLUE, bold: true });
+  cardText(ctx, "the other genes", DF.px + 96, 10, { size: 11, col: "#8b877b", bold: true });
+  cardText(ctx, "- - the inversion", DF.px + 210, 10, { size: 11, col: HOT, bold: true });
+  ctx.restore();
+  const rd = $("D_read");
+  if (!O) { rd.innerHTML = ""; return; }
+  const S = O[upto], pc = v => Math.round(100 * v) + "%", rng = arr => { const a = Math.min(...arr), b = Math.max(...arr); return a === b ? pc(a) : pc(a) + " to " + pc(b); };
+  const inside = S.f.slice(IV.A, IV.B), outside = S.f.slice(0, IV.A).concat(S.f.slice(IV.B));
+  rd.innerHTML = lab("generation") + " <b>" + upto + "</b>" + (q.set.inv ? " " + lab("· the inversion in") + " <b>" + pc(S.inv) + "</b> " + lab("of the chromosomes") : "") +
+    "<br>" + lab("the new chromosome's alleles: genes 4 to 8 in") + ' <b style="color:' + BLUE + '">' + rng(inside) + "</b>" + lab(", the other genes in") + " <b>" + rng(outside) + "</b>";
+}
+function D_sync() {
+  const busy = !!DV.run;
+  $("D_go").disabled = busy; $("D_inv").disabled = busy; $("D_s").disabled = busy;
+  $("D_sV").textContent = String(IV_SS[+$("D_s").value]).replace("-", "−");
+  tick("D", "with", DV.with, DV.with ? "done" : ""); tick("D", "without", DV.without, DV.without ? "done" : "");
+}
+function D_paint() { D_drawPop(); D_drawFreq(); D_sync(); }
+function D_wire() {
+  $("D_go").addEventListener("click", D_go);
+  $("D_inv").addEventListener("change", () => { bump("D"); if (!DV.run && !DV.last) D_drawPop(); D_sync(); });
+  $("D_s").addEventListener("input", D_sync);
+  $("D_s").addEventListener("change", () => bump("D"));
+}
+
 /* ====== painting and wiring ====== */
-function paintAll() { A_paint(); if (typeof B_paint === "function") B_paint(); if (typeof C_paint === "function") C_paint(); }
+function paintAll() { A_paint(); if (typeof B_paint === "function") B_paint(); if (typeof C_paint === "function") C_paint(); if (typeof D_paint === "function") D_paint(); }
 function wire() {
   const sc = $("A_seq");
   const ntAt = e => { const p = framePt(sc, e, SQ.W); for (let r = 0; r * PER_ROW < VIEW; r++) {
@@ -1730,6 +2221,7 @@ function wire() {
   $("A_dl").addEventListener("click", () => downloadText("lesson16_stageA.R", RTEXT.codeA));
   if (typeof B_wire === "function") B_wire();
   if (typeof C_wire === "function") C_wire();
+  if (typeof D_wire === "function") D_wire();
   let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; A_closePop(); paintAll(); }, 120); });
   /* instructor bypass / study mode: every stage open, and every inner gate */
   const reveal = () => { INSTRUCTOR = true; for (const k in Gates) Gates[k].open = true; FIT_EPOCH++; paintAll(); };
@@ -1742,8 +2234,8 @@ paintAll();
 
 Score.init({
   moduleId: "lesson16",
-  version: 2,      /* 1: first pass, A-C (2026-10-08). 2: A's ten named changes become eight targets (JM, 2026-10-09) */
-  scaffold: 16,
+  version: 3,      /* 1: first pass, A-C (2026-10-08). 2: A's ten named changes become eight targets (JM, 2026-10-09). 3: B's three targets for one population, two ways to breed (B4-B6); D added, unscored (JM, 2026-10-09) */
+  scaffold: 19,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {

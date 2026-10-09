@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt; D proposed, not built. 2026-10-09: A rebuilt on eight targets + dN/dS (v2, scaffold 16). Checks pass
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). Checks pass
 **Last touched** · 2026-10-09
 
 ## What the lesson is
@@ -19,6 +19,29 @@
 > Part C should be about the mechanics or recombination. Um, and they should have some manner of interactive where they line them up. Uh, and some chance of or way to manipulate them so that they can create an inversion. However, we do the 2 chromosomes snapping together for recombination, we should have it so that they can snap to create and insert an inversion and deletion. Um, I'm not sure what to do. for targets there, but I like that idea.
 
 > The final part, part D needs to be something that will lead into migration, which will be the next lesson after this one. So something with identical by descent blocks and hapletypes, which can connect the inversions above. This one I haven't fully cooked.
+
+## JM, 2026-10-09: B, C (and maybe D) revised
+
+> Part B of lesson 16 needs revision. I want a situation where (1) sex produces high variance in offspring relative to asexual, and (2) simulations that let some (stable) environments show low variation is good and others (unstable) environments show it is bad. The idea I'm trying to reinforce here is (1) the mechanics of Muller's ratchet & the value of sexual reproduction while also clarifying (2) that the core of sexual reproduction is **reducing** an individual's number of offspring (since each sexually reproduced offspring is only ~50% of a given parent). Part C, on some level, I think should be some sort of "drop down & watch" where the student chooses an event from a dropdown menu (gene X deleted, genes XYZ inverted) and the diagram moves dynamically to show while also having a manipulation mode to let students explore it. I kind of want this to be a "here's how recombination works" with maybe a separate stage that illustrates how inversions complicate recombination--but that might need to be a Stage D that cannibalizes the snake pedigree style graph we used in 15 and have in 17 but to illustrate one population and having multiple alleles rising and falling together due to the inversion until the inversion itself reaches high frequency.
+
+Measured before planning (node prototypes; the engines now live in the page, `envRun` and `invRun`, and `check_lesson16_numbers.js` re-measures them):
+
+- Stable vs unstable (one population, sexual and asexual females competing; a trait = the + alleles over 8 loci on two chromosomes, fitness exp(-(z - θ)² / 4); every female equally fecund, so an asexual one passes on twice the genome copies a young: the twofold cost; 10% of females turn asexual after 200 generations; 300 generations; 40 runs a setting):
+
+        θ fixed (stable)                         asexuals take over in 40 of 40
+        θ jumps ±4 every 40 / 20 / 10 / 5 gens   32 / 30 / 18 / 7 of 40   (end share 0.80 / 0.75 / 0.45 / 0.17)
+        θ jumps ±6 every 10                      5 of 40 (0.13)
+
+  Stable: the asexual line's copies win by the twofold cost, and sex's spread of young off θ costs. Fast, large change: the spread pays.
+- Inversion (50 diploids, 12 loci, an inversion over 4-8 arising on the chromosome that carries a good allele at 6, s 0.3; 40 runs where it spread, 60 generations): mean |frequency − locus 6's| at loci 1-12, with the inversion 0.44 0.43 0.32 0.00 0.00 0.00 0.00 0.00 0.35 0.45 0.48 0.50; without it 0.54 0.53 0.52 0.39 0.31 0.00 0.34 0.48 … — inside the inversion every allele moves as one.
+
+Proposed (mine), then JM's answers (2026-10-09): B's third part as a few generous rounds; C watch, then the five targets; D built now.
+
+    B  1. the bench as now (copy vs meiosis), plus: twenty young from each, their harmful changes as a spread (asexual: all the parent's; sexual: from fewer to more), and "copies of you a young carries: 1 vs ½".
+       2. the ratchet as now (two populations, its three rounds).
+       3. environments: one population, sexual and asexual females competing; sliders for how often and how far the best trait value moves; the asexual share and both lines' trait spreads over time; generous rounds (stable: the asexual line takes over; unstable: the sexual line holds).
+    C  a menu of events (a crossover between matching genes; a deletion; a duplication; an inversion; ...): pick one, the chromosomes move into the pairing that makes it, cross over, and come apart into the products; then the present drag-and-snap as the manipulation mode.
+    D  one population as bead strings (15's pedigree): an inversion arises carrying a good allele; the alleles inside it rise and fall as one while the rest come apart; a slider for the good allele's s (0 = drift alone).
 
 ## Read as (mine; JM may overrule)
 
@@ -76,6 +99,11 @@ D (proposal, not built)
 | 17 | A | JM 2026-10-09: dN/dS at the end from the student's own results | done: 1,000 populations a change, one N for the eight (JM chose both); N capped at 50 so the synonymous change fixes somewhere |
 | 18 | A | the pooled ratio with 3 beneficial + 3 harmful usually comes out near or above 1 (beneficial fixations swamp the harmful zeros); real genes, mostly harmful changes, sit below 1 | done (JM 2026-10-09: break it into beneficial / harmful): two ratios, two lines; no pooled one |
 | 19 | A | JM 2026-10-09: "Take it back" becomes a "Reset" button at the top left of the sequence panel, quick to undo a misclick | done: one click back to the sequence as it was (closes an open pop-up too); greyed while a run plays or with nothing to reset; checked |
+| 20 | B | twenty young each: copies all carry the parent's 3, young from sex spread round it; "20 copies of the parent against 10 copies' worth" | done: Twenty young each button, dot strips, readout; the rounds wait for it |
+| 21 | B | one population, two ways to breed: sexual and asexual females compete; the best trait value holds or moves (how often, how far); three rounds with practice (B4-B6) | done: E1 the asexual line takes over (opens moving every 5: 15%; never moves: 100%); E2 the sexual line holds (opens never: 0%; every 5 by 4: 85%, every 10 by 6: 86%); E3 every 10, asexual under half (by 2: 1%, by 6: 86%). Trait plot with the best value, each line's mean and spread band; asexual share under it |
+| 22 | C | watch: a menu of eight events (crossover; B-F lost and doubled; B-F looped out; B-D inverted; E-F inverted; two centres and none; reversed stretch, crossover outside; inside) on the same board, animated; the targets wait until all are watched | done; the first touch after a watch puts the target's board back |
+| 23 | D | one population as bead strings (50 x 2 x 12 genes): a new chromosome in 3 individuals, genes 4-8 inverted, a helpful allele at gene 6 (s slider, 0 = drift); frequency lines inside vs outside; run with and without the inversion | done, unscored: finishing D (one run each way) ends the lesson. From three copies (one copy spread in only 27% at s -0.3) |
+| 24 | B, D | R panels for the one-population part and for D | open |
 
 ## Measured (2026-10-08)
 
@@ -137,6 +165,7 @@ A, 2026-10-09 (the page's A_fate; 200 sets of 1,000 populations, by 4N): went to
 - 2026-10-09: kinds synonymous / nonsynonymous / noncoding (a third button for the flanks); then text targets in place of naming: 1 / 3 beneficial / 3 harmful / 1.
 - 2026-10-09: 1,000 populations a change, one N for all eight (for dN/dS).
 - 2026-10-09: dN/dS beneficial and harmful apart, no pooled ratio.
+- 2026-10-09: B shows (1) sex's young spread wider than copies, (2) stable environments favour low variation and unstable ones high, and that sex halves what a parent puts in each young. C: watch events from a menu, then the manipulation and its five targets. D: an inversion in one population, its alleles riding together.
 - 2026-10-09: the table's fates are extinct / went to fixation (his words); "still present" is mine.
 - 2026-10-09: the runs readout is one sentence, his: "In X populations where this mutation arose, it went extinct in Y after Z generations." Too many specifics under a graph hide what to look at.
 
