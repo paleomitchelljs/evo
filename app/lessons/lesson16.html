@@ -1,0 +1,1663 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 16</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  ul.setup { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
+  .readout .label { color:var(--muted); }
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .phase { font-size:13.5px; margin-top:6px; min-height:20px; }
+  .tbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 0 8px; font-size:13px; }
+  .tbar label { display:flex; align-items:center; gap:8px; }
+  .tbar input[type=range] { width:170px; accent-color:var(--accent2); }
+  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:52px; display:inline-block; }
+  .tbar.held { color:var(--muted); }
+
+  /* the target / change cards */
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard ul.rules { list-style:none; margin:8px 0 0; padding:0; font:12.5px ui-monospace,Menlo,monospace; }
+  .tcard ul.rules li { padding:2px 0; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+
+  /* A: the sequence, the pop-up for one letter, the four kinds, the table */
+  .seqpanel { position:relative; }
+  #A_seq { cursor:pointer; }
+  .seqpop { position:absolute; z-index:4; background:#fff; border:1px solid var(--ink); border-radius:6px; padding:10px 12px;
+            box-shadow:0 6px 24px rgba(0,0,0,0.18); font-size:13px; width:252px; }
+  .seqpop[hidden] { display:none; }
+  .seqpop .pt { margin:0 0 8px; }
+  .seqpop .pr { display:flex; align-items:center; gap:5px; margin:0 0 7px; flex-wrap:wrap; }
+  .seqpop .pr span { color:var(--muted); width:100%; font-size:12px; }
+  .seqpop button { background:#fff; color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:4px 0; width:34px; font:600 13px ui-monospace,Menlo,monospace; cursor:pointer; }
+  .seqpop button:hover { background:#f4f2ec; }
+  .seqpop button.wide { width:auto; padding:4px 10px; font:13px -apple-system,sans-serif; }
+  .kinds { display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:4px 0 0; }
+  .kinds button { background:#fff; color:var(--ink); border:1px solid var(--rule); border-radius:4px; padding:7px 8px; font-size:13.5px; cursor:pointer; text-align:center; }
+  .kinds button:hover:not(:disabled) { background:#f4f2ec; }
+  .kinds button.wrong { border-color:var(--bad); color:var(--bad); }
+  .kinds button.right { border-color:var(--good); color:var(--good); font-weight:600; }
+  .kinds button:disabled { cursor:default; }
+  .effect { font-size:13.5px; margin:10px 0 0; line-height:1.45; }
+  .effect:empty { display:none; }
+  table.tally { width:100%; border-collapse:collapse; font:12px ui-monospace,Menlo,monospace; }
+  table.tally th { text-align:left; color:var(--muted); font-weight:600; padding:3px 6px 5px 0; border-bottom:1px solid var(--rule); white-space:nowrap; }
+  table.tally td { padding:3px 6px 3px 0; border-bottom:1px solid #f2f0e8; white-space:nowrap; }
+  table.tally td.num { text-align:right; }
+  table.tally tr.empty td { color:#b8b3a0; }
+  .tablewrap { overflow-x:auto; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 16</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+</nav>
+
+<!-- ========== STAGE A — make a change, name it, watch it in 100 populations (JM, 2026-10-08) ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- voice: none yet; JM to dictate -->
+    <ul class="setup">
+      <li>144 letters of a bacterium's DNA, read 5′ to 3′. Above them, the amino acids they code for: from the first ATG (the start) to the first stop in step with it, three letters at a time.</li>
+      <li>The wheel is the genetic code. Read a codon from the middle out: its first letter, its second, its third, then the amino acid. Point at a codon in the sequence to light it on the wheel.</li>
+      <li>Click a letter to change it to one of the other three, to put a new letter in front of it, or to take it out. The amino acids are read again after every change, from wherever the start and the stop now fall.</li>
+      <li>Then say what kind of change you made.</li>
+      <li>If the protein changed, set what it does: one copy of the changed gene multiplies an individual's young by 1 &minus; h&middot;s, two copies by 1 &minus; s. If the protein is the same, s = 0. Either way, set N.</li>
+      <li><b>Go</b> puts your change into one copy of the gene in each of 100 populations of N individuals, and runs each one for 4N generations. Each square is one population.</li>
+      <li>Ten changes. Each one starts from the sequence as it was.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel seqpanel">
+        <canvas id="A_seq" width="760" height="320"></canvas>
+        <div class="seqpop" id="A_pop" hidden></div>
+        <div class="readout" id="A_seqRead"></div>
+      </div>
+      <div class="panel">
+        <canvas id="A_runs" width="760" height="270"></canvas>
+        <div class="readout" id="A_runsRead"></div>
+      </div>
+      <div class="panel">
+        <h3>Your ten changes</h3>
+        <div class="tablewrap"><table class="tally" id="A_table"></table></div>
+      </div>
+      <div class="panel">
+        <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <canvas id="A_wheel" width="380" height="380"></canvas>
+        <div class="readout" id="A_wheelRead"></div>
+      </div>
+      <div class="panel tcard">
+        <h3>Change <span id="A_no">1</span> of 10</h3>
+        <p class="ttext" id="A_step"></p>
+        <div id="A_kindBox" hidden>
+          <div class="kinds">
+            <button data-kind="insertion">insertion</button>
+            <button data-kind="deletion">deletion</button>
+            <button data-kind="transition">transition</button>
+            <button data-kind="transversion">transversion</button>
+          </div>
+          <div class="verdict" id="A_kindFb"></div>
+        </div>
+        <div class="effect" id="A_effect"></div>
+        <div class="controls" id="A_controls" hidden>
+          <div class="tbar" id="A_sRow"><label>s <input type="range" id="A_s" min="0" max="13" step="1" value="10"></label><b id="A_sV"></b></div>
+          <div class="tbar" id="A_hRow"><label>h <input type="range" id="A_h" min="0" max="1" step="0.1" value="0.5"></label><b id="A_hV"></b></div>
+          <div class="tbar"><label>N <input type="range" id="A_N" min="0" max="6" step="1" value="3"></label><b id="A_NV"></b></div>
+        </div>
+        <div class="buttons">
+          <button id="A_go" class="accent" hidden>Go</button>
+          <button id="A_next" class="ghost" hidden>Next change</button>
+          <button id="A_undo" class="ghost" hidden>Take it back</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Ten changes, each named and played out. <span class="hint" id="A1_now">0 of 10</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE B — copying or sex, and the harmful changes that pile up (JM, 2026-10-08) ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- voice: none yet; JM to dictate -->
+    <ul class="setup">
+      <li>Each individual: two chromosomes, ten genes on each. A red gene carries a harmful change. Each harmful change multiplies an individual's young by 1 &minus; s; here s = 0.1, so three of them leave 0.9 &times; 0.9 &times; 0.9 = 0.73 as many young.</li>
+      <li><b>Without sex</b>, a young is a copy of its one parent, both chromosomes whole. Press <b>Copy</b>.</li>
+      <li><b>With sex</b>, each parent makes four gametes: click a gap between two genes to put that parent's crossover there, then <b>Make gametes</b>. Click one gamete from each parent and the two fuse into a young.</li>
+      <li>Then whole populations, one without sex and one with: every young also picks up new harmful changes, U of them on average, and none is ever undone. The plot follows the best individual in each: the fewest harmful changes anyone carries.</li>
+      <li>Each target: set the slider that is open, press <b>Go</b>, and both populations run for 200 generations. Tick practice for a run that does not count.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body">
+    <div class="grid">
+      <div class="col">
+        <div class="panel">
+          <canvas id="B_bench" width="760" height="380"></canvas>
+          <div class="phase" id="B_benchPhase"></div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel">
+          <h3>Controls</h3>
+          <div class="buttons">
+            <button id="B_copy">Copy</button>
+            <button id="B_meio" class="accent">Make gametes</button>
+            <button id="B_reset" class="ghost">Start over</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>To finish</h3>
+          <ul class="tasks" id="tasksB">
+            <li data-task="copy">Copy the parent without sex. <span class="hint" id="B_copy_now"></span></li>
+            <li data-task="clean">With sex, make a young with no harmful changes at all. <span class="hint" id="B_clean_now"></span></li>
+            <li data-task="rounds">Three targets for the two populations: every one you hit counts. <span class="hint" id="B_rounds_now">0 of 3 attempts</span></li>
+          </ul>
+          <div class="solved-banner" id="solvedB">Stage C is open.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px">
+      <div class="col">
+        <div class="panel">
+          <canvas id="B_hist" width="760" height="250"></canvas>
+          <div class="readout" id="B_histRead"></div>
+        </div>
+        <div class="panel">
+          <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+        </div>
+      </div>
+      <div class="col">
+        <div class="panel tcard">
+          <h3>Target <span class="pips" id="B_pips"></span></h3>
+          <p class="ttext" id="B_ttext"></p>
+          <canvas id="B_plot" width="440" height="240"></canvas>
+          <ul class="rules" id="B_rules"></ul>
+          <div class="verdict" id="B_verdict"></div>
+        </div>
+        <div class="panel">
+          <h3>Controls</h3>
+          <div class="controls" id="B_controls">
+            <div class="tbar" id="B_NRow"><label>N <input type="range" id="B_N" min="0" max="5" step="1" value="2"></label><b id="B_NV"></b><span>individuals</span></div>
+            <div class="tbar" id="B_URow"><label>U <input type="range" id="B_U" min="0.1" max="1" step="0.1" value="0.3"></label><b id="B_UV"></b><span>new harmful changes a young</span></div>
+            <div class="tbar" id="B_sRow"><label>s <input type="range" id="B_s" min="0" max="4" step="1" value="2"></label><b id="B_sV"></b><span>harm of each</span></div>
+            <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice — a run with this ticked does not count</label></div>
+            <div class="buttons">
+              <button id="B_go" class="accent">Go</button>
+              <button id="B_next" class="ghost" hidden>Next target</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE C — two chromosomes line up, snap together, cross over (JM, 2026-10-08) ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- voice: none yet; JM to dictate -->
+    <ul class="setup">
+      <li>One individual's two chromosomes before meiosis: eight genes, A to H, each with an arrow for the way it reads. The grey arrows between some genes are copies of one jumping gene (Lesson 15): the same stretch of DNA, facing one way or the other. The black dot is the centre the chromosome is pulled by when the cell divides.</li>
+      <li>Drag the lower chromosome along the upper one. It snaps where the genes line up with their partners, or where a grey arrow sits over a grey arrow.</li>
+      <li>Or drag a grey arrow onto another grey arrow on the same chromosome: that chromosome loops round so the two touch.</li>
+      <li>With the genes lined up, click a gap to put the crossover there. Paired at grey arrows, the crossover falls in them. Then <b>Cross over</b>: the chromosomes break where they touch and join the other way.</li>
+      <li>Under the pairing, what comes out. Tick practice for a run that does not count.</li>
+    </ul>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="C_pair" width="800" height="250"></canvas>
+        <div class="phase" id="C_phase"></div>
+      </div>
+      <div class="panel">
+        <canvas id="C_out" width="800" height="210"></canvas>
+        <div class="readout" id="C_outRead"></div>
+      </div>
+      <div class="panel">
+        <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <ul class="rules" id="C_rules"></ul>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>Controls</h3>
+        <div class="controls" id="C_controls">
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent" disabled>Cross over</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+            <button id="C_reset" class="ghost">Start over</button>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="try">Pair them any way you like and cross over once. <span class="hint" id="C_try_now"></span></li>
+          <li data-task="rounds">Five targets: every one you hit counts. <span class="hint" id="C_rounds_now">0 of 5 attempts</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">That is the last target.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 16. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+/* =====================================================================
+   LESSON 16 — mutation. DRAFT; first pass 2026-10-08, from JM's plan
+   (dictated the same night; transcript and my reading of it in
+   docs/overhauls/lesson16_overhaul.md).
+
+   A  make one change to a real gene, name its kind, watch it in 100
+      populations for 4N generations; ten times.
+   B  without sex the best genome can only be copied; with sex it can be
+      rebuilt. A bench, then two populations and the ratchet.
+   C  two chromosomes line up and cross over; paired at repeated stretches
+      they make deletions, duplications and inversions.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", HOT_SOFT = "#f4d3d7", BLUE_SOFT = "#d0e1ed", RULE = "#e2e0d9";
+const PAPER = "#f4f2ec", PLAIN = "#d9d6cd";
+const clamp = (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v);
+const $ = id => document.getElementById(id);
+const sg = (v, d) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d == null ? 2 : d);
+const lab = s => '<span class="label">' + s + "</span>";
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lesson 15 carries it) ======
+   Each canvas is drawn in its own fixed frame (the markup's width x height) and scaled to the room
+   it has: draw(ctx) works in frame units, and a pointer is mapped back by the same factor. */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+/* a canvas drawn in its frame (fw x fh), scaled to fit: returns the context already scaled, and k */
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+/* a pointer event in a canvas's frame units */
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+/* R code with highlightable lines: [key, text] pairs (lesson 14's); RTEXT keeps the plain text for Download .R */
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|log|abs|min|max|sample|rbinom|rpois|runif|replicate|table|c|rev|which|rep|sapply|lapply|vector|length|paste|cumsum|sort|unlist)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+/* ====== gates ========================================================
+   A stage opens the next by being worked through; getting one wrong never
+   shuts a door. One bit per scored attempt (JM, 2026-09-30): A's ten
+   changes named (the first answer each), B's three ratchet targets, C's five
+   crossing-over targets. */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: null };
+const BIT = { A1:0, A2:1, A3:2, A4:3, A5:4, A6:5, A7:6, A8:7, A9:8, A10:9,
+              B1:10, B2:11, B3:12,
+              C1:13, C2:14, C3:15, C4:16, C5:17 };
+let INSTRUCTOR = false;
+function record(pos, ok) {
+  if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+}
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now") || $(task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) {
+    $("done-banner").classList.add("shown");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+    $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  $("stage" + nx).classList.remove("stage-locked");
+  const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true;
+  FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true;
+  $("solved" + stage).classList.add("shown");
+  unlockNext(stage);
+}
+
+/* =====================================================================
+   STAGE A — one change to a real gene.
+
+   THE SEQUENCE is real: the E. coli trp operon leader peptide, trpL, read
+   off the K-12 MG1655 genome (NC_000913.3, minus strand, 1323037-1323081;
+   fetched from NCBI 2026-10-08), with the 16 letters before its start (they
+   hold the ribosome's landing site, AAGGG) and 238 after. The page shows the
+   first VIEW letters of whatever the sequence is after a change, so an
+   insertion pushes one letter off the end and a deletion pulls the next real
+   one in. 83 letters after the stop are shown because the three reading
+   frames meet a stop 27, 53 and 82 letters past it (measured): every
+   frameshift ends in view. The reading is found the same way after every
+   change -- the first ATG from the 5' end, then three letters at a time to
+   the first stop in step -- so a change can lose the start (the next ATG down
+   takes over) or make a new one upstream. Nothing is special-cased.
+   Letters are DNA (T, not U) on the wheel too, so a codon is read off the
+   wheel in the same letters as the sequence.
+
+   THE POPULATIONS (JM: "a simulation is run with that as a new mutation in
+   the population of a particular size ... for 4 NE generations. And then
+   they see what percentage of their runs did the allele go extinct? What
+   percentage did it reach fixation, if any?"). Wright-Fisher, N diploid
+   individuals, 2N copies, one of them changed; fitness 1, 1 - hs, 1 - s for
+   no, one, two changed copies (JM's form, s > 0 harmful); random union, a
+   binomial draw of 2N copies a generation. Ne = N. 100 populations, each
+   to 4N generations or until the change is lost or in every copy.
+   MEASURED (2,000 runs a setting, node prototype of A_fate): N 100 neutral
+   lost 99.5%, still here 0.3, taken over 0.3 (1/2N = 0.5 in the long run);
+   N 10 neutral 93.3 / 3.3 / 3.5 (5.0); N 100, h 1, s -0.05: 90.7 / 1.1 / 8.2
+   (diffusion 8.97); lost in 5-13 generations on average. So the playback
+   runs the first 20 generations slowly: that is when nearly all of them go.
+   ===================================================================== */
+const SEQ_UP = "AAAAAGGGTATCGACA";
+const SEQ_ORF = "ATGAAAGCAATTTTCGTACTGAAAGGTTGGTGGCGCACTTCCTGA";
+const SEQ_DOWN = "AACGGGCAGTGTATTCACCATGCGTAAAGCAATCAGATACCCAGCCCGCCTAATGAGCGGGCTTTTTTTTGAACAAAATTAGAGAATAACAATGCAAACACAAAAACCGACTCTCGAACTGCTAACCTGCGAAGGCGCTTATCGCGACAATCCCACCGCGCTTTTTCACCAGTTGTGTGGGGATCGTCCGGCAACGCTGCTGCTGGAATCCGCAGATATCGACAGCAAAGATGATTTA";
+const BASE = SEQ_UP + SEQ_ORF + SEQ_DOWN;
+const VIEW = 144, PER_ROW = 36, A_TOTAL = 10;
+const PURINE = { A: true, G: true, C: false, T: false };
+const AA3 = { A:"Ala", R:"Arg", N:"Asn", D:"Asp", C:"Cys", Q:"Gln", E:"Glu", G:"Gly", H:"His", I:"Ile", L:"Leu", K:"Lys", M:"Met",
+              F:"Phe", P:"Pro", S:"Ser", T:"Thr", W:"Trp", Y:"Tyr", V:"Val", "*":"stop" };
+const WB = "TCAG", CODE_AA = "FFLLSSSSYY**CC*WLLLLPPPPHHQQRRRRIIIMTTTTNNKKSSRRVVVVAAAADDEEGGGG";
+const CODE = {};
+for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) for (let c = 0; c < 4; c++) CODE[WB[a] + WB[b] + WB[c]] = CODE_AA[16 * a + 4 * b + c];
+/* the reading: first ATG, then codons to the first stop in step (stop null: none in the sequence) */
+function readSeq(seq) {
+  const start = seq.indexOf("ATG");
+  if (start < 0) return { start: -1, codons: [], aa: "", stop: null };
+  const codons = []; let j = start, stop = null;
+  while (j + 3 <= seq.length) { const c = seq.slice(j, j + 3), a = CODE[c]; codons.push({ at: j, cod: c, aa: a }); if (a === "*") { stop = j; break; } j += 3; }
+  return { start, codons, aa: codons.filter(c => c.aa !== "*").map(c => c.aa).join(""), stop };
+}
+const ORIG = readSeq(BASE);                 /* MKAIFVLKGWWRTS, start at 16, stop at 58 */
+/* a change: { kind: "sub" | "ins" | "del", pos, from, to } on the original sequence; ins puts `to` in front of letter pos */
+function applyMut(m) {
+  if (!m) return BASE;
+  if (m.kind === "sub") return BASE.slice(0, m.pos) + m.to + BASE.slice(m.pos + 1);
+  if (m.kind === "ins") return BASE.slice(0, m.pos) + m.to + BASE.slice(m.pos);
+  return BASE.slice(0, m.pos) + BASE.slice(m.pos + 1);
+}
+const kindOf = m => m.kind === "ins" ? "insertion" : m.kind === "del" ? "deletion" : PURINE[m.from] === PURINE[m.to] ? "transition" : "transversion";
+/* a place in the changed sequence back to the original's (null: the letter put in) */
+function toOrig(m, i) {
+  if (!m || m.kind === "sub") return i;
+  if (m.kind === "ins") return i < m.pos ? i : i === m.pos ? null : i - 1;
+  return i < m.pos ? i : i + 1;
+}
+/* what the change did to the protein, measured off the two readings */
+function effectOf(m) {
+  const seq = applyMut(m), r = readSeq(seq), o = ORIG, n = r.aa.length;
+  const L = k => k + " amino acid" + (k === 1 ? "" : "s");
+  const ends = r.start < 0 ? "" : r.stop == null ? ", and no stop anywhere in the " + (seq.length - r.start) + " letters from the start on" : "";
+  const out = { r, seq, syn: r.aa === o.aa && r.start >= 0, short: "", text: "", sameStart: toOrig(m, r.start) === o.start };
+  /* inside the stretch that is read (a letter put in front of the start is not) */
+  const inRead = (m.kind === "ins" ? m.pos > o.start : m.pos >= o.start) && m.pos < o.stop + 3;
+  if (r.start < 0) { out.short = "no start"; out.text = "No ATG anywhere now: nothing is read, and there is no protein."; return out; }
+  if (out.syn) { out.short = "same"; out.text = inRead ? "The codon changed; its amino acid did not. The same 14 amino acids." : "Outside the stretch that is read. The same 14 amino acids."; return out; }
+  if (!out.sameStart) {
+    const at = toOrig(m, r.start), d = at == null ? r.start - o.start : at - o.start;
+    if (d < 0) { out.short = "new start";
+      out.text = "A new start, " + (-d) + " letters before the old one" + ((-d) % 3 === 0 ? ", in step with it: " + L(n) + ", " + L(n - 14) + " more at the front" : ", out of step with it: a different protein of " + L(n)) + ends + "."; }
+    else { out.short = "start lost"; out.text = "The start is gone. The first ATG now is " + d + " letters further on: a different protein of " + L(n) + ends + "."; }
+    return out;
+  }
+  if (m.kind !== "sub" && inRead && m.pos > o.start) {
+    const k = Math.floor((m.pos - o.start) / 3) + 1;
+    out.short = "frame from " + k;
+    out.text = "From amino acid " + k + " on, the letters are read in a new frame of three: " + L(n) + (r.stop != null ? ", then a stop." : ends + ".");
+    return out;
+  }
+  if (n < 14 && o.aa.startsWith(r.aa)) { out.short = "stop at " + (n + 1); out.text = "A stop now at amino acid " + (n + 1) + ": " + L(n) + " instead of 14."; return out; }
+  if (n > 14 && r.aa.startsWith(o.aa)) { out.short = "reads on"; out.text = "The stop is gone: it reads on " + L(n - 14) + " into what follows" + (r.stop != null ? ", to the next stop in step." : ends + "."); return out; }
+  const diff = []; for (let i = 0; i < Math.max(n, 14); i++) if (r.aa[i] !== o.aa[i]) diff.push(i);
+  if (diff.length === 1 && n === 14) { const i = diff[0]; out.short = AA3[o.aa[i]] + "→" + AA3[r.aa[i]] + " at " + (i + 1); out.text = "Amino acid " + (i + 1) + ": " + AA3[o.aa[i]] + " to " + AA3[r.aa[i]] + "."; return out; }
+  out.short = diff.length + " changed"; out.text = L(diff.length) + " changed: " + L(n) + " in all."; return out;
+}
+
+/* ---- the populations ---- */
+/* binomial draw: inverse CDF while the mean is small, normal beyond (lesson 14 E's) */
+function A_binom(n, p, rng) {
+  if (p <= 0) return 0;
+  if (p >= 1) return n;
+  if (p > 0.5) return n - A_binom(n, 1 - p, rng);
+  const m = n * p;
+  if (m < 30) {
+    const q = 1 - p, r = p / q; let pr = Math.pow(q, n), c = pr, k = 0; const u = rng();
+    while (u > c && k < n) { pr *= r * (n - k) / (k + 1); k++; c += pr; }
+    return k;
+  }
+  const k = Math.round(m + Math.sqrt(m * (1 - p)) * gauss(rng));
+  return k < 0 ? 0 : k > n ? n : k;
+}
+/* one population: the changed copies, generation by generation, from one */
+function A_fate(N, h, s, rng) {
+  const n2 = 2 * N, T = 4 * N, path = [1]; let k = 1;
+  for (let t = 1; t <= T; t++) {
+    const p = k / n2, q = 1 - p, w2 = 1 - s, w1 = 1 - h * s;           /* two changed copies, one; none = 1 */
+    const wbar = p * p * w2 + 2 * p * q * w1 + q * q;
+    k = wbar > 0 ? A_binom(n2, (p * p * w2 + p * q * w1) / wbar, rng) : 0; path.push(k);
+    if (k === 0 || k === n2) break;
+  }
+  return { path, end: k === 0 ? "lost" : k === n2 ? "fixed" : "here", n2, T };
+}
+/* the long run, from the diffusion formula: u = integral_0^p psi / integral_0^1 psi, psi(x) = exp(4Ns(h x + (1 - 2h) x^2 / 2)),
+   in logs so a large 4Ns cannot overflow */
+function A_longRun(N, h, s) {
+  const L = x => 4 * N * s * (h * x + (1 - 2 * h) * x * x / 2), n = 4000, p0 = 1 / (2 * N);
+  let m = -Infinity; for (let i = 0; i < n; i++) m = Math.max(m, L((i + 0.5) / n)); m = Math.max(m, L(0));
+  let den = 0; for (let i = 0; i < n; i++) den += Math.exp(L((i + 0.5) / n) - m) / n;
+  let num = 0; for (let i = 0; i < 50; i++) num += Math.exp(L((i + 0.5) / 50 * p0) - m) * p0 / 50;
+  return num / den;
+}
+const A_S = [-0.1, -0.05, -0.02, -0.01, -0.005, 0, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1];
+const A_NS = [10, 20, 50, 100, 200, 500, 1000];
+const A_POPS = 100;
+const A_set = () => ({ s: A.eff && A.eff.syn ? 0 : A_S[+$("A_s").value], h: +$("A_h").value, N: A_NS[+$("A_N").value] });
+/* state: step pick -> kind -> set -> run -> done, then the next change */
+const A = { no: 0, mut: null, step: "pick", eff: null, picked: [], rows: [], run: null, sel: null, hover: null, hits: [] };
+function A_runAll(set, seed) {
+  const rng = mulberry32(seed), runs = [];
+  for (let i = 0; i < A_POPS; i++) runs.push(A_fate(set.N, set.h, set.s, rng));
+  const c = e => runs.filter(r => r.end === e).length;
+  return { set, runs, lost: c("lost"), here: c("here"), fixed: c("fixed"), longRun: A_longRun(set.N, set.h, set.s) };
+}
+
+/* ---- drawing the sequence: four rows of 36, amino acids over their codons ---- */
+const SQ = { W: 760, H: 320, LM: 30, NW: 19.5, TOP: 26, ROWH: 72, AAH: 22, NH: 24, GAP: 5 };
+const sqX = i => SQ.LM + (i % PER_ROW) * SQ.NW;
+const sqRow = i => Math.floor(i / PER_ROW);
+const sqAAY = r => SQ.TOP + r * SQ.ROWH;
+const sqNTY = r => sqAAY(r) + SQ.AAH + SQ.GAP;
+function A_drawSeq() {
+  const cv = $("A_seq"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, SQ.W, SQ.H);
+  const m = A.mut, ef = m ? A.eff : null, seq = m ? ef.seq : BASE, r = m ? ef.r : ORIG;
+  /* codons of the reading, the changed ones marked against the original's codon at the same count from the start */
+  const cods = r.codons;
+  cods.forEach((c, ci) => {
+    if (c.at >= VIEW) return;
+    const o = ORIG.codons[ci], changed = m && (!ef.sameStart || !o || o.aa !== c.aa);
+    const start = ci === 0, stop = c.aa === "*", lit = A.hover && A.hover.codon === ci;
+    /* a codon can straddle two rows: draw each piece */
+    for (let j = 0; j < 3; ) {
+      const i0 = c.at + j; if (i0 >= VIEW) break;
+      const row = sqRow(i0); let len = 1; while (j + len < 3 && sqRow(c.at + j + len) === row && c.at + j + len < VIEW) len++;
+      const x = sqX(i0) + 1, y = sqAAY(row), w = len * SQ.NW - 2;
+      ctx.fillStyle = stop ? HOT_SOFT : start ? BLUE_SOFT : lit ? "#e6e3d8" : PAPER; rrect(ctx, x, y, w, SQ.AAH, 4); ctx.fill();
+      if (changed) { ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; rrect(ctx, x, y, w, SQ.AAH, 4); ctx.stroke(); }
+      else if (lit) { ctx.strokeStyle = INK; ctx.lineWidth = 1.2; rrect(ctx, x, y, w, SQ.AAH, 4); ctx.stroke(); }
+      if (len >= 2)            /* a codon split 1 + 2 over two rows is labelled on its longer piece */
+        cardText(ctx, AA3[c.aa], x + w / 2, y + SQ.AAH / 2 + 0.5, { size: 12, align: "center", bold: start || stop || changed, col: changed ? HOT : INK });
+      j += len;
+    }
+    if (start && c.at < VIEW) cardText(ctx, "start", sqX(c.at) + 1, sqAAY(sqRow(c.at)) - 8, { size: 10.5, col: BLUE });
+    if (stop) cardText(ctx, "stop", sqX(c.at) + 1, sqAAY(sqRow(c.at)) - 8, { size: 10.5, col: HOT });
+  });
+  /* the letters */
+  for (let i = 0; i < VIEW && i < seq.length; i++) {
+    const row = sqRow(i), x = sqX(i) + 1, y = sqNTY(row), w = SQ.NW - 2;
+    const isNew = m && m.kind !== "del" && i === m.pos, sel = A.sel === i, hov = A.hover && A.hover.nt === i;
+    ctx.fillStyle = isNew ? HOT_SOFT : hov ? PAPER : "#fff"; ctx.fillRect(x, y, w, SQ.NH);
+    ctx.strokeStyle = isNew ? HOT : sel ? INK : RULE; ctx.lineWidth = sel ? 2 : 1; ctx.strokeRect(x + 0.5, y + 0.5, w - 1, SQ.NH - 1);
+    cardText(ctx, seq[i], x + w / 2, y + SQ.NH / 2 + 0.5, { size: 13.5, mono: true, align: "center", bold: isNew, col: isNew ? HOT : INK });
+  }
+  /* a letter taken out: a mark where it was */
+  if (m && m.kind === "del" && m.pos < VIEW) {
+    const row = sqRow(m.pos), x = sqX(m.pos), y = sqNTY(row);
+    ctx.strokeStyle = HOT; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x, y - 3); ctx.lineTo(x, y + SQ.NH + 3); ctx.stroke();
+    ctx.fillStyle = HOT; ctx.beginPath(); ctx.moveTo(x - 5, y + SQ.NH + 9); ctx.lineTo(x + 5, y + SQ.NH + 9); ctx.lineTo(x, y + SQ.NH + 3); ctx.closePath(); ctx.fill();
+  }
+  cardText(ctx, "5′", 8, sqNTY(0) + SQ.NH / 2, { size: 12, col: MUTED });
+  const lastRow = sqRow(VIEW - 1);
+  cardText(ctx, "3′", sqX(VIEW - 1) + SQ.NW + 6, sqNTY(lastRow) + SQ.NH / 2, { size: 12, col: MUTED });
+  /* every tenth letter numbered under it */
+  for (let i = 9; i < VIEW; i += 10) cardText(ctx, String(i + 1), sqX(i) + SQ.NW / 2, sqNTY(sqRow(i)) + SQ.NH + 8, { size: 9.5, col: "#a9a597", align: "center" });
+  ctx.restore();
+  /* under it: where the reading starts and stops */
+  const stopTxt = r.start < 0 ? "no ATG: nothing is read" : r.stop == null ? "no stop" : r.stop + 3 > VIEW ? "the stop is " + (r.stop + 3 - VIEW) + " letters past the end of what is shown" : "stop at letters " + (r.stop + 1) + "-" + (r.stop + 3);
+  $("A_seqRead").innerHTML = r.start < 0 ? lab(stopTxt) : lab("start at letter") + " <b>" + (r.start + 1) + "</b> " + lab("· " + stopTxt.replace(/^stop/, "stop")) + " " + lab("·") + " <b>" + r.aa.length + "</b> " + lab("amino acids");
+}
+
+/* ---- the wheel: first letter in the middle, then the second, the third, the amino acid ---- */
+const WH = { W: 380, H: 380, cx: 190, cy: 190, r0: 26, r1: 62, r2: 98, r3: 126, r4: 182 };
+function A_wheelCodons() {
+  /* which codons to light: the one pointed at, else the change's old (blue) and new (red) */
+  if (A.hover && A.hover.codon != null) { const r = A.mut ? A.eff.r : ORIG, c = r.codons[A.hover.codon]; return c ? [{ cod: c.cod, col: INK }] : []; }
+  if (A.mut && A.eff) {
+    const r = A.eff.r, o = ORIG, out = [];
+    const ci = r.codons.findIndex((c, i) => !A.eff.sameStart || !o.codons[i] || o.codons[i].cod !== c.cod);
+    if (ci >= 0 && A.eff.sameStart && o.codons[ci]) out.push({ cod: o.codons[ci].cod, col: BLUE });
+    if (ci >= 0) out.push({ cod: r.codons[ci].cod, col: HOT });
+    return out;
+  }
+  return [];
+}
+function A_drawWheel() {
+  const cv = $("A_wheel"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, WH.W, WH.H);
+  const { cx, cy } = WH, a0 = -Math.PI / 2, seg = (ri, ro, t0, t1, fill, stroke) => {
+    ctx.beginPath(); ctx.arc(cx, cy, ro, t0, t1); ctx.arc(cx, cy, ri, t1, t0, true); ctx.closePath();
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 0.8; ctx.stroke(); } };
+  const radial = (t, r, txt, o) => { ctx.save(); ctx.translate(cx + r * Math.cos(t), cy + r * Math.sin(t)); let rot = t; const flip = Math.cos(t) < 0; if (flip) rot += Math.PI;
+    ctx.rotate(rot); cardText(ctx, txt, 0, 0, Object.assign({ align: flip ? "right" : "left" }, o)); ctx.restore(); };
+  const lit = A_wheelCodons();
+  const litCol = (cod, depth) => { const h = lit.find(l => l.cod.slice(0, depth) === cod.slice(0, depth)); return h ? h.col : null; };
+  for (let a = 0; a < 4; a++) {
+    const t0 = a0 + a * Math.PI / 2, t1 = t0 + Math.PI / 2;
+    const c1 = litCol(WB[a], 1);
+    seg(WH.r0, WH.r1, t0, t1, c1 ? (c1 === HOT ? HOT_SOFT : BLUE_SOFT) : (a % 2 ? "#fff" : PAPER), RULE);
+    const tm = (t0 + t1) / 2; cardText(ctx, WB[a], cx + (WH.r0 + WH.r1) / 2 * Math.cos(tm), cy + (WH.r0 + WH.r1) / 2 * Math.sin(tm), { size: 16, bold: true, align: "center", mono: true });
+    for (let b = 0; b < 4; b++) {
+      const u0 = t0 + b * Math.PI / 8, u1 = u0 + Math.PI / 8, c2 = litCol(WB[a] + WB[b], 2);
+      seg(WH.r1, WH.r2, u0, u1, c2 ? (c2 === HOT ? HOT_SOFT : BLUE_SOFT) : ((a + b) % 2 ? "#fff" : PAPER), RULE);
+      const um = (u0 + u1) / 2; cardText(ctx, WB[b], cx + (WH.r1 + WH.r2) / 2 * Math.cos(um), cy + (WH.r1 + WH.r2) / 2 * Math.sin(um), { size: 12.5, bold: true, align: "center", mono: true });
+      /* third letters, and the amino acids in runs */
+      let run0 = 0;
+      for (let c = 0; c < 4; c++) {
+        const v0 = u0 + c * Math.PI / 32, v1 = v0 + Math.PI / 32, cod = WB[a] + WB[b] + WB[c], aa = CODE[cod], c3 = litCol(cod, 3);
+        seg(WH.r2, WH.r3, v0, v1, c3 ? (c3 === HOT ? HOT_SOFT : BLUE_SOFT) : (aa === "*" ? HOT_SOFT : cod === "ATG" ? BLUE_SOFT : "#fff"), RULE);
+        const vm = (v0 + v1) / 2; cardText(ctx, WB[c], cx + (WH.r2 + WH.r3) / 2 * Math.cos(vm), cy + (WH.r2 + WH.r3) / 2 * Math.sin(vm), { size: 9.5, align: "center", mono: true, col: MUTED });
+        if (c === 3 || CODE[WB[a] + WB[b] + WB[c + 1]] !== aa) {
+          const g0 = u0 + run0 * Math.PI / 32, g1 = v1, gm = (g0 + g1) / 2, any = lit.find(l => CODE[l.cod] === aa && l.cod.slice(0, 2) === cod.slice(0, 2) && "TCAG".indexOf(l.cod[2]) >= run0 && "TCAG".indexOf(l.cod[2]) <= c);
+          seg(WH.r3 + 2, WH.r4 - 22, g0 + 0.004, g1 - 0.004, any ? (any.col === HOT ? HOT_SOFT : BLUE_SOFT) : (aa === "*" ? HOT_SOFT : null), null);
+          radial(gm, WH.r3 + 6, AA3[aa], { size: 11, bold: !!any || aa === "*" || aa === "M", col: any ? any.col : aa === "*" ? HOT : INK });
+          run0 = c + 1;
+        }
+      }
+    }
+  }
+  /* a lit codon's path: a line from the middle out through its three letters */
+  for (const l of lit) {
+    const a = WB.indexOf(l.cod[0]), b = WB.indexOf(l.cod[1]), c = WB.indexOf(l.cod[2]);
+    const t1 = a0 + a * Math.PI / 2 + Math.PI / 4, t2 = a0 + a * Math.PI / 2 + b * Math.PI / 8 + Math.PI / 16, t3 = a0 + a * Math.PI / 2 + b * Math.PI / 8 + c * Math.PI / 32 + Math.PI / 64;
+    const P = (t, r) => [cx + r * Math.cos(t), cy + r * Math.sin(t)];
+    polyline(ctx, [[cx, cy], P(t1, (WH.r0 + WH.r1) / 2 + 12), P(t2, (WH.r1 + WH.r2) / 2 + 9), P(t3, (WH.r2 + WH.r3) / 2 + 7)], l.col, 2, 0.85);
+  }
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(cx, cy, WH.r0 - 2, 0, 6.2832); ctx.fill();
+  cardText(ctx, "1st", cx, cy - 6, { size: 10, col: MUTED, align: "center" }); cardText(ctx, "letter", cx, cy + 6, { size: 10, col: MUTED, align: "center" });
+  ctx.restore();
+  const say = l => '<b style="color:' + l.col + '">' + l.cod + " → " + AA3[CODE[l.cod]] + "</b>";
+  $("A_wheelRead").innerHTML = lit.length === 2 ? say(lit[0]) + " " + lab("before, now") + " " + say(lit[1]) : lit.length ? say(lit[0]) : lab("point at a codon in the sequence to light it here");
+}
+
+/* ---- the 100 populations: lines on the left, a square each on the right ---- */
+const RN = { W: 760, H: 270, px: 52, py: 14, pw: 460, ph: 214, gx: 548, gy: 24, gs: 17, gg: 3 };
+/* the generation shown t seconds into the playback: the first 20 slowly, the rest catching up by 6 s */
+function A_genAt(t, T) {
+  const early = Math.min(20, T);
+  if (t < 2.4) return Math.min(T, Math.floor(t / 2.4 * early));
+  if (T <= early) return T;
+  const f = Math.min(1, (t - 2.4) / 3.6);
+  return Math.min(T, early + Math.floor((T - early) * f * f));
+}
+function A_drawRuns() {
+  const cv = $("A_runs"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, RN.W, RN.H);
+  const q = A.run || A.lastRes;
+  const T = q ? 4 * q.set.N : 400, g = A.run ? A.run.g : q ? T : 0;
+  const xs = t => RN.px + t / T * RN.pw, ys = p => RN.py + RN.ph - p * RN.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(RN.px, RN.py); ctx.lineTo(RN.px, RN.py + RN.ph); ctx.lineTo(RN.px + RN.pw, RN.py + RN.ph); ctx.stroke();
+  for (const v of [0, 0.25, 0.5, 0.75, 1]) { cardText(ctx, String(v), RN.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+    if (v) { ctx.strokeStyle = "#f0eee8"; ctx.beginPath(); ctx.moveTo(RN.px + 1, ys(v)); ctx.lineTo(RN.px + RN.pw, ys(v)); ctx.stroke(); } }
+  for (let i = 0; i <= 4; i++) cardText(ctx, String(Math.round(T * i / 4)), xs(T * i / 4), RN.py + RN.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation (4N = " + T + ")", RN.px + RN.pw / 2, RN.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, RN.py + RN.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "share of copies carrying the change", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  let lost = 0, here = 0, fixed = 0;
+  if (q) {
+    const n2 = 2 * q.set.N;
+    q.runs.forEach((r, i) => {
+      const upto = Math.min(g, r.path.length - 1), pts = [];
+      for (let t = 0; t <= upto; t++) pts.push([xs(t), ys(r.path[t] / n2)]);
+      const ended = r.path.length - 1 <= g, k = r.path[upto];
+      const st = ended && r.end === "lost" ? "lost" : ended && r.end === "fixed" ? "fixed" : "here";
+      if (st === "lost") lost++; else if (st === "fixed") fixed++; else here++;
+      polyline(ctx, pts, st === "lost" ? "#a9a597" : st === "fixed" ? INK : BLUE, st === "here" ? 1.4 : 1.1, st === "lost" ? 0.5 : 0.85);
+      /* the square: filled from the bottom by the share of copies */
+      const gx = RN.gx + (i % 10) * (RN.gs + RN.gg), gy = RN.gy + Math.floor(i / 10) * (RN.gs + RN.gg), f = k / n2;
+      ctx.fillStyle = "#fff"; ctx.fillRect(gx, gy, RN.gs, RN.gs);
+      if (st === "fixed") { ctx.fillStyle = INK; ctx.fillRect(gx, gy, RN.gs, RN.gs); }
+      else if (st === "here") { const hh = Math.max(2, f * RN.gs); ctx.fillStyle = BLUE; ctx.fillRect(gx, gy + RN.gs - hh, RN.gs, hh); }
+      ctx.strokeStyle = st === "lost" ? "#d8d4c8" : "#9a968a"; ctx.lineWidth = 1; ctx.strokeRect(gx + 0.5, gy + 0.5, RN.gs - 1, RN.gs - 1);
+      if (st === "lost") { ctx.strokeStyle = "#c5c1b4"; ctx.beginPath(); ctx.moveTo(gx + 4, gy + 4); ctx.lineTo(gx + RN.gs - 4, gy + RN.gs - 4); ctx.moveTo(gx + RN.gs - 4, gy + 4); ctx.lineTo(gx + 4, gy + RN.gs - 4); ctx.stroke(); }
+    });
+  } else {
+    for (let i = 0; i < A_POPS; i++) { const gx = RN.gx + (i % 10) * (RN.gs + RN.gg), gy = RN.gy + Math.floor(i / 10) * (RN.gs + RN.gg);
+      ctx.strokeStyle = "#e2e0d9"; ctx.lineWidth = 1; ctx.strokeRect(gx + 0.5, gy + 0.5, RN.gs - 1, RN.gs - 1); }
+    cardText(ctx, "Your change's 100 populations play out here.", RN.px + RN.pw / 2, RN.py + RN.ph / 2, { size: 13, col: MUTED, align: "center" });
+  }
+  cardText(ctx, "the 100 populations", RN.gx + 98, RN.gy - 12, { size: 11, col: MUTED, align: "center" });
+  ctx.restore();
+  const rd = $("A_runsRead");
+  if (!q) { rd.innerHTML = ""; return; }
+  const lr = q.longRun * A_POPS;
+  rd.innerHTML = lab("generation") + " <b>" + g + "</b> " + lab("of " + T + " · lost in") + " <b>" + lost + "</b> " + lab("· still here in") + ' <b style="color:' + BLUE + '">' + here + "</b> " +
+    lab("· in every copy in") + " <b>" + fixed + "</b>" + (A.run ? "" : "<br>" + lab("the formula for the long run: in every copy in about") + " <b>" + (lr >= 0.1 ? lr.toFixed(1) : lr >= 0.001 ? lr.toFixed(3) : "0.000") + "</b> " + lab("of 100" + (q.set.s === 0 ? " (1 in 2N)" : "")));
+}
+
+/* ---- the table of ten ---- */
+function A_changeText(m) {
+  return m.kind === "sub" ? "letter " + (m.pos + 1) + ": " + m.from + " → " + m.to : m.kind === "ins" ? "letter " + (m.pos + 1) + ": " + m.to + " put in" : "letter " + (m.pos + 1) + ": " + m.from + " taken out";
+}
+function A_drawTable() {
+  const hd = "<tr><th>#</th><th>the change</th><th>kind</th><th>the protein</th><th>s</th><th>h</th><th>N</th><th>lost</th><th>still here</th><th>in every copy</th></tr>";
+  let body = "";
+  for (let i = 0; i < A_TOTAL; i++) {
+    const r = A.rows[i];
+    if (!r) { body += '<tr class="empty"><td>' + (i + 1) + "</td><td colspan=\"9\">·</td></tr>"; continue; }
+    body += "<tr><td>" + (i + 1) + "</td><td>" + A_changeText(r.mut) + "</td><td>" + r.kind + ' <span class="' + (r.firstOk ? "ok" : "off") + '">' + (r.firstOk ? "✓" : "✗") + "</span></td><td>" + r.eff.short +
+      '</td><td class="num">' + r.res.set.s + '</td><td class="num">' + (r.eff.syn ? "·" : r.res.set.h.toFixed(1)) + '</td><td class="num">' + r.res.set.N + '</td><td class="num">' + r.res.lost + '</td><td class="num">' + r.res.here + '</td><td class="num">' + r.res.fixed + "</td></tr>";
+  }
+  $("A_table").innerHTML = hd + body;
+}
+
+/* ---- the card ---- */
+function A_sync() {
+  const st = A.step;
+  $("A_no").textContent = Math.min(A.no + 1, A_TOTAL);
+  $("A_step").textContent = A.rows.length >= A_TOTAL && st === "done" ? "All ten played out. The sequence is yours to play with: click a letter for another change." :
+    st === "pick" ? "Click any letter in the sequence." :
+    st === "kind" ? "What kind of change was that?" :
+    st === "set" ? (A.eff.syn ? "Set N, then Go." : "Set s, h and N, then Go.") :
+    st === "run" ? "Running: the controls are locked until it ends." : "";
+  $("A_kindBox").hidden = !(st === "kind" || st === "set" || st === "run" || st === "done") || !A.mut;
+  document.querySelectorAll("#A_kindBox button").forEach(b => { const k = b.dataset.kind, p = A.picked.includes(k), right = A.mut && kindOf(A.mut) === k;
+    b.classList.toggle("wrong", p && !right); b.classList.toggle("right", p && right); b.disabled = st !== "kind" || p; });
+  $("A_effect").innerHTML = A.mut && st !== "pick" ? "<b>The protein:</b> " + A.eff.text : "";
+  $("A_controls").hidden = !(st === "set" || st === "run" || st === "done") || !A.mut;
+  const syn = A.eff && A.eff.syn;
+  $("A_sRow").hidden = syn; $("A_hRow").hidden = syn;
+  ["A_s", "A_h", "A_N"].forEach(id => { $(id).disabled = st !== "set"; });
+  $("A_sV").textContent = (A_S[+$("A_s").value] > 0 ? "" : "") + A_S[+$("A_s").value]; $("A_hV").textContent = (+$("A_h").value).toFixed(1); $("A_NV").textContent = String(A_NS[+$("A_N").value]);
+  $("A_go").hidden = st !== "set"; $("A_next").hidden = st !== "done";
+  $("A_next").textContent = A.rows.length >= A_TOTAL ? "Another change" : "Next change";
+  $("A_undo").hidden = st !== "kind";
+  if (syn) $("A_effect").innerHTML += "<br>" + lab("The protein is the same, so s = 0.");
+  tick("A", "A1", A.rows.length >= A_TOTAL, Math.min(A.rows.length, A_TOTAL) + " of " + A_TOTAL);
+}
+function A_paint() { A_drawSeq(); A_drawWheel(); A_drawRuns(); A_drawTable(); A_sync(); A_code(); }
+
+/* ---- the steps ---- */
+function A_openPop(i) {
+  if (A.step !== "pick" && !(A.step === "done")) return;
+  if (A.step === "done") A_nextChange();
+  A.sel = i;
+  const pop = $("A_pop"), cv = $("A_seq"), k = cv.getBoundingClientRect().width / SQ.W, b = BASE[i];
+  const others = "ACGT".split("").filter(x => x !== b);
+  pop.innerHTML = '<div class="pt">Letter ' + (i + 1) + ": <b>" + b + "</b></div>" +
+    '<div class="pr"><span>Change it to</span>' + others.map(x => '<button data-act="sub" data-to="' + x + '">' + x + "</button>").join("") + "</div>" +
+    '<div class="pr"><span>Put a new letter in front of it</span>' + "ACGT".split("").map(x => '<button data-act="ins" data-to="' + x + '">' + x + "</button>").join("") + "</div>" +
+    '<div class="pr"><button class="wide" data-act="del">Take it out</button><button class="wide" data-act="cancel">Cancel</button></div>';
+  const left = clamp(sqX(i) * k - 10, 4, cv.clientWidth - 262), top = (sqNTY(sqRow(i)) + SQ.NH + 6) * k + cv.offsetTop;
+  pop.style.left = (left + cv.offsetLeft) + "px"; pop.style.top = top + "px"; pop.hidden = false;
+  pop.querySelectorAll("button").forEach(btn => btn.addEventListener("click", ev => { ev.stopPropagation(); A_edit(btn.dataset.act, i, btn.dataset.to); }));
+  A_drawSeq();
+}
+function A_closePop() { $("A_pop").hidden = true; A.sel = null; A_drawSeq(); }
+function A_edit(act, i, to) {
+  $("A_pop").hidden = true; A.sel = null;
+  if (act === "cancel") { A_drawSeq(); return; }
+  A.mut = act === "sub" ? { kind: "sub", pos: i, from: BASE[i], to } : act === "ins" ? { kind: "ins", pos: i, from: null, to } : { kind: "del", pos: i, from: BASE[i], to: null };
+  A.eff = effectOf(A.mut); A.picked = []; A.step = "kind"; $("A_kindFb").innerHTML = ""; bump("A");
+  A_paint();
+}
+function A_undo() { if (A.step !== "kind" || A.picked.length) return; A.mut = null; A.eff = null; A.step = "pick"; A_paint(); }
+function A_kind(k) {
+  if (A.step !== "kind" || A.picked.includes(k)) return;
+  const ok = kindOf(A.mut) === k, pos = A.no < A_TOTAL ? BIT["A" + (A.no + 1)] : null;
+  if (!A.picked.length) { A.firstOk = ok; if (pos != null && firstTry(pos)) record(pos, ok); }
+  A.picked.push(k); bump("A");
+  $("A_kindFb").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span> — try again';
+  if (ok) A.step = "set";
+  A_paint();
+}
+function A_go() {
+  if (A.step !== "set") return;
+  const set = A_set(), res = A_runAll(set, pageSeed("l16pops", 1, 999999) + 104729 * A.no + 7919 * (A.extraRuns || 0));
+  A.counted = A.rows.length < A_TOTAL; if (!A.counted) A.extraRuns = (A.extraRuns || 0) + 1;
+  A.step = "run"; A.run = Object.assign(res, { t: 0, g: 0 }); bump("A");
+  A_sync(); A_code(); A_loop();
+}
+function A_endRun() {
+  const q = A.run; if (!q) return;
+  A.run = null; A.step = "done"; A.lastRes = q;
+  const row = { mut: A.mut, eff: A.eff, kind: kindOf(A.mut), firstOk: !!A.firstOk, res: q };
+  if (A.counted) A.rows.push(row);
+  if (A.rows.length >= A_TOTAL && !Gates.A.done) finishStage("A");
+  A_paint();
+}
+function A_nextChange() {
+  if (A.step !== "done") return;
+  if (A.no < A_TOTAL) A.no++;
+  A.mut = null; A.eff = null; A.picked = []; A.step = "pick"; $("A_kindFb").innerHTML = "";
+  A_paint();
+}
+let A_on = false, A_last = 0;
+function A_loop() { if (A_on) return; A_on = true; A_last = 0; requestAnimationFrame(A_frame); }
+function A_frame(ts) {
+  const dt = Math.min(0.05, (ts - (A_last || ts)) / 1000); A_last = ts;
+  const q = A.run;
+  if (q) { q.t += dt; const T = 4 * q.set.N; q.g = A_genAt(q.t, T); A_drawRuns(); if (q.g >= T || q.runs.every(r => r.path.length - 1 <= q.g)) A_endRun(); }
+  if (A.run) requestAnimationFrame(A_frame); else A_on = false;
+}
+
+/* ---- the R panel ---- */
+function A_code() {
+  const st = A.mut && A.step !== "pick" ? A_set() : { s: A_S[+$("A_s").value], h: +$("A_h").value, N: A_NS[+$("A_N").value] };
+  codeInto("codeA", [
+    ["", "# Lesson 16, Stage A -- one new change, in 100 populations of N, for 4N generations"],
+    ["N", "N <- " + st.N + "                          # individuals; 2N copies of the gene"],
+    ["s", "s <- " + st.s + "                          # two changed copies: young x (1 - s)"],
+    ["h", "h <- " + st.h + "                          # one changed copy:  young x (1 - h * s)"],
+    ["", "fate <- replicate(100, {"],
+    ["", "  k <- 1                          # one changed copy to start"],
+    ["", "  for (t in 1:(4 * N)) {"],
+    ["", "    p <- k / (2 * N); q <- 1 - p"],
+    ["s", "    w <- p^2 * (1 - s) + 2 * p * q * (1 - h * s) + q^2"],
+    ["s", "    p2 <- (p^2 * (1 - s) + p * q * (1 - h * s)) / w"],
+    ["N", "    k <- rbinom(1, 2 * N, p2)       # the next generation's copies"],
+    ["", "    if (k == 0 || k == 2 * N) break"],
+    ["", "  }"],
+    ["", "  if (k == 0) \"lost\" else if (k == 2 * N) \"in every copy\" else \"still here\""],
+    ["", "})"],
+    ["", "table(fate)"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE B — copying, or sex (JM, 2026-10-08: "Mueller's ratchet ... where
+   they have an asexual reproduction, and they produce gametes, and they do
+   sexual reproduction ... And the fitness effects are shown. Something kind
+   of like the meiosis and gamete interactive we did in a prior lesson").
+
+   THE BENCH (lesson 9's, in miniature). Two parents, each with two
+   chromosomes of BG genes and three harmful changes, none of them on a clean
+   chromosome. Copying hands a young both chromosomes whole. Meiosis makes
+   four gametes from one crossover the student places: the two chromosomes
+   as they were and the two recombinants. A young with no harmful change at
+   all needs a crossover in the right stretch on both parents.
+
+   THE POPULATIONS. N individuals; two chromosomes each; a harmful change is
+   a place on a chromosome (any two are different changes). Each one
+   multiplies the young by 1 - s. Each young: without sex, a copy of one
+   parent drawn by its young; with sex, a gamete from each of two different
+   parents drawn the same way, a gamete being the two chromosomes joined at
+   one crossover at a random place. Every young then picks up a Poisson(U)
+   number of new harmful changes, on a random chromosome at a random place.
+   No change is ever undone. Both start clean.
+   MEASURED (node prototype of this engine; best = fewest harmful changes
+   anyone carries, at generation 200, 40 runs a setting; U 0.3, s 0.1 unless
+   said): without sex N 100 4-7-10 (10th-50th-90th), N 500 0-1-3, N 1000 0-0-1;
+   with sex 0 at all of them. Between generations 100 and 200 the best class
+   without sex is lost 2-4-8 times at N 100 and 0-1-2 at N 500; with sex its
+   best stays put and its average settles at U/s (3.0 here). U 0.5: without
+   sex 15-19-22, with sex 0-1-1. s 0.05: 14-17-21 (milder harm, faster).
+   The rate goes with the size the best class settles at, N e^(-U/s).
+   ===================================================================== */
+const BG = 10, B_BENCH_S = 0.1;
+/* the bench's parents: genes (1-10) with a harmful change, chromosome from its mother first */
+const B_PAR = { P: [[2, 4], [8]], M: [[6], [1, 3]] };
+const BB = { xo: { P: null, M: null }, gam: null, pick: { P: null, M: null }, young: [], copies: 0, hits: [], hover: null };
+const B_ready = () => (BB.copies > 0 && BB.young.some(y => y.n === 0)) || INSTRUCTOR;
+/* four gametes from one crossover after gene x (null: none): each its harmful genes, and which of the
+   parent's two chromosomes each gene came from (0 its mother's, 1 its father's) */
+function B_gametes(par, x) {
+  const [a, b] = par, all = s => Array(BG).fill(s);
+  const cut = (u, v, su) => ({ m: u.filter(g => g <= x).concat(v.filter(g => g > x)), src: all(0).map((_, i) => i + 1 <= x ? su : 1 - su) });
+  return x == null ? [{ m: a.slice(), src: all(0) }, { m: a.slice(), src: all(0) }, { m: b.slice(), src: all(1) }, { m: b.slice(), src: all(1) }]
+                   : [{ m: a.slice(), src: all(0) }, cut(a, b, 0), cut(b, a, 1), { m: b.slice(), src: all(1) }];
+}
+const B_fit = n => Math.pow(1 - B_BENCH_S, n);
+/* ---- drawing the bench ---- */
+const BCH = { W: 760, H: 380, gw: 15, gh: 13, gg: 2 };
+const BX = { copy: 30, P: 290, M: 506 };
+function B_strand(ctx, x, y, marks, o) {
+  o = o || {};
+  for (let g = 1; g <= BG; g++) {
+    const gx = x + (g - 1) * (BCH.gw + BCH.gg), bad = marks.includes(g);
+    ctx.fillStyle = bad ? HOT : o.src ? (o.src[g - 1] ? BLUE_SOFT : PLAIN) : (o.col || PLAIN); ctx.fillRect(gx, y, BCH.gw, BCH.gh);
+    ctx.strokeStyle = "rgba(29,29,27,0.25)"; ctx.lineWidth = 1; ctx.strokeRect(gx + 0.5, y + 0.5, BCH.gw - 1, BCH.gh - 1);
+  }
+  if (o.ring) { ctx.strokeStyle = o.ring; ctx.lineWidth = 2; ctx.strokeRect(x - 3, y - 3, BG * (BCH.gw + BCH.gg) + 4, BCH.gh + 6); }
+}
+const B_sw = BG * (BCH.gw + BCH.gg) - BCH.gg;
+const B_say = n => n + " harmful · young ×" + B_fit(n).toFixed(2);
+function B_drawBench() {
+  const cv = $("B_bench"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, BCH.W, BCH.H);
+  BB.hits = [];
+  ctx.strokeStyle = RULE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(256, 12); ctx.lineTo(256, BCH.H - 12); ctx.stroke();
+  cardText(ctx, "Without sex", BX.copy, 20, { size: 13, bold: true });
+  cardText(ctx, "With sex", BX.P, 20, { size: 13, bold: true });
+  /* without sex: the parent, then its copies */
+  const P = B_PAR.P, nP = P[0].length + P[1].length;
+  cardText(ctx, "parent", BX.copy, 44, { size: 11, col: MUTED });
+  B_strand(ctx, BX.copy, 56, P[0]); B_strand(ctx, BX.copy, 72, P[1], { col: BLUE_SOFT });
+  cardText(ctx, B_say(nP), BX.copy, 100, { size: 11.5, mono: true });
+  for (let i = 0; i < Math.min(3, BB.copies); i++) {
+    const y = 142 + i * 76;
+    cardText(ctx, "young " + (BB.copies > 3 ? BB.copies - 2 + i : i + 1), BX.copy, y - 12, { size: 11, col: MUTED });
+    B_strand(ctx, BX.copy, y, P[0]); B_strand(ctx, BX.copy, y + 16, P[1], { col: BLUE_SOFT });
+    cardText(ctx, B_say(nP), BX.copy, y + 42, { size: 11.5, mono: true });
+  }
+  if (!BB.copies) cardText(ctx, "Copy makes a young here.", BX.copy, 150, { size: 12, col: MUTED });
+  /* with sex: two parents, their crossovers, their gametes, the young */
+  for (const who of ["P", "M"]) {
+    const x0 = BX[who], par = B_PAR[who], n = par[0].length + par[1].length, xo = BB.xo[who];
+    cardText(ctx, who === "P" ? "parent" : "its mate", x0, 44, { size: 11, col: MUTED });
+    B_strand(ctx, x0, 56, par[0]); B_strand(ctx, x0, 72, par[1], { col: BLUE_SOFT });
+    cardText(ctx, B_say(n), x0, 100, { size: 11.5, mono: true });
+    /* the gaps a crossover can go in */
+    for (let g = 1; g < BG; g++) {
+      const gx = x0 + g * (BCH.gw + BCH.gg) - BCH.gg / 2;
+      BB.hits.push({ x0: gx - 6, x1: gx + 6, y0: 50, y1: 92, act: () => { if (BB.gam) return; BB.xo[who] = BB.xo[who] === g ? null : g; bump("B"); B_paintBench(); } });
+      const on = xo === g, hov = BB.hover && BB.hover.who === who && BB.hover.g === g;
+      if (on || hov) { ctx.save(); if (!on) ctx.setLineDash([3, 2]); ctx.strokeStyle = HOT; ctx.lineWidth = on ? 2 : 1.2; ctx.beginPath(); ctx.moveTo(gx, 50); ctx.lineTo(gx, 92); ctx.stroke(); ctx.restore(); }
+      if (on) { ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(gx - 5, 66); ctx.lineTo(gx + 5, 76); ctx.moveTo(gx + 5, 66); ctx.lineTo(gx - 5, 76); ctx.stroke(); }
+    }
+    if (BB.gam) {
+      cardText(ctx, "its four gametes", x0, 124, { size: 11, col: MUTED });
+      BB.gam[who].forEach((gm, i) => {
+        const y = 136 + i * 22, picked = BB.pick[who] === i;
+        B_strand(ctx, x0, y, gm.m, { src: gm.src, ring: picked ? INK : null });
+        cardText(ctx, String(gm.m.length), x0 + B_sw + 8, y + BCH.gh / 2, { size: 12, mono: true, col: picked ? INK : MUTED, bold: true });
+        BB.hits.push({ x0: x0 - 4, x1: x0 + B_sw + 20, y0: y - 4, y1: y + BCH.gh + 4, act: () => B_pickGamete(who, i) });
+      });
+    }
+  }
+  if (!BB.gam) cardText(ctx, "Click a gap in each parent for its crossover (or leave it without one), then Make gametes.", 300, 150, { size: 12, col: MUTED });
+  else if (!BB.young.length) cardText(ctx, "Click one gamete from each parent.", BX.P, 238, { size: 12, col: MUTED });
+  /* the latest young, and the count of all of them */
+  const y0 = BB.young[BB.young.length - 1];
+  if (y0) {
+    const yx = 420;
+    cardText(ctx, "their young", yx, 262, { size: 11, col: MUTED });
+    B_strand(ctx, yx, 274, y0.a.m, { src: y0.a.src }); B_strand(ctx, yx, 290, y0.b.m, { src: y0.b.src });
+    cardText(ctx, "from the parent", yx + B_sw + 8, 274 + BCH.gh / 2, { size: 10.5, col: MUTED });
+    cardText(ctx, "from its mate", yx + B_sw + 8, 290 + BCH.gh / 2, { size: 10.5, col: MUTED });
+    cardText(ctx, B_say(y0.n), yx, 318, { size: 11.5, mono: true, bold: y0.n === 0, col: y0.n === 0 ? "#2e4410" : INK });
+    cardText(ctx, "young so far: " + BB.young.map(y => y.n).join(", ") + " harmful", BX.P, 350, { size: 11.5, mono: true, col: MUTED });
+  }
+  ctx.restore();
+}
+function B_pickGamete(who, i) {
+  BB.pick[who] = i; bump("B");
+  if (BB.pick.P != null && BB.pick.M != null) {
+    const a = BB.gam.P[BB.pick.P], b = BB.gam.M[BB.pick.M];
+    BB.young.push({ a, b, n: a.m.length + b.m.length });
+    BB.pick = { P: null, M: null };
+  }
+  B_paintBench();
+}
+function B_makeGametes() { BB.gam = { P: B_gametes(B_PAR.P, BB.xo.P), M: B_gametes(B_PAR.M, BB.xo.M) }; BB.pick = { P: null, M: null }; bump("B"); B_paintBench(); }
+function B_copy() { BB.copies++; bump("B"); B_paintBench(); }
+function B_resetBench() { BB.xo = { P: null, M: null }; BB.gam = null; BB.pick = { P: null, M: null }; BB.young = []; B_paintBench(); }
+function B_paintBench() {
+  B_drawBench();
+  const clean = BB.young.some(y => y.n === 0);
+  tick("B", "copy", BB.copies > 0, BB.copies ? BB.copies + " cop" + (BB.copies === 1 ? "y" : "ies") + ", each " + (B_PAR.P[0].length + B_PAR.P[1].length) + " harmful" : "");
+  tick("B", "clean", clean, BB.young.length ? "fewest so far: " + Math.min(...BB.young.map(y => y.n)) : "");
+  $("B_benchPhase").textContent = !BB.gam ? (BB.xo.P == null && BB.xo.M == null ? "" : "Crossover after gene " + (BB.xo.P || "–") + " in the parent, after gene " + (BB.xo.M || "–") + " in its mate.") :
+    "Gametes made. Pick one from each parent; Start over to move the crossovers.";
+  $("B_meio").disabled = !!BB.gam;
+  B_sync();
+}
+
+/* ---- the populations ---- */
+const RT_T = 200, RT_NS = [20, 50, 100, 200, 500, 1000], RT_SS = [0.02, 0.05, 0.1, 0.2, 0.3], RT_HMAX = 80;
+function rtPois(l, rng) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1; }
+function rtAdd(ind, n, rng) {
+  for (let i = 0; i < n; i++) { const a = ind[rng() < 0.5 ? 0 : 1], x = rng(); let j = a.length; a.push(x); while (j > 0 && a[j - 1] > x) { a[j] = a[j - 1]; j--; } a[j] = x; }
+}
+const rtLoad = ind => ind[0].length + ind[1].length;
+function rtGamete(ind, rng) {
+  const xc = rng(), top = rng() < 0.5, L = top ? ind[0] : ind[1], R = top ? ind[1] : ind[0], out = [];
+  for (const x of L) if (x < xc) out.push(x);
+  for (const x of R) if (x >= xc) out.push(x);
+  return out;
+}
+function rtStep(pop, U, s, sex, rng) {
+  const N = pop.length, c = new Float64Array(N); let acc = 0;
+  for (let i = 0; i < N; i++) { acc += Math.pow(1 - s, rtLoad(pop[i])); c[i] = acc; }
+  const pick = () => { const r = rng() * acc; let lo = 0, hi = N - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] >= r) hi = m; else lo = m + 1; } return lo; };
+  const nx = new Array(N);
+  for (let i = 0; i < N; i++) {
+    let kid;
+    if (!sex) { const p = pop[pick()]; kid = [p[0].slice(), p[1].slice()]; }
+    else { const a = pick(); let b = pick(), g = 0; while (b === a && g++ < 30) b = pick(); kid = [rtGamete(pop[a], rng), rtGamete(pop[b], rng)]; }
+    rtAdd(kid, rtPois(U, rng), rng); nx[i] = kid;
+  }
+  return nx;
+}
+function rtStats(pop, s) {
+  const hist = new Array(RT_HMAX + 1).fill(0); let min = Infinity, sum = 0, w = 0;
+  for (const ind of pop) { const k = rtLoad(ind); hist[Math.min(k, RT_HMAX)]++; if (k < min) min = k; sum += k; w += Math.pow(1 - s, k); }
+  return { min, mean: sum / pop.length, w: w / pop.length, hist };
+}
+/* both populations, generation by generation, into `out` (read while it runs); yields after each */
+function* rtRun(set, seed, out) {
+  const rng = mulberry32(seed), N = set.N;
+  let a = [], x = []; for (let i = 0; i < N; i++) { a.push([[], []]); x.push([[], []]); }
+  out = out || {}; out.set = set; out.A = [rtStats(a, set.s)]; out.X = [rtStats(x, set.s)];
+  for (let t = 1; t <= RT_T; t++) {
+    a = rtStep(a, set.U, set.s, false, rng); x = rtStep(x, set.U, set.s, true, rng);
+    out.A.push(rtStats(a, set.s)); out.X.push(rtStats(x, set.s));
+    yield t;
+  }
+  return out;
+}
+const rtDrain = g => { for (;;) { const r = g.next(); if (r.done) return r.value; } };
+const BR_ROUNDS = [
+  { free: "N", hold: { U: 0.3, s: 0.1 }, A: [0, 3], X: null,
+    text: "Without sex: keep the best individual at 3 harmful changes or fewer by generation 200. U and s are set; you set N." },
+  { free: "U", hold: { N: 100, s: 0.1 }, A: [12, 25], X: [0, 2],
+    text: "Without sex, the best individual ends with 12 to 25 harmful changes at generation 200; with sex, with 2 or fewer. N and s are set; you set U." },
+  { free: "s", hold: { N: 100, U: 0.3 }, A: [12, 25], X: null,
+    text: "Without sex, the best individual ends with 12 to 25 harmful changes at generation 200. N and U are set; you set s." },
+];
+const BRd = { round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0 };
+const BR_rule = () => BR_ROUNDS[Math.min(BRd.round, BR_ROUNDS.length - 1)];
+const BR_practising = () => $("B_practice").checked || BRd.done;
+const B_setNow = () => ({ N: RT_NS[+$("B_N").value], U: +(+$("B_U").value).toFixed(1), s: RT_SS[+$("B_s").value] });
+const BR_judge = (r, res) => { const a = res.A[RT_T].min, x = res.X[RT_T].min;
+  return { a, x, okA: a >= r.A[0] && a <= r.A[1], okX: !r.X || (x >= r.X[0] && x <= r.X[1]), get ok() { return this.okA && this.okX; } }; };
+/* the held sliders sit at the round's values */
+function BR_hold() {
+  if (BRd.done) return;
+  const r = BR_rule();
+  if (r.hold.N != null) $("B_N").value = String(RT_NS.indexOf(r.hold.N));
+  if (r.hold.U != null) $("B_U").value = String(r.hold.U);
+  if (r.hold.s != null) $("B_s").value = String(RT_SS.indexOf(r.hold.s));
+}
+function B_go() {
+  if (BRd.run || !B_ready()) return;
+  const practice = BR_practising();
+  if (!practice && BRd.waiting) return;
+  const r = BR_rule(), set = B_setNow(), seed = pageSeed("l16ratchet", 1, 999999) + 104729 * BRd.runs++ + 7919 * BRd.round;
+  const out = {};
+  BRd.run = { r, set, practice, out, gen: rtRun(set, seed, out), res: null, done: 0, t: 0, shown: 0 };
+  if (!practice) BRd.pending = true;
+  $("B_verdict").innerHTML = ""; bump("B");
+  B_sync(); B_loop();
+}
+/* the instructor's and the checks' way to finish a run at once */
+function B_finishNow() { const q = BRd.run; if (!q) return; if (!q.res) q.res = rtDrain(q.gen); q.done = RT_T; q.shown = RT_T; B_endRun(); }
+function B_endRun() {
+  const q = BRd.run; if (!q) return;
+  BRd.run = null; BRd.last = q;
+  const j = BR_judge(q.r, q.res); q.j = j;
+  if (!q.practice) {
+    BRd.pending = false;
+    record(BIT["B" + (BRd.round + 1)], j.ok); BRd.results.push(j.ok); BRd.waiting = true;
+    if (BRd.results.length >= BR_ROUNDS.length) { BRd.done = true; BRd.waiting = false; }
+  }
+  $("B_verdict").innerHTML = (q.practice ? "practice: " : "") + (j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
+  B_checkDone(); B_sync(); B_drawPlot(); B_drawHist();
+}
+function B_nextRound() { if (!BRd.waiting || BRd.run) return; BRd.waiting = false; BRd.round = Math.min(BRd.round + 1, BR_ROUNDS.length - 1); BRd.last = null; $("B_verdict").innerHTML = ""; BR_hold(); B_sync(); B_drawPlot(); B_drawHist(); B_code(); }
+function B_checkDone() { if (BRd.results.length >= BR_ROUNDS.length && B_ready()) finishStage("B"); }
+let B_on = false, B_last = 0;
+function B_loop() { if (B_on) return; B_on = true; B_last = 0; requestAnimationFrame(B_frame); }
+function B_frame(ts) {
+  const dt = Math.min(0.05, (ts - (B_last || ts)) / 1000); B_last = ts;
+  const q = BRd.run;
+  if (q) {
+    /* work out generations for at most ~12 ms a frame; show them at 50 a second */
+    const t0 = performance.now();
+    while (!q.res && performance.now() - t0 < 12) { const r = q.gen.next(); if (r.done) { q.res = r.value; q.done = RT_T; } else q.done = r.value; }
+    q.t += dt; q.shown = Math.min(q.done, Math.floor(q.t * 50));
+    B_drawPlot(); B_drawHist();
+    if (q.res && q.shown >= RT_T) B_endRun();
+  }
+  if (BRd.run) requestAnimationFrame(B_frame); else B_on = false;
+}
+const B_PL = { W: 440, H: 240, px: 44, py: 12, pw: 380, ph: 190 };
+function B_drawPlot() {
+  const cv = $("B_plot"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, B_PL.W, B_PL.H);
+  const r = BR_rule(), q = BRd.run || BRd.last, S = q ? (q.res || (q.out && q.out.A ? q.out : null)) : null, g = BRd.run ? q.shown : RT_T;
+  let ymax = 30; if (S) for (let t = 0; t <= Math.min(g, S.A.length - 1); t++) ymax = Math.max(ymax, Math.ceil((S.A[t].min + 4) / 10) * 10);
+  if (!BRd.done) ymax = Math.max(ymax, Math.ceil((r.A[1] + 5) / 10) * 10);
+  const xs = t => B_PL.px + t / RT_T * B_PL.pw, ys = v => B_PL.py + B_PL.ph - v / ymax * B_PL.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(B_PL.px, B_PL.py); ctx.lineTo(B_PL.px, B_PL.py + B_PL.ph); ctx.lineTo(B_PL.px + B_PL.pw, B_PL.py + B_PL.ph); ctx.stroke();
+  for (let v = 0; v <= ymax; v += ymax > 40 ? 20 : 10) { cardText(ctx, String(v), B_PL.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+    if (v) { ctx.strokeStyle = "#f0eee8"; ctx.beginPath(); ctx.moveTo(B_PL.px + 1, ys(v)); ctx.lineTo(B_PL.px + B_PL.pw, ys(v)); ctx.stroke(); } }
+  for (let t = 0; t <= RT_T; t += 50) cardText(ctx, String(t), xs(t), B_PL.py + B_PL.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", B_PL.px + B_PL.pw / 2, B_PL.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(12, B_PL.py + B_PL.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "harmful changes in the best one", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  /* the windows, at generation 200 */
+  if (!BRd.done) {
+    const box = (lo, hi, col, soft) => { ctx.fillStyle = soft; ctx.fillRect(xs(RT_T - 8), ys(hi + 0.5), xs(RT_T) - xs(RT_T - 8) + 6, ys(lo - 0.5) - ys(hi + 0.5));
+      ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.strokeRect(xs(RT_T - 8), ys(hi + 0.5), xs(RT_T) - xs(RT_T - 8) + 6, ys(lo - 0.5) - ys(hi + 0.5)); };
+    box(Math.max(0, r.A[0]), r.A[1], HOT, "rgba(178,58,72,0.12)");
+    if (r.X) box(Math.max(0, r.X[0]), r.X[1], BLUE, "rgba(47,107,143,0.14)");
+  }
+  if (S) {
+    const upto = Math.min(g, S.A.length - 1);
+    polyline(ctx, S.A.slice(0, upto + 1).map((st, t) => [xs(t), ys(st.min)]), HOT, 2.2, 1);
+    polyline(ctx, S.X.slice(0, upto + 1).map((st, t) => [xs(t), ys(st.min)]), BLUE, 2.2, 1);
+  } else cardText(ctx, B_ready() ? "Go runs both populations at the settings above." : "First the bench, above.", B_PL.px + B_PL.pw / 2, B_PL.py + B_PL.ph / 2, { size: 12.5, col: MUTED, align: "center" });
+  cardText(ctx, "without sex", B_PL.px + 8, B_PL.py + 8, { size: 11, col: HOT, bold: true });
+  cardText(ctx, "with sex", B_PL.px + 90, B_PL.py + 8, { size: 11, col: BLUE, bold: true });
+  ctx.restore();
+}
+const B_HI = { W: 760, H: 250 };
+function B_drawHist() {
+  const cv = $("B_hist"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, B_HI.W, B_HI.H);
+  const q = BRd.run || BRd.last, S = q ? (q.res || (q.out && q.out.A ? q.out : null)) : null, g = BRd.run ? q.shown : RT_T;
+  const halves = [{ key: "A", name: "without sex", col: HOT, x0: 40 }, { key: "X", name: "with sex", col: BLUE, x0: 420 }];
+  let xmax = 20;
+  if (S) { const st = [S.A[Math.min(g, S.A.length - 1)], S.X[Math.min(g, S.X.length - 1)]]; for (const s of st) for (let k = RT_HMAX; k >= 0; k--) if (s.hist[k]) { xmax = Math.max(xmax, Math.ceil((k + 2) / 10) * 10); break; } }
+  xmax = Math.min(xmax, RT_HMAX);
+  for (const hf of halves) {
+    const pw = 320, ph = 170, py = 34, px = hf.x0, bw = pw / (xmax + 1);
+    cardText(ctx, hf.name, px, 14, { size: 12, bold: true, col: hf.col });
+    ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, py + ph); ctx.lineTo(px + pw, py + ph); ctx.stroke();
+    for (let k = 0; k <= xmax; k += xmax > 40 ? 10 : 5) cardText(ctx, String(k), px + (k + 0.5) * bw, py + ph + 12, { size: 10, col: MUTED, align: "center" });
+    cardText(ctx, "harmful changes an individual carries", px + pw / 2, py + ph + 28, { size: 10.5, col: MUTED, align: "center" });
+    if (!S) continue;
+    const st = S[hf.key][Math.min(g, S[hf.key].length - 1)], N = q.set.N, top = Math.max(...st.hist.slice(0, xmax + 1)) || 1;
+    for (let k = 0; k <= xmax; k++) {
+      const v = st.hist[k]; if (!v) continue;
+      const h = v / top * (ph - 14), x = px + k * bw + 0.5;
+      ctx.fillStyle = k === st.min ? hf.col : (hf.col === HOT ? HOT_SOFT : BLUE_SOFT); ctx.fillRect(x, py + ph - h, Math.max(1, bw - 1), h);
+    }
+    const bx = px + (st.min + 0.5) * bw;
+    cardText(ctx, "best", bx, py - 4 + (ph - 14) * (1 - st.hist[st.min] / top), { size: 10.5, col: hf.col, align: "center", bold: true });
+    cardText(ctx, N + " individuals", px + pw, 14, { size: 10.5, col: MUTED, align: "right" });
+  }
+  ctx.restore();
+  const rd = $("B_histRead");
+  if (!S) { rd.innerHTML = lab("each population's individuals by the harmful changes they carry; the dark bar is the best class"); return; }
+  const a = S.A[Math.min(g, S.A.length - 1)], x = S.X[Math.min(g, S.X.length - 1)], set = q.set;
+  rd.innerHTML = lab("generation") + " <b>" + Math.min(g, S.A.length - 1) + "</b><br>" +
+    '<span style="color:' + HOT + '">' + lab("without sex:") + "</span> " + lab("best") + " <b>" + a.min + "</b> " + lab("· average") + " <b>" + a.mean.toFixed(1) + "</b> " + lab("· young, on average ×") + "<b>" + a.w.toFixed(2) + "</b><br>" +
+    '<span style="color:' + BLUE + '">' + lab("with sex:") + "</span> " + lab("best") + " <b>" + x.min + "</b> " + lab("· average") + " <b>" + x.mean.toFixed(1) + "</b> " + lab("(U/s = " + (set.U / set.s).toFixed(1) + ")") + " " + lab("· young, on average ×") + "<b>" + x.w.toFixed(2) + "</b>";
+}
+function B_sync() {
+  const rd = B_ready(), r = BR_rule(), busy = !!BRd.run, held = k => !BRd.done && r.free !== k;
+  $("B_go").disabled = !rd || busy || (BRd.waiting && !BR_practising());
+  $("B_go").textContent = BR_practising() ? "Practice run" : "Go";
+  $("B_next").hidden = !BRd.waiting || busy;
+  for (const k of ["N", "U", "s"]) { $("B_" + k).disabled = !rd || busy || held(k); $("B_" + k + "Row").classList.toggle("held", held(k)); }
+  $("B_practice").disabled = !rd;
+  const st = B_setNow();
+  $("B_NV").textContent = String(st.N); $("B_UV").textContent = st.U.toFixed(1); $("B_sV").textContent = String(st.s);
+  $("B_pips").innerHTML = BR_ROUNDS.map((_, i) => i < BRd.results.length ? '<span class="' + (BRd.results[i] ? "ok" : "off") + '">●</span>' : i === BRd.round && !BRd.done ? "◉" : "○").join(" ");
+  $("B_ttext").textContent = !rd ? "First the bench: copy the parent, and make a young with no harmful changes." : BRd.done ? "All three targets taken. The populations are yours to play with." : r.text;
+  const q = BRd.last && BRd.last.r === r ? BRd.last : null, j = q && q.j;
+  const li = (ok, txt, val) => '<li><span class="' + (q ? (ok ? "ok" : "off") : "") + '">' + (q ? (ok ? "✓" : "✗") : "·") + "</span> " + txt + ' <span style="color:var(--muted)">(' + (q ? "this run " + val : "not run yet") + ")</span></li>";
+  $("B_rules").innerHTML = !rd || BRd.done ? "" :
+    li(j && j.okA, "without sex: " + (r.A[0] ? r.A[0] + " to " + r.A[1] : "at most " + r.A[1]), j ? j.a : "") +
+    (r.X ? li(j && j.okX, "with sex: at most " + r.X[1], j ? j.x : "") : "");
+  tick("B", "rounds", BRd.results.length >= BR_ROUNDS.length, BRd.results.length + " of " + BR_ROUNDS.length + " attempts");
+}
+function B_code() {
+  const st = B_setNow();
+  codeInto("codeB", [
+    ["", "# Lesson 16, Stage B -- two populations, one copying itself, one with sex"],
+    ["N", "N <- " + st.N + "                    # individuals"],
+    ["U", "U <- " + st.U + "                    # new harmful changes a young, on average"],
+    ["s", "s <- " + st.s + "                    # each one: young x (1 - s)"],
+    ["", "new <- function() list(numeric(0), numeric(0))      # two chromosomes: where the harmful changes sit"],
+    ["", "load <- function(i) length(i[[1]]) + length(i[[2]])"],
+    ["U", "mutate <- function(i) { for (k in seq_len(rpois(1, U))) { j <- sample(2, 1); i[[j]] <- sort(c(i[[j]], runif(1))) }; i }"],
+    ["", "gamete <- function(i) { x <- runif(1); o <- sample(2); c(i[[o[1]]][i[[o[1]]] < x], i[[o[2]]][i[[o[2]]] >= x]) }"],
+    ["N", "asex <- sex <- replicate(N, new(), simplify = FALSE)"],
+    ["", "for (t in 1:200) {"],
+    ["s", "  w <- sapply(asex, function(i) (1 - s)^load(i))"],
+    ["", "  asex <- lapply(sample(N, N, TRUE, w), function(j) mutate(asex[[j]]))           # a copy of one parent"],
+    ["s", "  w <- sapply(sex, function(i) (1 - s)^load(i))"],
+    ["", "  sex <- lapply(1:N, function(k) { p <- sample(N, 2, FALSE, w)                   # a gamete from each of two"],
+    ["", "    mutate(list(gamete(sex[[p[1]]]), gamete(sex[[p[2]]]))) })"],
+    ["", "}"],
+    ["", "c(without = min(sapply(asex, load)), with = min(sapply(sex, load)))   # the best one in each"],
+  ]);
+}
+function B_paint() { B_paintBench(); B_drawPlot(); B_drawHist(); B_sync(); B_code(); }
+function B_wire() {
+  const bc = $("B_bench");
+  const hitAt = e => { const p = framePt(bc, e, BCH.W); return BB.hits.find(h => p.x >= h.x0 && p.x <= h.x1 && p.y >= h.y0 && p.y <= h.y1) || null; };
+  bc.addEventListener("click", e => { const h = hitAt(e); if (h) h.act(); });
+  bc.addEventListener("mousemove", e => { const h = hitAt(e); bc.style.cursor = h ? "pointer" : "default";
+    const p = framePt(bc, e, BCH.W); let hov = null;
+    if (!BB.gam && p.y >= 50 && p.y <= 92) for (const who of ["P", "M"]) { const g = Math.round((p.x - BX[who] + BCH.gg / 2) / (BCH.gw + BCH.gg)); if (g >= 1 && g < BG && Math.abs(p.x - (BX[who] + g * (BCH.gw + BCH.gg) - BCH.gg / 2)) <= 6) hov = { who, g }; }
+    if (JSON.stringify(hov) !== JSON.stringify(BB.hover)) { BB.hover = hov; B_drawBench(); } });
+  $("B_copy").addEventListener("click", B_copy);
+  $("B_meio").addEventListener("click", B_makeGametes);
+  $("B_reset").addEventListener("click", B_resetBench);
+  $("B_go").addEventListener("click", B_go);
+  $("B_next").addEventListener("click", B_nextRound);
+  $("B_practice").addEventListener("change", B_sync);
+  for (const k of ["N", "U", "s"]) {
+    $("B_" + k).addEventListener("input", () => { B_sync(); B_code(); highlightByDataLine("codeB", k); });
+    $("B_" + k).addEventListener("change", () => bump("B"));
+  }
+  $("B_dl").addEventListener("click", () => downloadText("lesson16_stageB.R", RTEXT.codeB));
+  BR_hold();
+}
+
+/* =====================================================================
+   STAGE C — two chromosomes line up and cross over (JM, 2026-10-08: "they
+   should have some manner of interactive where they line them up ... However
+   we do the 2 chromosomes snapping together for recombination, we should
+   have it so that they can snap to create an inversion and deletion").
+
+   THE CHROMOSOMES. A centre (the centromere), then eight genes A-H, with
+   three copies of one repeated stretch between some of them: r1 after A
+   and r3 after F face one way, r2 after D the other. Real chromosomes are
+   full of such copies (jumping genes, Lesson 15), and crossing over between
+   two copies that are not partners is how most deletions, duplications and
+   inversions are made.
+
+   PAIRING. Genes lined up with their partners (offset 0), or one copy of the
+   repeat over another (any two, on the two chromosomes or on one).
+   THE RULES, one crossover at the paired spot:
+   - genes lined up, crossover in a gap between X and Y: X | Y on the upper
+     joins the lower from its Y on; the lower's start joins the upper from Y
+     on. Where the lower has X and Y the other way round (a reversed
+     stretch), the joins run backwards: one chromosome gets both centres,
+     the other none.
+   - two copies on the two chromosomes facing the same way: one product has
+     the stretch between them twice, the other lacks it.
+   - facing opposite ways: one product with two centres, one with none.
+   - two copies on one chromosome, same way: the stretch between loops out
+     as a ring with no centre and is lost (a deletion).
+   - opposite ways: the stretch between comes back reversed (an inversion).
+   A product with no centre is lost when the cell divides; one with two is
+   torn apart. Both are said so on the page, not drawn breaking.
+   ===================================================================== */
+const C_GENES = "ABCDEFGH".split("");
+function C_chrom(src, inv) {
+  const order = inv ? ["A", "r1", "D", "C", "B", "r2", "E", "F", "r3", "G", "H"] : ["A", "r1", "B", "C", "D", "r2", "E", "F", "r3", "G", "H"];
+  return [{ k: "cen", id: "cen", d: 1, src }].concat(order.map(id => id[0] === "r" ? { k: "r", id, d: id === "r2" ? -1 : 1, src }
+                                                                      : { k: "g", id, d: inv && "BCD".includes(id) ? -1 : 1, src }));
+}
+const C_rev = p => p.slice().reverse().map(e => Object.assign({}, e, { d: -e.d }));
+const C_W = { cen: 12, g: 30, r: 20 }, C_GAP = 3, C_TX = 227, C_Y = { top: 70, bot: 150 }, C_EH = 26;
+const C_xs = (ch, x0) => { const xs = []; let x = x0; for (const e of ch) { xs.push(x); x += C_W[e.k] + C_GAP; } return xs; };
+const C_len = ch => ch.reduce((a, e) => a + C_W[e.k] + C_GAP, 0) - C_GAP;
+/* the state: the board, the lower chromosome's offset, the pairing, the crossover gap */
+const C = { board: "std", top: C_chrom(0, false), bot: C_chrom(1, false), off: 96, pair: null, gap: null, drag: null, out: null,
+            tried: false, round: 0, results: [], waiting: false, done: false, last: null, hits: [] };
+/* gap g (1..n-1) between top[g-1] and top[g] can take a crossover when the lower has those two side by side */
+function C_gapOK(g) {
+  const X = C.top[g - 1], Y = C.top[g]; if (!X || !Y) return false;
+  const bx = C.bot.findIndex(e => e.id === X.id), by = C.bot.findIndex(e => e.id === Y.id);
+  return bx >= 0 && by >= 0 && Math.abs(bx - by) === 1;
+}
+/* the products of one crossover, as the rules above */
+function C_cross(top, bot, pair, gap) {
+  if (!pair) return null;
+  if (pair.t === "al") {
+    if (gap == null) return null;
+    const X = top[gap - 1], Y = top[gap], bx = bot.findIndex(e => e.id === X.id), by = bot.findIndex(e => e.id === Y.id);
+    if (by === bx + 1) return [top.slice(0, gap).concat(bot.slice(by)), bot.slice(0, bx + 1).concat(top.slice(gap))];
+    if (by === bx - 1) return [top.slice(0, gap).concat(C_rev(bot.slice(0, by + 1))), C_rev(bot.slice(bx)).concat(top.slice(gap))];
+    return null;
+  }
+  if (pair.t === "rr") {
+    const i = pair.i, j = pair.j, same = top[i].d === bot[j].d;
+    if (same) return [top.slice(0, i + 1).concat(bot.slice(j + 1)), bot.slice(0, j + 1).concat(top.slice(i + 1))];
+    return [top.slice(0, i + 1).concat(C_rev(bot.slice(0, j))), C_rev(top.slice(i + 1)).concat(bot.slice(j))];
+  }
+  /* one chromosome folded onto itself: i < j */
+  const ch = pair.c === "top" ? top : bot, other = pair.c === "top" ? bot : top, i = pair.i, j = pair.j;
+  if (ch[i].d === ch[j].d) { const p = ch.slice(0, i + 1).concat(ch.slice(j + 1)), ring = ch.slice(i + 1, j + 1); ring.ring = true; return [p, ring, other.slice()]; }
+  return [ch.slice(0, i + 1).concat(C_rev(ch.slice(i + 1, j))).concat(ch.slice(j)), other.slice()];
+}
+/* what a product is, read off it */
+function C_read(p) {
+  const cens = p.filter(e => e.k === "cen").length;
+  const q = cens === 1 && p[p.length - 1].k === "cen" && p[0].k !== "cen" ? C_rev(p) : p;
+  const genes = q.filter(e => e.k === "g"), ids = genes.map(e => e.id);
+  const missing = C_GENES.filter(g => !ids.includes(g)), dup = C_GENES.filter(g => ids.filter(x => x === g).length > 1);
+  const all = !missing.length && !dup.length;
+  const order = all && ids.join("") === C_GENES.join("") && genes.every(e => e.d === 1);
+  const mix = new Set(genes.map(e => e.src)).size > 1;
+  const back = genes.filter(e => e.d === -1).map(e => e.id);
+  let text;
+  if (p.ring) text = "a ring with no centre: lost when the cell divides";
+  else if (cens === 0) text = "no centre: lost when the cell divides";
+  else if (cens > 1) text = "two centres: torn apart when the cell divides";
+  else if (!all) text = [missing.length ? "missing " + missing.join(", ") : "", dup.length ? dup.join(", ") + " twice" : ""].filter(Boolean).join("; ");
+  else if (!order) text = "every gene once; " + back.join(", ") + " reversed";
+  else text = "every gene once, in order" + (mix ? "; a mix of the two" : "; all from one of them");
+  return { p: q, cens, one: cens === 1 && !p.ring, missing, dup, all, order, mix, text };
+}
+const C_ROUNDS = [
+  { board: "std", text: "Line the genes up and cross over: two chromosomes that each carry every gene once, in order, each a mix of the two.",
+    rule: "a chromosome: every gene once, in order, a mix", ok: rs => rs.some(r => r.one && r.order && r.mix) },
+  { board: "std", text: "Make a chromosome that is missing at least one gene, and still has its centre.",
+    rule: "a chromosome with one centre, missing a gene", ok: rs => rs.some(r => r.one && r.missing.length > 0) },
+  { board: "std", text: "Make a chromosome that carries at least one gene twice, and has one centre.",
+    rule: "a chromosome with one centre, a gene twice", ok: rs => rs.some(r => r.one && r.dup.length > 0) },
+  { board: "std", text: "Make a chromosome with every gene once but some of them in reverse order, and one centre.",
+    rule: "a chromosome with one centre: every gene once, some reversed", ok: rs => rs.some(r => r.one && r.all && !r.order) },
+  { board: "inv", text: "This one's chromosome from its father has B, C and D the other way round. Cross over so a chromosome comes out with one centre, every gene once, and a mix of the two.",
+    rule: "a chromosome with one centre: every gene once, a mix of the two", ok: rs => rs.some(r => r.one && r.all && r.mix) },
+];
+const C_rule = () => C_ROUNDS[Math.min(C.round, C_ROUNDS.length - 1)];
+const C_practising = () => $("C_practice").checked || C.done || !C.tried;
+const C_products = () => C_cross(C.top, C.bot, C.pair, C.gap);
+const C_canGo = () => !!C.pair && (C.pair.t !== "al" || (C.gap != null && C_gapOK(C.gap)));
+function C_setBoard(b) {
+  C.board = b; C.top = C_chrom(0, false); C.bot = C_chrom(1, b === "inv");
+  C.off = 96; C.pair = null; C.gap = null; C.out = null;
+}
+/* every place a crossover can go with the genes lined up, and what each gives (said after the reversed board's target) */
+function C_scanGaps() {
+  let ok = 0, bad = 0, all = 0;
+  for (let g = 1; g < C.top.length; g++) {
+    if (!C_gapOK(g)) continue; all++;
+    const rs = C_cross(C.top, C.bot, { t: "al" }, g).map(C_read);
+    if (rs.every(r => r.one && r.all)) ok++; else bad++;
+  }
+  return { ok, bad, all };
+}
+function C_go() {
+  if (!C_canGo()) return;
+  const practice = C_practising(), first = !C.tried;
+  if (!practice && C.waiting) return;
+  const rs = C_products().map(C_read), r = C_rule(), ok = r.ok(rs);
+  C.out = { rs, ok, practice, first, r };
+  if (first) C.tried = true;
+  else if (!practice) { record(BIT["C" + (C.round + 1)], ok); C.results.push(ok); C.waiting = true; if (C.results.length >= C_ROUNDS.length) { C.done = true; C.waiting = false; } }
+  bump("C");
+  $("C_verdict").innerHTML = first ? "" : (practice ? "practice: " : "") + (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
+  if (C.results.length >= C_ROUNDS.length && C.tried) finishStage("C");
+  C_paint();
+}
+function C_nextRound() {
+  if (!C.waiting) return;
+  C.waiting = false; C.round = Math.min(C.round + 1, C_ROUNDS.length - 1); $("C_verdict").innerHTML = "";
+  if (C_rule().board !== C.board) C_setBoard(C_rule().board); else { C.pair = null; C.gap = null; C.off = 96; }
+  C.out = null; C_paint();
+}
+function C_reset() { if (C.waiting && !C_practising()) return; C.pair = null; C.gap = null; C.off = 96; C.out = null; C_paint(); }
+/* ---- drawing ---- */
+function C_drawEl(ctx, e, x, y, o) {
+  o = o || {};
+  const w = C_W[e.k], h = C_EH;
+  if (e.k === "cen") { ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x + w / 2, y + h / 2, 5.5, 0, 6.2832); ctx.fill(); return; }
+  if (e.k === "r") {
+    ctx.fillStyle = o.lit ? HOT : "#8b877b"; ctx.beginPath();
+    const yy = y + h / 2, a = e.d > 0;
+    ctx.moveTo(a ? x : x + w, yy - 6); ctx.lineTo(a ? x + w - 6 : x + 6, yy - 6); ctx.lineTo(a ? x + w : x, yy); ctx.lineTo(a ? x + w - 6 : x + 6, yy + 6); ctx.lineTo(a ? x : x + w, yy + 6); ctx.closePath(); ctx.fill();
+    return;
+  }
+  ctx.fillStyle = e.src ? BLUE_SOFT : PLAIN; rrect(ctx, x, y, w, h, 3); ctx.fill();
+  ctx.strokeStyle = "rgba(29,29,27,0.3)"; ctx.lineWidth = 1; rrect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 3); ctx.stroke();
+  cardText(ctx, e.id, x + w / 2 + (e.d > 0 ? -3 : 3), y + h / 2 + 0.5, { size: 13, bold: true, align: "center", col: e.d < 0 ? HOT : INK });
+  /* the arrow the gene reads by */
+  ctx.fillStyle = e.d < 0 ? HOT : "#6b6b68"; ctx.beginPath();
+  if (e.d > 0) { ctx.moveTo(x + w - 9, y + h / 2 - 4); ctx.lineTo(x + w - 3, y + h / 2); ctx.lineTo(x + w - 9, y + h / 2 + 4); }
+  else { ctx.moveTo(x + 9, y + h / 2 - 4); ctx.lineTo(x + 3, y + h / 2); ctx.lineTo(x + 9, y + h / 2 + 4); }
+  ctx.closePath(); ctx.fill();
+}
+function C_drawChrom(ctx, ch, x0, y, lit) {
+  const xs = C_xs(ch, x0);
+  ctx.strokeStyle = "#9a968a"; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0 + 6, y + C_EH / 2); ctx.lineTo(x0 + C_len(ch), y + C_EH / 2); ctx.stroke();
+  ch.forEach((e, i) => C_drawEl(ctx, e, xs[i], y, { lit: lit && lit.includes(i) }));
+  return xs;
+}
+const CP = { W: 800, H: 250 };
+function C_drawPair() {
+  const cv = $("C_pair"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CP.W, CP.H);
+  C.hits = [];
+  const P = C.pair, litT = [], litB = [];
+  if (P && P.t === "rr") { litT.push(P.i); litB.push(P.j); }
+  if (P && P.t === "self") (P.c === "top" ? litT : litB).push(P.i, P.j);
+  const dragOff = C.drag && C.drag.kind === "slide" ? C.drag.off : C.off;
+  const tx = C_xs(C.top, C_TX), bx0 = C_TX + dragOff, bx = C_xs(C.bot, bx0);
+  cardText(ctx, "from its mother", C_TX, C_Y.top - 14, { size: 11.5, col: MUTED });
+  cardText(ctx, "from its father", bx0, C_Y.bot + C_EH + 14, { size: 11.5, col: MUTED });
+  /* the pairing: partners joined by thin lines (genes lined up), or the two copies of the repeat that touch */
+  if (P && P.t === "al") {
+    C.top.forEach((e, i) => { const j = C.bot.findIndex(f => f.id === e.id); if (j < 0) return;
+      ctx.strokeStyle = "rgba(29,29,27,0.22)"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(tx[i] + C_W[e.k] / 2, C_Y.top + C_EH); ctx.lineTo(bx[j] + C_W[e.k] / 2, C_Y.bot); ctx.stroke(); });
+  }
+  if (P && P.t === "rr") {
+    ctx.fillStyle = "rgba(178,58,72,0.16)"; ctx.fillRect(tx[P.i] - 2, C_Y.top + C_EH, C_W.r + 4, C_Y.bot - C_Y.top - C_EH);
+  }
+  if (P && P.t === "self") {
+    const ch = P.c === "top" ? C.top : C.bot, xs = P.c === "top" ? tx : bx, y = P.c === "top" ? C_Y.top : C_Y.bot, up = P.c === "top";
+    const x1 = xs[P.i] + C_W.r / 2, x2 = xs[P.j] + C_W.r / 2, yy = up ? y - 4 : y + C_EH + 4, h = up ? -38 : 38;
+    ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.setLineDash([4, 3]); ctx.beginPath(); ctx.moveTo(x1, yy); ctx.bezierCurveTo(x1, yy + h, x2, yy + h, x2, yy); ctx.stroke(); ctx.setLineDash([]);
+    cardText(ctx, ch[P.i].d === ch[P.j].d ? "loops round: the two copies face the same way" : "folds back: the two copies face opposite ways", (x1 + x2) / 2, yy + h * 0.95, { size: 11, col: HOT, align: "center", bold: true });
+  }
+  C_drawChrom(ctx, C.top, C_TX, C_Y.top, litT);
+  C_drawChrom(ctx, C.bot, bx0, C_Y.bot, litB);
+  /* the gaps a crossover can go in, with the genes lined up */
+  if (P && P.t === "al") for (let g = 1; g < C.top.length; g++) {
+    const x = tx[g] - C_GAP / 2, ok = C_gapOK(g), on = C.gap === g, hov = C.hoverGap === g;
+    C.hits.push({ x0: x - 5, x1: x + 5, y0: C_Y.top - 6, y1: C_Y.bot + C_EH + 6, gap: g });
+    if (on && ok) { ctx.strokeStyle = HOT; ctx.lineWidth = 2.4; const ym = (C_Y.top + C_EH + C_Y.bot) / 2; ctx.beginPath(); ctx.moveTo(x - 7, ym - 9); ctx.lineTo(x + 7, ym + 9); ctx.moveTo(x + 7, ym - 9); ctx.lineTo(x - 7, ym + 9); ctx.stroke(); }
+    else if (hov) { ctx.save(); ctx.setLineDash([3, 2]); ctx.strokeStyle = ok ? HOT : "#b9b4a6"; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, C_Y.top - 4); ctx.lineTo(x, C_Y.bot + C_EH + 4); ctx.stroke(); ctx.restore(); }
+  }
+  if (P && (P.t === "rr")) { const x = tx[P.i] + C_W.r / 2, ym = (C_Y.top + C_EH + C_Y.bot) / 2; ctx.strokeStyle = HOT; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(x - 7, ym - 9); ctx.lineTo(x + 7, ym + 9); ctx.moveTo(x + 7, ym - 9); ctx.lineTo(x - 7, ym + 9); ctx.stroke(); }
+  /* a repeat being dragged */
+  if (C.drag && C.drag.kind === "rep") { const e = (C.drag.c === "top" ? C.top : C.bot)[C.drag.i]; ctx.globalAlpha = 0.6; C_drawEl(ctx, e, C.drag.x - C_W.r / 2, C.drag.y - C_EH / 2, { lit: true }); ctx.globalAlpha = 1; }
+  ctx.restore();
+  const ph = $("C_phase");
+  ph.textContent = !P ? "Drag the lower chromosome to line it up, or drag a grey arrow onto another." :
+    P.t === "al" ? (C.gap == null ? "Lined up, gene to gene" + (C.board === "inv" ? " (the reversed stretch pairs gene to gene too, so the two twist round there)" : "") + ". Click a gap to put the crossover there." :
+                    C_gapOK(C.gap) ? "Crossover after " + C.top[C.gap - 1].id.replace(/^r\d/, "the grey arrow") + ". Cross over when ready." : "Those two genes do not sit side by side on the other chromosome: no crossover there.") :
+    P.t === "rr" ? "Paired at two copies of the repeat that are not partners: " + (C.top[P.i].d === C.bot[P.j].d ? "they face the same way." : "they face opposite ways.") + " The crossover falls in them." :
+    "One chromosome folded so two of its copies touch. The crossover falls in them.";
+}
+const CO = { W: 800, H: 210 };
+function C_drawOut() {
+  const cv = $("C_out"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CO.W, CO.H);
+  const o = C.out;
+  if (!o) { cardText(ctx, "What the crossover makes shows here.", CO.W / 2, CO.H / 2, { size: 13, col: MUTED, align: "center" }); ctx.restore(); $("C_outRead").innerHTML = ""; return; }
+  o.rs.forEach((r, k) => {
+    const y = 14 + k * 66, len = C_len(r.p), sc = Math.min(1, (CO.W - 40) / len);
+    ctx.save(); ctx.translate(20, y); ctx.scale(sc, sc); C_drawChrom(ctx, r.p, 0, 0, null); ctx.restore();
+    const hit = o.r.ok([r]);
+    cardText(ctx, r.text, 20, y + C_EH * sc + 14, { size: 14, col: r.one ? INK : HOT, bold: hit && !o.first });
+  });
+  ctx.restore();
+  const scan = C.board === "inv" && (C.done || (o.r.board === "inv" && !o.first)) ? C_scanGaps() : null;
+  $("C_outRead").innerHTML = scan ? lab("with the genes lined up, a crossover can go in") + " <b>" + scan.all + "</b> " + lab("places here:") + " <b>" + scan.ok + "</b> " +
+    lab("give two chromosomes with every gene once and one centre each;") + " <b>" + scan.bad + "</b> " + lab("(inside the reversed stretch) give one with two centres and one with none.") : "";
+}
+function C_sync() {
+  const r = C_rule();
+  $("C_go").disabled = !C_canGo() || (C.waiting && !C_practising());
+  $("C_go").textContent = !C.tried ? "Cross over (a try)" : C_practising() ? "Practice run" : "Cross over";
+  $("C_next").hidden = !C.waiting;
+  $("C_reset").disabled = C.waiting && !C_practising();
+  $("C_pips").innerHTML = C_ROUNDS.map((_, i) => i < C.results.length ? '<span class="' + (C.results[i] ? "ok" : "off") + '">●</span>' : i === C.round && !C.done && C.tried ? "◉" : "○").join(" ");
+  $("C_ttext").textContent = !C.tried ? "Pair the two any way you like and cross over once to see what comes out. It does not count." : C.done ? "All five targets taken. The chromosomes are yours to play with." : r.text;
+  const o = C.out && !C.out.first && C.out.r === r ? C.out : null;
+  $("C_rules").innerHTML = !C.tried || C.done ? "" : '<li><span class="' + (o ? (o.ok ? "ok" : "off") : "") + '">' + (o ? (o.ok ? "✓" : "✗") : "·") + "</span> " + r.rule + "</li>";
+  tick("C", "try", C.tried, C.tried ? "done" : "");
+  tick("C", "rounds", C.results.length >= C_ROUNDS.length, C.results.length + " of " + C_ROUNDS.length + " attempts");
+}
+function C_code() {
+  const P = C.pair, key = !P ? "" : P.t === "al" ? "al" : P.t === "rr" ? "rr" : "self";
+  codeInto("codeC", [
+    ["", "# Lesson 16, Stage C -- one crossover between two chromosomes, or within one"],
+    ["", "top <- c(\"centre\", \"A\", \"r>\", \"B\", \"C\", \"D\", \"r<\", \"E\", \"F\", \"r>\", \"G\", \"H\")"],
+    ["", "bot <- top" + (C.board === "inv" ? "; bot[4:6] <- c(\"D<\", \"C<\", \"B<\")         # B, C, D the other way round" : "")],
+    ["", "n <- length(top)"],
+    ["al", "# genes lined up, the crossover between elements g - 1 and g: each takes the other's rest"],
+    ["al", "g <- " + (P && P.t === "al" && C.gap ? C.gap + 1 : 5)],
+    ["al", "list(c(top[1:(g - 1)], bot[g:n]), c(bot[1:(g - 1)], top[g:n]))"],
+    ["rr", "# two copies of the repeat that are not partners, i on top and j below, facing the same way"],
+    ["rr", "i <- " + (P && P.t === "rr" ? P.i + 1 : 3) + "; j <- " + (P && P.t === "rr" ? P.j + 1 : 10)],
+    ["rr", "list(c(top[1:i], bot[(j + 1):n]), c(bot[1:j], top[(i + 1):n]))   # one lacks the stretch, one has it twice"],
+    ["self", "# one chromosome folded so its copies i and j touch: facing the same way, the stretch loops out;"],
+    ["self", "# facing opposite ways, it comes back reversed"],
+    ["self", "i <- " + (P && P.t === "self" ? P.i + 1 : 3) + "; j <- " + (P && P.t === "self" ? P.j + 1 : 7)],
+    ["self", "c(top[1:i], top[(j + 1):n])                       # the same way"],
+    ["self", "c(top[1:i], rev(top[(i + 1):(j - 1)]), top[j:n])    # opposite ways"],
+  ]);
+  if (key) highlightByDataLine("codeC", key);
+}
+function C_paint() { C_drawPair(); C_drawOut(); C_sync(); C_code(); }
+function C_wire() {
+  const cv = $("C_pair");
+  const where = e => framePt(cv, e, CP.W);
+  const elAt = (p, ch, x0, y) => { if (p.y < y - 4 || p.y > y + C_EH + 4) return -1; const xs = C_xs(ch, x0); return ch.findIndex((e, i) => p.x >= xs[i] - 1 && p.x <= xs[i] + C_W[e.k] + 1); };
+  const locked = () => C.waiting && !C_practising();
+  cv.addEventListener("pointerdown", e => {
+    if (locked()) return;
+    const p = where(e), ti = elAt(p, C.top, C_TX, C_Y.top), bi = elAt(p, C.bot, C_TX + C.off, C_Y.bot);
+    if (ti >= 0 && C.top[ti].k === "r") C.drag = { kind: "rep", c: "top", i: ti, x: p.x, y: p.y, x0: p.x, y0: p.y };
+    else if (bi >= 0 && C.bot[bi].k === "r") C.drag = { kind: "rep", c: "bot", i: bi, x: p.x, y: p.y, x0: p.x, y0: p.y };
+    else if (bi >= 0) C.drag = { kind: "slide", px: p.x, off0: C.off, off: C.off };
+    else { const h = C.hits.find(q => p.x >= q.x0 && p.x <= q.x1 && p.y >= q.y0 && p.y <= q.y1); if (h) { C.gap = h.gap; bump("C"); C.out = null; C_paint(); } return; }
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", e => {
+    const p = where(e);
+    if (C.drag) { if (C.drag.kind === "slide") C.drag.off = clamp(C.drag.off0 + p.x - C.drag.px, -230, 230); else { C.drag.x = p.x; C.drag.y = p.y; } C_drawPair(); return; }
+    const h = C.hits.find(q => p.x >= q.x0 && p.x <= q.x1 && p.y >= q.y0 && p.y <= q.y1), g = h ? h.gap : null;
+    const onEl = elAt(p, C.bot, C_TX + C.off, C_Y.bot) >= 0 || [C.top, C.bot].some((ch, k) => { const i = elAt(p, ch, k ? C_TX + C.off : C_TX, k ? C_Y.bot : C_Y.top); return i >= 0 && ch[i].k === "r"; });
+    cv.style.cursor = locked() ? "default" : C.drag ? "grabbing" : h ? "pointer" : onEl ? "grab" : "default";
+    if (g !== C.hoverGap) { C.hoverGap = g; C_drawPair(); }
+  });
+  const drop = e => {
+    const d = C.drag; if (!d) return; C.drag = null;
+    const p = where(e);
+    if (d.kind === "slide") {
+      /* snap: genes lined up (0), or any copy of the repeat below under any copy above */
+      const tx = C_xs(C.top, C_TX), b0 = C_xs(C.bot, C_TX), cands = [{ off: 0, pair: { t: "al" } }];
+      C.top.forEach((e1, i) => { if (e1.k !== "r") return; C.bot.forEach((e2, j) => { if (e2.k !== "r") return; const off = tx[i] - b0[j];
+        if (Math.abs(off) > 0.5) cands.push({ off, pair: { t: "rr", i, j } }); }); });
+      let best = null; for (const c of cands) if (Math.abs(c.off - d.off) <= 24 && (!best || Math.abs(c.off - d.off) < Math.abs(best.off - d.off))) best = c;
+      if (best) { C.off = best.off; C.pair = best.pair; } else { C.off = d.off; C.pair = null; }
+      C.gap = null; C.out = null; bump("C");
+    } else {
+      /* a repeat dropped on another */
+      const ti = elAt(p, C.top, C_TX, C_Y.top), bi = elAt(p, C.bot, C_TX + C.off, C_Y.bot);
+      const tgt = ti >= 0 && C.top[ti].k === "r" ? { c: "top", i: ti } : bi >= 0 && C.bot[bi].k === "r" ? { c: "bot", i: bi } : null;
+      if (tgt && !(tgt.c === d.c && tgt.i === d.i)) {
+        if (tgt.c === d.c) C.pair = { t: "self", c: d.c, i: Math.min(d.i, tgt.i), j: Math.max(d.i, tgt.i) };
+        else { const i = d.c === "top" ? d.i : tgt.i, j = d.c === "top" ? tgt.i : d.i, off = C_xs(C.top, C_TX)[i] - C_xs(C.bot, C_TX)[j];
+               C.off = off; C.pair = Math.abs(off) < 0.5 ? { t: "al" } : { t: "rr", i, j }; }
+        C.gap = null; C.out = null; bump("C");
+      }
+    }
+    C_paint();
+  };
+  cv.addEventListener("pointerup", drop);
+  cv.addEventListener("pointercancel", () => { C.drag = null; C_drawPair(); });
+  cv.addEventListener("mouseleave", () => { if (C.hoverGap != null) { C.hoverGap = null; C_drawPair(); } });
+  $("C_go").addEventListener("click", C_go);
+  $("C_next").addEventListener("click", C_nextRound);
+  $("C_reset").addEventListener("click", C_reset);
+  $("C_practice").addEventListener("change", C_sync);
+  $("C_dl").addEventListener("click", () => downloadText("lesson16_stageC.R", RTEXT.codeC));
+}
+
+/* ====== painting and wiring ====== */
+function paintAll() { A_paint(); if (typeof B_paint === "function") B_paint(); if (typeof C_paint === "function") C_paint(); }
+function wire() {
+  const sc = $("A_seq");
+  const ntAt = e => { const p = framePt(sc, e, SQ.W); for (let r = 0; r * PER_ROW < VIEW; r++) {
+      if (p.y >= sqNTY(r) - 2 && p.y <= sqNTY(r) + SQ.NH + 2) { const c = Math.floor((p.x - SQ.LM) / SQ.NW); if (c >= 0 && c < PER_ROW && r * PER_ROW + c < VIEW) return { nt: r * PER_ROW + c }; }
+      if (p.y >= sqAAY(r) && p.y < sqAAY(r) + SQ.AAH) { const c = Math.floor((p.x - SQ.LM) / SQ.NW); if (c >= 0 && c < PER_ROW) return { aa: r * PER_ROW + c }; }
+    } return null; };
+  const codonAt = i => { const r = A.mut ? A.eff.r : ORIG; const ci = r.codons.findIndex(c => i >= c.at && i < c.at + 3); return ci < 0 ? null : ci; };
+  sc.addEventListener("mousemove", e => { const h = ntAt(e), was = A.hover;
+    A.hover = h ? { nt: h.nt != null ? h.nt : null, codon: codonAt(h.nt != null ? h.nt : h.aa) } : null;
+    sc.style.cursor = h && h.nt != null && (A.step === "pick" || A.step === "done") && !A.run ? "pointer" : "default";
+    if (JSON.stringify(was) !== JSON.stringify(A.hover)) { A_drawSeq(); A_drawWheel(); } });
+  sc.addEventListener("mouseleave", () => { A.hover = null; A_drawSeq(); A_drawWheel(); });
+  sc.addEventListener("click", e => { const h = ntAt(e); if (!h || h.nt == null || A.run) { A_closePop(); return; } if (A.step === "pick" || A.step === "done") A_openPop(h.nt); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("A_pop").hidden) A_closePop(); });
+  document.querySelectorAll("#A_kindBox button").forEach(b => b.addEventListener("click", () => A_kind(b.dataset.kind)));
+  $("A_undo").addEventListener("click", A_undo);
+  $("A_go").addEventListener("click", A_go);
+  $("A_next").addEventListener("click", A_nextChange);
+  for (const id of ["A_s", "A_h", "A_N"]) {
+    $(id).addEventListener("input", () => { A_sync(); A_code(); highlightByDataLine("codeA", id.slice(2)); });
+    $(id).addEventListener("change", () => bump("A"));
+  }
+  $("A_dl").addEventListener("click", () => downloadText("lesson16_stageA.R", RTEXT.codeA));
+  if (typeof B_wire === "function") B_wire();
+  if (typeof C_wire === "function") C_wire();
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; A_closePop(); paintAll(); }, 120); });
+  /* instructor bypass / study mode: every stage open, and every inner gate */
+  const reveal = () => { INSTRUCTOR = true; for (const k in Gates) Gates[k].open = true; FIT_EPOCH++; paintAll(); };
+  document.addEventListener("score:bypass", reveal);
+  window.__l16reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson16",
+  version: 1,      /* 1: first pass, A-C (2026-10-08) */
+  scaffold: 18,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l16reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>

@@ -1,11 +1,17 @@
-# Lesson 17 — identical-by-descent blocks, haplotypes, runs of homozygosity (slot pencilled: JM "17(?)")
+# Lesson 17 — migration (JM, 2026-10-08); was identical-by-descent blocks, haplotypes, runs of homozygosity (JM "17(?)", 2026-10-01)
 
 **File** · `app/lessons/lesson17.html` — not started
 **Checks** · `node scripts/check_lesson17_numbers.js` (to write) · `python3 scripts/check_lessons.py`
 **Status** · brief only (JM, 2026-10-01); nothing built
 **Last touched** · 2026-10-01
 
-## What the lesson is
+## JM, 2026-10-08: 17 is migration
+
+- *"part D [of 16] needs to be something that will lead into migration, which will be the next lesson after this one. So something with identical by descent blocks and hapletypes, which can connect the inversions above."*
+- So IBD blocks and haplotypes move into 16 D (proposal in `lesson16_overhaul.md`); 17 is migration. The brief below (2026-10-01) is kept as a source; runs of homozygosity have no home yet.
+- Archive, sources only: old 16 "Spreading or staying — populations connected by migration" (`app/archive/lesson16.html`: two isolated populations drift apart; a few move each generation; work back to how many were moving; Italian sparrows across the hybrid zone).
+
+## What the lesson is (2026-10-01 brief)
 
 - JM, 2026-10-01: *"17(?) identical by descent blocks, haplotypes, runs of homozygosity"*.
 - After 15's coalescence (the snake game) and 16's mutation: a block identical by descent is two copies whose common ancestor is recent at that stretch of chromosome; a run of homozygosity is such a block inside one individual.
