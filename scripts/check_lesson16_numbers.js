@@ -207,15 +207,18 @@ Gates.A.open = true; FIT_EPOCH++;
   check("A: eight hits fill the table, all at one N (" + [...Ns].join(", ") + "), and open B (bits " + bits + ")",
         nc && A.rows.length === 8 && Ns.size === 1 && Gates.A.done && Gates.B.open && document.querySelector('#tasksA li[data-task="A1"]').classList.contains("done") &&
         bits === "01011111" && document.querySelectorAll("#A_table tr").length === 9);
-  /* dN/dS off the eight: the readout against the rows, and the picture it is for -- harmful below the synonymous
-     change, beneficial above (N 20, the opening: synonymous ~16 of 1,000, s 0.1 ~1, s -0.05 ~38) */
+  /* dN/dS off the eight, beneficial and harmful apart (JM 2026-10-09): the readout against the rows, and the
+     picture it is for -- harmful below the synonymous change, beneficial above (N 20, the opening: synonymous ~16 of
+     1,000, s 0.1 ~1, s -0.05 ~38) */
   const syn = A.rows.filter(r => r.eff.kind === "synonymous"), non = A.rows.filter(r => r.eff.kind === "nonsynonymous");
-  const dS = syn.reduce((a, r) => a + r.res.fixed, 0) / syn.length, dN = non.reduce((a, r) => a + r.res.fixed, 0) / non.length;
-  const dr = txt("A_dndsRead"), dm = dr.match(/^dN[/]dS = ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+)$/);
+  const mean = a => a.reduce((x, y) => x + y, 0) / a.length;
   const harm = non.filter(r => r.res.set.s > 0).map(r => r.res.fixed), ben = non.filter(r => r.res.set.s < 0).map(r => r.res.fixed);
-  check("A: dN/dS from the eight: '" + dr + "' (synonymous " + dS + ", harmful " + harm.join("/") + ", beneficial " + ben.join("/") + "; the noncoding one left out)",
-        shown("A_dndsPanel") && syn.length === 1 && non.length === 6 && dS > 0 && !!dm && near(+dm[1], dN, 0.05) && near(+dm[2], dS) && near(+dm[3], dN / dS, 0.005) &&
-        harm.every(v => v < dS) && ben.every(v => v > dS));
+  const dS = syn[0] ? syn[0].res.fixed : 0, dB = mean(ben), dH = mean(harm);
+  const dr = txt("A_dndsRead"), dm = dr.match(/^dN[/]dS: beneficial ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+) · harmful ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+)$/);
+  check("A: dN/dS from the eight, beneficial and harmful apart: '" + dr + "' (synonymous " + dS + ", harmful " + harm.join("/") + ", beneficial " + ben.join("/") + "; the noncoding one left out)",
+        shown("A_dndsPanel") && syn.length === 1 && ben.length === 3 && harm.length === 3 && dS > 0 && !!dm &&
+        near(+dm[1], dB, 0.05) && near(+dm[2], dS) && near(+dm[3], dB / dS, 0.005) && near(+dm[4], dH, 0.05) && near(+dm[5], dS) && near(+dm[6], dH / dS, 0.005) &&
+        dH / dS < 1 && dB / dS > 1);
   /* after the eight: a change plays as practice, N free again, its kind said, nothing recorded */
   A_nextChange(); A_edit("sub", 50, "A");
   const sand = free("N") && txt("A_go") === "Practice run" && el("A_practice").disabled;

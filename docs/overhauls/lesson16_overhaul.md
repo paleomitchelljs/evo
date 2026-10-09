@@ -74,7 +74,7 @@ D (proposal, not built)
 | 15 | A | JM 2026-10-09: synonymous / nonsynonymous instead of transitions and transversions | done, then superseded by 16; kinds synonymous / nonsynonymous / noncoding (JM chose the third) |
 | 16 | A | JM 2026-10-09: a text target per change in place of naming it: 1 syn, 3 nonsyn beneficial, 3 nonsyn harmful, 1 noncoding | done: v2, scaffold 16 (A1-A8); retry until hit, first scored try the bit; practice |
 | 17 | A | JM 2026-10-09: dN/dS at the end from the student's own results | done: 1,000 populations a change, one N for the eight (JM chose both); N capped at 50 so the synonymous change fixes somewhere |
-| 18 | A | the pooled ratio with 3 beneficial + 3 harmful usually comes out near or above 1 (beneficial fixations swamp the harmful zeros); real genes, mostly harmful changes, sit below 1 | open for JM |
+| 18 | A | the pooled ratio with 3 beneficial + 3 harmful usually comes out near or above 1 (beneficial fixations swamp the harmful zeros); real genes, mostly harmful changes, sit below 1 | done (JM 2026-10-09: break it into beneficial / harmful): two ratios, two lines; no pooled one |
 
 ## Measured (2026-10-08)
 
@@ -122,7 +122,7 @@ A, 2026-10-09 (the page's A_fate; 200 sets of 1,000 populations, by 4N): went to
 ## Open for JM
 
 - ~~"100 runs of 100 populations" read as 100 populations.~~ Settled 2026-10-09: 1,000.
-- Item 18: with 3 beneficial and 3 harmful, the pooled dN/dS is usually ≥ 1. Keep (an average hides both), weight the mix toward harmful (real genes), or print beneficial and harmful separately?
+- ~~Item 18, the pooled ratio.~~ Settled 2026-10-09: beneficial and harmful apart.
 - trpL is real but unnamed on the page. Name it (and the trp operon) in a setup bullet?
 - C's targets are mine. D is a proposal.
 - B's round 1 is a floor (3 or fewer), cleared by N 500-1000; one step up from the opening (N 200) clears it only sometimes. The ratchet is noisy; the windows are set on the idea (bigger, more, milder), not one step.
@@ -135,6 +135,7 @@ A, 2026-10-09 (the page's A_fate; 200 sets of 1,000 populations, by 4N): went to
 - 2026-10-09: a synonymous change locks s (at 0) and h, in view.
 - 2026-10-09: kinds synonymous / nonsynonymous / noncoding (a third button for the flanks); then text targets in place of naming: 1 / 3 beneficial / 3 harmful / 1.
 - 2026-10-09: 1,000 populations a change, one N for all eight (for dN/dS).
+- 2026-10-09: dN/dS beneficial and harmful apart, no pooled ratio.
 - 2026-10-09: the table's fates are extinct / went to fixation (his words); "still present" is mine.
 - 2026-10-09: the runs readout is one sentence, his: "In X populations where this mutation arose, it went extinct in Y after Z generations." Too many specifics under a graph hide what to look at.
 

@@ -815,10 +815,13 @@ function A_drawRuns() {
 /* ---- dN/dS from the student's own eight (JM, 2026-10-09): went to fixation per 1,000 populations a change arose
    in, nonsynonymous over synonymous. Every change arose in the same number of populations at the same N, so a
    change's count is its rate; the noncoding one is drawn but left out, as real dN/dS counts coding sites only. ---- */
+/* JM, 2026-10-09: beneficial and harmful apart -- pooled, three beneficial changes' fixations swamp three harmful
+   ones' zeros and the one ratio reads near or above 1 */
 function A_dnds(rows) {
-  const per = k => { const rs = rows.filter(r => r.eff.kind === k); return rs.length ? rs.reduce((a, r) => a + r.res.fixed, 0) / rs.length : null; };
-  const dS = per("synonymous"), dN = per("nonsynonymous");
-  return { dS, dN, ratio: dS ? dN / dS : null };
+  const per = f => { const rs = rows.filter(f); return rs.length ? rs.reduce((a, r) => a + r.res.fixed, 0) / rs.length : null; };
+  const non = r => r.eff.kind === "nonsynonymous";
+  const dS = per(r => r.eff.kind === "synonymous"), dB = per(r => non(r) && r.res.set.s < 0), dH = per(r => non(r) && r.res.set.s > 0);
+  return { dS, dB, dH, rB: dS && dB != null ? dB / dS : null, rH: dS && dH != null ? dH / dS : null };
 }
 const DN = { W: 760, H: 230, px: 52, py: 30, pw: 520, ph: 140 };
 function A_drawDnds() {
@@ -842,19 +845,23 @@ function A_drawDnds() {
     cardText(ctx, k === "noncoding" ? "left out" : "s = " + r.res.set.s, x + w / 2, DN.py + DN.ph + 27, { size: 10.5, align: "center", col: MUTED });
   });
   /* the two rates across the chart: what a synonymous change did, and the nonsynonymous ones on average */
-  /* labels beyond the bars' right end, pushed apart when the two lines are close */
-  const rule = (v, col, txt, ly) => { ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = col; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(DN.px, ys(v)); ctx.lineTo(DN.px + DN.pw + 4, ys(v)); ctx.stroke(); ctx.restore();
-    cardText(ctx, txt, DN.px + DN.pw + 10, ly, { size: 10.5, col, bold: true }); };
-  let lS = ys(d.dS), lN = d.dN == null ? null : ys(d.dN);
-  if (lN != null && Math.abs(lN - lS) < 14) { const mid = (lN + lS) / 2, up = lN <= lS ? -1 : 1; lN = mid + 7 * up; lS = mid - 7 * up; }
-  rule(d.dS, INK, "synonymous " + d.dS, lS);
-  if (lN != null) rule(d.dN, HOT, "nonsynonymous, average " + d.dN.toFixed(1), lN);
+  /* three lines: the synonymous change, the beneficial average, the harmful average; labels beyond the bars'
+     right end, pushed apart top to bottom so none overlaps */
+  const lines = [[d.dS, INK, "synonymous " + d.dS], [d.dB, HOT, "beneficial, average " + (d.dB == null ? "" : d.dB.toFixed(1))],
+                 [d.dH, HOT, "harmful, average " + (d.dH == null ? "" : d.dH.toFixed(1))]].filter(l => l[0] != null).map(l => ({ v: l[0], col: l[1], txt: l[2], y: ys(l[0]) }));
+  lines.sort((a, b) => a.y - b.y);
+  for (let i = 1; i < lines.length; i++) lines[i].y = Math.max(lines[i].y, lines[i - 1].y + 13);
+  const over = lines.length ? lines[lines.length - 1].y - (DN.py + DN.ph + 4) : 0;
+  if (over > 0) lines.forEach(l => l.y -= over);
+  for (const l of lines) { ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = l.col; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(DN.px, ys(l.v)); ctx.lineTo(DN.px + DN.pw + 4, ys(l.v)); ctx.stroke(); ctx.restore();
+    cardText(ctx, l.txt, DN.px + DN.pw + 10, l.y, { size: 10.5, col: l.col, bold: true }); }
   cardText(ctx, "N = " + A.rows[0].res.set.N + " in all eight", DN.px + 4, 10, { size: 10.5, col: MUTED });
   ctx.restore();
-  $("A_dndsRead").innerHTML = d.ratio == null
+  const part = (name, x, r) => lab(name) + " <b>" + x.toFixed(1) + "</b> " + lab("÷") + " <b>" + d.dS + "</b> " + lab("=") + " <b>" + r.toFixed(2) + "</b>";
+  $("A_dndsRead").innerHTML = !d.dS
     ? lab("Your synonymous change went to fixation in none of its 1,000 populations: nothing to measure the others against.")
-    : lab("dN/dS =") + " <b>" + d.dN.toFixed(1) + "</b> " + lab("÷") + " <b>" + d.dS + "</b> " + lab("=") + " <b>" + d.ratio.toFixed(2) + "</b>";
+    : lab("dN/dS:") + " " + part("beneficial", d.dB, d.rB) + " " + lab("·") + " " + part("harmful", d.dH, d.rH);
 }
 
 /* ---- the table of eight: the change that hit each target ---- */
