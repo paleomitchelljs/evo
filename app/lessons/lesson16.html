@@ -87,6 +87,7 @@
 
   /* A: the sequence, the pop-up for one letter, the table */
   .seqpanel { position:relative; }
+  .seqbar { margin:0 0 4px; }
   #A_seq { cursor:pointer; }
   .seqpop { position:absolute; z-index:4; background:#fff; border:1px solid var(--ink); border-radius:6px; padding:10px 12px;
             box-shadow:0 6px 24px rgba(0,0,0,0.18); font-size:13px; width:252px; }
@@ -142,6 +143,7 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel seqpanel">
+        <div class="buttons seqbar"><button id="A_reset" class="ghost" disabled>Reset</button></div>
         <canvas id="A_seq" width="760" height="320"></canvas>
         <div class="seqpop" id="A_pop" hidden></div>
         <div class="readout" id="A_seqRead"></div>
@@ -183,7 +185,6 @@
         <div class="buttons">
           <button id="A_go" class="accent" hidden>Go</button>
           <button id="A_next" class="ghost" hidden>Next target</button>
-          <button id="A_undo" class="ghost" hidden>Take it back</button>
         </div>
         <div class="verdict" id="A_verdict"></div>
       </div>
@@ -904,7 +905,7 @@ function A_sync() {
   $("A_go").hidden = st !== "set"; $("A_go").textContent = prac ? "Practice run" : "Go";
   $("A_next").hidden = st !== "done";
   $("A_next").textContent = done ? "Another change" : A.out && A.out.ok && !A.out.practice ? "Next target" : "Try again";
-  $("A_undo").hidden = st !== "set";
+  $("A_reset").disabled = st === "run" || !A.mut;
   /* the verdict, after the run */
   const o = A.out, kindTxt = o ? (o.kind === "nonsynonymous" ? "nonsynonymous, " + (o.s > 0 ? "harmful" : o.s < 0 ? "beneficial" : "with s = 0") : o.kind) : "";
   $("A_verdict").innerHTML = !o || st !== "done" ? "" : o.sandbox ? lab("that change is") + " " + kindTxt :
@@ -937,7 +938,13 @@ function A_edit(act, i, to) {
   A.eff = effectOf(A.mut); A.out = null; A.step = "set"; bump("A");
   A_paint();
 }
-function A_undo() { if (A.step !== "set") return; A.mut = null; A.eff = null; A.step = "pick"; A_paint(); }
+/* Reset (JM, 2026-10-09: "quick & easy to reset a misclick"): back to the sequence as it was; not while a run plays */
+function A_reset() {
+  if (A.run) return;
+  if (!$("A_pop").hidden) A_closePop();
+  if (A.step === "set") { A.mut = null; A.eff = null; A.step = "pick"; A_paint(); }
+  else if (A.step === "done") A_nextChange();
+}
 function A_go() {
   if (A.step !== "set") return;
   const practice = A_practising(), sandbox = A_done(), set = A_set();
@@ -1713,7 +1720,7 @@ function wire() {
   sc.addEventListener("click", e => { const h = ntAt(e); if (!h || h.nt == null || A.run) { A_closePop(); return; } if (A.step === "pick" || A.step === "done") A_openPop(h.nt); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("A_pop").hidden) A_closePop(); });
   $("A_practice").addEventListener("change", A_sync);
-  $("A_undo").addEventListener("click", A_undo);
+  $("A_reset").addEventListener("click", A_reset);
   $("A_go").addEventListener("click", A_go);
   $("A_next").addEventListener("click", A_nextChange);
   for (const id of ["A_s", "A_h", "A_N"]) {

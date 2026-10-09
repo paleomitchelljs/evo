@@ -161,6 +161,13 @@ Gates.A.open = true; FIT_EPOCH++;
   const opened = shown("A_controls") && free("s") && free("h") && free("N") && txt("A_go") === "Go" && txt("A_verdict") === "" && !/Gly/.test(txt("A_effect"));
   check("A: target 1 asks for a synonymous change; a click opens the pop-up (3 + 4 + 2 buttons); a change locks the sequence and opens s, h and N; the verdict and the protein wait for Go",
         t1 && popOpen && changed && lockedSeq && opened);
+  /* Reset, top left of the sequence panel (JM 2026-10-09): a misclicked change undone in one click, then made again */
+  const rb = el("A_reset"), sp = el("A_seq").parentElement;
+  const atTop = rb.closest(".seqpanel") === sp && sp.firstElementChild.contains(rb) && !rb.disabled;
+  rb.click();
+  const undone = A.step === "pick" && !A.mut && rb.disabled && txt("A_ttext") === "Make a synonymous change.";
+  A_edit("sub", 41, "T");
+  check("A: Reset sits at the top left of the sequence panel; one click undoes a change; nothing to reset, it greys out", atTop && undone && A.step === "set" && !rb.disabled);
   const sBefore = el("A_s").value, NBefore = el("A_N").value;
   A_go(); const running = A.step === "run" && el("A_s").disabled && el("A_N").disabled && A.Nheld === NBefore;
   A.run.g = 4 * A.run.set.N; A_endRun();

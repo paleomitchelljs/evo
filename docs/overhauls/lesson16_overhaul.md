@@ -75,6 +75,7 @@ D (proposal, not built)
 | 16 | A | JM 2026-10-09: a text target per change in place of naming it: 1 syn, 3 nonsyn beneficial, 3 nonsyn harmful, 1 noncoding | done: v2, scaffold 16 (A1-A8); retry until hit, first scored try the bit; practice |
 | 17 | A | JM 2026-10-09: dN/dS at the end from the student's own results | done: 1,000 populations a change, one N for the eight (JM chose both); N capped at 50 so the synonymous change fixes somewhere |
 | 18 | A | the pooled ratio with 3 beneficial + 3 harmful usually comes out near or above 1 (beneficial fixations swamp the harmful zeros); real genes, mostly harmful changes, sit below 1 | done (JM 2026-10-09: break it into beneficial / harmful): two ratios, two lines; no pooled one |
+| 19 | A | JM 2026-10-09: "Take it back" becomes a "Reset" button at the top left of the sequence panel, quick to undo a misclick | done: one click back to the sequence as it was (closes an open pop-up too); greyed while a run plays or with nothing to reset; checked |
 
 ## Measured (2026-10-08)
 
