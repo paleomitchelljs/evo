@@ -17,14 +17,17 @@
  *      twelve substitutions; worked cases of what a change does: silent,
  *      one amino acid, an early stop, a lost stop, a lost start, a new start
  *      upstream, a frameshift.
- *   A, the populations. the page's long-run formula against an independent
- *      run-to-the-end simulation written here (three settings); the share
- *      lost by 4N at N 100 neutral; the playback: the first 20 generations
- *      take 2.4 s, all of them 6 s.
+ *   A, the populations. the share lost by 4N at N 100 neutral; the
+ *      playback: the first 20 generations take 2.4 s, all of them 6 s.
  *   A, the flow. a letter clicked opens the pop-up; a change locks the
  *      sequence; a wrong first answer records 0 and the right one opens the
- *      sliders; a silent change hides s and h and runs at s = 0; ten changes
- *      played out fill the table and open B; an eleventh records nothing.
+ *      sliders; the sentence under the runs agrees with the run; a silent
+ *      change holds s (at 0) and h in view, read off the computed style and
+ *      `disabled`, not the `hidden` attribute (2026-10-09: `.tbar`'s
+ *      display:flex beat `hidden`, so the rows showed and moved while this
+ *      check passed), and runs at s = 0; the next change frees them and gives
+ *      back the student's s; ten changes played out fill the table and open
+ *      B; an eleventh records nothing.
  *   B, the bench. copying always gives the parent's 3; without crossovers
  *      the best young carries 2; a young with none exists exactly when the
  *      parent's crossover falls after gene 4-7 and the mate's after 3-5.
@@ -102,20 +105,6 @@ Gates.A.open = true; FIT_EPOCH++;
 
 /* ================= A: the populations ================= */
 {
-  /* an independent run to the end: the same generation, written here, until lost or in every copy */
-  const toEnd = (N, h, s, rng) => { const n2 = 2 * N; let k = 1;
-    for (;;) { const p = k / n2, q = 1 - p, w = p*p*(1-s) + 2*p*q*(1-h*s) + q*q, pp = (p*p*(1-s) + p*q*(1-h*s)) / w;
-      let c = 0; if (n2 * pp < 30) { for (let i = 0; i < n2; i++) if (rng() < pp) c++; } else c = A_binom(n2, pp, rng);
-      k = c; if (k === 0) return 0; if (k === n2) return 1; } };
-  const rng = mulberry32(2026), rows = [];
-  for (const [N, h, s, R] of [[20, 0.5, 0, 20000], [50, 0.5, -0.05, 8000], [50, 1, -0.05, 8000]]) {
-    let f = 0; for (let i = 0; i < R; i++) f += toEnd(N, h, s, rng);
-    const want = A_longRun(N, h, s), got = f / R, se = Math.sqrt(want * (1 - want) / R);
-    rows.push([N, h, s, got, want, se]);
-  }
-  check("the long-run formula against runs to the end: " + rows.map(r => "N " + r[0] + " h " + r[1] + " s " + r[2] + ": " + (100 * r[3]).toFixed(2) + "% vs " + (100 * r[4]).toFixed(2) + "%").join("; "),
-        rows.every(r => Math.abs(r[3] - r[4]) < 3.5 * r[5] + 0.004));
-  check("neutral, the formula is 1 in 2N", near(A_longRun(100, 0.5, 0), 1 / 200, 2e-5) && near(A_longRun(10, 0.3, 0), 1 / 20, 2e-4));
   const r2 = mulberry32(77); let lost = 0, here = 0, fx = 0, maxT = 0; const R = 3000;
   for (let i = 0; i < R; i++) { const o = A_fate(100, 0.5, 0, r2); if (o.end === "lost") lost++; else if (o.end === "here") here++; else fx++; maxT = Math.max(maxT, o.path.length - 1); }
   check("N 100, neutral: lost by 4N in " + pct(lost / R) + " (measured 99.5%), never past 4N generations", near(lost / R, 0.995, 0.006) && maxT <= 400);
@@ -133,21 +122,37 @@ Gates.A.open = true; FIT_EPOCH++;
   A_kind("transition");
   const wrong = Score.isAnswered("scaffold", BIT.A1) && Score.getBit("scaffold", BIT.A1) === 0 && A.step === "kind" && /incorrect/.test(document.getElementById("A_kindFb").textContent);
   A_kind("transversion");
-  const opened = A.step === "set" && !document.getElementById("A_controls").hidden && !document.getElementById("A_sRow").hidden && Score.getBit("scaffold", BIT.A1) === 0;
+  /* what a student sees: a row in view (not display:none), its slider free or held */
+  const el = id => document.getElementById(id);
+  const shown = id => getComputedStyle(el(id)).display !== "none";
+  const free = k => shown("A_" + k + "Row") && !el("A_" + k).disabled && !el("A_" + k + "Row").classList.contains("held");
+  const held = k => shown("A_" + k + "Row") && el("A_" + k).disabled && el("A_" + k + "Row").classList.contains("held");
+  const opened = A.step === "set" && shown("A_controls") && free("s") && free("h") && !el("A_N").disabled && Score.getBit("scaffold", BIT.A1) === 0;
   check("A: a click opens the pop-up (3 + 4 + 2 buttons); a change locks the sequence; a wrong first answer records 0, the right one opens s, h and N", popOpen && changed && lockedSeq && wrong && opened);
-  A_go(); const running = A.step === "run" && document.getElementById("A_s").disabled;
+  const sBefore = el("A_s").value;
+  A_go(); const running = A.step === "run" && el("A_s").disabled;
   A.run.g = 4 * A.run.set.N; A_endRun();
   const row = A.rows[0];
-  check("A: Go locks the sliders; the run ends as a row: " + row.eff.short + ", lost " + row.res.lost + " / still here " + row.res.here + " / in every copy " + row.res.fixed,
+  check("A: Go locks the sliders; the run ends as a row: " + row.eff.short + ", extinct " + row.res.lost + " / still present " + row.res.here + " / went to fixation " + row.res.fixed,
         running && A.rows.length === 1 && row.res.lost + row.res.here + row.res.fixed === 100 && !row.firstOk);
-  /* a silent change: s and h hidden, run at s = 0 */
+  /* the sentence under the runs (JM's): 100 populations, extinct in the row's count, after 4N generations */
+  const said = el("A_runsRead").textContent.replace(/\\s+/g, " ").trim();
+  const sm = said.match(/^In (\\d+) populations where this mutation arose, it went extinct in (\\d+) after (\\d+) generations[.]$/);
+  check("A: under the runs, one sentence that agrees with the run: '" + said + "'",
+        !!sm && +sm[1] === 100 && +sm[2] === row.res.lost && +sm[3] === 4 * row.res.set.N);
+  /* a silent change: s held at 0 and h held, both in view; N free; runs at s = 0 */
   A_nextChange(); A_edit("sub", 24, "G");
   A_kind("transition");
-  const silent = A.step === "set" && document.getElementById("A_sRow").hidden && A_set().s === 0 && Score.getBit("scaffold", BIT.A2) === 1;
+  const silent = A.step === "set" && A.eff.syn && held("s") && held("h") && !el("A_N").disabled &&
+    A_S[+el("A_s").value] === 0 && el("A_sV").textContent === "0" && A_set().s === 0 && Score.getBit("scaffold", BIT.A2) === 1;
   A_go(); A.run.g = 4 * A.run.set.N; A_endRun();
-  check("A: a silent change hides s and h and runs at s = 0; a right first answer records 1", silent && A.rows[1].res.set.s === 0);
-  /* eight more, then the stage closes */
-  for (let i = 2; i < 10; i++) { A_nextChange(); A_edit("del", 20 + i, null); A_kind("deletion"); A_go(); A.run.g = 4 * A.run.set.N; A_endRun(); }
+  check("A: a silent change holds s at 0 and h, in view, and runs at s = 0; a right first answer records 1", silent && A.rows[1].res.set.s === 0);
+  /* eight more, then the stage closes; the first of them (a frameshift) frees s and h and gives back the student's s */
+  let restored = null;
+  for (let i = 2; i < 10; i++) { A_nextChange(); A_edit("del", 20 + i, null); A_kind("deletion");
+    if (i === 2) restored = !A.eff.syn && free("s") && free("h") && el("A_s").value === sBefore;
+    A_go(); A.run.g = 4 * A.run.set.N; A_endRun(); }
+  check("A: the next change that alters the protein frees s and h and gives back the s set before", restored === true);
   const done = A.rows.length === 10 && Gates.A.done && Gates.B.open && document.querySelector('#tasksA li[data-task="A1"]').classList.contains("done");
   A_nextChange(); A_edit("sub", 50, "A"); A_kind(kindOf(A.mut)); A_go(); A.run.g = 4 * A.run.set.N; A_endRun();
   const bits = Array.from({ length: 10 }, (_, i) => Score.getBit("scaffold", BIT["A" + (i + 1)])).join("");

@@ -3,7 +3,7 @@
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
 **Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt; D proposed, not built. Checks pass
-**Last touched** · 2026-10-08
+**Last touched** · 2026-10-09
 
 ## What the lesson is
 
@@ -33,7 +33,7 @@ A
 - "Synonymous" = the amino acids from start to stop are unchanged (a change outside the reading counts). Then s = 0 and only N is set.
 - Each new mutation is made on the original sequence (a new change arises in a copy of the gene as the population has it).
 - The kind is asked once the change is made; a wrong answer says so and the student tries again; the first answer is the bit (as 15's reads). Ten mutations, ten bits; the stage closes after ten have played out.
-- A table of the ten builds under the runs: the change, its kind, what it did to the protein, s, h, N, lost / still here / taken over.
+- A table of the ten builds under the runs: the change, its kind, what it did to the protein, s, h, N, extinct / still present / went to fixation.
 
 B
 - Two populations side by side, one copying itself (no sex), one with meiosis and mating; each harmful mutation multiplies an individual's young by 1 − s; new ones arrive at U per young; none is ever undone.
@@ -55,7 +55,7 @@ D (proposal, not built)
 | 1 | A | sequence panel: 144 nt, amino acids above, start/stop marked, click → change / insert / delete | done: four rows of 36; codons drawn over their letters (split across rows); changed amino acids outlined red; a deletion marked by a caret; every tenth letter numbered; pop-up at the letter (3 changes, 4 insertions, take out) |
 | 2 | A | codon wheel (canvas), old and new codon lit | done: T C A G from the middle out, DNA letters; hover a codon to light it; after a change, old (blue) and new (red), path drawn |
 | 3 | A | kind question (4 buttons), first answer the bit | done: wrong → "incorrect — try again"; the right one opens the sliders; "Take it back" until the first answer |
-| 4 | A | s, h, N; 100 populations for 4N generations, animated; lost / still here / taken over; the long-run formula beside | done: lines + a 10 x 10 grid (a square fills by share; ✕ lost; black in every copy); the first 20 generations over 2.4 s, the rest by 6 s; s from −0.1 to 1 in 14 steps, h 0-1, N 10-1000 |
+| 4 | A | s, h, N; 100 populations for 4N generations, animated; lost / still here / taken over; the long-run formula beside (formula off, 2026-10-09: item 13) | done: lines + a 10 x 10 grid (a square fills by share; ✕ lost; black in every copy); the first 20 generations over 2.4 s, the rest by 6 s; s from −0.1 to 1 in 14 steps, h 0-1, N 10-1000 |
 | 5 | A | the ten-mutation table; R panel | done; an eleventh change onward plays but is not counted |
 | 6 | B | bench: copy vs meiosis + fuse; the task | done: parents [2,4 / 8] and [6 / 1,3]; a clean young needs the parent's crossover after gene 4-7 and the mate's after 3-5; without crossovers the best is 2 |
 | 7 | B | ratchet engine; both populations; histogram + best-class plot; rounds (practice); R panel | done: 200 generations, worked out in slices while it plays at 50 a second; three rounds (one slider free each, the others held) |
@@ -63,6 +63,9 @@ D (proposal, not built)
 | 9 | — | scoring, gates, LOCKS row (x), landing card | done: `version: 1`, `scaffold: 18` (A1-A10, B1-B3, C1-C5) |
 | 10 | — | `check_lesson16_numbers.js`: translation, classification, fates against Kimura, ratchet bars, C's rules | done: 34 checks, ~40 s, R panels through Rscript |
 | 11 | D | JM to settle the proposal | open |
+| 12 | A | JM 2026-10-09: s and h not locked on a synonymous change (the rows were `hidden`, but `.tbar`'s display:flex beat the attribute; the check read the attribute) | done: rows stay in view, held (greyed, disabled); s set to 0 while held, the student's s back on the next change; the check reads `disabled` and the slider's value |
+| 13 | A | JM 2026-10-09: the text under the graphs is too long. Runs: "In X populations where this mutation arose, it went extinct in Y after Z generations." | done: the runs line is JM's sentence and nothing else (no still here / in every copy; the table keeps the counts); the long-run formula and its two checks gone (git has them); the sequence line cut to the protein's length, plus a word when there is no start or the stop is off screen; the check reads the sentence back against the run |
+| 14 | A | JM 2026-10-09: clearer column names in the table ("went to fixation" not "in every copy", "extinct" not "lost") | done: extinct / still present / went to fixation; the R panel's labels match |
 
 ## Measured (2026-10-08)
 
@@ -109,7 +112,9 @@ B (node prototype of the page's engine; best = fewest harmful changes anyone car
 
 ## Rulings
 
-(none yet)
+- 2026-10-09: a synonymous change locks s (at 0) and h, in view.
+- 2026-10-09: the table's fates are extinct / went to fixation (his words); "still present" is mine.
+- 2026-10-09: the runs readout is one sentence, his: "In X populations where this mutation arose, it went extinct in Y after Z generations." Too many specifics under a graph hide what to look at.
 
 ## Do not
 

@@ -51,6 +51,14 @@ one process, not a comparison between populations with different histories.
 by reading the page. Sweep the controls and measure before fixing any target,
 tolerance or window.
 
+**`hidden` does nothing on an element whose class sets `display`.** The
+attribute's `display:none` is the browser's weakest rule; `.tbar { display:flex }`
+beats it. Lesson 16 A "hid" s and h on a synonymous change this way: the rows
+stayed on screen and moved, the run quietly used s = 0, and the check passed
+because it read the attribute. Hold a control (`disabled` + `held`) rather than
+hide it, or add `[hidden] { display:none }` for that class; in a check, read
+`getComputedStyle(el).display` and `disabled`, never `el.hidden`.
+
 **A check that fails one run in twenty teaches nothing.** Size tolerances off
 the measured run-to-run spread and say in the comment what that spread was.
 
