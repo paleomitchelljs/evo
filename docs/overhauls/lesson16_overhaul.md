@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt; D proposed, not built. Checks pass
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt; D proposed, not built. 2026-10-09: A rebuilt on eight targets + dN/dS (v2, scaffold 16). Checks pass
 **Last touched** · 2026-10-09
 
 ## What the lesson is
@@ -32,8 +32,13 @@ A
 - Fitness 1 / 1 − hs / 1 − s (JM's form; s > 0 harmful).
 - "Synonymous" = the amino acids from start to stop are unchanged (a change outside the reading counts). Then s = 0 and only N is set.
 - Each new mutation is made on the original sequence (a new change arises in a copy of the gene as the population has it).
-- The kind is asked once the change is made; a wrong answer says so and the student tries again; the first answer is the bit (as 15's reads). Ten mutations, ten bits; the stage closes after ten have played out.
-- A table of the ten builds under the runs: the change, its kind, what it did to the protein, s, h, N, extinct / still present / went to fixation.
+- ~~The kind is asked once the change is made (insertion / deletion / transition / transversion); ten mutations, ten bits.~~ Replaced 2026-10-09 (JM): eight text targets, below.
+- Targets (JM 2026-10-09): one synonymous, three nonsynonymous beneficial, three nonsynonymous harmful, one noncoding. Order mine: syn, harm, ben, noncoding, harm, ben, harm, ben. Beneficial / harmful = the sign of the s the student sets (s < 0 / s > 0), so the target also asks whether they read 1 − s right.
+- Kind read off the result: protein changed = nonsynonymous (a new start upstream counts); protein the same with the letters start-to-stop unchanged = noncoding; otherwise synonymous. By result because one outcome can be clicked two ways (taking out the A of ATG = taking out the A before it).
+- A target stays until hit; the first scored try is the bit; practice switch as B and C. The verdict and the protein sentence wait for Go.
+- 1,000 populations a change (JM's "100 runs of 100", agreed 2026-10-09); every one a line, the first 100 squares. N 10 / 20 / 50, set on the first scored Go and held for the eight, so dN/dS compares like with like.
+- A table of the eight: kind (✓/✗ first try), the change, what it did to the protein, s, h, extinct / still present / went to fixation.
+- After the eight, dN/dS: a bar per change (went to fixation, of 1,000), dashed lines at the synonymous change and the nonsynonymous average; noncoding drawn, left out. One line: dN/dS = dN ÷ dS = ratio.
 
 B
 - Two populations side by side, one copying itself (no sex), one with meiosis and mating; each harmful mutation multiplies an individual's young by 1 − s; new ones arrive at U per young; none is ever undone.
@@ -66,6 +71,10 @@ D (proposal, not built)
 | 12 | A | JM 2026-10-09: s and h not locked on a synonymous change (the rows were `hidden`, but `.tbar`'s display:flex beat the attribute; the check read the attribute) | done: rows stay in view, held (greyed, disabled); s set to 0 while held, the student's s back on the next change; the check reads `disabled` and the slider's value |
 | 13 | A | JM 2026-10-09: the text under the graphs is too long. Runs: "In X populations where this mutation arose, it went extinct in Y after Z generations." | done: the runs line is JM's sentence and nothing else (no still here / in every copy; the table keeps the counts); the long-run formula and its two checks gone (git has them); the sequence line cut to the protein's length, plus a word when there is no start or the stop is off screen; the check reads the sentence back against the run |
 | 14 | A | JM 2026-10-09: clearer column names in the table ("went to fixation" not "in every copy", "extinct" not "lost") | done: extinct / still present / went to fixation; the R panel's labels match |
+| 15 | A | JM 2026-10-09: synonymous / nonsynonymous instead of transitions and transversions | done, then superseded by 16; kinds synonymous / nonsynonymous / noncoding (JM chose the third) |
+| 16 | A | JM 2026-10-09: a text target per change in place of naming it: 1 syn, 3 nonsyn beneficial, 3 nonsyn harmful, 1 noncoding | done: v2, scaffold 16 (A1-A8); retry until hit, first scored try the bit; practice |
+| 17 | A | JM 2026-10-09: dN/dS at the end from the student's own results | done: 1,000 populations a change, one N for the eight (JM chose both); N capped at 50 so the synonymous change fixes somewhere |
+| 18 | A | the pooled ratio with 3 beneficial + 3 harmful usually comes out near or above 1 (beneficial fixations swamp the harmful zeros); real genes, mostly harmful changes, sit below 1 | open for JM |
 
 ## Measured (2026-10-08)
 
@@ -92,6 +101,16 @@ B (node prototype of the page's engine; best = fewest harmful changes anyone car
 - Starting clean, both populations' best rise at first while the load builds; only the one without sex keeps rising.
 - Rounds' hit rates (100 runs a setting): see "Round windows" below.
 
+A, 2026-10-09 (the page's A_fate; 200 sets of 1,000 populations, by 4N): went to fixation per 1,000, and how often none
+
+        neutral   N 10 33.3 (0)   N 20 15.5 (0)   N 50 6.3 (0.2%)   N 100 3.0 (~5%)   N 200 1.4 (22%)   N 1000 0.3 (74%)
+        N 20      s 0.1 1.4 · s 0.02 10.3 · s 0.005 14.3 · s −0.01 18.4 · s −0.05 37.5
+        N 50      s 0.1 0.0 · s 0.02 2.2 · s 0.005 4.8 · s −0.01 9.8 · s −0.05 37.9
+        N 100     s 0.1 0.0 · s 0.02 0.2 · s 0.005 1.8 · s −0.01 7.5 · s −0.05 46.4
+
+- One synonymous change is the yardstick, so N stops at 50. Opening N 20.
+- Every one-letter change in view: 30 synonymous (28 substitutions, as the codon table gives, + 2 indels in TGA that make TAA / TAG), 328 nonsynonymous, 794 noncoding.
+
 ## Round windows (B; node prototype of the page's engine, 100 runs a setting, share hit)
 
         R1  without sex, best <= 3 at 200 (U 0.3, s 0.1; N free)          N 100 4% · 200 37% · 500 98% · 1000 100%
@@ -102,7 +121,8 @@ B (node prototype of the page's engine; best = fewest harmful changes anyone car
 
 ## Open for JM
 
-- "100 runs of 100 populations" read as 100 populations. If he meant 100 x 100, the tallies become shares of 10,000 and the lines a sample.
+- ~~"100 runs of 100 populations" read as 100 populations.~~ Settled 2026-10-09: 1,000.
+- Item 18: with 3 beneficial and 3 harmful, the pooled dN/dS is usually ≥ 1. Keep (an average hides both), weight the mix toward harmful (real genes), or print beneficial and harmful separately?
 - trpL is real but unnamed on the page. Name it (and the trp operon) in a setup bullet?
 - C's targets are mine. D is a proposal.
 - B's round 1 is a floor (3 or fewer), cleared by N 500-1000; one step up from the opening (N 200) clears it only sometimes. The ratchet is noisy; the windows are set on the idea (bigger, more, milder), not one step.
@@ -113,6 +133,8 @@ B (node prototype of the page's engine; best = fewest harmful changes anyone car
 ## Rulings
 
 - 2026-10-09: a synonymous change locks s (at 0) and h, in view.
+- 2026-10-09: kinds synonymous / nonsynonymous / noncoding (a third button for the flanks); then text targets in place of naming: 1 / 3 beneficial / 3 harmful / 1.
+- 2026-10-09: 1,000 populations a change, one N for all eight (for dN/dS).
 - 2026-10-09: the table's fates are extinct / went to fixation (his words); "still present" is mine.
 - 2026-10-09: the runs readout is one sentence, his: "In X populations where this mutation arose, it went extinct in Y after Z generations." Too many specifics under a graph hide what to look at.
 

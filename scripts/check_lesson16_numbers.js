@@ -2,32 +2,36 @@
 /*
  * check_lesson16_numbers.js -- the checks for app/lessons/lesson16.html.
  *
- * Lesson 16 is a draft (first pass, 2026-10-08): A one change to a real gene
- * (E. coli trpL), named, then played out in 100 populations for 4N
- * generations, ten times; B a bench (copy, or meiosis and fusion) and then
- * two populations, one without sex and one with, and the ratchet; C two
+ * Lesson 16 is a draft (first pass, 2026-10-08; A's targets 2026-10-09): A
+ * eight targets, each one change to a real gene (E. coli trpL) of a kind
+ * asked for, played out in 1,000 populations for 4N generations, then dN/dS
+ * off the eight; B a bench (copy, or meiosis and fusion) and then two
+ * populations, one without sex and one with, and the ratchet; C two
  * chromosomes paired and crossed over, at their genes or at copies of a
  * repeat. What has to hold:
  *
  *   A, the reading. trpL reads MKAIFVLKGWWRTS from letter 17 to the stop at
  *      59-61; the genetic code on the page is the standard one (re-derived
  *      from the codon list here); every one-letter insertion or deletion
- *      inside the reading still meets its stop on screen; the four kinds
- *      (transition = purine for purine or pyrimidine for pyrimidine) for all
- *      twelve substitutions; worked cases of what a change does: silent,
- *      one amino acid, an early stop, a lost stop, a lost start, a new start
- *      upstream, a frameshift.
+ *      inside the reading still meets its stop on screen; the kind of every
+ *      one-letter change in view (synonymous, nonsynonymous, noncoding)
+ *      against the rule written out here, and the synonymous substitutions
+ *      against the codon table; worked cases of what a change does.
  *   A, the populations. the share lost by 4N at N 100 neutral; the
- *      playback: the first 20 generations take 2.4 s, all of them 6 s.
- *   A, the flow. a letter clicked opens the pop-up; a change locks the
- *      sequence; a wrong first answer records 0 and the right one opens the
- *      sliders; the sentence under the runs agrees with the run; a silent
- *      change holds s (at 0) and h in view, read off the computed style and
- *      `disabled`, not the `hidden` attribute (2026-10-09: `.tbar`'s
+ *      yardstick: at the largest N offered, a synonymous change in 1,000
+ *      populations goes to fixation somewhere almost always; the playback:
+ *      the first 20 generations take 2.4 s, all of them 6 s.
+ *   A, the flow. the verdict waits for Go; a miss records 0, adds no row,
+ *      says why (the wrong kind, or the wrong sign of s), and the target
+ *      stays; practice records nothing; a change that leaves the protein the
+ *      same holds s (at 0) and h in view, read off the computed style and
+ *      `disabled`, never the `hidden` attribute (2026-10-09: `.tbar`'s
  *      display:flex beat `hidden`, so the rows showed and moved while this
- *      check passed), and runs at s = 0; the next change frees them and gives
- *      back the student's s; ten changes played out fill the table and open
- *      B; an eleventh records nothing.
+ *      check passed); the student's s comes back; N holds from the first
+ *      scored Go; the sentence under the runs agrees with the run; eight
+ *      hits open B; dN/dS printed agrees with the rows, harmful below the
+ *      synonymous change and beneficial above; after the eight, changes
+ *      play as practice.
  *   B, the bench. copying always gives the parent's 3; without crossovers
  *      the best young carries 2; a young with none exists exactly when the
  *      parent's crossover falls after gene 4-7 and the mate's after 3-5.
@@ -45,7 +49,7 @@
  *      target has a pairing that hits it and the trivial crossovers miss;
  *      the first Cross over is a free try; five attempts finish the lesson.
  *   All. every canvas fits its panel (1500 and 1000 wide); a full run writes
- *      all 18 bits; the three R panels run (Rscript), and C's gives the
+ *      all 16 bits; the three R panels run (Rscript), and C's gives the
  *      page's own chromosomes.
  *
  * Same harness as check_lesson15_numbers.js.
@@ -84,19 +88,37 @@ Gates.A.open = true; FIT_EPOCH++;
     const r = readSeq(applyMut(m)); if (r.stop == null || r.stop + 3 > VIEW) off.push(m.kind + p); else worst = Math.max(worst, r.stop + 3);
   }
   check("every one-letter insertion or deletion in the reading meets its stop on screen (last stop ends at letter " + worst + " of " + VIEW + ")", off.length === 0, off.slice(0, 6).join(" "));
-  let kinds = true; for (const a of "ACGT") for (const b of "ACGT") if (a !== b) { const k = kindOf({ kind: "sub", from: a, to: b }), tr = (a + b === "AG" || a + b === "GA" || a + b === "CT" || a + b === "TC");
-    if (k !== (tr ? "transition" : "transversion")) kinds = false; }
-  check("kinds: A-G and C-T are transitions, the other eight substitutions transversions; an insertion and a deletion", kinds && kindOf({ kind: "ins" }) === "insertion" && kindOf({ kind: "del" }) === "deletion");
+  /* the kinds (JM, 2026-10-09): every one-letter change in view against the rule written out here -- the protein
+     changed: nonsynonymous; the same, and the letters from start to stop the same: noncoding; else synonymous */
+  const o = ORIG, cnt = { synonymous: 0, nonsynonymous: 0, noncoding: 0 }, badK = [], synIndel = [];
+  let synSub = 0;
+  for (let p = 0; p < VIEW; p++) {
+    const ms = "ACGT".split("").filter(t => t !== BASE[p]).map(t => ({ kind: "sub", pos: p, from: BASE[p], to: t }))
+      .concat("ACGT".split("").map(t => ({ kind: "ins", pos: p, from: null, to: t })), [{ kind: "del", pos: p, from: BASE[p], to: null }]);
+    for (const m of ms) {
+      const e = effectOf(m), r = readSeq(applyMut(m)), same = r.start >= 0 && r.aa === o.aa;
+      const seq = applyMut(m), want = !same ? "nonsynonymous" : seq.slice(r.start, r.stop + 3) === BASE.slice(o.start, o.stop + 3) ? "noncoding" : "synonymous";
+      cnt[e.kind]++; if (e.kind !== want) badK.push(m.kind + p + (m.to || ""));
+      if (e.kind === "synonymous") { if (m.kind === "sub") synSub++; else synIndel.push(p); }
+    }
+  }
+  /* synonymous substitutions straight off the codon table: a letter of a codon of the reading (the stop too) changed
+     to one that codes the same */
+  let fromTable = 0;
+  for (const c of o.codons) for (let j = 0; j < 3; j++) for (const t of "ACGT") if (t !== c.cod[j] && CODE[c.cod.slice(0, j) + t + c.cod.slice(j + 1)] === c.aa) fromTable++;
+  check("kinds over every one-letter change in view: " + cnt.synonymous + " synonymous, " + cnt.nonsynonymous + " nonsynonymous, " + cnt.noncoding + " noncoding; each by the rule; " +
+        synSub + " synonymous substitutions, as the codon table gives (" + fromTable + "); the " + synIndel.length + " synonymous indels all in the stop codon",
+        badK.length === 0 && synSub === fromTable && synIndel.every(p => p >= o.stop && p < o.stop + 3), badK.slice(0, 6).join(" "));
   const E = (kind, pos, to) => effectOf({ kind, pos, from: BASE[pos], to });
   const cases = [
-    ["silent: GCA to GCG (Ala)", E("sub", 24, "G"), e => e.syn && /same 14/.test(e.text)],
-    ["outside the reading", E("sub", 3, "C"), e => e.syn && /Outside/.test(e.text)],
-    ["a letter put in front of the start", E("ins", 16, "C"), e => e.syn && /Outside/.test(e.text)],
-    ["one amino acid: GGT to GTT, Gly to Val at 9", E("sub", 41, "T"), e => !e.syn && e.short === "Gly→Val at 9"],
+    ["synonymous: GCA to GCG (Ala)", E("sub", 24, "G"), e => e.kind === "synonymous" && /same 14/.test(e.text)],
+    ["noncoding: outside the reading", E("sub", 3, "C"), e => e.kind === "noncoding" && /Outside/.test(e.text)],
+    ["noncoding: a letter put in front of the start", E("ins", 16, "C"), e => e.kind === "noncoding" && /Outside/.test(e.text)],
+    ["one amino acid: GGT to GTT, Gly to Val at 9", E("sub", 41, "T"), e => e.kind === "nonsynonymous" && e.short === "Gly→Val at 9"],
     ["an early stop: TGG to TAG at Trp 10", E("sub", 44, "A"), e => e.short === "stop at 10" && e.r.aa === "MKAIFVLKG"],
     ["the stop lost: TGA to TGG, a Trp then 8 more", E("sub", 60, "G"), e => e.short === "reads on" && e.r.aa.length === 23 && /reads on 9 amino acids/.test(e.text)],
     ["the start lost: ATG to ATC, the next ATG down", E("sub", 18, "C"), e => e.short === "start lost" && e.r.start === 80 && /64 letters further on/.test(e.text)],
-    ["a new start upstream: C to G makes ATG 7 letters before", E("sub", 11, "G"), e => e.short === "new start" && /7 letters before/.test(e.text)],
+    ["a new start upstream: C to G makes ATG 7 letters before", E("sub", 11, "G"), e => e.kind === "nonsynonymous" && e.short === "new start" && /7 letters before/.test(e.text)],
     ["a frameshift: one letter out at codon 5", E("del", 30), e => e.short === "frame from 5" && e.r.stop != null],
   ];
   const fails = cases.filter(c => !c[2](c[1])).map(c => c[0] + " [" + c[1].short + ": " + c[1].text + "]");
@@ -108,55 +130,98 @@ Gates.A.open = true; FIT_EPOCH++;
   const r2 = mulberry32(77); let lost = 0, here = 0, fx = 0, maxT = 0; const R = 3000;
   for (let i = 0; i < R; i++) { const o = A_fate(100, 0.5, 0, r2); if (o.end === "lost") lost++; else if (o.end === "here") here++; else fx++; maxT = Math.max(maxT, o.path.length - 1); }
   check("N 100, neutral: lost by 4N in " + pct(lost / R) + " (measured 99.5%), never past 4N generations", near(lost / R, 0.995, 0.006) && maxT <= 400);
+  /* the yardstick for dN/dS: one synonymous change in 1,000 populations, at the largest N offered, has to go to
+     fixation somewhere (measured 2026-10-09: none 0.2% of the time at N 50, 5% at N 100, 22% at N 200) */
+  const Nmax = A_NS[A_NS.length - 1], r3 = mulberry32(91), S = 200; let zero = 0, tot = 0;
+  for (let k = 0; k < S; k++) { let f = 0; for (let i = 0; i < A_POPS; i++) if (A_fate(Nmax, 0.5, 0, r3).end === "fixed") f++; tot += f; if (!f) zero++; }
+  check("the yardstick: a synonymous change at N " + Nmax + " (the largest offered) goes to fixation in " + (tot / S).toFixed(1) + " of " + A_POPS + " by 4N, in none " + pct(zero / S) + " of the time (under 2%)",
+        A_POPS === 1000 && zero / S < 0.02);
   const T = 400; let mono = true; for (let t = 0, g0 = -1; t <= 6.2; t += 0.05) { const g = A_genAt(t, T); if (g < g0) mono = false; g0 = g; }
   check("playback: generation 20 at 2.4 s, all " + T + " by 6 s, never backwards", A_genAt(2.39, T) <= 20 && A_genAt(2.4, T) === 20 && A_genAt(6, T) === T && mono && A_genAt(2.4, 40) === 20 && A_genAt(6, 40) === 40);
 }
 
 /* ================= A: the flow ================= */
 {
-  A_openPop(41);
-  const popOpen = !document.getElementById("A_pop").hidden && document.querySelectorAll("#A_pop button").length === 9;
-  document.querySelector('#A_pop button[data-act="sub"][data-to="T"]').click();
-  const changed = A.step === "kind" && A.mut.kind === "sub" && A.mut.to === "T";
-  A_openPop(10); const lockedSeq = document.getElementById("A_pop").hidden && A.mut.pos === 41;
-  A_kind("transition");
-  const wrong = Score.isAnswered("scaffold", BIT.A1) && Score.getBit("scaffold", BIT.A1) === 0 && A.step === "kind" && /incorrect/.test(document.getElementById("A_kindFb").textContent);
-  A_kind("transversion");
   /* what a student sees: a row in view (not display:none), its slider free or held */
   const el = id => document.getElementById(id);
   const shown = id => getComputedStyle(el(id)).display !== "none";
   const free = k => shown("A_" + k + "Row") && !el("A_" + k).disabled && !el("A_" + k + "Row").classList.contains("held");
   const held = k => shown("A_" + k + "Row") && el("A_" + k).disabled && el("A_" + k + "Row").classList.contains("held");
-  const opened = A.step === "set" && shown("A_controls") && free("s") && free("h") && !el("A_N").disabled && Score.getBit("scaffold", BIT.A1) === 0;
-  check("A: a click opens the pop-up (3 + 4 + 2 buttons); a change locks the sequence; a wrong first answer records 0, the right one opens s, h and N", popOpen && changed && lockedSeq && wrong && opened);
-  const sBefore = el("A_s").value;
-  A_go(); const running = A.step === "run" && el("A_s").disabled;
+  const txt = id => el(id).textContent.replace(/\\s+/g, " ").trim();
+  const bit = k => Score.isAnswered("scaffold", BIT[k]) ? Score.getBit("scaffold", BIT[k]) : null;
+  const play = () => { A_go(); A.run.g = 4 * A.run.set.N; A_endRun(); };
+  const setS = v => { el("A_s").value = A_S.indexOf(v); A_sync(); };
+  /* target 1, synonymous; the first scored try a nonsynonymous change */
+  const t1 = txt("A_ttext") === "Make a synonymous change.";
+  A_openPop(41);
+  const popOpen = !el("A_pop").hidden && document.querySelectorAll("#A_pop button").length === 9;
+  document.querySelector('#A_pop button[data-act="sub"][data-to="T"]').click();
+  const changed = A.step === "set" && A.mut.kind === "sub" && A.mut.to === "T" && A.eff.kind === "nonsynonymous";
+  A_openPop(10); const lockedSeq = el("A_pop").hidden && A.mut.pos === 41;
+  const opened = shown("A_controls") && free("s") && free("h") && free("N") && txt("A_go") === "Go" && txt("A_verdict") === "" && !/Gly/.test(txt("A_effect"));
+  check("A: target 1 asks for a synonymous change; a click opens the pop-up (3 + 4 + 2 buttons); a change locks the sequence and opens s, h and N; the verdict and the protein wait for Go",
+        t1 && popOpen && changed && lockedSeq && opened);
+  const sBefore = el("A_s").value, NBefore = el("A_N").value;
+  A_go(); const running = A.step === "run" && el("A_s").disabled && el("A_N").disabled && A.Nheld === NBefore;
   A.run.g = 4 * A.run.set.N; A_endRun();
-  const row = A.rows[0];
-  check("A: Go locks the sliders; the run ends as a row: " + row.eff.short + ", extinct " + row.res.lost + " / still present " + row.res.here + " / went to fixation " + row.res.fixed,
-        running && A.rows.length === 1 && row.res.lost + row.res.here + row.res.fixed === 100 && !row.firstOk);
-  /* the sentence under the runs (JM's): 100 populations, extinct in the row's count, after 4N generations */
-  const said = el("A_runsRead").textContent.replace(/\\s+/g, " ").trim();
-  const sm = said.match(/^In (\\d+) populations where this mutation arose, it went extinct in (\\d+) after (\\d+) generations[.]$/);
+  const why1 = txt("A_verdict");
+  check("A: Go locks the sliders and fixes N; a miss records 0, adds no row, says why, offers Try again: '" + why1 + "'",
+        running && bit("A1") === 0 && A.rows.length === 0 && why1 === "incorrect: that change is nonsynonymous. Try again." && txt("A_next") === "Try again" && /Gly/.test(txt("A_effect")));
+  /* the sentence under the runs (JM's): 1,000 populations, extinct in the run's count, after 4N generations */
+  const q = A.lastRes, said = txt("A_runsRead"), num = x => +x.replace(/,/g, "");
+  const sm = said.match(/^In ([\\d,]+) populations where this mutation arose, it went extinct in ([\\d,]+) after ([\\d,]+) generations[.]$/);
   check("A: under the runs, one sentence that agrees with the run: '" + said + "'",
-        !!sm && +sm[1] === 100 && +sm[2] === row.res.lost && +sm[3] === 4 * row.res.set.N);
-  /* a silent change: s held at 0 and h held, both in view; N free; runs at s = 0 */
-  A_nextChange(); A_edit("sub", 24, "G");
-  A_kind("transition");
-  const silent = A.step === "set" && A.eff.syn && held("s") && held("h") && !el("A_N").disabled &&
-    A_S[+el("A_s").value] === 0 && el("A_sV").textContent === "0" && A_set().s === 0 && Score.getBit("scaffold", BIT.A2) === 1;
-  A_go(); A.run.g = 4 * A.run.set.N; A_endRun();
-  check("A: a silent change holds s at 0 and h, in view, and runs at s = 0; a right first answer records 1", silent && A.rows[1].res.set.s === 0);
-  /* eight more, then the stage closes; the first of them (a frameshift) frees s and h and gives back the student's s */
-  let restored = null;
-  for (let i = 2; i < 10; i++) { A_nextChange(); A_edit("del", 20 + i, null); A_kind("deletion");
-    if (i === 2) restored = !A.eff.syn && free("s") && free("h") && el("A_s").value === sBefore;
-    A_go(); A.run.g = 4 * A.run.set.N; A_endRun(); }
-  check("A: the next change that alters the protein frees s and h and gives back the s set before", restored === true);
-  const done = A.rows.length === 10 && Gates.A.done && Gates.B.open && document.querySelector('#tasksA li[data-task="A1"]').classList.contains("done");
-  A_nextChange(); A_edit("sub", 50, "A"); A_kind(kindOf(A.mut)); A_go(); A.run.g = 4 * A.run.set.N; A_endRun();
-  const bits = Array.from({ length: 10 }, (_, i) => Score.getBit("scaffold", BIT["A" + (i + 1)])).join("");
-  check("A: ten changes fill the table and open B; an eleventh is played but not counted (bits " + bits + ")", done && A.rows.length === 10 && bits === "0111111111" && document.querySelectorAll("#A_table tr").length === 11);
+        !!sm && num(sm[1]) === 1000 && q.runs.length === 1000 && num(sm[2]) === q.lost && num(sm[3]) === 4 * q.set.N && q.lost + q.here + q.fixed === 1000);
+  /* practice, a noncoding change: s held at 0, h held, N held -- all in view; nothing counts */
+  A_nextChange(); el("A_practice").checked = true; A_sync();
+  A_edit("sub", 3, "C");
+  const pr1 = A.eff.kind === "noncoding" && held("s") && held("h") && held("N") && A_S[+el("A_s").value] === 0 && txt("A_sV") === "0" && txt("A_go") === "Practice run";
+  play();
+  check("A: practice on, a noncoding change: s held at 0, h and N held, all in view; the run counts for nothing: '" + txt("A_verdict") + "'",
+        pr1 && txt("A_verdict") === "practice: incorrect: that change is noncoding." && A.rows.length === 0 && bit("A1") === 0 && A.lastRes.set.s === 0);
+  /* scored again, a synonymous change: a hit, a row, the bit still the first try's */
+  A_nextChange(); el("A_practice").checked = false; A_sync();
+  A_edit("sub", 24, "G");
+  const sy = A.eff.kind === "synonymous" && held("s") && held("h") && held("N");
+  play();
+  check("A: a synonymous change hits target 1 on a later try: a row at s = 0; the bit stays 0; Next target",
+        sy && A.rows.length === 1 && A.rows[0].res.set.s === 0 && A.rows[0].firstOk === false && bit("A1") === 0 && txt("A_verdict") === "correct" && txt("A_next") === "Next target");
+  /* target 2, harmful: the s set before comes back */
+  A_nextChange(); const t2 = /harmful/.test(txt("A_ttext"));
+  A_edit("sub", 41, "T");
+  const restored = free("s") && free("h") && held("N") && el("A_s").value === sBefore;
+  play();
+  check("A: target 2 (harmful): the s set before comes back, s and h free, N held; s 0.1 hits at the first try", t2 && restored && bit("A2") === 1 && A.rows.length === 2);
+  /* target 3, beneficial: s 0.1 misses, s -0.05 hits */
+  A_nextChange(); A_edit("sub", 41, "T"); play();
+  const why3 = txt("A_verdict"), miss3 = bit("A3") === 0 && A.rows.length === 2;
+  A_nextChange(); A_edit("sub", 41, "T"); setS(-0.05); play();
+  check("A: target 3 (beneficial): s 0.1 misses ('" + why3 + "'), s -0.05 hits; the bit stays the first try's",
+        miss3 && why3 === "incorrect: with s = 0.1 it is harmful. Try again." && A.rows.length === 3 && bit("A3") === 0);
+  /* target 4, noncoding; then the last four */
+  A_nextChange(); A_edit("sub", 3, "C"); play();
+  const nc = bit("A4") === 1 && A.rows.length === 4;
+  for (const [k, p, t, sv] of [["sub", 44, "A", 0.1], ["del", 30, null, -0.05], ["sub", 18, "C", 0.1], ["sub", 60, "G", -0.05]]) { A_nextChange(); A_edit(k, p, t); setS(sv); play(); }
+  const Ns = new Set(A.rows.map(r => r.res.set.N));
+  const bits = Array.from({ length: 8 }, (_, i) => bit("A" + (i + 1))).join("");
+  check("A: eight hits fill the table, all at one N (" + [...Ns].join(", ") + "), and open B (bits " + bits + ")",
+        nc && A.rows.length === 8 && Ns.size === 1 && Gates.A.done && Gates.B.open && document.querySelector('#tasksA li[data-task="A1"]').classList.contains("done") &&
+        bits === "01011111" && document.querySelectorAll("#A_table tr").length === 9);
+  /* dN/dS off the eight: the readout against the rows, and the picture it is for -- harmful below the synonymous
+     change, beneficial above (N 20, the opening: synonymous ~16 of 1,000, s 0.1 ~1, s -0.05 ~38) */
+  const syn = A.rows.filter(r => r.eff.kind === "synonymous"), non = A.rows.filter(r => r.eff.kind === "nonsynonymous");
+  const dS = syn.reduce((a, r) => a + r.res.fixed, 0) / syn.length, dN = non.reduce((a, r) => a + r.res.fixed, 0) / non.length;
+  const dr = txt("A_dndsRead"), dm = dr.match(/^dN[/]dS = ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+)$/);
+  const harm = non.filter(r => r.res.set.s > 0).map(r => r.res.fixed), ben = non.filter(r => r.res.set.s < 0).map(r => r.res.fixed);
+  check("A: dN/dS from the eight: '" + dr + "' (synonymous " + dS + ", harmful " + harm.join("/") + ", beneficial " + ben.join("/") + "; the noncoding one left out)",
+        shown("A_dndsPanel") && syn.length === 1 && non.length === 6 && dS > 0 && !!dm && near(+dm[1], dN, 0.05) && near(+dm[2], dS) && near(+dm[3], dN / dS, 0.005) &&
+        harm.every(v => v < dS) && ben.every(v => v > dS));
+  /* after the eight: a change plays as practice, N free again, its kind said, nothing recorded */
+  A_nextChange(); A_edit("sub", 50, "A");
+  const sand = free("N") && txt("A_go") === "Practice run" && el("A_practice").disabled;
+  play();
+  check("A: after the eight, a change plays as practice with N free; its kind is said, nothing recorded: '" + txt("A_verdict") + "'",
+        sand && /^that change is /.test(txt("A_verdict")) && A.rows.length === 8 && Array.from({ length: 8 }, (_, i) => bit("A" + (i + 1))).join("") === "01011111");
 }
 
 /* ================= B: the bench ================= */
@@ -265,13 +330,13 @@ const ids = p => p.map(e => e.k === "cen" ? "o" : e.k === "r" ? (e.d > 0 ? ">" :
         shut && tried && practiced && miss && bits === "01111" && C.board === "inv" && Gates.C.done && document.getElementById("done-banner").classList.contains("shown"));
 }
 {
-  let n = 0; for (let i = 0; i < 18; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all 18 declared bits written", n === 18, n + " written");
+  const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
+  check("all " + D + " declared bits written", D === 16 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();
   const over = [];
-  for (const id of ["A_seq","A_runs","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
+  for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
 }
@@ -294,7 +359,7 @@ const INNER_NARROW = `
 for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 FIT_EPOCH++; paintAll();
 const over = [];
-for (const id of ["A_seq","A_runs","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
+for (const id of ["A_seq","A_runs","A_dnds","A_wheel","B_bench","B_hist","B_plot","C_pair","C_out"]) { const cv = document.getElementById(id), host = cv.parentElement;
   if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
 (over.length ? "FAIL " : "ok   ") + "every canvas fits its panel (" + window.innerWidth + " wide)" + (over.length ? "  -- " + over.join(", ") : "");
 `;
@@ -342,7 +407,7 @@ setTimeout(() => {
   if (probeR.error) console.log("skip R panels  (no Rscript)");
   else {
     const a = rs(tagged("RA"), "\ncat('\\nOK', sum(table(fate)), '\\n')");
-    const okA = /OK 100/.test(a.stdout || ""); console.log((okA ? "ok   " : "FAIL ") + "the R panel for A runs 100 populations" + (okA ? "" : "  -- " + (a.stderr || "").slice(0, 300))); if (!okA) bad = true;
+    const okA = /OK 1000/.test(a.stdout || ""); console.log((okA ? "ok   " : "FAIL ") + "the R panel for A runs 1,000 populations" + (okA ? "" : "  -- " + (a.stderr || "").slice(0, 300))); if (!okA) bad = true;
     const b = rs(tagged("RB").replace(/N <- \d+/, "N <- 40").replace("1:200", "1:40"), "\ncat('\\nOK\\n')");
     const okB = /OK/.test(b.stdout || ""); console.log((okB ? "ok   " : "FAIL ") + "the R panel for B runs (40 individuals, 40 generations here)" + (okB ? "" : "  -- " + (b.stderr || "").slice(0, 300))); if (!okB) bad = true;
     const want = tagged("RCWANT");
