@@ -1,8 +1,8 @@
-# Lesson 17 — migration: chunks that cross, and what sets their size
+# Lesson 17 — migration: chunks that cross, what sets their size, and F_ST
 
 **File** · `app/lessons/lesson17.html` — not started
 **Checks** · `node scripts/check_lesson17_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · outline (JM 2026-10-09 + earlier plans); open points below; nothing built
+**Status** · outline, JM's rulings of 2026-10-09 applied; four open points; nothing built
 **Last touched** · 2026-10-09
 
 ## What the lesson is
@@ -31,28 +31,32 @@ Two populations of N 25, one chromosome of 100 loci, origin painted per locus; W
         50 generations, R 1              m 0.005-0.2: 6.2-7.2 (flat); m 0.002: 8.5 ± 5.5, 4 of 20 runs no chunk
         one pulse (5 of 25 swap once), R 1    5 / 10 / 20 / 40 / 80 generations later: mean length 30 / 13 / 8.2 / 4.6 / 4.3
 
-- **The planned end plot is flat.** Under steady migration a chunk's length is set by how long it has been cut (generations × crossovers); migration rate sets how many chunks and how much of the genome, not how long they are. A student's 10 points against m will scatter around a level line.
+- **Chunk size against migration rate is flat.** Under steady migration a chunk's length is set by how long it has been cut (generations × crossovers); migration rate sets how many chunks and how much of the genome, not how long they are. (JM's end plot is now against time since a pulse and against r.)
 - Recombination and time since arrival both move chunk length strongly. The foreign share moves with m.
 - Length stops shrinking after ~40 generations at N 25: a chunk can only be cut against a chromosome of the other colour, and drift makes both copies the same colour more and more often.
 - Not yet measured: mutations (orange / blue spectra) as the only marker; selection (h/s); F_ST.
 
-## Proposed stages (mine, for JM to cut)
+## Stages (outline; JM's rulings of 2026-10-09 applied)
 
-    A  The two populations, painted. Sliders m and r (N held). Rolls with practice; targets on outcomes, e.g. "a quarter of the orange population blue by generation 100" (m), "blue chunks in the orange population averaging over 8 loci" (r, or fewer generations).
-    B  The student's 10 runs → their own plots, a fitted line and its interval on each: chunk length against m (flat: it does not predict), against r (it does). Causal inference on their own data, the course's throughline. JM's plot kept, as the surprise.
-    C  One arrival (16 D's proposal moved here): a single migrant, its chunks halving and halving again; read the arrival date off chunk length (rerun six times). Option: the migrant carries 16 C's inversion, and its inverted stretch never breaks.
-    D  Mutations and selection (U, h/s): what the h/s slider is for is open (below). Real anchor: Isle Royale's 1997 migrant wolf (counts + ice bridges in `data/clean/isle_royale.csv`).
-    E  F_ST, visually: each locus's frequency in the two populations side by side; the gap between them as a share of the spread; 1/(1 + 4Nm) printed beside the measurement. N becomes a slider here (4Nm). Real anchor: the Italian sparrow genome scan (77 loci, house–Spanish F_ST bimodal, the Italian sparrow a mosaic). Here or in 18.
+One interactive throughout: two populations side by side, every chromosome painted in its population's colour (orange / blue), each new mutation a dot in its population's spectrum; a stretch of the other colour is a chunk, visible at a glance. Sliders kept free to explore wherever they make sense; targets, where any, generous and on outcomes.
+
+    A  Steady migration. Sliders m and r. Many small chunks, and more of them the higher m; lower r, longer chunks. A plot beside the populations: the share of each population in the other's colour, and the average chunk size, generation by generation.
+    B  One pulse. A batch of migrants once, then none. A few long chunks, cut shorter every generation; lower r, slower. The same plot: chunk size falling with time since the pulse, one line per run so two r's sit on one axis.
+    C  The 10 runs (JM's outline): set up, play, final outcomes side by side. The student's own plot: average chunk size against generations since the pulse, and against r -- both falling, plainly. Steady and pulsed runs on one plot: steady sits low and flat, pulsed falls toward it.
+    D  Selection: U and h/s (JM: "just allows students to investigate how selection interacts with these processes"). No story imposed; the same setups with selection on.
+    E  F_ST, visually (JM: stage E of 17): each locus's frequency in the two populations side by side; the gap as a share of the spread; 1/(1 + 4Nm) beside the measurement. Real anchor: the Italian sparrow scan.
+
+Notes for the build:
+- A pulse's chunks shrink as 1/(r · time) only while the populations are still mixed: at N 25 the cutting stops after ~40 generations (drift makes both copies of a stretch the same colour, and a crossover between two same-colour copies cuts nothing). Keep a pulse's window to ~5-40 generations at N 25, or measure a larger N.
+- The textbook mean, L / (1 + R t), understates a pulse's chunks here (measured 30 loci at t 5 against 17): a chunk is cut only when paired with the other colour. Measure before printing any formula beside it.
+- Under steady migration the average chunk size settles at a level set by r (and the run's length), whatever m is: say nothing that ties chunk size to m.
 
 ## Open for JM
 
-1. The end plot: keep chunk length against m as a deliberate surprise and follow it with r (proposed B), or plot share foreign against m and chunk length against r, or chunk length against time since one arrival (C)?
-2. Read chunks off the mutations only (as real data does: blue alleles in an orange genome), or paint each locus by origin with the mutations as dots on top? Dots alone: chunk edges fall somewhere between two dots, and at low U nothing shows.
-3. N: hold it (e.g. 25: 4N = 100 generations a run, 50 rows a population) until F_ST, where 4Nm needs it?
-4. h/s of new mutants, which story: harmful changes drifting up in a small population and migrants carrying the fix (genetic rescue); a beneficial change crossing over and dragging its chunk (adaptive introgression); or a locus good in one population and bad in the other, so chunks around it are kept out (a barrier, an F_ST peak)? The last needs a second difference between the populations beyond colour.
-5. F_ST as 17 E, or lesson 18?
-6. 16 D (IBD blocks, dating an arrival): fold into 17 C instead of building it in 16?
-7. "10 runs": one point per run at whatever the student set, or 10 runs at one setting (a replicate panel), repeated?
+1. N: a slider throughout, or held (e.g. 25: 4N = 100 generations a run, 50 rows a population) until E, where 4Nm needs it?
+2. 16 D (IBD blocks, dating an arrival from its blocks): fold into 17 B instead of building it in 16?
+3. The inversion from 16 C riding in a migrant (its stretch never cut): in B, or not at all?
+4. Painting by origin is my reading of "it should be visual": the chromosome is coloured by where each stretch came from, so chunks show at any U; the mutation dots ride on top.
 
 ## Sources (earlier plans, archive, data)
 
@@ -67,16 +71,21 @@ Two populations of N 25, one chromosome of 100 loci, origin painted per locus; W
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
-| 1 | — | JM settles the open points | todo |
-| 2 | — | prototype with mutations as the marker (open 2) and with h/s (open 4) | todo |
-| 3 | — | stages, then build | todo |
+| 1 | — | JM settles the four open points | todo |
+| 2 | — | prototype the pulse at N 25 / 50 (window where chunks keep shrinking), and with h/s on | todo |
+| 3 | A-E | build, A first | todo |
 
 ## Rulings
 
 - 2026-10-08: 17 is migration; IBD blocks and haplotypes lead into it.
-- 2026-10-09: two populations side by side; orange and blue spectra; 10 runs; chunks show introgression; F_ST later, calculated visually.
+- 2026-10-09 (outline): two populations side by side; orange and blue spectra; 10 runs; chunks show introgression; F_ST later, calculated visually.
+- 2026-10-09: *"No surprises. Showing how recombination rate & constant migration produce many small chunks, while pulsed migration leaves chunks whose size is proportionate to the time since the migration pulse & the recombination rate is what I want to show students."*
+- 2026-10-09: *"It should be visual, the goal is the color choice is to make it visible to students who don't need to quantify it precisely to understand what's happening."*
+- 2026-10-09: *"The h/s slider just allows students to investigate how selection interacts with these processes."*
+- 2026-10-09: F_ST is stage E of 17.
+- 2026-10-09: *"we aren't trying to trick or assess students in these homeworks, we're trying to give them adaptable interactives that clearly illustrate processes, and give them the freedom to explore the setups we give them ... We're trying to build intuition."*
 
 ## Do not
 
-- Tell students chunk length tracks migration rate: measured flat (above).
+- Plot chunk size against migration rate, or build any stage around a result meant to surprise: measured flat (above), and JM: no surprises.
 - Read a long chunk as recent arrival without the recombination rate beside it: halving r doubles every chunk.
