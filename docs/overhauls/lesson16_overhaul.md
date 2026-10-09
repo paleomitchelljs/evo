@@ -89,6 +89,14 @@ B (node prototype of the page's engine; best = fewest harmful changes anyone car
 - Starting clean, both populations' best rise at first while the load builds; only the one without sex keeps rising.
 - Rounds' hit rates (100 runs a setting): see "Round windows" below.
 
+## Round windows (B; node prototype of the page's engine, 100 runs a setting, share hit)
+
+        R1  without sex, best <= 3 at 200 (U 0.3, s 0.1; N free)          N 100 4% · 200 37% · 500 98% · 1000 100%
+        R2  without 12-25, with sex <= 2 (N 100, s 0.1; U free)           U 0.3 2% · 0.4 69% · 0.5 97% · 0.6 43% · 0.7 1%
+        R3  without 12-25 (N 100, U 0.3; s free)                          s 0.02 28% · 0.05 97% · 0.1 1% · 0.2 0%
+
+- Openings (N 100, U 0.3, s 0.1) hit 4 / 2 / 1%. R3's naive move (harsher harm) hits 0%.
+
 ## Open for JM
 
 - "100 runs of 100 populations" read as 100 populations. If he meant 100 x 100, the tallies become shares of 10,000 and the lines a sample.
