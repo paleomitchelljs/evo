@@ -505,6 +505,17 @@ checkSeries("B");
   const bits = ["C1","C2","C3"].map(k => Score.getBit("scaffold", BIT[k])).join("");
   check("C race: practice records nothing; Go locks the slider while it runs and records one bit; three attempts", practiced && locked && miss && CR.done && bits === "011", "bits " + bits);
 }
+{
+  /* the question after the race: shown once the three race targets are taken; its first answer is the bit; a wrong
+     answer says so and leaves the rest open; the right one closes the task */
+  const box = document.getElementById("C_q"), btn = o => box.querySelector('button[data-opt="' + o + '"]');
+  const shown = !box.hidden && CR.done;
+  btn(1).click();
+  const first = Score.isAnswered("scaffold", BIT.C6) && Score.getBit("scaffold", BIT.C6) === 0 && !CQ.solved && /incorrect/.test(document.getElementById("C_qfb").textContent) && btn(1).disabled && !btn(3).disabled;
+  btn(0).click(); btn(3).click();
+  const closed = CQ.solved && Score.getBit("scaffold", BIT.C6) === 0 && document.querySelector('#tasksC li[data-task="question"]').classList.contains("done") && btn(2).disabled && !Gates.C.done;
+  check("C question: shown after the race targets; a wrong first answer records 0 and leaves the others open; the right one closes the task, the bit stays the first answer", shown && first && closed);
+}
 
 /* ================= C: the jump ================= */
 {
@@ -617,8 +628,8 @@ const OPEN = () => [0,1,2].map(() => [D_kid(0), D_kid(1)]);
         practiced && miss && locked && D.done && bits === "01111" && document.getElementById("done-banner").classList.contains("shown"), "bits " + bits);
 }
 {
-  let n = 0; for (let i = 0; i < 21; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all 21 declared bits written", n === 21, n + " written");
+  let n = 0; for (let i = 0; i < 22; i++) if (Score.isAnswered("scaffold", i)) n++;
+  check("all 22 declared bits written", n === 22, n + " written");
 }
 /* the R panel, for a family that moves every term */
 D.young = [[K(0,0),K(0,0,1,0)], [K(0,1),K(1,0),K(0,0)], [K(0,1)]];

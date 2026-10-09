@@ -1,9 +1,21 @@
 # Lesson 15 — the bridge: coalescence and linkage through a snake game (slot pencilled: JM, 2026-10-01: "make the snake game lesson 15")
 
-**File** · `app/lessons/lesson15.html` — A, B, C, D built (v4, scaffold 21), locked
+**File** · `app/lessons/lesson15.html` — A, B, C, D built (v5, scaffold 22), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
 **Status** · thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
 **Last touched** · 2026-10-08 (thirteenth pass: a new C; old C is D)
+
+## Fourteenth pass (JM, 2026-10-08, night): a question after the race
+
+JM, dictated: *"After the students have run through it, they should be given a final multiple choice question. It should say that. The rules of myosis and gamete formation are evolved features, traits. The above simulation is completely possible and in fact does happen. See, for instance, the T. locus in mice. However, it's not common. It's not common, even though. It clearly does make more of itself. Why? ... because the world is just and fair, because those are the rules. Because it'd be really inconvenient if individual low si broke whole genomes and drove sperm like that. And finally, because Genomes that solved the problem made more of themselves as genomes. And so became more common."*
+
+| # | What | Status |
+|---|------|--------|
+| 14-1 | the question in the race's card once the three race targets are taken (instructor: at once); his words, minor edits ("myosis" meiosis, "low si" loci, "T. locus" T locus, the doubled "it's not common"); options in his order, the last one right | done |
+| 14-2 | first answer = bit C6 (index 16); a wrong one says "incorrect — try again"; the right one closes a new task "Answer the question about the race"; C needs it | done; D's bits move to 17-21; `scaffold: 22`, `version: 5` |
+| 14-3 | check: shown after the race, first answer recorded, the rest stay open, right one closes the task | done (76 checks); one earlier run failed one existing check once in ten (not the new one) |
+
+- Honest-science note: in the t haplotype the distorters harm the motility of every sperm in a +/t male and the responder rescues t sperm, so t sperm effectively swim better: close to the race as built.
 
 ## Thirteenth pass (JM, 2026-10-08, later): a new C — play as a gamete; old C becomes D
 

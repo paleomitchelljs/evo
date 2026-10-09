@@ -138,6 +138,14 @@
   .tcard ul.rules li { padding:2px 0; }
   .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
   .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  /* C's closing question: four answers, one button each */
+  .mcq[hidden] { display:none; }
+  .mcq button { display:block; width:100%; text-align:left; background:#fff; color:var(--ink); border:1px solid var(--rule); border-radius:4px;
+                padding:7px 10px; margin:0 0 6px; font-size:13.5px; line-height:1.35; cursor:pointer; }
+  .mcq button:hover:not(:disabled) { background:#f4f2ec; }
+  .mcq button.wrong { border-color:var(--bad); color:var(--bad); }
+  .mcq button.right { border-color:var(--good); color:var(--good); font-weight:600; }
+  .mcq button:disabled { cursor:default; }
 </style>
 </head>
 <body>
@@ -231,10 +239,19 @@
       </div>
       <div class="col">
         <div class="panel tcard">
-          <h3>Target <span class="pips" id="C_pips"></span></h3>
+          <h3><span id="C_cardH">Target</span> <span class="pips" id="C_pips"></span></h3>
           <p class="ttext" id="C_ttext"></p>
           <ul class="rules" id="C_rules"></ul>
           <div class="verdict" id="C_verdict"></div>
+          <!-- the closing question, once the three race targets are taken (JM, 2026-10-08, dictated; minor edits only) -->
+          <div class="mcq" id="C_q" hidden>
+            <p class="ttext">The rules of meiosis and gamete formation are evolved features: traits. The above simulation is completely possible, and in fact does happen. See, for instance, the T locus in mice. However, it's not common, even though it clearly does make more of itself. Why?</p>
+            <button data-opt="0">Because the world is just and fair.</button>
+            <button data-opt="1">Because those are the rules.</button>
+            <button data-opt="2">Because it'd be really inconvenient if individual loci broke whole genomes and drove sperm like that.</button>
+            <button data-opt="3">Because genomes that solved the problem made more of themselves as genomes, and so became more common.</button>
+            <div class="verdict" id="C_qfb"></div>
+          </div>
         </div>
         <div class="panel">
           <h3>Controls</h3>
@@ -254,6 +271,7 @@
           <ul class="tasks" id="tasksC">
             <li data-task="race">Race for six eggs, then watch a hundred more. <span class="hint" id="C_race_now"></span></li>
             <li data-task="rounds">Three targets for the race: every one you hit counts. <span class="hint" id="C_rounds_now">0 of 3 attempts</span></li>
+            <li data-task="question">Answer the question about the race. <span class="hint" id="C_question_now"></span></li>
             <li data-task="jump">Two targets for the jump. <span class="hint" id="C_jump_now">0 of 2 attempts</span></li>
           </ul>
           <div class="solved-banner" id="solvedC">Stage D is open.</div>
@@ -1792,10 +1810,10 @@ const Chal = {
 const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
 const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
 /* One bit per scored attempt (JM, 2026-09-30): six reads on island A, five on B's plots, three race and two jump targets
-   in C, five targets in D (the old C). */
+   in C, then C6, the question after the race (its first answer), five targets in D (the old C). */
 const BIT = { A1:0, A2:1, A3:2, A4:3, A5:4, A6:5, B1:6, B2:7, B3:8, B4:9, B5:10,
-              C1:11, C2:12, C3:13, C4:14, C5:15,
-              D1:16, D2:17, D3:18, D4:19, D5:20 };
+              C1:11, C2:12, C3:13, C4:14, C5:15, C6:16,
+              D1:17, D2:18, D3:19, D4:20, D5:21 };
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
@@ -2607,8 +2625,22 @@ function CJ_place(slot) {
   if (slot.chr === CJ.orig.chr && slot.x === CJ.orig.x) return;
   CJ.copy = slot; CJ.last = null; bump("C"); C_paint();
 }
+/* ---- the question after the race (JM, 2026-10-08): its first answer is the bit; a wrong one says so and
+   the others stay open, as the reads do. The answer is the last of the four, as he gave them. ---- */
+const CQ_RIGHT = 3;
+const CQ = { picked: [], solved: false };
+const CQ_open = () => CR.done || INSTRUCTOR;
+function CQ_answer(opt) {
+  if (!CQ_open() || CQ.solved || CQ.picked.includes(opt)) return;
+  const ok = opt === CQ_RIGHT;
+  if (!CQ.picked.length && firstTry(BIT.C6)) record(BIT.C6, ok);
+  CQ.picked.push(opt); bump("C");
+  if (ok) CQ.solved = true;
+  $("C_qfb").innerHTML = ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span> — try again';
+  C_checkDone(); C_sync();
+}
 function C_checkDone() {
-  if (CR.results.length >= CR_ROUNDS.length && CJ.results.length >= CJ_ROUNDS.length) finishStage("C");
+  if (CR.results.length >= CR_ROUNDS.length && CQ.solved && CJ.results.length >= CJ_ROUNDS.length) finishStage("C");
 }
 
 /* ---- the loop: a race, a run or a division animating ---- */
@@ -2827,7 +2859,12 @@ function C_sync() {
   $("C_speed").disabled = !pd || !!CR.run;
   $("C_speedV").textContent = "×" + (+$("C_speed").value).toFixed(2);
   $("C_pips").innerHTML = CR_ROUNDS.map((_, i) => i < CR.results.length ? '<span class="' + (CR.results[i] ? "ok" : "off") + '">●</span>' : i === CR.round && !CR.done ? "◉" : "○").join(" ");
+  const qo = CQ_open();
+  $("C_q").hidden = !qo; $("C_cardH").textContent = qo ? "Question" : "Target";
+  $("C_ttext").hidden = qo && !CQ.solved;
   $("C_ttext").textContent = !pd ? "First race for six eggs yourself, then watch a hundred more." : CR.done ? "All three race targets taken. The page is yours to play with." : r.text;
+  document.querySelectorAll("#C_q button").forEach(b => { const o = +b.dataset.opt, p = CQ.picked.includes(o);
+    b.classList.toggle("wrong", p && o !== CQ_RIGHT); b.classList.toggle("right", p && o === CQ_RIGHT); b.disabled = CQ.solved || p; });
   const q = CR.last && CR.last.r === r ? CR.last : null;
   $("C_rules").innerHTML = !pd || CR.done ? "" : '<li><span class="' + (q ? (q.res.ok ? "ok" : "off") : "") + '">' + (q ? (q.res.ok ? "✓" : "✗") : "·") + "</span> " +
     (r.kind === "brood" ? "gold in at least 60% of the young" : "gold's share in generation " + r.gens + " between " + r.lo + " and " + Math.min(1, r.hi)) +
@@ -2835,6 +2872,7 @@ function C_sync() {
   const tk = (t, on, hint) => { const li = document.querySelector('#tasksC li[data-task="' + t + '"]'); if (li) li.classList.toggle("done", !!on); const h = $("C_" + t + "_now"); if (h && hint != null) h.textContent = hint; };
   tk("race", pd, CR.more ? "done" : CR.brood.length + " of " + RC_BROOD + " eggs");
   tk("rounds", CR.results.length >= CR_ROUNDS.length, CR.results.length + " of " + CR_ROUNDS.length + " attempts");
+  tk("question", CQ.solved, CQ.solved ? "done" : qo ? "in the card above the controls" : "after the three race targets");
   tk("jump", CJ.results.length >= CJ_ROUNDS.length, CJ.results.length + " of " + CJ_ROUNDS.length + " attempts");
   /* the jump */
   const jr = CJ_rule(), jb = !!CJ.anim;
@@ -3201,6 +3239,7 @@ function wire() {
   $("C_jnext").addEventListener("click", CJ_nextRound);
   $("C_jundo").addEventListener("click", () => { if (CJ.anim) return; CJ.copy = null; CJ.last = null; bump("C"); C_paint(); });
   $("C_jpractice").addEventListener("change", C_sync);
+  document.querySelectorAll("#C_q button").forEach(b => b.addEventListener("click", () => CQ_answer(+b.dataset.opt)));
   const fam = $("D_fam");
   fam.addEventListener("click", e => { const r = fam.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
     const h = (D.hits || []).find(q => Math.hypot(x - q.x, y - q.y) <= q.r); if (h) h.act(); });
@@ -3227,8 +3266,8 @@ paintAll(null, true);
 
 Score.init({
   moduleId: "lesson15",
-  version: 4,      /* 4: thirteenth pass -- a new C (the race, the jump), old C now D (2026-10-08); 3: B's reads on the plots */
-  scaffold: 21,
+  version: 5,      /* 5: C6, the question after the race (2026-10-08); 4: a new C (the race, the jump), old C now D; 3: B's reads on the plots */
+  scaffold: 22,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
