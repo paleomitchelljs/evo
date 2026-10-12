@@ -1,9 +1,9 @@
-# Lesson 16 — mutation: what a change does; copy or mate; your DNA in pieces; an inversion
+# Lesson 16 — mutation: what a change does; you, a sequence, in pieces; copy or mate; an inversion
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
 **Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
-**Last touched** · 2026-10-11
+**Last touched** · 2026-10-12
 
 ## JM, 2026-10-11: B rebuilt as a game; C and D built off it
 
