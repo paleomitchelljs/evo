@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: B rebuilt as copy or mate (a plan played in 100 populations), C and D drafted on its engine (v4, scaffold 15; section below). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
 **Last touched** · 2026-10-11
 
 ## JM, 2026-10-11: B rebuilt as a game; C and D built off it
@@ -50,8 +50,23 @@ Items (2026-10-11):
 | 29 | D | the inversion: two targets (the team in 40+ populations at 40; at 100 the team in 40+ and fewest inside ≥ 1) | draft |
 | 30 | — | scoring v4, scaffold 15 (A1-8, B1-3, C1-2, D1-2); checks rewritten for B-D (36 + R panels) | done |
 
+JM, 2026-10-12:
+
+> The current C is great. I think it should be Part B and Part B should be shifted to part C. I also think that the "you" should be more explicitly "you are a specific sequence of nucleotides"
+
+Read as (mine):
+- Swap: your DNA in pieces is B (it now introduces copy and mate); the copy-or-mate plan game is C. Ids, functions, bits follow the letters (B1-B2 pieces, C1-C3 the game), `version: 5`.
+- In B each bead is one nucleotide: you are a specific sequence of 80 letters (two chromosomes of 40), shown in red letters; everyone else's letters are their own. Click a female, then another: their chromosomes letter by letter, red where the letters came from you.
+- In C you are that kind of sequence again, spanning twelve genes a chromosome; "copies of you" counts your sequence, "you, whole" a female carrying all of it unbroken.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 31 | B, C | swap: pieces → B, the plan game → C; bits, ids, checks follow | done: `version: 5`, B1-B2 then C1-C3; the engine its own section ahead of both |
+| 32 | B | you as letters: your sequence shown; a picked female's chromosomes letter by letter | done: each place one nucleotide; your 80 letters drawn once per student; everyone else's at random; checked: every red place carries your letter there, grey ones match yours ~25% by chance |
+| 33 | B, C | wording: "you are a specific sequence of nucleotides" | done: B introduces copy and mate; C "you are a specific sequence of nucleotides again"; "whole copies" became "you, whole" |
+
 Open for JM:
-- C and D are drafts he has not seen; he had ideas for them. C still plays one generation at a time; B's plan strip would carry over.
+- D is a draft he has not seen; he had ideas for C and D (now B and D). C still plays one generation at a time; B's plan strip would carry over.
 - The Price panel: mothers as parents (exact, matches the plots). Is "whole copies of you" against "your DNA" the organism / gene contrast he means?
 - B's still world is only 6 generations: at 10, mating once your copies fill the population costs nothing, and "mate every 10th" cleared all three targets.
 
