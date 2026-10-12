@@ -40,22 +40,25 @@
  *      plan and missed by its neighbours; two targets and a comparison
  *      finish B.
  *   C (copy or mate: a plan played in 100 populations; it was B until
- *      2026-10-12). A copy is its mother exactly and you, whole; a young from
- *      mating never is, half are sons. The Price split (cov(w, z) + E(wΔz))
- *      adds to the change in the females' average exactly, for your sequence
- *      and for you whole; a mating ends you whole in E(wΔz). Each world's
- *      window is hit by the intended plan and missed by the opening and the
- *      naive ones (re-measured, two runs of 100 populations each); a miss
- *      records 0 and the target stays; three hits finish C.
+ *      2026-10-12; hermaphrodites since that evening). A copy is its parent
+ *      exactly and you, whole; a young from mating never is, and is half
+ *      you. The Price split (cov(w, z) + E(wΔz), every genome a parent, a
+ *      young from mating half to each) adds to the change in the genomes'
+ *      average exactly, for your sequence and for you whole; a mating ends
+ *      you whole in E(wΔz), while your sequence passes on as it was. Each
+ *      world's window is hit by the intended plan and missed by the opening
+ *      and the naive ones (re-measured, two runs of 100 populations each); a
+ *      miss records 0 and the target stays; three hits finish C.
  *   D (rebuilt 2026-10-12: how common the inversion gets). A carrier of one
  *      inverted and one standard chromosome never crosses over inside the
  *      stretch; inverted, your haplotype and the inversion are the same
  *      chromosomes; with two copies killing no copy ever sits beside
  *      another; gene by gene, the haplotype's chromosomes part from the
- *      others inside the stretch and not far outside it; each target hit by
- *      its world and missed by the others; three finish the lesson.
+ *      others inside the stretch and not far outside it; the genomes carrying
+ *      a never-paired inversion carry more mutational load; each target hit
+ *      by its world and missed by the others; four finish the lesson.
  *   All. every canvas fits its panel (1500 and 1000 wide); a full run writes
- *      all 16 bits; the four R panels run (Rscript).
+ *      all 17 bits; the four R panels run (Rscript).
  *
  * Same harness as check_lesson15_numbers.js.
  *
@@ -231,7 +234,7 @@ Gates.A.open = true; FIT_EPOCH++;
   const dr = txt("A_dndsRead"), dm = dr.match(/^dN[/]dS: beneficial ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+) · harmful ([\\d.]+) ÷ ([\\d.]+) = ([\\d.]+)$/);
   check("A: dN/dS from the eight, beneficial and harmful apart: '" + dr + "' (synonymous " + dS + ", harmful " + harm.join("/") + ", beneficial " + ben.join("/") + "; the noncoding one left out)",
         shown("A_dndsPanel") && syn.length === 1 && ben.length === 3 && harm.length === 3 && dS > 0 && !!dm &&
-        near(+dm[1], dB, 0.05) && near(+dm[2], dS) && near(+dm[3], dB / dS, 0.005) && near(+dm[4], dH, 0.05) && near(+dm[5], dS) && near(+dm[6], dH / dS, 0.005) &&
+        near(+dm[1], dB, 0.05) && near(+dm[2], dS) && near(+dm[3], dB / dS, 0.0051) && near(+dm[4], dH, 0.05) && near(+dm[5], dS) && near(+dm[6], dH / dS, 0.0051) &&   /* half the last printed place: 0.125 prints 0.13 */
         dH / dS < 1 && dB / dS > 1);
   /* after the eight: a change plays as practice, N free again, its kind said, nothing recorded */
   A_nextChange(); A_edit("sub", 50, "A");
@@ -250,11 +253,11 @@ Gates.A.open = true; FIT_EPOCH++;
         JSON.stringify(pc) === "[[0,3],[10,4]]" && JSON.stringify(sh) === "[[12,8]]");
   /* hermaphrodites: a copying genome's young are it, whole (its own two chromosomes); no genome that is not you gets any
      of you while you copy; then a mating cuts nothing the first time (both your chromosomes are you) */
-  { let seed = 77, pop, me, n0 = 0;
-    do { pop = B_start(seed++); me = pop.F[0]; B_step(pop, "copy"); n0 = pop.F.filter(g => cmRed(g) > 0).length; } while (!n0 && seed < 120);
-    const red = pop.F.filter(g => cmRed(g) > 0), whole = red.every(g => g.c[0] === me.c[0] && g.c[1] === me.c[1]), clean = pop.F.every(g => cmRed(g) === 0 || cmRed(g) === 1);
-    B_step(pop, "mate");
-    const mine = pop.F.filter(g => cmRed(g) > 0), uncut = mine.every(g => g.c.every(c => { const n = c.y.reduce((x, v) => x + v, 0); return n === 0 || n === 40; }));
+  { let seed = 77, pop, me, n0 = 0, red, whole, clean, mine;
+    do { pop = B_start(seed++); me = pop.F[0]; cmStep(B_P, pop, "copy", 1, false); red = pop.F.filter(g => cmRed(g) > 0); n0 = red.length;
+         whole = red.every(g => g.c[0] === me.c[0] && g.c[1] === me.c[1]); clean = pop.F.every(g => cmRed(g) === 0 || cmRed(g) === 1);
+         cmStep(B_P, pop, "mate", 2, false); mine = pop.F.filter(g => cmRed(g) > 0); } while ((!n0 || !mine.length) && seed < 200);
+    const uncut = mine.every(g => g.c.every(c => { const n = c.y.reduce((x, v) => x + v, 0); return n === 0 || n === 40; }));
     check("B: a genome that copies leaves itself whole (" + n0 + " young lived, all you, both chromosomes its own) and mates with no one; the first mating after cuts none of you (" + mine.length + " young, every chromosome all red or none)",
           n0 > 0 && whole && clean && mine.length > 0 && uncut); }
   /* you are a sequence: every red place, in every genome of 100 populations after 4 copies and 4 matings, carries one of
@@ -290,7 +293,8 @@ Gates.A.open = true; FIT_EPOCH++;
   const q = BG.run, k = B_shown(q), F = q.pops[k].F, red = F.map((g, i) => [cmRed(g), i]).filter(x => x[0] > 0);
   const two = red.length >= 2;
   if (two) { BG.pick = [red[0][1]]; BG.pick.push(red[1][1]); BG.picked = true; B_checkDone(); }
-  check("B: two targets (bits " + bits + "), then two genomes that both carry some of you compared, finish B and open C", two && done1 && bits === "11" && Gates.B.done && Gates.C.open);
+  check("B: two targets (bits " + bits + "), then two genomes that both carry some of you compared, finish B and open C", two && done1 && bits === "11" && Gates.B.done && Gates.C.open,
+        "two " + two + " (" + red.length + " carriers shown) done1 " + done1 + " lengths " + BG.results.join(","));
 }
 
 /* ================= C: copy or mate, the engine ================= */
@@ -298,22 +302,23 @@ Gates.A.open = true; FIT_EPOCH++;
   const P = C_P({ env: 0, U: 0, N: 6 }), pop = cmStart(P, 11, C_you()); pop.theta = 12;
   const me = pop.F[0];
   cmStep(P, pop, "copy", 1, true);
-  const mine = pop.F.filter(g => g.lin);
+  const mine = pop.F.filter(g => cmRed(g) > 0);
   const same = mine.length > 0 && mine.every(g => g.c[0] === me.c[0] && g.c[1] === me.c[1] && g.whole && cmRed(g) === 1);
-  const sc = pop.seen.filter(y => y.lin), copiesOk = sc.length === 6 && sc.every(y => y.copy && !y.male);
-  check("C: at U 0 a copy is its mother exactly (her own two chromosomes), a daughter, you whole; you had 6, " + mine.length + " lived", same && copiesOk);
+  const sc = pop.seen.filter(y => y.mine), copiesOk = sc.length === 6 && sc.every(y => y.copy);
+  check("C: at U 0 a copy is its parent exactly (its own two chromosomes), you whole; you had 6, " + mine.length + " lived; no one else got any of you", same && copiesOk && pop.F.every(g => cmRed(g) === 0 || cmRed(g) === 1));
   cmStep(P, pop, "mate", 2, true);
-  const sm = pop.seen.filter(y => y.lin), sons = sm.filter(y => y.male).length, mated = pop.F.filter(g => g.lin);
-  check("C: when your line mates, none of its young is a copy or whole; " + sons + " of " + sm.length + " are sons; a daughter's red " + mated.map(g => cmRed(g).toFixed(2)).slice(0, 6).join(" "),
-        sm.length > 0 && sm.every(y => !y.copy) && sons > 0.25 * sm.length && sons < 0.75 * sm.length && mated.every(g => !g.whole && cmRed(g) <= 1));
+  const sm = pop.seen.filter(y => y.mine), mated = pop.F.filter(g => cmRed(g) > 0);
+  check("C: when genomes carrying you mate, none of their young is a copy or whole; a young's red " + mated.map(g => cmRed(g).toFixed(2)).slice(0, 6).join(" "),
+        sm.length > 0 && sm.every(y => !y.copy) && mated.length > 0 && mated.every(g => !g.whole && cmRed(g) <= 1));
 }
 {
-  /* the Price split adds up exactly: for both your DNA and whole copies of you, cov(w, z) + E(wΔz) is the change in the
-     females' average, every generation of 40 populations played copy, copy, mate, copy, mate, mate, copy (one wandering) */
+  /* the Price split adds up exactly: for your sequence and for you whole, cov(w, z) + E(wΔz) is the change in the genomes'
+     average, every generation of 40 populations played copy, copy, mate, copy, mate, mate, copy (one wandering); a mating
+     ends you whole in E(wΔz); with both parents counted, your sequence's E(wΔz) in matings averages near 0 */
   const P = C_P({ env: 1, U: 0.3, N: 7 }), s0 = cmStart(P, 21, C_you()), plan = ["copy", "copy", "mate", "copy", "mate", "mate", "copy"];
-  let worst = 0, n = 0, oNeg = 0;
+  let worst = 0, n = 0, oNeg = 0, gT = 0, gS = 0, nm = 0;
   for (let k = 0; k < 40; k++) {
-    const p = { F: s0.F.slice(), M: s0.M.slice(), rng: mulberry32(500 + k), theta: 12, price: { gS: 0, gT: 0, oS: 0, oT: 0 } };
+    const p = { F: s0.F.slice(), rng: mulberry32(500 + k), theta: 12, price: { gS: 0, gT: 0, oS: 0, oT: 0 } };
     plan.forEach((c, i) => {
       const F0 = p.F, zg = F0.length ? F0.reduce((a, g) => a + cmRed(g), 0) / F0.length : 0, zo = F0.length ? F0.filter(g => g.whole).length / F0.length : 0;
       let th = p.theta + gauss(p.rng); if (th < 6) th = 12 - th; if (th > 18) th = 36 - th; p.theta = th;
@@ -322,31 +327,35 @@ Gates.A.open = true; FIT_EPOCH++;
       const zg1 = p.F.reduce((a, g) => a + cmRed(g), 0) / p.F.length, zo1 = p.F.filter(g => g.whole).length / p.F.length;
       worst = Math.max(worst, Math.abs(p.price.gS + p.price.gT - (zg1 - zg)), Math.abs(p.price.oS + p.price.oT - (zo1 - zo))); n++;
       if (c === "mate" && zo > 0 && zo1 === 0 && p.price.oT < 0) oNeg++;
+      if (c === "mate" && zg > 0) { gT += p.price.gT; gS += Math.abs(p.price.gS); nm++; }
     });
   }
-  check("C: cov(w, z) + E(wΔz) equals the change in the females' average, your sequence and you whole, in " + n + " generations (worst gap " + worst.toExponential(1) + "); a mating ends you whole in E(wΔz) (" + oNeg + " times)",
-        n > 200 && worst < 1e-9 && oNeg > 20);
+  check("C: cov(w, z) + E(wΔz) equals the change in the genomes' average, your sequence and you whole, in " + n + " generations (worst gap " + worst.toExponential(1) + "); a mating ends you whole in E(wΔz) (" + oNeg + " times); your sequence's E(wΔz) in matings averages " + (gT / nm).toFixed(4) + " (|cov| " + (gS / nm).toFixed(4) + ")",
+        n > 200 && worst < 1e-9 && oNeg > 20 && Math.abs(gT / nm) < 0.004);
 }
 /* ================= C: the three worlds ================= */
 {
   /* re-measured on the page: each plan played twice as practice (100 populations each); the window is on copies of you
-     at the world's last generation. Measured (100 populations, three starts): still, 6 generations: copy 37, mate 0.8,
-     every 5th 23-24, only at 6: 26-28; wandering 1, 30 generations: copy 8-12, every 5th 19-21, mate ~1; harmful
-     changes 0.7, 100 generations: copy ~3, every 5th 29-31, every 20th ~13 */
+     at the world's last generation. Measured (node, hermaphrodites, 12-16 starts, min-max): never changes, 6 generations:
+     copy 6.5-9.1, only at the last 4.2-5.8, every 5th 3.3-4.5, mate 0.5-0.7; changes often and bad, 40 generations:
+     60 generations, every 5th 1.7-4.2, copy 0.0 typically (1.4 once in 24), mate ~0.7; very bad, 100 generations: every 10th 16.1-22.5, copy 1.2-3.2, mate
+     0.6-1.2 */
   const pr = document.getElementById("C_practice"), fill = v => { document.getElementById("C_fill").value = v; C_fillPlan(C_world().N); };
   pr.checked = true; C_sync();
   const play = (round, plan) => { CG.round = round; C_openRound(); if (typeof plan === "string") fill(plan); else CG.plan = plan.slice(); const out = []; for (let k = 0; k < 2; k++) { C_go(); C_finishNow(); out.push(C_sum(CG.last, CG.last.w.N).copies); } return out; };
   const fmt = a => a.map(v => v.toFixed(1)).join("/"), r = C_ROUNDS;
   const r1 = { copy: play(0, "copy"), mate: play(0, "mate"), five: play(0, "5"), last: play(0, ["copy", "copy", "copy", "copy", "copy", "mate"]) };
-  check("C world 1 (still, 6 generations, at least " + r[0].copies + "): copy " + fmt(r1.copy) + " hits; mate " + fmt(r1.mate) + ", every 5th " + fmt(r1.five) + ", only at the last " + fmt(r1.last) + " miss",
-        r1.copy.every(v => v >= r[0].copies) && [r1.mate, r1.five, r1.last].every(a => a.every(v => v < r[0].copies)));
-  const r2 = { copy: play(1, "copy"), five: play(1, "5"), mate: play(1, "mate") };
-  check("C world 2 (wandering 1, 30 generations, at least " + r[1].copies + "): every 5th " + fmt(r2.five) + " hits; copy " + fmt(r2.copy) + ", mate " + fmt(r2.mate) + " miss",
-        r2.five.every(v => v >= r[1].copies) && [r2.copy, r2.mate].every(a => a.every(v => v < r[1].copies)));
-  const r3 = { copy: play(2, "copy"), five: play(2, "5"), twenty: play(2, "20") };
+  check("C world 1 (still, 6 generations, at least " + r[0].copies + "): copy " + fmt(r1.copy) + " hits; mate " + fmt(r1.mate) + " and every 5th " + fmt(r1.five) + " miss (only at the last, mostly copying: " + fmt(r1.last) + ")",
+        r1.copy.every(v => v >= r[0].copies) && [r1.mate, r1.five].every(a => a.every(v => v < r[0].copies)) && r1.last.every(v => v < Math.min(...r1.copy) + 2));
+  /* world 2's naive plans are judged on their typical run (the mean of two): copying alone ends at 0 in most starts but
+     reached 1.4 once in 20, where the best value stayed near where you began */
+  const r2 = { copy: play(1, "copy"), five: play(1, "5"), mate: play(1, "mate") }, mean = a => (a[0] + a[1]) / 2;
+  check("C world 2 (changes often, bad mutations, 60 generations, at least " + r[1].copies + "): every 5th " + fmt(r2.five) + " hits; copy " + fmt(r2.copy) + ", mate " + fmt(r2.mate) + " miss (their typical run)",
+        r2.five.every(v => v >= r[1].copies) && [r2.copy, r2.mate].every(a => mean(a) < r[1].copies));
+  const r3 = { copy: play(2, "copy"), ten: play(2, "10"), mate: play(2, "mate") };
   const left = C_sum(CG.last, 100).alive;
-  check("C world 3 (harmful changes 0.7, 100 generations, at least " + r[2].copies + "): every 5th " + fmt(r3.five) + " hits; copy " + fmt(r3.copy) + " (its populations die out), every 20th " + fmt(r3.twenty) + " miss",
-        r3.five.every(v => v >= r[2].copies) && [r3.copy, r3.twenty].every(a => a.every(v => v < r[2].copies)));
+  check("C world 3 (very bad mutations, 100 generations, at least " + r[2].copies + "): every 10th " + fmt(r3.ten) + " hits; copy " + fmt(r3.copy) + " (its populations die out), mate " + fmt(r3.mate) + " miss",
+        r3.ten.every(v => v >= r[2].copies) && [r3.copy, r3.mate].every(a => a.every(v => v < r[2].copies)));
   pr.checked = false; CG.round = 0; CG.results = []; C_openRound(); C_sync();
 }
 {
@@ -358,7 +367,7 @@ Gates.A.open = true; FIT_EPOCH++;
   const miss = Score.getBit("scaffold", BIT.C1) === 0 && !CG.waiting && txt("C_verdict") === "incorrect";
   fill("copy"); C_go(); C_finishNow();
   const hit = CG.waiting && Score.getBit("scaffold", BIT.C1) === 0 && !document.getElementById("C_next").hidden && txt("C_verdict") === "correct";
-  C_nextRound(); fill("5"); C_go(); C_finishNow(); C_nextRound(); fill("5"); C_go(); C_finishNow();
+  C_nextRound(); fill("5"); C_go(); C_finishNow(); C_nextRound(); fill("10"); C_go(); C_finishNow();
   const bits = ["C1", "C2", "C3"].map(k => Score.getBit("scaffold", BIT[k])).join("");
   check("C: the opening plan misses and records 0; the right plan then hits, the bit still the first try's; three targets finish C and open D (bits " + bits + ")",
         opening && miss && hit && bits === "011" && CG.done && Gates.C.done && Gates.D.open && !document.getElementById("C_env").disabled);
@@ -380,9 +389,11 @@ Gates.A.open = true; FIT_EPOCH++;
         mixedHet === 0 && invOk && mixedStd > 1500);
 }
 {
-  /* the targets, each setting played twice as practice. Measured (node, 100 populations, 26 starts): your haplotype lasts at
-     40 in 58-75 populations inverted, 11-17 standard; at 100, fewest inside on its chromosomes: kill 1.04-1.93, no better
-     than none 0.10-0.40, as one 0.11-0.32; its share where it lasts 0.22-0.24 / 0.47-0.50 / 0.90-0.97 */
+  /* the targets, each setting played twice as practice. Measured (node, hermaphrodites, 60 genomes, 100 populations, 12
+     starts): your haplotype lasts at 40 in 58-70 populations inverted, 5-22 standard; at 100, fewest inside on its
+     chromosomes: kill 2.17-3.03, no better than none 0.33-0.76 (1.03 once on the page), as one 0.06-0.40; its share where it lasts 0.21-0.23 /
+     0.46-0.50 / 0.92-0.97; at 50, fewest inside on the other chromosomes: as one 0.35-0.67, none 0.10 at most, kill 0.01,
+     standard 0.04 */
   const sel = (inv, two) => { document.getElementById("D_inv").value = inv; document.getElementById("D_two").value = two; };
   const pr = document.getElementById("D_practice"); pr.checked = true; D_sync();
   const play = (round, inv, two) => { DG.round = round; sel(inv, two); const out = []; for (let k = 0; k < 2; k++) { D_go(); D_finishNow(); out.push(D_sum(DG.last, DG.last.G)); } return out; };
@@ -392,39 +403,48 @@ Gates.A.open = true; FIT_EPOCH++;
         i1.every(S => j(0, S)) && s1.concat(s1k).every(S => !j(0, S)));
   const g = a => a.map(S => S.pops + ":" + (S.share == null ? "–" : S.share.toFixed(2)) + ":" + (S.mT == null ? "–" : S.mT.toFixed(2))).join(" ");
   const k2 = play(1, "yes", "kill"), n2 = play(1, "yes", "none"), o2 = play(1, "yes", "one"), sk2 = play(1, "no", "kill");
-  check("D target 2 (at 100: in 40+ populations, fewest harmful mutations inside its chromosomes 0.8+; populations:share:fewest): kill " + g(k2) + " hits; no better than none " + g(n2) + ", as one " + g(o2) + ", standard " + g(sk2) + " miss",
+  check("D target 2 (at 100: in 40+ populations, fewest harmful mutations inside its chromosomes 1.5+; populations:share:fewest): kill " + g(k2) + " hits; no better than none " + g(n2) + ", as one " + g(o2) + ", standard " + g(sk2) + " miss",
         k2.every(S => j(1, S)) && n2.concat(o2, sk2).every(S => !j(1, S)));
   /* the lock itself: with two copies killing, no copy of your haplotype ever sits beside another; inverted, the haplotype
-     and the inversion are the same chromosomes */
+     and the inversion are the same chromosomes; and the genomes carrying it carry more mutational load than the rest */
   play(1, "yes", "kill"); const qk = DG.last, neverK = qk.hist.every(H => H.every(st => st.paired == null || st.paired === 0));
-  let sameK = true; for (const p of qk.pops) for (const gg of p.F.concat(p.M)) for (const c of gg.c) if (D_hap(c) !== !!c.inv) sameK = false;
+  let sameK = true; for (const p of qk.pops) for (const gg of p.F) for (const c of gg.c) if (D_hap(c) !== !!c.inv) sameK = false;
+  const Sk = D_sum(qk, 100), S0 = D_sum(qk, 10);
   /* gene by gene, kill at 100: inside the stretch your haplotype's chromosomes carry more harmful mutations than the others;
      at the ends of the chromosome (genes 1-4, 21-24), about as many */
   const sum = [new Float64Array(DW.L), new Float64Array(DW.L)], cnt = [0, 0];
-  for (const p of qk.pops) for (const gg of p.F.concat(p.M)) for (const c of gg.c) { const k = D_hap(c) ? 1 : 0; cnt[k]++; for (let i = 0; i < DW.L; i++) sum[k][i] += c.h[i]; }
+  for (const p of qk.pops) for (const gg of p.F) for (const c of gg.c) { const k = D_hap(c) ? 1 : 0; cnt[k]++; for (let i = 0; i < DW.L; i++) sum[k][i] += c.h[i]; }
   const per = (k, gs) => gs.reduce((a, i) => a + sum[k][i], 0) / gs.length / cnt[k], inside = [8, 9, 10, 11, 12, 13, 14, 15], ends = [0, 1, 2, 3, 20, 21, 22, 23];
   const rIn = per(1, inside) / per(0, inside), rEnd = per(1, ends) / per(0, ends);
   check("D: two copies killing, no copy of your haplotype ever sits beside another (" + neverK + "); inverted, the haplotype and the inversion are the same chromosomes (" + sameK + "); gene by gene at 100, your haplotype's chromosomes carry " + rIn.toFixed(2) + "x the others' harmful mutations inside genes 9-16, " + rEnd.toFixed(2) + "x at the ends",
         neverK && sameK && rIn > 1.5 && rEnd > 0.7 && rEnd < 1.4);
+  check("D: mutational load, kill: genomes carrying your haplotype " + D_f2(S0.lT) + " / the rest " + D_f2(S0.lO) + " at 10, " + D_f2(Sk.lT) + " / " + D_f2(Sk.lO) + " at 100 (carriers' load pulls ahead as the mutations pile up; the rest settle)",
+        Sk.lT - Sk.lO > 0.015 && Sk.lT - Sk.lO > S0.lT - S0.lO && Sk.lO > 0.2 && Sk.lO < 0.35);
   const n3 = play(2, "yes", "none"), o3 = play(2, "yes", "one"), k3 = play(2, "yes", "kill"), s3 = play(2, "no", "one");
-  check("D target 3 (at 100: in 40+ populations, on 40%+ of chromosomes where it lasts, fewest inside below 0.8): no better than none " + g(n3) + " and as one " + g(o3) + " hit; kill " + g(k3) + ", standard " + g(s3) + " miss; beside another, none " + n3.map(S => S.paired.toFixed(2)).join("/") + ", kill 0",
+  check("D target 3 (at 100: in 40+ populations, on 40%+ of chromosomes where it lasts, fewest inside below 1.5): no better than none " + g(n3) + " and as one " + g(o3) + " hit; kill " + g(k3) + ", standard " + g(s3) + " miss; beside another, none " + n3.map(S => S.paired.toFixed(2)).join("/") + ", kill 0",
         n3.concat(o3).every(S => j(2, S)) && k3.concat(s3).every(S => !j(2, S)) && n3.every(S => S.paired > 0.2));
+  const go4 = a => a.map(S => S.pops + ":" + (S.mO == null ? "–" : S.mO.toFixed(2))).join(" ");
+  const o4 = play(3, "yes", "one"), n4 = play(3, "yes", "none"), k4 = play(3, "yes", "kill"), s4 = play(3, "no", "one");
+  check("D target 4 (at 50: in 40+ populations, fewest inside on the other chromosomes 0.25+; populations:fewest on the others): as one " + go4(o4) + " hits (yours " + o4.map(S => D_f2(S.mT)).join("/") + "); no better than none " + go4(n4) + ", kill " + go4(k4) + ", standard " + go4(s4) + " miss",
+        o4.every(S => j(3, S) && S.mO > S.mT) && n4.concat(k4, s4).every(S => !j(3, S)));
   pr.checked = false; DG.round = 0; DG.results = []; DG.last = null; D_openRound(); D_sync();
-  /* the flow: the opening misses (bit 0); the right world hits; each round opens on a world that misses; three finish */
+  /* the flow: the opening misses (bit 0); the right world hits; each round opens on a world that misses; four finish */
   const op1 = document.getElementById("D_inv").value === "no";
   D_go(); D_finishNow(); const miss = Score.getBit("scaffold", BIT.D1) === 0 && !DG.waiting;
   sel("yes", "one"); D_go(); D_finishNow(); D_nextRound();
   const op2 = document.getElementById("D_inv").value === "yes" && document.getElementById("D_two").value === "one";
   sel("yes", "kill"); D_go(); D_finishNow(); D_nextRound();
   const op3 = document.getElementById("D_two").value === "kill";
-  sel("yes", "none"); D_go(); D_finishNow();
-  const bits = ["D1", "D2", "D3"].map(k => Score.getBit("scaffold", BIT[k])).join("");
-  check("D: each round opens on a world that misses (" + [op1, op2, op3].join(", ") + "); the opening run records 0; three targets (bits " + bits + ") finish D and the lesson",
-        op1 && op2 && op3 && miss && bits === "011" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
+  sel("yes", "none"); D_go(); D_finishNow(); D_nextRound();
+  const op4 = document.getElementById("D_two").value === "none";
+  sel("yes", "one"); D_go(); D_finishNow();
+  const bits = ["D1", "D2", "D3", "D4"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("D: each round opens on a world that misses (" + [op1, op2, op3, op4].join(", ") + "); the opening run records 0; four targets (bits " + bits + ") finish D and the lesson",
+        op1 && op2 && op3 && op4 && miss && bits === "0111" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 16 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 17 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();
@@ -500,7 +520,7 @@ setTimeout(() => {
     const okA = /OK 1000/.test(a.stdout || ""); console.log((okA ? "ok   " : "FAIL ") + "the R panel for A runs 1,000 populations" + (okA ? "" : "  -- " + (a.stderr || "").slice(0, 300))); if (!okA) bad = true;
     const b = rs(tagged("RB"), "\ncat('\\nOK\\n')");
     const okB = /OK/.test(b.stdout || ""); console.log((okB ? "ok   " : "FAIL ") + "the R panel for B runs" + (okB ? "" : "  -- " + (b.stderr || "").slice(0, 300))); if (!okB) bad = true;
-    const c = rs(tagged("RC"), "\ncat('\\nOK', round(sum(vapply(fem, red, 0)), 1), '\\n')");
+    const c = rs(tagged("RC"), "\ncat('\\nOK', round(sum(vapply(pop, red, 0)), 1), '\\n')");
     const okC = /OK [0-9.]+/.test(c.stdout || ""); console.log((okC ? "ok   " : "FAIL ") + "the R panel for C runs (the plan as set: " + ((c.stdout || "").match(/OK (.*)/) || ["", "-"])[1] + " copies of you)" + (okC ? "" : "  -- " + (c.stderr || "").slice(0, 300))); if (!okC) bad = true;
     const d = rs(tagged("RD").replace("for (t in 1:100)", "for (t in 1:8)"), "\ncat('\\nOK\\n')");
     const okD = /OK/.test(d.stdout || ""); console.log((okD ? "ok   " : "FAIL ") + "the R panel for D runs (8 generations here)" + (okD ? "" : "  -- " + (d.stderr || "").slice(0, 300))); if (!okD) bad = true;

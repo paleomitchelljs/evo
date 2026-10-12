@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15); later the same day B hermaphrodites, C's labels and plots, D rebuilt on how common the inversion gets (v6, scaffold 16). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
-**Last touched** · 2026-10-12 (later: JM's notes on B-D; B hermaphrodites, C labels and plots, D rebuilt; v6)
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15); later the same day B hermaphrodites, C's labels and plots, D rebuilt on how common the inversion gets (v6, scaffold 16); that evening hermaphrodites throughout, D's fourth target and mutational load (v7, scaffold 17). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
+**Last touched** · 2026-10-12 (evening: hermaphrodites throughout; D's side effect and mutational load; v7)
 
 ## JM, 2026-10-11: B rebuilt as a game; C and D built off it
 
@@ -113,9 +113,42 @@ Measured (2026-10-12; node prototypes of the page's code, scratch bh.js, bh2.js,
 
 Open for JM (2026-10-12):
 - C's two labels sit on the old controls. "How bad new mutations are" sets how many a young gets (U), not how bad each is (s held at 0.12); a student may read "very bad" as each dot costing more. Making it s would change world 3: a harsher s purges faster, so copying alone may stop melting down; not measured. "How often selection changes" is still a step every generation, sized never / rarely / often / very often; a literal "how often" (the best value jumping at a set rate) would need world 2 re-measured.
-- B now has no cost of sons, so its copy-or-mate choice is only about pieces: copying keeps you whole in about one genome (lost in most populations), mating spreads you over ~10 genomes in shorter sequences. C brings the sons back, said in its intro. Is the switch from hermaphrodites (B) to females and males (C) wanted, or should C be hermaphrodites too? It cannot be without losing its first target: with no sons, copying gains nothing.
+- ~~B hermaphrodites, C females and males?~~ Settled below: hermaphrodites throughout.
 - D's toward-17 is a picture, not a measure: the board sorted by two / one / no copies and the gene-by-gene panel (inside the bracket the two kinds of chromosome part; outside they match). Nothing named past "haplotype". A differentiation number could join the gene panel if 17 wants one to point back to.
-- With "help as one", once the inversion is nearly everywhere the standard chromosomes are the rare ones and their fewest climbs instead (0 to 0.7 by generation 60, one start). A fourth target, or left to free play?
+- ~~A fourth target for the side effect?~~ Built below.
+
+JM, 2026-10-12, evening:
+
+> Hermaphrodites throughout would be good--I want to focus on the genetic cost of reproduction, rather than just the production of males per se. I like the side effect idea of D--also it serves as a good time to bring up mutational load (which we don't currently do).
+
+Read as (mine):
+- One engine for B, C, D: hermaphrodites. Every genome carrying any of you copies or mates (C's "your line" becomes that, as in B); a genome that copies is no one's mate, so copying gains nothing by numbers. The cost of mating is then all genetic: it breaks your best-value genome up (your dark alleles sit in opposite halves; a crossover makes gametes with 0 to 12). No aphid clone-son rule (no males).
+- C's Price split counts every genome a parent (a young from mating half to each); now that there are no males it matches the plots. Your sequence passes on as it was (E(wΔz) averages ~0 in matings); you, whole, end in E(wΔz).
+- D, 60 genomes. The side effect as a fourth target: "help as one", at generation 50 the standard chromosomes are the rare ones and their fewest inside climbs. Mutational load as a measure (how much a genome's harmful mutations cut its chance to live), split into the genomes carrying your haplotype and the rest, with a one-line definition in the intro. It shows where the lock is permanent (kill): carriers' load pulls ahead of a balance the rest settle at. It does not show in the side effect itself (below).
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 40 | — | the engine: hermaphrodites for B, C, D; B's own step removed | done |
+| 41 | C | text and labels for genomes; Price every genome a parent; windows re-measured: never changes, 6 gens, ≥ 5; changes often + bad (U 0.3), **60** gens, ≥ 1.2; never changes + very bad, 100 gens, ≥ 10; generations menu gains 60 | done |
+| 42 | D | 60 hermaphrodite genomes; windows 1.5 (targets 2, 3); target 4, the side effect; mutational load (menu, readout, intro line) | done |
+| 43 | B | window 18 → 17 (two matings reached 18.7 on the page) | done |
+| 44 | — | `version: 7`, scaffold 17 (D1-D4); checks 43 + R panels; three consecutive passes. A's dN/dS check widened by a hair (0.125 prints 0.13: an old rounding-edge flake) | done |
+
+Measured (node prototypes of the page's engine, scratch herm.js, c1-c2.js, d5-d7.js; 100 populations; min / median / max over starts):
+
+        C, never changes, mild, 6 gens (16)          copy 6.5/7.2/9.1 · mate only at the end 4.2/4.7/5.8 (6.1 on the page) · every 5th 3.3/3.7/4.5 · mate 0.5/0.7/0.7
+        C, often, bad, 60 gens (16-24)               copy 0.0/0.0/1.4 · every 2nd 1.3/1.8/2.7 · 3rd 1.4/2.2/3.9 · 5th 1.7/3.0/4.2 · 10th 0.6/2.3/3.9 · 20th 0.3/1.1/2.3 · mate ~0.7
+          (often, mild, 30 gens: every plan 0.4-3.4, overlapping; often, bad, 40 gens: copy up to 2.0, every 3rd down to 1.3)
+        C, never changes, very bad, 100 gens (16)    copy 1.2/2.0/3.2 (42-62 populations left) · mate 0.6/0.8/1.2 · every 5th 7.0/11.0/13.5 · 10th 16.1/19.3/22.5 · 20th 10.2/13.3/19.3
+        D, 60 genomes (12 starts)                    lasts at 40: inverted 58-70, standard 5-22
+          fewest inside at 100, yours: kill 2.17/2.65/3.03 · none 0.33/0.50/0.76 (1.16 on the page) · one 0.06/0.20/0.40
+          fewest inside at 50, the others: one 0.35/0.48/0.67 · none ≤ 0.10 · kill ≤ 0.01 · standard ≤ 0.04
+          load: ~0.28 in every setting once settled (a balance set by the mutation rate); kill at 100, carriers 0.31-0.32, the rest 0.27-0.28; one: no gap (the standard chromosomes are rare only a while, then lost in about half the populations)
+
+Open for JM (2026-10-12, evening):
+- C's numbers are small now. Without the cost of sons, copies of you grow only through your genome's fit: 7 at most in the still world (37 before), 1-4 in the changing one. The lesson holds (copying wins when nothing changes, mating now and then wins when it does or when mutations pile up), but world 2 needed 60 generations and bad mutations to separate at all.
+- Load in the side effect: the rare standard chromosomes lose their mutation-free copies (the fewest climbs) but their average barely moves before they are lost, so their load does not show. Load shows where the lock lasts (kill). If he wants load on the side effect itself, the standard arrangement would have to stay rare longer (it is swept out now).
+- "Mutational load" is named on screen with a one-line gloss: the first term this lesson names beyond haplotype. His call that it should be.
 
 ## Measured (2026-10-08)
 
