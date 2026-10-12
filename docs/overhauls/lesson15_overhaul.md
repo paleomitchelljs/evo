@@ -3,7 +3,15 @@
 **File** · `app/lessons/lesson15.html` — A, B, C, D built (v6, scaffold 15), locked
 **Checks** · `node scripts/check_lesson15_numbers.js` (~40 s; islands differ run to run, the page seed is random per load) · `python3 scripts/test_codec.py` · `python3 scripts/check_lessons.py`
 **Status** · fifteenth pass built (2026-10-09): JM's intros for A, B, C; the questions in a card under the pedigree; the jump + a pedigree of cells as D; old D archived. Thirteenth pass built (2026-10-08): a new C (the race, the jump); old C is D. Twelfth: Run to generation 100 on B. Eleventh pass built (2026-10-07): the island-over-time plot after A and after B; B's reads rebuilt on the plots; top score (in the code); Play again; Run to generation 15 after one played season. Checks pass. JM live-tests B's reads next. Mutation moved to `lesson16_overhaul.md`; the linkage plan that once held slot 16 is `lesson14_linkage_plan_absorbed.md`
-**Last touched** · 2026-10-09 (fifteenth pass; B doubled and to 30: the version for students)
+**Last touched** · 2026-10-12 (a note from students' use of B, parked)
+
+## Note (JM, 2026-10-12): B's selection picker, after students used it (parked, not now)
+
+> Notes for lesson 15: the selection picker for Part B is hard for students. The pertinent graph is buried, and the fact that they need the highest fitness allele overall confused some of them, as they weren't sure if they needed to account for heritability. We don't need to fix this now, but we should note that while the snake game was praised, the format, layout, and specific tasks here need revision later.
+
+- The game itself: praised. Keep.
+- B's picker: the plot it needs is buried; "highest fitness allele" left students unsure whether to weigh in h (JM's "heritability", the dominance in 1, 1 − hs, 1 − s).
+- Later: B's format, layout and tasks. Nothing changed now.
 
 ## Fifteenth pass (JM, 2026-10-09): his intros, the questions in the pedigree, the jump as D, old D archived
 

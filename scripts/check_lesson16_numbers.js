@@ -31,10 +31,14 @@
  *      hits open B; dN/dS printed agrees with the rows, harmful below the
  *      synonymous change and beneficial above; after the eight, changes
  *      play as practice.
- *   B (2026-10-12: you are a specific sequence of nucleotides). Pieces are
- *      runs of red; two females share what both carry at the same places;
- *      your letters stay yours; each target hit by its plan and missed by
- *      its neighbours; two targets and a comparison finish B.
+ *   B (2026-10-12: you are a specific sequence of nucleotides; later the
+ *      same day, hermaphrodites). Pieces are runs of red; two genomes share
+ *      what both carry at the same places; your letters stay yours; a copy
+ *      is its parent whole and a genome that copies is no one's mate; with
+ *      no males copying does not multiply you (copies of you near 1 either
+ *      way, mating spreads you over more genomes); each target hit by its
+ *      plan and missed by its neighbours; two targets and a comparison
+ *      finish B.
  *   C (copy or mate: a plan played in 100 populations; it was B until
  *      2026-10-12). A copy is its mother exactly and you, whole; a young from
  *      mating never is, half are sons. The Price split (cov(w, z) + E(wΔz))
@@ -43,11 +47,15 @@
  *      window is hit by the intended plan and missed by the opening and the
  *      naive ones (re-measured, two runs of 100 populations each); a miss
  *      records 0 and the target stays; three hits finish C.
- *   D. a carrier of one inverted and one standard chromosome never crosses
- *      over inside the stretch; each target hit by its world and missed by
- *      the others; two finish the lesson.
+ *   D (rebuilt 2026-10-12: how common the inversion gets). A carrier of one
+ *      inverted and one standard chromosome never crosses over inside the
+ *      stretch; inverted, your haplotype and the inversion are the same
+ *      chromosomes; with two copies killing no copy ever sits beside
+ *      another; gene by gene, the haplotype's chromosomes part from the
+ *      others inside the stretch and not far outside it; each target hit by
+ *      its world and missed by the others; three finish the lesson.
  *   All. every canvas fits its panel (1500 and 1000 wide); a full run writes
- *      all 15 bits; the four R panels run (Rscript).
+ *      all 16 bits; the four R panels run (Rscript).
  *
  * Same harness as check_lesson15_numbers.js.
  *
@@ -62,7 +70,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8798;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_seq","A_runs","A_dnds","A_wheel","B_board","B_letters","B_pieces","B_time","C_plan","C_side","C_board","C_young","C_time","C_price","D_board","D_time"];
+const CANVAS_IDS = ["A_seq","A_runs","A_dnds","A_wheel","B_board","B_letters","B_pieces","B_time","C_plan","C_side","C_board","C_time","C_price","D_board","D_time","D_genes"];
 const INNER = `
 const CANVASES = ${JSON.stringify(CANVAS_IDS)};
 const L=[], say=s=>L.push(s);
@@ -238,9 +246,18 @@ Gates.A.open = true; FIT_EPOCH++;
   const mk = (a, b) => ({ c: [{ y: Uint8Array.from(a) }, { y: Uint8Array.from(b) }] });
   const z = n => new Array(40).fill(0), on = (s, e) => { const v = z(); for (let i = s; i < e; i++) v[i] = 1; return v; };
   const sh = B_shared(mk(on(5, 20), z()), mk(z(), on(12, 30))), pc = cmPieces({ y: Uint8Array.from(on(0, 3).map((v, i) => v || (i >= 10 && i < 14) ? 1 : 0)) });
-  check("B: pieces of red found as runs (" + JSON.stringify(pc) + "); two females both red at genes 13-20 share exactly that (" + JSON.stringify(sh) + ")",
+  check("B: pieces of red found as runs (" + JSON.stringify(pc) + "); two genomes both red at places 13-20 share exactly that (" + JSON.stringify(sh) + ")",
         JSON.stringify(pc) === "[[0,3],[10,4]]" && JSON.stringify(sh) === "[[12,8]]");
-  /* you are a sequence: every red place, in every female of 100 populations after 4 copies and 4 matings, carries one of
+  /* hermaphrodites: a copying genome's young are it, whole (its own two chromosomes); no genome that is not you gets any
+     of you while you copy; then a mating cuts nothing the first time (both your chromosomes are you) */
+  { let seed = 77, pop, me, n0 = 0;
+    do { pop = B_start(seed++); me = pop.F[0]; B_step(pop, "copy"); n0 = pop.F.filter(g => cmRed(g) > 0).length; } while (!n0 && seed < 120);
+    const red = pop.F.filter(g => cmRed(g) > 0), whole = red.every(g => g.c[0] === me.c[0] && g.c[1] === me.c[1]), clean = pop.F.every(g => cmRed(g) === 0 || cmRed(g) === 1);
+    B_step(pop, "mate");
+    const mine = pop.F.filter(g => cmRed(g) > 0), uncut = mine.every(g => g.c.every(c => { const n = c.y.reduce((x, v) => x + v, 0); return n === 0 || n === 40; }));
+    check("B: a genome that copies leaves itself whole (" + n0 + " young lived, all you, both chromosomes its own) and mates with no one; the first mating after cuts none of you (" + mine.length + " young, every chromosome all red or none)",
+          n0 > 0 && whole && clean && mine.length > 0 && uncut); }
+  /* you are a sequence: every red place, in every genome of 100 populations after 4 copies and 4 matings, carries one of
      your two letters at that place; a grey one can match your letter only by chance (~1 in 4) */
   { const pr0 = document.getElementById("B_practice"); pr0.checked = true; B_sync(); B_newRun();
     for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < 4 ? "copy" : "mate"; B_stepOnce(); }
@@ -251,23 +268,29 @@ Gates.A.open = true; FIT_EPOCH++;
     pr0.checked = false; B_sync();
     check("B: you are 80 letters (" + B_SEQ.map(r => r.map(v => "ACGT"[v]).join("").slice(0, 12)).join(" / ") + " ...); all " + red + " red places carry your letter there; grey ones match yours " + (100 * same / grey).toFixed(0) + "% of the time, by chance",
           B_SEQ.length === 2 && B_SEQ.every(r => r.length === 40) && red > 0 && mine === red && same / grey > 0.15 && same / grey < 0.4); }
-  /* each plan played twice as practice; measured (100 populations): copy 6 then mate 2: 42 females / pieces 26; copy 5,
-     mate 3: 40 / 17; copy 8: 40 / 40; mate 8: 11 / 5.5 */
+  /* each plan played twice as practice. Measured (node, 100 populations, 20 starts; average sequence length at generation
+     8 by generations of mating): 0 and 1: 40; 2: 19.0-23.0; 3: 12.3-16.3; 4: 8.6-12.1; 8: 4.6-5.8. Genomes carrying you
+     median 1.1 copying, 9.8 mating; copies of you near 1 either way (expected exactly 1; copying alone, one run of 100
+     populations has a standard error near 0.26, so the band is wide) */
   const pr = document.getElementById("B_practice"); pr.checked = true; B_sync();
   const play = (round, nc) => { BG.round = round; const out = []; for (let k = 0; k < 2; k++) { B_newRun(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < nc ? "copy" : "mate"; B_stepOnce(); } out.push(B_sum(BG.run, 8)); } return out; };
-  const ok = (r, S) => S.car >= r.car && S.piece >= r.lo && S.piece <= r.hi, f = a => a.map(S => S.car.toFixed(0) + "/" + S.piece.toFixed(1)).join(" ");
-  const [c1, c2] = B_ROUNDS, a6 = play(0, 6), a8 = play(0, 8), a0 = play(0, 0), b5 = play(1, 5), b6 = play(1, 6);
-  check("B target 1 (pieces " + c1.lo + "-" + c1.hi + ", " + c1.car + "+ females): copy 6 then mate " + f(a6) + " hits; copy 8 " + f(a8) + " and mate 8 " + f(a0) + " miss",
-        a6.every(S => ok(c1, S)) && a8.every(S => !ok(c1, S)) && a0.every(S => !ok(c1, S)) && a8.every(S => S.piece === 40));
-  check("B target 2 (pieces " + c2.lo + "-" + c2.hi + "): copy 5 then mate " + f(b5) + " hits; copy 6 then mate " + f(b6) + " misses (one generation of mating fewer, longer pieces)",
-        b5.every(S => ok(c2, S)) && b6.every(S => !ok(c2, S)));
+  const ok = (r, S) => S.piece >= r.lo && S.piece <= r.hi, f = a => a.map(S => S.car.toFixed(1) + "/" + S.piece.toFixed(1)).join(" ");
+  const [c1, c2] = B_ROUNDS, a6 = play(0, 6), a7 = play(0, 7), a5 = play(0, 5), a8 = play(0, 8), b4 = play(1, 4), b6 = play(1, 6), b0 = play(1, 0);
+  check("B: no males, so copying does not multiply you: copies of you at generation 8, copy 8 " + a8.map(S => S.copies.toFixed(2)).join("/") + ", mate 8 " + b0.map(S => S.copies.toFixed(2)).join("/") +
+        " (about 1 either way); mating spreads you, genomes carrying you " + a8.map(S => S.car.toFixed(1)).join("/") + " against " + b0.map(S => S.car.toFixed(1)).join("/"),
+        a8.concat(b0).every(S => S.copies > 0.25 && S.copies < 2.2) && Math.min(...b0.map(S => S.car)) > 3 * Math.max(...a8.map(S => S.car)));
+  check("B target 1 (sequence length " + c1.lo + "-" + c1.hi + "; genomes / length): copy 6 then mate 2 " + f(a6) + " hits; copy 7 then mate 1 " + f(a7) + " (your two chromosomes are both you) and copy 5 then mate 3 " + f(a5) + " miss",
+        a6.every(S => ok(c1, S)) && a7.every(S => !ok(c1, S) && S.piece === 40) && a5.every(S => !ok(c1, S)) && a8.every(S => S.piece === 40));
+  check("B target 2 (sequence length " + c2.lo + "-" + c2.hi + "): copy 4 then mate 4 " + f(b4) + " hits; copy 6 then mate 2 " + f(b6) + " and mate 8 " + f(b0) + " miss",
+        b4.every(S => ok(c2, S)) && b6.every(S => !ok(c2, S)) && b0.every(S => !ok(c2, S)));
   pr.checked = false; BG.round = 0; BG.results = []; B_newRun(); B_sync();
-  /* the flow: both targets and two females compared finish C */
-  for (const [r, nc] of [[0, 6], [1, 5]]) { if (r) B_nextRound(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < nc ? "copy" : "mate"; B_stepOnce(); } }
+  /* the flow: both targets and two genomes compared finish B */
+  for (const [r, nc] of [[0, 6], [1, 4]]) { if (r) B_nextRound(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < nc ? "copy" : "mate"; B_stepOnce(); } }
   const done1 = BG.done && !Gates.B.done, bits = Score.getBit("scaffold", BIT.B1) + "" + Score.getBit("scaffold", BIT.B2);
   const q = BG.run, k = B_shown(q), F = q.pops[k].F, red = F.map((g, i) => [cmRed(g), i]).filter(x => x[0] > 0);
-  BG.pick = [red[0][1]]; BG.pick.push(red[1][1]); BG.picked = true; B_checkDone();
-  check("B: two targets (bits " + bits + "), then two females that both carry some of you compared, finish B and open C", done1 && bits === "11" && Gates.B.done && Gates.C.open);
+  const two = red.length >= 2;
+  if (two) { BG.pick = [red[0][1]]; BG.pick.push(red[1][1]); BG.picked = true; B_checkDone(); }
+  check("B: two targets (bits " + bits + "), then two genomes that both carry some of you compared, finish B and open C", two && done1 && bits === "11" && Gates.B.done && Gates.C.open);
 }
 
 /* ================= C: copy or mate, the engine ================= */
@@ -344,7 +367,7 @@ Gates.A.open = true; FIT_EPOCH++;
 /* ================= D: an inversion ================= */
 {
   /* a carrier of one inverted and one standard chromosome never crosses over inside genes 9-16; two standard ones do */
-  const P = Object.assign({}, D_P({ inv: true, U: 0, kill: false }), { xo: 0.5 }), rng = mulberry32(3);
+  const P = Object.assign({}, D_P({ inv: true, two: "one" }), { xo: 0.5 }), rng = mulberry32(3);
   const ch = (v, inv) => { const c = cmHap(DW.L); c.a.fill(v); c.inv = inv; return c; };
   let mixedHet = 0, mixedStd = 0, invOk = true;
   for (let k = 0; k < 2000; k++) {
@@ -357,28 +380,51 @@ Gates.A.open = true; FIT_EPOCH++;
         mixedHet === 0 && invOk && mixedStd > 1500);
 }
 {
-  /* the targets, each setting played twice as practice. Measured (100 populations, six starts): the team lasts at 40
-     in 55-70 populations inverted, 8-17 standard; at 100 with harm common, the fewest inside on the team's chromosomes
-     1.33-1.67 inverted with two copies killing, 0.04-0.25 if two help, 0.00-0.67 standard */
-  const sel = (inv, U, two) => { document.getElementById("D_inv").value = inv; document.getElementById("D_U").value = U; document.getElementById("D_two").value = two; };
+  /* the targets, each setting played twice as practice. Measured (node, 100 populations, 26 starts): your haplotype lasts at
+     40 in 58-75 populations inverted, 11-17 standard; at 100, fewest inside on its chromosomes: kill 1.04-1.93, no better
+     than none 0.10-0.40, as one 0.11-0.32; its share where it lasts 0.22-0.24 / 0.47-0.50 / 0.90-0.97 */
+  const sel = (inv, two) => { document.getElementById("D_inv").value = inv; document.getElementById("D_two").value = two; };
   const pr = document.getElementById("D_practice"); pr.checked = true; D_sync();
-  const play = (round, inv, U, two) => { DG.round = round; sel(inv, U, two); const out = []; for (let k = 0; k < 2; k++) { D_go(); D_finishNow(); out.push(D_sum(DG.last, DG.last.G)); } return out; };
-  const i1 = play(0, "yes", "0.05", "fine"), s1 = play(0, "no", "0.05", "fine"), s1k = play(0, "no", "0.05", "kill");
-  check("D target 1 (the team in 40+ populations at 40): inverted " + i1.map(S => S.pops).join("/") + " hits; standard " + s1.map(S => S.pops).join("/") + " (two kill " + s1k.map(S => S.pops).join("/") + ") misses",
-        i1.every(S => S.pops >= 40) && s1.concat(s1k).every(S => S.pops < 40));
-  const f = a => a.map(S => S.mT == null ? "–" : S.mT.toFixed(2)).join("/");
-  const i2 = play(1, "yes", "0.5", "kill"), i2f = play(1, "yes", "0.5", "fine"), s2 = play(1, "no", "0.5", "kill"), i2r = play(1, "yes", "0.05", "kill");
-  const j = S => D_ROUNDS[1].judge(S).ok, g = a => a.map(S => S.pops + ":" + (S.mT == null ? "–" : S.mT.toFixed(2))).join("/");
-  check("D target 2 (at 100, the team in 40+ populations and the fewest inside its chromosomes 1+): inverted, harm common, two kill " + g(i2) + " (others " + i2.map(S => S.mO.toFixed(2)).join("/") + ") hits; two help " + g(i2f) + ", standard " + g(s2) + ", harm rare " + g(i2r) + " miss",
-        i2.every(S => j(S) && S.mO < 0.2) && i2f.concat(s2, i2r).every(S => !j(S)) && i2f.concat(i2r).every(S => S.mT < 1));
-  pr.checked = false; DG.round = 0; DG.results = []; DG.last = null; D_sync();
-  sel("yes", "0.05", "fine"); D_go(); D_finishNow(); D_nextRound(); sel("yes", "0.5", "kill"); D_go(); D_finishNow();
-  const bits = Score.getBit("scaffold", BIT.D1) + "" + Score.getBit("scaffold", BIT.D2);
-  check("D: two targets (bits " + bits + ") finish D and the lesson", bits === "11" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
+  const play = (round, inv, two) => { DG.round = round; sel(inv, two); const out = []; for (let k = 0; k < 2; k++) { D_go(); D_finishNow(); out.push(D_sum(DG.last, DG.last.G)); } return out; };
+  const j = (r, S) => D_judge(D_ROUNDS[r], S).ok;
+  const i1 = play(0, "yes", "one"), s1 = play(0, "no", "one"), s1k = play(0, "no", "kill");
+  check("D target 1 (your haplotype in 40+ populations at 40): inverted " + i1.map(S => S.pops).join("/") + " hits; standard " + s1.map(S => S.pops).join("/") + " (two kill " + s1k.map(S => S.pops).join("/") + ") misses",
+        i1.every(S => j(0, S)) && s1.concat(s1k).every(S => !j(0, S)));
+  const g = a => a.map(S => S.pops + ":" + (S.share == null ? "–" : S.share.toFixed(2)) + ":" + (S.mT == null ? "–" : S.mT.toFixed(2))).join(" ");
+  const k2 = play(1, "yes", "kill"), n2 = play(1, "yes", "none"), o2 = play(1, "yes", "one"), sk2 = play(1, "no", "kill");
+  check("D target 2 (at 100: in 40+ populations, fewest harmful mutations inside its chromosomes 0.8+; populations:share:fewest): kill " + g(k2) + " hits; no better than none " + g(n2) + ", as one " + g(o2) + ", standard " + g(sk2) + " miss",
+        k2.every(S => j(1, S)) && n2.concat(o2, sk2).every(S => !j(1, S)));
+  /* the lock itself: with two copies killing, no copy of your haplotype ever sits beside another; inverted, the haplotype
+     and the inversion are the same chromosomes */
+  play(1, "yes", "kill"); const qk = DG.last, neverK = qk.hist.every(H => H.every(st => st.paired == null || st.paired === 0));
+  let sameK = true; for (const p of qk.pops) for (const gg of p.F.concat(p.M)) for (const c of gg.c) if (D_hap(c) !== !!c.inv) sameK = false;
+  /* gene by gene, kill at 100: inside the stretch your haplotype's chromosomes carry more harmful mutations than the others;
+     at the ends of the chromosome (genes 1-4, 21-24), about as many */
+  const sum = [new Float64Array(DW.L), new Float64Array(DW.L)], cnt = [0, 0];
+  for (const p of qk.pops) for (const gg of p.F.concat(p.M)) for (const c of gg.c) { const k = D_hap(c) ? 1 : 0; cnt[k]++; for (let i = 0; i < DW.L; i++) sum[k][i] += c.h[i]; }
+  const per = (k, gs) => gs.reduce((a, i) => a + sum[k][i], 0) / gs.length / cnt[k], inside = [8, 9, 10, 11, 12, 13, 14, 15], ends = [0, 1, 2, 3, 20, 21, 22, 23];
+  const rIn = per(1, inside) / per(0, inside), rEnd = per(1, ends) / per(0, ends);
+  check("D: two copies killing, no copy of your haplotype ever sits beside another (" + neverK + "); inverted, the haplotype and the inversion are the same chromosomes (" + sameK + "); gene by gene at 100, your haplotype's chromosomes carry " + rIn.toFixed(2) + "x the others' harmful mutations inside genes 9-16, " + rEnd.toFixed(2) + "x at the ends",
+        neverK && sameK && rIn > 1.5 && rEnd > 0.7 && rEnd < 1.4);
+  const n3 = play(2, "yes", "none"), o3 = play(2, "yes", "one"), k3 = play(2, "yes", "kill"), s3 = play(2, "no", "one");
+  check("D target 3 (at 100: in 40+ populations, on 40%+ of chromosomes where it lasts, fewest inside below 0.8): no better than none " + g(n3) + " and as one " + g(o3) + " hit; kill " + g(k3) + ", standard " + g(s3) + " miss; beside another, none " + n3.map(S => S.paired.toFixed(2)).join("/") + ", kill 0",
+        n3.concat(o3).every(S => j(2, S)) && k3.concat(s3).every(S => !j(2, S)) && n3.every(S => S.paired > 0.2));
+  pr.checked = false; DG.round = 0; DG.results = []; DG.last = null; D_openRound(); D_sync();
+  /* the flow: the opening misses (bit 0); the right world hits; each round opens on a world that misses; three finish */
+  const op1 = document.getElementById("D_inv").value === "no";
+  D_go(); D_finishNow(); const miss = Score.getBit("scaffold", BIT.D1) === 0 && !DG.waiting;
+  sel("yes", "one"); D_go(); D_finishNow(); D_nextRound();
+  const op2 = document.getElementById("D_inv").value === "yes" && document.getElementById("D_two").value === "one";
+  sel("yes", "kill"); D_go(); D_finishNow(); D_nextRound();
+  const op3 = document.getElementById("D_two").value === "kill";
+  sel("yes", "none"); D_go(); D_finishNow();
+  const bits = ["D1", "D2", "D3"].map(k => Score.getBit("scaffold", BIT[k])).join("");
+  check("D: each round opens on a world that misses (" + [op1, op2, op3].join(", ") + "); the opening run records 0; three targets (bits " + bits + ") finish D and the lesson",
+        op1 && op2 && op3 && miss && bits === "011" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 15 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 16 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();
@@ -454,7 +500,7 @@ setTimeout(() => {
     const okA = /OK 1000/.test(a.stdout || ""); console.log((okA ? "ok   " : "FAIL ") + "the R panel for A runs 1,000 populations" + (okA ? "" : "  -- " + (a.stderr || "").slice(0, 300))); if (!okA) bad = true;
     const b = rs(tagged("RB"), "\ncat('\\nOK\\n')");
     const okB = /OK/.test(b.stdout || ""); console.log((okB ? "ok   " : "FAIL ") + "the R panel for B runs" + (okB ? "" : "  -- " + (b.stderr || "").slice(0, 300))); if (!okB) bad = true;
-    const c = rs(tagged("RC"), "\ncat('\\nOK', round(sum(sapply(fem, red)), 1), '\\n')");
+    const c = rs(tagged("RC"), "\ncat('\\nOK', round(sum(vapply(fem, red, 0)), 1), '\\n')");
     const okC = /OK [0-9.]+/.test(c.stdout || ""); console.log((okC ? "ok   " : "FAIL ") + "the R panel for C runs (the plan as set: " + ((c.stdout || "").match(/OK (.*)/) || ["", "-"])[1] + " copies of you)" + (okC ? "" : "  -- " + (c.stderr || "").slice(0, 300))); if (!okC) bad = true;
     const d = rs(tagged("RD").replace("for (t in 1:100)", "for (t in 1:8)"), "\ncat('\\nOK\\n')");
     const okD = /OK/.test(d.stdout || ""); console.log((okD ? "ok   " : "FAIL ") + "the R panel for D runs (8 generations here)" + (okD ? "" : "  -- " + (d.stderr || "").slice(0, 300))); if (!okD) bad = true;

@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
-**Last touched** · 2026-10-12
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15); later the same day B hermaphrodites, C's labels and plots, D rebuilt on how common the inversion gets (v6, scaffold 16). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
+**Last touched** · 2026-10-12 (later: JM's notes on B-D; B hermaphrodites, C labels and plots, D rebuilt; v6)
 
 ## JM, 2026-10-11: B rebuilt as a game; C and D built off it
 
@@ -66,9 +66,56 @@ Read as (mine):
 | 33 | B, C | wording: "you are a specific sequence of nucleotides" | done: B introduces copy and mate; C "you are a specific sequence of nucleotides again"; "whole copies" became "you, whole" |
 
 Open for JM:
-- D is a draft he has not seen; he had ideas for C and D (now B and D). C still plays one generation at a time; B's plan strip would carry over.
+- ~~D is a draft he has not seen.~~ Seen 2026-10-12; see below.
 - The Price panel: mothers as parents (exact, matches the plots). Is "whole copies of you" against "your DNA" the organism / gene contrast he means?
 - B's still world is only 6 generations: at 10, mating once your copies fill the population costs nothing, and "mate every 10th" cleared all three targets.
+
+JM, 2026-10-12 (notes after looking at B-D):
+
+> Part B: make them hermaphrodites instead of females. Label them "genomes" as in "genomes carrying any of you" or "genomes". Also say "sequence length" instead of "pieces".
+>
+> Part C: "the best value wanders" let's just say "how often selection changes". Likewise, I think the "new harmful changes a young" line is confusing. Let's just say "how bad new mutations are".
+>
+> The two drop-down menu plots should be swapped. The density plot showing trait/harmful changes should be dropped or archived, and the line plot showing copies over generations should be moved into the "Population 1, Up Close" panel beneath the small genome figures.
+>
+> Part D: I hate the term "the team". We can use biological terminology here. Likewise the "harmful change" phrasing is more confusing here (as in Part C) than just using some light jargon.
+>
+> I like this part overall. I think the displays are great, but I'm wanting this to be an avenue that clarifies/shows how inversions lock recombination until they're common resulting in all the upsides and downsides of linkage in terms of selection efficiency, and I'm wanting to illustrate that (when rare) this means that an inversion evolves **like** a asexual chunk, but evolves more "normally" later. Basically I want to use inversions to help illustrate Muller's ratchet again, while also building up the next unit (Migration) where we'll look at haplotypes and population differentiation.
+
+Read as (mine):
+- B, hermaphrodites: one sex, sixty genomes; each is the parent of six young and a mate for anyone's. Every genome carrying any of you copies or mates together; a copying genome takes no part in anyone else's mating. No males, so copying no longer multiplies you: copies of you hold near 1 under either choice (neutral), and the choice only sets how many genomes you are in and how long the sequences are. The old floor ("in at least 30 females") came from the cost of males and goes.
+- C keeps females and males: it is where the cost of sons comes in. Its intro says so now that B has none.
+- C's two labels as he gives them. The controls underneath are unchanged: "how often selection changes" is still a normal step each generation, never / rarely / often / very often over steps 0 / 0.5 / 1 / 1.5; "how bad new mutations are" still sets how many a young gets (U 0.1 / 0.3 / 0.7: mild / bad / very bad), not how much each one harms (s stays 0.12).
+- "The two drop-down plots swapped" read with the sentence after it: the young-by-trait plot goes (archived with the page); the over-time plot takes its place in "Population N, up close", under the bead strings. The population looked at up close is drawn dark among the hundred. Price stays below.
+- D: "the team" → your haplotype; "harmful change" → harmful mutation (C too).
+- D, the idea: an inverted chromosome crosses over only beside another inverted one; how often it sits beside one is how common it is (with two copies lethal, never). So a rare inversion passes on whole, like C's copies, and harmful mutations ratchet up inside it; a common one crosses over with itself and evolves like the rest. The upside (your haplotype held together) and the downside (mutations ratcheting inside it) both from the one lock.
+- How common it gets is set by what two copies do: kill (it settles near a quarter of chromosomes, never paired), no better than none (about half), help as one copy (nearly all). Harmful mutations fixed at 0.5 a young; no slider.
+- Toward 17: the board sorts genomes by arrangement (two inverted, one, none) so the pairs that can cross over are the ones in view; a gene-by-gene panel: harmful mutations on inverted and standard chromosomes at each gene, which part only inside the bracket. Haplotypes and differentiation by picture, not named past "haplotype".
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 34 | — | archive the page whole as `app/archive/lesson16_with_D_2026-10-12.html` (at `8c64baf`), README line | done |
+| 35 | B | hermaphrodites ("genomes"); carriers copy or mate together; "sequence length"; targets re-measured | done: windows 18-30 (two generations of mating) and 8-16 (three to five), on length alone |
+| 36 | C | labels: how often selection changes; how bad new mutations are; harmful mutation; intro: females and males here | done; targets unchanged ("Selection never changes", "Selection changes often", "New mutations are very bad") |
+| 37 | C | young plot out; over-time plot into the up-close panel, the picked population dark | done; the engine still keeps the young when asked (the checks read them) |
+| 38 | D | haplotype, harmful mutation; two copies kill / none / one; U fixed; board by arrangement; paired measure; gene-by-gene panel; targets | done: three targets (keep it whole at 40, inverted; pile up inside it at 100, kill; common and not piling up at 100, none or one); each round opens on a world that misses; the board shows the first population still carrying it |
+| 39 | — | scoring and checks follow | done: `version: 6`, scaffold 16 (D1-D3); checks 41 + four R panels; C's R panel no longer stops when a population runs out of males |
+
+Measured (2026-10-12; node prototypes of the page's code, scratch bh.js, bh2.js, d1-d4.js; 100 populations):
+
+        B, generation 8, by generations of mating (20 starts; average sequence length 5th-50th-95th / genomes carrying you, median)
+          0: 40 / 1.1   1: 40 / 2.1   2: 19.0-20.9-23.0 / 3.1   3: 12.3-14.1-15.9 / 4.2   4: 9.3-10.8-11.6 / 5.2   8: 4.6-5.1-5.8 / 9.8
+          (when the matings fall changes length by under a letter; copies of you near 1 either way; copying alone loses you in ~75 of 100)
+        D, generation 100 (26 starts kill / none, 6 one): share where it lasts · beside another · fewest inside · average inside (others)
+          kill 0.22-0.24 · 0 · 1.04-1.93 · 2.7-3.2 (1.3)    none 0.47-0.50 · 0.35-0.39 · 0.10-0.40 · 1.5-2.1 (1.4)    one 0.90-0.97 · 0.88-0.96 · 0.11-0.32
+          lasts at 40: inverted 58-75, standard 11-17. Gene by gene, kill: 2.0x the others' mutations inside 9-16, 1.0x at the ends
+          5-17% of populations die out under the mutations whatever the settings (more without your haplotype)
+
+Open for JM (2026-10-12):
+- C's two labels sit on the old controls. "How bad new mutations are" sets how many a young gets (U), not how bad each is (s held at 0.12); a student may read "very bad" as each dot costing more. Making it s would change world 3: a harsher s purges faster, so copying alone may stop melting down; not measured. "How often selection changes" is still a step every generation, sized never / rarely / often / very often; a literal "how often" (the best value jumping at a set rate) would need world 2 re-measured.
+- B now has no cost of sons, so its copy-or-mate choice is only about pieces: copying keeps you whole in about one genome (lost in most populations), mating spreads you over ~10 genomes in shorter sequences. C brings the sons back, said in its intro. Is the switch from hermaphrodites (B) to females and males (C) wanted, or should C be hermaphrodites too? It cannot be without losing its first target: with no sons, copying gains nothing.
+- D's toward-17 is a picture, not a measure: the board sorted by two / one / no copies and the gene-by-gene panel (inside the bracket the two kinds of chromosome part; outside they match). Nothing named past "haplotype". A differentiation number could join the gene panel if 17 wants one to point back to.
+- With "help as one", once the inversion is nearly everywhere the standard chromosomes are the rare ones and their fewest climbs instead (0 to 0.7 by generation 60, one start). A fourth target, or left to free play?
 
 ## Measured (2026-10-08)
 
