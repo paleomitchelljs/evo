@@ -3,7 +3,7 @@
 **File** · `app/lessons/lesson18.html` — first draft 2026-10-12
 **Checks** · `node scripts/check_lesson18_numbers.js` · `python3 scripts/check_lessons.py`
 **Status** · draft built (A-F), checks green (20 + R panels); LOCKS `x`; JM to review
-**Last touched** · 2026-10-12
+**Last touched** · 2026-10-13
 **Source** · `notes/exams/2025.5/exam02_key.tex` and `exam02.pdf` (question text and key answers quoted verbatim on the page)
 
 ## What the lesson is
@@ -51,6 +51,7 @@
 | 2 | A-F | build the page | done |
 | 3 | — | `check_lesson18_numbers.js` | done |
 | 4 | — | JM rules on the open points; key answers settled | todo |
+| 5 | A-F | streamlined (JM, 2026-10-13): setup bullets, R panels, Download .R, To-finish boxes gone; the exam's question text stays; sliders became lesson 14's arrow diagrams (paths.js) on A1, A2, B, D, E2, F; C and E1 keep plain sliders | done |
 
 ## Rulings
 
@@ -58,5 +59,6 @@
 
 ## Do not
 
+- Put bullets, setup notes or R code back: this is an exam key, not a lesson (JM, 2026-10-13). Question text, the target, the controls, the key.
 - Edit the key's answers on the page to match the simulation: they are JM's, verbatim; disagreements go in "Open for JM".
 - Gate the stages in sequence (the exam is not a sequence).

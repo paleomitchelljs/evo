@@ -27,14 +27,12 @@
  *      h 0, d -25 and the opening.
  *   Flow. every stage open with the name; a scored miss records 0 and the
  *      key stays shut; hits open the key; every bit written; the banner.
- *   All. every canvas fits its panel (1500 and 1000 wide); the six R panels
- *      run (Rscript; B, C and E shortened).
+ *   All. every canvas fits its panel (1500 and 1000 wide);
  *
  * Same harness as check_lesson17_numbers.js.
  *
  * Usage:  node scripts/check_lesson18_numbers.js      (~3 minutes)
- * Exit 0 iff every check passes. Needs Google Chrome and python3; Rscript
- * for the R panels (skipped, and said so, without it).
+ * Exit 0 iff every check passes. Needs Google Chrome and python3.
  */
 const { spawn, spawnSync } = require("child_process");
 const fs = require("fs"), path = require("path");
@@ -150,10 +148,8 @@ tgt(PF, 0, [{ d: -17, h: 0.5 }], [{ d: -5, h: 0 }, { d: -17, h: 0.75 }, { d: -17
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
 }
-A_code(); B_code(); C_code(); D_code(); E_code(); F_code();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
 say("RAN " + ran);
-for (const K of ["A", "B", "C", "D", "E", "F"]) say("R" + K + " " + RTEXT["code" + K].replace(/\\n/g, "\\\\n"));
 L_.join(" ;; ");
 `;
 
@@ -206,17 +202,6 @@ setTimeout(() => {
   if (!ranLine || +ranLine[1] !== reported) { console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported + " came back"); bad = true; }
   const narrow = m2 ? dec(m2[1]) : "FAIL narrow frame gave nothing";
   console.log(narrow); if (!/^ok/.test(narrow)) bad = true;
-  /* run R outside the repo: F's boxplot() would leave an Rplots.pdf behind */
-  const rs = code => spawnSync("Rscript", ["-e", code + "\ncat('\\nOK\\n')"], { encoding: "utf8", timeout: 240000, cwd: require("os").tmpdir() });
-  const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
-  if (probeR.error) console.log("skip R panels  (no Rscript)");
-  else for (const [tag, name, fix] of [["RA", "A", s => s], ["RB", "B (8 generations here)", s => s.replace("for (t in 1:(4 * N))", "for (t in 1:8)")],
-      ["RC", "C (150 generations here)", s => s.replace("G <- 1500", "G <- 150")], ["RD", "D", s => s], ["RE", "E (1,000 fates a kind here)", s => s.replace("replicate(10000", "replicate(1000")], ["RF", "F", s => s]]) {
-    const o = rs(fix(tagged(tag)));
-    const ok = /OK/.test(o.stdout || "");
-    console.log((ok ? "ok   " : "FAIL ") + "the R panel for " + name + " runs" + (ok ? "" : "  -- " + (o.stderr || "").slice(0, 300)));
-    if (!ok) bad = true;
-  }
   cleanup();
   process.exit(bad ? 1 : 0);
 }, 700);
