@@ -41,12 +41,12 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8796;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A1_plot","A2_hist","A2_paths","B_time","C_land","D_plot","D_time","E1_plot","E2_plot","F_plot"];
+const CANVAS_IDS = ["A_hist","A_traj","B_time","C_land","D_plot","D_time","E_plot","E_time","F_plot"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
-const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error(S.P + ": no " + k + " = " + o[k] + " on the slider"); document.getElementById(S.P + "_" + k).value = i; } syncVals(S); };
+const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error(S.P + ": no " + k + " = " + o[k] + " on the slider"); document.getElementById(S.P + "_" + k).value = i - (c.mid || 0); } syncVals(S); };
 /* keep going until a part is done, at most 12 more tries (a miss forever is a failure, not a hang) */
 const until = S => { for (let k = 0; k < 12 && !S.done; k++) { goPart(S); finishNow(S); } };
 const play = (S, r, o, n) => { S.round = r; S.waiting = false; S.done = false; document.getElementById(S.P + "_practice").checked = true; openRound(S); setC(S, o);
@@ -62,24 +62,25 @@ const tgt = (S, r, good, badOnes, n, need) => {
 
 /* ================= A ================= */
 {
-  const c0 = A1_balance(1e-5, 0.3, 0), c1 = A1_balance(1e-5, 0.3, 0.5);
-  check("A1: balance q " + c0.q.toPrecision(3) + " against sqrt(u/s) " + Math.sqrt(1e-5 / 0.3).toPrecision(3) + " (h 0); " + c1.q.toPrecision(3) + " against u/(hs) " + (1e-5 / 0.15).toPrecision(3) + " (h .5)",
-        Math.abs(c0.q / Math.sqrt(1e-5 / 0.3) - 1) < 0.05 && Math.abs(c1.q / (1e-5 / 0.15) - 1) < 0.1);
+  const q0 = A_balance(1e-5, 0.3, 0), q1 = A_balance(1e-5, 0.3, 0.5);
+  check("A: balance q " + q0.toPrecision(3) + " against sqrt(u/s) " + Math.sqrt(1e-5 / 0.3).toPrecision(3) + " (h 0); " + q1.toPrecision(3) + " against u/(hs) " + (1e-5 / 0.15).toPrecision(3) + " (h .5)",
+        Math.abs(q0 / Math.sqrt(1e-5 / 0.3) - 1) < 0.05 && Math.abs(q1 / (1e-5 / 0.15) - 1) < 0.1);
 }
-tgt(PA1, 0, [{ u: 1e-5, s: 0.3, h: 0 }, { u: 1e-6, s: 0.03, h: 0 }], [{ u: 1e-6, s: 1, h: 0.5 }, { u: 1e-5, s: 0.3, h: 0.1 }, { u: 1e-4, s: 0.3, h: 0 }], 1);
-setC(PA1, { u: 1e-5, s: 0.3, h: 0 });
-tgt(PA2, 0, [{ g: 1.1, k: 8, c: 0 }, { g: 1.1, k: 8, c: 0.5 }], [{ g: 2, k: 1, c: 0 }, { g: 2, k: 8, c: 0.5 }], 3, 2);
+tgt(PA, 0, [{ u: 1e-6, s: 0.3, h: 0, N: 20, f: 0 }, { u: 1e-6, s: 0.1, h: 0, N: 10, f: 0.25 }], [{ u: 1e-6, s: 1, h: 0.5, N: 300, f: 0 }, { u: 1e-6, s: 0.3, h: 0, N: 100, f: 0.25 }, { u: 1e-6, s: 0.01, h: 0, N: 300, f: 0 }, { u: 1e-6, s: 1, h: 0.5, N: 10, f: 0 }], 3, 2);
 {
-  const slow = play(PA2, 0, { g: 1.1, k: 1, c: 0 }, 1)[0], fast = play(PA2, 0, { g: 2, k: 1, c: 0 }, 1)[0];
-  check("A2: F (ten neutral genes) rises more the slower the regrowth: x1.1 " + slow.F.toFixed(3) + ", x2 " + fast.F.toFixed(3), slow.F > fast.F && slow.F > 0.1 && fast.F > 0.02);
+  const small = play(PA, 0, { u: 1e-6, s: 0.3, h: 0, N: 10, f: 0 }, 1)[0], big = play(PA, 0, { u: 1e-6, s: 0.3, h: 0, N: 300, f: 0 }, 1)[0];
+  const sib = play(PA, 0, { u: 1e-6, s: 0.3, h: 0, N: 20, f: 0.25 }, 1)[0], none = play(PA, 0, { u: 1e-6, s: 0.3, h: 0, N: 20, f: 0 }, 1)[0];
+  check("A: F (ten neutral genes) is higher in a small census, " + small.F.toFixed(2) + " (N 10) against " + big.F.toFixed(2) + " (N 300); and with siblings mating, " + sib.F.toFixed(2) + " against " + none.F.toFixed(2) + " (N 20); drift alone at N 10 " + (1 - Math.pow(1 - 1 / 20, 9)).toFixed(2),
+        small.F > big.F + 0.1 && sib.F > none.F + 0.02 && Math.abs(small.F - (1 - Math.pow(1 - 1 / 20, 9))) < 0.1);
 }
 
 /* ================= B ================= */
-/* u .015 with box .75 sits on the box He edge (.76-.81): it hit 1 of 2 on 2026-10-12, so only u .02 is held to it */
-tgt(PB, 0, [{ mu: 0.02, bs: 0, bb: 0.75 }], [{ mu: 0.005, bs: 0, bb: 0 }, { mu: 0.02, bs: 0, bb: 0 }, { mu: 0.02, bs: 0, bb: 1 }], 3, 2);
+tgt(PB, 0, [{ mu: 0.025, sb: 0.1, hb: 0.02, bs: 0, bb: 0.7 }], [{ mu: 0.005, sb: 0, hb: 0.1, bs: 0, bb: 0 }, { mu: 0.025, sb: 0, hb: 0.02, bs: 0, bb: 0.7 }, { mu: 0.025, sb: 0.1, hb: 0.02, bs: 0, bb: 0 }, { mu: 0.025, sb: 0.1, hb: 0.02, bs: 0.7, bb: 0.7 }], 3, 2);
 {
-  const x = play(PB, 0, { mu: 0.02, bs: 0, bb: 0 }, 1)[0];
-  check("B: at the same u, random mating both, He is higher in box (N 109) than spotted (N 39): " + x.bHe.toFixed(2) + " vs " + x.sHe.toFixed(2) + " (the key's (d) says spotted; overhaul doc, open point 1)", x.bHe > x.sHe + 0.05);
+  const x = play(PB, 0, { mu: 0.02, sb: 0, hb: 0.02, bs: 0, bb: 0 }, 1)[0], y = play(PB, 0, { mu: 0.02, sb: 0.1, hb: 0.02, bs: 0, bb: 0.7 }, 1)[0];
+  const cf = N => 4 * N * 0.02 / (1 + 4 * N * 0.02);
+  check("B: random mating, s 0: He " + x.sHe.toFixed(2) + " / " + x.bHe.toFixed(2) + " against 4Nu/(1 + 4Nu) " + cf(39).toFixed(2) + " / " + cf(109).toFixed(2) + "; hatching " + pc(x.sHat) + " / " + pc(x.bHat) + " (nothing to expose); with s .1 and relatives, box hatching falls to " + pc(y.bHat),
+        Math.abs(x.sHe - cf(39)) < 0.1 && Math.abs(x.bHe - cf(109)) < 0.1 && x.sHat > 0.9 && x.bHat > 0.9 && y.bHat < 0.7);
 }
 
 /* ================= C ================= */
@@ -93,21 +94,29 @@ tgt(PC, 1, [{ N: 6 }], [{ N: 1200 }], 5, 4);
 }
 
 /* ================= D ================= */
-tgt(PD, 0, [{ H: 0.7, h2: 0.8, b: 0 }, { H: 0.9, h2: 0.6, b: 0.1 }], [{ H: 0.3, h2: 0.4, b: 0 }, { H: 0.5, h2: 0.8, b: 0 }]);
-tgt(PD, 1, [{ H: 0.7, h2: 0.8, b: 0.3 }, { H: 0.9, h2: 0.8, b: 0.3 }], [{ H: 0.7, h2: 0.8, b: 0 }, { H: 0, h2: 0.8, b: 0.3 }]);
+tgt(PD, 0, [{ H: 0.7, pref: 50, h2: 0.8, b: 0 }, { H: 0.9, pref: 4, h2: 0.6, b: 0.1 }], [{ H: 0.3, pref: 50, h2: 0.4, b: 0 }, { H: 0.7, pref: 0, h2: 0.8, b: 0 }]);
+tgt(PD, 1, [{ H: 0.7, pref: 50, h2: 0.8, b: 0.3 }, { H: 0.9, pref: 50, h2: 0.8, b: 0.3 }], [{ H: 0.7, pref: 50, h2: 0.8, b: 0 }, { H: 0, pref: 50, h2: 0.8, b: 0.3 }]);
 {
-  const z = play(PD, 1, { H: 0.7, h2: 0.8, b: 0 }, 1)[0], e = play(PD, 1, { H: 0.7, h2: 0.8, b: 0.3 }, 1)[0];
+  const z = play(PD, 1, { H: 0.7, pref: 50, h2: 0.8, b: 0 }, 1)[0], e = play(PD, 1, { H: 0.7, pref: 50, h2: 0.8, b: 0.3 }, 1)[0];
   check("D: cov(w, z)/w̄ before 1995 " + z.covBefore.toFixed(2) + " at edge 0, " + e.covBefore.toFixed(2) + " at edge .3; while hunted " + z.covHunt.toFixed(2) + "; V_A " + z.va1995.toFixed(1) + " -> " + z.va2020.toFixed(1) + "; rams that sired " + z.ramsBefore.toFixed(0) + " -> " + z.ramsHunt.toFixed(0) + "; neutral heterozygosity " + z.hn1995.toFixed(3) + " -> " + z.hn2020.toFixed(3),
         Math.abs(z.covBefore) < 0.3 && e.covBefore > 1 && z.covHunt < -2 && z.va2020 < 0.6 * z.va1995 && z.ramsHunt < 0.5 * z.ramsBefore && z.hn2020 < z.hn1995);
 }
+{
+  const hunted = herds => meanOf(herds.flatMap(h => h.slice(6, 16).map(r => r.shotZ)));
+  const lo = play(PD, 0, { H: 0.7, pref: 0, h2: 0.8, b: 0 }, 1)[0], hi = play(PD, 0, { H: 0.7, pref: 50, h2: 0.8, b: 0 }, 1)[0];
+  const qLo = PD.last && PD.last, z = { lo: lo.z2020, hi: hi.z2020 };
+  check("D: with hunters indifferent to horns (preference none) the horn mean ends at " + z.lo.toFixed(1) + " cm; picking the largest, " + z.hi.toFixed(1) + " cm (the horn's own link to deaths is 0 throughout)", z.lo > 68 && z.hi < 56);
+}
 
 /* ================= E ================= */
-tgt(PE1, 0, [{ y0: 1000, r: 1900 }], [{ y0: -4000, r: 300 }, { y0: 1000, r: 1800 }, { y0: 900, r: 1900 }, { y0: -4000, r: 1900 }]);
-tgt(PE2, 0, [{ hk: 0.01, im: 0.01 }], [{ hk: 0, im: 0 }, { hk: 0.005, im: 0.01 }, { hk: 0.02, im: 0.01 }, { hk: 0.01, im: 0.005 }, { hk: 0.01, im: 0.02 }], 3, 2);
+tgt(PE, 0, [{ N: 100, y0: 1000, r: 1900 }], [{ N: 100, y0: -4000, r: 300 }, { N: 100, y0: 1000, r: 1800 }, { N: 100, y0: 900, r: 1900 }, { N: 100, y0: -4000, r: 1900 }]);
+tgt(PE, 1, [{ hk: -0.05, im: 0.05, oth: 0, N: 100 }], [{ hk: 0, im: 0, oth: 0, N: 100 }, { hk: -0.01, im: 0.01, oth: 0, N: 100 }, { hk: -0.1, im: 0.1, oth: 0, N: 100 }, { hk: 0.05, im: -0.05, oth: 0, N: 100 }], 3, 2);
+tgt(PE, 2, [{ hk: -0.05, im: 0.05, oth: 0, N: 100 }], [{ hk: 0, im: 0, oth: 0, N: 100 }, { hk: -0.01, im: 0.01, oth: 0, N: 100 }], 3, 2);
 {
-  const x = play(PE2, 0, { hk: 0.01, im: 0.01 }, 2), hk = (x[0].hk + x[1].hk) / 2, im = (x[0].im + x[1].im) / 2;
-  check("E2: dN/dS against the closed form N(1 - e^-2s)/(1 - e^-2Ns): housekeeping " + hk.toFixed(3) + " vs " + E_kimura(-0.01).toFixed(3) + ", immune " + im.toFixed(3) + " vs " + E_kimura(0.01).toFixed(3),
-        Math.abs(hk / E_kimura(-0.01) - 1) < 0.3 && Math.abs(im / E_kimura(0.01) - 1) < 0.15);
+  const x = play(PE, 1, { hk: 0, im: 0, oth: 0, N: 100 }, 2), y = play(PE, 1, { hk: -0.05, im: 0.05, oth: 0, N: 100 }, 2);
+  const tm = meanOf(x.map(v => v.tmrca)), pi = meanOf(x.map(v => v.pi)), tms = meanOf(y.map(v => v.tmrca)), pis = meanOf(y.map(v => v.pi));
+  check("E: no selection, the common ancestor " + tm.toFixed(0) + " generations back against 2N 200, differences between two cells " + Math.round(pi) + " against 2 N rate 380,000, dN/dS ~1 (" + x.map(v => f2(v.hk) + "/" + f2(v.im) + "/" + f2(v.all)).join(", ") + "); with s -.05 and +.05 the ancestor " + tms.toFixed(0) + " and differences " + Math.round(pis),
+        Math.abs(tm / 200 - 1) < 0.5 && Math.abs(pi / 380000 - 1) < 0.5 && x.every(v => Math.abs(v.hk - 1) < 0.45 && Math.abs(v.im - 1) < 0.45) && tms < tm && pis < 0.7 * pi);
 }
 
 /* ================= F ================= */
@@ -125,19 +134,16 @@ tgt(PF, 0, [{ d: -17, h: 0.5 }], [{ d: -5, h: 0 }, { d: -17, h: 0.75 }, { d: -17
   };
   for (const K in Gates) Gates[K].done = false;
   const keyShut = document.getElementById("keyA").textContent.indexOf("Hit this question") >= 0;
-  const a1 = flow(PA1, [{ u: 1e-5, s: 0.3, h: 0 }]);
-  const keyStill = document.getElementById("keyA").textContent.indexOf("Hit this question") >= 0;
-  const a2 = flow(PA2, [{ g: 1.1, k: 8, c: 0.5 }]);
-  setC(PA2, { g: 1.1, k: 8, c: 0.5 }); until(PA2);
+  const a = flow(PA, [{ u: 1e-6, s: 0.3, h: 0, N: 20, f: 0 }]); until(PA);
   const keyOpen = /drift/.test(document.getElementById("keyA").textContent);
-  const b = flow(PB, [{ mu: 0.02, bs: 0, bb: 0.75 }]); until(PB);
+  const b = flow(PB, [{ mu: 0.025, sb: 0.1, hb: 0.02, bs: 0, bb: 0.7 }]); until(PB);
   const c = flow(PC, [{ N: 1200 }, { N: 6 }]); until(PC);
-  const d = flow(PD, [{ H: 0.7, h2: 0.8, b: 0.1 }, { H: 0.7, h2: 0.8, b: 0.3 }]); until(PD);
-  const e1 = flow(PE1, [{ y0: 1000, r: 1900 }]), e2 = flow(PE2, [{ hk: 0.01, im: 0.01 }]); until(PE2);
+  const d = flow(PD, [{ H: 0.7, pref: 50, h2: 0.8, b: 0.1 }, { H: 0.7, pref: 50, h2: 0.8, b: 0.3 }]); until(PD);
+  const e = flow(PE, [{ y0: 1000, r: 1900 }, { hk: -0.05, im: 0.05, oth: 0 }, { hk: -0.05, im: 0.05, oth: 0 }]); until(PE);
   const f = flow(PF, [{ d: -17, h: 0.5 }]); until(PF);
-  check("flow: all six stages open with the name (" + before + "); the key shut before (" + keyShut + ") and after one of A's two targets (" + keyStill + "), open after both (" + keyOpen + ")", before === 6 && keyShut && keyStill && keyOpen);
-  check("flow: each opening run records 0 (" + [a1, a2, b, c, d, e1, e2, f].map(x => x.miss).join(",") + "); bits " + [a1, a2, b, c, d, e1, e2, f].map(x => x.bits).join(" "),
-        [a1, a2, b, c, d, e1, e2, f].every(x => x.miss) && a1.bits === "0" && c.bits.startsWith("0") && d.bits.startsWith("0"));
+  check("flow: all six stages open with the name (" + before + "); the key shut before (" + keyShut + ") and open after the target (" + keyOpen + ")", before === 6 && keyShut && keyOpen);
+  check("flow: each opening run records 0 (" + [a, b, c, d, e, f].map(x => x.miss).join(",") + "); bits " + [a, b, c, d, e, f].map(x => x.bits).join(" "),
+        [a, b, c, d, e, f].every(x => x.miss) && a.bits === "0" && c.bits.startsWith("0") && d.bits.startsWith("0") && e.bits.startsWith("0"));
   const n = Object.keys(BIT).filter(k => Score.isAnswered("scaffold", BIT[k])).length;
   check("all " + Object.keys(BIT).length + " declared bits written; every stage done; the banner shown", n === 10 && Object.values(Gates).every(g => g.done) && document.getElementById("done-banner").classList.contains("shown"), n + " written");
 }

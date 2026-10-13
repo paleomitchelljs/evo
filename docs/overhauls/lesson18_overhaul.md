@@ -2,9 +2,9 @@
 
 **File** · `app/lessons/lesson18.html` — first draft 2026-10-12
 **Checks** · `node scripts/check_lesson18_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · draft built (A-F), checks green (20 + R panels); LOCKS `x`; JM to review
+**Status** · draft 2 built (1-5 + extra credit), checks green (21 bars); LOCKS `x`; JM to review
 **Last touched** · 2026-10-13
-**Source** · `notes/exams/2025.5/exam02_key.tex` and `exam02.pdf` (question text and key answers quoted verbatim on the page)
+**Source** · `notes/exams/2025.5/exam02_key.tex` and `exam02.pdf` (question text and key answers quoted verbatim on the page; the keys read "your simulations' ...")
 
 ## What the lesson is
 
@@ -15,16 +15,23 @@
 
 > For lesson 18, I'd also like a draft. This lesson would be abnormal. I am looking for an "interactive exam key" where students get a bespoke simulation that lets them generate data similar to what is shown in the question plots and their goal is to hit a target that looks like the empircal data.
 
-## Stages as built (draft 1)
+## Stages as built (draft 2, 2026-10-13, v2, scaffold 10)
 
-    A  Pingelap. A1 before the typhoon: u, s, h set the worldwide colorblind share (target 0.001-0.01%, data 0.003%). A2 the typhoon: 20 survivors, one carrier; regrowth, the carrier's young, cousin marriages; 100 islands, 9 generations; target: at least 1 island at 10%+ (2+ hit only 2 of 6 tries at the best setting). F and colorblind against q^2 under the islands.
-    B  Turtles. N held at the table's 39 and 109; shared mutation rate; each species' share of young from the first parent's closest relative; hatching .82 exp(-relatedness). Target: the table (windows ~ +-0.07 on Ho/He; hatching 72%+ / 48-68%). Hit at u .02, box .75 (box .63 / .80 / 60%).
-    C  Thornton. The three lineages on the exam's landscape; 10 populations; N. Targets: all 10 at C's peak; at least 2 reach B's peak. N a multiple of 3 (6-1200) so the lineages start equal.
-    D  Bighorn. Hunting share, heritability, rams' mating edge; the exam's 17 points as the target (typical miss under 4.5 cm); then the ban in 2027: horn length rises, slower than it fell. cov(w, z), V_A, neutral H and breeding rams by year.
-    E  CTVT. E1 the clock: rate and start year against the exam's 11 points. E2 dN/dS: how harmful a housekeeping change is, how helpful an immune one is (windows .15-.5 / 1.8-3.5 / .8-1.3 on the table's 0.22 / 2.45 / 0.99). Not built: a host-DNA-stealing toggle for (d); the key's (d) line points at the harmful housekeeping changes that still fixed.
-    F  Extra credit: ARRB2. G/G's dose and h make three box plots; target the exam's (A/A ~48, A/G ~40, G/G ~31).
+    1  Pingelap. One target: 100 islands, 9 generations, at least 1 at 10%+. DAG: rate of colorblind mutation, colorblind homozygote fitness (s), heterozygote colorblind phenotype (h), census N, inbreeding F (0, cousins, half-sibs, siblings). The world comparison is gone. F and colorblind / q^2 shown beside drift alone, 1 - (1 - 1/2N)^9.
+    2  Turtles. General model: mutation rate and the mean s, h of new mutants (shared arrows, two per control, grow together), average relatedness to mates and census N per species. Hatching comes from the new mutants' genotypes (0.95 x product), not asserted. N held at 39 / 109 until the target is hit, then free. Table and drop-down plot kept.
+    3  Thornton (unchanged).
+    4  Bighorn. Birth-death DAG: additive genetic variation -> horn phenotype -> births (mating edge) and -> rams hunted -> deaths (hunting); hunter preference onto the horn -> hunted arrow; horn -> deaths directly is a fixed 0; births, deaths -> population size -> inbreeding -> variation, and population size -> variation. Engine adds preference (Gumbel top-k on preference x horn z; 0 random, 50 the largest first).
+    5  CTVT. Five tumors (N cells, a generation a year, asexual). DAG with signed arrows (blue +, red -) for s per gene class. Three targets on one card: the clock (y0, rate; s held 0), the table (dN/dS; y0, rate held), selection shrinks diversity (pairwise differences under half of 2 N rate). Outputs: clock plot, genealogy (lineages back) or pairwise differences, dN/dS table.
+    F  Extra credit: boxes now "s for G allele" and "h for G allele".
 
-## Measured (node prototypes, scratch, 2026-10-12)
+## Measured, draft 2 (node prototypes in scratch; the page's check agrees)
+
+- 1: islands at 10%+ of 100, 6 reps: N 10 s .01 10, s .3 h 0 6-8, s 1 h .5 0; N 20 s .3 h 0 1.8-2.8 (3 of 3 hits); N 50 0-1; N 100, 300: 0.
+- 2: u .025, s .1, h .02, box 0.7 relatives: spotted .84 / .80 / .71, box .61 / .72 / .58 (Ho / He / hatching). With s 0 hatching .95 whatever the mating. Box He sits below the table's .85; the window is .66-.91.
+- 4: preference 0 ends at 76 cm (no fall), 50 at 50 cm; targets as before.
+- 5: coding share 1 in 5,000, N 100, rate 1900, begun 1000 AD: clock 1.879 million at 1988; s -.05 / +.05: housekeeping .22-.34, immune 2.4-3.2, other .9-1.1, common ancestor 33-89 generations, differences ~135k; no selection ~1, 233, 422k (2N 200, 2 N rate 380k).
+
+## Measured, draft 1 (superseded where it names a stage rebuilt above)
 
 - A2 (20 survivors, 9 gens, affected 1 - s with s .05): share of islands at 10%+: growth x2 0 whatever else; x1.25 carrier x8 .057; x1.1 carrier x1 .004, x4 .045, x8 .097. Cousins 50%: colorblind / q^2 1.04-1.56 (random mating .93-.97).
 - C (exp(.25 (sensitivity - 2)), mu .005, 1500 gens): reach B's peak N 5 .31 / 10 .22 / 20 .08 / 50 0; C's peak N 200 .98, N 1000 ~1.
