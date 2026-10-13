@@ -1,14 +1,18 @@
-# Lesson 17 — migration: chunks that cross, what sets their size, and F_ST
+# Lesson 17 — migration: fragments that cross, what sets their size, drift against migration, selection at one gene
 
-**File** · `app/lessons/lesson17.html` — not started
-**Checks** · `node scripts/check_lesson17_numbers.js` (to write) · `python3 scripts/check_lessons.py`
-**Status** · outline, JM's rulings of 2026-10-09 applied (beads, hue by population); three open points; nothing built
-**Last touched** · 2026-10-09
+**File** · `app/lessons/lesson17.html` — first draft 2026-10-12
+**Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
+**Status** · draft built (A-D), checks green (30 + R panels); LOCKS `x`; JM to review
+**Last touched** · 2026-10-12
 
 ## What the lesson is
 
-- Two populations swapping a few individuals a generation: pieces of one population's chromosomes turn up inside the other's, and recombination cuts them smaller every generation.
-- Worth protecting: the chunks are watched forming and shrinking, then measured off the student's own runs; F_ST comes after, read off the same pictures.
+- Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; drift pulls the two apart, migration holds them together, selection at one gene keeps it apart (or drags it in).
+- Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST measured off the student's own runs with the closed form beside it.
+
+## JM's brief, 2026-10-12 (verbatim)
+
+> I am wanting a draft of lesson 17 (migration--big goal to look at introgression, haplotypes, and population differentiation ideally using heterozygosity to connect to drift along with Fst and utilizing many of hte same kinds of simulations and displays done in 16 for mutation with the identical by descent blocks). Using the migration lesson to reinforce the prior forces (drift, selection, and mutation) and their key components is ideal.
 
 ## JM's outline, 2026-10-09 (verbatim)
 
@@ -19,79 +23,53 @@
 > At the end, students plot "average size of introgressed chunks" against migration rate (recombination rate also matters, but we won't complicate this yet)
 > Builds to Fst later which we'll calculate visually
 
-## Measured before planning (2026-10-09; node prototype, `scripts/proto_lesson17_chunks.js`, not the page)
+## Stages as built (draft 1)
 
-Two populations of N 25, one chromosome of 100 loci, origin painted per locus; Wright–Fisher, neutral; R crossovers a meiosis (Poisson); each individual swaps with one in the other population with probability m a generation. 20 runs a setting; chunk = a run of the other population's loci on one chromosome.
+One engine throughout (`mg*` in the page): two populations of hermaphrodite genomes, one chromosome of 40 beads; Wright-Fisher (two different parents, picked by fitness); crossing over with chance R/39 at each gap; each generation Binomial(N, m) genomes swap places; new mutations Poisson(U) a gamete, each a new allele in the population's hue. 50 pairs (100 populations) a run in A, B, D; 20 pairs in C.
 
-        100 generations (4N), R 1       m 0.002 / 0.005 / 0.01 / 0.02 / 0.05 / 0.1 / 0.2
-          mean chunk length (loci)       4.7 / 5.1 / 5.3 / 4.9 / 4.9 / 4.7 / 4.5      flat
-          chunks a population            200 / 308 / 444 / 503 / 532 / 553 / 563
-          share of loci foreign          18 / 31 / 45 / 48 / 50 / 50 / 50 %           rises, saturates by m ~0.02
-        100 generations, m 0.01          R 0.5 / 1 / 2:  mean length 9.4 / 5.3 / 3.3   halves as R doubles
-        50 generations, R 1              m 0.005-0.2: 6.2-7.2 (flat); m 0.002: 8.5 ± 5.5, 4 of 20 runs no chunk
-        one pulse (5 of 25 swap once), R 1    5 / 10 / 20 / 40 / 80 generations later: mean length 30 / 13 / 8.2 / 4.6 / 4.3
+    A  Steady migration: m and R. Other colour 15-40% (m); then in fragments 4.5+ beads (lower R); then 6+ fragments a chromosome under 3 beads (high m and R).
+    B  One pulse: migrants each way (1/2/4/6/10: ~4-40% other hue), R, generations after. Fragments 7+ beads with the other colour under 12% (small, recent); 4+ beads at generation 20 with 4 migrants held (lower R); under 3.5 beads, under 12% (small, old). Every run a dot on "your runs": fragment length against generations after, by R (JM's 10 runs). Click two genomes: where they carry the same alleles bead for bead (task: one shared other-hue fragment of 3+ beads).
+    C  A split: one grey population divided in two. N, m, U. F_ST 0.2+ at 50 (drift: smaller N); 0.1-0.3 at 100 with N 25 (m); the same at 200 with N 100 (m four times smaller: Nm); heterozygosity 0.3+ at 100 with no migration (U). Bead-by-bead frequency bars, pair 1. Closed forms beside: H0(1 - 1/2N)^t, 1/(1 + 16Nm), 4Nu/(1 + 4Nu).
+    D  Selection at gene 20: s, h, m, R. The other colour under 15% at gene 20 and 25%+ at the ends at 100 (barrier); 60%+ at gene 20 and under 35% at the ends at 60 (it sweeps in). Gene-by-gene panel (other colour, F_ST). Italian sparrow F_ST strip (77 values from data/clean, embedded) beside the student's, no target.
 
-- **Chunk size against migration rate is flat.** Under steady migration a chunk's length is set by how long it has been cut (generations × crossovers); migration rate sets how many chunks and how much of the genome, not how long they are. (JM's end plot is now against time since a pulse and against r.)
-- Recombination and time since arrival both move chunk length strongly. The foreign share moves with m.
-- Length stops shrinking after ~40 generations at N 25: a chunk can only be cut against a chromosome of the other colour, and drift makes both copies the same colour more and more often.
-- Not yet measured: selection (h/s); F_ST.
+## Measured (node prototype of the page's engine, 2026-10-12; N 25, 40 beads)
 
-At bead-string scale (same prototype, N 25, 20 runs a setting):
-
-        40 beads, steady, 100 gens, R 1    m 0.001 / 0.002 / 0.005 / 0.01 / 0.02 / 0.05
-          fragments a population            97 / 139 / 231 / 300 / 341 / 333        more with m, level once fully mixed
-          mean size (beads)                 2.6 / 2.8 / 2.9 / 3.0 / 2.9 / 3.1        flat
-          other hue                         12 / 18 / 33 / 43 / 48 / 51 %
-        40 beads, one pulse                 t 5 / 10 / 20 / 40 generations after
-          R 0.5                             19 / 10.5 / 6.3 / 3.8 beads
-          R 1                               11 / 6.0 / 3.7 / 2.3
-          R 2                               7.7 / 3.4 / 2.1 / 1.8
-        60 beads: the same shapes (steady 3.2-3.8 beads; pulse R 1: 18 / 9.3 / 4.4 / 3.0)
-
-- 40 beads is enough: steady fragments are 2-4 beads, a fresh pulse's are a quarter to half a chromosome. A pulse's fragments are whole until the first hybrids make gametes (a pure migrant's gametes are all one hue), so cutting starts a generation or two after the pulse.
-- Fragment count rises with m and stops once the two populations are fully mixed (m ~0.02 at N 25 over 100 generations): keep m's slider below that, or let E show the mixing as F_ST falling to 0.
-
-## Stages (outline; JM's rulings of 2026-10-09 applied)
-
-One interactive throughout, 15's snake chromosomes with more loci (JM, 2026-10-09): beads on a string, each bead an allele in its own shade, the hue (blue / orange) the population the allele arose in. A genome from one population is all blue or all orange; a mix shows as fragments of the other hue. Sliders free to explore wherever they make sense; targets, where any, generous and on outcomes.
-- Every bead needs an allele from generation 0: each population starts with a few founder alleles a locus, in its own hue (15 started loci with 1-3 alleles).
-- A new mutation takes the hue of the population it arises in, even on a fragment from the other one: a lone off-hue bead inside a fragment, rare at low U.
-- Shades of the course's blue and of 14's orange (`#e8730c`, lesson 14 B's bead list): no new palette.
-
-    A  Steady migration. Sliders m and r. Many small chunks, and more of them the higher m; lower r, longer chunks. A plot beside the populations: the share of each population in the other's colour, and the average chunk size, generation by generation.
-    B  One pulse. A batch of migrants once, then none. A few long chunks, cut shorter every generation; lower r, slower. The same plot: chunk size falling with time since the pulse, one line per run so two r's sit on one axis.
-    C  The 10 runs (JM's outline): set up, play, final outcomes side by side. The student's own plot: average chunk size against generations since the pulse, and against r -- both falling, plainly. Steady and pulsed runs on one plot: steady sits low and flat, pulsed falls toward it.
-    D  Selection: U and h/s (JM: "just allows students to investigate how selection interacts with these processes"). No story imposed; the same setups with selection on.
-    E  F_ST, visually (JM: stage E of 17): each locus's frequency in the two populations side by side; the gap as a share of the spread; 1/(1 + 4Nm) beside the measurement. Real anchor: the Italian sparrow scan.
-
-Notes for the build:
-- A pulse's chunks shrink as 1/(r · time) only while the populations are still mixed: at N 25 the cutting stops after ~40 generations (drift makes both copies of a stretch the same colour, and a crossover between two same-colour copies cuts nothing). Keep a pulse's window to ~5-40 generations at N 25, or measure a larger N.
-- The textbook mean, L / (1 + R t), understates a pulse's chunks here (measured 30 loci at t 5 against 17): a chunk is cut only when paired with the other colour. Measure before printing any formula beside it.
-- Under steady migration the average chunk size settles at a level set by r (and the run's length), whatever m is: say nothing that ties chunk size to m.
-- On the page: fragments get *smaller* the longer since the migrant ancestor and the higher r (JM's "size proportional to time since migrant ancestor + recombination rate" is the dependence, inverse).
+        A, generation 50, 50 pairs         m 0 / .002 / .005 / .01 / .02 / .05
+          other colour                     0 / .09 / .21 / .32 / .43 / .49        (flat in R)
+          fragment length, R .25/.5/1/2/4  ~9 / ~5.3 / ~3.3 / ~2.3 / ~1.8          (flat in m)
+          fragments a chromosome, R 1      0 / 1.3 / 2.7 / 4.0 / 5.0 / 6.2        (R 2: 1.8/4.2/5.5/7.2/8.1)
+        B, pulse at gen 1 (both ways)      fragment length at 5 / 10 / 20 / 40 generations
+          R .5                              17 / 9 / 5 / 3.3
+          R 1                               11 / 5.4 / 3 / 2.1
+          R 2                               6.6 / 3.1 / 1.9 / 1.5
+          other colour: pulse 2 -> 8%, pulse 5 -> 19% (flat in time)
+        C, split, U 0                      F_ST at 50 / 100: N 10 .84/.99, N 25 .44/.75, N 50 .25/.47, N 100 .13/.24
+          H within tracks H0(1 - 1/2N)^t (0.233 vs 0.216 at N 25, gen 50; 0.222 vs 0.222 at N 50, gen 100)
+          equilibrium F_ST                  N 25: m .005 .45 / .01 .23 / .02 .13 / .05 .05; N 100 (gen 200): .001 .32 / .002 .23 / .005 .12 / .01 .06
+          1/(1 + 16Nm) agrees (.20 / .11 / .05; .24 / .11 / .06); 1/(1 + 4Nm) does not (.50 / .33 / .17)
+          mutation, N 25, m 0, gen 100      U .1 .22 / .2 .35 / .4 .49 / .8 .66 / 1.6 .79   (4Nu/(1+4Nu), u = U/40: .20/.33/.50/.67/.80)
+        D, gene 20, h .5, 100 gens         s .3 m .02: gene 20 .13, ends .42; s .6: .05/.31; s 1: .03 everywhere (whole chromosome shut)
+          sweep, 60 gens, R 1               s -.3 m .005: gene 20 .77, ends .25; s -.6 m .002: .68/.16; s -.1 m .005: .42/.20
+        Italian sparrows, 77 loci           mean F_ST .54, 22% >= .9, 34% < .3 (bimodal); one pair of 40 beads at s .6 m .01: .61 / .21 / .17, but s 0 m .002 matches as well (.61 / .24 / .19) -- so no target on it
 
 ## Open for JM
 
-1. N: a slider throughout, or held (e.g. 25: 4N = 100 generations a run, 50 rows a population) until E, where 4Nm needs it?
-2. 16 D (IBD blocks, dating an arrival from its blocks): fold into 17 B instead of building it in 16?
-3. The inversion from 16 C riding in a migrant (its stretch never cut): in B, or not at all?
+0. Founder shades: three alleles a gene in shades 1/3/5 of each hue (grey 0/2/5); new mutations a random shade. Hue reads clearly on the boards (screenshots 2026-10-12); a new mutation is not marked apart from a founder of the same shade.
 
-## Sources (earlier plans, archive, data)
-
-- 16 D proposal (`lesson16_overhaul.md`): a migrant's chromosomes painted in its own colour, chopped into shorter blocks shared among its descendants (IBD); date the arrival from block length; its inverted stretch (from 16 C) never breaks, so the longest block is not the youngest.
-- 2026-10-01 brief: *"17(?) identical by descent blocks, haplotypes, runs of homozygosity"*. Runs of homozygosity have no home yet (a chunk is IBD; a run of homozygosity is two IBD copies in one individual: 11's F read along a chromosome).
-- `app/interactives/descent.html`: coalescence by position (`coalesceAt`), *"Identity by descent and coalescence are the same fact read in two directions"*.
-- 15: the bead-string chromosomes (two strings of seven genes a snake, mother's above), drawn in `drawPed`. 9: the meiosis bench. 14 B/C: haplotype rows. 16 B: the copy / meiosis bench and two populations side by side.
-- Archive, sources only: old 16 "Spreading or staying" (`app/archive/lesson16.html`: two populations drift apart; a few move; work back to m from F_ST; Italian sparrows; a cod F_ST round).
-- Data: `data/clean/italian_sparrow_loci.csv` (77 loci, house / Spanish / Italian frequencies, house–Spanish F_ST 0.06-1.00, mean 0.54). `data/clean/fsj_cohort_sizes.csv`: Florida scrub-jay immigrants a year, 5.4% of the population on average (13% in 1992, 3-7% in the 2010s): a real m, a year rather than a generation. `data/clean/isle_royale.csv`: wolves + ice bridges (1997 migrant; 2018-19 re-founding). `scripts/fetch_1000g_region.py`: phased 1000 Genomes regions; whether admixed samples give local-ancestry chunks without a reference panel is unmeasured.
+1. **1/(1 + 4Nm) does not hold for two populations.** Measured F_ST (pooled H_T, as the sparrow file's column) sits on 1/(1 + 16Nm); the 4Nm form is the many-islands one. The page prints the 16Nm form. Keep, or switch C to many populations (n 10 gives 4Nm x 1.23)?
+2. N: held at 25 in A, B, D; a slider only in C (where Nm is the point). OK?
+3. D's sparrow strip has no target: one gene on one chromosome cannot tell selection from low migration in that histogram (above). A many-genes D (several selected genes) would; worth building?
+4. 16 D's inversion riding in a migrant (old open point 3): not built.
+5. No voice blocks yet: JM to dictate.
 
 ## Items
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
-| 1 | — | JM settles the three open points | todo |
-| 2 | — | prototype the pulse at N 25 / 50 (window where chunks keep shrinking), and with h/s on | todo |
-| 3 | A-E | build, A first | todo |
+| 1 | — | prototype engine, measure A-D | done |
+| 2 | A-D | build the page | done |
+| 3 | — | `check_lesson17_numbers.js` | done |
+| 4 | — | JM's review; voice | todo |
 
 ## Rulings
 
@@ -100,11 +78,13 @@ Notes for the build:
 - 2026-10-09: *"No surprises. Showing how recombination rate & constant migration produce many small chunks, while pulsed migration leaves chunks whose size is proportionate to the time since the migration pulse & the recombination rate is what I want to show students."*
 - 2026-10-09: *"It should be visual, the goal is the color choice is to make it visible to students who don't need to quantify it precisely to understand what's happening."*
 - 2026-10-09: *"The h/s slider just allows students to investigate how selection interacts with these processes."*
-- 2026-10-09: F_ST is stage E of 17.
-- 2026-10-09: *"I'm envisioning a system just like the snakes, but with more loci. So a beads-on-a-string style of chromosome, where each bead is color coded by its mutation (given a different shade), with the hue (blue vs orange) based on the population. So that when you look at a genome you see all blue (if purely pop 1) alleles at each locus, or all orange (if purely pop 2), or a mix (number of fragments proportional to migration rate, size of fragments proportional to time since migrant ancestor + recombination rate)."*
-- 2026-10-09: *"we aren't trying to trick or assess students in these homeworks, we're trying to give them adaptable interactives that clearly illustrate processes, and give them the freedom to explore the setups we give them ... We're trying to build intuition."*
+- 2026-10-09: beads on a string, each bead an allele in its own shade, hue = population it arose in.
+- 2026-10-09: *"we aren't trying to trick or assess students in these homeworks ... We're trying to build intuition."*
+- 2026-10-12: heterozygosity to connect to drift, F_ST; reinforce drift, selection, mutation (brief above).
 
 ## Do not
 
-- Plot chunk size against migration rate, or build any stage around a result meant to surprise: measured flat (above), and JM: no surprises.
-- Read a long chunk as recent arrival without the recombination rate beside it: halving r doubles every chunk.
+- Plot chunk size against migration rate, or build a stage around a surprise (measured flat; JM: no surprises).
+- Read a long fragment as a recent arrival without R beside it: halving R doubles every fragment.
+- Print 1/(1 + 4Nm) beside two populations' F_ST (measured: it is 1/(1 + 16Nm)).
+- Fuse the two F's: C's F_ST is drift between populations; lesson 11's 1 - Ho/He within one stays near 0 under random mating.

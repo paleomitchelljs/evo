@@ -1,0 +1,1488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 18</title>
+<link rel="stylesheet" href="../assets/score.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  ul.setup { list-style:none; margin:10px 0 0; padding:0; font-size:13.5px; }
+  ul.setup li { padding:3px 0 3px 15px; position:relative; }
+  ul.setup li::before { content:"—"; position:absolute; left:0; color:#b8b3a0; }
+  .exam { font-size:14px; border-left:3px solid var(--rule); padding:2px 0 2px 12px; }
+  .exam p { margin:0 0 6px; font-style:italic; }
+  .exam ol { margin:6px 0 0; padding-left:24px; }
+  .exam ol li { padding:1px 0; }
+  .exam table.data { border-collapse:collapse; font:13px ui-monospace,Menlo,monospace; margin:6px 0 4px; }
+  .exam table.data th, .exam table.data td { padding:2px 10px; border-bottom:1px solid #eeece5; text-align:right; }
+  .exam table.data th:first-child, .exam table.data td:first-child { text-align:left; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  .readout { font:12.5px ui-monospace,Menlo,monospace; margin-top:8px; color:var(--ink); line-height:1.7; }
+  .readout .label { color:var(--muted); }
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tbar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:0 0 8px; font-size:13px; }
+  .tbar label { display:flex; align-items:center; gap:8px; }
+  .tbar input[type=range] { width:150px; accent-color:var(--accent2); }
+  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:52px; display:inline-block; }
+  .tbar.held { color:var(--muted); }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard ul.rules { list-style:none; margin:8px 0 10px; padding:0; font:12.5px ui-monospace,Menlo,monospace; }
+  .tcard ul.rules li { padding:2px 0; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  /* the key: the exam's own answers, in red as the key prints them, opened by the stage's targets */
+  .keypanel .shut { color:var(--muted); font-size:13px; }
+  .keypanel dl { margin:0; font-size:13.5px; }
+  .keypanel dt { font-weight:600; margin-top:8px; }
+  .keypanel dt:first-child { margin-top:0; }
+  .keypanel dd { margin:2px 0 0 18px; }
+  .keypanel dd.ans { color:#b0221c; }
+  .keypanel dd.run { font:12.5px ui-monospace,Menlo,monospace; color:var(--muted); }
+  table.cmp { width:100%; border-collapse:collapse; font:12.5px ui-monospace,Menlo,monospace; }
+  table.cmp th { text-align:right; color:var(--muted); font-weight:600; padding:3px 6px; border-bottom:1px solid var(--rule); }
+  table.cmp td { text-align:right; padding:3px 6px; border-bottom:1px solid #f2f0e8; }
+  table.cmp th:first-child, table.cmp td:first-child { text-align:left; }
+  table.cmp tr.obs td { color:var(--ink); }
+  table.cmp tr.run td { color:#b23a48; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 18</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB">B</a>
+  <a href="#stageC" id="tocC">C</a>
+  <a href="#stageD" id="tocD">D</a>
+  <a href="#stageE" id="tocE">E</a>
+  <a href="#stageF" id="tocF">F</a>
+</nav>
+
+<!-- ========== STAGE A — Exam 02, question 1: Pingelap ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), question 1, verbatim; notes/exams/2025.5/exam02_key.tex -->
+    <div class="exam">
+      <p>In 1775, a severe typhoon reduced the human population of Pingelap Atoll to roughly 20 survivors. By chance, one survivor (the king!) carried a recessive loss-of-function mutation for achromatopsia (complete colorblindness). Today, roughly 10% of the island’s population is completely colorblind, compared to 0.003% globally.</p>
+      <ol type="a">
+        <li>What specific evolutionary mechanism caused this massive shift in allele frequency?</li>
+        <li>Compared to the pre-typhoon population, how did this event alter the inbreeding coefficient (F) of the modern islanders?</li>
+        <li>Before the typhoon why would this detrimental allele have existed in the population at all?</li>
+        <li>Do you expect this allele to be at Hardy-Weinberg Equilibrium?</li>
+      </ol>
+    </div>
+    <ul class="setup">
+      <li><b>Before the typhoon.</b> The whole world, too large for chance to matter. Each generation the normal allele turns into the colorblind one with chance u. An individual's chance to have young: 1 with no colorblind copy, 1 &minus; h&middot;s with one, 1 &minus; s with two. 20,000 generations.</li>
+      <li><b>The typhoon.</b> 20 survivors, one of them carrying one colorblind copy. 100 islands, 9 generations (1775 to about 2000). The cost of colorblindness is the one you set before the typhoon.</li>
+      <li>Ten other genes, with many alleles each, ride along: how much of their variety is left measures F.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3>Before the typhoon</h3>
+        <canvas id="A1_plot" width="760" height="230"></canvas>
+        <div class="readout" id="A1_read"></div>
+      </div>
+      <div class="panel">
+        <h3>After the typhoon: 100 islands</h3>
+        <canvas id="A2_hist" width="760" height="210"></canvas>
+        <canvas id="A2_paths" width="760" height="200" style="margin-top:8px"></canvas>
+        <div class="readout" id="A2_read"></div>
+      </div>
+      <div class="panel">
+        <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target 1 <span class="pips" id="A1_pips"></span></h3>
+        <p class="ttext" id="A1_ttext"></p>
+        <ul class="rules" id="A1_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="A1_uRow"><label>u <input type="range" id="A1_u" min="0" max="3" step="1" value="1"></label><b id="A1_uV"></b></div>
+          <div class="tbar" id="A1_sRow"><label>s <input type="range" id="A1_s" min="0" max="4" step="1" value="4"></label><b id="A1_sV"></b></div>
+          <div class="tbar" id="A1_hRow"><label>h <input type="range" id="A1_h" min="0" max="3" step="1" value="3"></label><b id="A1_hV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="A1_practice" /><label for="A1_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="A1_go" class="accent">Go</button><button id="A1_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="A1_verdict"></div>
+      </div>
+      <div class="panel tcard">
+        <h3>Target 2 <span class="pips" id="A2_pips"></span></h3>
+        <p class="ttext" id="A2_ttext"></p>
+        <ul class="rules" id="A2_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="A2_gRow"><label>regrowth, each generation <input type="range" id="A2_g" min="0" max="3" step="1" value="3"></label><b id="A2_gV"></b></div>
+          <div class="tbar" id="A2_kRow"><label>the carrier's young, relative to others <input type="range" id="A2_k" min="0" max="3" step="1" value="0"></label><b id="A2_kV"></b></div>
+          <div class="tbar" id="A2_cRow"><label>marriages between cousins <input type="range" id="A2_c" min="0" max="3" step="1" value="0"></label><b id="A2_cV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="A2_practice" /><label for="A2_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="A2_go" class="accent">Go</button><button id="A2_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="A2_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyA"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="A1">Before the typhoon: the world's colorblind share. <span class="hint" id="A1_now"></span></li>
+          <li data-task="A2">After it: islands like Pingelap. <span class="hint" id="A2_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE B — Exam 02, question 2: turtles ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), question 2, verbatim (doi: 10.1002/ece3.72736) -->
+    <div class="exam">
+      <p>In December of 2025, a new study came out looking at population genetics &amp; demographics of two species of turtle found in the Midwest. These turtles are extremely similar, and for the purposes of this question, assume that they’re functionally identical for any trait you can think of that isn’t laid out in the table below. The researchers measured average census size (N), observed heterozygosity (H<sub>o</sub>), expected heterozygosity (H<sub>e</sub>), and two fitness components (percent of eggs that hatch and percent of hatchlings that survive their first year) across several populations of each of the two species.</p>
+      <table class="data"><tr><th></th><th>N</th><th>H<sub>o</sub></th><th>H<sub>e</sub></th><th>Hatching (%)</th><th>Survival (%)</th></tr>
+        <tr><td>spotted turtle</td><td>39</td><td>0.75</td><td>0.76</td><td>79.7%</td><td>82%</td></tr>
+        <tr><td>box turtle</td><td>109</td><td>0.63</td><td>0.85</td><td>58.1%</td><td>59%</td></tr></table>
+      <ol type="a">
+        <li>Which species is more inbred?</li>
+        <li>What data let you answer (a)?</li>
+        <li>What is the most likely explanation for the hatching/survival rate differences?</li>
+        <li>Assume equal mutation rates. Which population should have higher genetic diversity?</li>
+      </ol>
+    </div>
+    <ul class="setup">
+      <li>Two populations, the table's N: 39 spotted turtles, 109 box turtles. Twenty genes, each allele able to mutate into a new one with chance u, the same in both.</li>
+      <li>Each young has two parents. For a share of the young, set per species, the second parent is the first parent's closest relative; the rest pair at random.</li>
+      <li>An egg hatches less often the more closely related its parents are, compared with two turtles picked at random.</li>
+      <li><b>Go</b> runs each species 4N generations, three times over.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3>The table, and your run</h3>
+        <div id="B_table"></div>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>Over time: <select id="B_meas">
+          <option value="H">H<sub>o</sub> and H<sub>e</sub></option>
+          <option value="hatch">hatching</option>
+        </select></label></div>
+        <canvas id="B_time" width="760" height="240"></canvas>
+        <div class="readout" id="B_read"></div>
+      </div>
+      <div class="panel">
+        <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target <span class="pips" id="B1_pips"></span></h3>
+        <p class="ttext" id="B1_ttext"></p>
+        <ul class="rules" id="B1_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="B1_muRow"><label>u, both species <input type="range" id="B1_mu" min="0" max="4" step="1" value="0"></label><b id="B1_muV"></b></div>
+          <div class="tbar" id="B1_bsRow"><label>spotted: young from relatives <input type="range" id="B1_bs" min="0" max="5" step="1" value="0"></label><b id="B1_bsV"></b></div>
+          <div class="tbar" id="B1_bbRow"><label>box: young from relatives <input type="range" id="B1_bb" min="0" max="5" step="1" value="0"></label><b id="B1_bbV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="B1_practice" /><label for="B1_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="B1_go" class="accent">Go</button><button id="B1_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="B1_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyB"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="B1">Both species, as the table has them. <span class="hint" id="B1_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE C — Exam 02, question 3: Thornton's three lineages ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), question 3, verbatim (https://pmc.ncbi.nlm.nih.gov/articles/PMC6141187/) -->
+    <div class="exam">
+      <p>Joe Thornton, an excellent first baseman, specializes in reconstructing ancient proteins &amp; exploring how individual mutations that accumulated over time changed their function. This example is a simplified version of one of his types of analyses.</p>
+      <p>An ancestral sequence (CAGGTTACA) diversifies into three competing lineages in a population. Lineage A mutates to <b>G</b>AGGTTACA, Lineage B mutates to <b>T</b>AGGTTACA, and Lineage C mutates to <b>A</b>AGGTTACA. Each lineage then acquires <b>the exact same mutations in the exact same order</b>.</p>
+      <p>Despite all later mutations being the same, because that first base pair remains different (A/T/G), the entire structure of the three proteins is different. Each has a different biochemical activity (y-axis). For this question, assume receptor sensitivity is positively correlated with fitness.</p>
+      <p>The colored lines below show the “full” potential sensitivity curve for each trajectory across 8 subsequent substitutions. The solid black dots indicate the highest sensitivity each of these three allele trajectories can reach.</p>
+      <p>Imagine 10 populations that all start at the same allele &amp; all start with the 3 of the 1-mutation alleles shown above.</p>
+      <ol type="a">
+        <li>At the start, when the three 1-mutation alleles are competing, which allele is most likely to go extinct in each of the 10 populations?</li>
+        <li>Which is least likely to go extinct in each?</li>
+        <li>What evolutionary force(s) would a population need to reach Lineage C’s peak?</li>
+        <li>What evolutionary force(s) would a population need to reach the highest peak?</li>
+        <li>How does the effective population size influence the probability a population that starts with all three alleles will ultimately end up with the best protein?</li>
+      </ol>
+    </div>
+    <ul class="setup">
+      <li>The exam's three curves. 10 populations of N, each starting a third A, a third B, a third C, all at step 0. No mixing between lineages: each copies itself.</li>
+      <li>Each generation a copy takes its lineage's next substitution with chance 0.005. Its chance to be copied: e<sup>0.25 (sensitivity &minus; 2)</sup>.</li>
+      <li>A numbered dot: where most of that population sits now. 1,500 generations.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="C_land" width="760" height="330"></canvas>
+        <div class="readout" id="C_read"></div>
+      </div>
+      <div class="panel">
+        <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <ul class="rules" id="C_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="C_NRow"><label>N, each population <input type="range" id="C_N" min="0" max="5" step="1" value="1"></label><b id="C_NV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="C_go" class="accent">Go</button><button id="C_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyC"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="C">Hit the two targets. <span class="hint" id="C_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE D — Exam 02, question 4: bighorn sheep ========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), question 4, verbatim -->
+    <div class="exam">
+      <p>Researchers have monitored a wild population of bighorn sheep for decades, carefully measuring the mean adult male horn length (z̄) each generation. In 1995, the area became open to hunters. The hunting laws in this area put no restrictions on trait size, only the total number harvested. However, hunters preferentially target males with the largest horns. The average horn size trajectory over time is plotted below.</p>
+      <p>Presume how the horn size trait is transmitted has not changed.</p>
+      <ol type="a">
+        <li>How did the covariance of horn size &amp; reproductive success change in 1995?</li>
+        <li>What was happening to the additive genetic variation for horn size before 1995?</li>
+        <li>What has been happening to the additive genetic variation for horn size since 1995?</li>
+        <li>Hunters specifically target males in big horn sheep, but pay a fee to get their permits. The fees have allowed the park to expand each year, which means that the total population of bighorn sheep (N) has remained the same over time despite the hunting. How has <b>neutral</b> genetic diversity (θ) likely changed over this period?</li>
+        <li>If hunting is permanently banned in 2027, how do you expect horn length to change <b>relative to</b> the period before trophy hunting was legalized?</li>
+      </ol>
+    </div>
+    <ul class="setup">
+      <li>Twenty herds of 200 sheep, half rams, a generation every 2.5 years (each of the exam's points). Ten genes set horn length, each long allele adding 3 cm; the rest is the year a ram had.</li>
+      <li>From 1995 hunters shoot the rams with the largest horns, the share you set, before the rams breed. The herd's size stays the same.</li>
+      <li>Rams' mating edge: how much more often a bigger-horned ram sires a lamb. Ewes all breed alike.</li>
+      <li>Ten other genes do nothing: their variety is the neutral diversity.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="D_plot" width="760" height="300"></canvas>
+        <div class="readout" id="D_read"></div>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>Over time, 20 herds: <select id="D_meas">
+          <option value="cov">cov(w, z) / w̄, rams: horn length and lambs sired</option>
+          <option value="va">additive genetic variance in horn length</option>
+          <option value="hn">neutral heterozygosity</option>
+          <option value="rams">rams that breed</option>
+        </select></label></div>
+        <canvas id="D_time" width="760" height="220"></canvas>
+        <div class="readout" id="D_timeRead"></div>
+      </div>
+      <div class="panel">
+        <button id="D_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeD"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target <span class="pips" id="D_pips"></span></h3>
+        <p class="ttext" id="D_ttext"></p>
+        <ul class="rules" id="D_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="D_HRow"><label>rams shot from 1995 <input type="range" id="D_H" min="0" max="4" step="1" value="1"></label><b id="D_HV"></b></div>
+          <div class="tbar" id="D_h2Row"><label>heritability at the start <input type="range" id="D_h2" min="0" max="3" step="1" value="1"></label><b id="D_h2V"></b></div>
+          <div class="tbar" id="D_bRow"><label>rams' mating edge <input type="range" id="D_b" min="0" max="2" step="1" value="0"></label><b id="D_bV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="D_go" class="accent">Go</button><button id="D_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyD"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="D">Hit the two targets. <span class="hint" id="D_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE E — Exam 02, question 5: CTVT ========== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), question 5, verbatim (https://www.science.org/doi/abs/10.1126/science.aau9923; https://www.pnas.org/doi/abs/10.1073/pnas.2424634122) -->
+    <div class="exam">
+      <p>Your coolest friend comes up to you and says, “I’ve been reading a lot about Canine Transmissible Venereal Tumor (CTVT). It’s a contagious cancer that’s almost 6,000 years old! It is a <b>strictly asexual parasite</b> spreading between dogs–when the dogs mate or lick or sniff a growth on another dog some of the tumor cells move into the new host and set up there. I took some notes on a cool paper by Baez-Ortega from 2019 where they sequenced hundreds of CTVT tumors from dogs around the world. My took some notes on mutation types in different genes and how many mutations tumors from different years had. I have some questions I was hoping you could help answer…”</p>
+      <table class="data"><tr><th>Gene Category</th><th>dN/dS Ratio</th></tr>
+        <tr><td>All protein-coding genes</td><td>0.99</td></tr><tr><td>Housekeeping genes</td><td>0.22</td></tr><tr><td>Immune evasion genes</td><td>2.45</td></tr></table>
+      <ol type="a">
+        <li>“Papers keep saying the tumor is thousands of years old but I can’t figure out what they’re using to determine that! There are no fossil tumors! Any idea how they estimate <i>when</i> these tumor cells diverged from healthy dogs using just the DNA?”</li>
+        <li>“If one cell in a tumor has a non-synonymous mutation to an immune evasion gene what is likely to happen to it?”</li>
+        <li>“If one cell in a tumor has a non-synonymous mutation to a housekeeping gene what is likely to happen to it?”</li>
+        <li>“A new paper that just came out in 2025 by Gori showed that CTVT sometimes steals chunks of nuclear DNA or even whole mitochondria from the host cells. Why would the tumor do this?”</li>
+      </ol>
+    </div>
+    <ul class="setup">
+      <li><b>The clock.</b> One tumor line, begun in the year you set, picking up new mutations at the rate you set. Eleven tumors collected in the exam's years, each counted.</li>
+      <li><b>The table.</b> A tumor's cells copy themselves; there are 100 of them in the line that carries on. A new synonymous mutation does nothing. A new nonsynonymous one in a housekeeping gene multiplies a cell's copies by 1 &minus; s; in an immune evasion gene, by 1 + s; elsewhere it does nothing.</li>
+      <li>Each new mutation is followed until it is lost or in every cell. dN/dS: how often nonsynonymous ones end up in every cell, relative to synonymous ones.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3>Somatic mutations by year collected</h3>
+        <canvas id="E1_plot" width="760" height="270"></canvas>
+        <div class="readout" id="E1_read"></div>
+      </div>
+      <div class="panel">
+        <h3>dN/dS</h3>
+        <div id="E2_table"></div>
+        <canvas id="E2_plot" width="760" height="180" style="margin-top:8px"></canvas>
+        <div class="readout" id="E2_read"></div>
+      </div>
+      <div class="panel">
+        <button id="E_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeE"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target 1 <span class="pips" id="E1_pips"></span></h3>
+        <p class="ttext" id="E1_ttext"></p>
+        <ul class="rules" id="E1_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="E1_y0Row"><label>the tumor began <input type="range" id="E1_y0" min="0" max="11" step="1" value="0"></label><b id="E1_y0V"></b></div>
+          <div class="tbar" id="E1_rRow"><label>new mutations a year <input type="range" id="E1_r" min="0" max="7" step="1" value="0"></label><b id="E1_rV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="E1_practice" /><label for="E1_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="E1_go" class="accent">Go</button><button id="E1_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="E1_verdict"></div>
+      </div>
+      <div class="panel tcard">
+        <h3>Target 2 <span class="pips" id="E2_pips"></span></h3>
+        <p class="ttext" id="E2_ttext"></p>
+        <ul class="rules" id="E2_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="E2_hkRow"><label>s, housekeeping <input type="range" id="E2_hk" min="0" max="4" step="1" value="0"></label><b id="E2_hkV"></b></div>
+          <div class="tbar" id="E2_imRow"><label>s, immune evasion <input type="range" id="E2_im" min="0" max="4" step="1" value="0"></label><b id="E2_imV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="E2_practice" /><label for="E2_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="E2_go" class="accent">Go</button><button id="E2_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="E2_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyE"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="E1">The clock: the exam's eleven tumors. <span class="hint" id="E1_now"></span></li>
+          <li data-task="E2">The table: dN/dS by kind of gene. <span class="hint" id="E2_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== STAGE F — Exam 02, extra credit: ARRB2 ========== -->
+<section class="stage stage-locked" id="stageF">
+  <h2 class="stage-h">F</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+  <div class="panel stage-intro">
+    <!-- voice: Exam 02 (spring 2026), extra credit, verbatim ("fentyl" as printed) -->
+    <div class="exam">
+      <p>Above is a diagram from a recent (Sept 2025) paper that look at palliative care in pediatric cancer. They looked at alleles at a locus (here, two alleles A vs G at a single locus in the β-arrestin-2 [ARRB2] gene). The y-axis represents the dosage of fentyl needed to relieve pain in the pediatric cancer cases, the x-axis represents the genotype at this specific locus. <b>What (roughly) is the heritability of the fentyl dosage for pain relief phenotype for the G allele?</b></p>
+    </div>
+    <ul class="setup">
+      <li>600 children, genotyped at the one gene. A/A children need a dose of 48 on average; G/G children differ from that by the amount you set; A/G children sit h of the way from A/A to G/G.</li>
+      <li>Everything else about a child moves the dose up or down at random. Grey outlines: the exam's boxes. Coloured: your run's.</li>
+    </ul>
+  </div>
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <canvas id="F_plot" width="760" height="280"></canvas>
+        <div class="readout" id="F_read"></div>
+      </div>
+      <div class="panel">
+        <button id="F_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeF"></pre>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3>Target <span class="pips" id="F1_pips"></span></h3>
+        <p class="ttext" id="F1_ttext"></p>
+        <ul class="rules" id="F1_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="F1_dRow"><label>G/G's dose, relative to A/A <input type="range" id="F1_d" min="0" max="4" step="1" value="0"></label><b id="F1_dV"></b></div>
+          <div class="tbar" id="F1_hRow"><label>h <input type="range" id="F1_h" min="0" max="4" step="1" value="0"></label><b id="F1_hV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="F1_practice" /><label for="F1_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons"><button id="F1_go" class="accent">Go</button><button id="F1_next" class="ghost" hidden>Next target</button></div>
+        </div>
+        <div class="verdict" id="F1_verdict"></div>
+      </div>
+      <div class="panel keypanel"><h3>The key</h3><div id="keyF"></div></div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksF">
+          <li data-task="F1">The exam's three boxes. <span class="hint" id="F1_now"></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 18. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script>
+/* =====================================================================
+   LESSON 18 — the interactive exam key (Exam 02, spring 2026). DRAFT;
+   first pass 2026-10-12 from JM's brief: "an "interactive exam key" where
+   students get a bespoke simulation that lets them generate data similar
+   to what is shown in the question plots and their goal is to hit a
+   target that looks like the empircal data". Plan, measurements and the
+   points where the key and the simulations disagree:
+   docs/overhauls/lesson18_overhaul.md.
+
+   Every stage is open at once (the exam is not a sequence). Each stage's
+   key -- the exam key's own answers, verbatim -- opens when its targets
+   are hit, each answer beside the number from the student's run that
+   shows it.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", GREEN = "#4a7a2a", ORANGE = "#e8730c", RULE = "#e2e0d9";
+const $ = id => document.getElementById(id);
+const lab = s => '<span class="label">' + s + "</span>";
+const f2 = v => v == null || Number.isNaN(v) ? "–" : v.toFixed(2);
+const f1 = v => v == null || Number.isNaN(v) ? "–" : v.toFixed(1);
+const pc = v => v == null ? "–" : Math.round(100 * v) + "%";
+const lsSlope = (xs, ys) => { const mx = xs.reduce((a, b) => a + b, 0) / xs.length, my = ys.reduce((a, b) => a + b, 0) / ys.length; let sxy = 0, sxx = 0; xs.forEach((x, i) => { sxy += (x - mx) * (ys[i] - my); sxx += (x - mx) ** 2; }); return sxy / sxx; };
+const meanOf = a => { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; };
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round"; if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+function dot(ctx, x, y, r, fill, stroke) { ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1.3; ctx.stroke(); } }
+/* axes in a frame: x0, y0 (top), w, h; ticks as [[value, label]] */
+function axes(ctx, F, xt, yt, xlab, ylab) {
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(F.x0, F.y0); ctx.lineTo(F.x0, F.y0 + F.h); ctx.lineTo(F.x0 + F.w, F.y0 + F.h); ctx.stroke();
+  for (const [v, t] of yt) cardText(ctx, t, F.x0 - 6, F.y(v), { size: 10.5, col: MUTED, align: "right" });
+  for (const [v, t] of xt) cardText(ctx, t, F.x(v), F.y0 + F.h + 12, { size: 10.5, col: MUTED, align: "center" });
+  if (xlab) cardText(ctx, xlab, F.x0 + F.w / 2, F.y0 + F.h + 28, { size: 11, col: MUTED, align: "center" });
+  if (ylab) { ctx.save(); ctx.translate(12, F.y0 + F.h / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, ylab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore(); }
+}
+function frame(x0, y0, w, h, xa, xb, ya, yb, logy) {
+  const ly = v => Math.log10(Math.max(v, 1e-12));
+  return { x0, y0, w, h, x: v => x0 + (v - xa) / (xb - xa) * w,
+           y: logy ? v => y0 + h - (ly(v) - ly(ya)) / (ly(yb) - ly(ya)) * h : v => y0 + h - (v - ya) / (yb - ya) * h };
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lesson 17 carries it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|rpois|rnorm|runif|replicate|table|c|which|rep|sapply|lapply|length|cumsum|unlist|sample|ifelse|exp|sqrt|var|cov|lm|coef|tapply|boxplot|min|max|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+/* binomial: inverse CDF while the mean is small, normal beyond (lesson 16's A_binom) */
+function binom(n, p, rng) {
+  if (p <= 0 || n <= 0) return 0;
+  if (p >= 1) return n;
+  if (p > 0.5) return n - binom(n, 1 - p, rng);
+  const m = n * p;
+  if (m < 30) { const q = 1 - p, r = p / q; let pr = Math.pow(q, n), c = pr, k = 0; const u = rng(); while (u > c && k < n) { pr *= r * (n - k) / (k + 1); k++; c += pr; } return k; }
+  const k = Math.round(m + Math.sqrt(m * (1 - p)) * gauss(rng)); return k < 0 ? 0 : k > n ? n : k;
+}
+function pickCum(cum, total, rng) { const u = rng() * total; let lo = 0, hi = cum.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < u) lo = mid + 1; else hi = mid; } return lo; }
+
+/* ====== scoring and gates ============================================
+   One bit per target, the first scored try (JM, 2026-09-30); retried
+   until hit. Every stage opens with the name; a stage's key opens when
+   its targets are hit; the code mints when every stage's are. */
+const BIT = { A1:0, A2:1, B1:2, C1:3, C2:4, D1:5, D2:6, E1:7, E2:8, F1:9 };
+const STAGE_PARTS = { A: ["A1", "A2"], B: ["B1"], C: ["C"], D: ["D"], E: ["E1", "E2"], F: ["F1"] };
+const Gates = { A: { done: false }, B: { done: false }, C: { done: false }, D: { done: false }, E: { done: false }, F: { done: false } };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function checkStages() {
+  for (const K in STAGE_PARTS) if (!Gates[K].done && STAGE_PARTS[K].every(p => PARTS[p].done)) { Gates[K].done = true; KEY_PAINT[K](); }
+  if (Object.values(Gates).every(g => g.done) && !$("done-banner").classList.contains("shown")) {
+    $("done-banner").classList.add("shown");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+    $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+/* ====== one part's targets: the bowling shape. The run is simulated whole at Go, then played back over cfg.ms
+   milliseconds (run.shown, 0 to 1); the verdict waits for the end. ====== */
+const PARTS = {};
+function mkPart(P, cfg) { PARTS[P] = { P, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return PARTS[P]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => $(S.P + "_practice").checked || S.done;
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[+$(S.P + "_" + c.key).value]; return o; }
+function syncVals(S) { for (const c of S.cfg.ctl) $(S.P + "_" + c.key + "V").textContent = (c.fmt || String)(c.vals[+$(S.P + "_" + c.key).value]); }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.P + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]);
+    el.dataset.held = held ? "1" : ""; $(S.P + "_" + c.key + "Row").classList.toggle("held", held);
+  }
+  syncVals(S);
+}
+function goPart(S) {
+  if (S.run || S.waiting) return;
+  const set = readSet(S), r = S.done ? null : ruleOf(S);
+  const seed = pageSeed("l18" + S.P, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const run = S.cfg.simulate(set, seed, S.done ? null : S.round);
+  Object.assign(run, { set, shown: 0, practice: practising(S), r, round: S.round });
+  S.run = run; $(S.P + "_verdict").innerHTML = ""; bump(S.cfg.stage); S.cfg.paint(); loopPart(S);
+}
+function loopPart(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => framePart(S, ts)); }
+function framePart(S, ts) {
+  const q = S.run;
+  if (q) { if (!S.t0) S.t0 = ts; q.shown = Math.min(1, (ts - S.t0) / S.cfg.ms); S.cfg.paint(); if (q.shown >= 1) endPart(S); }
+  if (S.run) requestAnimationFrame(t => framePart(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { if (!S.run) return; S.run.shown = 1; endPart(S); }
+function judge(r, sum) { const each = r.rules.map(u => u.ok(sum)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(sum)) }; }
+function endPart(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q; q.sum = S.cfg.sum(q);
+  if (q.r) {
+    q.j = judge(q.r, q.sum);
+    if (!q.practice) {
+      const pos = BIT[S.cfg.bits[q.round]];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.P + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
+    if (S.waiting && S.round >= S.cfg.rounds.length - 1) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.cfg.afterRun) S.cfg.afterRun(q);
+  checkStages();
+  S.cfg.paint();
+}
+function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.P + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function syncPart(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), P = S.P;
+  $(P + "_pips").innerHTML = free ? "" : S.cfg.rounds.length < 2 ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
+  $(P + "_ttext").textContent = free ? S.cfg.freeText : r.text;
+  const q = S.last && S.last.r === r ? S.last : null, j = q && q.j;
+  $(P + "_rules").innerHTML = free ? "" : r.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
+    ' <span style="color:var(--muted)">(' + (j ? "this run " + j.vals[k] : "not run yet") + ")</span></li>").join("");
+  for (const c of S.cfg.ctl) $(P + "_" + c.key).disabled = busy || S.waiting || $(P + "_" + c.key).dataset.held === "1";
+  $(P + "_practice").disabled = busy || free || S.waiting;
+  $(P + "_go").disabled = busy || S.waiting; $(P + "_go").textContent = practising(S) ? "Practice run" : "Go";
+  $(P + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length, li = document.querySelector('ul.tasks li[data-task="' + P + '"]');
+  if (li) li.classList.toggle("done", S.done);
+  $(P + "_now").textContent = S.cfg.rounds.length > 1 ? n + " of " + S.cfg.rounds.length : S.done ? "done" : "";
+}
+function wirePart(S) {
+  const P = S.P;
+  $(P + "_go").addEventListener("click", () => goPart(S));
+  $(P + "_next").addEventListener("click", () => nextRound(S));
+  $(P + "_practice").addEventListener("change", () => syncPart(S));
+  for (const c of S.cfg.ctl) {
+    $(P + "_" + c.key).addEventListener("input", () => { syncVals(S); S.cfg.paint(); highlightByDataLine(S.cfg.code, c.key); });
+    $(P + "_" + c.key).addEventListener("change", () => bump(S.cfg.stage));
+  }
+  openRound(S);
+}
+const shownRun = S => S.run || S.last;
+/* the key: the exam's answers verbatim (red, as the key prints them) and, under each, what the student's own run shows */
+function keyInto(id, open, items) {
+  if (!open) { $(id).innerHTML = '<p class="shut">Hit this question\'s targets to open its key.</p>'; return; }
+  $(id).innerHTML = "<dl>" + items.map(([q, ans, run]) => "<dt>" + q + "</dt><dd class=\"ans\">" + ans + "</dd>" + (run ? '<dd class="run">' + run + "</dd>" : "")).join("") + "</dl>";
+}
+const KEY_PAINT = {};
+
+/* =====================================================================
+   STAGE A — Pingelap (question 1).
+   A1, before the typhoon: the world, deterministic (too large for chance):
+   q' = (pq(1 - hs) + q²(1 - s)) / w̄, then q'' = q' + u(1 - q'); 20,000
+   generations from q = 0. At balance, colorblind (q²) is about u/s when h
+   = 0 (q = sqrt(u/s)) and (u/hs)² when hs is large against sqrt(us):
+   JM's key, "recessive q=u/hs situation". Target 0.001-0.01% (data
+   0.003%): u 1e-5 with s .3, or 1e-6 with s .03, h 0.
+   A2, the typhoon: 20 survivors, one carrying one colorblind copy (the
+   king); 100 islands; 9 generations (1775 to ~2000 at 25 years); N grows
+   by the regrowth factor each generation to at most 3,000. Parents picked
+   by fitness (A1's s and h); in the first generation the carrier's weight
+   is multiplied by "the carrier's young". A young from cousins (the share
+   set) has each gene's two copies from one ancestral copy with chance
+   1/16. Ten neutral genes, 20 equally common alleles each in the world
+   (heterozygosity 0.95): F = 1 - H / 0.95.
+   MEASURED (node prototype, 2,000 islands, s .05): share of islands at
+   10%+ -- regrowth x2: 0 whatever else; x1.25, carrier x8: .057; x1.1,
+   carrier x1 .004, x4 .045, x8 .097. Cousins 50%: colorblind / q² 1.04-
+   1.56 (random mating .93-.97). Target: 1 or more of 100 islands at 10%+.
+   ON THE PAGE (s .3, h 0 from A1; six Go's): regrowth x1.1, carrier x8:
+   1,1,1,3,4,1 islands at 10%+; x1.1 x1: 0,0,0,0,1,0; x1.25 x8: 3,1,1,1,0,
+   0; x2 (any carrier, cousins), x1.5 x8 50%: all 0. Two or more was hit
+   by x1.1 x8 in only 2 of 6.
+   ===================================================================== */
+const A1_U = [1e-7, 1e-6, 1e-5, 1e-4], A1_S = [0.01, 0.03, 0.1, 0.3, 1], A1_H = [0, 0.01, 0.1, 0.5];
+const tiny = v => v >= 0.01 ? Math.round(100 * v) + "%" : v <= 0 ? "0%" : (100 * v).toPrecision(2) + "%";
+function A1_balance(u, s, h) {
+  let q = 0; const pts = [];
+  for (let t = 0; t <= 20000; t++) {
+    if (t % 100 === 0) pts.push([t, q * q]);
+    const p = 1 - q, wbar = p * p + 2 * p * q * (1 - h * s) + q * q * (1 - s), q1 = (p * q * (1 - h * s) + q * q * (1 - s)) / wbar;
+    q = q1 + u * (1 - q1);
+  }
+  return { pts, q, aff: q * q, carriers: 2 * q * (1 - q) };
+}
+const PA1 = mkPart("A1", {
+  stage: "A", bits: ["A1"], code: "codeA", ms: 1400,
+  ctl: [{ key: "u", vals: A1_U, fmt: v => v.toExponential(0).replace("e-", " × 10^-") }, { key: "s", vals: A1_S }, { key: "h", vals: A1_H }],
+  rounds: [{ open: { u: 1e-6, s: 1, h: 0.5 }, text: "Make the world's colorblind share look like the data: at generation 20,000, between 0.001% and 0.01% colorblind (data: 0.003%).",
+    rules: [{ txt: "colorblind at generation 20,000: 0.001% to 0.01%", ok: S => S.aff >= 1e-5 && S.aff <= 1e-4, val: S => tiny(S.aff) }] }],
+  freeText: "Target taken. Try any world you like.",
+  simulate: set => A1_balance(set.u, set.s, set.h),
+  sum: q => ({ aff: q.aff, q: q.q }),
+  paint: () => A_paint(),
+});
+const A2_G = [1.1, 1.25, 1.5, 2], A2_K = [1, 2, 4, 8], A2_C = [0, 0.1, 0.25, 0.5], A2_NL = 10, A2_ALLELES = 20, A2_HPRE = 1 - 1 / A2_ALLELES;
+/* one island: an individual is [colorblind copies (two 0/1), then ten neutral genes x two copies] in one Int8Array */
+function A2_island(set, s, h, rng) {
+  const W = 2 + 2 * A2_NL; let N = 20, pop = [];
+  for (let i = 0; i < N; i++) { const x = new Int8Array(W); for (let j = 2; j < W; j++) x[j] = Math.floor(rng() * A2_ALLELES); pop.push(x); }
+  pop[0][0] = 1;                                         /* the king: one colorblind copy */
+  const stat = () => { let aff = 0, k = 0, H = 0; for (const x of pop) { k += x[0] + x[1]; if (x[0] + x[1] === 2) aff++; }
+    for (let g = 0; g < A2_NL; g++) { const c = new Int32Array(A2_ALLELES); for (const x of pop) { c[x[2 + 2 * g]]++; c[x[3 + 2 * g]]++; } let s2 = 0; for (const v of c) s2 += (v / (2 * pop.length)) ** 2; H += 1 - s2; }
+    return { aff: aff / pop.length, q: k / (2 * pop.length), H: H / A2_NL, N: pop.length }; };
+  const path = [stat()];
+  for (let t = 1; t <= 9; t++) {
+    const Nn = Math.min(3000, Math.round(N * set.g)), cum = new Float64Array(N); let tot = 0;
+    for (let i = 0; i < N; i++) { const c = pop[i][0] + pop[i][1]; let w = c === 0 ? 1 : c === 1 ? 1 - h * s : 1 - s; if (t === 1 && i === 0) w *= set.k; tot += Math.max(0, w); cum[i] = tot; }
+    const young = [];
+    for (let n = 0; n < Nn; n++) {
+      const a = pickCum(cum, tot, rng); let b = pickCum(cum, tot, rng), tries = 0; while (b === a && tries++ < 30) b = pickCum(cum, tot, rng);
+      const cousins = rng() < set.c, x = new Int8Array(W);
+      for (let g = 0; g <= A2_NL; g++) {
+        const j = 2 * g, fa = pop[a][j + (rng() < 0.5 ? 1 : 0)];
+        x[j] = fa; x[j + 1] = cousins && rng() < 1 / 16 ? fa : pop[b][j + (rng() < 0.5 ? 1 : 0)];
+      }
+      young.push(x);
+    }
+    pop = young; N = Nn; path.push(stat());
+  }
+  return path;
+}
+function A2_sim(set, seed) {
+  const a1 = readSet(PA1), rng = mulberry32(seed), islands = [];
+  for (let i = 0; i < 100; i++) islands.push(A2_island(set, a1.s, a1.h, rng));
+  return { islands, s: a1.s, h: a1.h };
+}
+function A2_sum(q) {
+  const end = q.islands.map(p => p[p.length - 1]), kept = end.filter(e => e.q > 0);
+  const rat = end.filter(e => e.q >= 0.1).map(e => e.aff / (e.q * e.q));
+  return { n10: end.filter(e => e.aff >= 0.1).length, lost: end.filter(e => e.q === 0).length, F: meanOf(end.map(e => 1 - e.H / A2_HPRE)), ratio: meanOf(rat), nRat: rat.length,
+           top: Math.max(...end.map(e => e.aff)), qKept: meanOf(kept.map(e => e.q)) };
+}
+const PA2 = mkPart("A2", {
+  stage: "A", bits: ["A2"], code: "codeA", ms: 1800,
+  ctl: [{ key: "g", vals: A2_G, fmt: v => "×" + v }, { key: "k", vals: A2_K, fmt: v => "×" + v }, { key: "c", vals: A2_C, fmt: pc }],
+  rounds: [{ open: { g: 2, k: 1, c: 0 }, text: "Make an island like Pingelap: after 9 generations, at least one of your 100 islands with 10% or more colorblind.",
+    rules: [{ txt: "islands with 10% or more colorblind: at least 1", ok: S => S.n10 >= 1, val: S => S.n10 + " of 100" }] }],
+  freeText: "Target taken. Try any island you like.",
+  simulate: (set, seed) => A2_sim(set, seed),
+  sum: q => A2_sum(q),
+  paint: () => A_paint(),
+});
+function A_drawBalance() {
+  const cv = $("A1_plot"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, 230), F = frame(64, 14, 670, 170, 0, 20000, 1e-8, 1e-2, true), q = shownRun(PA1);
+  axes(ctx, F, [[0, "0"], [5000, "5,000"], [10000, "10,000"], [15000, "15,000"], [20000, "20,000"]], [[1e-8, "0.000001%"], [1e-6, "0.0001%"], [1e-4, "0.01%"], [1e-2, "1%"]], "generation", "colorblind");
+  ctx.fillStyle = "rgba(178,58,72,0.12)"; ctx.fillRect(F.x0, F.y(1e-4), F.w, F.y(1e-5) - F.y(1e-4));
+  polyline(ctx, [[F.x0, F.y(3e-5)], [F.x0 + F.w, F.y(3e-5)]], INK, 1.2, 0.8, [4, 4]);
+  cardText(ctx, "data, worldwide: 0.003%", F.x0 + F.w - 4, F.y(3e-5) - 9, { size: 10.5, col: INK, align: "right" });
+  if (q) { const n = Math.max(1, Math.round(q.pts.length * q.shown)); polyline(ctx, q.pts.slice(0, n).map(p => [F.x(p[0]), F.y(Math.max(p[1], 1e-8))]), HOT, 2.4, 1); }
+  else cardText(ctx, "Go plays it here.", F.x0 + F.w / 2, F.y0 + F.h / 2, { size: 12.5, col: MUTED, align: "center" });
+  ctx.restore();
+  const set = q ? q.set : readSet(PA1), u = set.u, s = set.s, h = set.h;
+  $("A1_read").innerHTML = q && q.shown >= 1 ? lab("generation 20,000: colorblind") + " <b>" + tiny(q.aff) + "</b>" + lab(", carriers") + " <b>" + tiny(q.carriers) + "</b>" + lab(", q") + " <b>" + q.q.toPrecision(2) + "</b>" +
+    "<br>" + lab("balance, closed forms: sqrt(u/s) =") + ' <b style="color:' + HOT + '">' + Math.sqrt(u / s).toPrecision(2) + "</b>" + (h > 0 ? lab(" · u/(hs) =") + ' <b style="color:' + HOT + '">' + (u / (h * s)).toPrecision(2) + "</b>" : "") : "";
+}
+const A2H = { W: 760, H: 210 };
+function A_drawIslands() {
+  const q = shownRun(PA2);
+  { const cv = $("A2_hist"); if (cv) {
+    const { ctx } = frameCanvas(cv, A2H.W, A2H.H), F = frame(56, 14, 680, 150, 0, 0.3, 0, 100);
+    const bins = new Array(30).fill(0), t = q ? Math.round(9 * q.shown) : 0;
+    if (q) for (const p of q.islands) bins[Math.min(29, Math.floor(p[t].aff * 100))]++;
+    const ymax = Math.max(20, ...bins), Fy = frame(56, 14, 680, 150, 0, 0.3, 0, ymax);
+    axes(ctx, Fy, [[0, "0%"], [0.05, "5%"], [0.1, "10%"], [0.15, "15%"], [0.2, "20%"], [0.25, "25%"], [0.3, "30%"]], [[0, "0"], [ymax / 2, String(Math.round(ymax / 2))], [ymax, String(ymax)]], "colorblind, after generation " + t, "islands");
+    bins.forEach((v, i) => { if (!v) return; ctx.fillStyle = i >= 10 ? HOT : "#9a968a"; ctx.fillRect(Fy.x(i / 100) + 1, Fy.y(v), Fy.x(0.01) - Fy.x(0) - 2, Fy.y(0) - Fy.y(v)); });
+    polyline(ctx, [[Fy.x(0.1), Fy.y0], [Fy.x(0.1), Fy.y0 + Fy.h]], INK, 1.3, 0.9, [4, 4]);
+    cardText(ctx, "Pingelap today: 10%", Fy.x(0.1) + 6, Fy.y0 + 8, { size: 10.5, col: INK });
+    if (!q) cardText(ctx, "Go plays 100 islands here.", Fy.x0 + Fy.w / 2, Fy.y0 + Fy.h / 2, { size: 12.5, col: MUTED, align: "center" });
+    ctx.restore(); } }
+  { const cv = $("A2_paths"); if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 200), F = frame(56, 12, 680, 140, 0, 9, 0, 0.5);
+    axes(ctx, F, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(v => [v, v === 0 ? "1775" : String(v)]), [[0, "0"], [0.25, "0.25"], [0.5, "0.5"]], "generation after the typhoon", "q");
+    if (q) { const t = Math.round(9 * q.shown); for (const p of q.islands) polyline(ctx, p.slice(0, t + 1).map((s, i) => [F.x(i), F.y(Math.min(0.5, s.q))]), p[t].aff >= 0.1 ? HOT : INK, 1, p[t].aff >= 0.1 ? 0.9 : 0.12); }
+    ctx.restore(); } }
+  if (q && q.shown >= 1) { const S = A2_sum(q);
+    $("A2_read").innerHTML = lab("after 9 generations: islands at 10%+ colorblind") + " <b>" + S.n10 + "</b>" + lab(" · the allele lost on") + " <b>" + S.lost + "</b>" + lab(" · highest") + " <b>" + pc(S.top) + "</b>" +
+      "<br>" + lab("F (ten other genes, 1 − H / 0.95), average") + " <b>" + f2(S.F) + "</b>" + lab(" · colorblind ÷ q², islands with q 0.1+:") + " <b>" + f2(S.ratio) + "</b>" + lab(" (1 is Hardy-Weinberg; " + S.nRat + " islands)") +
+      "<br>" + lab("the cost of colorblindness, from before the typhoon: s") + " <b>" + q.s + "</b>" + lab(", h") + " <b>" + q.h + "</b>"; }
+  else { const a1 = readSet(PA1); $("A2_read").innerHTML = lab("the cost of colorblindness, from before the typhoon: s") + " <b>" + a1.s + "</b>" + lab(", h") + " <b>" + a1.h + "</b>"; }
+}
+function A_paint() { A_drawBalance(); A_drawIslands(); syncPart(PA1); syncPart(PA2); A_code(); }
+function A_code() {
+  const a = readSet(PA1), b = readSet(PA2);
+  codeInto("codeA", [
+    ["", "# Lesson 18, Stage A -- Pingelap: a balance before the typhoon, then 100 islands of 20 survivors"],
+    ["u", "u <- " + a.u + "                               # chance the normal allele turns colorblind, each generation"],
+    ["s", "s <- " + a.s + "; h <- " + a.h + "                          # young: 1, 1 - h s, 1 - s for 0, 1, 2 colorblind copies"],
+    ["", "q <- 0; for (t in 1:20000) { p <- 1 - q; w <- p^2 + 2*p*q*(1 - h*s) + q^2*(1 - s)"],
+    ["", "  q <- (p*q*(1 - h*s) + q^2*(1 - s)) / w; q <- q + u * (1 - q) }"],
+    ["", "c(colorblind = q^2, closed_form = u / s)                 # q^2 about u/s when h = 0"],
+    ["g", "g <- " + b.g + "                                   # regrowth, each generation"],
+    ["k", "k <- " + b.k + "                                     # the carrier's young, relative to others, first generation"],
+    ["c", "cous <- " + b.c + "                                  # share of young from cousins: each copy pair one copy with chance 1/16"],
+    ["", "island <- function() { N <- 20; cb <- matrix(0, N, 2); cb[1, 1] <- 1          # the king: one colorblind copy"],
+    ["", "  for (t in 1:9) { nc <- rowSums(cb); w <- c(1, 1 - h*s, 1 - s)[nc + 1]"],
+    ["k", "    if (t == 1) w[1] <- w[1] * k"],
+    ["g", "    Nn <- min(3000, round(nrow(cb) * g)); a <- sample(nrow(cb), Nn, TRUE, w); b <- sample(nrow(cb), Nn, TRUE, w)"],
+    ["c", "    ca <- cb[cbind(a, sample(2, Nn, TRUE))]; cbb <- cb[cbind(b, sample(2, Nn, TRUE))]; same <- runif(Nn) < cous / 16"],
+    ["c", "    cb <- cbind(ca, ifelse(same, ca, cbb)) }"],
+    ["", "  c(colorblind = mean(rowSums(cb) == 2), q = mean(cb)) }"],
+    ["", "res <- replicate(100, island()); sum(res[\"colorblind\", ] >= 0.1)       # islands at 10% or more"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE B — turtles (question 2).
+   Each species: N individuals (the table's), Wright-Fisher; twenty neutral
+   genes, each copy mutating into a brand-new allele with chance u. A
+   young's first parent at random; its second, with the share set, the
+   first's closest relative (highest kinship), else at random. Kinship is
+   tracked exactly (a matrix, updated each generation from the parents').
+   An egg's relatedness: (kinship of its parents - the average kinship of
+   two turtles picked at random) / (1 - that average). It hatches with
+   chance 0.82 exp(-relatedness): inbreeding depression, held. 4N
+   generations, three populations a species; Ho, He averaged over the
+   genes; hatching over the last five generations' eggs.
+   ON THE PAGE (two Go's a setting, 2026-10-12; Ho / He / hatching): u .02,
+   spotted no relatives .76-.78 / .74-.76 / .81; box relatives .75 .63-.65 /
+   .79-.82 / .59-.60 (the table: .63 / .85 / .58); relatives .9 .53 / .80-
+   .84 / .45; none .89 / .89 / .81. u .015 the same shape, He ~.03 lower. He
+   rises with N whatever the mating: box above spotted at the same u.
+   ===================================================================== */
+const B_MU = [0.005, 0.01, 0.015, 0.02, 0.03], B_BE = [0, 0.25, 0.5, 0.75, 0.9, 1], B_NL = 20, B_BASE = 0.82, B_LOAD = 1;
+function B_pop(N, u, beta, rng) {
+  const NL = B_NL; let ser = 1000, T = 4 * N;
+  let g = Array.from({ length: N }, () => { const a = new Int32Array(2 * NL); for (let j = 0; j < 2 * NL; j++) a[j] = 1 + Math.floor(rng() * 10); return a; });
+  let K = Array.from({ length: N }, (_, i) => { const r = new Float64Array(N); r[i] = 0.5; return r; });
+  const hist = []; let hs = 0, laid = 0;
+  const het = () => { let ho = 0, he = 0; for (let q = 0; q < NL; q++) { const c = new Map(); let h = 0; for (const a of g) { if (a[2 * q] !== a[2 * q + 1]) h++; c.set(a[2 * q], (c.get(a[2 * q]) || 0) + 1); c.set(a[2 * q + 1], (c.get(a[2 * q + 1]) || 0) + 1); }
+    let s2 = 0; for (const v of c.values()) s2 += (v / (2 * N)) ** 2; ho += h / N; he += 1 - s2; } return [ho / NL, he / NL]; };
+  for (let t = 0; t < T; t++) {
+    let Kbar = 0; for (let x = 0; x < N; x++) for (let y = 0; y < N; y++) if (x !== y) Kbar += K[x][y]; Kbar /= N * (N - 1);
+    const best = new Int32Array(N); for (let i = 0; i < N; i++) { let b = -1, bv = -1; for (let j = 0; j < N; j++) if (j !== i && K[i][j] > bv) { bv = K[i][j]; b = j; } best[i] = b; }
+    const par = [], ng = []; let gl = 0, gh = 0;
+    while (par.length < N) {
+      const i = Math.floor(rng() * N); let j;
+      if (rng() < beta) j = best[i]; else { do { j = Math.floor(rng() * N); } while (j === i); }
+      const fr = Math.max(0, (K[i][j] - Kbar) / (1 - Kbar)), w = B_BASE * Math.exp(-B_LOAD * fr); gl++; gh += w;
+      if (rng() < w) { const a = new Int32Array(2 * NL); for (let q = 0; q < NL; q++) { a[2 * q] = g[i][2 * q + (rng() < 0.5 ? 1 : 0)]; a[2 * q + 1] = g[j][2 * q + (rng() < 0.5 ? 1 : 0)];
+        if (rng() < u) a[2 * q] = ser++; if (rng() < u) a[2 * q + 1] = ser++; } par.push([i, j, K[i][j]]); ng.push(a); }
+    }
+    const K2 = Array.from({ length: N }, () => new Float64Array(N));
+    for (let x = 0; x < N; x++) { const [a, b, f] = par[x]; K2[x][x] = (1 + f) / 2; for (let y = 0; y < x; y++) { const [c, d] = par[y]; const v = (K[a][c] + K[a][d] + K[b][c] + K[b][d]) / 4; K2[x][y] = v; K2[y][x] = v; } }
+    K = K2; g = ng;
+    if (t >= T - 5) { hs += gh; laid += gl; }
+    if (t % 4 === 3 || t === T - 1) { const [ho, he] = het(); hist.push({ t: t + 1, ho, he, hatch: gh / gl }); }
+  }
+  const [Ho, He] = het();
+  return { Ho, He, hatch: hs / laid, hist, T };
+}
+function B_sim(set, seed) {
+  const rng = mulberry32(seed), sp = [], bx = [];
+  for (let r = 0; r < 3; r++) { sp.push(B_pop(39, set.mu, set.bs, rng)); bx.push(B_pop(109, set.mu, set.bb, rng)); }
+  return { sp, bx };
+}
+const B_avg = (a, k) => meanOf(a.map(r => r[k]));
+function B_sum(q) { return { sHo: B_avg(q.sp, "Ho"), sHe: B_avg(q.sp, "He"), sHat: B_avg(q.sp, "hatch"), bHo: B_avg(q.bx, "Ho"), bHe: B_avg(q.bx, "He"), bHat: B_avg(q.bx, "hatch") }; }
+const in_ = (v, lo, hi) => v != null && v >= lo && v <= hi;
+const PB = mkPart("B1", {
+  stage: "B", bits: ["B1"], code: "codeB", ms: 1600,
+  ctl: [{ key: "mu", vals: B_MU }, { key: "bs", vals: B_BE, fmt: pc }, { key: "bb", vals: B_BE, fmt: pc }],
+  rounds: [{ open: { mu: 0.005, bs: 0, bb: 0 }, text: "Make both species look like the table.",
+    rules: [{ txt: "spotted: Ho 0.68-0.82, He 0.69-0.83, hatching 72%+", ok: S => in_(S.sHo, 0.68, 0.82) && in_(S.sHe, 0.69, 0.83) && S.sHat >= 0.72, val: S => f2(S.sHo) + " / " + f2(S.sHe) + " / " + pc(S.sHat) },
+            { txt: "box: Ho 0.55-0.71, He 0.76-0.91, hatching 48-68%", ok: S => in_(S.bHo, 0.55, 0.71) && in_(S.bHe, 0.76, 0.91) && in_(S.bHat, 0.48, 0.68), val: S => f2(S.bHo) + " / " + f2(S.bHe) + " / " + pc(S.bHat) }] }],
+  freeText: "Target taken. Try any turtles you like.",
+  simulate: (set, seed) => B_sim(set, seed),
+  sum: q => B_sum(q),
+  paint: () => B_paint(),
+});
+function B_paint() {
+  const q = shownRun(PB), done = q && q.shown >= 1, S = done ? B_sum(q) : null;
+  const row = (cls, name, N, ho, he, ha) => '<tr class="' + cls + '"><td>' + name + "</td><td>" + N + "</td><td>" + ho + "</td><td>" + he + "</td><td>" + (he !== "–" && ho !== "–" ? f2(1 - (+ho) / (+he)) : "–") + "</td><td>" + ha + "</td></tr>";
+  $("B_table").innerHTML = '<table class="cmp"><tr><th></th><th>N</th><th>Ho</th><th>He</th><th>1 − Ho/He</th><th>hatching</th></tr>' +
+    row("obs", "spotted turtle, data", 39, "0.75", "0.76", "79.7%") + row("run", "spotted, your run", 39, S ? f2(S.sHo) : "–", S ? f2(S.sHe) : "–", S ? pc(S.sHat) : "–") +
+    row("obs", "box turtle, data", 109, "0.63", "0.85", "58.1%") + row("run", "box, your run", 109, S ? f2(S.bHo) : "–", S ? f2(S.bHe) : "–", S ? pc(S.bHat) : "–") + "</table>";
+  const cv = $("B_time"); if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 240), meas = $("B_meas").value, F = frame(56, 14, 680, 170, 0, 1, meas === "H" ? 0 : 0.3, meas === "H" ? 1 : 1);
+    axes(ctx, F, [[0, "0"], [0.25, "N"], [0.5, "2N"], [0.75, "3N"], [1, "4N"]], meas === "H" ? [[0, "0"], [0.5, "0.5"], [1, "1"]] : [[0.3, "30%"], [0.65, "65%"], [1, "100%"]], "generations", meas === "H" ? "heterozygosity" : "hatching");
+    if (q) for (const [runs, col] of [[q.sp, GREEN], [q.bx, ORANGE]]) for (const r of runs) {
+      const n = Math.max(1, Math.round(r.hist.length * q.shown)), hs = r.hist.slice(0, n);
+      if (meas === "H") { polyline(ctx, hs.map(h => [F.x(h.t / r.T), F.y(h.he)]), col, 1.6, 0.8); polyline(ctx, hs.map(h => [F.x(h.t / r.T), F.y(h.ho)]), col, 1.6, 0.8, [5, 4]); }
+      else polyline(ctx, hs.map(h => [F.x(h.t / r.T), F.y(h.hatch)]), col, 1.4, 0.8);
+    }
+    cardText(ctx, "spotted", F.x0 + 8, F.y0 + 6, { size: 11, col: GREEN, bold: true }); cardText(ctx, "box", F.x0 + 64, F.y0 + 6, { size: 11, col: ORANGE, bold: true });
+    if (meas === "H") cardText(ctx, "solid He · dashed Ho", F.x0 + 100, F.y0 + 6, { size: 11, col: MUTED });
+    if (!q) cardText(ctx, "Go plays both here.", F.x0 + F.w / 2, F.y0 + F.h / 2, { size: 12.5, col: MUTED, align: "center" });
+    ctx.restore();
+  }
+  const set = q ? q.set : readSet(PB);
+  $("B_read").innerHTML = lab("closed form, random mating: He = 4Nu / (1 + 4Nu): spotted") + ' <b style="color:' + HOT + '">' + f2(4 * 39 * set.mu / (1 + 4 * 39 * set.mu)) + "</b>" + lab(", box") + ' <b style="color:' + HOT + '">' + f2(4 * 109 * set.mu / (1 + 4 * 109 * set.mu)) + "</b>";
+  syncPart(PB); B_code();
+}
+function B_code() {
+  const s = readSet(PB);
+  codeInto("codeB", [
+    ["", "# Lesson 18, Stage B -- two turtle populations; mating with relatives, and hatching that falls with it"],
+    ["mu", "u <- " + s.mu + "                                      # each copy turns into a new allele, each generation"],
+    ["bs", "rel <- c(spotted = " + s.bs + ", box = " + s.bb + ")                  # share of young whose second parent is the first's closest relative"],
+    ["", "turtles <- function(N, rel, G = 20) { a <- matrix(sample(10, 2 * N * G, TRUE), N, 2 * G); K <- diag(0.5, N); new <- 1000"],
+    ["", "  for (t in 1:(4 * N)) { Kbar <- (sum(K) - sum(diag(K))) / (N * (N - 1)); kids <- NULL; par <- NULL"],
+    ["", "    while (length(kids) < N * 2 * G) { i <- sample(N, 1); k <- K[i, ]; k[i] <- -1"],
+    ["bs", "      j <- if (runif(1) < rel) which.max(k) else sample((1:N)[-i], 1)"],
+    ["", "      if (runif(1) < 0.82 * exp(-max(0, (K[i, j] - Kbar) / (1 - Kbar)))) {           # it hatches"],
+    ["mu", "        g <- c(rbind(a[i, 2 * (1:G) - sample(0:1, G, TRUE)], a[j, 2 * (1:G) - sample(0:1, G, TRUE)])); m <- runif(2 * G) < u"],
+    ["mu", "        g[m] <- new + seq_len(sum(m)); new <- new + sum(m); kids <- c(kids, g); par <- rbind(par, c(i, j)) } }"],
+    ["", "    a <- matrix(kids, N, 2 * G, byrow = TRUE); F <- K[par]                   # each young's F: its parents' kinship"],
+    ["", "    K <- (K[par[, 1], par[, 1]] + K[par[, 1], par[, 2]] + K[par[, 2], par[, 1]] + K[par[, 2], par[, 2]]) / 4; diag(K) <- (1 + F) / 2 }"],
+    ["", "  Ho <- mean(a[, 2 * (1:G) - 1] != a[, 2 * (1:G)]); He <- mean(sapply(1:G, function(q) 1 - sum(table(a[, (2*q-1):(2*q)])^2) / (2 * N)^2))"],
+    ["", "  c(Ho = Ho, He = He) }"],
+    ["", "rbind(spotted = turtles(39, rel[\"spotted\"]), box = turtles(109, rel[\"box\"]))"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE C — Thornton's three lineages (question 3).
+   The exam's curves, read off its figure: sensitivity at 0-8 later
+   substitutions for A, B, C. Ten populations of N copies, a third each of
+   A, B, C at step 0; no recombination between lineages (each copies
+   itself). Each generation: copies drawn in proportion to e^(0.25 (s -
+   2)), s the sensitivity of the copy's lineage and step (multinomial, as
+   binomials in turn); then each copy takes its lineage's next
+   substitution with chance 0.005. 1,500 generations.
+   "Reaches B's peak": at some generation more than half the population is
+   B at step 6. "At C's peak at the end": more than half C at step 4.
+   MEASURED (node prototype, 200 populations each): reach B's peak N 5 .31
+   / 10 .22 / 20 .08 / 50 0; C's peak at the end N 200 .98, N 1000 ~1.
+   N is a multiple of 3 so the three start equal (at N 5 the page started 1
+   / 1 / 3 and B's peak fell to .14).
+   ON THE PAGE (300 populations each): reach B's peak N 6 .26 / 12 .17 /
+   24 .05 / 60 0; at C's peak at the end N 60 .69, 300 .997, 1200 1.
+   Targets: all 10 at C's peak (N 300 or 1200); 1+ of 10 reach B's peak
+   (N 6: 95% of tries, 12: 84%, 24: 38%; 2+ was 77% at best).
+   ===================================================================== */
+const C_SENS = [[2, 2.8, 3.2, 2.0, 1.2, 0.6, 0.3, 0.2, 0.1], [2, 1.6, 1.5, 1.6, 1.8, 2.0, 5.2, 4.8, 4.0], [2, 3.5, 4.0, 4.2, 4.3, 3.6, 2.8, 2.0, 1.5]];
+const C_N = [6, 12, 24, 60, 300, 1200], C_T = 1500, C_MU = 0.005, C_SIG = 0.25, C_LIN = ["A", "B", "C"], C_COL = [HOT, BLUE, GREEN];
+const C_W = (() => { const w = new Float64Array(27); for (let l = 0; l < 3; l++) for (let k = 0; k < 9; k++) w[l * 9 + k] = Math.exp(C_SIG * (C_SENS[l][k] - 2)); return w; })();
+function C_pop(N, rng) {
+  let c = new Int32Array(27); const third = Math.floor(N / 3); c[0] = third; c[9] = third; c[18] = N - 2 * third;
+  const path = []; let reachB = false, firstLost = null;
+  for (let t = 1; t <= C_T; t++) {
+    let tot = 0; const p = new Float64Array(27); for (let i = 0; i < 27; i++) { p[i] = c[i] * C_W[i]; tot += p[i]; }
+    const n = new Int32Array(27); let left = N, rem = 1;
+    for (let i = 0; i < 27 && left > 0; i++) { const pi = p[i] / tot; if (pi <= 0) continue; const k = binom(left, Math.min(1, pi / rem), rng); n[i] = k; left -= k; rem -= pi; }
+    if (left > 0) { let li = 26; while (li > 0 && p[li] <= 0) li--; n[li] += left; }
+    for (let i = 26; i >= 0; i--) if (i % 9 < 8 && n[i] > 0) { const m = binom(n[i], C_MU, rng); n[i] -= m; n[i + 1] += m; }
+    c = n;
+    if (c[15] * 2 > N) reachB = true;
+    if (firstLost == null) for (let l = 0; l < 3; l++) { let s = 0; for (let k = 0; k < 9; k++) s += c[l * 9 + k]; if (s === 0) { firstLost = l; break; } }
+    if (t % 10 === 0) { let b = 0; for (let i = 1; i < 27; i++) if (c[i] > c[b]) b = i; path.push([b, c[b] / N]); }
+  }
+  let b = 0; for (let i = 1; i < 27; i++) if (c[i] > c[b]) b = i;
+  return { path, reachB, firstLost, end: b, endShare: c[b] / N };
+}
+function C_sim(set, seed) { const rng = mulberry32(seed), pops = []; for (let i = 0; i < 10; i++) pops.push(C_pop(set.N, rng)); return { pops }; }
+function C_sum(q) {
+  const ps = q.pops, lost = [0, 0, 0]; for (const p of ps) if (p.firstLost != null) lost[p.firstLost]++;
+  return { atC: ps.filter(p => p.end === 22 && p.endShare > 0.5).length, reachB: ps.filter(p => p.reachB).length, lost };
+}
+const C_HIST = [];
+const PC = mkPart("C", {
+  stage: "C", bits: ["C1", "C2"], code: "codeC", ms: 2200,
+  ctl: [{ key: "N", vals: C_N }],
+  rounds: [
+    { open: { N: 12 }, text: "Send all 10 populations to Lineage C's peak, and keep them there to the end.", rules: [{ txt: "populations at C's peak at the end: all 10", ok: S => S.atC === 10, val: S => S.atC + " of 10" }] },
+    { open: { N: 1200 }, text: "Now the highest peak: at least one of the 10 populations reaches Lineage B's peak.", rules: [{ txt: "populations that reach B's peak: at least 1", ok: S => S.reachB >= 1, val: S => S.reachB + " of 10" }] },
+  ],
+  freeText: "Both targets taken. Try any N you like.",
+  simulate: (set, seed) => C_sim(set, seed),
+  sum: q => C_sum(q),
+  afterRun: q => C_HIST.push(Object.assign({ N: q.set.N }, q.sum)),
+  paint: () => C_paint(),
+});
+function C_paint() {
+  const cv = $("C_land"), q = shownRun(PC);
+  if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 330), F = frame(60, 16, 560, 260, 0, 8, 0, 5.5);
+    axes(ctx, F, [0, 1, 2, 3, 4, 5, 6, 7, 8].map(v => [v, String(v)]), [[0, ""], [2, "start"]], "potential subsequent substitutions", "receptor sensitivity");
+    C_SENS.forEach((s, l) => polyline(ctx, s.map((v, k) => [F.x(k), F.y(v)]), C_COL[l], 2.6, 0.9, l === 0 ? [7, 5] : l === 2 ? [2, 4] : null));
+    for (const [l, k] of [[0, 2], [2, 4], [1, 6]]) dot(ctx, F.x(k), F.y(C_SENS[l][k]), 5, INK);
+    dot(ctx, F.x(0), F.y(2), 5, INK);
+    C_LIN.forEach((n, l) => { const y = F.y0 + 14 + l * 20; polyline(ctx, [[F.x0 + F.w + 18, y], [F.x0 + F.w + 48, y]], C_COL[l], 2.6, 1, l === 0 ? [7, 5] : l === 2 ? [2, 4] : null); cardText(ctx, "Lineage " + n, F.x0 + F.w + 54, y, { size: 11.5 }); });
+    if (q) {
+      const idx = Math.max(0, Math.min(q.pops[0].path.length - 1, Math.round((q.pops[0].path.length - 1) * q.shown)));
+      q.pops.forEach((p, i) => { const [b] = p.path[idx], l = Math.floor(b / 9), k = b % 9, jx = (i % 5 - 2) * 4, jy = (Math.floor(i / 5) - 0.5) * 9;
+        dot(ctx, F.x(k) + jx, F.y(C_SENS[l][k]) + jy, 7.5, "#fff", C_COL[l]); cardText(ctx, String(i + 1), F.x(k) + jx, F.y(C_SENS[l][k]) + jy + 0.5, { size: 9, align: "center", col: C_COL[l], bold: true }); });
+      cardText(ctx, "generation " + Math.round(C_T * q.shown), F.x0 + F.w + 18, F.y0 + 90, { size: 11, col: MUTED });
+    }
+    ctx.restore();
+  }
+  if (q && q.shown >= 1) { const S = C_sum(q);
+    $("C_read").innerHTML = lab("N") + " <b>" + q.set.N + "</b>" + lab(" · at C's peak at the end") + " <b>" + S.atC + "</b>" + lab(" · reached B's peak") + " <b>" + S.reachB + "</b>" + lab(" · the lineage lost first: A") + " <b>" + S.lost[0] + "</b>" + lab(", B") + " <b>" + S.lost[1] + "</b>" + lab(", C") + " <b>" + S.lost[2] + "</b>" + lab(" (of 10)"); }
+  else $("C_read").innerHTML = "";
+  syncPart(PC); C_code();
+}
+function C_code() {
+  const s = readSet(PC);
+  codeInto("codeC", [
+    ["", "# Lesson 18, Stage C -- three lineages on the exam's curves; ten populations of N copies"],
+    ["", "sens <- rbind(A = c(2, 2.8, 3.2, 2.0, 1.2, 0.6, 0.3, 0.2, 0.1), B = c(2, 1.6, 1.5, 1.6, 1.8, 2.0, 5.2, 4.8, 4.0),"],
+    ["", "              C = c(2, 3.5, 4.0, 4.2, 4.3, 3.6, 2.8, 2.0, 1.5))       # steps 0 to 8"],
+    ["N", "N <- " + s.N + "; mu <- 0.005; G <- 1500"],
+    ["", "w <- exp(0.25 * (sens - 2))                                   # chance to be copied"],
+    ["", "pop <- function() { lin <- rep(1:3, length.out = N); k <- rep(0, N); reachB <- FALSE"],
+    ["N", "  for (t in 1:G) { i <- sample(N, N, TRUE, w[cbind(lin, k + 1)]); lin <- lin[i]; k <- k[i]"],
+    ["", "    k <- pmin(8, k + (runif(N) < mu)); if (mean(lin == 2 & k == 6) > 0.5) reachB <- TRUE }"],
+    ["", "  c(at_C_peak = mean(lin == 3 & k == 4) > 0.5, reached_B_peak = reachB) }"],
+    ["", "rowSums(replicate(10, pop()))                                  # of 10 populations"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE D — bighorn sheep (question 4).
+   The exam's 17 points (1980-2020, every 2.5 years, read off its figure)
+   are the observed data; each point a generation (realish). Twenty herds of
+   200, half rams; ten horn genes, a long allele +3 cm a copy (start at
+   half), mean 75 cm; a ram's environment adds normal noise sized so
+   heritability at the start is the slider's (V_A 45 cm²). Each
+   generation: from 1995 (to 2027 in the second target), hunters remove the
+   largest-horned share of rams before breeding; each lamb's sire drawn
+   among the remaining rams in proportion to e^(edge x his horn in sd units
+   of the breeding rams); dam any ewe. The herd's size stays 200. Ten
+   neutral genes start at half.
+   Measured each generation: rams' mean horn length (before the hunt);
+   cov(w, z)/w̄ among the rams, w the lambs a ram sired (0 if shot); V_A =
+   sum 2pq(3)² over the horn genes; neutral heterozygosity; rams that
+   sired a lamb.
+   ON THE PAGE (two Go's a setting, 2026-10-12): target 1 (miss under 4.5
+   cm): shot .3 h2 .4 10; shot .5 h2 .8 4.9-5.0 miss; shot .7 h2 .8 2.7, h2
+   .6 3.4-3.6, with edge .1 3.4-4.0; shot .9 1.6-3.1 hit. cov(w, z)/w̄
+   before 1995: 0 at edge 0, +.7-.9 at .1, +2.2 at .3; while hunted -5 to
+   -17. Target 2 (rise after the ban 0.05+ a generation, slower than the
+   fall): edge 0 .01/-.02 miss; edge .1 at shot .7 .10 hit, at shot .9 h2
+   .6 ~0 miss (V_A 45 -> 9 by 2020); edge .3 .13-.54 hit; no hunting misses
+   (no fall). Rams that sired: ~86 before, 30 (shot .7) / 10 (.9) while
+   hunted; neutral heterozygosity .49 -> .47 / .42 by 2020.
+   ===================================================================== */
+const D_EX = [73, 77, 72, 76, 79, 74, 76, 72, 68, 64, 60, 57, 54, 52, 51, 50, 49];
+const D_HV = [0, 0.3, 0.5, 0.7, 0.9], D_H2 = [0.2, 0.4, 0.6, 0.8], D_BV = [0, 0.1, 0.3], D_LOCI = 10, D_A = 3, D_NN = 10, D_VA0 = 2 * D_LOCI * 0.25 * D_A * D_A;
+const D_year = t => 1980 + 2.5 * t;
+function D_herd(set, T, banAt, rng) {
+  const N = 200, eSD = Math.sqrt(D_VA0 * (1 - set.h2) / set.h2), W = 2 * (D_LOCI + D_NN);
+  let pop = []; for (let i = 0; i < N; i++) { const g = new Uint8Array(W); for (let j = 0; j < W; j++) g[j] = rng() < 0.5 ? 1 : 0; pop.push({ g, ram: i % 2 === 0 }); }
+  const out = [];
+  for (let t = 0; t <= T; t++) {
+    for (const s of pop) { let c = 0; for (let j = 0; j < 2 * D_LOCI; j++) c += s.g[j]; s.z = 75 + D_A * (c - D_LOCI) + eSD * gauss(rng); s.w = 0; }
+    const rams = pop.filter(s => s.ram), ewes = pop.filter(s => !s.ram);
+    let va = 0, hn = 0; for (let l = 0; l < D_LOCI; l++) { let k = 0; for (const s of pop) k += s.g[2 * l] + s.g[2 * l + 1]; const p = k / (2 * N); va += 2 * p * (1 - p) * D_A * D_A; }
+    for (let l = D_LOCI; l < D_LOCI + D_NN; l++) { let k = 0; for (const s of pop) k += s.g[2 * l] + s.g[2 * l + 1]; const p = k / (2 * N); hn += 2 * p * (1 - p); }
+    const rec = { t, z: meanOf(rams.map(s => s.z)), va, hn: hn / D_NN };
+    if (t === T) { out.push(rec); break; }
+    const yr = D_year(t), hunt = yr >= 1995 && (banAt == null || yr < banAt);
+    let br = rams; if (hunt && set.H > 0) br = rams.slice().sort((a, b) => b.z - a.z).slice(Math.round(set.H * rams.length));
+    const mz = meanOf(br.map(s => s.z)), sd = Math.sqrt(meanOf(br.map(s => (s.z - mz) ** 2))) || 1;
+    const cum = new Float64Array(br.length); let tot = 0; br.forEach((s, i) => { tot += Math.exp(set.b * (s.z - mz) / sd); cum[i] = tot; });
+    const young = [];
+    for (let i = 0; i < N; i++) { const d = ewes[Math.floor(rng() * ewes.length)], s = br[pickCum(cum, tot, rng)]; s.w++;
+      const g = new Uint8Array(W); for (let l = 0; l < D_LOCI + D_NN; l++) { g[2 * l] = d.g[2 * l + (rng() < 0.5 ? 1 : 0)]; g[2 * l + 1] = s.g[2 * l + (rng() < 0.5 ? 1 : 0)]; } young.push({ g, ram: i % 2 === 0 }); }
+    const wbar = meanOf(rams.map(s => s.w)), zbar = rec.z; rec.cov = meanOf(rams.map(s => (s.w - wbar) * (s.z - zbar))) / wbar; rec.rams = br.filter(s => s.w > 0).length;
+    out.push(rec); pop = young;
+  }
+  return out;
+}
+function D_sim(set, seed, round) {
+  const T = round === 0 ? 16 : 32, rng = mulberry32(seed), herds = [];
+  for (let i = 0; i < 20; i++) herds.push(D_herd(set, T, round === 0 ? null : 2027, rng));
+  const avg = Array.from({ length: T + 1 }, (_, t) => meanOf(herds.map(h => h[t].z)));
+  return { herds, avg, T };
+}
+function D_sum(q) {
+  const a = q.avg, miss = Math.sqrt(meanOf(D_EX.map((v, t) => (a[t] - v) ** 2)));
+  const t95 = 6, t20 = 16, tBan = 19, fall = (a[t20] - a[t95]) / (t20 - t95);
+  const rise = q.T >= 32 ? (a[32] - a[tBan]) / (32 - tBan) : null;
+  const cAt = (lo, hi) => meanOf(q.herds.flatMap(h => h.slice(lo, hi).map(r => r.cov)));
+  return { miss, z2020: a[t20], fall, rise, covBefore: cAt(0, 6), covHunt: cAt(6, 16), covAfter: q.T >= 32 ? cAt(tBan, 32) : null,
+           vaStart: meanOf(q.herds.map(h => h[0].va)), va1995: meanOf(q.herds.map(h => h[6].va)), va2020: meanOf(q.herds.map(h => h[16].va)),
+           hn1995: meanOf(q.herds.map(h => h[6].hn)), hn2020: meanOf(q.herds.map(h => h[16].hn)), hnStart: meanOf(q.herds.map(h => h[0].hn)),
+           ramsBefore: meanOf(q.herds.flatMap(h => h.slice(0, 6).map(r => r.rams))), ramsHunt: meanOf(q.herds.flatMap(h => h.slice(6, 16).map(r => r.rams))) };
+}
+const PD = mkPart("D", {
+  stage: "D", bits: ["D1", "D2"], code: "codeD", ms: 2000,
+  ctl: [{ key: "H", vals: D_HV, fmt: pc }, { key: "h2", vals: D_H2 }, { key: "b", vals: D_BV }],
+  rounds: [
+    { open: { H: 0.3, h2: 0.4, b: 0 }, text: "Match the observed data, 1980-2020: a typical miss of under 4.5 cm.", rules: [{ txt: "typical miss, 17 points: under 4.5 cm", ok: S => S.miss < 4.5, val: S => f1(S.miss) + " cm" }] },
+    { open: { b: 0 }, text: "Hunting is banned in 2027. By 2060: horn length rising again, but slower than it fell under hunting.",
+      rules: [{ txt: "after the ban: rising, at least 0.05 cm a generation", ok: S => S.rise != null && S.rise >= 0.05, val: S => (S.rise == null ? "–" : (S.rise >= 0 ? "+" : "") + f2(S.rise)) },
+              { txt: "slower than the fall, 1995-2020", ok: S => S.rise != null && S.fall < 0 && S.rise < -S.fall, val: S => "fall " + f2(S.fall) }] },
+  ],
+  freeText: "Both targets taken. Try any herd you like (to 2060, the ban in 2027).",
+  simulate: (set, seed, round) => D_sim(set, seed, round === 0 ? 0 : 1),
+  sum: q => D_sum(q),
+  paint: () => D_paint(),
+});
+function D_paint() {
+  const q = shownRun(PD), cv = $("D_plot");
+  const T = q ? q.T : (PD.done || PD.round === 1 ? 32 : 16), yMax = D_year(T);
+  if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 300), F = frame(60, 18, 670, 230, 1980, yMax, 40, 90);
+    const xt = []; for (let y = 1980; y <= yMax; y += 10) xt.push([y, String(y)]);
+    axes(ctx, F, xt, [[50, "50"], [60, "60"], [70, "70"], [80, "80"], [90, "90"]], "year", "mean male horn length, z̄ (cm)");
+    polyline(ctx, [[F.x(1995), F.y0], [F.x(1995), F.y0 + F.h]], "#9a968a", 1.6, 1, [5, 4]); cardText(ctx, "trophy hunting legalized (1995)", F.x(1995) + 5, F.y0 + 6, { size: 10.5, col: MUTED });
+    if (T > 16) { polyline(ctx, [[F.x(2027), F.y0], [F.x(2027), F.y0 + F.h]], "#9a968a", 1.6, 1, [5, 4]); cardText(ctx, "banned (2027)", F.x(2027) + 5, F.y0 + 6, { size: 10.5, col: MUTED }); }
+    polyline(ctx, D_EX.map((v, t) => [F.x(D_year(t)), F.y(v)]), INK, 1.2, 0.7);
+    D_EX.forEach((v, t) => dot(ctx, F.x(D_year(t)), F.y(v), 3.6, "#fff", INK));
+    if (q) { const n = Math.max(1, Math.round((q.T + 1) * q.shown));
+      for (const h of q.herds) polyline(ctx, h.slice(0, n).map(r => [F.x(D_year(r.t)), F.y(r.z)]), HOT, 1, 0.15);
+      polyline(ctx, q.avg.slice(0, n).map((v, t) => [F.x(D_year(t)), F.y(v)]), HOT, 2.6, 1); }
+    cardText(ctx, "○ observed data", F.x0 + F.w - 4, F.y0 + F.h - 26, { size: 11, col: INK, align: "right" }); cardText(ctx, "— your herds, and their average", F.x0 + F.w - 4, F.y0 + F.h - 10, { size: 11, col: HOT, align: "right" });
+    ctx.restore();
+  }
+  const tv = $("D_time"); if (tv) {
+    const { ctx } = frameCanvas(tv, 760, 220), meas = $("D_meas").value;
+    const lim = { cov: [-6, 3], va: [0, 50], hn: [0, 0.6], rams: [0, 110] }[meas];
+    if (meas === "cov" && q) for (const h of q.herds) for (const r of h) if (r.cov != null) { lim[0] = Math.min(lim[0], 3 * Math.floor(r.cov / 3)); lim[1] = Math.max(lim[1], 3 * Math.ceil(r.cov / 3)); }
+    const F = frame(60, 14, 670, 160, 1980, yMax, lim[0], lim[1]);
+    const xt = []; for (let y = 1980; y <= yMax; y += 10) xt.push([y, String(y)]);
+    axes(ctx, F, xt, [[lim[0], String(lim[0])], [(lim[0] + lim[1]) / 2, String(+((lim[0] + lim[1]) / 2).toFixed(2))], [lim[1], String(lim[1])]], "year", { cov: "cov(w, z) / w̄ (cm)", va: "V_A (cm²)", hn: "neutral heterozygosity", rams: "rams that sired a lamb" }[meas]);
+    if (meas === "cov") polyline(ctx, [[F.x0, F.y(0)], [F.x0 + F.w, F.y(0)]], MUTED, 1, 0.6, [3, 3]);
+    polyline(ctx, [[F.x(1995), F.y0], [F.x(1995), F.y0 + F.h]], "#9a968a", 1.2, 1, [5, 4]);
+    if (q) { const n = Math.max(1, Math.round((q.T + 1) * q.shown)), av = [];
+      for (let t = 0; t < n; t++) { const v = meanOf(q.herds.map(h => h[t][meas])); if (v != null) av.push([F.x(D_year(t)), F.y(Math.max(lim[0], Math.min(lim[1], v)))]); }
+      polyline(ctx, av, HOT, 2.4, 1);
+      if (meas === "hn") { const h0 = meanOf(q.herds.map(h => h[0].hn)), pts = []; let H = h0; for (let t = 0; t < n; t++) { pts.push([F.x(D_year(t)), F.y(H)]);
+          const r = meanOf(q.herds.map(h => h[t].rams)); if (r) { const Ne = 4 * r * 100 / (r + 100); H *= 1 - 1 / (2 * Ne); } }
+        polyline(ctx, pts, INK, 1.4, 0.8, [5, 4]); cardText(ctx, "dashed: H(0)(1 − 1/2Ne)^t, Ne = 4 Nm Nf / (Nm + Nf), Nm the rams that sired", F.x0 + 6, F.y0 + 6, { size: 10.5, col: MUTED }); } }
+    ctx.restore();
+  }
+  if (q && q.shown >= 1) { const S = D_sum(q);
+    $("D_read").innerHTML = lab("typical miss, 1980-2020:") + " <b>" + f1(S.miss) + "</b> " + lab("cm · 2020:") + " <b>" + f1(S.z2020) + "</b> " + lab("cm · fall a generation, 1995-2020:") + " <b>" + f2(S.fall) + "</b>" + (S.rise != null ? lab(" · rise a generation after the ban:") + " <b>" + f2(S.rise) + "</b>" : "");
+    $("D_timeRead").innerHTML = lab("cov(w, z) / w̄: before 1995") + " <b>" + f2(S.covBefore) + "</b>" + lab(", 1995-2020") + " <b>" + f2(S.covHunt) + "</b>" + (S.covAfter != null ? lab(", after the ban") + " <b>" + f2(S.covAfter) + "</b>" : "") +
+      "<br>" + lab("V_A: 1980") + " <b>" + f1(S.vaStart) + "</b>" + lab(", 1995") + " <b>" + f1(S.va1995) + "</b>" + lab(", 2020") + " <b>" + f1(S.va2020) + "</b>" + lab(" · neutral heterozygosity: 1980") + " <b>" + f2(S.hnStart) + "</b>" + lab(", 1995") + " <b>" + f2(S.hn1995) + "</b>" + lab(", 2020") + " <b>" + f2(S.hn2020) + "</b>" +
+      "<br>" + lab("rams that sired a lamb: before 1995") + " <b>" + f1(S.ramsBefore) + "</b>" + lab(", while hunted") + " <b>" + f1(S.ramsHunt) + "</b>" + lab(" (of 100)"); }
+  else { $("D_read").innerHTML = ""; $("D_timeRead").innerHTML = ""; }
+  syncPart(PD); D_code();
+}
+function D_code() {
+  const s = readSet(PD);
+  codeInto("codeD", [
+    ["", "# Lesson 18, Stage D -- bighorn rams: trophy hunting from 1995, a generation every 2.5 years"],
+    ["H", "shot <- " + s.H + "                                  # share of rams shot, largest horns first, from 1995"],
+    ["h2", "h2 <- " + s.h2 + "; L <- 10; a <- 3; VA <- 2 * L * 0.25 * a^2; esd <- sqrt(VA * (1 - h2) / h2)"],
+    ["b", "edge <- " + s.b + "                                    # rams' mating edge"],
+    ["", "herd <- function(T = 16) { g <- matrix(rbinom(200 * 2 * L, 1, 0.5), 200); ram <- rep(c(TRUE, FALSE), 100); z <- numeric(T + 1)"],
+    ["", "  for (t in 0:T) { horn <- 75 + a * (rowSums(g) - L) + rnorm(200, 0, esd); z[t + 1] <- mean(horn[ram]); if (t == T) break"],
+    ["H", "    br <- which(ram); if (1980 + 2.5 * t >= 1995) br <- br[order(-horn[br])][-seq_len(round(shot * length(br)))]"],
+    ["b", "    w <- exp(edge * (horn[br] - mean(horn[br])) / sd(horn[br])); sire <- br[sample(length(br), 200, TRUE, w)]; dam <- sample(which(!ram), 200, TRUE)"],
+    ["", "    half <- function(p) g[cbind(rep(p, each = L), 2 * (1:L) - sample(0:1, 200 * L, TRUE))]"],
+    ["", "    g <- matrix(rbind(matrix(half(dam), L), matrix(half(sire), L)), 200, 2 * L, byrow = TRUE) }"],
+    ["", "  z }"],
+    ["", "observed <- c(73, 77, 72, 76, 79, 74, 76, 72, 68, 64, 60, 57, 54, 52, 51, 50, 49)"],
+    ["", "avg <- rowMeans(replicate(20, herd())); sqrt(mean((avg - observed)^2))            # typical miss, cm"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE E — CTVT (question 5).
+   E1, the clock: the exam's 11 tumors, read off its figure (year = 1980 +
+   10 x, count = 1.86 + 0.02 y million). A run: one line begun in the year
+   set, picking up the rate set a year; each tumor collected in the exam's
+   years, its count rate x (year - start) x (1 + 0.0008 noise). Target: a
+   typical miss under 5,000. The exam's points rise ~1,900 a year from
+   ~1.9 million: about 1,000 years of mutations at that rate, not ~6,000
+   (overhaul doc, open point 2).
+   E2, the table: origin and fate. 100 cells; a new mutation is one cell's;
+   each generation the mutant's copies are a binomial draw with chance
+   k(1 + s) / (k(1 + s) + N - k), until lost or in every cell. 60,000
+   synonymous (s 0), 40,000 housekeeping nonsynonymous (s = -slider),
+   20,000 immune evasion (s = +slider), 30,000 elsewhere (s 0). dN/dS = the
+   share fixed against the synonymous share; all genes: 85% elsewhere, 10%
+   housekeeping, 5% immune evasion. Closed form beside (haploid, Kimura):
+   N(1 - e^-2s) / (1 - e^-2Ns): s -.01 .32, -.005 .59, -.02 .08; +.01 2.29,
+   +.005 1.57, +.02 3.99. Windows: housekeeping .15-.5, immune 1.8-3.5,
+   all .8-1.3. ON THE PAGE at half these counts (2026-10-12): hk .01 im .01
+   .34-.44 / 2.47-2.62 / .96-1.29 -- the noise that doubled them; hk .005
+   .58-.69, .02 .04-.09; im .005 1.44-1.74, .02 4.04-4.13.
+   ===================================================================== */
+const E_YR = [1988, 1992, 1995, 2001, 2005, 2008, 2012, 2016, 2021, 2025, 2028];
+const E_CT = [1.876, 1.890, 1.896, 1.904, 1.910, 1.914, 1.922, 1.928, 1.938, 1.942, 1.952];
+const E_Y0 = [-6000, -4000, -2000, -1000, 0, 500, 800, 900, 1000, 1100, 1200, 1500], E_R = [300, 500, 1000, 1500, 1800, 1900, 2000, 2500];
+const yrName = y => y < 0 ? (-y).toLocaleString("en-US") + " BC" : y + " AD";
+const PE1 = mkPart("E1", {
+  stage: "E", bits: ["E1"], code: "codeE", ms: 1200,
+  ctl: [{ key: "y0", vals: E_Y0, fmt: yrName }, { key: "r", vals: E_R, fmt: v => v.toLocaleString("en-US") }],
+  rounds: [{ open: { y0: -4000, r: 300 }, text: "Match the observed data: your eleven tumors within a typical miss of 5,000 mutations of the exam's.",
+    rules: [{ txt: "typical miss: under 5,000 mutations", ok: S => S.miss < 0.005, val: S => Math.round(S.miss * 1e6).toLocaleString("en-US") }] }],
+  freeText: "Target taken. Try any start and rate you like.",
+  simulate: (set, seed) => { const rng = mulberry32(seed); return { pts: E_YR.map(y => set.r * (y - set.y0) * (1 + 0.0008 * gauss(rng)) / 1e6) }; },
+  sum: q => { const miss = Math.sqrt(meanOf(q.pts.map((v, i) => (v - E_CT[i]) ** 2))), slope = lsSlope(E_YR, q.pts) * 1e6; const ym = meanOf(E_YR), cm = meanOf(q.pts) * 1e6; return { miss, slope, began: ym - cm / slope }; },
+  paint: () => E_paint(),
+});
+const E_S = [0, 0.005, 0.01, 0.02, 0.05], E_NC = 100;
+function E_fate(s, rng) { let k = 1; while (k > 0 && k < E_NC) { const p = k * (1 + s) / (k * (1 + s) + E_NC - k); k = binom(E_NC, p, rng); } return k === E_NC; }
+const E_kimura = s => s === 0 ? 1 : E_NC * (1 - Math.exp(-2 * s)) / (1 - Math.exp(-2 * E_NC * s));
+const PE2 = mkPart("E2", {
+  stage: "E", bits: ["E2"], code: "codeE", ms: 1200,
+  ctl: [{ key: "hk", vals: E_S }, { key: "im", vals: E_S }],
+  rounds: [{ open: { hk: 0, im: 0 }, text: "Match the exam's table: dN/dS of about 0.22 in housekeeping genes, 2.45 in immune evasion genes, and near 1 over all genes.",
+    rules: [{ txt: "housekeeping: 0.15 to 0.5", ok: S => S.hk >= 0.15 && S.hk <= 0.5, val: S => f2(S.hk) },
+            { txt: "immune evasion: 1.8 to 3.5", ok: S => S.im >= 1.8 && S.im <= 3.5, val: S => f2(S.im) },
+            { txt: "all protein-coding genes: 0.8 to 1.3", ok: S => S.all >= 0.8 && S.all <= 1.3, val: S => f2(S.all) }] }],
+  freeText: "Target taken. Try any selection you like.",
+  simulate: (set, seed) => { const rng = mulberry32(seed), n = { syn: 60000, hk: 40000, im: 20000, oth: 30000 }, s = { syn: 0, hk: -set.hk, im: set.im, oth: 0 }, fx = {};
+    for (const k in n) { let f = 0; for (let i = 0; i < n[k]; i++) if (E_fate(s[k], rng)) f++; fx[k] = f; } return { n, fx }; },
+  sum: q => { const r = k => q.fx[k] / q.n[k], syn = r("syn"); return { syn, hk: r("hk") / syn, im: r("im") / syn, oth: r("oth") / syn, all: (0.85 * r("oth") + 0.1 * r("hk") + 0.05 * r("im")) / syn, fx: q.fx, n: q.n }; },
+  paint: () => E_paint(),
+});
+function E_paint() {
+  const q1 = shownRun(PE1), cv = $("E1_plot");
+  if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 270), F = frame(70, 14, 650, 200, 1985, 2030, 1.86, 1.96);
+    axes(ctx, F, [[1990, "1990"], [2000, "2000"], [2010, "2010"], [2020, "2020"]], [[1.86, "1.86"], [1.88, "1.88"], [1.9, "1.90"], [1.92, "1.92"], [1.94, "1.94"], [1.96, "1.96"]], "year collected", "somatic mutations (millions)");
+    E_YR.forEach((y, i) => dot(ctx, F.x(y), F.y(E_CT[i]), 4, "#fff", INK));
+    if (q1) { const n = Math.max(1, Math.round(E_YR.length * q1.shown));
+      for (let i = 0; i < n; i++) { const v = q1.pts[i]; if (v >= 1.86 && v <= 1.96) dot(ctx, F.x(E_YR[i]), F.y(v), 4, HOT); else cardText(ctx, v > 1.96 ? "▲" : "▼", F.x(E_YR[i]), v > 1.96 ? F.y0 + 6 : F.y0 + F.h - 6, { size: 11, col: HOT, align: "center" }); } }
+    cardText(ctx, "○ observed data   ● your tumors (▲▼ off the plot)", F.x0 + 8, F.y0 + 8, { size: 11, col: MUTED });
+    ctx.restore();
+  }
+  if (q1 && q1.shown >= 1) { const S = PE1.cfg.sum(q1);
+    $("E1_read").innerHTML = lab("typical miss") + " <b>" + Math.round(S.miss * 1e6).toLocaleString("en-US") + "</b> " + lab("mutations · your tumors' slope") + " <b>" + Math.round(S.slope).toLocaleString("en-US") + "</b> " + lab("a year · counted back to zero at that slope: begun") + " <b>" + yrName(Math.round(S.began)) + "</b>" +
+      "<br>" + lab("the exam's points: slope") + " <b>" + Math.round(lsSlope(E_YR, E_CT) * 1e6).toLocaleString("en-US") + "</b> " + lab("a year; 1.9 million at that rate:") + " <b>" + Math.round(1.9e6 / (lsSlope(E_YR, E_CT) * 1e6)).toLocaleString("en-US") + "</b> " + lab("years"); }
+  else $("E1_read").innerHTML = "";
+  const q2 = shownRun(PE2), done2 = q2 && q2.shown >= 1, S2 = done2 ? PE2.cfg.sum(q2) : null, set2 = q2 ? q2.set : readSet(PE2);
+  $("E2_table").innerHTML = '<table class="cmp"><tr><th>gene category</th><th>dN/dS, exam</th><th>your run</th><th>closed form</th></tr>' +
+    [["All protein-coding genes", "0.99", S2 && S2.all, 0.85 + 0.1 * E_kimura(-set2.hk) + 0.05 * E_kimura(set2.im)], ["Housekeeping genes", "0.22", S2 && S2.hk, E_kimura(-set2.hk)], ["Immune evasion genes", "2.45", S2 && S2.im, E_kimura(set2.im)]]
+      .map(r => '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td style="color:' + HOT + '">' + (r[2] == null ? "–" : f2(r[2])) + "</td><td>" + f2(r[3]) + "</td></tr>").join("") + "</table>";
+  const cv2 = $("E2_plot"); if (cv2) {
+    const { ctx } = frameCanvas(cv2, 760, 180), cats = [["synonymous", "syn"], ["housekeeping, nonsynonymous", "hk"], ["immune evasion, nonsynonymous", "im"], ["elsewhere, nonsynonymous", "oth"]];
+    cardText(ctx, "share of new mutations that end up in every cell", 10, 9, { size: 11, col: MUTED });
+    const xmax = 0.05, bx = 250, bw = 480;
+    cats.forEach(([name, k], i) => { const y = 30 + i * 34; cardText(ctx, name, 10, y + 9, { size: 11.5 });
+      ctx.strokeStyle = RULE; ctx.strokeRect(bx, y, bw, 18);
+      if (S2) { const v = S2.fx[k] / S2.n[k], w = Math.min(1, v / xmax) * bw; ctx.fillStyle = k === "hk" ? INK : k === "im" ? HOT : "#9a968a"; ctx.fillRect(bx, y, w, 18);
+        cardText(ctx, (100 * v).toFixed(2) + "%  (" + S2.fx[k] + " of " + S2.n[k].toLocaleString("en-US") + ")", bx + Math.min(w, bw - 160) + 6, y + 9, { size: 10.5, col: INK, mono: true }); } });
+    ctx.restore();
+  }
+  $("E2_read").innerHTML = done2 ? lab("dN/dS, housekeeping") + " <b>" + f2(S2.hk) + "</b>" + lab(" · immune evasion") + " <b>" + f2(S2.im) + "</b>" + lab(" · all genes") + " <b>" + f2(S2.all) + "</b>" : "";
+  syncPart(PE1); syncPart(PE2); E_code();
+}
+function E_code() {
+  const a = readSet(PE1), b = readSet(PE2);
+  codeInto("codeE", [
+    ["", "# Lesson 18, Stage E -- CTVT: a clock from counts by year; dN/dS from the fate of new mutations in 100 cells"],
+    ["y0", "start <- " + a.y0 + "; rate <- " + a.r + "                  # year the line began; new mutations a year"],
+    ["", "year <- c(1988, 1992, 1995, 2001, 2005, 2008, 2012, 2016, 2021, 2025, 2028)"],
+    ["", "observed <- c(1.876, 1.890, 1.896, 1.904, 1.910, 1.914, 1.922, 1.928, 1.938, 1.942, 1.952) * 1e6"],
+    ["r", "count <- rate * (year - start) * (1 + rnorm(11, 0, 0.0008))"],
+    ["", "c(typical_miss = sqrt(mean((count - observed)^2)), slope = unname(coef(lm(observed ~ year))[2]))"],
+    ["hk", "s <- c(syn = 0, housekeeping = -" + b.hk + ", immune = " + b.im + ", elsewhere = 0); N <- 100"],
+    ["", "fate <- function(s) { k <- 1; while (k > 0 && k < N) k <- rbinom(1, N, k * (1 + s) / (k * (1 + s) + N - k)); k == N }"],
+    ["", "fixed <- sapply(s, function(x) mean(replicate(10000, fate(x))))       # share that ends up in every cell"],
+    ["", "dNdS <- fixed[-1] / fixed[\"syn\"]; dNdS"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE F — ARRB2, extra credit. 600 children at a G frequency of 0.4
+   (Hardy-Weinberg shares: 216 A/A, 288 A/G, 96 G/G); dose 48 + (G/G: d;
+   A/G: h d) + normal noise (sd 18), floored at 0. The exam's boxes read off
+   its figure: A/A box 30-75, whiskers 12-90, mean 48; A/G 25-52, 12-75,
+   mean 40; G/G 18-44, mean 31. JM's "heritability" for the G allele is h,
+   the heterozygote's place between the two homozygotes (as in 1, 1 - hs,
+   1 - s): (48 - 40) / (48 - 31) = 0.47. Target: the three means inside
+   +-4 / -2.5..+2.5 / +-4 of the exam's (d -17 with h .5 hits; h .25 and
+   .75 miss the A/G window most runs; at 400 children h .25 hit 2 of 3).
+   ===================================================================== */
+const F_D = [-5, -10, -17, -25, -35], F_H = [0, 0.25, 0.5, 0.75, 1], F_EXAM = [{ lo: 30, hi: 75, wl: 12, wh: 90, m: 48 }, { lo: 25, hi: 52, wl: 12, wh: 75, m: 40 }, { lo: 18, hi: 44, wl: 18, wh: 44, m: 31 }];
+const F_COL = [BLUE, ORANGE, "#9a968a"], F_NAME = ["A/A", "A/G", "G/G"];
+const PF = mkPart("F1", {
+  stage: "F", bits: ["F1"], code: "codeF", ms: 900,
+  ctl: [{ key: "d", vals: F_D }, { key: "h", vals: F_H }],
+  rounds: [{ open: { d: -5, h: 0 }, text: "Make your three boxes look like the exam's: their averages near 48, 40 and 31.",
+    rules: [{ txt: "A/A average: 44 to 52", ok: S => S.m[0] >= 44 && S.m[0] <= 52, val: S => f1(S.m[0]) },
+            { txt: "A/G average: 37.5 to 42.5", ok: S => S.m[1] >= 37.5 && S.m[1] <= 42.5, val: S => f1(S.m[1]) },
+            { txt: "G/G average: 27 to 35", ok: S => S.m[2] >= 27 && S.m[2] <= 35, val: S => f1(S.m[2]) }] }],
+  freeText: "Target taken. Try any gene you like.",
+  simulate: (set, seed) => { const rng = mulberry32(seed), n = [216, 288, 96], eff = [0, set.h * set.d, set.d];
+    return { g: n.map((k, i) => Array.from({ length: k }, () => Math.max(0, 48 + eff[i] + 18 * gauss(rng)))) }; },
+  sum: q => { const m = q.g.map(meanOf); return { m, h: (m[0] - m[1]) / (m[0] - m[2]) }; },
+  paint: () => F_paint(),
+});
+function F_paint() {
+  const q = shownRun(PF), cv = $("F_plot");
+  if (cv) {
+    const { ctx } = frameCanvas(cv, 760, 280), F = frame(70, 14, 640, 220, 0, 3, 0, 120);
+    axes(ctx, F, [[0.5, "A/A"], [1.5, "A/G"], [2.5, "G/G"]], [[0, "0"], [20, "20"], [40, "40"], [60, "60"], [80, "80"], [100, "100"], [120, "120"]], "ARRB2 genotype", "average dose");
+    const box = (x, b, col, fill, w) => { ctx.strokeStyle = col; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(F.x(x), F.y(b.wl)); ctx.lineTo(F.x(x), F.y(b.lo)); ctx.moveTo(F.x(x), F.y(b.hi)); ctx.lineTo(F.x(x), F.y(b.wh)); ctx.stroke();
+      if (fill) { ctx.fillStyle = fill; ctx.globalAlpha = 0.75; ctx.fillRect(F.x(x - w), F.y(b.hi), F.x(x + w) - F.x(x - w), F.y(b.lo) - F.y(b.hi)); ctx.globalAlpha = 1; }
+      ctx.strokeRect(F.x(x - w), F.y(b.hi), F.x(x + w) - F.x(x - w), F.y(b.lo) - F.y(b.hi));
+      cardText(ctx, "×", F.x(x), F.y(b.m), { size: 14, col: fill ? "#fff" : col, align: "center", bold: true }); };
+    F_EXAM.forEach((b, i) => box(i + 0.32, b, "#9a968a", null, 0.17));
+    if (q && q.shown >= 1) q.g.forEach((v, i) => { const s = v.slice().sort((a, b) => a - b), Q = p => quantile(s, p), lo = Q(0.25), hi = Q(0.75), iq = hi - lo;
+      box(i + 0.68, { lo, hi, wl: Math.max(s[0], lo - 1.5 * iq), wh: Math.min(s[s.length - 1], hi + 1.5 * iq), m: meanOf(v) }, F_COL[i], F_COL[i], 0.17); });
+    cardText(ctx, "grey: the exam's boxes · coloured: your run", F.x0 + F.w - 4, F.y0 + 6, { size: 11, col: MUTED, align: "right" });
+    ctx.restore();
+  }
+  if (q && q.shown >= 1) { const S = PF.cfg.sum(q);
+    $("F_read").innerHTML = lab("averages: A/A") + " <b>" + f1(S.m[0]) + "</b>" + lab(", A/G") + " <b>" + f1(S.m[1]) + "</b>" + lab(", G/G") + " <b>" + f1(S.m[2]) + "</b>" + lab(" · the heterozygote's place between the homozygotes, (A/A − A/G) / (A/A − G/G):") + " <b>" + f2(S.h) + "</b>" +
+      "<br>" + lab("the exam's boxes: (48 − 40) / (48 − 31) =") + ' <b style="color:' + HOT + '">0.47</b>'; }
+  else $("F_read").innerHTML = "";
+  syncPart(PF); F_code();
+}
+function F_code() {
+  const s = readSet(PF);
+  codeInto("codeF", [
+    ["", "# Lesson 18, Stage F -- dose by genotype at one gene; h is the heterozygote's place between the two homozygotes"],
+    ["d", "d <- " + s.d + "                                     # G/G's dose, relative to A/A (48)"],
+    ["h", "h <- " + s.h],
+    ["", "geno <- rep(c(\"A/A\", \"A/G\", \"G/G\"), c(216, 288, 96))"],
+    ["", "dose <- pmax(0, 48 + c(\"A/A\" = 0, \"A/G\" = h * d, \"G/G\" = d)[geno] + rnorm(600, 0, 18))"],
+    ["", "m <- tapply(dose, geno, mean); boxplot(dose ~ geno)"],
+    ["", "c(m, h_measured = unname((m[\"A/A\"] - m[\"A/G\"]) / (m[\"A/A\"] - m[\"G/G\"])))"],
+  ]);
+}
+
+/* =====================================================================
+   THE KEY — the exam key's answers, verbatim (exam02_key.tex), with what
+   the student's runs show under each. JM's answers are not edited to fit
+   the simulations; where the two disagree the overhaul doc says so.
+   ===================================================================== */
+const runLine = (S, f) => { const q = S.last && S.last.sum ? S.last : null; return q ? f(q.sum, q) : "run it to see your numbers"; };
+KEY_PAINT.A = () => keyInto("keyA", Gates.A.done, [
+  ["(a) What specific evolutionary mechanism caused this massive shift in allele frequency?", "drift", runLine(PA2, S => "your islands: the same start, the allele lost on " + S.lost + " of 100, 10%+ colorblind on " + S.n10 + "")],
+  ["(b) Compared to the pre-typhoon population, how did this event alter the inbreeding coefficient (F) of the modern islanders?", "increased.", runLine(PA2, S => "your islands: F from 0 to " + f2(S.F) + " in 9 generations")],
+  ["(c) Before the typhoon why would this detrimental allele have existed in the population at all?", "de novo mutation or recessive q=u/hs situation", runLine(PA1, (S, q) => "your world: " + tiny(S.aff) + " colorblind at balance with u " + q.set.u + ", s " + q.set.s + ", h " + q.set.h)],
+  ["(d) Do you expect this allele to be at Hardy-Weinberg Equilibrium?", "No", runLine(PA2, S => "your islands: colorblind ÷ q² " + f2(S.ratio) + " (1 at Hardy-Weinberg); q changed from 0.025 by chance")],
+]);
+KEY_PAINT.B = () => keyInto("keyB", Gates.B.done, [
+  ["(a) Which species is more inbred?", "box turtles.", runLine(PB, S => "your run: 1 − Ho/He, spotted " + f2(1 - S.sHo / S.sHe) + ", box " + f2(1 - S.bHo / S.bHe))],
+  ["(b) What data let you answer (a)?", "Gap between observed &amp; expected heterozygotes", runLine(PB, S => "your run: box Ho " + f2(S.bHo) + " against He " + f2(S.bHe))],
+  ["(c) What is the most likely explanation for the hatching/survival rate differences?", "low box turtle fitness (inbreeding depression)", runLine(PB, S => "your run: hatching, spotted " + pc(S.sHat) + ", box " + pc(S.bHat))],
+  ["(d) Assume equal mutation rates. Which population should have higher genetic diversity?", "Spotted turtles", runLine(PB, S => "your run, the same u: He spotted " + f2(S.sHe) + ", box " + f2(S.bHe) + "; Ho spotted " + f2(S.sHo) + ", box " + f2(S.bHo))],
+  /* JM: the key says spotted; He (the table's and the run's) is higher in box turtles at equal u -- overhaul doc, open point 1 */
+]);
+const C_byN = () => { const by = {}; for (const h of C_HIST) { const b = by[h.N] = by[h.N] || { runs: 0, reachB: 0, atC: 0, lost: [0, 0, 0] }; b.runs++; b.reachB += h.reachB; b.atC += h.atC; h.lost.forEach((v, i) => b.lost[i] += v); } return by; };
+KEY_PAINT.C = () => { const by = C_byN(), Ns = Object.keys(by).map(Number).sort((a, b) => a - b), tot = [0, 0, 0]; for (const N of Ns) by[N].lost.forEach((v, i) => tot[i] += v);
+  keyInto("keyC", Gates.C.done, [
+    ["(a) At the start, when the three 1-mutation alleles are competing, which allele is most likely to go extinct in each of the 10 populations?", "B", C_HIST.length ? "your runs: lost first, A " + tot[0] + ", B " + tot[1] + ", C " + tot[2] : ""],
+    ["(b) Which is least likely to go extinct in each?", "C", ""],
+    ["(c) What evolutionary force(s) would a population need to reach Lineage C’s peak?", "selection", C_HIST.length ? "your runs, at C's peak at the end: " + Ns.map(N => "N " + N + " " + by[N].atC + "/" + 10 * by[N].runs).join(", ") : ""],
+    ["(d) What evolutionary force(s) would a population need to reach the highest peak?", "selection &amp; drift", C_HIST.length ? "your runs, reached B's peak: " + Ns.map(N => "N " + N + " " + by[N].reachB + "/" + 10 * by[N].runs).join(", ") : ""],
+    ["(e) How does the effective population size influence the probability a population that starts with all three alleles will ultimately end up with the best protein?", "higher Ne = weaker drift = less likely for B to last = lower chance of best protein here", ""],
+  ]); };
+KEY_PAINT.D = () => keyInto("keyD", Gates.D.done, [
+  ["(a) How did the covariance of horn size &amp; reproductive success change in 1995?", "+ to - / decreased", runLine(PD, S => "your herds: cov(w, z)/w̄ before 1995 " + f2(S.covBefore) + ", 1995-2020 " + f2(S.covHunt))],
+  ["(b) What was happening to the additive genetic variation for horn size before 1995?", "Decreasing", runLine(PD, S => "your herds: V_A 1980 " + f1(S.vaStart) + ", 1995 " + f1(S.va1995))],
+  ["(c) What has been happening to the additive genetic variation for horn size since 1995?", "Decreasing", runLine(PD, S => "your herds: V_A 1995 " + f1(S.va1995) + ", 2020 " + f1(S.va2020))],
+  ["(d) How has neutral genetic diversity (θ) likely changed over this period?", "Decreases (due to lower Ne); fewer males = sex ratio bias = more inbreeding", runLine(PD, S => "your herds: rams that sired, " + f1(S.ramsBefore) + " before 1995, " + f1(S.ramsHunt) + " while hunted; neutral heterozygosity " + f2(S.hn1995) + " → " + f2(S.hn2020))],
+  ["(e) If hunting is permanently banned in 2027, how do you expect horn length to change relative to the period before trophy hunting was legalized?", "Go up again (same sign) but slower (lower magnitude). Additive genetic variation was lost.", runLine(PD, S => S.rise == null ? "run the second target to see it" : "your herds: " + (S.rise >= 0 ? "+" : "") + f2(S.rise) + " cm a generation after the ban, against " + f2(S.fall) + " under hunting")],
+]);
+KEY_PAINT.E = () => keyInto("keyE", Gates.E.done, [
+  ["(a) Any idea how they estimate when these tumor cells diverged from healthy dogs using just the DNA?", "Long wordy answer: “Because the table shows that most mutations are neutral, they accumulate by drift at a constant rate. So you can just look at how many mutations &amp; how fast they accumulate” Short mathy answer: slope (mutations/time) ≈ μ thus time ≈ Nmutations/μ", runLine(PE1, S => "your tumors: slope " + Math.round(S.slope).toLocaleString("en-US") + " a year; counted back, begun " + yrName(Math.round(S.began)))],
+  ["(b) If one cell in a tumor has a non-synonymous mutation to an immune evasion gene what is likely to happen to it?", "Become more common in the tumor", runLine(PE2, S => "your run: " + (100 * S.fx.im / S.n.im).toFixed(2) + "% end up in every cell, against " + (100 * S.syn).toFixed(2) + "% for synonymous")],
+  ["(c) If one cell in a tumor has a non-synonymous mutation to a housekeeping gene what is likely to happen to it?", "Die off", runLine(PE2, S => "your run: " + (100 * S.fx.hk / S.n.hk).toFixed(2) + "% end up in every cell; the rest are lost")],
+  ["(d) Why would the tumor do this?", "Increase variation/escape ratchet from dN housekeeping mutations", runLine(PE2, S => "your run: " + S.fx.hk + " harmful housekeeping changes still reached every cell; a line that only copies itself never sheds them (lesson 16)")],
+]);
+KEY_PAINT.F = () => keyInto("keyF", Gates.F.done, [
+  ["What (roughly) is the heritability of the fentyl dosage for pain relief phenotype for the G allele?", "≈ 0.5", runLine(PF, S => "your run: (A/A − A/G) / (A/A − G/G) = " + f2(S.h))],
+]);
+
+/* ====== painting and wiring ====== */
+function paintAll() { A_paint(); B_paint(); C_paint(); D_paint(); E_paint(); F_paint(); for (const K in KEY_PAINT) KEY_PAINT[K](); }
+function wire() {
+  for (const S of [PA1, PA2, PB, PC, PD, PE1, PE2, PF]) wirePart(S);
+  $("B_meas").addEventListener("change", B_paint);
+  $("D_meas").addEventListener("change", D_paint);
+  for (const K of ["A", "B", "C", "D", "E", "F"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson18_stage" + K + ".R", RTEXT["code" + K]));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  /* instructor bypass / study mode: every stage is open anyway. Study mode leaves the targets to be done (JM, 2026-10-08);
+     the instructor bypass fills them as hit, and opens every key */
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const K of ["A", "B", "C", "D", "E", "F"]) $("stage" + K).classList.remove("stage-locked");
+    if (!study) { for (const P in PARTS) { const S = PARTS[P]; S.done = true; S.results = S.cfg.rounds.map(() => true); openRound(S); }
+      for (const k in BIT) record(BIT[k], true); checkStages(); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l18reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson18",
+  version: 1,      /* 1: first draft, A-F (2026-10-12) */
+  scaffold: 10,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    for (const K of ["A", "B", "C", "D", "E", "F"]) $("stage" + K).classList.remove("stage-locked");
+    if (Score.isStudy && Score.isStudy()) window.__l18reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>
