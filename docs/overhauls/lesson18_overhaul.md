@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson18.html` — first draft 2026-10-12
 **Checks** · `node scripts/check_lesson18_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · draft 2 built (1-5 + extra credit), checks green (21 bars); LOCKS `x`; JM to review
-**Last touched** · 2026-10-13
+**Status** · draft 2 built (1-5 + extra credit), checks green (21 bars); LOCKS `o` (unlocked 2026-10-14, JM)
+**Last touched** · 2026-10-14
 **Source** · `notes/exams/2025.5/exam02_key.tex` and `exam02.pdf` (question text and key answers quoted verbatim on the page; the keys read "your simulations' ...")
 
 ## What the lesson is
@@ -42,6 +42,7 @@
 
 1. **Q2(d)**: key says spotted turtles. With equal mutation rates, He rises with N (4Nu/(1+4Nu)); the table's own He is higher in box turtles (0.85 vs 0.76), and the sim agrees. "Spotted" matches Ho only. Which answer should the page reveal?
 2. **Q5(a) and the plot**: the plotted slope is ~1,900 mutations a year; 1.9 million at that rate is ~1,000 years, not the ~6,000 in the question. Two points sit at 2025 and 2028. Fit as drawn (the page does), or re-scale the axis?
+   - **JM 2026-10-14**: fit as drawn; the question's "almost 6,000 years old" and (a)'s "thousands of years old" now read "long ago" (a number misleads). He hit target 1 at 1000 AD / 1,900 but found it touchy: only that one setting of the 80 hits (next best misses by ~79k), and the readout's least-squares slope (1,729) points to 1,800, which misses at every start on the menu. Not changed yet.
 3. **Q1(d)**: under random mating the sim's colorblind share sits on q^2 (HWE in the snapshot sense) even after drift; only cousin marriages push it above. The key's "No" reads as "the assumptions are broken". Fine as is?
 4. **Q4(a)** "+ to −": the page's rams' mating edge gives a positive cov(w, z) before 1995 (+0.7 at edge .1, +2.2 at .3) and the rise after the ban, (e). At edge 0 cov sits at 0 and nothing rises after the ban (target 2 misses). Edge .3 overshoots 1995 (miss 6.5 cm on target 1); edge .1 clears both. Matches the key.
 8. **Q5 voice**: "My took some notes" left as printed (typo in the exam).
