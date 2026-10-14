@@ -51,7 +51,7 @@
      - checks, three runs (2026-10-14): the clock target and the axis check pass 3/3. Four untouched bars failed once each (seeds are a fresh draw per load): B target 1's intended setting hit 1/3 (needs 2); E target 2's s -.1/+.1 hit 1/2 (should miss); E target 3's s -.01/+.01 hit 1/2 (should miss); extra credit's h .75 hit 1/2 (should miss; known, see the F comment). Not changed: JM called 18 done
 3. **Q1(d)**: under random mating the sim's colorblind share sits on q^2 (HWE in the snapshot sense) even after drift; only cousin marriages push it above. The key's "No" reads as "the assumptions are broken". Fine as is?
 4. **Q4(a)** "+ to −": the page's rams' mating edge gives a positive cov(w, z) before 1995 (+0.7 at edge .1, +2.2 at .3) and the rise after the ban, (e). At edge 0 cov sits at 0 and nothing rises after the ban (target 2 misses). Edge .3 overshoots 1995 (miss 6.5 cm on target 1); edge .1 clears both. Matches the key.
-8. **Q5 voice**: "My took some notes" left as printed (typo in the exam).
+8. **Typos** (JM 2026-10-14: "I'm fine with the correction of minor typos"): Q5 "My took" read "I took"; Q4 "big horn" read "bighorn"; extra credit "fentyl" read "fentanyl" (also in its key), "look at" read "looked at". Each noted in its HTML comment.
 9. **C**: N runs 6-1200 (multiples of 3: at N 5 the three lineages started 1/1/3 and B's peak fell to .14). Target 2 is "at least one of 10 reaches B's peak" (2+ was 77% of tries at best).
 5. Points on the bighorn plot treated as generations (2.5 years apart): realish, not sheep biology.
 6. Extra credit: only ARRB2 has a simulation; the three naming questions are not on the page.
