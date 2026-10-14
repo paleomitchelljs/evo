@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson16.html`
 **Checks** · `node scripts/check_lesson16_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15); later the same day B hermaphrodites, C's labels and plots, D rebuilt on how common the inversion gets (v6, scaffold 16); that evening hermaphrodites throughout, D's fourth target and mutational load (v7, scaffold 17). Checks pass. Items 6-11 and 20-24 below describe the archived B-D
-**Last touched** · 2026-10-12 (evening: hermaphrodites throughout; D's side effect and mutational load; v7)
+**Status** · first pass built (2026-10-08): A, B, C from JM's plan, locked in LOCKS.txt. 2026-10-09: A rebuilt on eight targets + dN/dS (v2); then B's spread + one-population rounds, C's watch, a new D (v3, scaffold 19). 2026-10-11: copy or mate rebuilt as a plan played in 100 populations, pieces and the inversion drafted on its engine (v4). 2026-10-12: pieces became B ("you are a specific sequence of nucleotides"), copy or mate C (v5, scaffold 15); later the same day B hermaphrodites, C's labels and plots, D rebuilt on how common the inversion gets (v6, scaffold 16); that evening hermaphrodites throughout, D's fourth target and mutational load (v7, scaffold 17). 2026-10-14: JM's dictated intros for A-D, mechanical bullets, B's bar plot out and its targets on frequency (v8). Items 6-11 and 20-24 below describe the archived B-D
+**Last touched** · 2026-10-14 (JM's voice notes: intros, bullets, A's pop-up, B's panel and targets; v8)
 
 ## JM, 2026-10-11: B rebuilt as a game; C and D built off it
 
@@ -149,6 +149,53 @@ Open for JM (2026-10-12, evening):
 - C's numbers are small now. Without the cost of sons, copies of you grow only through your genome's fit: 7 at most in the still world (37 before), 1-4 in the changing one. The lesson holds (copying wins when nothing changes, mating now and then wins when it does or when mutations pile up), but world 2 needed 60 generations and bad mutations to separate at all.
 - Load in the side effect: the rare standard chromosomes lose their mutation-free copies (the fewest climbs) but their average barely moves before they are lost, so their load does not show. Load shows where the lock lasts (kill). If he wants load on the side effect itself, the standard arrangement would have to stay rare longer (it is swept out now).
 - "Mutational load" is named on screen with a one-line gloss: the first term this lesson names beyond haplotype. His call that it should be.
+
+JM, 2026-10-14 (voice notes, autotranscribed; the dictated text is on the page as each stage's voice block, ASR slips fixed and noted in an HTML comment there). The technical asks, verbatim:
+
+> [A] we should change the buttons on the pop-up for it to delete instead of take it out and insert instead of put a new letter in front of it.
+>
+> And for the bullet points, these should be short and should be purely mechanical. I think that should be the trend going forward for all.
+>
+> [B] For this, um, the bar plot panel. That should be removed. We should have the population panel at the top with the genomes. I love that. And we should have the over time drop down plot where you can select which thing to plot. But the bar plot in the middle, the one that says sequences of you and genomes carrying any of you, we should just remove that.
+>
+> [B, in the dictated text] Your goal is to try and reach high frequency in the population. What you should see is that there are multiple ways to do this. You can have many genomes that are exactly you, or you can have a lot more genomes that have some pieces of you ... The panel below shows over time. Many populations carrying your same strategy, with a drop down menu letting you see alternative randomization histories
+>
+> [C] Again, targeted short, descriptive bullet points.
+>
+> [D] bullet points, again, cleaned up and are less explanatory and more just documenting what the boxes show and do.
+
+Read as (mine):
+- Each stage's intro: his dictation as a voice block (left), bullets (right), as lessons 14 and 15 lay it out. A, B, C bullets are his dictated ones; D's are mine, one per box.
+- A: pop-up row "Insert" (letters), buttons "Delete" / "Cancel"; the table says "inserted" / "deleted". N still holds for all eight (dN/dS ruling, 2026-10-09); his text "you can affect the population size" is true of the first change.
+- B: the bar plot (`B_pieces`) goes. B's targets were sequence length (17-30, 8-16); his goal is frequency, reached two ways, so the two targets become the two ways: genomes all you (copying) and genomes carrying some of you (mating). His "drop-down menu letting you see alternative randomization histories" built literally: a second menu in the over-time panel picks which of the 100 populations the board shows, drawn dark among the lines.
+- C: "you, whole" in the menu becomes "you, whole (unrecombined)" (his "whole chunks of you ... unrecombined chunks"). His "set six generations" read as the first target's six (the plan's length is the target's). A fifth bullet for the Price panel (mine: his four leave it undocumented).
+- D: targets unchanged. His "targets for the frequency of your haplotype" left as said.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 45 | A | voice block + his five bullets; pop-up Insert / Delete; table inserted / deleted | done; his target bullet gained the noncoding kind and "fitness 1, 1 − hs, 1 − s" (the s/h bullet it replaces) |
+| 46 | B | voice block + his bullets; bar plot out; population menu; targets on the two ways to high frequency; readout under the over-time plot | done: genomes exactly you ≥ 2 and carrying some of you ≥ 8, generation 8, averaged where you last; each round opens the plot on its measure |
+| 47 | C | voice block + his four bullets (+ Price); "you, whole (unrecombined)" | done |
+| 48 | D | voice block + mechanical bullets | done: five, one per box; mutational load's gloss kept on the over-time bullet |
+| 49 | — | `version: 8` (B's scoring rules change; still scaffold 17); checks: B rewritten, `B_pieces` out of the canvas list, A's pop-up labels; three passes | done: 45 checks + four R panels. A pre-existing flake in D target 4's check (others' fewest above yours, run by run; 0.26 against 0.29 once) now compares the two runs' average |
+| 50 | — | REVISIONS_PLANNED row: bullets purely mechanical (JM: "the trend going forward for all") | done: row 14 |
+
+Measured (B, node prototype of the page's engine, scratch b1-b3.js; 100 populations; generation 8; averaged over the populations still carrying you; min / median / max over 12 starts unless said):
+
+        left / exactly you / carrying some of you
+        copy 8 (40 starts)       17-23-31 · 2.70/4.56/6.48 · the same
+        mate at the last 1       16-24-29 · 0.13/0.39/0.84 (all red) · 5.7/7.7/9.3 (30 starts 5.2-10.7)
+        mate at the last 2, 3    18-28-33 · ~0.1 · 8.8/11.3/12.5     18-30-35 · 0 · 11.3/14.5/16.3
+        mate 8                   56-69-77 · 0 · 13.3/15.7/17.5
+        mate first 1 or 2, copy  29-41-49 · 0 · 3.7/5.3/5.8          43-51-55 · 0 · 5.1/6.1/7.1
+        copies of you over all 100: 0.5-1.3 whatever the plan (nothing helps or harms)
+        generation 10 changes little (copy, exactly you where you last 3.0/4.5/6.7), so 8 stays
+
+Open for JM (2026-10-14):
+- B's targets are new: the sequence-length windows (17-30, 8-16) are gone, replaced by his two ways to high frequency. Both are averaged over the populations still carrying you; over all 100 every count sits near 1 (neutral), so "high" only shows where you last. The readout gives populations left and copies over all 100 beside it.
+- B's "many genomes exactly you" target is 2 on average (copying alone gives 2.7-6.5; any mating breaks you to under 1). "High frequency" is modest at 60 genomes and 8 generations.
+- Mating only early, then copying, mostly misses B's second target (5-7; 8.0 once on the page): mating spreads you most when you are already in several genomes. The window closes on copying alone (at most 6.5).
+- C's "six generations" read as all of them; "hit run" given as Go; a fifth bullet (Price) is mine.
 
 ## Measured (2026-10-08)
 

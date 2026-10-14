@@ -32,13 +32,17 @@
  *      synonymous change and beneficial above; after the eight, changes
  *      play as practice.
  *   B (2026-10-12: you are a specific sequence of nucleotides; later the
- *      same day, hermaphrodites). Pieces are runs of red; two genomes share
- *      what both carry at the same places; your letters stay yours; a copy
- *      is its parent whole and a genome that copies is no one's mate; with
- *      no males copying does not multiply you (copies of you near 1 either
- *      way, mating spreads you over more genomes); each target hit by its
- *      plan and missed by its neighbours; two targets and a comparison
- *      finish B.
+ *      same day, hermaphrodites; 2026-10-14: targets on frequency, the bar
+ *      plot gone). Pieces are runs of red; two genomes share what both carry
+ *      at the same places; your letters stay yours; a copy is its parent
+ *      whole and a genome that copies is no one's mate; with no males
+ *      copying does not multiply you (copies of you over all 100 near 1
+ *      either way); "exactly you" is your two chromosomes letter for letter;
+ *      target 1 (genomes exactly you) hit by copying and missed by any
+ *      mating, target 2 (genomes carrying some of you) hit by mating late or
+ *      throughout and missed by copying and by mating only early; the
+ *      population menu picks the board's population and its dark line; the
+ *      readout agrees with the run; two targets and a comparison finish B.
  *   C (copy or mate: a plan played in 100 populations; it was B until
  *      2026-10-12; hermaphrodites since that evening). A copy is its parent
  *      exactly and you, whole; a young from mating never is, and is half
@@ -73,7 +77,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8798;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_seq","A_runs","A_dnds","A_wheel","B_board","B_letters","B_pieces","B_time","C_plan","C_side","C_board","C_time","C_price","D_board","D_time","D_genes"];
+const CANVAS_IDS = ["A_seq","A_runs","A_dnds","A_wheel","B_board","B_letters","B_time","C_plan","C_side","C_board","C_time","C_price","D_board","D_time","D_genes"];
 const INNER = `
 const CANVASES = ${JSON.stringify(CANVAS_IDS)};
 const L=[], say=s=>L.push(s);
@@ -164,12 +168,14 @@ Gates.A.open = true; FIT_EPOCH++;
   /* target 1, synonymous; the first scored try a nonsynonymous change */
   const t1 = txt("A_ttext") === "Make a synonymous change.";
   A_openPop(41);
-  const popOpen = !el("A_pop").hidden && document.querySelectorAll("#A_pop button").length === 9;
+  const popOpen = !el("A_pop").hidden && document.querySelectorAll("#A_pop button").length === 9 &&
+    Array.from(document.querySelectorAll("#A_pop .pr span")).map(x => x.textContent).join("|") === "Change it to|Insert" &&
+    document.querySelector('#A_pop button[data-act="del"]').textContent === "Delete";
   document.querySelector('#A_pop button[data-act="sub"][data-to="T"]').click();
   const changed = A.step === "set" && A.mut.kind === "sub" && A.mut.to === "T" && A.eff.kind === "nonsynonymous";
   A_openPop(10); const lockedSeq = el("A_pop").hidden && A.mut.pos === 41;
   const opened = shown("A_controls") && free("s") && free("h") && free("N") && txt("A_go") === "Go" && txt("A_verdict") === "" && !/Gly/.test(txt("A_effect"));
-  check("A: target 1 asks for a synonymous change; a click opens the pop-up (3 + 4 + 2 buttons); a change locks the sequence and opens s, h and N; the verdict and the protein wait for Go",
+  check("A: target 1 asks for a synonymous change; a click opens the pop-up (3 + 4 + 2 buttons: Change it to, Insert, Delete); a change locks the sequence and opens s, h and N; the verdict and the protein wait for Go",
         t1 && popOpen && changed && lockedSeq && opened);
   /* Reset, top left of the sequence panel (JM 2026-10-09): a misclicked change undone in one click, then made again */
   const rb = el("A_reset"), sp = el("A_seq").parentElement;
@@ -223,7 +229,7 @@ Gates.A.open = true; FIT_EPOCH++;
   const bits = Array.from({ length: 8 }, (_, i) => bit("A" + (i + 1))).join("");
   check("A: eight hits fill the table, all at one N (" + [...Ns].join(", ") + "), and open B (bits " + bits + ")",
         nc && A.rows.length === 8 && Ns.size === 1 && Gates.A.done && Gates.B.open && document.querySelector('#tasksA li[data-task="A1"]').classList.contains("done") &&
-        bits === "01011111" && document.querySelectorAll("#A_table tr").length === 9);
+        bits === "01011111" && document.querySelectorAll("#A_table tr").length === 9 && /letter 31: [ACGT] deleted/.test(el("A_table").textContent) && A_changeText({ kind: "ins", pos: 4, to: "G" }) === "letter 5: G inserted");
   /* dN/dS off the eight, beneficial and harmful apart (JM 2026-10-09): the readout against the rows, and the
      picture it is for -- harmful below the synonymous change, beneficial above (N 20, the opening: synonymous ~16 of
      1,000, s 0.1 ~1, s -0.05 ~38) */
@@ -271,30 +277,59 @@ Gates.A.open = true; FIT_EPOCH++;
     pr0.checked = false; B_sync();
     check("B: you are 80 letters (" + B_SEQ.map(r => r.map(v => "ACGT"[v]).join("").slice(0, 12)).join(" / ") + " ...); all " + red + " red places carry your letter there; grey ones match yours " + (100 * same / grey).toFixed(0) + "% of the time, by chance",
           B_SEQ.length === 2 && B_SEQ.every(r => r.length === 40) && red > 0 && mine === red && same / grey > 0.15 && same / grey < 0.4); }
-  /* each plan played twice as practice. Measured (node, 100 populations, 20 starts; average sequence length at generation
-     8 by generations of mating): 0 and 1: 40; 2: 19.0-23.0; 3: 12.3-16.3; 4: 8.6-12.1; 8: 4.6-5.8. Genomes carrying you
-     median 1.1 copying, 9.8 mating; copies of you near 1 either way (expected exactly 1; copying alone, one run of 100
-     populations has a standard error near 0.26, so the band is wide) */
+  /* exactly you: your two chromosomes letter for letter, either way round; all red is not enough (a young of two of
+     you is red throughout, its chromosomes your two crossed over) */
+  { const you = B_you(), sw = { c: [you.c[1], you.c[0]] }, mixed = { c: [cmHap(40), cmHap(40)] };
+    mixed.c[0].a.set(B_SEQ[0].slice(0, 20).concat(B_SEQ[1].slice(20))); mixed.c[1].a.set(B_SEQ[1]); mixed.c.forEach(c => c.y.fill(1));
+    const differ = B_SEQ[0].slice(20).some((v, i) => v !== B_SEQ[1][20 + i]);
+    check("B: exactly you is your two chromosomes letter for letter, either way round; a red-throughout genome with one chromosome your two crossed over is not",
+          B_exact(you) && B_exact(sw) && (!differ || !B_exact(mixed)) && cmRed(mixed) === 1); }
+  /* each plan played twice as practice. Measured (node, the page's engine; 100 populations; at generation 8, averaged
+     over the populations still carrying you, min / median / max over starts):
+       genomes exactly you   copy 8 (40 starts) see the page's comment; any mating 0.0-0.6 (one at the end), 0 (more)
+       genomes carrying you  copy 2.6-5.7 · mate last 1 5.7-9.3 · last 2 8.8-12.5 · last 3 11.3-16.3 · mate 8 13.3-17.5 ·
+                             mate first 2 then copy 5.1-7.1 · mate first 1 then copy 3.7-5.8
+     copies of you over all 100 near 1 whatever the plan (expected exactly 1; one run of 100 populations has a standard
+     error near 0.26 copying, so the band is wide) */
   const pr = document.getElementById("B_practice"); pr.checked = true; B_sync();
-  const play = (round, nc) => { BG.round = round; const out = []; for (let k = 0; k < 2; k++) { B_newRun(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < nc ? "copy" : "mate"; B_stepOnce(); } out.push(B_sum(BG.run, 8)); } return out; };
-  const ok = (r, S) => S.piece >= r.lo && S.piece <= r.hi, f = a => a.map(S => S.car.toFixed(1) + "/" + S.piece.toFixed(1)).join(" ");
-  const [c1, c2] = B_ROUNDS, a6 = play(0, 6), a7 = play(0, 7), a5 = play(0, 5), a8 = play(0, 8), b4 = play(1, 4), b6 = play(1, 6), b0 = play(1, 0);
-  check("B: no males, so copying does not multiply you: copies of you at generation 8, copy 8 " + a8.map(S => S.copies.toFixed(2)).join("/") + ", mate 8 " + b0.map(S => S.copies.toFixed(2)).join("/") +
-        " (about 1 either way); mating spreads you, genomes carrying you " + a8.map(S => S.car.toFixed(1)).join("/") + " against " + b0.map(S => S.car.toFixed(1)).join("/"),
-        a8.concat(b0).every(S => S.copies > 0.25 && S.copies < 2.2) && Math.min(...b0.map(S => S.car)) > 3 * Math.max(...a8.map(S => S.car)));
-  check("B target 1 (sequence length " + c1.lo + "-" + c1.hi + "; genomes / length): copy 6 then mate 2 " + f(a6) + " hits; copy 7 then mate 1 " + f(a7) + " (your two chromosomes are both you) and copy 5 then mate 3 " + f(a5) + " miss",
-        a6.every(S => ok(c1, S)) && a7.every(S => !ok(c1, S) && S.piece === 40) && a5.every(S => !ok(c1, S)) && a8.every(S => S.piece === 40));
-  check("B target 2 (sequence length " + c2.lo + "-" + c2.hi + "): copy 4 then mate 4 " + f(b4) + " hits; copy 6 then mate 2 " + f(b6) + " and mate 8 " + f(b0) + " miss",
-        b4.every(S => ok(c2, S)) && b6.every(S => !ok(c2, S)) && b0.every(S => !ok(c2, S)));
+  const plan = (n, first) => Array.from({ length: 8 }, (_, t) => (first ? t < n : t >= 8 - n) ? "mate" : "copy");
+  const play = (round, pl) => { BG.round = round; const out = []; for (let k = 0; k < 2; k++) { B_newRun(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = pl[t]; B_stepOnce(); } out.push(Object.assign(B_sum(BG.run, 8), { j: B_judge(B_rule(), B_sum(BG.run, 8)) })); } return out; };
+  const [c1, c2] = B_ROUNDS, f = (a, k) => a.map(S => S[k] == null ? "–" : S[k].toFixed(1)).join("/");
+  const a0 = play(0, plan(0)), a1 = play(0, plan(1)), a1f = play(0, plan(1, true)), a8 = play(0, plan(8));
+  const b8 = play(1, plan(8)), b3 = play(1, plan(3)), b0 = play(1, plan(0)), b2f = play(1, plan(2, true));
+  check("B: no males, so copying does not multiply you: copies of you over all 100 at generation 8, copy 8 " + a0.map(S => S.copiesAll.toFixed(2)).join("/") + ", mate 8 " + b8.map(S => S.copiesAll.toFixed(2)).join("/") +
+        " (about 1 either way); mating spreads you, populations still carrying you " + a0.map(S => S.left).join("/") + " against " + b8.map(S => S.left).join("/"),
+        a0.concat(b8).every(S => S.copiesAll > 0.25 && S.copiesAll < 2.2) && Math.min(...b8.map(S => S.left)) > Math.max(...a0.map(S => S.left)));
+  check("B target 1 (" + c1.txt + ", where you last): copy 8 " + f(a0, "exact") + " hits; mate once at the end " + f(a1, "exact") + ", once at the start " + f(a1f, "exact") + ", mate 8 " + f(a8, "exact") + " miss",
+        c1.meas === "exact" && a0.every(S => S.j.ok) && a1.concat(a1f, a8).every(S => !S.j.ok && S.exact < 1));
+  /* the window closes on copying (its highest, 40 starts: 6.48); mating only early and copying after spreads you less
+     than mating throughout, but it is mating, and may reach the window (5.1-7.1 over 12 starts; 8.0 once on the page) */
+  const avg = (a, k) => a.reduce((x, S) => x + S[k], 0) / a.length;
+  check("B target 2 (" + c2.txt + ", where you last): mate 8 " + f(b8, "car") + " and copy 5 then mate 3 " + f(b3, "car") + " hit; copy 8 " + f(b0, "car") + " misses; mate 2 then copy 6 " + f(b2f, "car") + " spreads you less than mate 8",
+        c2.meas === "car" && b8.concat(b3).every(S => S.j.ok) && b0.every(S => !S.j.ok) && avg(b2f, "car") < avg(b8, "car"));
+  /* the over-time panel: the readout agrees with the run; the population menu picks the board's population (and its dark
+     line), Start over goes back to the first still carrying you; no bar plot */
+  { B_paint(); const q = BG.run, rd = document.getElementById("B_timeRead").textContent.replace(/\\s+/g, " ");
+    const live = q.hist[q.t].filter(s => s.car > 0), m = rd.match(/populations still carrying you (\\d+) of 100; there, on average:\\s*genomes exactly you ([\\d.–]+) · carrying some of you ([\\d.–]+) · copies of you ([\\d.–]+) · sequence length ([\\d.–]+) letters\\s*copies of you over all 100, the lost ones as 0: ([\\d.]+)/);
+    const agrees = !!m && +m[1] === live.length && near(+m[3], live.reduce((a, s) => a + s.car, 0) / live.length, 0.051) && near(+m[6], q.hist[q.t].reduce((a, s) => a + s.copies, 0) / 100, 0.0051);
+    const sel = document.getElementById("B_pop"), first = B_shown(q), other = (first + 7) % 100;
+    sel.value = String(other + 1); sel.dispatchEvent(new Event("change"));
+    const picked = B_shown(q) === other && /^Population /.test(document.getElementById("B_boardH").textContent) && document.getElementById("B_boardH").textContent.startsWith("Population " + (other + 1) + " ");
+    BG.round = 0; B_restart(); const back = BG.popSel == null && sel.value === String(B_shown(BG.run) + 1);
+    check("B: under the over-time plot, a readout that agrees with the run ('" + rd.slice(0, 120) + " ...'); the population menu puts population " + (other + 1) + " on the board; Start over goes back to the first still carrying you; no bar plot",
+          agrees && picked && back && !document.getElementById("B_pieces") && sel.options.length === 100); }
   pr.checked = false; BG.round = 0; BG.results = []; B_newRun(); B_sync();
-  /* the flow: both targets and two genomes compared finish B */
-  for (const [r, nc] of [[0, 6], [1, 4]]) { if (r) B_nextRound(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = t < nc ? "copy" : "mate"; B_stepOnce(); } }
+  /* the flow: each round opens on its own measure; both targets and two genomes compared finish B */
+  const m0 = document.getElementById("B_meas").value;
+  for (const [r, pl] of [[0, plan(0)], [1, plan(8)]]) { if (r) B_nextRound(); for (let t = 0; t < 8; t++) { document.getElementById("B_choice").value = pl[t]; B_stepOnce(); } }
+  const m1 = document.getElementById("B_meas").value;
   const done1 = BG.done && !Gates.B.done, bits = Score.getBit("scaffold", BIT.B1) + "" + Score.getBit("scaffold", BIT.B2);
   const q = BG.run, k = B_shown(q), F = q.pops[k].F, red = F.map((g, i) => [cmRed(g), i]).filter(x => x[0] > 0);
   const two = red.length >= 2;
   if (two) { BG.pick = [red[0][1]]; BG.pick.push(red[1][1]); BG.picked = true; B_checkDone(); }
-  check("B: two targets (bits " + bits + "), then two genomes that both carry some of you compared, finish B and open C", two && done1 && bits === "11" && Gates.B.done && Gates.C.open,
-        "two " + two + " (" + red.length + " carriers shown) done1 " + done1 + " lengths " + BG.results.join(","));
+  check("B: rounds open on their own measure (" + m0 + ", " + m1 + "); two targets (bits " + bits + "), then two genomes that both carry some of you compared, finish B and open C",
+        m0 === "exact" && m1 === "car" && two && done1 && bits === "11" && Gates.B.done && Gates.C.open,
+        "two " + two + " (" + red.length + " carriers shown) done1 " + done1 + " results " + BG.results.join(","));
 }
 
 /* ================= C: copy or mate, the engine ================= */
@@ -426,7 +461,9 @@ Gates.A.open = true; FIT_EPOCH++;
   const go4 = a => a.map(S => S.pops + ":" + (S.mO == null ? "–" : S.mO.toFixed(2))).join(" ");
   const o4 = play(3, "yes", "one"), n4 = play(3, "yes", "none"), k4 = play(3, "yes", "kill"), s4 = play(3, "no", "one");
   check("D target 4 (at 50: in 40+ populations, fewest inside on the other chromosomes 0.25+; populations:fewest on the others): as one " + go4(o4) + " hits (yours " + o4.map(S => D_f2(S.mT)).join("/") + "); no better than none " + go4(n4) + ", kill " + go4(k4) + ", standard " + go4(s4) + " miss",
-        o4.every(S => j(3, S) && S.mO > S.mT) && n4.concat(k4, s4).every(S => !j(3, S)));
+        /* the others above yours on average over the two runs: run by run the two overlap at their tails (2026-10-14: others
+           0.26 against yours 0.29 once; measured over 12 starts, yours 0.06-0.29, the others 0.35-0.67) */
+        o4.every(S => j(3, S)) && o4.reduce((a, S) => a + S.mO - S.mT, 0) > 0 && n4.concat(k4, s4).every(S => !j(3, S)));
   pr.checked = false; DG.round = 0; DG.results = []; DG.last = null; D_openRound(); D_sync();
   /* the flow: the opening misses (bit 0); the right world hits; each round opens on a world that misses; four finish */
   const op1 = document.getElementById("D_inv").value === "no";
