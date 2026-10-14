@@ -21,7 +21,9 @@
  *      after the ban, a rise slower than the fall needs the rams' edge;
  *      cov(w, z) ~0 before 1995 at edge 0, positive with an edge, negative
  *      while hunted; V_A and breeding rams fall while hunted.
- *   E. The eleven tumors matched only at 1000 AD and 1,900 a year; dN/dS
+ *   E. The eleven tumors matched on the diagonal (1800/950, 1900/1000,
+ *      2000/1050, 2100/1100), missed one step off it and at the opening; the
+ *      clock plot's axis takes in every tumor at the menus' corners; dN/dS
  *      hit at s .01 / .01, missed off it; measured against the closed form.
  *   F. The three boxes hit at d -17, h .5 (2+ of 3 tries); missed at h .75,
  *      h 0, d -25 and the opening.
@@ -109,7 +111,16 @@ tgt(PD, 1, [{ H: 0.7, pref: 50, h2: 0.8, b: 0.3 }, { H: 0.9, pref: 50, h2: 0.8, 
 }
 
 /* ================= E ================= */
-tgt(PE, 0, [{ N: 100, y0: 1000, r: 1900 }], [{ N: 100, y0: -4000, r: 300 }, { N: 100, y0: 1000, r: 1800 }, { N: 100, y0: 900, r: 1900 }, { N: 100, y0: -4000, r: 1900 }]);
+tgt(PE, 0, [{ N: 100, y0: 950, r: 1800 }, { N: 100, y0: 1000, r: 1900 }, { N: 100, y0: 1050, r: 2000 }, { N: 100, y0: 1100, r: 2100 }],
+    [{ N: 100, y0: 975, r: 1800 }, { N: 100, y0: 900, r: 1700 }, { N: 100, y0: 925, r: 1800 }, { N: 100, y0: 975, r: 1900 }, { N: 100, y0: 1075, r: 2100 }]);
+{
+  const ax = [];
+  for (const o of [{ N: 100, y0: 900, r: 2100 }, { N: 100, y0: 1100, r: 1700 }, { N: 100, y0: 1000, r: 1900 }]) {
+    play(PE, 0, o, 1); const cv = document.getElementById("E_plot"), lo = +cv.dataset.ylo, hi = +cv.dataset.yhi, v = PE.last.reps.flatMap(p => p.samples.map(x => x / 1e6));
+    ax.push({ o, lo, hi, inside: v.every(x => x >= lo && x <= hi) }); }
+  check("E: the clock plot's axis takes in every tumor (" + ax.map(a => show(a.o) + " " + a.lo.toFixed(2) + "-" + a.hi.toFixed(2)).join("; ") + "); on the target it stays at the exam's 1.86-1.96",
+        ax.every(a => a.inside) && Math.abs(ax[2].lo - 1.86) < 1e-6 && Math.abs(ax[2].hi - 1.96) < 1e-6);
+}
 tgt(PE, 1, [{ hk: -0.05, im: 0.05, oth: 0, N: 100 }], [{ hk: 0, im: 0, oth: 0, N: 100 }, { hk: -0.01, im: 0.01, oth: 0, N: 100 }, { hk: -0.1, im: 0.1, oth: 0, N: 100 }, { hk: 0.05, im: -0.05, oth: 0, N: 100 }], 3, 2);
 tgt(PE, 2, [{ hk: -0.05, im: 0.05, oth: 0, N: 100 }], [{ hk: 0, im: 0, oth: 0, N: 100 }, { hk: -0.01, im: 0.01, oth: 0, N: 100 }], 3, 2);
 {

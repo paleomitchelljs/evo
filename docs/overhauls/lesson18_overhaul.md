@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson18.html` — first draft 2026-10-12
 **Checks** · `node scripts/check_lesson18_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · draft 2 built (1-5 + extra credit), checks green (21 bars); LOCKS `o` (unlocked 2026-10-14, JM)
+**Status** · draft 2 built (1-5 + extra credit), checks green (21 bars); LOCKS `o` (unlocked 2026-10-14, JM); done (JM, 2026-10-14, after the clock target's menus, window and axis)
 **Last touched** · 2026-10-14
 **Source** · `notes/exams/2025.5/exam02_key.tex` and `exam02.pdf` (question text and key answers quoted verbatim on the page; the keys read "your simulations' ...")
 
@@ -42,7 +42,13 @@
 
 1. **Q2(d)**: key says spotted turtles. With equal mutation rates, He rises with N (4Nu/(1+4Nu)); the table's own He is higher in box turtles (0.85 vs 0.76), and the sim agrees. "Spotted" matches Ho only. Which answer should the page reveal?
 2. **Q5(a) and the plot**: the plotted slope is ~1,900 mutations a year; 1.9 million at that rate is ~1,000 years, not the ~6,000 in the question. Two points sit at 2025 and 2028. Fit as drawn (the page does), or re-scale the axis?
-   - **JM 2026-10-14**: fit as drawn; the question's "almost 6,000 years old" and (a)'s "thousands of years old" now read "long ago" (a number misleads). He hit target 1 at 1000 AD / 1,900 but found it touchy: only that one setting of the 80 hits (next best misses by ~79k), and the readout's least-squares slope (1,729) points to 1,800, which misses at every start on the menu. Not changed yet.
+   - **JM 2026-10-14**: fit as drawn; the question's "almost 6,000 years old" and (a)'s "thousands of years old" now read "long ago" (a number misleads). He hit target 1 at 1000 AD / 1,900 but found it touchy: only that one setting of the 80 hits (next best misses by ~79k), and the readout's least-squares slope (1,729) points to 1,800, which misses at every start on the menu.
+   - **JM 2026-10-14, later**: "make that small adjustment to allow it to hit, and also constrain the values on the arrows a bit more so that most of the settings produce some visually non-flat line within the axes". Done:
+     - starts 900-1100 AD in 25s, rates 1,700-2,100 in 100s (was 4000 BC-1500 AD, 300-2,500); opens at 1800/975 (56k low), one start step earlier hits
+     - window 15,000 (was 5,000): a 5,000 window needed the start within ~3 years (1,800 a year misses even at 940); now the four diagonal pairs hit (1800/950 11k, 1900/1000 3k, 2000/1050 4k, 2100/1100 10k, noise free), nearest miss on the menu 32k
+     - a fixed axis cannot do "most settings inside": one start step moves the line ~47k, half the 1.86-1.96 axis (40% inside at best); so the axis widens to take in the run (fixed for the run), every setting draws inside; widest 1.5-2.0 or 1.8-2.4, where the run's rise is ~15% of the height
+     - rounds 2-3 hold 1000 / 1,900 as before
+     - checks, three runs (2026-10-14): the clock target and the axis check pass 3/3. Four untouched bars failed once each (seeds are a fresh draw per load): B target 1's intended setting hit 1/3 (needs 2); E target 2's s -.1/+.1 hit 1/2 (should miss); E target 3's s -.01/+.01 hit 1/2 (should miss); extra credit's h .75 hit 1/2 (should miss; known, see the F comment). Not changed: JM called 18 done
 3. **Q1(d)**: under random mating the sim's colorblind share sits on q^2 (HWE in the snapshot sense) even after drift; only cousin marriages push it above. The key's "No" reads as "the assumptions are broken". Fine as is?
 4. **Q4(a)** "+ to −": the page's rams' mating edge gives a positive cov(w, z) before 1995 (+0.7 at edge .1, +2.2 at .3) and the rise after the ban, (e). At edge 0 cov sits at 0 and nothing rises after the ban (target 2 misses). Edge .3 overshoots 1995 (miss 6.5 cm on target 1); edge .1 clears both. Matches the key.
 8. **Q5 voice**: "My took some notes" left as printed (typo in the exam).

@@ -1033,6 +1033,13 @@ function D_paint() {
    every final cell): for a kind, (trunk's of that kind / that kind ever
    arisen before the common ancestor) over the same for synonymous. All genes:
    85% other, 10% housekeeping, 5% immune evasion.
+   The clock (target 1; JM 2026-10-14: "touchy", most settings drew a flat row
+   off the plot): starts 900-1100 AD in 25s, rates 1,700-2,100 in 100s; the
+   axis widens to take in the run. A start step moves the line ~47,000, so the
+   window is a typical miss of 15,000: the four rate/start pairs on the
+   diagonal hit (1800/950 11k, 1900/1000 3k, 2000/1050 4k, 2100/1100 10k, noise
+   free); the nearest miss on the menu is 32k (1700/900).
+   Opens at 1800/975 (56k low); one start step earlier hits.
    MEASURED (node prototype, 6 tumors, N 100, rate 1900, begun 1000 AD, 2028):
    clock 1.879 million at 1988 against the exam's 1.876; s -.05 / +.05:
    housekeeping .22-.34, immune 2.4-3.2, other .9-1.1, time to the common
@@ -1040,7 +1047,7 @@ function D_paint() {
    ===================================================================== */
 const E_YR = [1988, 1992, 1995, 2001, 2005, 2008, 2012, 2016, 2021, 2025, 2028];
 const E_CT = [1.876, 1.890, 1.896, 1.904, 1.910, 1.914, 1.922, 1.928, 1.938, 1.942, 1.952];
-const E_Y0 = [-4000, -2000, 0, 500, 800, 900, 1000, 1100, 1200, 1500], E_R = [300, 500, 1000, 1500, 1800, 1900, 2000, 2500], E_NC = [50, 100, 200, 400];
+const E_Y0 = [900, 925, 950, 975, 1000, 1025, 1050, 1075, 1100], E_R = [1700, 1800, 1900, 2000, 2100], E_NC = [50, 100, 200, 400];
 const E_S = [-0.1, -0.05, -0.025, -0.01, 0, 0.01, 0.025, 0.05, 0.1], E_MID = 4, E_CODING = 0.0002, E_SHARE = { syn: 0.4, hk: 0.2, im: 0.1, oth: 0.3 }, E_REPS = 5;
 const yrName = y => y < 0 ? (-y).toLocaleString("en-US") + " BC" : y + " AD";
 const sFmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
@@ -1095,8 +1102,8 @@ const PE = mkPart("E", {
   ctl: [{ key: "N", vals: E_NC }, { key: "y0", vals: E_Y0, fmt: yrName }, { key: "r", vals: E_R, fmt: v => v.toLocaleString("en-US") },
         { key: "hk", vals: E_S, mid: E_MID, fmt: sFmt }, { key: "im", vals: E_S, mid: E_MID, fmt: sFmt }, { key: "oth", vals: E_S, mid: E_MID, fmt: sFmt }],
   rounds: [
-    { open: { N: 100, y0: -4000, r: 300, hk: 0, im: 0, oth: 0 }, hold: { hk: 0, im: 0, oth: 0 }, text: "Match the observed data: the counts of mutations in tumors collected 1988-2028, within a typical miss of 5,000.",
-      rules: [{ txt: "typical miss, 11 years: under 5,000 mutations", ok: S => S.miss < 0.005, val: S => Math.round(S.miss * 1e6).toLocaleString("en-US") }] },
+    { open: { N: 100, y0: 975, r: 1800, hk: 0, im: 0, oth: 0 }, hold: { hk: 0, im: 0, oth: 0 }, text: "Match the observed data: the counts of mutations in tumors collected 1988-2028, within a typical miss of 15,000.",
+      rules: [{ txt: "typical miss, 11 years: under 15,000 mutations", ok: S => S.miss < 0.015, val: S => Math.round(S.miss * 1e6).toLocaleString("en-US") }] },
     { open: { N: 100, hk: -0.05, im: 0.05, oth: 0 }, hold: { y0: 1000, r: 1900, N: 100 }, text: "Match the table: dN/dS of about 0.22 in housekeeping genes, 2.45 in immune evasion genes, and near 1 over all protein-coding genes.",
       rules: [{ txt: "housekeeping: 0.12 to 0.45", ok: S => S.hk >= 0.12 && S.hk <= 0.45, val: S => f2(S.hk) },
               { txt: "immune evasion: 1.9 to 3.9", ok: S => S.im >= 1.9 && S.im <= 3.9, val: S => f2(S.im) },
@@ -1109,15 +1116,26 @@ const PE = mkPart("E", {
   sum: q => E_sum(q),
   paint: () => E_paint(),
 });
+/* the clock plot's y axis: the exam's 1.86-1.96 million, widened to take in every point of the run shown (fixed for
+   the whole run, so it does not move during playback), so every setting draws its line inside the axes */
+function E_yRange(q) {
+  let lo = 1.86, hi = 1.96;
+  if (q) for (const p of q.reps) for (const v of p.samples) { lo = Math.min(lo, v / 1e6); hi = Math.max(hi, v / 1e6); }
+  const step = [0.02, 0.05, 0.1, 0.2].find(st => Math.ceil(hi / st - 1e-9) - Math.floor(lo / st + 1e-9) <= 6) || 0.5;
+  lo = Math.floor(lo / step + 1e-9) * step; hi = Math.ceil(hi / step - 1e-9) * step;
+  const ticks = []; for (let v = lo; v <= hi + 1e-9; v += step) ticks.push(+v.toFixed(2));
+  return { lo, hi, ticks };
+}
 function E_paint() {
   const q = shownRun(PE), cv = $("E_plot"), done = q && q.shown >= 1, S = done ? E_sum(q) : null, set = q ? q.set : readSet(PE);
   if (cv) {
-    const { ctx } = frameCanvas(cv, 760, 270), F = frame(70, 14, 650, 200, 1985, 2030, 1.86, 1.96);
-    axes(ctx, F, [[1990, "1990"], [2000, "2000"], [2010, "2010"], [2020, "2020"]], [[1.86, "1.86"], [1.88, "1.88"], [1.9, "1.90"], [1.92, "1.92"], [1.94, "1.94"], [1.96, "1.96"]], "year collected", "somatic mutations (millions)");
+    const { ctx } = frameCanvas(cv, 760, 270), yr = E_yRange(q), F = frame(70, 14, 650, 200, 1985, 2030, yr.lo, yr.hi);
+    cv.dataset.ylo = yr.lo; cv.dataset.yhi = yr.hi;
+    axes(ctx, F, [[1990, "1990"], [2000, "2000"], [2010, "2010"], [2020, "2020"]], yr.ticks.map(v => [v, v.toFixed(2)]), "year collected", "somatic mutations (millions)");
     E_YR.forEach((y, i) => dot(ctx, F.x(y), F.y(E_CT[i]), 4, "#fff", INK));
     if (q) { const n = Math.max(1, Math.round(E_YR.length * q.shown));
-      for (let i = 0; i < n; i++) for (const p of q.reps) { const v = p.samples[i] / 1e6; if (v >= 1.86 && v <= 1.96) dot(ctx, F.x(E_YR[i]), F.y(v), 3, HOT); else cardText(ctx, v > 1.96 ? "▲" : "▼", F.x(E_YR[i]), v > 1.96 ? F.y0 + 6 : F.y0 + F.h - 6, { size: 11, col: HOT, align: "center" }); } }
-    cardText(ctx, "○ observed data   ● your tumors (▲▼ off the plot)", F.x0 + 8, F.y0 + 8, { size: 11, col: MUTED });
+      for (let i = 0; i < n; i++) for (const p of q.reps) dot(ctx, F.x(E_YR[i]), F.y(p.samples[i] / 1e6), 3, HOT); }
+    cardText(ctx, "○ observed data   ● your tumors", F.x0 + 8, F.y0 + 8, { size: 11, col: MUTED });
     ctx.restore();
   }
   $("E_read").innerHTML = done ? lab("typical miss") + " <b>" + Math.round(S.miss * 1e6).toLocaleString("en-US") + "</b> " + lab("mutations · your tumors' slope") + " <b>" + Math.round(S.slope).toLocaleString("en-US") + "</b> " + lab("a year · counted back to zero at that slope: begun") + " <b>" + yrName(Math.round(S.began)) + "</b>" +
