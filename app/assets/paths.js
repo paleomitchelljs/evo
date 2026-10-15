@@ -84,6 +84,8 @@
 // genes); both heads stand off their boxes alike. `caption: "..."` with
 // `captionAt: {x, y}` writes the arrow's name beside it, always on show
 // (`captionUpright: true` turns it to run up the page, for an upright arrow).
+// A box's `cls: "..."` adds a class to its rectangle, for the page's CSS to
+// colour (lesson 17 D, 2026-10-15: four populations, each in its own colour).
 
 (function (global) {
   "use strict";
@@ -131,7 +133,7 @@
     (opts.boxes || []).forEach(b => {
       boxes[b.id] = { id: b.id, label: b.label || b.id, sub: b.sub || null,
                       x: b.x, y: b.y, w: b.w || 170, h: b.h || 48,
-                      kind: b.kind || "cause", hidden: !!b.hidden };
+                      kind: b.kind || "cause", hidden: !!b.hidden, cls: b.cls || null };
       order.push(b.id);
     });
     const arrows = (opts.arrows || []).map(a => ({
@@ -456,7 +458,7 @@
         if (b.hidden) return;
         const g = svg("g");
         g.appendChild(svg("rect", { x: b.x - b.w / 2, y: b.y - b.h / 2, width: b.w, height: b.h,
-                                    rx: 7, class: "paths-box-bg" + (b.kind === "outcome" ? " outcome" : "") }));
+                                    rx: 7, class: "paths-box-bg" + (b.kind === "outcome" ? " outcome" : "") + (b.cls ? " " + b.cls : "") }));
         const lines = wrap(b.label, Math.max(12, Math.floor(b.w / 6.6)));
         const sub = b.sub ? 1 : 0;
         let ty = b.y - ((lines.length + sub) * 14) / 2 + 12;

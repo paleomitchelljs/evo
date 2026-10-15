@@ -1,14 +1,18 @@
-# Lesson 17 — migration: fragments that cross, what sets their size, drift against migration, selection at one gene
+# Lesson 17 — migration: fragments that cross, what sets their size, selection at one gene, four populations and F_ST
 
-**File** · `app/lessons/lesson17.html` — first draft 2026-10-12
+**File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review)
 **Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · draft built (A-D), checks green (30 + R panels); LOCKS `x`; JM to review
-**Last touched** · 2026-10-12
+**Status** · second pass built (v2); LOCKS `x`; JM to review; voice still owed
+**Last touched** · 2026-10-15
 
 ## What the lesson is
 
-- Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; drift pulls the two apart, migration holds them together, selection at one gene keeps it apart (or drags it in).
-- Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST measured off the student's own runs with the closed form beside it.
+- Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
+- Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
+
+## JM's review, 2026-10-15 (verbatim)
+
+> Reviewing lesson 17, I like Part A but I think Part B has targets that are maybe too tight and sliders that could be worded better. It's a single dispersal event at some point in the past. I love the visuals and interactives for B but the framing of the targets is confusing. Part C jumps immediately into using Fst as a measure. I think expanding it to four types of populations (blue, orange, red, purple?) and connecting Fst directly to differences in chunk size/number. I usually teach Fst as how differentiated the populations are, and framing Part C i nthat way--where the goal is to teach them visually what Fst means through interactions--is what I'd prefer over trying to assess their understanding of a measure. D is solid and I am fine with having two populations (maybe we move current D to C and current C to D so we do two-population selection & then do four-population differentiation to learn Fst last). One thing I think would be important for the selection one is somethign that allows a given allele to have different s/h in different populations so that in addition to everything else we can show migration swamping local adaptation in some scenarios.
 
 ## JM's brief, 2026-10-12 (verbatim)
 
@@ -23,53 +27,67 @@
 > At the end, students plot "average size of introgressed chunks" against migration rate (recombination rate also matters, but we won't complicate this yet)
 > Builds to Fst later which we'll calculate visually
 
-## Stages as built (draft 1)
+## Stages as built (pass 2, 2026-10-15)
 
-One engine throughout (`mg*` in the page): two populations of hermaphrodite genomes, one chromosome of 40 beads; Wright-Fisher (two different parents, picked by fitness); crossing over with chance R/39 at each gap; each generation Binomial(N, m) genomes swap places; new mutations Poisson(U) a gamete, each a new allele in the population's hue. 50 pairs (100 populations) a run in A, B, D; 20 pairs in C.
+One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes, one chromosome of 40 beads; Wright-Fisher, parents picked by fitness; crossing over R/39 a gap; each generation, for each connected pair, Binomial(N, m) genomes swap. Hue in bits 0-2 (1 orange, 2 blue, 3 red, 4 purple), shade 3-5. No new mutations any more (old C's U went with old C).
 
-    A  Steady migration: m and R. Other colour 15-40% (m); then in fragments 4.5+ beads (lower R); then 6+ fragments a chromosome under 3 beads (high m and R).
-    B  One pulse: migrants each way (1/2/4/6/10: ~4-40% other hue), R, generations after. Fragments 7+ beads with the other colour under 12% (small, recent); 4+ beads at generation 20 with 4 migrants held (lower R); under 3.5 beads, under 12% (small, old). Every run a dot on "your runs": fragment length against generations after, by R (JM's 10 runs). Click two genomes: where they carry the same alleles bead for bead (task: one shared other-hue fragment of 3+ beads).
-    C  A split: one grey population divided in two. N, m, U. F_ST 0.2+ at 50 (drift: smaller N); 0.1-0.3 at 100 with N 25 (m); the same at 200 with N 100 (m four times smaller: Nm); heterozygosity 0.3+ at 100 with no migration (U). Bead-by-bead frequency bars, pair 1. Closed forms beside: H0(1 - 1/2N)^t, 1/(1 + 16Nm), 4Nu/(1 + 4Nu).
-    D  Selection at gene 20: s, h, m, R. The other colour under 15% at gene 20 and 25%+ at the ends at 100 (barrier); 60%+ at gene 20 and under 35% at the ends at 60 (it sweeps in). Gene-by-gene panel (other colour, F_ST). Italian sparrow F_ST strip (77 values from data/clean, embedded) beside the student's, no target.
+    A  Steady migration (unchanged): m and R. Three targets as pass 1.
+    B  One dispersal event, some generations back. Sliders: genomes dispersed (each way), crossovers a chromosome,
+       generations since the dispersal event. Each round holds the event at 4 each way and frees one slider:
+       1 time (R 1 held): fragments 4+ beads; 2 R (20 generations held): 4+ beads; 3 R (5 generations held): under 6 beads.
+       Your-runs plot and the shared-fragment pick unchanged.
+    C  Old D, two populations: the blue allele at gene 20 has its own s and h in each population (1, 1 - hs, 1 - s; s > 0 harmful there).
+       1 local adaptation (m .02 held): orange under 30% blue at gene 20, blue over 70%. 2 swamping (s +.1 / -.6 held):
+       orange's gene 20 60%+ blue at 100 (raise m). 3 a sweep that drags little: orange's gene 20 70%+ blue, its ends under 40%, at 60.
+       Gene-by-gene and over-time panels show share blue, each population. No F_ST in C.
+    D  Four populations, each starting all its own colour (one allele a gene): orange, blue, red, purple. Migration per pair as
+       six two-headed arrows (paths.js, `both`), N a slider. Board with each population's colour mix and the pooled mix; within and
+       pooled heterozygosity on colour; F_ST overall, over time, and for each pair (grid). Sparrow strip moved here from old D.
+       1 alike: F_ST under 0.2 (N 25 held). 2 two pairs: orange-blue and red-purple under 0.2, every cross pair over 0.4.
+       3 every pair held at m .01: F_ST over 0.25 (smaller N: drift).
 
-## Measured (node prototype of the page's engine, 2026-10-12; N 25, 40 beads)
+## Measured (node prototype of the pass-2 engine, 2026-10-15; N 25, 40 beads)
 
-        A, generation 50, 50 pairs         m 0 / .002 / .005 / .01 / .02 / .05
-          other colour                     0 / .09 / .21 / .32 / .43 / .49        (flat in R)
-          fragment length, R .25/.5/1/2/4  ~9 / ~5.3 / ~3.3 / ~2.3 / ~1.8          (flat in m)
-          fragments a chromosome, R 1      0 / 1.3 / 2.7 / 4.0 / 5.0 / 6.2        (R 2: 1.8/4.2/5.5/7.2/8.1)
-        B, pulse at gen 1 (both ways)      fragment length at 5 / 10 / 20 / 40 generations
-          R .5                              17 / 9 / 5 / 3.3
-          R 1                               11 / 5.4 / 3 / 2.1
-          R 2                               6.6 / 3.1 / 1.9 / 1.5
-          other colour: pulse 2 -> 8%, pulse 5 -> 19% (flat in time)
-        C, split, U 0                      F_ST at 50 / 100: N 10 .84/.99, N 25 .44/.75, N 50 .25/.47, N 100 .13/.24
-          H within tracks H0(1 - 1/2N)^t (0.233 vs 0.216 at N 25, gen 50; 0.222 vs 0.222 at N 50, gen 100)
-          equilibrium F_ST                  N 25: m .005 .45 / .01 .23 / .02 .13 / .05 .05; N 100 (gen 200): .001 .32 / .002 .23 / .005 .12 / .01 .06
-          1/(1 + 16Nm) agrees (.20 / .11 / .05; .24 / .11 / .06); 1/(1 + 4Nm) does not (.50 / .33 / .17)
-          mutation, N 25, m 0, gen 100      U .1 .22 / .2 .35 / .4 .49 / .8 .66 / 1.6 .79   (4Nu/(1+4Nu), u = U/40: .20/.33/.50/.67/.80)
-        D, gene 20, h .5, 100 gens         s .3 m .02: gene 20 .13, ends .42; s .6: .05/.31; s 1: .03 everywhere (whole chromosome shut)
-          sweep, 60 gens, R 1               s -.3 m .005: gene 20 .77, ends .25; s -.6 m .002: .68/.16; s -.1 m .005: .42/.20
-        Italian sparrows, 77 loci           mean F_ST .54, 22% >= .9, 34% < .3 (bimodal); one pair of 40 beads at s .6 m .01: .61 / .21 / .17, but s 0 m .002 matches as well (.61 / .24 / .19) -- so no target on it
+        B, pulse of 4 each way, 50 pairs, 4 seeds   average fragment length at G 2 / 5 / 10 / 20 / 40 / 80
+          R .25                                     33 / 21 / 14 / 8.5 / 5.6 / 4.9
+          R .5                                      28 / 15 / 8.4 / 5.0 / 3.3 / 2.9
+          R 1                                       21 / 9.3 / 5.0 / 3.0 / 2.2 / 1.9   (sd of a run's average 0.1-0.2)
+          R 2                                       15 / 5.4 / 3.0 / 2.0 / 1.6 / 1.6
+          R 4                                       9.2 / 3.1 / 1.9 / 1.5 / 1.3 / 1.4
+          pulse size, R 1, G 20: M 1/2/4/6/10 -> other 4/9/16/24/41%, length 2.7/2.8/3.1/3.5/4.4 (neighbouring fragments merge: M held in every round)
+        C, h .5 both, 50 pairs, at 100 (orange g20 blue / orange ends blue / blue g20 blue)
+          m .02: s 0/0 57/50/57; +.3/0 2/38/18; 0/-.3 79/60/95; +.1/-.1 35/50/66; +.3/-.3 11/43/84; +.6/-.6 6/25/90
+          s +.1/-.6: m .005 10%, .01 24%, .02 47-49%, .05 81-82%, .1 95% (orange g20 blue)
+          at 60, R 1: s -.3/0 m .005 g20 80 (77-84), ends 30 (26-32); -.6/0 m .002 81 / 19; -.3/0 m .01 93 / 42 (37-47);
+          cheap routes: s 0 m .05 51 / 48; +.1/-.6 m .05 71 / 61; 0/-.6 m .05 91 / 64
+        D, four populations, 20 sets, at 100, N 25 (F_ST on colour; 6 seeds)
+          every pair at m: 0 1.0; .002 .53; .005 .30 (.28-.32); .01 .17 (.17-.18); .02 .09; .05 .04
+          two pairs (O-B, R-P) at .02: within .14, across .66; at .01: within .24 (.20-.27); plus B-P .002: across .53 (.49-.57)
+          chain O-B-R-P at .02: neighbours .12, ends .30-.35; ring (sides) .02: .15
+          every pair .01: N 10 .36 (.34-.38), 25 .17, 50 .09 (drift)
+          balance for n islands, m to each of 3: 1/(1 + 4N(3m)(4/3)^2) = .16 / .32 / .09 at N 25 / 10 / 50, m .01 (R panel only)
 
 ## Open for JM
 
-0. Founder shades: three alleles a gene in shades 1/3/5 of each hue (grey 0/2/5); new mutations a random shade. Hue reads clearly on the boards (screenshots 2026-10-12); a new mutation is not marked apart from a founder of the same shade.
-
-1. **1/(1 + 4Nm) does not hold for two populations.** Measured F_ST (pooled H_T, as the sparrow file's column) sits on 1/(1 + 16Nm); the 4Nm form is the many-islands one. The page prints the 16Nm form. Keep, or switch C to many populations (n 10 gives 4Nm x 1.23)?
-2. N: held at 25 in A, B, D; a slider only in C (where Nm is the point). OK?
-3. D's sparrow strip has no target: one gene on one chromosome cannot tell selection from low migration in that histogram (above). A many-genes D (several selected genes) would; worth building?
-4. 16 D's inversion riding in a migrant (old open point 3): not built.
-5. No voice blocks yet: JM to dictate.
+1. Voice blocks: none yet, all four stages.
+2. D's pairwise F_ST between two populations that share no colour at all sits near 0.67, not 1 (each is itself a mix; F_ST is 1 only when each population is one colour). No target leans on it; say so in lecture or the voice if it comes up.
+3. Mutation is no longer in the lesson (old C's U went with old C). Add it back to D?
+4. B's rounds each free one slider with the dispersal event held at 4 each way; the pulse-size slider is free only in practice and after the targets.
+5. 16 D's inversion riding in a migrant: not built.
 
 ## Items
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
-| 1 | — | prototype engine, measure A-D | done |
-| 2 | A-D | build the page | done |
-| 3 | — | `check_lesson17_numbers.js` | done |
-| 4 | — | JM's review; voice | todo |
+| 1 | — | prototype engine, measure A-D (pass 1) | done |
+| 2 | A-D | build the page (pass 1) | done |
+| 3 | — | `check_lesson17_numbers.js` (pass 1) | done |
+| 4 | B | dispersal-event wording; one idea a round, wider windows (JM 10-15) | done |
+| 5 | C | old D moved here; s and h of the blue allele per population; swamping round (JM 10-15) | done |
+| 6 | D | four populations, F_ST as differentiation, per-pair migration on a diagram; old C retired (JM 10-15) | done |
+| 7 | — | engine generalised to n populations; prototype measurements above | done |
+| 8 | — | checks rewritten for B-D; version 2 | done |
+| 9 | — | JM's review; voice | todo |
 
 ## Rulings
 
@@ -81,10 +99,12 @@ One engine throughout (`mg*` in the page): two populations of hermaphrodite geno
 - 2026-10-09: beads on a string, each bead an allele in its own shade, hue = population it arose in.
 - 2026-10-09: *"we aren't trying to trick or assess students in these homeworks ... We're trying to build intuition."*
 - 2026-10-12: heterozygosity to connect to drift, F_ST; reinforce drift, selection, mutation (brief above).
+- 2026-10-15: A stays. B: *"a single dispersal event at some point in the past"*; targets less tight, framing less confusing. Two-population selection becomes C, with *"a given allele"* having *"different s/h in different populations"* so migration can swamp local adaptation. Four populations (orange, blue, red, purple) last, F_ST taught as *"how differentiated the populations are"*, visually, *"over trying to assess their understanding of a measure"*.
 
 ## Do not
 
 - Plot chunk size against migration rate, or build a stage around a surprise (measured flat; JM: no surprises).
 - Read a long fragment as a recent arrival without R beside it: halving R doubles every fragment.
-- Print 1/(1 + 4Nm) beside two populations' F_ST (measured: it is 1/(1 + 16Nm)).
-- Fuse the two F's: C's F_ST is drift between populations; lesson 11's 1 - Ho/He within one stays near 0 under random mating.
+- Free the pulse size in a B round with a floor on fragment length: big pulses merge neighbouring fragments (M 10 at G 20 reads 4.4 beads, M 4 reads 3.1).
+- Put F_ST in C (JM: it came too early); D builds it.
+- Fuse the two F's: D's F_ST is between populations; lesson 11's 1 - Ho/He within one stays near 0 under random mating.

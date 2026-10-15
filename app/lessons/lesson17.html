@@ -6,6 +6,7 @@
 <script src="../assets/lock.js"></script>
 <title>BIO 202 — Lesson 17</title>
 <link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/paths.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
   * { box-sizing:border-box; }
@@ -85,6 +86,18 @@
   .watchbar label { display:flex; align-items:center; gap:8px; }
   .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
   #B_board { cursor:pointer; }
+  .fitline { font:12px ui-monospace,Menlo,monospace; color:var(--muted); margin:2px 0 8px; line-height:1.6; }
+  .fitline b { color:var(--ink); font-weight:600; }
+  /* D: the four populations' boxes in their own colours; an arrow held this target pale (lesson 14's lockColours) */
+  #D_paths { max-width:440px; }
+  #D_paths .paths-box-bg.pop-orange { fill:#fbe3cc; stroke:#e8730c; }
+  #D_paths .paths-box-bg.pop-blue { fill:#dbe8f1; stroke:#2f6b8f; }
+  #D_paths .paths-box-bg.pop-red { fill:#f4d3d7; stroke:#b23a48; }
+  #D_paths .paths-box-bg.pop-purple { fill:#e3ddef; stroke:#55407e; }
+  #D_paths .paths-arrow.locked { stroke:#a9c7da; }
+  /* A run is thrown, not steered: paths.js's hit targets set their own pointer-events (lesson 14's note), so a
+     playing run, or a hit waiting for Next target, blocks them here */
+  .controls.pending .paths-hit, .controls.pending .paths-step { pointer-events:none; }
 </style>
 </head>
 <body>
@@ -165,18 +178,19 @@
   </div>
 </section>
 
-<!-- ========== STAGE B — one pulse: fragments cut shorter with time and with crossing over (JM, 2026-10-09: "pulsed migration leaves chunks whose size is proportionate to the time since the migration pulse & the recombination rate") ========== -->
+<!-- ========== STAGE B — one dispersal event: fragments cut shorter with time and with crossing over (JM, 2026-10-09: "pulsed migration leaves chunks whose size is proportionate to the time since the migration pulse & the recombination rate"; 2026-10-15: "It's a single dispersal event at some point in the past") ========== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Finish Stage A to unlock this section.</div>
 
   <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate -->
+    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
     <ul class="setup">
-      <li>The same two populations, with no steady migration. Once, at the start, a batch of genomes swaps places: the pulse. Then none.</li>
-      <li>Set how many genomes the pulse moves each way, how many crossovers a chromosome gets, and how many generations to watch after it.</li>
-      <li>Every run, practice or not, adds a dot to <b>your runs</b>: its average fragment length against generations after the pulse.</li>
-      <li>Click a genome, then another in the same population, to see where they carry the same alleles bead for bead.</li>
+      <li>The same two populations, with no steady migration: one dispersal event, some generations back. In it, a batch of genomes from each population traded places with as many from the other. None since.</li>
+      <li>Set how many genomes dispersed each way, how many crossovers a chromosome gets, and how many generations have passed since the dispersal event.</li>
+      <li>Pair 1: the two populations today. Click a genome, then another in the same population, to see where they carry the same alleles bead for bead.</li>
+      <li>Your runs: every run, practice or not, adds a dot: across, generations since the dispersal event; up, its average fragment length.</li>
+      <li>Tick practice for a run that does not count.</li>
     </ul>
   </div>
 
@@ -212,9 +226,9 @@
         <p class="ttext" id="B_ttext"></p>
         <ul class="rules" id="B_rules"></ul>
         <div class="controls">
-          <div class="tbar" id="B_MRow"><label>genomes in the pulse, each way <input type="range" id="B_M" min="0" max="4" step="1" value="2"></label><b id="B_MV"></b></div>
-          <div class="tbar" id="B_RRow"><label>crossovers a chromosome <input type="range" id="B_R" min="0" max="2" step="1" value="1"></label><b id="B_RV"></b></div>
-          <div class="tbar" id="B_GRow"><label>generations after the pulse <input type="range" id="B_G" min="0" max="7" step="1" value="4"></label><b id="B_GV"></b></div>
+          <div class="tbar" id="B_MRow"><label>genomes dispersed, each way <input type="range" id="B_M" min="0" max="4" step="1" value="2"></label><b id="B_MV"></b></div>
+          <div class="tbar" id="B_RRow"><label>crossovers a chromosome <input type="range" id="B_R" min="0" max="4" step="1" value="2"></label><b id="B_RV"></b></div>
+          <div class="tbar" id="B_GRow"><label>generations since the dispersal event <input type="range" id="B_G" min="0" max="5" step="1" value="3"></label><b id="B_GV"></b></div>
           <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="B_go" class="accent">Go</button>
@@ -236,19 +250,19 @@
   </div>
 </section>
 
-<!-- ========== STAGE C — a split: drift pulls the two apart, migration holds them together, mutation refills (JM, 2026-10-12: "using heterozygosity to connect to drift along with Fst") ========== -->
+<!-- ========== STAGE C — selection at one gene, two populations: kept apart, swamped, or swept in (JM, 2026-10-09: "The h/s slider just allows students to investigate how selection interacts with these processes"; 2026-10-15: "allows a given allele to have different s/h in different populations so that ... we can show migration swamping local adaptation") ========== -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Finish Stage B to unlock this section.</div>
 
   <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate -->
+    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
     <ul class="setup">
-      <li>One population split in two. Every allele at the start is grey: it arose before the split, and both halves carry the same ones at the same shares.</li>
-      <li>A new mutation takes the hue of the population it arises in: orange or blue. Set N (genomes in each population), m, and new mutations a chromosome each generation.</li>
-      <li>Heterozygosity: the chance two copies of a gene, drawn from one population, are different alleles. Within: each population on its own. Pooled: the two together.</li>
-      <li>F<sub>ST</sub>: the gap between pooled and within, as a share of pooled.</li>
-      <li><b>Go</b> plays 20 pairs of populations (40 populations). Under pair 1, each gene's alleles in the orange population (left bar) and the blue (right bar).</li>
+      <li>Back to A: orange and blue from the start, steady migration. Now gene 20 (boxed) matters; every other gene does nothing.</li>
+      <li>The blue allele at gene 20 (a blue bead there) multiplies a genome's chance to be a parent: 1 with none, 1 &minus; h&middot;s with one, 1 &minus; s with two. Each population has its own s and h.</li>
+      <li>s above 0: the blue allele is harmful in that population. Below 0: helpful. Under the sliders, the three fitnesses each population's s and h give.</li>
+      <li>Gene by gene: how much of each gene is blue, in each population (orange bars: the orange population; blue bars: the blue).</li>
+      <li><b>Go</b> plays 50 pairs. Tick practice for a run that does not count.</li>
     </ul>
   </div>
 
@@ -257,17 +271,19 @@
       <div class="panel">
         <h3 id="C_boardH">Pair 1</h3>
         <canvas id="C_board" width="760" height="236"></canvas>
-        <canvas id="C_freq" width="760" height="170" style="margin-top:10px"></canvas>
         <div class="readout" id="C_boardRead"></div>
       </div>
       <div class="panel">
-        <div class="watchbar"><label>Over time, 40 populations: <select id="C_meas">
-          <option value="fst">F_ST</option>
-          <option value="H">heterozygosity within a population</option>
-          <option value="HT">heterozygosity, both populations pooled</option>
-          <option value="nal">alleles a gene</option>
+        <h3>Gene by gene, 100 populations: share in blue</h3>
+        <canvas id="C_genes" width="760" height="210"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>Over time, 100 populations, share in blue: <select id="C_meas">
+          <option value="g20">at gene 20</option>
+          <option value="ends">at the ends (genes 1-2, 39-40)</option>
+          <option value="all">all genes</option>
         </select></label></div>
-        <canvas id="C_time" width="760" height="250"></canvas>
+        <canvas id="C_time" width="760" height="230"></canvas>
         <div class="readout" id="C_read"></div>
       </div>
       <div class="panel">
@@ -281,9 +297,13 @@
         <p class="ttext" id="C_ttext"></p>
         <ul class="rules" id="C_rules"></ul>
         <div class="controls">
-          <div class="tbar" id="C_NRow"><label>N, each population <input type="range" id="C_N" min="0" max="3" step="1" value="3"></label><b id="C_NV"></b></div>
-          <div class="tbar" id="C_mRow"><label>migration, m <input type="range" id="C_m" min="0" max="6" step="1" value="0"></label><b id="C_mV"></b></div>
-          <div class="tbar" id="C_URow"><label>new mutations a chromosome <input type="range" id="C_U" min="0" max="4" step="1" value="0"></label><b id="C_UV"></b></div>
+          <div class="tbar" id="C_soRow"><label>s, orange population <input type="range" id="C_so" min="0" max="7" step="1" value="3"></label><b id="C_soV"></b></div>
+          <div class="tbar" id="C_hoRow"><label>h, orange population <input type="range" id="C_ho" min="0" max="2" step="1" value="1"></label><b id="C_hoV"></b></div>
+          <div class="tbar" id="C_sbRow"><label>s, blue population <input type="range" id="C_sb" min="0" max="7" step="1" value="3"></label><b id="C_sbV"></b></div>
+          <div class="tbar" id="C_hbRow"><label>h, blue population <input type="range" id="C_hb" min="0" max="2" step="1" value="1"></label><b id="C_hbV"></b></div>
+          <div class="fitline" id="C_fit"></div>
+          <div class="tbar" id="C_mRow"><label>migration, m <input type="range" id="C_m" min="0" max="5" step="1" value="3"></label><b id="C_mV"></b></div>
+          <div class="tbar" id="C_RRow"><label>crossovers a chromosome <input type="range" id="C_R" min="0" max="2" step="1" value="1"></label><b id="C_RV"></b></div>
           <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="C_go" class="accent">Go</button>
@@ -295,7 +315,7 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksC">
-          <li data-task="rounds">Hit the four targets. <span class="hint" id="C_rounds_now">0 of 4</span></li>
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="C_rounds_now">0 of 3</span></li>
         </ul>
         <div class="solved-banner" id="solvedC">Stage D is open.</div>
       </div>
@@ -303,45 +323,50 @@
   </div>
 </section>
 
-<!-- ========== STAGE D — selection at one gene: kept apart, or let in (JM, 2026-10-09: "The h/s slider just allows students to investigate how selection interacts with these processes") ========== -->
+<!-- ========== STAGE D — four populations: how differentiated they are, F_ST (JM, 2026-10-15: "expanding it to four types of populations (blue, orange, red, purple?)"; "I usually teach Fst as how differentiated the populations are"; "teach them visually what Fst means through interactions") ========== -->
 <section class="stage stage-locked" id="stageD">
   <h2 class="stage-h">D</h2>
   <div class="lock-banner">Finish Stage C to unlock this section.</div>
 
   <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate -->
+    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
     <ul class="setup">
-      <li>Back to A: orange and blue from the start, steady migration. Now gene 20 (marked) matters. In each population, an allele at gene 20 from the other population multiplies a genome's chance to be a parent by 1 &minus; h&middot;s in one copy, 1 &minus; s in two.</li>
-      <li>s above 0: the other population's allele is worse here. Below 0: better. Every other gene does nothing.</li>
-      <li><b>Go</b> plays 50 pairs. Gene by gene: how much of each gene is in the other hue, or its F<sub>ST</sub>.</li>
+      <li>Four populations of N genomes: orange, blue, red and purple. At the start each is all its own colour, one allele a gene. Nothing helps or harms.</li>
+      <li>The diagram: an arrow between two populations is migration between them. Click it, then drag up or down to set m: each generation, each genome trades places with one in the other population with chance m.</li>
+      <li>Set 1: the four populations, each with a bar of its mix of colours; under them, the four pooled.</li>
+      <li>Within: the chance two beads at one gene, drawn from one population, are different colours. Pooled: the same, the two drawn from all four together.</li>
+      <li>F<sub>ST</sub>: how differentiated the populations are, (pooled &minus; within) / pooled. 0: every population the same mix of colours. 1: each only its own colour.</li>
+      <li>Each pair: F<sub>ST</sub> between those two populations alone. <b>Go</b> plays 20 sets of four. Tick practice for a run that does not count.</li>
     </ul>
   </div>
 
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3 id="D_boardH">Pair 1</h3>
-        <canvas id="D_board" width="760" height="236"></canvas>
+        <h3 id="D_boardH">Set 1</h3>
+        <canvas id="D_board" width="760" height="336"></canvas>
         <div class="readout" id="D_boardRead"></div>
       </div>
       <div class="panel">
-        <div class="watchbar"><label>Gene by gene, 100 populations: <select id="D_gmeas">
-          <option value="other">share in the other hue</option>
+        <div class="watchbar"><label>Over time, 20 sets of four: <select id="D_meas">
           <option value="fst">F_ST</option>
-        </select></label></div>
-        <canvas id="D_genes" width="760" height="210"></canvas>
-      </div>
-      <div class="panel">
-        <div class="watchbar"><label>Over time, 100 populations: <select id="D_meas">
-          <option value="g20">share in the other hue at gene 20</option>
-          <option value="ends">share in the other hue at the ends (genes 1-2, 39-40)</option>
-          <option value="other">share in the other hue, all genes</option>
+          <option value="H">heterozygosity, within (red) and pooled (black)</option>
+          <option value="other">share in other colours</option>
+          <option value="nf">fragments a chromosome</option>
         </select></label></div>
         <canvas id="D_time" width="760" height="230"></canvas>
         <div class="readout" id="D_read"></div>
       </div>
       <div class="panel">
         <h3>Observed data: house and Spanish sparrows</h3>
+        <div class="watchbar"><label>Beside them, your set 1: <select id="D_spPair">
+          <option value="0">orange and blue</option>
+          <option value="1">orange and red</option>
+          <option value="2">orange and purple</option>
+          <option value="3">blue and red</option>
+          <option value="4">blue and purple</option>
+          <option value="5">red and purple</option>
+        </select></label></div>
         <canvas id="D_sparrow" width="760" height="150"></canvas>
         <div class="readout" id="D_sparrowRead"></div>
       </div>
@@ -355,11 +380,14 @@
         <h3>Target <span class="pips" id="D_pips"></span></h3>
         <p class="ttext" id="D_ttext"></p>
         <ul class="rules" id="D_rules"></ul>
-        <div class="controls">
-          <div class="tbar" id="D_sRow"><label>s <input type="range" id="D_s" min="0" max="7" step="1" value="3"></label><b id="D_sV"></b></div>
-          <div class="tbar" id="D_hRow"><label>h <input type="range" id="D_h" min="0" max="2" step="1" value="1"></label><b id="D_hV"></b></div>
-          <div class="tbar" id="D_mRow"><label>migration, m <input type="range" id="D_m" min="0" max="4" step="1" value="3"></label><b id="D_mV"></b></div>
-          <div class="tbar" id="D_RRow"><label>crossovers a chromosome <input type="range" id="D_R" min="0" max="2" step="1" value="1"></label><b id="D_RV"></b></div>
+        <div class="controls" id="D_controls">
+          <div id="D_paths"></div>
+          <div hidden>
+            <input type="range" id="D_e0" min="0" max="5" step="1" value="0"><input type="range" id="D_e1" min="0" max="5" step="1" value="0">
+            <input type="range" id="D_e2" min="0" max="5" step="1" value="0"><input type="range" id="D_e3" min="0" max="5" step="1" value="0">
+            <input type="range" id="D_e4" min="0" max="5" step="1" value="0"><input type="range" id="D_e5" min="0" max="5" step="1" value="0">
+          </div>
+          <div class="tbar" id="D_NRow"><label>N, each population <input type="range" id="D_N" min="0" max="3" step="1" value="1"></label><b id="D_NV"></b></div>
           <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
           <div class="buttons">
             <button id="D_go" class="accent">Go</button>
@@ -369,9 +397,14 @@
         <div class="verdict" id="D_verdict"></div>
       </div>
       <div class="panel">
+        <h3>Each pair: F<sub>ST</sub></h3>
+        <canvas id="D_pairs" width="360" height="220"></canvas>
+        <div class="readout" id="D_pairsRead"></div>
+      </div>
+      <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="rounds">Hit the two targets. <span class="hint" id="D_rounds_now">0 of 2</span></li>
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="D_rounds_now">0 of 3</span></li>
         </ul>
         <div class="solved-banner" id="solvedD">That is the end of the lesson.</div>
       </div>
@@ -388,22 +421,28 @@
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
 <script src="../assets/score.js"></script>
+<script src="../assets/paths.js"></script>
 <script>
 /* =====================================================================
    LESSON 17 — migration. DRAFT; first pass 2026-10-12, from JM's outline
-   (2026-10-09) and brief (2026-10-12); plan, measurements and open points
-   in docs/overhauls/lesson17_overhaul.md.
+   (2026-10-09) and brief (2026-10-12); second pass 2026-10-15, from his
+   review (B reworded, one slider a round; pass 1's D became C, with s and
+   h per population; pass 1's C retired for four populations and F_ST).
+   Plan, measurements and open points in docs/overhauls/lesson17_overhaul.md.
 
    A  steady migration: the other population's DNA arrives in fragments;
       m sets how much, crossing over sets how long.
-   B  one pulse: fragments cut shorter with every generation after it, and
-      faster with more crossing over; the student's ten runs on one plot.
-   C  a split: drift pulls two halves apart (heterozygosity within falls),
-      migration holds them together, mutation refills; F_ST.
-   D  selection at one gene: kept apart (s > 0), or let in, dragging its
-      neighbours (s < 0).
+   B  one dispersal event, some generations back: its fragments cut
+      shorter with every generation since, and faster with more crossing
+      over; the student's ten runs on one plot.
+   C  selection at one gene, two populations: the blue allele with its own
+      s and h in each; kept apart (local adaptation), swamped by
+      migration, or swept in dragging its neighbours.
+   D  four populations, each its own colour: migration between each pair
+      set on a diagram; F_ST as how differentiated they are; drift holds
+      them apart.
    ===================================================================== */
-const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c";
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", RED = "#b23a48", PURPLE = "#55407e", GREEN = "#6f8a4a";
 const $ = id => document.getElementById(id);
 const lab = s => '<span class="label">' + s + "</span>";
 const f2 = v => v == null ? "–" : v.toFixed(2);
@@ -463,10 +502,10 @@ function codeInto(id, lines) {
 /* ====== gates ========================================================
    A stage opens the next by being worked through; a miss never shuts a
    door. One bit per target (JM, 2026-09-30): the first scored try at each,
-   retried until hit. A1-A3, B1-B3, C1-C4, D1-D2. */
+   retried until hit. A1-A3, B1-B3, C1-C3, D1-D3. */
 const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
 const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
-const BIT = { A1:0, A2:1, A3:2, B1:3, B2:4, B3:5, C1:6, C2:7, C3:8, C4:9, D1:10, D2:11 };
+const BIT = { A1:0, A2:1, A3:2, B1:3, B2:4, B3:5, C1:6, C2:7, C3:8, D1:9, D2:10, D3:11 };
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
@@ -498,119 +537,137 @@ function finishStage(stage) {
 }
 
 /* =====================================================================
-   THE ENGINE (all four stages). Two populations of N hermaphrodite genomes;
-   a genome is two chromosomes of L = 40 genes, each gene an allele.
-   An allele is one integer: its hue in bits 0-1 (0 grey: arose before a
-   split; 1 orange: arose in the orange population; 2 blue), its shade in
-   bits 2-4 (0-5, for drawing), a serial number above. Two alleles are the
-   same allele only if the whole integer is the same.
+   THE ENGINE (all four stages). n populations (two in A-C, four in D) of N
+   hermaphrodite genomes; a genome is two chromosomes of L = 40 genes, each
+   gene an allele.
+   An allele is one integer: its hue in bits 0-2 (1 orange, 2 blue, 3 red,
+   4 purple: the population it arose in), its shade in bits 3-5 (0-5, for
+   drawing), a serial number above. Two alleles are the same allele only if
+   the whole integer is the same.
 
-   Founders: each population starts with three alleles a gene in its own hue
-   (shades 1, 3, 5; grey 0, 2, 5) at random shares, each genome drawing every gene from
-   them (lesson 15 started its genes with 1-3 alleles). A split (C) starts
-   both populations from one grey set.
+   Founders: each population starts with its own alleles, in its own hue.
+   A-C: three a gene (shades 1, 3, 5) at random shares, each genome drawing
+   every gene from them (lesson 15 started its genes with 1-3 alleles). D:
+   one a gene (shade 3), so a population starts one solid colour and an
+   allele is a colour.
 
    A generation, in each population: N young, each from two different
-   parents picked in proportion to fitness (1 everywhere but D), one gamete
+   parents picked in proportion to fitness (1 everywhere but C), one gamete
    from each. A gamete: one of the parent's two chromosomes, switching to
    the other at each gap between neighbouring genes with chance R / 39 (R
-   crossovers a chromosome on average); then Poisson(U) new mutations, each
-   a new allele at a random gene in the population's own hue and a random
-   shade. Then Binomial(N, m) genomes in each population trade places with
-   as many in the other (a pulse: `swap` of them, once).
-   A fragment: an unbroken run of genes on one chromosome in the other
-   population's hue (grey never counts).
+   crossovers a chromosome on average). Then, for each pair of populations
+   joined by migration m (P.mig: [i, j, m]), Binomial(N, m) genomes in one
+   trade places with as many in the other (B: a dispersal event, `swap` of
+   them, once).
+   A fragment: an unbroken run of genes on one chromosome in another
+   population's hue.
+   Pass 1 (2026-10-12) also had a grey founder set split in two and new
+   mutations in each population's hue (old C); both went with old C.
    ===================================================================== */
-const L = 40, FOUNDERS = 3;
-const mgHue = a => a & 3;
-const mgAl = (hue, shade, serial) => hue | (shade << 2) | (serial << 5);
-let MG_SERIAL = 100000;
-function mgPois(l, rng) { if (l <= 0) return 0; const e = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > e); return k - 1; }
+const L = 40;
+const mgHue = a => a & 7;
+const mgAl = (hue, shade, serial) => hue | (shade << 3) | (serial << 6);
 function mgBinom(n, p, rng) { let k = 0; for (let i = 0; i < n; i++) if (rng() < p) k++; return k; }
 function mgShuffle(n, rng) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-/* each gene's founder alleles: FOUNDERS of them, in one hue, at random shares */
-function mgFounders(hue, rng) {
+/* each gene's founder alleles: nf of them, in one hue, at random shares */
+function mgFounders(hue, nf, rng) {
   const out = [];
-  for (let i = 0; i < L; i++) { const w = Array.from({ length: FOUNDERS }, () => 0.2 + rng()), s = w.reduce((a, b) => a + b, 0);
-    out.push(w.map((x, k) => ({ a: mgAl(hue, (hue ? [1, 3, 5] : [0, 2, 5])[k], i * 8 + k + 8 * L * hue), p: x / s }))); }
+  for (let i = 0; i < L; i++) { const w = Array.from({ length: nf }, () => 0.2 + rng()), s = w.reduce((a, b) => a + b, 0);
+    out.push(w.map((x, k) => ({ a: mgAl(hue, nf === 1 ? 3 : [1, 3, 5][k], i * 8 + k + 8 * L * hue), p: x / s }))); }
   return out;
 }
 function mgDraw(fd, rng) { const c = new Int32Array(L); for (let i = 0; i < L; i++) { let u = rng(), k = 0; while (k < fd[i].length - 1 && u > fd[i][k].p) { u -= fd[i][k].p; k++; } c[i] = fd[i][k].a; } return c; }
-/* the start: two populations of N genomes, each in its own hue, or (split) both from one grey set */
+/* the start: P.n populations (2 unless said) of N genomes, each in its own hue */
 function mgStart(P, seed) {
-  const rng = mulberry32(seed);
-  const fd = P.split ? [mgFounders(0, rng)] : [mgFounders(1, rng), mgFounders(2, rng)];
-  return [0, 1].map(k => Array.from({ length: P.N }, () => [mgDraw(fd[P.split ? 0 : k], rng), mgDraw(fd[P.split ? 0 : k], rng)]));
+  const rng = mulberry32(seed), nf = P.founders || 3;
+  const fd = Array.from({ length: P.n || 2 }, (_, k) => mgFounders(k + 1, nf, rng));
+  return fd.map(f => Array.from({ length: P.N }, () => [mgDraw(f, rng), mgDraw(f, rng)]));
 }
-function mgGamete(P, g, hue, rng) {
+function mgGamete(P, g, rng) {
   const xo = P.R / (L - 1); let k = rng() < 0.5 ? 0 : 1, o = null;
   for (let i = 1; i < L; i++) if (rng() < xo) { if (!o) o = g[k].slice(); k ^= 1; for (let j = i; j < L; j++) o[j] = g[k][j]; }
-  if (!o) o = g[k];
-  for (let u = mgPois(P.U, rng); u > 0; u--) { if (o === g[0] || o === g[1]) o = o.slice(); o[Math.floor(rng() * L)] = mgAl(hue, Math.floor(rng() * 6), MG_SERIAL++); }
-  return o;
+  return o || g[k];
 }
-/* D: gene P.sel; the other population's allele there, 1 - h s in one copy, 1 - s in two (JM's 1, 1 - hs, 1 - s) */
-function mgFit(P, g, own) {
+/* C: the blue allele (hue 2) at gene P.sel: 1 with none, 1 - h s with one, 1 - s with two, with population k's own s and h
+   (JM's 1, 1 - hs, 1 - s; JM 2026-10-15: "a given allele to have different s/h in different populations") */
+function mgFit(P, g, k) {
   if (P.sel == null) return 1;
-  const fx = a => mgHue(a) !== own && mgHue(a) !== 0 ? 1 : 0, n = fx(g[0][P.sel]) + fx(g[1][P.sel]);
-  return n === 0 ? 1 : n === 1 ? 1 - P.h * P.s : 1 - P.s;
+  const n = (mgHue(g[0][P.sel]) === 2 ? 1 : 0) + (mgHue(g[1][P.sel]) === 2 ? 1 : 0), s = P.s[k], h = P.h[k];
+  return Math.max(0, n === 0 ? 1 : n === 1 ? 1 - h * s : 1 - s);
 }
 function mgStep(P, pair, swap) {
   const rng = pair.rng;
   pair.pops = pair.pops.map((F, k) => {
-    const own = k + 1, N = F.length, cum = new Float64Array(N); let s = 0;
-    for (let i = 0; i < N; i++) { s += Math.max(0, mgFit(P, F[i], own)); cum[i] = s; }
+    const N = F.length, cum = new Float64Array(N); let s = 0;
+    for (let i = 0; i < N; i++) { s += mgFit(P, F[i], k); cum[i] = s; }
     const pick = () => { const u = rng() * s; let lo = 0, hi = N - 1; while (lo < hi) { const mid = (lo + hi) >> 1; if (cum[mid] < u) lo = mid + 1; else hi = mid; } return lo; };
     const young = [];
     for (let i = 0; i < P.N; i++) { const a = pick(); let b = pick(), tries = 0; while (b === a && tries++ < 30) b = pick();
-      young.push([mgGamete(P, F[a], own, rng), mgGamete(P, F[b], own, rng)]); }
+      young.push([mgGamete(P, F[a], rng), mgGamete(P, F[b], rng)]); }
     return young;
   });
-  const n = swap != null ? swap : P.m > 0 ? mgBinom(P.N, P.m, rng) : 0;
-  if (n > 0) { const ia = mgShuffle(P.N, rng), ib = mgShuffle(P.N, rng);
-    for (let j = 0; j < n; j++) { const t = pair.pops[0][ia[j]]; pair.pops[0][ia[j]] = pair.pops[1][ib[j]]; pair.pops[1][ib[j]] = t; } }
+  for (const [i, j, m] of P.mig) {
+    const n = swap != null ? swap : m > 0 ? mgBinom(P.N, m, rng) : 0;
+    if (n > 0) { const ia = mgShuffle(P.N, rng), ib = mgShuffle(P.N, rng);
+      for (let q = 0; q < n; q++) { const t = pair.pops[i][ia[q]]; pair.pops[i][ia[q]] = pair.pops[j][ib[q]]; pair.pops[j][ib[q]] = t; } }
+  }
 }
-function mgFrags(c, own) { const out = []; let s = -1; for (let i = 0; i <= L; i++) { const f = i < L && mgHue(c[i]) !== own && mgHue(c[i]) !== 0; if (f) { if (s < 0) s = i; } else if (s >= 0) { out.push([s, i - s]); s = -1; } } return out; }
-const mgOther = (g, own) => { let n = 0; for (const c of g) for (let i = 0; i < L; i++) { const h = mgHue(c[i]); if (h !== own && h !== 0) n++; } return n / (2 * L); };
-/* one pair now. Each population: share of genes in the other hue, fragments a chromosome, their average length, the
-   other hue gene by gene. full: also heterozygosity within, alleles a gene, and (pair) heterozygosity pooled (the two
-   populations weighted equally), F_ST = (pooled - within) / pooled, and F_ST gene by gene. */
+function mgFrags(c, own) { const out = []; let s = -1; for (let i = 0; i <= L; i++) { const f = i < L && mgHue(c[i]) !== own; if (f) { if (s < 0) s = i; } else if (s >= 0) { out.push([s, i - s]); s = -1; } } return out; }
+const mgOther = (g, own) => { let n = 0; for (const c of g) for (let i = 0; i < L; i++) if (mgHue(c[i]) !== own) n++; return n / (2 * L); };
+/* each population's hues, gene by gene, as shares: [population][gene][hue] */
+function mgCounts(pair) {
+  return pair.pops.map(F => { const n2 = 2 * F.length, cnt = Array.from({ length: L }, () => new Float64Array(5));
+    for (const g of F) for (const c of g) for (let i = 0; i < L; i++) cnt[i][mgHue(c[i])]++;
+    for (const r of cnt) for (let h = 0; h < 5; h++) r[h] /= n2;      /* counted, then divided: a solid population is exactly 1 */
+    return cnt; });
+}
+/* heterozygosity on colour over the populations idx: within (each population on its own, averaged) and pooled (their
+   colours pooled, each population weighted equally), each averaged over the genes; F_ST = (pooled - within) / pooled.
+   byGene: F_ST gene by gene as well. In D an allele is a colour, so this is F_ST on alleles. */
+function mgFst(hc, idx, byGene) {
+  let HT = 0, HS = 0; const g = byGene ? new Float64Array(L) : null;
+  for (let i = 0; i < L; i++) {
+    const pbar = new Float64Array(5); let hs = 0, s2 = 0;
+    for (const k of idx) { let q2 = 0; for (let h = 0; h < 5; h++) { const p = hc[k][i][h]; q2 += p * p; pbar[h] += p / idx.length; } hs += (1 - q2) / idx.length; }
+    for (let h = 0; h < 5; h++) s2 += pbar[h] * pbar[h];
+    const ht = 1 - s2; HT += ht; HS += hs; if (g) g[i] = ht > 1e-9 ? (ht - hs) / ht : 0;
+  }
+  return { HT: HT / L, HS: HS / L, fst: HT > 1e-9 ? (HT - HS) / HT : 0, g };
+}
+/* one pair (or set) now. Each population: share of genes in another hue, fragments a chromosome, their average length,
+   the other hue gene by gene. full (D): each population's mix of hues; heterozygosity within and pooled, F_ST, and F_ST
+   for each pair of populations (D_PAIRS' order: 0-1, 0-2, 0-3, 1-2, 1-3, 2-3). */
 function mgStats(pair, full) {
-  const out = { pops: [] }, maps = [];
+  const out = { pops: [] };
   pair.pops.forEach((F, k) => {
     const own = k + 1, n2 = 2 * F.length; let other = 0, nf = 0, lf = 0; const byGene = new Float64Array(L);
-    const mp = full ? Array.from({ length: L }, () => new Map()) : null;
     for (const g of F) for (const c of g) {
-      for (let i = 0; i < L; i++) { const h = mgHue(c[i]); if (h !== own && h !== 0) { other++; byGene[i]++; } if (mp) mp[i].set(c[i], (mp[i].get(c[i]) || 0) + 1); }
+      for (let i = 0; i < L; i++) if (mgHue(c[i]) !== own) { other++; byGene[i]++; }
       for (const f of mgFrags(c, own)) { nf++; lf += f[1]; }
     }
-    const ps = { other: other / (n2 * L), nf: nf / n2, mf: nf ? lf / nf : null, byGene: Array.from(byGene, v => v / n2) };
-    if (mp) { let H = 0, nal = 0; ps.Hg = new Float64Array(L);
-      for (let i = 0; i < L; i++) { let s2 = 0; for (const v of mp[i].values()) s2 += (v / n2) ** 2; ps.Hg[i] = 1 - s2; H += 1 - s2; nal += mp[i].size; }
-      ps.H = H / L; ps.nal = nal / L; }
-    maps.push(mp); out.pops.push(ps);
+    out.pops.push({ other: other / (n2 * L), nf: nf / n2, mf: nf ? lf / nf : null, byGene: Array.from(byGene, v => v / n2) });
   });
   if (full) {
-    const n0 = 2 * pair.pops[0].length, n1 = 2 * pair.pops[1].length; let HT = 0, HS = 0; out.fstG = new Float64Array(L);
-    for (let i = 0; i < L; i++) {
-      const keys = new Set([...maps[0][i].keys(), ...maps[1][i].keys()]); let s2 = 0;
-      for (const a of keys) { const p = ((maps[0][i].get(a) || 0) / n0 + (maps[1][i].get(a) || 0) / n1) / 2; s2 += p * p; }
-      const ht = 1 - s2, hs = (out.pops[0].Hg[i] + out.pops[1].Hg[i]) / 2; HT += ht; HS += hs; out.fstG[i] = ht > 1e-9 ? (ht - hs) / ht : 0;
-    }
-    out.HT = HT / L; out.HS = HS / L; out.fst = HT > 1e-9 ? (HT - HS) / HT : 0;
+    const hc = mgCounts(pair), n = hc.length;
+    hc.forEach((cnt, k) => { const mix = new Float64Array(5); for (const r of cnt) for (let h = 0; h < 5; h++) mix[h] += r[h] / L; out.pops[k].mix = mix; });
+    Object.assign(out, mgFst(hc, Array.from({ length: n }, (_, k) => k)));
+    out.pw = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) out.pw.push(mgFst(hc, [i, j]).fst);
   }
   return out;
 }
 
 /* ====== drawing shared by the stages ====== */
-/* shades: grey (arose before the split), orange (arose in the orange population: lesson 14's orange), blue (the course's) */
+/* shades by hue: row 0 unused (pass 1's grey); orange (lesson 14's), blue (the course's), red (the course's accent),
+   purple (lesson 12's) */
 const SHADE = [
   ["#ebe8df", "#d6d2c6", "#bdb8aa", "#a29d8f", "#827e72", "#5f5c53"],
   ["#f8d2ae", "#f2b07a", "#ec8f45", "#e8730c", "#b95b08", "#874205"],
   ["#cfe0ec", "#a3c3da", "#6f9fc2", "#2f6b8f", "#245672", "#183e53"],
+  ["#f4d3d7", "#e5a5ae", "#d06f7d", "#b23a48", "#8e2c39", "#661f29"],
+  ["#e3ddef", "#c2b6dc", "#9784bf", "#55407e", "#443265", "#32254b"],
 ];
-const beadCol = a => SHADE[a & 3][Math.min(5, (a >> 2) & 7)];
-const POPCOL = [ORANGE, BLUE], POPNAME = ["orange", "blue"];
+const beadCol = a => SHADE[Math.min(4, a & 7)][Math.min(5, (a >> 3) & 7)];
+const POPCOL = [ORANGE, BLUE, RED, PURPLE], POPNAME = ["orange", "blue", "red", "purple"];
 /* the board: a pair's two populations side by side, two columns of genomes each, a genome's two chromosomes as two bead
    strings. At most 26 genomes a population shown. sortOther: most of the other hue first. marks: [{k, i, runs}] */
 const BD = { W: 760, H: 236, popW: 372, cw: 184, bw: 4.3, bh: 5, rh: 15.5, y0: 34, show: 26 };
@@ -639,14 +696,38 @@ function boardLine(S0) {
   const p = S0.pops, one = (k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> " + lab("other hue") + " <b>" + pc(p[k].other) + "</b>" + lab(", fragments a chromosome") + " <b>" + f1(p[k].nf) + "</b>" + lab(", average") + " <b>" + f1(p[k].mf) + "</b> " + lab("beads");
   return one(0) + "<br>" + one(1);
 }
+/* a mix of colours as one stacked bar, in hue order */
+function mixBar(ctx, mix, x, y, w, h) {
+  let at = x; for (let hu = 1; hu < 5; hu++) { const d = mix[hu] * w; if (d > 0) { ctx.fillStyle = SHADE[hu][3]; ctx.fillRect(at, y, d, h); at += d; } }
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 0.8; ctx.strokeRect(x, y, w, h);
+}
+/* D's board: four populations in a square (orange, blue / red, purple), as the diagram has them; each with its mix of
+   colours as a bar over its first 16 genomes; under them, the four pooled */
+const BD4 = { W: 760, H: 336, bw: 372, gap: 16, bh: 156, cw: 184, show: 16 };
+function drawBoard4(cvId, pair) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, BD4.W, BD4.H), st = mgStats(pair, true), pool = new Float64Array(5);
+  pair.pops.forEach((F, k) => {
+    const x0 = (k % 2) * (BD4.bw + BD4.gap), y0 = Math.floor(k / 2) * BD4.bh, mix = st.pops[k].mix;
+    for (let h = 0; h < 5; h++) pool[h] += mix[h] / pair.pops.length;
+    cardText(ctx, POPNAME[k] + " population" + (F.length > BD4.show ? " · first " + BD4.show + " of " + F.length + " genomes" : ""), x0, y0 + 8, { size: 12, bold: true, col: POPCOL[k] });
+    mixBar(ctx, mix, x0, y0 + 17, BD4.bw, 8);
+    F.slice(0, BD4.show).forEach((g, j) => { const x = x0 + (j % 2) * BD4.cw, y = y0 + 32 + Math.floor(j / 2) * BD.rh;
+      g.forEach((c, ci) => { for (let i = 0; i < L; i++) { ctx.fillStyle = beadCol(c[i]); ctx.fillRect(x + i * BD.bw, y + ci * (BD.bh + 1), BD.bw - 0.5, BD.bh); } }); });
+  });
+  cardText(ctx, "all four pooled", 0, 2 * BD4.bh + 12, { size: 12, bold: true, col: INK });
+  mixBar(ctx, pool, 110, 2 * BD4.bh + 7, BD4.W - 110, 10);
+  ctx.restore();
+}
 
-/* over time: thin lines for every population (or pair, for a pair-level measure), coloured by population; the average
-   thick; a target's window at its generation */
+/* over time: thin lines for every population (or pair or set, for a measure of the whole), coloured by population
+   (m.cols when the lines are not populations); the average thick, or (m.perPop) one average for each line; a target's
+   window at its generation, edged in a population's colour when the rule is about one */
 const TM = { W: 760, H: 250, px: 50, py: 16, pw: 680, ph: 190 };
 function drawTime(cvId, q, meas, M, rule, Gnow) {
   const cv = $(cvId); if (!cv) return;
   const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H: H, ph: H - 60 });
-  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas], G = q ? q.G : Gnow;
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas], G = q ? q.G : Gnow, cols = m.cols || POPCOL;
   let ymax = m.ymax;
   if (q && m.auto) for (const s of q.hist) for (const pr of s.pairs) for (const v of m.vals(pr)) if (v != null) ymax = Math.max(ymax, Math.ceil(v / m.auto) * m.auto);
   const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - Math.min(v, ymax) / ymax * T.ph;
@@ -656,52 +737,65 @@ function drawTime(cvId, q, meas, M, rule, Gnow) {
   for (let t = 0; t <= G; t += step) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
   cardText(ctx, m.xlab || "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
   if (rule) for (const u of rule.rules) if (u.meas === meas) {
-    const lo = u.lo == null ? 0 : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 10;
-    ctx.fillStyle = "rgba(178,58,72,0.12)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi)); ctx.strokeStyle = HOT; ctx.lineWidth = 1.3; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    const lo = u.lo == null ? 0 : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 10 + (u.pop != null ? 10 * u.pop - 5 : 0);
+    ctx.fillStyle = u.pop != null ? "rgba(29,29,27,0.07)" : "rgba(178,58,72,0.12)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = u.pop != null ? POPCOL[u.pop] : HOT; ctx.lineWidth = 1.5; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
   }
   if (q) {
     const nPer = m.vals(q.hist[0].pairs[0]).length;
     for (let i = 0; i < q.pairs.length; i++) for (let k = 0; k < nPer; k++) {
       const pts = []; for (const s of q.hist) { const v = m.vals(s.pairs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
-      polyline(ctx, pts, nPer === 2 ? POPCOL[k] : INK, 1, 0.13);
+      polyline(ctx, pts, nPer > 1 ? cols[k] : INK, 1, 0.13);
     }
-    const avg = []; for (const s of q.hist) { const v = meanOf(s.pairs.flatMap(m.vals)); if (v != null) avg.push([xs(s.t), ys(v)]); }
-    polyline(ctx, avg, INK, 2.6, 1);
-    if (m.closed) { const pts = []; for (let t = 0; t <= q.t; t++) { const v = m.closed(q, t); if (v != null) pts.push([xs(t), ys(v)]); } if (pts.length) { ctx.save(); ctx.setLineDash([5, 4]); polyline(ctx, pts, HOT, 1.6, 0.9); ctx.restore(); } }
+    if (m.perPop) for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.pairs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, cols[k], 2.6, 1);
+    } else {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.pairs.flatMap(m.vals)); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, INK, 2.6, 1);
+    }
   } else cardText(ctx, "Go plays it here.", T.px + T.pw / 2, T.py + T.ph / 2, { size: 12.5, col: MUTED, align: "center" });
   ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
   ctx.restore();
 }
 function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
-/* the run's summary at generation t: every measure averaged over the populations (or pairs) that have it */
+/* the run's summary at generation t: every measure averaged over the populations (or pairs, or sets) that have it.
+   Two populations (A-C): the share in blue gene by gene in each (the orange population's other hue is blue; the blue
+   population's own is), at gene 20, at the ends (genes 1-2, 39-40) and over all genes. Four (D): F_ST, heterozygosity
+   within and pooled, and each pair's F_ST. */
 function sumAt(q, t) {
   const s = q.hist.find(h => h.t === t) || q.hist[q.hist.length - 1], P = s.pairs, pops = P.flatMap(p => p.pops);
   const out = { t: s.t, other: meanOf(pops.map(p => p.other)), nf: meanOf(pops.map(p => p.nf)), mf: meanOf(pops.map(p => p.mf)) };
-  out.byGene = Array.from({ length: L }, (_, i) => meanOf(pops.map(p => p.byGene[i])));
-  out.g20 = out.byGene[19]; out.ends = (out.byGene[0] + out.byGene[1] + out.byGene[38] + out.byGene[39]) / 4;
-  if (P[0].fst != null) { out.fst = meanOf(P.map(p => p.fst)); out.H = meanOf(pops.map(p => p.H)); out.HT = meanOf(P.map(p => p.HT)); out.nal = meanOf(pops.map(p => p.nal));
-    out.fstG = Array.from({ length: L }, (_, i) => meanOf(P.map(p => p.fstG[i]))); }
+  if (P[0].pops.length === 2) {
+    out.blue = [0, 1].map(k => Array.from({ length: L }, (_, i) => meanOf(P.map(p => k === 0 ? p.pops[0].byGene[i] : 1 - p.pops[1].byGene[i]))));
+    out.g20 = out.blue.map(b => b[19]); out.ends = out.blue.map(b => (b[0] + b[1] + b[38] + b[39]) / 4); out.all = out.blue.map(b => meanOf(b));
+  }
+  if (P[0].fst != null) { out.fst = meanOf(P.map(p => p.fst)); out.HS = meanOf(P.map(p => p.HS)); out.HT = meanOf(P.map(p => p.HT));
+    out.pw = P[0].pw.map((_, j) => meanOf(P.map(p => p.pw[j]))); }
   return out;
 }
 
 /* ====== one stage's targets: the bowling shape (lesson 16's), shared by A-D ======
-   cfg: ctl [{key, vals, fmt}], rounds [{G, text, open, hold, rules [{meas, lo, hi, txt, ok(S), val(S)}]}], start(set, seed, G)
-   -> { P, pairs, swap(t), full, every }, freeG(set), paint(), extra tasks (done()) */
+   cfg: ctl [{key, vals, fmt, paths}], rounds [{G, text, open, hold, rules [{meas, pop, lo, hi, txt, ok(S), val(S)}]}],
+   start(set, seed, G) -> { P, pairs, swap(t), full, every }, freeG(set), paint(), extra tasks (extraDone()); hooks:
+   afterOpen() when a round opens, afterSync(locked) on every repaint, onInput(key) when a control moves.
+   A control with `paths` is a hidden input a diagram's arrow writes (D): it has no slider row or value of its own. */
 const ST = {};
 function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
 const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
 const practising = S => $(S.K + "_practice").checked || S.done;
 function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[+$(S.K + "_" + c.key).value]; return o; }
-function syncVals(S) { for (const c of S.cfg.ctl) $(S.K + "_" + c.key + "V").textContent = (c.fmt || String)(c.vals[+$(S.K + "_" + c.key).value]); }
+function syncVals(S) { for (const c of S.cfg.ctl) { const v = $(S.K + "_" + c.key + "V"); if (v) v.textContent = (c.fmt || String)(c.vals[+$(S.K + "_" + c.key).value]); } }
 function openRound(S) {
   const r = ruleOf(S);
   for (const c of S.cfg.ctl) {
-    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null, row = $(S.K + "_" + c.key + "Row");
     if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]);
     if (held) el.value = c.vals.indexOf(r.hold[c.key]);
-    el.dataset.held = held ? "1" : ""; $(S.K + "_" + c.key + "Row").classList.toggle("held", held);
+    el.dataset.held = held ? "1" : ""; if (row) row.classList.toggle("held", held);
   }
   syncVals(S);
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
 }
 function snap(q) { q.hist.push({ t: q.t, pairs: q.pairs.map(pr => mgStats(pr, q.full)) }); }
 function stepOnce(q) { q.t++; for (const pr of q.pairs) mgStep(q.P, pr, q.swap ? q.swap(q.t) : null); if (q.t === q.G || q.t % q.every === 0) snap(q); }
@@ -762,6 +856,7 @@ function syncStage(S) {
   $(K + "_next").hidden = !S.waiting || busy;
   const n = S.results.filter(Boolean).length;
   tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
 }
 function wireStage(S) {
   const K = S.K;
@@ -769,7 +864,11 @@ function wireStage(S) {
   $(K + "_next").addEventListener("click", () => nextRound(S));
   $(K + "_practice").addEventListener("change", () => syncStage(S));
   for (const c of S.cfg.ctl) {
-    $(K + "_" + c.key).addEventListener("input", () => { syncVals(S); S.preview = null; S.cfg.paint(); highlightByDataLine("code" + K, c.key); });
+    $(K + "_" + c.key).addEventListener("input", () => {
+      syncVals(S); S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.key);
+      /* a diagram's arrow writes its input on every step of a drag and fires no "change": count a drag once */
+      if (c.paths && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
     $(K + "_" + c.key).addEventListener("change", () => bump(K));
   }
   openRound(S);
@@ -816,7 +915,7 @@ const A_ROUNDS = [
 const SA = mkStage("A", {
   ctl: [{ key: "m", vals: A_MV }, { key: "R", vals: A_RV }], rounds: A_ROUNDS, ms: 60,
   freeText: "All three targets taken. Run any setting you like: 50 generations.", freeG: () => 50,
-  start: (set, seed, G) => { const P = { N: 25, m: set.m, R: set.R, U: 0, sel: null, split: false }, s0 = mgStart(P, seed);
+  start: (set, seed, G) => { const P = { N: 25, mig: [[0, 1, set.m]], R: set.R, sel: null }, s0 = mgStart(P, seed);
     return { P, pairs: Array.from({ length: 50 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: false, every: 1 }; },
   paint: () => A_paint(),
 });
@@ -852,60 +951,60 @@ function A_code() {
 }
 
 /* =====================================================================
-   STAGE B — one pulse (JM, 2026-10-09: "pulsed migration leaves chunks
-   whose size is proportionate to the time since the migration pulse & the
-   recombination rate"; outline: "Students set up and do 10 runs. Final
-   outcomes shown").
+   STAGE B — one dispersal event (JM, 2026-10-09: "pulsed migration leaves
+   chunks whose size is proportionate to the time since the migration pulse
+   & the recombination rate"; outline: "Students set up and do 10 runs.
+   Final outcomes shown"; 2026-10-15: "It's a single dispersal event at
+   some point in the past", the targets "maybe too tight", their framing
+   "confusing").
 
    The start of A; then, before any breeding, M genomes trade places each
-   way (the pulse); then G generations with no migration. A fresh pulse's
-   fragments are whole chromosomes until the first young of a migrant make
-   gametes, so cutting starts a generation in.
-   MEASURED (prototype; pulse after the first breeding there, so its t 5 is
-   t 4 here): fragment length at t 5 / 10 / 20 / 40 -- R .5: 17 / 9 / 5 /
-   3.3; R 1: 11 / 5.4 / 3 / 2.1; R 2: 6.6 / 3.1 / 1.9 / 1.5; other hue: a
-   pulse of 2 -> 8%, 5 -> 19%, flat in time.
-   The pulse sizes give the other hue ~4 / 8 / 16 / 24 / 40%: at 1 / 2 / 3 /
-   5 / 8 (the first build) M 2 and M 3 sat at 6-9% and 10-13%, either side
-   of a 10% bar, and the check flaked. Bars on the other hue are at 12%.
-   ON THE PAGE (two runs a setting, 2026-10-12, at the old sizes): 1 fresh and small, 7 beads
-   or more and the other hue under 15%: M 2 R 1 G 3 13-15, M 2 R .5 G 5
-   14-15 hit; M 2 R 1 G 5 8-9; G 10 R 1 ~5. 2 M 3 and G 20 held, 4 beads
-   or more: R .5 4.9-5.1 hits, R 1 2.8-3.0 and R 2 1.8 miss (with M free,
-   M 8 R 1 gave 3.9-4.1, so M is held). 3 old and small, under 3.5 beads and
-   under 10%: M 2 R 1 G 20 2.6, M 2 R 2 G 10 2.7, M 2 R .5 G 40 3.0 hit; M 1
-   R 1 G 10 4.3-4.5 misses.
+   way (the dispersal event); then G generations with no migration. A fresh
+   event's fragments are whole chromosomes until the first young of a
+   migrant make gametes, so cutting starts a generation in.
+   MEASURED (node prototype of this engine, 2026-10-15; M 4, 50 pairs, four
+   seeds): average fragment length at G 2 / 5 / 10 / 20 / 40 / 80 --
+     R .25   33 / 21 / 14 / 8.5 / 5.6 / 4.9
+     R .5    28 / 15 / 8.4 / 5.0 / 3.3 / 2.9
+     R 1     21 / 9.3 / 5.0 / 3.0 / 2.2 / 1.9      (sd of a run's average 0.1-0.3)
+     R 2     15 / 5.4 / 3.0 / 2.0 / 1.6 / 1.6
+     R 4     9.2 / 3.1 / 1.9 / 1.5 / 1.3 / 1.4
+   The event's size sets the other hue (M 1 / 2 / 4 / 6 / 10: 4 / 9 / 16 /
+   24 / 41%, flat in time) and a little of the length, since neighbouring
+   fragments merge (R 1, G 20: 2.7 / 2.8 / 3.1 / 3.5 / 4.4 beads). So each
+   round holds M at 4 and frees one slider. Pass 1's rounds paired two
+   conditions and named the answer ("a small pulse, seen soon after").
+   Targets: 1 time free (R 1): 4 beads or more (G 10 or sooner; opens at G
+   20, 3.0); 2 R free (G 20): 4 or more (R .5 or less; opens at R 1, 3.0);
+   3 R free (G 5): under 6 (R 2 or more; opens at R 1, 9.3).
    Every run, practice or not, is a dot on "your runs".
    ===================================================================== */
-const B_MV = [1, 2, 4, 6, 10], B_RV = [0.5, 1, 2], B_GV = [3, 5, 10, 15, 20, 30, 40, 60];
+const B_MV = [1, 2, 4, 6, 10], B_RV = [0.25, 0.5, 1, 2, 4], B_GV = [2, 5, 10, 20, 40, 80];
+const B_LEN = (lo, hi) => ({ meas: "mf", lo, hi, txt: "average fragment length today: " + (hi == null ? "at least " + lo : "under " + hi) + " beads",
+  ok: S => S.mf != null && (hi == null ? S.mf >= lo : S.mf < hi), val: S => f1(S.mf) });
 const B_ROUNDS = [
-  { G: null, open: { M: 6, R: 1, G: 20 }, text: "A small pulse, seen soon after: long fragments, averaging 7 beads or more, with under 12% of genes in the other hue.",
-    rules: [{ meas: "mf", lo: 7, hi: null, txt: "average fragment length: at least 7 beads", ok: S => S.mf != null && S.mf >= 7, val: S => f1(S.mf) },
-            { meas: "other", lo: 0, hi: 0.12, txt: "share in the other hue: under 12%", ok: S => S.other < 0.12, val: S => pc(S.other) }] },
-  { G: null, open: { R: 2 }, hold: { G: 20, M: 4 }, text: "Four genomes each way, twenty generations after the pulse: keep the fragments long, averaging 4 beads or more.",
-    rules: [{ meas: "mf", lo: 4, hi: null, txt: "average fragment length at generation 20: at least 4 beads", ok: S => S.mf != null && S.mf >= 4, val: S => f1(S.mf) }] },
-  { G: null, open: { M: 6, R: 0.5, G: 10 }, text: "An old, small pulse: fragments averaging under 3.5 beads, with under 12% of genes in the other hue.",
-    rules: [{ meas: "mf", lo: 0, hi: 3.5, txt: "average fragment length: under 3.5 beads", ok: S => S.mf != null && S.mf < 3.5, val: S => f1(S.mf) },
-            { meas: "other", lo: 0, hi: 0.12, txt: "share in the other hue: under 12%", ok: S => S.other < 0.12, val: S => pc(S.other) }] },
+  { G: null, open: { G: 20 }, hold: { M: 4, R: 1 }, text: "Four genomes each way, one crossover a chromosome. Set the time since the dispersal event so that its fragments average 4 beads or more today.", rules: [B_LEN(4, null)] },
+  { G: null, open: { R: 1 }, hold: { M: 4, G: 20 }, text: "The dispersal event was 20 generations ago. Keep its fragments long: averaging 4 beads or more today.", rules: [B_LEN(4, null)] },
+  { G: null, open: { R: 1 }, hold: { M: 4, G: 5 }, text: "The dispersal event was only 5 generations ago. Cut its fragments short: averaging under 6 beads today.", rules: [B_LEN(0, 6)] },
 ];
 const BX = { dots: [], pick: [], picked: false };
 const SB = mkStage("B", {
   ctl: [{ key: "M", vals: B_MV }, { key: "R", vals: B_RV }, { key: "G", vals: B_GV }], rounds: B_ROUNDS, ms: 70,
-  freeText: "All three targets taken. Run any pulse you like.", freeG: set => set.G,
-  start: (set, seed, G) => { const P = { N: 25, m: 0, R: set.R, U: 0, sel: null, split: false }, s0 = mgStart(P, seed);
+  freeText: "All three targets taken. Run any dispersal event you like.", freeG: set => set.G,
+  start: (set, seed, G) => { const P = { N: 25, mig: [[0, 1, 0]], R: set.R, sel: null }, s0 = mgStart(P, seed);
     const pairs = Array.from({ length: 50 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) }));
-    /* the pulse, before any breeding: each pair trades M genomes each way, its own pick */
+    /* the dispersal event, before any breeding: each pair trades M genomes each way, its own pick */
     return { P, pairs, full: false, every: 1, swap: () => 0, t0swap: () => { for (const pr of pairs) { const ia = mgShuffle(P.N, pr.rng), ib = mgShuffle(P.N, pr.rng);
       for (let j = 0; j < set.M; j++) { const t = pr.pops[0][ia[j]]; pr.pops[0][ia[j]] = pr.pops[1][ib[j]]; pr.pops[1][ib[j]] = t; } } } }; },
   afterRun: q => { const s = sumAt(q, q.G); BX.dots.push({ G: q.G, R: q.set.R, M: q.set.M, mf: s.mf, other: s.other, line: q.hist.map(h => [h.t, meanOf(h.pairs.flatMap(p => p.pops.map(x => x.mf)))]) }); BX.pick = []; },
   extraDone: () => BX.dots.length >= 10 && BX.picked,
   paint: () => B_paint(),
 });
-/* B's rounds are judged at the generation the slider says (round 2 holds it at 20) */
+/* B's rounds are judged at the generation the slider says (rounds 2 and 3 hold it) */
 B_ROUNDS.forEach(r => Object.defineProperty(r, "G", { get: () => B_GV[+$("B_G").value], configurable: true }));
-const B_RCOL = { 0.5: INK, 1: HOT, 2: BLUE };
+const B_RCOL = { 0.25: MUTED, 0.5: INK, 1: HOT, 2: BLUE, 4: GREEN };
 const MEAS_B = {};
-for (const k in MEAS_FRAG) MEAS_B[k] = Object.assign({}, MEAS_FRAG[k], { xlab: "generations after the pulse" }, k === "mf" ? { ymax: 40, auto: 0 } : {});
+for (const k in MEAS_FRAG) MEAS_B[k] = Object.assign({}, MEAS_FRAG[k], { xlab: "generations since the dispersal event" }, k === "mf" ? { ymax: 40, auto: 0 } : {});
 /* two genomes, same population: where any of their chromosomes carry the same alleles bead for bead; and of that, the
    runs in the other hue (for the board marks) */
 function B_same(a, b, own) {
@@ -913,7 +1012,7 @@ function B_same(a, b, own) {
   for (const x of a) for (const y of b) {
     const runs = [], oth = []; let s = -1, so = -1;
     for (let i = 0; i <= L; i++) {
-      const eq = i < L && x[i] === y[i], eo = eq && mgHue(x[i]) !== own && mgHue(x[i]) !== 0;
+      const eq = i < L && x[i] === y[i], eo = eq && mgHue(x[i]) !== own;
       if (eq) { if (s < 0) s = i; } else if (s >= 0) { runs.push([s, i - s]); s = -1; }
       if (eo) { if (so < 0) so = i; } else if (so >= 0) { oth.push([so, i - so]); so = -1; }
     }
@@ -949,46 +1048,47 @@ function B_paint() {
     else marks = [{ k, i: BX.pick[0].i, runs: [] }];
   }
   drawBoard("B_board", pair, { sortOther: true, marks });
-  $("B_boardH").textContent = "Pair 1 · generation " + (q ? q.t : 0) + " after the pulse";
+  $("B_boardH").textContent = "Pair 1 · " + (q ? q.t : 0) + " generations since the dispersal event";
   $("B_boardRead").innerHTML = boardLine(mgStats(pair, false)) + "<br>" + pickTxt;
   drawTime("B_time", q, $("B_meas").value, MEAS_B, q ? q.r : (S.done ? null : ruleOf(S)), B_GV[+$("B_G").value]);
-  if (q) { const s = sumAt(q, q.t); $("B_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("after the pulse · other hue") + " <b>" + pc(s.other) + "</b> " + lab("· fragments a chromosome") + " <b>" + f1(s.nf) + "</b> " + lab("· average length") + " <b>" + f1(s.mf) + "</b> " + lab("beads") + (q.practice ? " " + lab("· practice") : ""); }
+  if (q) { const s = sumAt(q, q.t); $("B_read").innerHTML = lab("generations since the dispersal event") + " <b>" + q.t + "</b> " + lab("· other hue") + " <b>" + pc(s.other) + "</b> " + lab("· fragments a chromosome") + " <b>" + f1(s.nf) + "</b> " + lab("· average length") + " <b>" + f1(s.mf) + "</b> " + lab("beads") + (q.practice ? " " + lab("· practice") : ""); }
   else $("B_read").innerHTML = "";
   B_drawRuns(); syncStage(S); B_code();
   tick("B", "runs", BX.dots.length >= 10, Math.min(10, BX.dots.length) + " of 10");
   tick("B", "pick", BX.picked, BX.picked ? "done" : "");
 }
-const BRn = { W: 760, H: 250, px: 50, py: 16, pw: 570, ph: 190 };
+const BRn = { W: 760, H: 250, px: 50, py: 16, pw: 570, ph: 190, G: 80 };
 function B_drawRuns() {
   const cv = $("B_runs"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, BRn.W, BRn.H), xs = t => BRn.px + t / 60 * BRn.pw, ys = v => BRn.py + BRn.ph - Math.min(v, 40) / 40 * BRn.ph;
+  const { ctx } = frameCanvas(cv, BRn.W, BRn.H), xs = t => BRn.px + t / BRn.G * BRn.pw, ys = v => BRn.py + BRn.ph - Math.min(v, 40) / 40 * BRn.ph;
   ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(BRn.px, BRn.py); ctx.lineTo(BRn.px, BRn.py + BRn.ph); ctx.lineTo(BRn.px + BRn.pw, BRn.py + BRn.ph); ctx.stroke();
   for (const v of [0, 10, 20, 30, 40]) cardText(ctx, String(v), BRn.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
-  for (let t = 0; t <= 60; t += 10) cardText(ctx, String(t), xs(t), BRn.py + BRn.ph + 12, { size: 10.5, col: MUTED, align: "center" });
-  cardText(ctx, "generations after the pulse", BRn.px + BRn.pw / 2, BRn.H - 8, { size: 11, col: MUTED, align: "center" });
+  for (let t = 0; t <= BRn.G; t += 10) cardText(ctx, String(t), xs(t), BRn.py + BRn.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generations since the dispersal event", BRn.px + BRn.pw / 2, BRn.H - 8, { size: 11, col: MUTED, align: "center" });
   ctx.save(); ctx.translate(13, BRn.py + BRn.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "average fragment length (beads)", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
   for (const d of BX.dots) { polyline(ctx, d.line.filter(p => p[1] != null).map(p => [xs(p[0]), ys(p[1])]), B_RCOL[d.R], 1, 0.22); }
   for (const d of BX.dots) if (d.mf != null) { ctx.fillStyle = B_RCOL[d.R]; ctx.beginPath(); ctx.arc(xs(d.G), ys(d.mf), 4.2, 0, 6.2832); ctx.fill(); }
   /* the key, right of the plot */
-  [0.5, 1, 2].forEach((R, i) => { const y = BRn.py + 14 + i * 18; ctx.fillStyle = B_RCOL[R]; ctx.beginPath(); ctx.arc(BRn.px + BRn.pw + 16, y, 4.2, 0, 6.2832); ctx.fill();
+  B_RV.forEach((R, i) => { const y = BRn.py + 14 + i * 18; ctx.fillStyle = B_RCOL[R]; ctx.beginPath(); ctx.arc(BRn.px + BRn.pw + 16, y, 4.2, 0, 6.2832); ctx.fill();
     cardText(ctx, R + (R === 1 ? " crossover" : " crossovers"), BRn.px + BRn.pw + 26, y, { size: 11, col: B_RCOL[R] }); });
   if (!BX.dots.length) cardText(ctx, "Each run puts a dot here.", BRn.px + BRn.pw / 2, BRn.py + BRn.ph / 2, { size: 12.5, col: MUTED, align: "center" });
   ctx.restore();
-  $("B_runsRead").innerHTML = BX.dots.length ? lab("runs") + " <b>" + BX.dots.length + "</b>" + lab(" · last: pulse of") + " <b>" + BX.dots[BX.dots.length - 1].M + "</b>" + lab(", average length") + " <b>" + f1(BX.dots[BX.dots.length - 1].mf) + "</b> " + lab("beads at generation") + " <b>" + BX.dots[BX.dots.length - 1].G + "</b>" : "";
+  const last = BX.dots[BX.dots.length - 1];
+  $("B_runsRead").innerHTML = last ? lab("runs") + " <b>" + BX.dots.length + "</b>" + lab(" · last: ") + " <b>" + last.M + "</b>" + lab(" genomes each way, average length") + " <b>" + f1(last.mf) + "</b> " + lab("beads,") + " <b>" + last.G + "</b> " + lab("generations since the dispersal event") : "";
 }
 function B_code() {
   const s = readSet(SB);
   codeInto("codeB", [
-    ["", "# Lesson 17, Stage B -- one pulse of migrants, then none; fragments cut shorter each generation (hue only)"],
+    ["", "# Lesson 17, Stage B -- one dispersal event, then no migration; fragments cut shorter each generation (hue only)"],
     ["", "N <- 25; L <- 40"],
-    ["M", "M <- " + s.M + "                                     # genomes in the pulse, each way"],
+    ["M", "M <- " + s.M + "                                     # genomes in the dispersal event, each way"],
     ["R", "R <- " + s.R + "                                   # crossovers a chromosome, on average"],
-    ["G", "G <- " + s.G + "                                    # generations after the pulse"],
+    ["G", "G <- " + s.G + "                                    # generations since the dispersal event"],
     ["R", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
     ["R", "  ifelse(side == 0, g[[1]], g[[2]]) }"],
     ["", "pop <- list(replicate(N, list(rep(1, L), rep(1, L)), simplify = FALSE),     # 1: orange"],
     ["", "            replicate(N, list(rep(2, L), rep(2, L)), simplify = FALSE))     # 2: blue"],
-    ["M", "a <- sample(N, M); b <- sample(N, M); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp   # the pulse"],
+    ["M", "a <- sample(N, M); b <- sample(N, M); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp   # the dispersal event"],
     ["G", "for (t in seq_len(G))"],
     ["", "  pop <- lapply(pop, function(P) lapply(1:N, function(i) { ab <- sample(N, 2); list(gamete(P[[ab[1]]]), gamete(P[[ab[2]]])) }))"],
     ["", "frag <- unlist(lapply(pop[[1]], function(g) lapply(g, function(ch) with(rle(ch != 1), lengths[values]))))"],
@@ -997,190 +1097,228 @@ function B_code() {
 }
 
 /* =====================================================================
-   STAGE C — a split (JM, 2026-10-12: "population differentiation ideally
-   using heterozygosity to connect to drift along with Fst"; reinforce
-   drift and mutation).
+   STAGE C — selection at one gene, two populations (pass 1's D; JM,
+   2026-10-09: "The h/s slider just allows students to investigate how
+   selection interacts with these processes"; 2026-10-15: "D is solid ...
+   move current D to C", and "allows a given allele to have different s/h
+   in different populations so that in addition to everything else we can
+   show migration swamping local adaptation in some scenarios").
 
-   Both populations drawn from one grey founder set (three alleles a gene);
-   new mutations take their population's hue. 20 pairs; a snapshot every
-   generation to 100, every second beyond.
-   Beside the measurements, the closed forms (WORK_ORDER's pinned ones):
-     drift alone (m 0, U 0): H(t) = H(0) (1 - 1/2N)^t, within a population
-     migration and drift (U 0): F_ST at balance = 1 / (1 + 16 N m) for two
-       populations swapping (measured: 4Nm is the many-islands form and
-       misses badly here -- overhaul doc, open point 1)
-     mutation and drift (m 0): H = 4Nu / (1 + 4Nu), u = U / 40 a gene
-   MEASURED (prototype, 50 pairs): F_ST at 50 / 100, m 0: N 10 .84/.99, 25
-   .44/.75, 50 .25/.47, 100 .13/.24. N 25 at 100: m .005 .38, .01 .24, .02
-   .13, .05 .05. N 100 at 200: m .001 .32, .002 .23, .005 .12, .01 .06.
-   H within, N 25, m 0, gen 100: U .1 .22, .2 .35, .4 .49.
-   ON THE PAGE (two runs a setting, 2026-10-12): 1 N 100 .13 miss, N 50 .25,
-   25 .48, 10 .83 hit. 2 m .005 .37-.42, .01 .22-.24, .02 .11-.15, .05 .06.
-   3 m .01 .06, .005 .12, .002 .23-.24, .001 .32. 4 U .1 .22, .25 .39, .5
-   .56.
-   Targets: 1 F_ST .2+ at 50 (N 50 or less); 2 N 25: .1-.3 at 100 (m .01,
-   .02); 3 N 100: .1-.3 at 200 (m .002, .005; the opening m .01 misses: the
-   number of migrants a generation sets it); 4 N 25, m 0: H within .3+ at
-   100 (U .25 or more).
+   A's start and steady migration; gene 20 (index 19) under selection. The
+   given allele is the blue one (any blue bead at gene 20): 1 with none,
+   1 - h s with one, 1 - s with two, each population with its own s and h.
+   s > 0 harmful there, s < 0 helpful (JM's sign). Local adaptation: harmful
+   in orange, helpful in blue. 50 pairs.
+   MEASURED (node prototype of this engine, 2026-10-15; h .5, R 1, 50 pairs;
+   share in blue: orange population at gene 20 / its ends / blue population
+   at gene 20):
+     m .02, at 100: s 0 / 0 57 / 50 / 57; +.3 / 0 2 / 38 / 18 (the blue
+       population takes the orange allele: migrants from orange carry it,
+       migrants into orange lose theirs); 0 / -.3 79 / 60 / 95; +.1 / -.1
+       35 / 50 / 66; +.3 / -.3 11 / 43 / 84; +.6 / -.6 6 / 25 / 90.
+     s +.1 / -.6, at 100, orange's gene 20: m .005 10%, .01 24%, .02 47-49%,
+       .05 81-82%, .1 95% (swamped).
+     at 60, R 1, orange's gene 20 / ends (four seeds): s -.3 / 0, m .005
+       80 (77-84) / 30 (26-32); -.6 / 0, .002 81 / 19; -.3 / -.3, .005 86 /
+       30; -.3 / 0, .01 93 / 42 (37-47); cheap routes: s 0 m .05 51 / 48;
+       +.1 / -.6, m .05 71 / 61; 0 / -.6, m .05 91 / 64.
+   Targets: 1 m .02 held: orange under 30% blue at gene 20, blue over 70%
+   (both signs needed; opens at 0 / 0); 2 s +.1 / -.6 held: orange's gene
+   20 60% or more blue at 100 (m .05 or more; opens at .02, 47%); 3 at 60:
+   orange's gene 20 70% or more blue, its ends under 40% (blue helpful in
+   orange, little migration; opens on 2's swamp, ends 61%).
    ===================================================================== */
-const C_NV = [10, 25, 50, 100], C_MV = [0, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05], C_UV = [0, 0.1, 0.25, 0.5, 1];
-const C_FST = (lo, hi, at) => ({ meas: "fst", lo, hi, txt: "F_ST at generation " + at + ": " + (hi == null ? "at least " + lo : lo + " to " + hi), ok: S => S.fst >= lo && (hi == null || S.fst <= hi), val: S => f2(S.fst) });
+const C_SV = [-0.6, -0.3, -0.1, 0, 0.1, 0.3, 0.6, 1], C_HV = [0, 0.5, 1], C_MV = [0.002, 0.005, 0.01, 0.02, 0.05, 0.1], C_RV = [0.5, 1, 2];
+const sFmt = v => v === 0 ? "0 · no effect" : v > 0 ? "+" + v + " · harmful" : "−" + Math.abs(v) + " · helpful";
+const C_G20 = (k, lo, hi) => ({ meas: "g20", pop: k, lo, hi, txt: POPNAME[k] + " population, gene 20: " + (hi == null ? "at least " + Math.round(100 * lo) : "under " + Math.round(100 * hi)) + "% blue",
+  ok: S => hi == null ? S.g20[k] >= lo : S.g20[k] < hi, val: S => pc(S.g20[k]) });
 const C_ROUNDS = [
-  { G: 50, open: { N: 100 }, hold: { m: 0, U: 0 }, text: "No migration, no mutation: let drift pull the two apart. At generation 50, F_ST of 0.2 or more.", rules: [C_FST(0.2, null, 50)] },
-  { G: 100, open: { m: 0 }, hold: { N: 25, U: 0 }, text: "Twenty-five genomes each: let migration hold them together. At generation 100, F_ST between 0.1 and 0.3.", rules: [C_FST(0.1, 0.3, 100)] },
-  { G: 200, open: { m: 0.01 }, hold: { N: 100, U: 0 }, text: "Four times as many genomes each, and the same F_ST: between 0.1 and 0.3 at generation 200.", rules: [C_FST(0.1, 0.3, 200)] },
-  { G: 100, open: { U: 0 }, hold: { N: 25, m: 0 }, text: "No migration: keep each population diverse anyway. At generation 100, heterozygosity within each at 0.3 or more.",
-    rules: [{ meas: "H", lo: 0.3, hi: null, txt: "heterozygosity within, at generation 100: at least 0.3", ok: S => S.H >= 0.3, val: S => f2(S.H) }] },
+  { G: 100, open: { so: 0, ho: 0.5, sb: 0, hb: 0.5 }, hold: { m: 0.02, R: 1 }, text: "Keep gene 20 apart while the rest of the chromosome mixes: at generation 100, the orange population mostly orange at gene 20, the blue population mostly blue.",
+    rules: [C_G20(0, 0, 0.3), C_G20(1, 0.7, null)] },
+  { G: 100, open: { m: 0.02, R: 1 }, hold: { so: 0.1, ho: 0.5, sb: -0.6, hb: 0.5 }, text: "Held: the blue allele mildly harmful in the orange population, strongly helpful in the blue. Swamp the orange population anyway: at generation 100, 60% or more of its gene 20 blue.",
+    rules: [{ meas: "g20", pop: 0, lo: 0.6, hi: null, txt: "orange population, gene 20: at least 60% blue", ok: S => S.g20[0] >= 0.6, val: S => pc(S.g20[0]) }] },
+  { G: 60, open: { so: 0.1, ho: 0.5, sb: -0.6, hb: 0.5, m: 0.05, R: 1 }, text: "Turn the orange population's gene 20 blue while the rest of its chromosome stays mostly orange: at generation 60, 70% or more blue at gene 20, under 40% at the ends.",
+    rules: [{ meas: "g20", pop: 0, lo: 0.7, hi: null, txt: "orange population, gene 20: at least 70% blue", ok: S => S.g20[0] >= 0.7, val: S => pc(S.g20[0]) },
+            { meas: "ends", pop: 0, lo: 0, hi: 0.4, txt: "orange population, the ends: under 40% blue", ok: S => S.ends[0] < 0.4, val: S => pc(S.ends[0]) }] },
 ];
-const H0 = q => meanOf(q.hist[0].pairs.flatMap(p => p.pops.map(x => x.H)));
 const MEAS_C = {
-  fst: { lab: "F_ST", ymax: 1, vals: pr => [pr.fst], closed: q => q.set.m > 0 && q.set.U === 0 ? 1 / (1 + 16 * q.set.N * q.set.m) : null },
-  H: { lab: "heterozygosity within", ymax: 1, vals: pr => pr.pops.map(p => p.H), closed: (q, t) => q.set.m === 0 && q.set.U === 0 ? H0(q) * Math.pow(1 - 1 / (2 * q.set.N), t) : q.set.m === 0 ? 4 * q.set.N * q.set.U / L / (1 + 4 * q.set.N * q.set.U / L) : null },
-  HT: { lab: "heterozygosity, pooled", ymax: 1, vals: pr => [pr.HT] },
-  nal: { lab: "alleles a gene", ymax: 4, auto: 2, vals: pr => pr.pops.map(p => p.nal) },
+  g20: { lab: "share in blue at gene 20", ymax: 1, pct: true, perPop: true, vals: pr => [pr.pops[0].byGene[19], 1 - pr.pops[1].byGene[19]] },
+  ends: { lab: "share in blue at the ends", ymax: 1, pct: true, perPop: true, vals: pr => [0, 1].map(k => { const b = pr.pops[k].byGene, e = (b[0] + b[1] + b[38] + b[39]) / 4; return k ? 1 - e : e; }) },
+  all: { lab: "share in blue, all genes", ymax: 1, pct: true, perPop: true, vals: pr => [pr.pops[0].other, 1 - pr.pops[1].other] },
 };
 const SC = mkStage("C", {
-  ctl: [{ key: "N", vals: C_NV }, { key: "m", vals: C_MV }, { key: "U", vals: C_UV }], rounds: C_ROUNDS, ms: 25,
-  freeText: "All four targets taken. Run any setting you like: 200 generations.", freeG: () => 200,
-  start: (set, seed, G) => { const P = { N: set.N, m: set.m, R: 1, U: set.U, sel: null, split: true }, s0 = mgStart(P, seed);
-    return { P, pairs: Array.from({ length: 20 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: true, every: G >= 200 ? 4 : G >= 100 ? 2 : 1 }; },
+  ctl: [{ key: "so", vals: C_SV, fmt: sFmt }, { key: "ho", vals: C_HV }, { key: "sb", vals: C_SV, fmt: sFmt }, { key: "hb", vals: C_HV }, { key: "m", vals: C_MV }, { key: "R", vals: C_RV }], rounds: C_ROUNDS, ms: 40,
+  freeText: "All three targets taken. Run any setting you like: 100 generations.", freeG: () => 100,
+  start: (set, seed, G) => { const P = { N: 25, mig: [[0, 1, set.m]], R: set.R, sel: 19, s: [set.so, set.sb], h: [set.ho, set.hb] }, s0 = mgStart(P, seed);
+    return { P, pairs: Array.from({ length: 50 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: false, every: G > 60 ? 2 : 1 }; },
   paint: () => C_paint(),
 });
-/* pair 1, gene by gene: each population's alleles as a stacked bar, coloured by allele; the gene's F_ST under it */
-const CF = { W: 760, H: 170, x0: 40, gw: 17.5, top: 18, bh: 104 };
-function C_drawFreq(pair) {
-  const cv = $("C_freq"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, CF.W, CF.H), st = mgStats(pair, true);
-  cardText(ctx, "each gene: orange population (left bar), blue (right bar), alleles stacked by share", CF.x0, 7, { size: 11, col: MUTED });
-  for (let i = 0; i < L; i++) {
-    const x = CF.x0 + i * CF.gw;
-    pair.pops.forEach((F, k) => {
-      const cnt = new Map(); for (const g of F) for (const c of g) cnt.set(c[i], (cnt.get(c[i]) || 0) + 1);
-      const n2 = 2 * F.length; let y = CF.top + CF.bh;
-      [...cnt.entries()].sort((a, b) => a[0] - b[0]).forEach(([a, n]) => { const h = n / n2 * CF.bh; ctx.fillStyle = beadCol(a); ctx.fillRect(x + k * 7.5, y - h, 7, h); y -= h; });
-    });
-    const f = st.fstG[i], fh = Math.max(0, Math.min(1, f)) * 26;
-    ctx.fillStyle = INK; ctx.fillRect(x + 2, CF.top + CF.bh + 6, 11, fh);
-    if (i % 5 === 4 || i === 0) cardText(ctx, String(i + 1), x + 7.5, CF.H - 6, { size: 9.5, col: MUTED, align: "center" });
-  }
-  cardText(ctx, "F_ST", 4, CF.top + CF.bh + 14, { size: 10.5, col: MUTED });
+/* gene by gene: each gene's share in blue, the orange population's bar left (orange), the blue's right (blue) */
+const CGn = { W: 760, H: 210, px: 50, py: 26, pw: 690, ph: 140 };
+function C_drawGenes(q) {
+  const cv = $("C_genes"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CGn.W, CGn.H), s = q ? sumAt(q, q.t) : null;
+  const gw = CGn.pw / L, ys = v => CGn.py + CGn.ph - Math.max(0, Math.min(v, 1)) * CGn.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CGn.px, CGn.py); ctx.lineTo(CGn.px, CGn.py + CGn.ph); ctx.lineTo(CGn.px + CGn.pw, CGn.py + CGn.ph); ctx.stroke();
+  for (const v of [0, 0.5, 1]) cardText(ctx, Math.round(100 * v) + "%", CGn.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  const xg = CGn.px + 19 * gw; ctx.fillStyle = "rgba(29,29,27,0.05)"; ctx.fillRect(xg, CGn.py, gw, CGn.ph);
+  cardText(ctx, "gene 20", xg + gw / 2, CGn.py - 9, { size: 10.5, col: INK, align: "center", bold: true });
+  if (s) for (let i = 0; i < L; i++) for (let k = 0; k < 2; k++) { const v = s.blue[k][i]; ctx.fillStyle = POPCOL[k]; ctx.fillRect(CGn.px + i * gw + gw * (0.1 + 0.42 * k), ys(v), gw * 0.38, ys(0) - ys(v)); }
+  for (let i = 0; i < L; i++) if (i % 5 === 4 || i === 0) cardText(ctx, String(i + 1), CGn.px + i * gw + gw / 2, CGn.py + CGn.ph + 12, { size: 10, col: MUTED, align: "center" });
+  cardText(ctx, "gene", CGn.px + CGn.pw / 2, CGn.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, CGn.py + CGn.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "share in blue", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (!q) cardText(ctx, "Go fills this in.", CGn.px + CGn.pw / 2, CGn.py + CGn.ph / 2, { size: 12.5, col: MUTED, align: "center" });
   ctx.restore();
-  return st;
+}
+/* the three fitnesses each population's s and h give: the terms the settings set, live before Go */
+function C_fitLine() {
+  const s = readSet(SC), f = (s, h) => [1, 1 - h * s, 1 - s].map(v => "<b>" + Math.max(0, v).toFixed(2) + "</b>").join(" · ");
+  $("C_fit").innerHTML = "fitness with 0 · 1 · 2 blue alleles at gene 20<br>" +
+    '<span style="color:' + ORANGE + '">orange population</span> ' + f(s.so, s.ho) + "<br>" + '<span style="color:' + BLUE + '">blue population</span> ' + f(s.sb, s.hb);
 }
 function C_paint() {
   const S = SC, q = shownRun(S), pair = q ? q.pairs[0] : previewPair(S);
-  drawBoard("C_board", pair, {});
+  drawBoard("C_board", pair, { sortOther: true, gene: 19 });
   $("C_boardH").textContent = "Pair 1 · generation " + (q ? q.t : 0);
-  const st = C_drawFreq(pair);
-  $("C_boardRead").innerHTML = lab("pair 1: heterozygosity within, orange") + " <b>" + f2(st.pops[0].H) + "</b>" + lab(", blue") + " <b>" + f2(st.pops[1].H) + "</b>" + lab(" · pooled") + " <b>" + f2(st.HT) + "</b>" + lab(" · F_ST") + " <b>" + f2(st.fst) + "</b>";
-  const set = q ? q.set : readSet(S), G = q ? q.G : (S.done ? 200 : ruleOf(S).G);
-  drawTime("C_time", q, $("C_meas").value, MEAS_C, q ? q.r : (S.done ? null : ruleOf(S)), G);
-  const Nm = set.N * set.m, u = set.U / L;
-  let rd = lab("migrants a generation, N × m:") + " <b>" + (+Nm.toFixed(3)) + "</b>";
-  if (q) { const s = sumAt(q, q.t);
-    rd = lab("generation") + " <b>" + q.t + "</b> " + lab("· 40 populations: heterozygosity within") + " <b>" + f2(s.H) + "</b>" + lab(", pooled") + " <b>" + f2(s.HT) + "</b>" + lab(" · F_ST") + " <b>" + f2(s.fst) + "</b>" + lab(" · alleles a gene") + " <b>" + f1(s.nal) + "</b>" + (q.practice ? " " + lab("· practice") : "") + "<br>" + rd;
-    if (set.m === 0 && set.U === 0) rd += lab(" · drift alone, within: H(0)(1 − 1/2N)^t =") + ' <b style="color:' + HOT + '">' + f2(H0(q) * Math.pow(1 - 1 / (2 * set.N), q.t)) + "</b>";
-    if (set.m > 0 && set.U === 0) rd += lab(" · F_ST at balance, two populations: 1/(1 + 16Nm) =") + ' <b style="color:' + HOT + '">' + f2(1 / (1 + 16 * Nm)) + "</b>";
-    if (set.m === 0 && set.U > 0) rd += lab(" · within, at balance: 4Nu/(1 + 4Nu), u = U/40 =") + ' <b style="color:' + HOT + '">' + f2(4 * set.N * u / (1 + 4 * set.N * u)) + "</b>";
-    rd += lab(" (dashed red on the plot)");
-  }
-  $("C_read").innerHTML = rd;
-  syncStage(S); C_code();
+  const st = mgStats(pair, false);
+  $("C_boardRead").innerHTML = boardLine(st) + "<br>" + lab("gene 20, share in blue: orange population") + " <b>" + pc(st.pops[0].byGene[19]) + "</b>" + lab(", blue population") + " <b>" + pc(1 - st.pops[1].byGene[19]) + "</b>";
+  C_drawGenes(q);
+  drawTime("C_time", q, $("C_meas").value, MEAS_C, q ? q.r : (S.done ? null : ruleOf(S)), S.done ? 100 : ruleOf(S).G);
+  if (q) { const s = sumAt(q, q.t); $("C_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· share in blue, orange population: gene 20") + " <b>" + pc(s.g20[0]) + "</b>" + lab(", the ends") + " <b>" + pc(s.ends[0]) + "</b>" +
+    lab(" · blue population: gene 20") + " <b>" + pc(s.g20[1]) + "</b>" + lab(", the ends") + " <b>" + pc(s.ends[1]) + "</b>" + (q.practice ? " " + lab("· practice") : ""); }
+  else $("C_read").innerHTML = "";
+  C_fitLine(); syncStage(S); C_code();
 }
 function C_code() {
   const s = readSet(SC);
   codeInto("codeC", [
-    ["", "# Lesson 17, Stage C -- one population split in two: drift pulls them apart, migration holds them, mutation refills"],
-    ["N", "N <- " + s.N + "; L <- 40; G <- 100; R <- 1            # genomes a population, genes, generations, crossovers"],
+    ["", "# Lesson 17, Stage C -- steady migration; gene 20: the blue allele 1, 1 - h s, 1 - s, with its own s and h in each population"],
+    ["", "N <- 25; L <- 40; G <- 100; gene <- 20"],
+    ["so", "so <- " + s.so + "                                    # the blue allele in the orange population: above 0 harmful, below 0 helpful"],
+    ["ho", "ho <- " + s.ho],
+    ["sb", "sb <- " + s.sb + "                                    # the blue allele in the blue population"],
+    ["hb", "hb <- " + s.hb],
     ["m", "m <- " + s.m + "                                     # chance a genome swaps places, each generation"],
-    ["U", "U <- " + s.U + "                                     # new mutations a chromosome, each generation"],
-    ["", "anc <- function() sample(1:3, L, replace = TRUE)          # before the split: three alleles a gene"],
-    ["N", "pop <- lapply(1:2, function(k) replicate(N, list(anc(), anc()), simplify = FALSE))"],
-    ["U", "new <- 1000; gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
-    ["U", "  x <- ifelse(side == 0, g[[1]], g[[2]]); for (k in seq_len(rpois(1, U))) { new <<- new + 1; x[sample(L, 1)] <- new }; x }"],
-    ["", "het <- function(P) mean(sapply(1:L, function(i) { a <- unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))); 1 - sum(prop.table(table(a))^2) }))"],
-    ["", "H0 <- mean(sapply(pop, het))"],
+    ["R", "R <- " + s.R + "                                       # crossovers a chromosome, on average"],
+    ["R", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
+    ["R", "  ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["s", "fit <- function(g, s, h) { n <- (g[[1]][gene] == 2) + (g[[2]][gene] == 2); max(0, c(1, 1 - h * s, 1 - s)[n + 1]) }"],
+    ["", "pop <- list(replicate(N, list(rep(1, L), rep(1, L)), simplify = FALSE),     # 1: orange"],
+    ["", "            replicate(N, list(rep(2, L), rep(2, L)), simplify = FALSE))     # 2: blue"],
     ["", "for (t in 1:G) {"],
-    ["N", "  pop <- lapply(pop, function(P) lapply(1:N, function(i) { ab <- sample(N, 2); list(gamete(P[[ab[1]]]), gamete(P[[ab[2]]])) }))"],
+    ["s", "  w <- list(sapply(pop[[1]], fit, s = so, h = ho), sapply(pop[[2]], fit, s = sb, h = hb))"],
+    ["s", "  pop <- lapply(1:2, function(k) lapply(1:N, function(i) { ab <- sample(N, 2, prob = w[[k]]); list(gamete(pop[[k]][[ab[1]]]), gamete(pop[[k]][[ab[2]]])) }))"],
     ["m", "  n <- rbinom(1, N, m); a <- sample(N, n); b <- sample(N, n); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp"],
     ["", "}"],
-    ["", "HS <- mean(sapply(pop, het)); HT <- het(c(pop[[1]], pop[[2]]))      # within; pooled (equal sizes)"],
-    ["", "c(H_within = HS, H_pooled = HT, F_ST = (HT - HS) / HT, drift_alone = H0 * (1 - 1 / (2 * N))^G, balance = 1 / (1 + 16 * N * m))"],
+    ["", "blue <- function(P, i) mean(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))) == 2)"],
+    ["", "c(orange_gene_20 = blue(pop[[1]], gene), blue_gene_20 = blue(pop[[2]], gene), orange_ends = mean(sapply(c(1, 2, 39, 40), function(i) blue(pop[[1]], i))))"],
   ]);
 }
 
 /* =====================================================================
-   STAGE D — selection at one gene (JM, 2026-10-09: "The h/s slider just
-   allows students to investigate how selection interacts with these
-   processes").
+   STAGE D — four populations, F_ST (JM, 2026-10-15: "expanding it to four
+   types of populations (blue, orange, red, purple?) and connecting Fst
+   directly to differences in chunk size/number. I usually teach Fst as how
+   differentiated the populations are ... the goal is to teach them
+   visually what Fst means through interactions"; "four-population
+   differentiation to learn Fst last").
 
-   A's start and steady migration; gene 20 (index 19) under selection in
-   both populations: the other population's allele there 1 - h s in one
-   copy, 1 - s in two. s > 0: each population's own allele is best (kept
-   apart); s < 0: the other's is better (it sweeps in, and drags its
-   neighbours: lesson 14's linked selection). 50 pairs.
-   MEASURED (prototype, h .5, R 1): at 100, m .02: s .3 gene 20 .13, ends
-   .42; s .6 .05 / .31; s 1 .03 everywhere (hybrids so unfit the whole
-   chromosome stays apart). Sweep at 60, s -.3 m .005: gene 20 .77, ends
-   .25; s -.6 m .002 .68 / .16.
-   Targets: 1 at 100, gene 20 under 15% and the ends 25% or more (s .3 to
-   .6 at m .02); 2 at 60, gene 20 60% or more and the ends under 35% (s
-   -.3 or below, m .005 or less).
-   ON THE PAGE (two runs a setting, 2026-10-12): 1 s .3 .11-.13 / .43-.44,
-   s .6 .05 / .30 hit; s 0 .47-.52, s .1 .29-.34, s 1 .02 / .02 (whole
-   chromosome shut), s .3 with h 0 .20 miss. 2 s -.3 m .005 .70-.73 / .25-
-   .29, s -.6 m .002 .71 / .16 hit; s -.1 .38-.44, s -.3 m .002 .46-.58, s
-   -.3 m .01 ends .37 miss.
-   The sparrows (Trier et al. 2014, data/clean/italian_sparrow_loci.csv,
-   house vs Spanish F_ST at 77 genes; data/SOURCES.md) beside the student's
-   own, sorted: no target (one gene on one chromosome cannot tell selection
-   from low migration in that picture; overhaul doc, open point 3).
+   Four populations of N, each starting one colour: one allele a gene, so
+   an allele is a colour and F_ST on colour is F_ST on alleles. Migration
+   between each pair is set on paths.js's diagram: six two-headed arrows (a
+   swap goes both ways), each bound to a hidden range input. R 1. 20 sets.
+   F_ST = (pooled - within) / pooled: heterozygosity on colour averaged over
+   the 40 genes, the populations weighted equally; for a pair, the same over
+   those two. Pass 1's C (a grey population split in two, F_ST from the
+   first round, 1/(1 + 16Nm) beside it) is gone: JM, "jumps immediately into
+   using Fst as a measure".
+   MEASURED (node prototype of this engine, 2026-10-15; N 25, 20 sets, six
+   seeds, at 100): every pair at m 0 / .002 / .005 / .01 / .02 / .05: 1 /
+   .53 / .30 (.28-.32) / .17 (.17-.18) / .09 / .04. The four sides of the
+   square at .02: .15; a chain orange-blue-red-purple at .05 .11, at .02
+   .27. Two pairs (orange-blue, red-purple) at .02: within .14, across .66;
+   at .01 within .24 (.20-.27); a blue-purple arrow at .002 brings across
+   to .53 (.49-.57). Every pair at .01: N 10 .36 (.34-.38), 25 .17, 50 .09.
+   The island model, each genome leaving for each of the other three at m:
+   1 / (1 + 4N (3m) (4/3)^2) = .16 / .32 / .09 there (R panel only; JM wants
+   the meaning, not the formula, on the page).
+   Two populations that share no colour, each a mix of two, read about .67,
+   not 1: F_ST is 1 only when each population is one colour (overhaul doc,
+   open point 2). No target leans on it.
+   Targets: 1 N 25: F_ST under 0.2 (every pair .01 or more, or the square's
+   sides or a chain high enough; opens at 0); 2 N 25: orange-blue and
+   red-purple each under 0.2, all four cross pairs over 0.4 (join the pairs,
+   nothing across; opens with every pair at .02, across .06); 3 every pair
+   held at .01: F_ST over 0.25 (N 10; opens at N 25, .17).
    ===================================================================== */
-const D_SV = [-0.6, -0.3, -0.1, 0, 0.1, 0.3, 0.6, 1], D_HV = [0, 0.5, 1], D_MV = [0.002, 0.005, 0.01, 0.02, 0.05], D_RV = [0.5, 1, 2];
+const D_MV = [0, 0.002, 0.005, 0.01, 0.02, 0.05], D_NV = [10, 25, 50, 100];
+const D_PAIRS = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]], D_PN = D_PAIRS.map(p => POPNAME[p[0]] + " and " + POPNAME[p[1]]);
+const D_EK = D_PAIRS.map((_, j) => "e" + j), allE = v => Object.fromEntries(D_EK.map(k => [k, v]));
+const D_PW = (j, lo, hi) => ({ meas: "pw", lo, hi, txt: D_PN[j] + ": F_ST " + (hi == null ? "over " + lo : "under " + hi), ok: S => hi == null ? S.pw[j] > lo : S.pw[j] < hi, val: S => f2(S.pw[j]) });
 const D_ROUNDS = [
-  { G: 100, open: { s: 0, m: 0.02, R: 1, h: 0.5 }, text: "Keep gene 20 apart while the rest mixes: at generation 100, under 15% of gene 20 in the other hue, and 25% or more at the ends.",
-    rules: [{ meas: "g20", lo: 0, hi: 0.15, txt: "other hue at gene 20: under 15%", ok: S => S.g20 < 0.15, val: S => pc(S.g20) },
-            { meas: "ends", lo: 0.25, hi: null, txt: "other hue at the ends: at least 25%", ok: S => S.ends >= 0.25, val: S => pc(S.ends) }] },
-  { G: 60, open: { s: 0.3, m: 0.005, R: 1, h: 0.5 }, text: "Let the other population's allele in: at generation 60, 60% or more of gene 20 in the other hue, the ends still under 35%.",
-    rules: [{ meas: "g20", lo: 0.6, hi: null, txt: "other hue at gene 20: at least 60%", ok: S => S.g20 >= 0.6, val: S => pc(S.g20) },
-            { meas: "ends", lo: 0, hi: 0.35, txt: "other hue at the ends: under 35%", ok: S => S.ends < 0.35, val: S => pc(S.ends) }] },
+  { G: 100, open: allE(0), hold: { N: 25 }, text: "Make the four populations alike: at generation 100, F_ST under 0.2.",
+    rules: [{ meas: "fst", lo: 0, hi: 0.2, txt: "F_ST at generation 100: under 0.2", ok: S => S.fst < 0.2, val: S => f2(S.fst) }] },
+  { G: 100, open: allE(0.02), hold: { N: 25 }, text: "Two pairs: orange and blue alike, red and purple alike, each pair differentiated from the other. At generation 100:",
+    rules: [D_PW(0, null, 0.2), D_PW(5, null, 0.2),
+            { meas: "pw", lo: 0.4, hi: null, txt: "across the pairs (orange or blue with red or purple): F_ST over 0.4, all four", ok: S => Math.min(S.pw[1], S.pw[2], S.pw[3], S.pw[4]) > 0.4, val: S => "lowest " + f2(Math.min(S.pw[1], S.pw[2], S.pw[3], S.pw[4])) }] },
+  { G: 100, open: { N: 25 }, hold: allE(0.01), text: "Every pair trades genomes at m 0.01 (held). Keep the four differentiated anyway: at generation 100, F_ST over 0.25.",
+    rules: [{ meas: "fst", lo: 0.25, hi: null, txt: "F_ST at generation 100: over 0.25", ok: S => S.fst > 0.25, val: S => f2(S.fst) }] },
 ];
 const MEAS_D = {
-  g20: { lab: "other hue at gene 20", ymax: 1, pct: true, vals: pr => pr.pops.map(p => p.byGene[19]) },
-  ends: { lab: "other hue at the ends", ymax: 0.6, pct: true, vals: pr => pr.pops.map(p => (p.byGene[0] + p.byGene[1] + p.byGene[38] + p.byGene[39]) / 4) },
-  other: { lab: "other hue, all genes", ymax: 0.6, pct: true, vals: pr => pr.pops.map(p => p.other) },
+  fst: { lab: "F_ST", ymax: 1, vals: pr => [pr.fst] },
+  H: { lab: "heterozygosity on colour", ymax: 1, perPop: true, cols: [HOT, INK], vals: pr => [pr.HS, pr.HT] },
+  other: { lab: "share in other colours", ymax: 1, pct: true, vals: pr => pr.pops.map(p => p.other) },
+  nf: { lab: "fragments a chromosome", ymax: 4, auto: 2, vals: pr => pr.pops.map(p => p.nf) },
 };
+let D_PATHS = null;
 const SD = mkStage("D", {
-  ctl: [{ key: "s", vals: D_SV, fmt: v => (v > 0 ? "+" : "") + v }, { key: "h", vals: D_HV }, { key: "m", vals: D_MV }, { key: "R", vals: D_RV }], rounds: D_ROUNDS, ms: 40,
-  freeText: "Both targets taken. Run any setting you like: 100 generations.", freeG: () => 100,
-  start: (set, seed, G) => { const P = { N: 25, m: set.m, R: set.R, U: 0, sel: 19, s: set.s, h: set.h, split: false }, s0 = mgStart(P, seed);
-    return { P, pairs: Array.from({ length: 50 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: true, every: G > 60 ? 2 : 1 }; },
+  ctl: D_EK.map(k => ({ key: k, vals: D_MV, paths: true })).concat([{ key: "N", vals: D_NV }]), rounds: D_ROUNDS, ms: 40,
+  freeText: "All three targets taken. Run any setting you like: 100 generations.", freeG: () => 100,
+  start: (set, seed, G) => { const P = { n: 4, founders: 1, N: set.N, R: 1, sel: null, mig: D_PAIRS.map((p, j) => [p[0], p[1], set["e" + j]]).filter(x => x[2] > 0) }, s0 = mgStart(P, seed);
+    return { P, pairs: Array.from({ length: 20 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: true, every: 2 }; },
+  /* a held arrow is pale and cannot be set; while a run plays (or a hit waits for Next target) no arrow takes a drag */
+  afterOpen: () => { if (!D_PATHS) return; for (const k of D_EK) D_PATHS.setArrow(k, { readonly: $("D_" + k).dataset.held === "1" }); D_PATHS.sync(); },
+  afterSync: locked => $("D_controls").classList.toggle("pending", locked),
+  onInput: () => { if (D_PATHS) D_PATHS.sync(); },
   paint: () => D_paint(),
 });
-const SPARROW_FST = [0.957,1.0,0.867,0.97,0.796,0.735,1.0,1.0,1.0,0.658,1.0,0.774,1.0,1.0,1.0,1.0,1.0,0.702,0.548,1.0,0.248,0.379,0.217,0.249,0.411,0.19,0.513,0.97,1.0,0.74,1.0,0.227,0.489,0.815,0.698,0.42,0.693,0.511,0.244,0.743,0.563,1.0,0.668,0.222,0.25,0.201,0.21,0.883,0.831,0.148,0.407,0.739,0.673,0.138,0.457,0.413,0.157,0.075,0.387,0.179,0.385,0.059,0.107,0.094,0.539,0.098,0.206,0.245,0.057,0.205,0.489,0.073,0.389,0.261,0.09,0.352,0.39];
-const DGn = { W: 760, H: 210, px: 50, py: 26, pw: 690, ph: 140 };
-function D_drawGenes(q) {
-  const cv = $("D_genes"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, DGn.W, DGn.H), meas = $("D_gmeas").value, s = q ? sumAt(q, q.t) : null;
-  const vals = s ? (meas === "fst" ? s.fstG : s.byGene) : null, ymax = meas === "fst" ? 1 : 0.6;
-  const gw = DGn.pw / L, ys = v => DGn.py + DGn.ph - Math.min(v, ymax) / ymax * DGn.ph;
-  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(DGn.px, DGn.py); ctx.lineTo(DGn.px, DGn.py + DGn.ph); ctx.lineTo(DGn.px + DGn.pw, DGn.py + DGn.ph); ctx.stroke();
-  for (const v of [0, ymax / 2, ymax]) cardText(ctx, meas === "fst" ? String(v) : Math.round(100 * v) + "%", DGn.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
-  const xg = DGn.px + 19 * gw; ctx.fillStyle = "rgba(29,29,27,0.05)"; ctx.fillRect(xg, DGn.py, gw, DGn.ph);
-  cardText(ctx, "gene 20", xg + gw / 2, DGn.py - 9, { size: 10.5, col: INK, align: "center", bold: true });
-  if (vals) for (let i = 0; i < L; i++) { const v = vals[i]; if (v == null) continue; ctx.fillStyle = i === 19 ? HOT : INK; ctx.fillRect(DGn.px + i * gw + gw * 0.18, ys(v), gw * 0.64, ys(0) - ys(v)); }
-  for (let i = 0; i < L; i += 1) if (i % 5 === 4 || i === 0) cardText(ctx, String(i + 1), DGn.px + i * gw + gw / 2, DGn.py + DGn.ph + 12, { size: 10, col: MUTED, align: "center" });
-  cardText(ctx, "gene", DGn.px + DGn.pw / 2, DGn.H - 8, { size: 11, col: MUTED, align: "center" });
-  ctx.save(); ctx.translate(13, DGn.py + DGn.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, meas === "fst" ? "F_ST" : "other hue", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
-  if (!q) cardText(ctx, "Go fills this in.", DGn.px + DGn.pw / 2, DGn.py + DGn.ph / 2, { size: 12.5, col: MUTED, align: "center" });
-  ctx.restore();
+/* the diagram: the four populations at the corners of a square, as the board has them; an arrow for each pair */
+function D_mountPaths() {
+  const at = [[50, 24], [370, 24], [50, 256], [370, 256]], cls = ["pop-orange", "pop-blue", "pop-red", "pop-purple"];
+  D_PATHS = Paths.init({
+    mount: "#D_paths", width: 420, height: 280,
+    boxes: POPNAME.map((nm, k) => ({ id: "p" + k, label: nm, x: at[k][0], y: at[k][1], w: 84, h: 30, cls: cls[k] })),
+    arrows: D_PAIRS.map((p, j) => ({ id: "e" + j, from: "p" + p[0], to: "p" + p[1], both: true, input: "D_e" + j, label: "migration, " + D_PN[j], fmt: v => "m " + D_MV[Math.round(v)] })),
+    valuesOnSelect: true, lockColours: true,
+    idleNote: "Click an arrow, then drag it up or down to set migration between those two populations. Pale: held this target."
+  });
 }
-/* the sparrows' 77 genes and pair 1's 40, each sorted from most different to least, side by side */
+/* each pair's F_ST, the average of the 20 sets: a triangle of cells, darker more differentiated */
+const DPr = { W: 360, H: 220, x0: 74, y0: 32, cs: 62 };
+function D_drawPairs(q) {
+  const cv = $("D_pairs"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DPr.W, DPr.H), s = q ? sumAt(q, q.t) : null;
+  for (let r = 1; r < 4; r++) cardText(ctx, POPNAME[r], DPr.x0 - 8, DPr.y0 + (r - 1) * DPr.cs + DPr.cs / 2, { size: 12, bold: true, col: POPCOL[r], align: "right" });
+  for (let c = 0; c < 3; c++) cardText(ctx, POPNAME[c], DPr.x0 + c * DPr.cs + DPr.cs / 2, DPr.y0 - 12, { size: 12, bold: true, col: POPCOL[c], align: "center" });
+  for (let r = 1; r < 4; r++) for (let c = 0; c < r; c++) {
+    const j = D_PAIRS.findIndex(p => p[0] === c && p[1] === r), x = DPr.x0 + c * DPr.cs, y = DPr.y0 + (r - 1) * DPr.cs, v = s ? s.pw[j] : null;
+    const g = v == null ? 244 : Math.round(246 - 196 * Math.max(0, Math.min(1, v)));
+    ctx.fillStyle = "rgb(" + g + "," + g + "," + Math.max(0, g - 5) + ")"; ctx.fillRect(x + 1, y + 1, DPr.cs - 2, DPr.cs - 2);
+    cardText(ctx, v == null ? "–" : f2(v), x + DPr.cs / 2, y + DPr.cs / 2, { size: 14, mono: true, bold: true, col: v != null && v > 0.5 ? "#fff" : INK, align: "center" });
+  }
+  ctx.restore();
+  $("D_pairsRead").innerHTML = q ? lab("average of the 20 sets, generation") + " <b>" + q.t + "</b>" + lab(" · darker: more differentiated") : lab("Go fills this in.");
+}
+const SPARROW_FST = [0.957,1.0,0.867,0.97,0.796,0.735,1.0,1.0,1.0,0.658,1.0,0.774,1.0,1.0,1.0,1.0,1.0,0.702,0.548,1.0,0.248,0.379,0.217,0.249,0.411,0.19,0.513,0.97,1.0,0.74,1.0,0.227,0.489,0.815,0.698,0.42,0.693,0.511,0.244,0.743,0.563,1.0,0.668,0.222,0.25,0.201,0.21,0.883,0.831,0.148,0.407,0.739,0.673,0.138,0.457,0.413,0.157,0.075,0.387,0.179,0.385,0.059,0.107,0.094,0.539,0.098,0.206,0.245,0.057,0.205,0.489,0.073,0.389,0.261,0.09,0.352,0.39];
+/* The sparrows (Trier et al. 2014, data/clean/italian_sparrow_loci.csv, house vs Spanish F_ST at 77 genes;
+   data/SOURCES.md; moved here from pass 1's D) beside one pair of the student's set 1, each sorted from most
+   different to least. No target: a pair of neutral populations at low migration matches the sparrows' spread as
+   well as selection does (pass 1, overhaul doc). */
 const DSp = { W: 760, H: 150, top: 22, ph: 96 };
 function D_drawSparrow(q) {
   const cv = $("D_sparrow"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, DSp.W, DSp.H);
-  const mine = q ? Array.from(mgStats(q.pairs[0], true).fstG).sort((a, b) => b - a) : null;
+  const { ctx } = frameCanvas(cv, DSp.W, DSp.H), j = +$("D_spPair").value;
+  const mine = q ? Array.from(mgFst(mgCounts(q.pairs[0]), D_PAIRS[j], true).g).sort((a, b) => b - a) : null;
   const strip = (vals, x0, w, col, title) => {
     cardText(ctx, title, x0, 9, { size: 11, col, bold: true });
     ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, DSp.top + DSp.ph); ctx.lineTo(x0 + w, DSp.top + DSp.ph); ctx.stroke();
@@ -1190,57 +1328,61 @@ function D_drawSparrow(q) {
   };
   cardText(ctx, "1", 28, DSp.top + 4, { size: 10, col: MUTED, align: "right" }); cardText(ctx, "0", 28, DSp.top + DSp.ph, { size: 10, col: MUTED, align: "right" });
   strip(SPARROW_FST.slice().sort((a, b) => b - a), 36, 400, INK, "house and Spanish sparrows: F_ST, 77 genes");
-  strip(mine, 470, 284, HOT, "your pair 1: F_ST, 40 genes");
+  strip(mine, 470, 284, HOT, "your set 1, " + D_PN[j] + ": F_ST, 40 genes");
   ctx.restore();
   const above = v => v.filter(x => x >= 0.9).length / v.length, mean = v => v.reduce((a, b) => a + b, 0) / v.length;
   $("D_sparrowRead").innerHTML = lab("sparrows: average F_ST") + " <b>" + f2(mean(SPARROW_FST)) + "</b>" + lab(", genes at 0.9 or more") + " <b>" + pc(above(SPARROW_FST)) + "</b>" +
-    (mine ? lab(" · your pair 1: average") + " <b>" + f2(mean(mine)) + "</b>" + lab(", at 0.9 or more") + " <b>" + pc(above(mine)) + "</b>" : "");
+    (mine ? lab(" · your " + D_PN[j] + ": average") + " <b>" + f2(mean(mine)) + "</b>" + lab(", at 0.9 or more") + " <b>" + pc(above(mine)) + "</b>" : "");
 }
 function D_paint() {
   const S = SD, q = shownRun(S), pair = q ? q.pairs[0] : previewPair(S);
-  drawBoard("D_board", pair, { sortOther: true, gene: 19 });
-  $("D_boardH").textContent = "Pair 1 · generation " + (q ? q.t : 0);
-  const st = mgStats(pair, false);
-  $("D_boardRead").innerHTML = boardLine(st) + "<br>" + lab("gene 20, other hue: orange") + " <b>" + pc(st.pops[0].byGene[19]) + "</b>" + lab(", blue") + " <b>" + pc(st.pops[1].byGene[19]) + "</b>";
-  D_drawGenes(q);
-  drawTime("D_time", q, $("D_meas").value, MEAS_D, q ? q.r : (S.done ? null : ruleOf(S)), S.done ? 100 : ruleOf(S).G);
-  if (q) { const s = sumAt(q, q.t); $("D_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· 100 populations, other hue: gene 20") + " <b>" + pc(s.g20) + "</b>" + lab(", the ends") + " <b>" + pc(s.ends) + "</b>" + lab(", all genes") + " <b>" + pc(s.other) + "</b>" + (q.practice ? " " + lab("· practice") : ""); }
+  drawBoard4("D_board", pair);
+  $("D_boardH").textContent = "Set 1 · generation " + (q ? q.t : 0);
+  const st = mgStats(pair, true);
+  $("D_boardRead").innerHTML = st.pops.map((p, k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> " + lab("other colours") + " <b>" + pc(p.other) + "</b>" + lab(", fragments a chromosome") + " <b>" + f1(p.nf) + "</b>").join(lab(" · ")) +
+    "<br>" + lab("set 1: within") + " <b>" + f2(st.HS) + "</b>" + lab(" · pooled") + " <b>" + f2(st.HT) + "</b>" + lab(" · F_ST = (pooled − within) / pooled =") + " <b>" + f2(st.fst) + "</b>";
+  drawTime("D_time", q, $("D_meas").value, MEAS_D, q ? q.r : (S.done ? null : ruleOf(S)), 100);
+  if (q) { const s = sumAt(q, q.t); $("D_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· 20 sets: F_ST") + " <b>" + f2(s.fst) + "</b>" + lab(" · within") + " <b>" + f2(s.HS) + "</b>" + lab(", pooled") + " <b>" + f2(s.HT) + "</b>" +
+    lab(" · other colours") + " <b>" + pc(s.other) + "</b>" + (q.practice ? " " + lab("· practice") : ""); }
   else $("D_read").innerHTML = "";
+  D_drawPairs(q);
   if (!S.run) D_drawSparrow(q);
   syncStage(S); D_code();
 }
 function D_code() {
   const s = readSet(SD);
   codeInto("codeD", [
-    ["", "# Lesson 17, Stage D -- steady migration; gene 20 under selection: the other population's allele 1 - h s, 1 - s"],
-    ["", "N <- 25; L <- 40; G <- 100; gene <- 20"],
-    ["s", "s <- " + s.s + "                                     # above 0: the other population's allele is worse here"],
-    ["h", "h <- " + s.h],
-    ["m", "m <- " + s.m + "                                   # chance a genome swaps places, each generation"],
-    ["R", "R <- " + s.R + "                                     # crossovers a chromosome, on average"],
-    ["R", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
-    ["R", "  ifelse(side == 0, g[[1]], g[[2]]) }"],
-    ["s", "fit <- function(g, own) { n <- (g[[1]][gene] != own) + (g[[2]][gene] != own); c(1, 1 - h * s, 1 - s)[n + 1] }"],
-    ["", "pop <- list(replicate(N, list(rep(1, L), rep(1, L)), simplify = FALSE), replicate(N, list(rep(2, L), rep(2, L)), simplify = FALSE))"],
+    ["", "# Lesson 17, Stage D -- four populations, each one colour at the start; migration between pairs; F_ST on colour"],
+    ["N", "N <- " + s.N + "; L <- 40; G <- 100; R <- 1                # genomes a population, genes, generations, crossovers"],
+    ["", "M <- matrix(0, 4, 4)                              # migration between each pair: 1 orange, 2 blue, 3 red, 4 purple"],
+    ...D_PAIRS.map((p, j) => ["e" + j, "M[" + (p[0] + 1) + ", " + (p[1] + 1) + "] <- " + String(s["e" + j]).padEnd(7) + "                         # " + D_PN[j]]),
+    ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
+    ["", "  ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["", "pop <- lapply(1:4, function(k) replicate(N, list(rep(k, L), rep(k, L)), simplify = FALSE))   # each population its own colour"],
     ["", "for (t in 1:G) {"],
-    ["s", "  pop <- lapply(1:2, function(k) { w <- sapply(pop[[k]], fit, own = k)"],
-    ["s", "    lapply(1:N, function(i) { ab <- sample(N, 2, prob = w); list(gamete(pop[[k]][[ab[1]]]), gamete(pop[[k]][[ab[2]]])) }) })"],
-    ["m", "  n <- rbinom(1, N, m); a <- sample(N, n); b <- sample(N, n); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp"],
+    ["N", "  pop <- lapply(pop, function(P) lapply(1:N, function(i) { ab <- sample(N, 2); list(gamete(P[[ab[1]]]), gamete(P[[ab[2]]])) }))"],
+    ["", "  for (i in 1:3) for (j in (i + 1):4) { n <- rbinom(1, N, M[i, j]); a <- sample(N, n); b <- sample(N, n)"],
+    ["", "    tmp <- pop[[i]][a]; pop[[i]][a] <- pop[[j]][b]; pop[[j]][b] <- tmp }"],
     ["", "}"],
-    ["", "other <- function(P, own, i) mean(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))) != own)"],
-    ["", "c(gene_20 = other(pop[[1]], 1, gene), ends = mean(sapply(c(1, 2, 39, 40), function(i) other(pop[[1]], 1, i))))"],
+    ["", "freq <- function(P, i) tabulate(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))), 4) / (2 * N)   # each colour's share at gene i"],
+    ["", "het <- function(p) 1 - sum(p^2)                   # the chance two beads are different colours"],
+    ["", "HS <- mean(sapply(1:L, function(i) mean(sapply(pop, function(P) het(freq(P, i))))))      # within"],
+    ["", "HT <- mean(sapply(1:L, function(i) het(rowMeans(sapply(pop, function(P) freq(P, i))))))  # pooled"],
+    ["", "c(within = HS, pooled = HT, F_ST = (HT - HS) / HT)"],
+    ["", "# every pair at one m: F_ST settles near 1 / (1 + 4 N (3 m) (4/3)^2)"],
   ]);
 }
 
 /* ====== painting and wiring ====== */
 function paintAll() { A_paint(); B_paint(); C_paint(); D_paint(); }
 function wire() {
+  D_mountPaths();
   for (const S of [SA, SB, SC, SD]) wireStage(S);
   $("A_meas").addEventListener("change", A_paint);
   $("B_meas").addEventListener("change", B_paint);
   $("C_meas").addEventListener("change", C_paint);
   $("D_meas").addEventListener("change", D_paint);
-  $("D_gmeas").addEventListener("change", D_paint);
+  $("D_spPair").addEventListener("change", D_paint);
   $("B_board").addEventListener("click", B_pickAt);
   for (const K of ["A", "B", "C", "D"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson17_stage" + K + ".R", RTEXT["code" + K]));
   let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
@@ -1262,7 +1404,8 @@ paintAll();
 
 Score.init({
   moduleId: "lesson17",
-  version: 1,      /* 1: first draft, A-D (2026-10-12) */
+  version: 2,      /* 1: first draft, A-D (2026-10-12). 2: JM's review (2026-10-15): B's rounds reworded and one slider each;
+                      C is pass 1's D with s and h per population (3 targets); D four populations and F_ST (3 targets) */
   scaffold: 12,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
