@@ -24,8 +24,10 @@
  *   C. local adaptation needs both signs; swamping needs m .05 or more;
  *      the sweep needs a helpful allele and little migration, and the swamp
  *      that opens it misses; the fitness line agrees with 1, 1 - hs, 1 - s.
- *   D. F_ST falls as migration rises and as N rises; the four F's average
- *      to F_ST, on screen too; the five rounds run from most differentiated
+ *   D. F_ST falls as migration rises and as N rises, and heterozygosity
+ *      rises with migration, then levels off; each population's heterozygosity is its
+ *      genomes' own count, 0 where no one trades, and the mirror's readout
+ *      agrees with it and with F_ST; the five rounds run from most differentiated
  *      to least; the theory places solid populations without a miss and
  *      identical ones at guessing (75% wrong), misses more as F_ST falls,
  *      and beats counting colours, which is fine in round 1 and near
@@ -155,16 +157,23 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
     let b = 1; for (let h = 2; h < 5; h++) if (c[h] > c[b]) b = h; if (b - 1 !== k) w++; }
   return w / (4 * n); };
 {
-  const f = [0, 0.002, 0.005, 0.01, 0.02].map(m => play(SD, 0, Object.assign(allE(m), { N: 25 }), 1)[0].fst);
+  const fh = [0, 0.002, 0.005, 0.01, 0.02].map(m => play(SD, 0, Object.assign(allE(m), { N: 25 }), 1)[0]), f = fh.map(x => x.fst), h = fh.map(x => x.het);
   check("D: F_ST at 100 falls as every pair's migration rises (m 0 / .002 / .005 / .01 / .02: " + f.map(v => v.toFixed(2)).join(" / ") + ")", f.every((v, i) => i === 0 || v < f[i - 1]) && f[0] === 1);
+  /* and heterozygosity rises with it, then levels off: the four together are 4N genomes, drifting as one when well mixed
+     (about 0.75 e^(-100 / 8N) by 100, 0.45 at N 25) */
+  check("D: heterozygosity at 100 rises with it, from 0, then levels off near 0.75 e^(-100 / 8N) = " + (0.75 * Math.exp(-100 / 200)).toFixed(2) + " (" + h.map(v => v.toFixed(2)).join(" / ") + ")",
+        h[0] === 0 && h[1] > 0.15 && h[2] > h[1] && h[3] > h[2] && Math.abs(h[4] - h[3]) < 0.04 && Math.abs(h[4] - 0.75 * Math.exp(-0.5)) < 0.06);
   const n = [10, 25, 50].map(N => play(SD, 0, Object.assign(allE(0.01), { N }), 1)[0].fst);
   check("D: with every pair at .01, F_ST falls as N rises (N 10 / 25 / 50: " + n.map(v => v.toFixed(2)).join(" / ") + ")", n[0] > n[1] && n[1] > n[2]);
-  const st = mgStats(SD.last.pairs[0], true), avgF = st.F.reduce((a, b) => a + b, 0) / 4;
-  check("D: the four F's average to F_ST (" + st.F.map(v => v.toFixed(3)).join(", ") + " -> " + avgF.toFixed(4) + "; F_ST " + st.fst.toFixed(4) + ")", Math.abs(avgF - st.fst) < 1e-9);
-  play(SD, 0, Object.assign(allE(0.01), { N: 25 }), 1); D_paint();
-  const t = document.getElementById("D_mirrorRead").textContent, nums = (t.match(/within ([0-9.]+) · pooled ([0-9.]+) · F_ST = [(]pooled − within[)] [/] pooled = ([0-9.]+) = the four F's averaged, [(]([0-9.]+) [+] ([0-9.]+) [+] ([0-9.]+) [+] ([0-9.]+)[)] [/] 4/) || []).slice(1).map(Number);
-  check("D: under the mirror, (pooled - within) / pooled and the four F's averaged agree with F_ST (" + nums.join(", ") + ")",
-        nums.length === 7 && Math.abs((nums[1] - nums[0]) / nums[1] - nums[2]) < 0.012 && Math.abs((nums[3] + nums[4] + nums[5] + nums[6]) / 4 - nums[2]) < 0.012);
+  /* heterozygosity recounted here, genome by genome: a gene counts when its two chromosomes' hues differ */
+  const hetOf = F => F.reduce((a, g) => { let n = 0; for (let i = 0; i < L; i++) if ((g[0][i] & 7) !== (g[1][i] & 7)) n++; return a + n / L; }, 0) / F.length;
+  play(SD, 0, Object.assign({}, D_PRESETS[0].e, { N: 25 }), 1); D_paint();
+  const pr1 = SD.last.pairs[0], st = mgStats(pr1, true), mine = pr1.pops.map(hetOf);
+  check("D: each population's heterozygosity is its genomes' own count, and 0 where no one trades (one link, orange / blue / red / purple: " + st.het.map(v => v.toFixed(3)).join(" / ") + ")",
+        st.het.every((v, k) => Math.abs(v - mine[k]) < 1e-12) && st.het[2] === 0 && st.het[3] === 0 && st.het[0] > 0.05 && st.het[1] > 0.05);
+  const t = document.getElementById("D_mirrorRead").textContent, nums = (t.match(/orange ([0-9.]+) · blue ([0-9.]+) · red ([0-9.]+) · purple ([0-9.]+) · F_ST, how different the four are from each other: ([0-9.]+)/) || []).slice(1).map(Number);
+  check("D: under the mirror, the four heterozygosities and F_ST are set 1's (" + nums.join(", ") + ")",
+        nums.length === 5 && nums.slice(0, 4).every((v, k) => Math.abs(v - mine[k]) < 0.006) && Math.abs(nums[4] - mgFst(mgCounts(pr1), [0, 1, 2, 3]).fst) < 0.006);
   /* the theory at its two ends: four solid populations, and four identical ones */
   const P0 = { n: 4, founders: 1, N: 25, R: 1, sel: null, mig: [] }, solid = { pops: mgStart(P0, 5) }, same = { pops: [0, 1, 2, 3].map(() => solid.pops[1]) };
   const t0 = D_theory(P0, solid, mulberry32(3)), t1 = D_theory(P0, same, mulberry32(3));

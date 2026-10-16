@@ -10,6 +10,10 @@
 - Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
 - Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
 
+## JM on D's F and theory, 2026-10-15 late (verbatim)
+
+> The F should be heterozygosity directly. I don't care if students understand the exact mathematical relationship of F to Fst so long as they can easily see "F is individual heterozygosity, and Fst is how different the subpopulations are from each other which is the predictability and so ancestry assignment". Likewise students outperforming the judge is fine—I just want the teaching point that higher Fst = easier to tell populations apart. The precise probabilities and students knowing the underlying equations are unimportant to me if the transferable understanding of the concepts is built. Intuition building over knowledge assessment for all of these.
+
 ## JM's D request, 2026-10-15 evening (verbatim)
 
 > I'm really liking lesson 17. Part D's main visualization & control panel are fantastic. I want to do an unorthodox target here, though. Instead of a bowling round, I want a prediction round. The students are given free play with the controls until they're satisfied and they start round. Then a preset arrangement of migration rates locked in, the populations evolve, and then they are shown the F_st in a plot below the main visualization where the F for each population is displayed, along with the F_st in a kind of mirror of the control panel. The students are then in the target window shown a genome and they move it to the correct population. They sssign 10 genomes to a population this way, and their correct rate & the Fst are recorded in a table. They continue this for 4 more locked sets of migration rates and their assignment is plotted against the Fst's they were shown + the theoretical error rate. In study mode/with practice toggled, they can set the migration rates as they wish and after running they get the same activity. Could you please adjust D in that way?
@@ -47,8 +51,10 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
     D  Four populations, each starting all its own colour (one allele a gene): orange, blue, red, purple. Migration per pair as
        six two-headed arrows (paths.js, `both`), N a slider. Board with each population's colour mix and the pooled mix.
        Pass 3 (JM's D request): under the board, the mirror: set 1 on the diagram's square, each box a population's colours
-       gene by gene (a column a gene) and its F = (pooled - its within) / pooled; each line that pair's F_ST; the middle the
-       pooled colours and F_ST (the four F's averaged, printed under it). Over time: F_ST, F each population, H, other, fragments.
+       gene by gene (a column a gene) and its heterozygosity (JM, late: a genome's genes whose two chromosomes are different
+       colours, averaged over its genomes); each line that pair's F_ST; the middle the pooled colours and F_ST ("0 all alike ·
+       1 each its own"). Over time: F_ST, heterozygosity each population, other, fragments. Within/pooled and pass 3's
+       F = (pooled - its within) / pooled are off the page (R panel keeps within and pooled to compute F_ST).
        Rounds: practice is ticked at the start (free play: own migration and N). Unticked, Go reads "Start round k of 5": it holds
        the round's migration (pale arrows) and N 25 and plays 100 generations in 20 sets. Every run, round or practice, ends in
        ten young genomes from set 1 (two parents in one population, a quarter each; none on the board), one at a time on a
@@ -95,13 +101,14 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 
 - Theory is not a function of F_ST alone: two linked pairs at .05 read F_ST .67 and still misplace 12% (partners confused). So the theory is computed on each run's own set 1, not drawn as one curve.
 - Counting colours fails below F_ST ~.4: with steady migration every population drifts toward the same overall mix, and what is left to tell them apart is which colour each has at each gene. F_ST is gene by gene; so is the mirror's colour strip.
-- Each population's F = (pooled − its own within) / pooled; the four averaged are F_ST exactly.
+- Pass 3's F (pooled − its own within) / pooled averaged to F_ST exactly; replaced by heterozygosity (JM, late).
+- Heterozygosity (a genome's two chromosomes different colours), 20 sets at 100, N 25: every pair at m 0 / .002 / .005 / .01 / .02 = 0 / .31 / .40 / .44 / .45. It levels off: well mixed, the four are 4N = 100 genomes drifting as one, about .75 e^(-100 / 8N) = .45. One link O-B .01: orange .25, blue .22-.28, red and purple 0.
 
 ## Open for JM
 
 0. D, pass 3 (placing rounds):
-   - By eye, students will sit well above the theory below F_ST ~.3. Counting colours (what an eye does first) misplaces 50-80% there; the judge reads which colour sits at which gene, which is what the mirror's columns show. Whether to give the student something closer to that (a population's columns beside the genome on the card) is open.
-   - "The F for each population" built as (pooled - its within) / pooled: how differentiated that population is from the four pooled; the four average to F_ST exactly. Not lesson 11's F (1 - Ho/He), which stays near 0 under random mating.
+   - Settled (JM, late): a gap between students and the judge is fine; the point is higher F_ST = easier to tell apart. (The gap runs the other way: by eye, students sit above the judge's error below F_ST ~.3, counting colours misplacing 50-80%; their own dots still fall as F_ST rises.)
+   - Settled (JM, late): each population shows heterozygosity, measured directly. Labelled "heterozygosity", not "F": lesson 11's F is 1 − Ho/He (JM's intro text there), so F 1 = no heterozygotes, the opposite direction. One word to change if JM wants the letter.
    - Theory = the judge above, on each run's set 1, not one curve: it is not a function of F_ST alone (two linked pairs at F_ST .67 misplace 12%). It treats genes as independent, so it is close to the best possible, not provably it.
    - Practice starts ticked in D only (free play first, per the request); every other stage starts unticked.
    - The five presets are a first choice (spread F_ST .85 / .40 / .28 / .10 / .04, two with unequal F's); swap freely.
@@ -129,6 +136,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 12 | D | your placements: table (F_ST, right of 10, wrong, theory) and wrong against F_ST with the theory for each run | done |
 | 13 | — | checks for the new D (41 + four R panels, ~1 min); version 3, scaffold 59 | done |
 | 14 | D | JM's review of the placing rounds | todo |
+| 15 | D | heterozygosity per population in place of F (mirror boxes, over-time menu, readouts, bullets, R); within/pooled off the page; checks: heterozygosity is the genomes' own count, 0 where no one trades, rises then levels off (42 + R) | done |
 
 ## Rulings
 
@@ -140,6 +148,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 - 2026-10-09: beads on a string, each bead an allele in its own shade, hue = population it arose in.
 - 2026-10-09: *"we aren't trying to trick or assess students in these homeworks ... We're trying to build intuition."*
 - 2026-10-12: heterozygosity to connect to drift, F_ST; reinforce drift, selection, mutation (brief above).
+- 2026-10-15 late: *"The F should be heterozygosity directly"*; *"higher Fst = easier to tell populations apart"*; *"Intuition building over knowledge assessment for all of these."*
 - 2026-10-15: A stays. B: *"a single dispersal event at some point in the past"*; targets less tight, framing less confusing. Two-population selection becomes C, with *"a given allele"* having *"different s/h in different populations"* so migration can swamp local adaptation. Four populations (orange, blue, red, purple) last, F_ST taught as *"how differentiated the populations are"*, visually, *"over trying to assess their understanding of a measure"*.
 
 ## Do not
@@ -149,5 +158,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 - Free the pulse size in a B round with a floor on fragment length: big pulses merge neighbouring fragments (M 10 at G 20 reads 4.4 beads, M 4 reads 3.1).
 - Put F_ST in C (JM: it came too early); D builds it.
 - Fuse the two F's: D's F_ST is between populations; lesson 11's 1 - Ho/He within one stays near 0 under random mating.
+- Label D's heterozygosity "F" on screen: lesson 11's F rises as heterozygosity falls.
+- Expect D's heterozygosity to keep rising with m: past m ~.01 it levels off near .45 (the four drifting as one).
 - Draw D's theory as one curve against F_ST: arrangements with the same F_ST place differently (two pairs: partners confused).
 - Show the young genome to be placed from the board: it would be found bead for bead. They are young of set 1, not its members.

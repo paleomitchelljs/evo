@@ -344,9 +344,9 @@
       <li>Four populations of N genomes: orange, blue, red and purple. At the start each is all its own colour, one allele a gene. Nothing helps or harms.</li>
       <li>The diagram: an arrow between two populations is migration between them. Click it, then drag up or down to set m: each generation, each genome trades places with one in the other population with chance m.</li>
       <li>Set 1: the four populations, each with a bar of its mix of colours; under them, the four pooled.</li>
-      <li>Under it, set 1 on the diagram's square: each population's colours gene by gene (a column a gene) and its F; on each line, F<sub>ST</sub> between those two; in the middle, the four pooled and F<sub>ST</sub>.</li>
-      <li>Within: the chance two beads at one gene, drawn from one population, are different colours. Pooled: the same, the two drawn from all four together.</li>
-      <li>F, one population: (pooled &minus; its within) / pooled. F<sub>ST</sub>: the four F's averaged, (pooled &minus; within) / pooled. 0: every population the same mix at every gene. 1: each only its own colour.</li>
+      <li>Under it, set 1 on the diagram's square: each population's colours gene by gene (a column a gene) and its heterozygosity; on each line, F<sub>ST</sub> between those two; in the middle, the four pooled and F<sub>ST</sub>.</li>
+      <li>Heterozygosity: the share of a genome's genes at which its two chromosomes are different colours, averaged over the population's genomes.</li>
+      <li>F<sub>ST</sub>: how different the populations are from each other. 0: every population the same mix at every gene. 1: each only its own colour.</li>
       <li>A round: <b>Start round</b> sets the round's migration and holds it, with N 25, and plays 100 generations in 20 sets of four. Then ten young genomes, each born in one of set 1's populations, one at a time on the diagram: drag each to the population it came from.</li>
       <li>Practice, ticked at the start: your own migration and N, and the same ten genomes after each run; nothing counts. Untick it to start a round.</li>
       <li>Your placements: each run's F<sub>ST</sub> and how many you placed right. The plot: the share placed wrong against F<sub>ST</sub>; theory, the share wrong for a judge who knows set 1's colours gene by gene and places 400 young where each most likely came from.</li>
@@ -368,8 +368,7 @@
       <div class="panel">
         <div class="watchbar"><label>Over time, 20 sets of four: <select id="D_meas">
           <option value="fst">F_ST</option>
-          <option value="F">F, each population</option>
-          <option value="H">heterozygosity, within (red) and pooled (black)</option>
+          <option value="het">heterozygosity, each population</option>
           <option value="other">share in other colours</option>
           <option value="nf">fragments a chromosome</option>
         </select></label></div>
@@ -665,21 +664,11 @@ function mgFst(hc, idx, byGene) {
   }
   return { HT: HT / L, HS: HS / L, fst: HT > 1e-9 ? (HT - HS) / HT : 0, g };
 }
-/* each population's F: (pooled - its own within) / pooled, on mgFst's terms (within and pooled each averaged over the
-   genes, pooled over all the populations). The F's averaged are F_ST exactly. */
-function mgPopF(hc) {
-  const n = hc.length, hs = new Float64Array(n); let HT = 0;
-  for (let i = 0; i < L; i++) {
-    const pbar = new Float64Array(5); let s2 = 0;
-    for (let k = 0; k < n; k++) { let q2 = 0; for (let h = 0; h < 5; h++) { const p = hc[k][i][h]; q2 += p * p; pbar[h] += p / n; } hs[k] += (1 - q2) / L; }
-    for (let h = 0; h < 5; h++) s2 += pbar[h] * pbar[h];
-    HT += (1 - s2) / L;
-  }
-  return Array.from(hs, v => HT > 1e-9 ? (HT - v) / HT : 0);
-}
+/* a genome's heterozygosity on colour: the share of its genes at which its two chromosomes are different colours */
+const mgHet = g => { let n = 0; for (let i = 0; i < L; i++) if (mgHue(g[0][i]) !== mgHue(g[1][i])) n++; return n / L; };
 /* one pair (or set) now. Each population: share of genes in another hue, fragments a chromosome, their average length,
    the other hue gene by gene. full (D): each population's mix of hues; heterozygosity within and pooled, F_ST, each
-   population's F, and F_ST for each pair of populations (D_PAIRS' order: 0-1, 0-2, 0-3, 1-2, 1-3, 2-3). */
+   population's heterozygosity (its genomes', averaged), and F_ST for each pair of populations (D_PAIRS' order: 0-1, 0-2, 0-3, 1-2, 1-3, 2-3). */
 function mgStats(pair, full) {
   const out = { pops: [] };
   pair.pops.forEach((F, k) => {
@@ -694,7 +683,7 @@ function mgStats(pair, full) {
     const hc = mgCounts(pair), n = hc.length;
     hc.forEach((cnt, k) => { const mix = new Float64Array(5); for (const r of cnt) for (let h = 0; h < 5; h++) mix[h] += r[h] / L; out.pops[k].mix = mix; });
     Object.assign(out, mgFst(hc, Array.from({ length: n }, (_, k) => k)));
-    out.F = mgPopF(hc);
+    out.het = pair.pops.map(F => F.reduce((a, g) => a + mgHet(g), 0) / F.length);
     out.pw = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) out.pw.push(mgFst(hc, [i, j]).fst);
   }
   return out;
@@ -806,7 +795,7 @@ function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); ret
 /* the run's summary at generation t: every measure averaged over the populations (or pairs, or sets) that have it.
    Two populations (A-C): the share in blue gene by gene in each (the orange population's other hue is blue; the blue
    population's own is), at gene 20, at the ends (genes 1-2, 39-40) and over all genes. Four (D): F_ST, heterozygosity
-   within and pooled, and each pair's F_ST. */
+   within and pooled, each population's heterozygosity averaged over the four, and each pair's F_ST. */
 function sumAt(q, t) {
   const s = q.hist.find(h => h.t === t) || q.hist[q.hist.length - 1], P = s.pairs, pops = P.flatMap(p => p.pops);
   const out = { t: s.t, other: meanOf(pops.map(p => p.other)), nf: meanOf(pops.map(p => p.nf)), mf: meanOf(pops.map(p => p.mf)) };
@@ -814,7 +803,7 @@ function sumAt(q, t) {
     out.blue = [0, 1].map(k => Array.from({ length: L }, (_, i) => meanOf(P.map(p => k === 0 ? p.pops[0].byGene[i] : 1 - p.pops[1].byGene[i]))));
     out.g20 = out.blue.map(b => b[19]); out.ends = out.blue.map(b => (b[0] + b[1] + b[38] + b[39]) / 4); out.all = out.blue.map(b => meanOf(b));
   }
-  if (P[0].fst != null) { out.fst = meanOf(P.map(p => p.fst)); out.HS = meanOf(P.map(p => p.HS)); out.HT = meanOf(P.map(p => p.HT));
+  if (P[0].fst != null) { out.fst = meanOf(P.map(p => p.fst)); out.HS = meanOf(P.map(p => p.HS)); out.HT = meanOf(P.map(p => p.HT)); out.het = meanOf(P.flatMap(p => p.het));
     out.pw = P[0].pw.map((_, j) => meanOf(P.map(p => p.pw[j]))); }
   return out;
 }
@@ -1292,10 +1281,14 @@ function C_code() {
    100 generations.
    F_ST = (pooled - within) / pooled: heterozygosity on colour averaged over
    the 40 genes, the populations weighted equally; for a pair, the same over
-   those two. A population's F = (pooled - its within) / pooled; the four
-   averaged are F_ST exactly. The mirror under the board draws set 1 on the
-   diagram's square: each population's colours gene by gene and its F, each
-   pair's F_ST on its line, the pooled colours and F_ST in the middle.
+   those two. Each population's heterozygosity (JM, 2026-10-15, late: "The
+   F should be heterozygosity directly"): the share of a genome's genes
+   whose two chromosomes are different colours, averaged over its genomes;
+   not named F on screen, as lesson 11's F falls as heterozygosity rises.
+   Pass 3's F, (pooled - its within) / pooled, is gone. The mirror under
+   the board draws set 1 on the diagram's square: each population's colours
+   gene by gene and its heterozygosity, each pair's F_ST on its line, the
+   pooled colours and F_ST in the middle.
    Pass 2's three bowling targets and its pairs grid are gone.
 
    Every run, round or practice, ends in ten young genomes, each from two
@@ -1313,7 +1306,7 @@ function C_code() {
    toward one overall mix, and what tells them apart is which colour each
    has at each gene, which is what the mirror's columns show.
    MEASURED (node prototype of this engine, 2026-10-15; N 25, set 1 at 100,
-   8-10 seeds): F_ST (range) / F orange, blue, red, purple / theory wrong /
+   8-10 seeds): F_ST (range) / pass 3's F orange, blue, red, purple / theory wrong /
    counting colours wrong --
      one link O-B .01     .85 (.82-.89)  .71 .70 1 1      .008   .17
      orange the hub .01   .40 (.29-.48)  .17 .50 .43 .49  .031   .34
@@ -1343,8 +1336,7 @@ const D_PRESETS = [
 const D_YOUNG = 10, D_THEORY = 100;
 const MEAS_D = {
   fst: { lab: "F_ST", ymax: 1, vals: pr => [pr.fst] },
-  F: { lab: "F, each population", ymax: 1, perPop: true, vals: pr => pr.F },
-  H: { lab: "heterozygosity on colour", ymax: 1, perPop: true, cols: [HOT, INK], vals: pr => [pr.HS, pr.HT] },
+  het: { lab: "heterozygosity", ymax: 1, perPop: true, vals: pr => pr.het },
   other: { lab: "share in other colours", ymax: 1, pct: true, vals: pr => pr.pops.map(p => p.other) },
   nf: { lab: "fragments a chromosome", ymax: 4, auto: 2, vals: pr => pr.pops.map(p => p.nf) },
 };
@@ -1416,7 +1408,7 @@ function D_theory(P, pair, rng) {
 function D_endRun(q) {
   const pair = q.pairs[0], st = mgStats(pair, true), rng = mulberry32(q.seed + 7121);
   const young = Array.from({ length: D_YOUNG }, () => { const k = Math.floor(rng() * 4); return { k, g: D_young(q.P, pair.pops[k], rng) }; });
-  DX.placing = { practice: q.practice, round: q.round, young, i: 0, picks: [], fst: st.fst, F: st.F, theory: D_theory(q.P, pair, mulberry32(q.seed + 7247)), drag: null, hover: -1 };
+  DX.placing = { practice: q.practice, round: q.round, young, i: 0, picks: [], fst: st.fst, theory: D_theory(q.P, pair, mulberry32(q.seed + 7247)), drag: null, hover: -1 };
   if (!q.practice) SD.waiting = true;
 }
 /* the genome on show goes in population k: one bit in a round, right or wrong; the tenth closes the run's row */
@@ -1518,7 +1510,7 @@ function D_wirePlace() {
   $("D_stop").addEventListener("click", () => { if (!DX.placing || !DX.placing.practice) return; DX.placing = null; $("D_verdict").innerHTML = ""; D_paint(); });
 }
 
-/* ---- the mirror, under the board: set 1 on the diagram's square. Each population's box: its name, its F, and its
+/* ---- the mirror, under the board: set 1 on the diagram's square. Each population's box: its name, its heterozygosity, and its
    colours gene by gene (a column a gene, stacked in its shares); on each line between two, their F_ST; in the middle,
    the four pooled gene by gene, and F_ST ---- */
 const DMr = { W: 760, H: 270, bw: 250, bh: 76, at: [[0, 0], [510, 0], [0, 194], [510, 194]], mid: { x: 300, y: 92, w: 160, h: 90 } };
@@ -1541,7 +1533,8 @@ function D_drawMirror(pair, st) {
   DMr.at.forEach(([x, y], k) => {
     ctx.fillStyle = DPL.pale[k]; ctx.fillRect(x, y, DMr.bw, DMr.bh); ctx.strokeStyle = POPCOL[k]; ctx.lineWidth = 1.4; ctx.strokeRect(x + 0.7, y + 0.7, DMr.bw - 1.4, DMr.bh - 1.4);
     cardText(ctx, POPNAME[k], x + 10, y + 14, { size: 12.5, bold: true, col: POPCOL[k] });
-    cardText(ctx, "F " + f2(st.F[k]), x + DMr.bw - 10, y + 14, { size: 13, mono: true, bold: true, align: "right" });
+    cardText(ctx, f2(st.het[k]), x + DMr.bw - 10, y + 14, { size: 13, mono: true, bold: true, align: "right" });
+    cardText(ctx, "heterozygosity", x + DMr.bw - 50, y + 14, { size: 11, col: MUTED, align: "right" });
     D_profile(ctx, hc[k], x + 9, y + 28, DMr.bw - 18, 30);
     cardText(ctx, "gene 1", x + 9, y + 67, { size: 9.5, col: MUTED }); cardText(ctx, "40", x + DMr.bw - 9, y + 67, { size: 9.5, col: MUTED, align: "right" });
   });
@@ -1549,7 +1542,7 @@ function D_drawMirror(pair, st) {
   cardText(ctx, "all four pooled", M.x + M.w / 2, M.y + 6, { size: 11, col: MUTED, align: "center" });
   D_profile(ctx, pool, M.x, M.y + 16, M.w, 24);
   cardText(ctx, "F_ST " + f2(st.fst), M.x + M.w / 2, M.y + 60, { size: 15, mono: true, bold: true, align: "center" });
-  cardText(ctx, "the four F's averaged", M.x + M.w / 2, M.y + 78, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "0 all alike · 1 each its own", M.x + M.w / 2, M.y + 78, { size: 10.5, col: MUTED, align: "center" });
   ctx.restore();
 }
 
@@ -1623,10 +1616,11 @@ function D_paint() {
   $("D_boardRead").innerHTML = st.pops.map((p, k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> " + lab("other colours") + " <b>" + pc(p.other) + "</b>" + lab(", fragments a chromosome") + " <b>" + f1(p.nf) + "</b>").join(lab(" · "));
   D_drawMirror(pair, st);
   $("D_mirrorH").textContent = "Set 1: how differentiated · generation " + t;
-  $("D_mirrorRead").innerHTML = lab("within") + " <b>" + f2(st.HS) + "</b>" + lab(" · pooled") + " <b>" + f2(st.HT) + "</b>" + lab(" · F_ST = (pooled − within) / pooled =") + " <b>" + f2(st.fst) + "</b>" +
-    lab(" = the four F's averaged, (") + st.F.map(v => "<b>" + f2(v) + "</b>").join(lab(" + ")) + lab(") / 4");
+  $("D_mirrorRead").innerHTML = lab("heterozygosity, a genome's genes with its two chromosomes different colours: ") +
+    st.het.map((v, k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> <b>" + f2(v) + "</b>").join(lab(" · ")) +
+    lab(" · F_ST, how different the four are from each other:") + " <b>" + f2(st.fst) + "</b>";
   drawTime("D_time", q, $("D_meas").value, MEAS_D, null, 100);
-  if (q) { const s = sumAt(q, q.t); $("D_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· 20 sets: F_ST") + " <b>" + f2(s.fst) + "</b>" + lab(" · within") + " <b>" + f2(s.HS) + "</b>" + lab(", pooled") + " <b>" + f2(s.HT) + "</b>" +
+  if (q) { const s = sumAt(q, q.t); $("D_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· 20 sets: F_ST") + " <b>" + f2(s.fst) + "</b>" + lab(" · heterozygosity") + " <b>" + f2(s.het) + "</b>" +
     lab(" · other colours") + " <b>" + pc(s.other) + "</b>" + (q.practice ? " " + lab("· practice") : ""); }
   else $("D_read").innerHTML = "";
   if (!S.run) D_drawSparrow(q);
@@ -1636,7 +1630,7 @@ function D_paint() {
 function D_code() {
   const s = readSet(SD);
   codeInto("codeD", [
-    ["", "# Lesson 17, Stage D -- four populations, each one colour at the start; migration between pairs; F and F_ST on colour;"],
+    ["", "# Lesson 17, Stage D -- four populations, each one colour at the start; migration between pairs; heterozygosity and F_ST on colour;"],
     ["", "# then young genomes placed where they most likely came from"],
     ["N", "N <- " + s.N + "; L <- 40; G <- 100; R <- 1                # genomes a population, genes, generations, crossovers"],
     ["", "M <- matrix(0, 4, 4)                              # migration between each pair: 1 orange, 2 blue, 3 red, 4 purple"],
@@ -1652,10 +1646,10 @@ function D_code() {
     ["", "}"],
     ["", "cnt <- lapply(pop, function(P) sapply(1:L, function(i) tabulate(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))), 4)))   # colour x gene"],
     ["", "het <- function(p) 1 - sum(p^2)                   # the chance two beads at a gene are different colours"],
-    ["", "within <- sapply(cnt, function(C) mean(apply(C / (2 * N), 2, het)))      # each population"],
+    ["", "within <- mean(sapply(cnt, function(C) mean(apply(C / (2 * N), 2, het))))   # each population on its own, averaged"],
     ["", "pooled <- mean(apply(Reduce(`+`, cnt) / (8 * N), 2, het))              # the four pooled"],
-    ["", "F <- (pooled - within) / pooled                    # each population's F"],
-    ["", "print(c(F = round(F, 2), F_ST = mean(F)))          # F_ST: the four F's averaged"],
+    ["", "heterozygosity <- sapply(pop, function(P) mean(sapply(P, function(g) mean(g[[1]] != g[[2]]))))   # a genome's two chromosomes"],
+    ["", "print(c(heterozygosity = round(heterozygosity, 2), F_ST = (pooled - within) / pooled))"],
     ["", "judge <- function(g) which.max(sapply(cnt, function(C) sum(log((C[cbind(c(g[[1]], g[[2]]), rep(1:L, 2))] + 0.5) / (2 * N + 2)))))"],
     ["", "born <- rep(1:4, each = 100)                       # the theory: 100 young from each population, placed by the judge"],
     ["", "c(theory_wrong = mean(sapply(born, function(k) judge(young(pop[[k]]))) != born))"],
