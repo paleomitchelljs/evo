@@ -95,6 +95,16 @@
   #D_paths .paths-box-bg.pop-red { fill:#f4d3d7; stroke:#b23a48; }
   #D_paths .paths-box-bg.pop-purple { fill:#e3ddef; stroke:#55407e; }
   #D_paths .paths-arrow.locked { stroke:#a9c7da; }
+  /* D's placing: a canvas laid over the diagram while ten young genomes are placed on its boxes */
+  #D_pathsWrap { position:relative; max-width:440px; }
+  #D_place { position:absolute; left:0; top:0; touch-action:none; cursor:grab; z-index:2; }
+  .dtab-wrap { max-height:230px; overflow-y:auto; margin:0 0 10px; }
+  table.dtab { width:100%; border-collapse:collapse; font:12.5px ui-monospace,Menlo,monospace; }
+  table.dtab th { text-align:right; font:600 11px -apple-system,BlinkMacSystemFont,sans-serif; color:var(--muted); padding:3px 6px; border-bottom:1px solid var(--rule); position:sticky; top:0; background:var(--panel); }
+  table.dtab td { text-align:right; padding:3px 6px; border-bottom:1px solid #f2f0e8; }
+  table.dtab th:first-child, table.dtab td:first-child { text-align:left; }
+  table.dtab tr.prac td { color:var(--muted); }
+  table.dtab td.none { text-align:left; color:var(--muted); font-family:-apple-system,BlinkMacSystemFont,sans-serif; }
   /* A run is thrown, not steered: paths.js's hit targets set their own pointer-events (lesson 14's note), so a
      playing run, or a hit waiting for Next target, blocks them here */
   .controls.pending .paths-hit, .controls.pending .paths-step { pointer-events:none; }
@@ -323,7 +333,7 @@
   </div>
 </section>
 
-<!-- ========== STAGE D — four populations: how differentiated they are, F_ST (JM, 2026-10-15: "expanding it to four types of populations (blue, orange, red, purple?)"; "I usually teach Fst as how differentiated the populations are"; "teach them visually what Fst means through interactions") ========== -->
+<!-- ========== STAGE D — four populations: how differentiated they are, F_ST; placing young genomes (JM, 2026-10-15: "expanding it to four types of populations (blue, orange, red, purple?)"; "I usually teach Fst as how differentiated the populations are"; "teach them visually what Fst means through interactions"; evening: "Instead of a bowling round, I want a prediction round ... shown a genome and they move it to the correct population") ========== -->
 <section class="stage stage-locked" id="stageD">
   <h2 class="stage-h">D</h2>
   <div class="lock-banner">Finish Stage C to unlock this section.</div>
@@ -334,9 +344,12 @@
       <li>Four populations of N genomes: orange, blue, red and purple. At the start each is all its own colour, one allele a gene. Nothing helps or harms.</li>
       <li>The diagram: an arrow between two populations is migration between them. Click it, then drag up or down to set m: each generation, each genome trades places with one in the other population with chance m.</li>
       <li>Set 1: the four populations, each with a bar of its mix of colours; under them, the four pooled.</li>
+      <li>Under it, set 1 on the diagram's square: each population's colours gene by gene (a column a gene) and its F; on each line, F<sub>ST</sub> between those two; in the middle, the four pooled and F<sub>ST</sub>.</li>
       <li>Within: the chance two beads at one gene, drawn from one population, are different colours. Pooled: the same, the two drawn from all four together.</li>
-      <li>F<sub>ST</sub>: how differentiated the populations are, (pooled &minus; within) / pooled. 0: every population the same mix of colours. 1: each only its own colour.</li>
-      <li>Each pair: F<sub>ST</sub> between those two populations alone. <b>Go</b> plays 20 sets of four. Tick practice for a run that does not count.</li>
+      <li>F, one population: (pooled &minus; its within) / pooled. F<sub>ST</sub>: the four F's averaged, (pooled &minus; within) / pooled. 0: every population the same mix at every gene. 1: each only its own colour.</li>
+      <li>A round: <b>Start round</b> sets the round's migration and holds it, with N 25, and plays 100 generations in 20 sets of four. Then ten young genomes, each born in one of set 1's populations, one at a time on the diagram: drag each to the population it came from.</li>
+      <li>Practice, ticked at the start: your own migration and N, and the same ten genomes after each run; nothing counts. Untick it to start a round.</li>
+      <li>Your placements: each run's F<sub>ST</sub> and how many you placed right. The plot: the share placed wrong against F<sub>ST</sub>; theory, the share wrong for a judge who knows set 1's colours gene by gene and places 400 young where each most likely came from.</li>
     </ul>
   </div>
 
@@ -348,8 +361,14 @@
         <div class="readout" id="D_boardRead"></div>
       </div>
       <div class="panel">
+        <h3 id="D_mirrorH">Set 1: how differentiated</h3>
+        <canvas id="D_mirror" width="760" height="270"></canvas>
+        <div class="readout" id="D_mirrorRead"></div>
+      </div>
+      <div class="panel">
         <div class="watchbar"><label>Over time, 20 sets of four: <select id="D_meas">
           <option value="fst">F_ST</option>
+          <option value="F">F, each population</option>
           <option value="H">heterozygosity, within (red) and pooled (black)</option>
           <option value="other">share in other colours</option>
           <option value="nf">fragments a chromosome</option>
@@ -381,30 +400,32 @@
         <p class="ttext" id="D_ttext"></p>
         <ul class="rules" id="D_rules"></ul>
         <div class="controls" id="D_controls">
-          <div id="D_paths"></div>
+          <div id="D_pathsWrap"><div id="D_paths"></div><canvas id="D_place" hidden></canvas></div>
           <div hidden>
             <input type="range" id="D_e0" min="0" max="5" step="1" value="0"><input type="range" id="D_e1" min="0" max="5" step="1" value="0">
             <input type="range" id="D_e2" min="0" max="5" step="1" value="0"><input type="range" id="D_e3" min="0" max="5" step="1" value="0">
             <input type="range" id="D_e4" min="0" max="5" step="1" value="0"><input type="range" id="D_e5" min="0" max="5" step="1" value="0">
           </div>
           <div class="tbar" id="D_NRow"><label>N, each population <input type="range" id="D_N" min="0" max="3" step="1" value="1"></label><b id="D_NV"></b></div>
-          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" checked /><label for="D_practice">practice — your own migration and N; nothing counts</label></div>
           <div class="buttons">
             <button id="D_go" class="accent">Go</button>
             <button id="D_next" class="ghost" hidden>Next target</button>
+            <button id="D_stop" class="ghost" hidden>Stop placing</button>
           </div>
         </div>
         <div class="verdict" id="D_verdict"></div>
       </div>
       <div class="panel">
-        <h3>Each pair: F<sub>ST</sub></h3>
-        <canvas id="D_pairs" width="360" height="220"></canvas>
-        <div class="readout" id="D_pairsRead"></div>
+        <h3>Your placements</h3>
+        <div class="dtab-wrap"><table class="dtab" id="D_table"></table></div>
+        <canvas id="D_assign" width="480" height="290"></canvas>
+        <div class="readout" id="D_assignRead"></div>
       </div>
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksD">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="D_rounds_now">0 of 3</span></li>
+          <li data-task="rounds">Place the ten genomes of all five rounds. <span class="hint" id="D_rounds_now">0 of 5</span></li>
         </ul>
         <div class="solved-banner" id="solvedD">That is the end of the lesson.</div>
       </div>
@@ -427,7 +448,9 @@
    LESSON 17 — migration. DRAFT; first pass 2026-10-12, from JM's outline
    (2026-10-09) and brief (2026-10-12); second pass 2026-10-15, from his
    review (B reworded, one slider a round; pass 1's D became C, with s and
-   h per population; pass 1's C retired for four populations and F_ST).
+   h per population; pass 1's C retired for four populations and F_ST);
+   third pass the same evening, D's bowling rounds become placing rounds
+   (JM: "Instead of a bowling round, I want a prediction round").
    Plan, measurements and open points in docs/overhauls/lesson17_overhaul.md.
 
    A  steady migration: the other population's DNA arrives in fragments;
@@ -439,8 +462,9 @@
       s and h in each; kept apart (local adaptation), swamped by
       migration, or swept in dragging its neighbours.
    D  four populations, each its own colour: migration between each pair
-      set on a diagram; F_ST as how differentiated they are; drift holds
-      them apart.
+      set on a diagram; F_ST as how differentiated they are; five rounds
+      of held migration, each followed by ten young genomes to place in
+      the population they came from, placed wrong against F_ST.
    ===================================================================== */
 const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", RED = "#b23a48", PURPLE = "#55407e", GREEN = "#6f8a4a";
 const $ = id => document.getElementById(id);
@@ -501,11 +525,18 @@ function codeInto(id, lines) {
 
 /* ====== gates ========================================================
    A stage opens the next by being worked through; a miss never shuts a
-   door. One bit per target (JM, 2026-09-30): the first scored try at each,
-   retried until hit. A1-A3, B1-B3, C1-C3, D1-D3. */
+   door. One bit per scored attempt (JM, 2026-09-30). A-C: one a target,
+   the first scored try at each, retried until hit (A1-A3, B1-B3, C1-C3).
+   D: one a placed genome, 1 placed right, ten a round, five rounds (D1-D10
+   round 1 ... D41-D50 round 5); each round's F_ST in the notes. */
 const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
 const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
-const BIT = { A1:0, A2:1, A3:2, B1:3, B2:4, B3:5, C1:6, C2:7, C3:8, D1:9, D2:10, D3:11 };
+const BIT = { A1:0, A2:1, A3:2, B1:3, B2:4, B3:5, C1:6, C2:7, C3:8,
+  D1:9, D2:10, D3:11, D4:12, D5:13, D6:14, D7:15, D8:16, D9:17, D10:18,
+  D11:19, D12:20, D13:21, D14:22, D15:23, D16:24, D17:25, D18:26, D19:27, D20:28,
+  D21:29, D22:30, D23:31, D24:32, D25:33, D26:34, D27:35, D28:36, D29:37, D30:38,
+  D31:39, D32:40, D33:41, D34:42, D35:43, D36:44, D37:45, D38:46, D39:47, D40:48,
+  D41:49, D42:50, D43:51, D44:52, D45:53, D46:54, D47:55, D48:56, D49:57, D50:58 };
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
@@ -634,9 +665,21 @@ function mgFst(hc, idx, byGene) {
   }
   return { HT: HT / L, HS: HS / L, fst: HT > 1e-9 ? (HT - HS) / HT : 0, g };
 }
+/* each population's F: (pooled - its own within) / pooled, on mgFst's terms (within and pooled each averaged over the
+   genes, pooled over all the populations). The F's averaged are F_ST exactly. */
+function mgPopF(hc) {
+  const n = hc.length, hs = new Float64Array(n); let HT = 0;
+  for (let i = 0; i < L; i++) {
+    const pbar = new Float64Array(5); let s2 = 0;
+    for (let k = 0; k < n; k++) { let q2 = 0; for (let h = 0; h < 5; h++) { const p = hc[k][i][h]; q2 += p * p; pbar[h] += p / n; } hs[k] += (1 - q2) / L; }
+    for (let h = 0; h < 5; h++) s2 += pbar[h] * pbar[h];
+    HT += (1 - s2) / L;
+  }
+  return Array.from(hs, v => HT > 1e-9 ? (HT - v) / HT : 0);
+}
 /* one pair (or set) now. Each population: share of genes in another hue, fragments a chromosome, their average length,
-   the other hue gene by gene. full (D): each population's mix of hues; heterozygosity within and pooled, F_ST, and F_ST
-   for each pair of populations (D_PAIRS' order: 0-1, 0-2, 0-3, 1-2, 1-3, 2-3). */
+   the other hue gene by gene. full (D): each population's mix of hues; heterozygosity within and pooled, F_ST, each
+   population's F, and F_ST for each pair of populations (D_PAIRS' order: 0-1, 0-2, 0-3, 1-2, 1-3, 2-3). */
 function mgStats(pair, full) {
   const out = { pops: [] };
   pair.pops.forEach((F, k) => {
@@ -651,6 +694,7 @@ function mgStats(pair, full) {
     const hc = mgCounts(pair), n = hc.length;
     hc.forEach((cnt, k) => { const mix = new Float64Array(5); for (const r of cnt) for (let h = 0; h < 5; h++) mix[h] += r[h] / L; out.pops[k].mix = mix; });
     Object.assign(out, mgFst(hc, Array.from({ length: n }, (_, k) => k)));
+    out.F = mgPopF(hc);
     out.pw = []; for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) out.pw.push(mgFst(hc, [i, j]).fst);
   }
   return out;
@@ -779,7 +823,9 @@ function sumAt(q, t) {
    cfg: ctl [{key, vals, fmt, paths}], rounds [{G, text, open, hold, rules [{meas, pop, lo, hi, txt, ok(S), val(S)}]}],
    start(set, seed, G) -> { P, pairs, swap(t), full, every }, freeG(set), paint(), extra tasks (extraDone()); hooks:
    afterOpen() when a round opens, afterSync(locked) on every repaint, onInput(key) when a control moves.
-   A control with `paths` is a hidden input a diagram's arrow writes (D): it has no slider row or value of its own. */
+   A control with `paths` is a hidden input a diagram's arrow writes (D): it has no slider row or value of its own.
+   D's placing rounds are not bowling rounds and take three more hooks: beforeGo() as Go is pressed, endRun(q) in place
+   of the judging, sync() in place of syncStage. */
 const ST = {};
 function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
 const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
@@ -801,10 +847,11 @@ function snap(q) { q.hist.push({ t: q.t, pairs: q.pairs.map(pr => mgStats(pr, q.
 function stepOnce(q) { q.t++; for (const pr of q.pairs) mgStep(q.P, pr, q.swap ? q.swap(q.t) : null); if (q.t === q.G || q.t % q.every === 0) snap(q); }
 function goStage(S) {
   if (S.run || S.waiting) return;
+  if (S.cfg.beforeGo) S.cfg.beforeGo();
   const set = readSet(S), r = S.done ? null : ruleOf(S), G = r ? r.G : S.cfg.freeG(set);
   const seed = pageSeed("l17" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
   const q = S.cfg.start(set, seed, G);
-  Object.assign(q, { set, G, t: 0, hist: [], practice: practising(S), r, round: S.round });
+  Object.assign(q, { set, G, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
   if (q.t0swap) q.t0swap();
   snap(q);
   S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
@@ -827,7 +874,8 @@ function judge(r, sum) { const each = r.rules.map(u => u.ok(sum)); return { ok: 
 function endStage(S) {
   const q = S.run; if (!q) return;
   S.run = null; S.last = q;
-  if (q.r) {
+  if (S.cfg.endRun) S.cfg.endRun(q);
+  else if (q.r) {
     q.j = judge(q.r, sumAt(q, q.G));
     if (!q.practice) {
       const pos = BIT[S.K + (q.round + 1)];
@@ -844,6 +892,7 @@ function endStage(S) {
 function checkStage(S) { if (S.done && (!S.cfg.extraDone || S.cfg.extraDone())) finishStage(S.K); }
 function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
 function syncStage(S) {
+  if (S.cfg.sync) return S.cfg.sync();
   const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
   $(K + "_pips").innerHTML = free ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
   $(K + "_ttext").textContent = free ? S.cfg.freeText : r.text;
@@ -1221,67 +1270,113 @@ function C_code() {
    directly to differences in chunk size/number. I usually teach Fst as how
    differentiated the populations are ... the goal is to teach them
    visually what Fst means through interactions"; "four-population
-   differentiation to learn Fst last").
+   differentiation to learn Fst last"). Third pass, the same evening:
+   "Instead of a bowling round, I want a prediction round. The students are
+   given free play with the controls until they're satisfied and they start
+   round. Then a preset arrangement of migration rates locked in, the
+   populations evolve, and then they are shown the F_st in a plot below the
+   main visualization where the F for each population is displayed, along
+   with the F_st in a kind of mirror of the control panel. The students are
+   then in the target window shown a genome and they move it to the correct
+   population. They [assign] 10 genomes ... their correct rate & the Fst
+   are recorded in a table. They continue this for 4 more locked sets of
+   migration rates and their assignment is plotted against the Fst's they
+   were shown + the theoretical error rate. In study mode/with practice
+   toggled, they can set the migration rates as they wish and after
+   running they get the same activity."
 
    Four populations of N, each starting one colour: one allele a gene, so
    an allele is a colour and F_ST on colour is F_ST on alleles. Migration
    between each pair is set on paths.js's diagram: six two-headed arrows (a
-   swap goes both ways), each bound to a hidden range input. R 1. 20 sets.
+   swap goes both ways), each bound to a hidden range input. R 1. 20 sets,
+   100 generations.
    F_ST = (pooled - within) / pooled: heterozygosity on colour averaged over
    the 40 genes, the populations weighted equally; for a pair, the same over
-   those two. Pass 1's C (a grey population split in two, F_ST from the
-   first round, 1/(1 + 16Nm) beside it) is gone: JM, "jumps immediately into
-   using Fst as a measure".
-   MEASURED (node prototype of this engine, 2026-10-15; N 25, 20 sets, six
-   seeds, at 100): every pair at m 0 / .002 / .005 / .01 / .02 / .05: 1 /
-   .53 / .30 (.28-.32) / .17 (.17-.18) / .09 / .04. The four sides of the
-   square at .02: .15; a chain orange-blue-red-purple at .05 .11, at .02
-   .27. Two pairs (orange-blue, red-purple) at .02: within .14, across .66;
-   at .01 within .24 (.20-.27); a blue-purple arrow at .002 brings across
-   to .53 (.49-.57). Every pair at .01: N 10 .36 (.34-.38), 25 .17, 50 .09.
-   The island model, each genome leaving for each of the other three at m:
-   1 / (1 + 4N (3m) (4/3)^2) = .16 / .32 / .09 there (R panel only; JM wants
-   the meaning, not the formula, on the page).
-   Two populations that share no colour, each a mix of two, read about .67,
-   not 1: F_ST is 1 only when each population is one colour (overhaul doc,
-   open point 2). No target leans on it.
-   Targets: 1 N 25: F_ST under 0.2 (every pair .01 or more, or the square's
-   sides or a chain high enough; opens at 0); 2 N 25: orange-blue and
-   red-purple each under 0.2, all four cross pairs over 0.4 (join the pairs,
-   nothing across; opens with every pair at .02, across .06); 3 every pair
-   held at .01: F_ST over 0.25 (N 10; opens at N 25, .17).
+   those two. A population's F = (pooled - its within) / pooled; the four
+   averaged are F_ST exactly. The mirror under the board draws set 1 on the
+   diagram's square: each population's colours gene by gene and its F, each
+   pair's F_ST on its line, the pooled colours and F_ST in the middle.
+   Pass 2's three bowling targets and its pairs grid are gone.
+
+   Every run, round or practice, ends in ten young genomes, each from two
+   parents in one of set 1's populations (a quarter each), so none is on
+   the board; the student drags each onto a box of the diagram. The theory:
+   a judge who knows set 1's colours gene by gene and places a young genome
+   where it most likely came from, the genes taken one at a time, a colour
+   a population lacks counted rare ((count + 0.5) / (2N + 2)) rather than
+   impossible; scored on 100 young a population. Identical populations
+   leave it guessing, 75% wrong. It is worked out on each run's own set 1,
+   not drawn as one curve, because it is not a function of F_ST alone: two
+   pairs joined at .05 read F_ST .67 and still misplace 12% (the partners
+   confused). Counting colours (a genome goes with the colour it carries
+   most) fails below F_ST ~.4: steady migration takes every population
+   toward one overall mix, and what tells them apart is which colour each
+   has at each gene, which is what the mirror's columns show.
+   MEASURED (node prototype of this engine, 2026-10-15; N 25, set 1 at 100,
+   8-10 seeds): F_ST (range) / F orange, blue, red, purple / theory wrong /
+   counting colours wrong --
+     one link O-B .01     .85 (.82-.89)  .71 .70 1 1      .008   .17
+     orange the hub .01   .40 (.29-.48)  .17 .50 .43 .49  .031   .34
+     chain O-B-P-R .02    .28 (.20-.43)  .32 .17 .41 .22  .039   .56
+     every pair .02       .10 (.06-.14)                   .073   .78
+     every pair .05       .04 (.03-.06)                   .191   .77
+   Pass 2, 20 sets: every pair at m 0 / .002 / .005 / .01 / .02 / .05, F_ST
+   1 / .53 / .30 / .17 / .09 / .04; every pair .01, N 10 / 25 / 50: .36 /
+   .17 / .09. The island model, each genome leaving for each of the other
+   three at m: 1 / (1 + 4N (3m) (4/3)^2) (R panel only).
+   Rounds: those five, in that order, N 25 held. Free play first (practice
+   ticked at the start); Start round k holds the round's migration. One bit
+   a placed genome; the stage is done when all five rounds are placed.
    ===================================================================== */
 const D_MV = [0, 0.002, 0.005, 0.01, 0.02, 0.05], D_NV = [10, 25, 50, 100];
 const D_PAIRS = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]], D_PN = D_PAIRS.map(p => POPNAME[p[0]] + " and " + POPNAME[p[1]]);
-const D_EK = D_PAIRS.map((_, j) => "e" + j), allE = v => Object.fromEntries(D_EK.map(k => [k, v]));
-const D_PW = (j, lo, hi) => ({ meas: "pw", lo, hi, txt: D_PN[j] + ": F_ST " + (hi == null ? "over " + lo : "under " + hi), ok: S => hi == null ? S.pw[j] > lo : S.pw[j] < hi, val: S => f2(S.pw[j]) });
-const D_ROUNDS = [
-  { G: 100, open: allE(0), hold: { N: 25 }, text: "Make the four populations alike: at generation 100, F_ST under 0.2.",
-    rules: [{ meas: "fst", lo: 0, hi: 0.2, txt: "F_ST at generation 100: under 0.2", ok: S => S.fst < 0.2, val: S => f2(S.fst) }] },
-  { G: 100, open: allE(0.02), hold: { N: 25 }, text: "Two pairs: orange and blue alike, red and purple alike, each pair differentiated from the other. At generation 100:",
-    rules: [D_PW(0, null, 0.2), D_PW(5, null, 0.2),
-            { meas: "pw", lo: 0.4, hi: null, txt: "across the pairs (orange or blue with red or purple): F_ST over 0.4, all four", ok: S => Math.min(S.pw[1], S.pw[2], S.pw[3], S.pw[4]) > 0.4, val: S => "lowest " + f2(Math.min(S.pw[1], S.pw[2], S.pw[3], S.pw[4])) }] },
-  { G: 100, open: { N: 25 }, hold: allE(0.01), text: "Every pair trades genomes at m 0.01 (held). Keep the four differentiated anyway: at generation 100, F_ST over 0.25.",
-    rules: [{ meas: "fst", lo: 0.25, hi: null, txt: "F_ST at generation 100: over 0.25", ok: S => S.fst > 0.25, val: S => f2(S.fst) }] },
+const D_EK = D_PAIRS.map((_, j) => "e" + j), allE = v => Object.fromEntries(D_EK.map(k => [k, v])), onlyE = o => Object.assign(allE(0), o);
+/* the five rounds' migration, most differentiated first (e0 orange-blue, e1 orange-red, e2 orange-purple, e3 blue-red,
+   e4 blue-purple, e5 red-purple) */
+const D_PRESETS = [
+  { short: "one link", name: "orange and blue trade at m 0.01; red and purple trade with no one", e: onlyE({ e0: 0.01 }) },
+  { short: "orange the hub", name: "orange trades with each of the others at m 0.01; they do not trade with each other", e: onlyE({ e0: 0.01, e1: 0.01, e2: 0.01 }) },
+  { short: "a chain", name: "a chain, orange, blue, purple, red: m 0.02 between neighbours", e: onlyE({ e0: 0.02, e4: 0.02, e5: 0.02 }) },
+  { short: "every pair, 0.02", name: "every pair trades at m 0.02", e: allE(0.02) },
+  { short: "every pair, 0.05", name: "every pair trades at m 0.05", e: allE(0.05) },
 ];
+const D_YOUNG = 10, D_THEORY = 100;
 const MEAS_D = {
   fst: { lab: "F_ST", ymax: 1, vals: pr => [pr.fst] },
+  F: { lab: "F, each population", ymax: 1, perPop: true, vals: pr => pr.F },
   H: { lab: "heterozygosity on colour", ymax: 1, perPop: true, cols: [HOT, INK], vals: pr => [pr.HS, pr.HT] },
   other: { lab: "share in other colours", ymax: 1, pct: true, vals: pr => pr.pops.map(p => p.other) },
   nf: { lab: "fragments a chromosome", ymax: 4, auto: 2, vals: pr => pr.pops.map(p => p.nf) },
 };
+/* the placing under way (null when none), and every placed run's row for the table and the plot */
+const DX = { placing: null, rows: [] };
 let D_PATHS = null;
 const SD = mkStage("D", {
-  ctl: D_EK.map(k => ({ key: k, vals: D_MV, paths: true })).concat([{ key: "N", vals: D_NV }]), rounds: D_ROUNDS, ms: 40,
-  freeText: "All three targets taken. Run any setting you like: 100 generations.", freeG: () => 100,
+  ctl: D_EK.map(k => ({ key: k, vals: D_MV, paths: true })).concat([{ key: "N", vals: D_NV }]),
+  rounds: D_PRESETS.map(() => ({ G: 100, text: "", rules: [] })), ms: 40,
+  freeText: "All five rounds placed. Run any setting you like, and place its genomes: 100 generations.", freeG: () => 100,
   start: (set, seed, G) => { const P = { n: 4, founders: 1, N: set.N, R: 1, sel: null, mig: D_PAIRS.map((p, j) => [p[0], p[1], set["e" + j]]).filter(x => x[2] > 0) }, s0 = mgStart(P, seed);
     return { P, pairs: Array.from({ length: 20 }, (_, i) => ({ pops: s0.map(F => F.slice()), rng: mulberry32(seed + 1 + 7919 * i) })), full: true, every: 2 }; },
-  /* a held arrow is pale and cannot be set; while a run plays (or a hit waits for Next target) no arrow takes a drag */
+  /* Go: a round holds its migration and N 25; a practice run frees every control. Either drops a placing left unfinished
+     (only a practice one can be: a round's holds Go until it is done) */
+  beforeGo: () => { DX.placing = null; $("D_verdict").innerHTML = ""; D_hold(practising(SD) ? null : D_PRESETS[SD.round]); },
+  endRun: q => D_endRun(q),
+  sync: () => D_sync(),
+  /* a held arrow is pale and cannot be set */
   afterOpen: () => { if (!D_PATHS) return; for (const k of D_EK) D_PATHS.setArrow(k, { readonly: $("D_" + k).dataset.held === "1" }); D_PATHS.sync(); },
-  afterSync: locked => $("D_controls").classList.toggle("pending", locked),
   onInput: () => { if (D_PATHS) D_PATHS.sync(); },
   paint: () => D_paint(),
 });
+/* hold a round's migration and N 25 (pr), or free every control (null) */
+function D_hold(pr) {
+  for (const c of SD.cfg.ctl) {
+    const el = $("D_" + c.key), v = pr ? (c.key === "N" ? 25 : pr.e[c.key]) : null;
+    if (v != null) el.value = c.vals.indexOf(v);
+    el.dataset.held = pr ? "1" : "";
+  }
+  $("D_NRow").classList.toggle("held", !!pr);
+  syncVals(SD); SD.preview = null; SD.cfg.afterOpen();
+}
 /* the diagram: the four populations at the corners of a square, as the board has them; an arrow for each pair */
 function D_mountPaths() {
   const at = [[50, 24], [370, 24], [50, 256], [370, 256]], cls = ["pop-orange", "pop-blue", "pop-red", "pop-purple"];
@@ -1290,24 +1385,210 @@ function D_mountPaths() {
     boxes: POPNAME.map((nm, k) => ({ id: "p" + k, label: nm, x: at[k][0], y: at[k][1], w: 84, h: 30, cls: cls[k] })),
     arrows: D_PAIRS.map((p, j) => ({ id: "e" + j, from: "p" + p[0], to: "p" + p[1], both: true, input: "D_e" + j, label: "migration, " + D_PN[j], fmt: v => "m " + D_MV[Math.round(v)] })),
     valuesOnSelect: true, lockColours: true,
-    idleNote: "Click an arrow, then drag it up or down to set migration between those two populations. Pale: held this target."
+    idleNote: "Click an arrow, then drag it up or down to set migration between those two populations. Pale: held this round."
   });
 }
-/* each pair's F_ST, the average of the 20 sets: a triangle of cells, darker more differentiated */
-const DPr = { W: 360, H: 220, x0: 74, y0: 32, cs: 62 };
-function D_drawPairs(q) {
-  const cv = $("D_pairs"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, DPr.W, DPr.H), s = q ? sumAt(q, q.t) : null;
-  for (let r = 1; r < 4; r++) cardText(ctx, POPNAME[r], DPr.x0 - 8, DPr.y0 + (r - 1) * DPr.cs + DPr.cs / 2, { size: 12, bold: true, col: POPCOL[r], align: "right" });
-  for (let c = 0; c < 3; c++) cardText(ctx, POPNAME[c], DPr.x0 + c * DPr.cs + DPr.cs / 2, DPr.y0 - 12, { size: 12, bold: true, col: POPCOL[c], align: "center" });
-  for (let r = 1; r < 4; r++) for (let c = 0; c < r; c++) {
-    const j = D_PAIRS.findIndex(p => p[0] === c && p[1] === r), x = DPr.x0 + c * DPr.cs, y = DPr.y0 + (r - 1) * DPr.cs, v = s ? s.pw[j] : null;
-    const g = v == null ? 244 : Math.round(246 - 196 * Math.max(0, Math.min(1, v)));
-    ctx.fillStyle = "rgb(" + g + "," + g + "," + Math.max(0, g - 5) + ")"; ctx.fillRect(x + 1, y + 1, DPr.cs - 2, DPr.cs - 2);
-    cardText(ctx, v == null ? "–" : f2(v), x + DPr.cs / 2, y + DPr.cs / 2, { size: 14, mono: true, bold: true, col: v != null && v > 0.5 ? "#fff" : INK, align: "center" });
+
+/* ---- placing ---- */
+/* a young genome of population F: two different parents at random (nothing helps or harms in D), a gamete from each */
+function D_young(P, F, rng) {
+  const N = F.length, a = Math.floor(rng() * N); let b = Math.floor(rng() * N), t = 0;
+  while (b === a && t++ < 30) b = Math.floor(rng() * N);
+  return [mgGamete(P, F[a], rng), mgGamete(P, F[b], rng)];
+}
+/* the theory's judge: the population most likely to give genome g its every bead, gene by gene, from a set's colour shares
+   (hc, of 2N each); a colour a population lacks counts as rare, (count + 0.5) / (2N + 2). A tie goes to the first. */
+function D_judge(hc, g, N) {
+  const n2 = 2 * N; let best = 0, bl = -Infinity;
+  for (let k = 0; k < hc.length; k++) {
+    let ll = 0; for (const c of g) for (let i = 0; i < L; i++) ll += Math.log((hc[k][i][mgHue(c[i])] * n2 + 0.5) / (n2 + 2));
+    if (ll > bl + 1e-9) { bl = ll; best = k; }
   }
+  return best;
+}
+/* the share the judge places wrong: D_THEORY young from each population of one set */
+function D_theory(P, pair, rng) {
+  const hc = mgCounts(pair); let wrong = 0;
+  for (let k = 0; k < pair.pops.length; k++) for (let r = 0; r < D_THEORY; r++) if (D_judge(hc, D_young(P, pair.pops[k], rng), P.N) !== k) wrong++;
+  return wrong / (D_THEORY * pair.pops.length);
+}
+/* a run's end: ten young from set 1 to place, and the theory on the same populations */
+function D_endRun(q) {
+  const pair = q.pairs[0], st = mgStats(pair, true), rng = mulberry32(q.seed + 7121);
+  const young = Array.from({ length: D_YOUNG }, () => { const k = Math.floor(rng() * 4); return { k, g: D_young(q.P, pair.pops[k], rng) }; });
+  DX.placing = { practice: q.practice, round: q.round, young, i: 0, picks: [], fst: st.fst, F: st.F, theory: D_theory(q.P, pair, mulberry32(q.seed + 7247)), drag: null, hover: -1 };
+  if (!q.practice) SD.waiting = true;
+}
+/* the genome on show goes in population k: one bit in a round, right or wrong; the tenth closes the run's row */
+function D_place(k) {
+  const p = DX.placing; if (!p || SD.run || p.i >= D_YOUNG) return;
+  const y = p.young[p.i], ok = y.k === k;
+  p.picks.push({ k, from: y.k, ok });
+  if (!p.practice) { const pos = BIT["D" + (D_YOUNG * p.round + p.i + 1)]; if (firstTry(pos)) record(pos, ok); }
+  bump("D");
+  const born = '<b style="color:' + POPCOL[y.k] + '">' + POPNAME[y.k] + "</b>";
+  $("D_verdict").innerHTML = (p.practice ? "practice: " : "") + "genome " + (p.i + 1) + ": " + (ok ? '<span class="ok">right</span>, born in ' + born : '<span class="off">wrong</span>: placed in ' + POPNAME[k] + ", born in " + born);
+  p.i++; p.drag = null; p.hover = -1;
+  if (p.i >= D_YOUNG) D_endPlacing(p);
+  D_paint();
+}
+function D_endPlacing(p) {
+  const right = p.picks.filter(x => x.ok).length;
+  DX.rows.push({ practice: p.practice, round: p.round, fst: p.fst, right, theory: p.theory });
+  DX.placing = null;
+  $("D_verdict").innerHTML += "<br>" + (p.practice ? "practice: " : "round " + (p.round + 1) + ": ") + "<b>" + right + " of " + D_YOUNG + "</b> placed right, at F<sub>ST</sub> " + f2(p.fst) + " · theory: " + pc(p.theory) + " wrong";
+  if (p.practice) return;
+  const nk = "D_fst" + (p.round + 1);
+  if (typeof Score !== "undefined" && Score.setNote && Score.getNote && Score.getNote(nk) == null) Score.setNote(nk, f2(p.fst));
+  SD.results[p.round] = true; SD.waiting = false;
+  if (p.round >= D_PRESETS.length - 1) SD.done = true; else SD.round = p.round + 1;
+  D_hold(null);
+  checkStage(SD);
+}
+function D_sync() {
+  const S = SD, busy = !!S.run, p = DX.placing, placing = !!p && !busy, scored = !!p && !p.practice, prac = practising(S), nR = D_PRESETS.length, k = S.round;
+  $("D_pips").innerHTML = S.done ? "" : D_PRESETS.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === k ? "◉" : "○").join(" ");
+  $("D_ttext").textContent =
+    placing ? "Genome " + (p.i + 1) + " of " + D_YOUNG + ": young, born in one of set 1's four populations. Drag it to the population it came from, or click that population."
+    : busy ? (S.run.practice ? "Your setting, playing: 100 generations." : "Round " + (k + 1) + " of " + nR + ", playing: 100 generations.")
+    : S.done ? S.cfg.freeText
+    : prac ? "Free play: set migration on the diagram and N, and run as often as you like; ten young genomes to place follow each run. When you are ready, untick practice for round " + (k + 1) + " of " + nR + "."
+    : "Round " + (k + 1) + " of " + nR + ": Start holds the round's migration, with N 25, and plays 100 generations; then ten young genomes from set 1 to place.";
+  $("D_rules").innerHTML = (busy && !S.run.practice) || scored ? "<li>held: " + D_PRESETS[k].name + "; N 25</li>" : "";
+  for (const c of S.cfg.ctl) $("D_" + c.key).disabled = busy || !!p || $("D_" + c.key).dataset.held === "1";
+  $("D_practice").disabled = busy || scored || S.done;
+  $("D_go").disabled = busy || scored; $("D_go").textContent = prac ? "Practice run" : "Start round " + (k + 1) + " of " + nR;
+  $("D_next").hidden = true; $("D_stop").hidden = !placing || !p.practice;
+  const n = S.results.filter(Boolean).length;
+  tick("D", "rounds", n >= nR, n + " of " + nR);
+  $("D_controls").classList.toggle("pending", busy || !!p);
+  D_drawPlace();
+}
+/* the placing, laid over the diagram (its 420 x 280 units): the arrows washed pale, the boxes redrawn on top, the genome on
+   show in a card in the middle and the ten as dots under it (green right, red wrong, ringed on show). Drag the genome to
+   a box, or click a box. */
+const DPL = { W: 420, H: 280, at: [[50, 24], [370, 24], [50, 256], [370, 256]], bw: 84, bh: 30, card: { x: 104, y: 90, w: 212, h: 86 }, bead: 4.6,
+  pale: ["#fbe3cc", "#dbe8f1", "#f4d3d7", "#e3ddef"] };
+function D_drawPlace() {
+  const cv = $("D_place"), p = DX.placing, svg = $("D_paths").querySelector("svg"), on = !!p && !SD.run && !!svg;
+  cv.hidden = !on; if (!on) return;
+  const r = svg.getBoundingClientRect(), wr = $("D_pathsWrap").getBoundingClientRect(); if (!r.width) return;
+  const dpr = window.devicePixelRatio || 1, k = r.width / DPL.W, C = DPL.card;
+  Object.assign(cv.style, { left: (r.left - wr.left) + "px", top: (r.top - wr.top) + "px", width: r.width + "px", height: r.height + "px" });
+  cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr);
+  const ctx = cv.getContext("2d"); ctx.setTransform(dpr * k, 0, 0, dpr * k, 0, 0);
+  ctx.fillStyle = "rgba(255,255,255,0.72)"; ctx.fillRect(0, 0, DPL.W, DPL.H);
+  DPL.at.forEach(([x, y], b) => {
+    const hov = p.hover === b; ctx.fillStyle = DPL.pale[b]; ctx.fillRect(x - DPL.bw / 2, y - DPL.bh / 2, DPL.bw, DPL.bh);
+    ctx.strokeStyle = POPCOL[b]; ctx.lineWidth = hov ? 3.2 : 1.4; ctx.strokeRect(x - DPL.bw / 2, y - DPL.bh / 2, DPL.bw, DPL.bh);
+    cardText(ctx, POPNAME[b], x, y, { size: 12, align: "center", bold: hov });
+  });
+  ctx.fillStyle = "#fff"; ctx.fillRect(C.x, C.y, C.w, C.h); ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.strokeRect(C.x, C.y, C.w, C.h);
+  cardText(ctx, "genome " + (p.i + 1) + " of " + D_YOUNG + ": drag it to its population", C.x + C.w / 2, C.y + 12, { size: 10.5, col: MUTED, align: "center" });
+  const g = p.young[p.i].g, gw = L * DPL.bead, home = { x: C.x + (C.w - gw) / 2, y: C.y + 27 }, at = p.drag ? { x: p.drag.x - gw / 2, y: p.drag.y - 8 } : home;
+  if (p.drag) { ctx.setLineDash([3, 3]); ctx.strokeStyle = "#bdb8aa"; ctx.strokeRect(home.x - 3, home.y - 3, gw + 6, 22); ctx.setLineDash([]); }
+  ctx.fillStyle = "#fff"; ctx.fillRect(at.x - 3, at.y - 3, gw + 6, 22);
+  g.forEach((c, ci) => { for (let i = 0; i < L; i++) { ctx.fillStyle = beadCol(c[i]); ctx.fillRect(at.x + i * DPL.bead, at.y + ci * 8.5, DPL.bead - 0.6, 7); } });
+  ctx.strokeStyle = INK; ctx.lineWidth = 0.8; ctx.strokeRect(at.x - 3, at.y - 3, gw + 6, 22);
+  for (let j = 0; j < D_YOUNG; j++) {
+    const x = C.x + C.w / 2 + (j - (D_YOUNG - 1) / 2) * 15, y = C.y + C.h - 14, pk = p.picks[j];
+    ctx.beginPath(); ctx.arc(x, y, 4.6, 0, 6.2832);
+    if (pk) { ctx.fillStyle = pk.ok ? GREEN : HOT; ctx.fill(); }
+    else { ctx.strokeStyle = j === p.i ? INK : "#cfccc2"; ctx.lineWidth = j === p.i ? 1.6 : 1; ctx.stroke(); }
+  }
+}
+function D_placePt(e) { const r = $("D_place").getBoundingClientRect(), k = r.width / DPL.W; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+/* the box a point is on or near (26 units round it), or -1 */
+function D_boxAt(pt) { return DPL.at.findIndex(([x, y]) => Math.abs(pt.x - x) <= DPL.bw / 2 + 26 && Math.abs(pt.y - y) <= DPL.bh / 2 + 26); }
+function D_wirePlace() {
+  const cv = $("D_place"), C = DPL.card, inCard = pt => pt.x >= C.x && pt.x <= C.x + C.w && pt.y >= C.y && pt.y <= C.y + C.h;
+  cv.addEventListener("pointerdown", e => {
+    const p = DX.placing; if (!p || SD.run) return;
+    const pt = D_placePt(e), b = D_boxAt(pt); e.preventDefault();
+    if (inCard(pt)) { p.drag = pt; p.hover = -1; try { cv.setPointerCapture(e.pointerId); } catch (err) {} cv.style.cursor = "grabbing"; D_drawPlace(); }
+    else if (b >= 0) D_place(b);
+  });
+  cv.addEventListener("pointermove", e => {
+    const p = DX.placing; if (!p) return; const pt = D_placePt(e);
+    if (p.drag) { p.drag = pt; p.hover = inCard(pt) ? -1 : D_boxAt(pt); D_drawPlace(); }
+    else cv.style.cursor = inCard(pt) ? "grab" : D_boxAt(pt) >= 0 ? "pointer" : "default";
+  });
+  cv.addEventListener("pointerup", () => { const p = DX.placing; if (!p || !p.drag) return; const b = p.hover; p.drag = null; p.hover = -1; cv.style.cursor = "grab"; if (b >= 0) D_place(b); else D_drawPlace(); });
+  cv.addEventListener("pointercancel", () => { const p = DX.placing; if (p) { p.drag = null; p.hover = -1; D_drawPlace(); } });
+  $("D_stop").addEventListener("click", () => { if (!DX.placing || !DX.placing.practice) return; DX.placing = null; $("D_verdict").innerHTML = ""; D_paint(); });
+}
+
+/* ---- the mirror, under the board: set 1 on the diagram's square. Each population's box: its name, its F, and its
+   colours gene by gene (a column a gene, stacked in its shares); on each line between two, their F_ST; in the middle,
+   the four pooled gene by gene, and F_ST ---- */
+const DMr = { W: 760, H: 270, bw: 250, bh: 76, at: [[0, 0], [510, 0], [0, 194], [510, 194]], mid: { x: 300, y: 92, w: 160, h: 90 } };
+function D_profile(ctx, cols, x, y, w, h) {
+  const cw = w / L;
+  for (let i = 0; i < L; i++) { let at = y; for (let hu = 1; hu < 5; hu++) { const d = cols[i][hu] * h; if (d > 0) { ctx.fillStyle = SHADE[hu][3]; ctx.fillRect(x + i * cw, at, cw - 0.5, d); at += d; } } }
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 0.8; ctx.strokeRect(x - 0.5, y - 0.5, w + 0.5, h + 1);
+}
+function D_drawMirror(pair, st) {
+  const cv = $("D_mirror"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DMr.W, DMr.H), hc = mgCounts(pair), n = hc.length, M = DMr.mid;
+  /* each line runs between two boxes' facing edges (corners, for the diagonals), in D_PAIRS' order; its F_ST at its middle,
+     or near the upper end of a diagonal, clear of the middle block */
+  const seg = [[[250, 38], [510, 38], 0.5], [[125, 76], [125, 194], 0.5], [[250, 76], [510, 194], 0.1], [[510, 76], [250, 194], 0.1], [[635, 76], [635, 194], 0.5], [[250, 232], [510, 232], 0.5]];
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1.6;
+  seg.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); });
+  ctx.fillStyle = "#fff"; ctx.fillRect(M.x - 4, M.y - 4, M.w + 8, M.h + 8);
+  seg.forEach(([a, b, t], j) => { const x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+    ctx.fillStyle = "#fff"; ctx.fillRect(x - 19, y - 8, 38, 16); cardText(ctx, f2(st.pw[j]), x, y, { size: 12, mono: true, bold: true, align: "center" }); });
+  DMr.at.forEach(([x, y], k) => {
+    ctx.fillStyle = DPL.pale[k]; ctx.fillRect(x, y, DMr.bw, DMr.bh); ctx.strokeStyle = POPCOL[k]; ctx.lineWidth = 1.4; ctx.strokeRect(x + 0.7, y + 0.7, DMr.bw - 1.4, DMr.bh - 1.4);
+    cardText(ctx, POPNAME[k], x + 10, y + 14, { size: 12.5, bold: true, col: POPCOL[k] });
+    cardText(ctx, "F " + f2(st.F[k]), x + DMr.bw - 10, y + 14, { size: 13, mono: true, bold: true, align: "right" });
+    D_profile(ctx, hc[k], x + 9, y + 28, DMr.bw - 18, 30);
+    cardText(ctx, "gene 1", x + 9, y + 67, { size: 9.5, col: MUTED }); cardText(ctx, "40", x + DMr.bw - 9, y + 67, { size: 9.5, col: MUTED, align: "right" });
+  });
+  const pool = Array.from({ length: L }, (_, i) => { const r = new Float64Array(5); for (let k = 0; k < n; k++) for (let h = 0; h < 5; h++) r[h] += hc[k][i][h] / n; return r; });
+  cardText(ctx, "all four pooled", M.x + M.w / 2, M.y + 6, { size: 11, col: MUTED, align: "center" });
+  D_profile(ctx, pool, M.x, M.y + 16, M.w, 24);
+  cardText(ctx, "F_ST " + f2(st.fst), M.x + M.w / 2, M.y + 60, { size: 15, mono: true, bold: true, align: "center" });
+  cardText(ctx, "the four F's averaged", M.x + M.w / 2, M.y + 78, { size: 10.5, col: MUTED, align: "center" });
   ctx.restore();
-  $("D_pairsRead").innerHTML = q ? lab("average of the 20 sets, generation") + " <b>" + q.t + "</b>" + lab(" · darker: more differentiated") : lab("Go fills this in.");
+}
+
+/* ---- your placements: a row a placed run; the plot, each run's share placed wrong above its F_ST (filled and numbered: a
+   round; open: practice), the theory on the same populations (black rings; the rounds' joined in order of F_ST), and
+   guessing (75% wrong, dashed) ---- */
+function D_table() {
+  const rows = DX.rows;
+  $("D_table").innerHTML = "<tr><th>run</th><th>F<sub>ST</sub></th><th>right</th><th>wrong</th><th>theory, wrong</th></tr>" +
+    (rows.length ? rows.map(r => "<tr" + (r.practice ? ' class="prac"' : "") + "><td>" + (r.practice ? "practice" : "round " + (r.round + 1) + " · " + D_PRESETS[r.round].short) + "</td><td>" + f2(r.fst) +
+      "</td><td>" + r.right + " of " + D_YOUNG + "</td><td>" + pc(1 - r.right / D_YOUNG) + "</td><td>" + pc(r.theory) + "</td></tr>").join("")
+     : '<tr><td class="none" colspan="5">Each run you place adds a row.</td></tr>');
+}
+const DAs = { W: 480, H: 290, px: 50, py: 30, pw: 410, ph: 210 };
+function D_drawAssign() {
+  const cv = $("D_assign"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DAs.W, DAs.H), xs = f => DAs.px + Math.max(0, Math.min(1, f)) * DAs.pw, ys = v => DAs.py + DAs.ph - Math.min(v, 0.8) / 0.8 * DAs.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(DAs.px, DAs.py); ctx.lineTo(DAs.px, DAs.py + DAs.ph); ctx.lineTo(DAs.px + DAs.pw, DAs.py + DAs.ph); ctx.stroke();
+  for (const v of [0, 0.2, 0.4, 0.6, 0.8]) cardText(ctx, Math.round(100 * v) + "%", DAs.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (const f of [0, 0.25, 0.5, 0.75, 1]) cardText(ctx, String(f), xs(f), DAs.py + DAs.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "F_ST of set 1 when you placed", DAs.px + DAs.pw / 2, DAs.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, DAs.py + DAs.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "placed wrong", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.setLineDash([4, 4]); ctx.strokeStyle = MUTED; ctx.beginPath(); ctx.moveTo(DAs.px, ys(0.75)); ctx.lineTo(DAs.px + DAs.pw, ys(0.75)); ctx.stroke(); ctx.setLineDash([]);
+  cardText(ctx, "guessing", DAs.px + DAs.pw - 2, ys(0.75) - 8, { size: 10.5, col: MUTED, align: "right" });
+  /* the key, above the plot */
+  ctx.fillStyle = BLUE; ctx.beginPath(); ctx.arc(DAs.px + 6, 10, 5, 0, 6.2832); ctx.fill(); cardText(ctx, "you, a round", DAs.px + 15, 10, { size: 11, col: INK });
+  ctx.strokeStyle = BLUE; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(DAs.px + 106, 10, 4, 0, 6.2832); ctx.stroke(); cardText(ctx, "you, practice", DAs.px + 115, 10, { size: 11, col: INK });
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(DAs.px + 212, 10, 3.6, 0, 6.2832); ctx.stroke(); cardText(ctx, "theory, the same populations", DAs.px + 221, 10, { size: 11, col: INK });
+  const rows = DX.rows, wrong = r => 1 - r.right / D_YOUNG;
+  polyline(ctx, rows.filter(r => !r.practice).slice().sort((a, b) => a.fst - b.fst).map(r => [xs(r.fst), ys(r.theory)]), INK, 1.1, 0.8);
+  for (const r of rows) { polyline(ctx, [[xs(r.fst), ys(wrong(r))], [xs(r.fst), ys(r.theory)]], MUTED, 1, 0.35);
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(xs(r.fst), ys(r.theory), 3.6, 0, 6.2832); ctx.stroke(); }
+  for (const r of rows) { const x = xs(r.fst), y = ys(wrong(r));
+    if (r.practice) { ctx.strokeStyle = BLUE; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 4, 0, 6.2832); ctx.stroke(); }
+    else { ctx.fillStyle = BLUE; ctx.beginPath(); ctx.arc(x, y, 7, 0, 6.2832); ctx.fill(); cardText(ctx, String(r.round + 1), x, y + 0.5, { size: 9.5, bold: true, col: "#fff", align: "center" }); } }
+  if (!rows.length) cardText(ctx, "Each run you place puts a dot here.", DAs.px + DAs.pw / 2, DAs.py + DAs.ph / 2, { size: 12.5, col: MUTED, align: "center" });
+  ctx.restore();
+  const rd = rows.filter(r => !r.practice), n = rd.length, right = rd.reduce((a, r) => a + r.right, 0);
+  $("D_assignRead").innerHTML = n ? lab("rounds placed") + " <b>" + n + "</b>" + lab(" · right in them") + " <b>" + right + " of " + n * D_YOUNG + "</b>" + lab(" · theory on the same populations, wrong:") + " <b>" + pc(meanOf(rd.map(r => r.theory))) + "</b>" : "";
 }
 const SPARROW_FST = [0.957,1.0,0.867,0.97,0.796,0.735,1.0,1.0,1.0,0.658,1.0,0.774,1.0,1.0,1.0,1.0,1.0,0.702,0.548,1.0,0.248,0.379,0.217,0.249,0.411,0.19,0.513,0.97,1.0,0.74,1.0,0.227,0.489,0.815,0.698,0.42,0.693,0.511,0.244,0.743,0.563,1.0,0.668,0.222,0.25,0.201,0.21,0.883,0.831,0.148,0.407,0.739,0.673,0.138,0.457,0.413,0.157,0.075,0.387,0.179,0.385,0.059,0.107,0.094,0.539,0.098,0.206,0.245,0.057,0.205,0.489,0.073,0.389,0.261,0.09,0.352,0.39];
 /* The sparrows (Trier et al. 2014, data/clean/italian_sparrow_loci.csv, house vs Spanish F_ST at 77 genes;
@@ -1335,40 +1616,49 @@ function D_drawSparrow(q) {
     (mine ? lab(" · your " + D_PN[j] + ": average") + " <b>" + f2(mean(mine)) + "</b>" + lab(", at 0.9 or more") + " <b>" + pc(above(mine)) + "</b>" : "");
 }
 function D_paint() {
-  const S = SD, q = shownRun(S), pair = q ? q.pairs[0] : previewPair(S);
+  const S = SD, q = shownRun(S), pair = q ? q.pairs[0] : previewPair(S), t = q ? q.t : 0;
   drawBoard4("D_board", pair);
-  $("D_boardH").textContent = "Set 1 · generation " + (q ? q.t : 0);
+  $("D_boardH").textContent = "Set 1 · generation " + t;
   const st = mgStats(pair, true);
-  $("D_boardRead").innerHTML = st.pops.map((p, k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> " + lab("other colours") + " <b>" + pc(p.other) + "</b>" + lab(", fragments a chromosome") + " <b>" + f1(p.nf) + "</b>").join(lab(" · ")) +
-    "<br>" + lab("set 1: within") + " <b>" + f2(st.HS) + "</b>" + lab(" · pooled") + " <b>" + f2(st.HT) + "</b>" + lab(" · F_ST = (pooled − within) / pooled =") + " <b>" + f2(st.fst) + "</b>";
-  drawTime("D_time", q, $("D_meas").value, MEAS_D, q ? q.r : (S.done ? null : ruleOf(S)), 100);
+  $("D_boardRead").innerHTML = st.pops.map((p, k) => '<b style="color:' + POPCOL[k] + '">' + POPNAME[k] + "</b> " + lab("other colours") + " <b>" + pc(p.other) + "</b>" + lab(", fragments a chromosome") + " <b>" + f1(p.nf) + "</b>").join(lab(" · "));
+  D_drawMirror(pair, st);
+  $("D_mirrorH").textContent = "Set 1: how differentiated · generation " + t;
+  $("D_mirrorRead").innerHTML = lab("within") + " <b>" + f2(st.HS) + "</b>" + lab(" · pooled") + " <b>" + f2(st.HT) + "</b>" + lab(" · F_ST = (pooled − within) / pooled =") + " <b>" + f2(st.fst) + "</b>" +
+    lab(" = the four F's averaged, (") + st.F.map(v => "<b>" + f2(v) + "</b>").join(lab(" + ")) + lab(") / 4");
+  drawTime("D_time", q, $("D_meas").value, MEAS_D, null, 100);
   if (q) { const s = sumAt(q, q.t); $("D_read").innerHTML = lab("generation") + " <b>" + q.t + "</b> " + lab("· 20 sets: F_ST") + " <b>" + f2(s.fst) + "</b>" + lab(" · within") + " <b>" + f2(s.HS) + "</b>" + lab(", pooled") + " <b>" + f2(s.HT) + "</b>" +
     lab(" · other colours") + " <b>" + pc(s.other) + "</b>" + (q.practice ? " " + lab("· practice") : ""); }
   else $("D_read").innerHTML = "";
-  D_drawPairs(q);
   if (!S.run) D_drawSparrow(q);
+  D_table(); D_drawAssign();
   syncStage(S); D_code();
 }
 function D_code() {
   const s = readSet(SD);
   codeInto("codeD", [
-    ["", "# Lesson 17, Stage D -- four populations, each one colour at the start; migration between pairs; F_ST on colour"],
+    ["", "# Lesson 17, Stage D -- four populations, each one colour at the start; migration between pairs; F and F_ST on colour;"],
+    ["", "# then young genomes placed where they most likely came from"],
     ["N", "N <- " + s.N + "; L <- 40; G <- 100; R <- 1                # genomes a population, genes, generations, crossovers"],
     ["", "M <- matrix(0, 4, 4)                              # migration between each pair: 1 orange, 2 blue, 3 red, 4 purple"],
     ...D_PAIRS.map((p, j) => ["e" + j, "M[" + (p[0] + 1) + ", " + (p[1] + 1) + "] <- " + String(s["e" + j]).padEnd(7) + "                         # " + D_PN[j]]),
     ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2"],
     ["", "  ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["N", "young <- function(P) { ab <- sample(N, 2); list(gamete(P[[ab[1]]]), gamete(P[[ab[2]]])) }"],
     ["", "pop <- lapply(1:4, function(k) replicate(N, list(rep(k, L), rep(k, L)), simplify = FALSE))   # each population its own colour"],
     ["", "for (t in 1:G) {"],
-    ["N", "  pop <- lapply(pop, function(P) lapply(1:N, function(i) { ab <- sample(N, 2); list(gamete(P[[ab[1]]]), gamete(P[[ab[2]]])) }))"],
+    ["N", "  pop <- lapply(pop, function(P) lapply(1:N, function(i) young(P)))"],
     ["", "  for (i in 1:3) for (j in (i + 1):4) { n <- rbinom(1, N, M[i, j]); a <- sample(N, n); b <- sample(N, n)"],
     ["", "    tmp <- pop[[i]][a]; pop[[i]][a] <- pop[[j]][b]; pop[[j]][b] <- tmp }"],
     ["", "}"],
-    ["", "freq <- function(P, i) tabulate(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))), 4) / (2 * N)   # each colour's share at gene i"],
-    ["", "het <- function(p) 1 - sum(p^2)                   # the chance two beads are different colours"],
-    ["", "HS <- mean(sapply(1:L, function(i) mean(sapply(pop, function(P) het(freq(P, i))))))      # within"],
-    ["", "HT <- mean(sapply(1:L, function(i) het(rowMeans(sapply(pop, function(P) freq(P, i))))))  # pooled"],
-    ["", "c(within = HS, pooled = HT, F_ST = (HT - HS) / HT)"],
+    ["", "cnt <- lapply(pop, function(P) sapply(1:L, function(i) tabulate(unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))), 4)))   # colour x gene"],
+    ["", "het <- function(p) 1 - sum(p^2)                   # the chance two beads at a gene are different colours"],
+    ["", "within <- sapply(cnt, function(C) mean(apply(C / (2 * N), 2, het)))      # each population"],
+    ["", "pooled <- mean(apply(Reduce(`+`, cnt) / (8 * N), 2, het))              # the four pooled"],
+    ["", "F <- (pooled - within) / pooled                    # each population's F"],
+    ["", "print(c(F = round(F, 2), F_ST = mean(F)))          # F_ST: the four F's averaged"],
+    ["", "judge <- function(g) which.max(sapply(cnt, function(C) sum(log((C[cbind(c(g[[1]], g[[2]]), rep(1:L, 2))] + 0.5) / (2 * N + 2)))))"],
+    ["", "born <- rep(1:4, each = 100)                       # the theory: 100 young from each population, placed by the judge"],
+    ["", "c(theory_wrong = mean(sapply(born, function(k) judge(young(pop[[k]]))) != born))"],
     ["", "# every pair at one m: F_ST settles near 1 / (1 + 4 N (3 m) (4/3)^2)"],
   ]);
 }
@@ -1378,6 +1668,7 @@ function paintAll() { A_paint(); B_paint(); C_paint(); D_paint(); }
 function wire() {
   D_mountPaths();
   for (const S of [SA, SB, SC, SD]) wireStage(S);
+  D_wirePlace();
   $("A_meas").addEventListener("change", A_paint);
   $("B_meas").addEventListener("change", B_paint);
   $("C_meas").addEventListener("change", C_paint);
@@ -1391,7 +1682,7 @@ function wire() {
   const reveal = () => {
     const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
     for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
-    if (!study) { for (const S of [SA, SB, SC, SD]) { S.done = true; S.results = S.cfg.rounds.map(() => true); openRound(S); }
+    if (!study) { DX.placing = null; for (const S of [SA, SB, SC, SD]) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); }
       for (const k in BIT) record(BIT[k], true); BX.picked = true; }
     FIT_EPOCH++; paintAll();
   };
@@ -1404,9 +1695,10 @@ paintAll();
 
 Score.init({
   moduleId: "lesson17",
-  version: 2,      /* 1: first draft, A-D (2026-10-12). 2: JM's review (2026-10-15): B's rounds reworded and one slider each;
-                      C is pass 1's D with s and h per population (3 targets); D four populations and F_ST (3 targets) */
-  scaffold: 12,
+  version: 3,      /* 1: first draft, A-D (2026-10-12). 2: JM's review (2026-10-15): B's rounds reworded and one slider each;
+                      C is pass 1's D with s and h per population (3 targets); D four populations and F_ST (3 targets).
+                      3: the same evening, D's targets become five placing rounds, a bit a placed genome (50) */
+  scaffold: 59,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {

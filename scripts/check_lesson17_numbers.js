@@ -2,11 +2,12 @@
 /*
  * check_lesson17_numbers.js -- the checks for app/lessons/lesson17.html.
  *
- * Lesson 17 is a draft (pass 2, 2026-10-15, from JM's review): migration
- * between populations of bead-string genomes (hue = the population an
- * allele arose in). A steady migration, B one dispersal event, C selection
- * at gene 20 with s and h per population (local adaptation, swamping, a
- * sweep), D four populations and F_ST. What has to hold:
+ * Lesson 17 is a draft (pass 3, 2026-10-15, from JM's review and his D
+ * request the same evening): migration between populations of bead-string
+ * genomes (hue = the population an allele arose in). A steady migration,
+ * B one dispersal event, C selection at gene 20 with s and h per population
+ * (local adaptation, swamping, a sweep), D four populations, F_ST, and
+ * five rounds of placing young genomes. What has to hold:
  *
  *   Engine. A swap moves whole genomes; a gamete with no crossover is a
  *      parent's chromosome; at R 0 fragments never shorten; the dispersal
@@ -23,18 +24,24 @@
  *   C. local adaptation needs both signs; swamping needs m .05 or more;
  *      the sweep needs a helpful allele and little migration, and the swamp
  *      that opens it misses; the fitness line agrees with 1, 1 - hs, 1 - s.
- *   D. F_ST falls as migration rises and as N rises; each target hit by
- *      its intended setting and missed by the opening and the near miss;
- *      the printed (pooled - within) / pooled agrees with the printed F_ST;
- *      a held arrow is pale and takes no drag.
- *   Flow. the opening run records 0 and the target stays; a hit opens Next
- *      target; every bit written at the end; B needs ten runs and a pick.
+ *   D. F_ST falls as migration rises and as N rises; the four F's average
+ *      to F_ST, on screen too; the five rounds run from most differentiated
+ *      to least; the theory places solid populations without a miss and
+ *      identical ones at guessing (75% wrong), misses more as F_ST falls,
+ *      and beats counting colours, which is fine in round 1 and near
+ *      guessing in round 5; a round holds its migration (pale, no drag)
+ *      and N 25; a genome dragged onto a box is placed.
+ *   Flow. A-C: the opening run records 0 and the target stays; a hit opens
+ *      Next target; B needs ten runs and a pick. D: practice ticked at the
+ *      start; a practice run's ten genomes add a row and no bit; each round
+ *      writes its ten bits as placed, its F_ST to the notes, and holds Go
+ *      until placed; five rounds finish the lesson. Every bit written.
  *   All. every canvas fits its panel (1500 and 1000 wide); the four R
  *      panels run (Rscript; C and D shortened).
  *
  * Same harness as check_lesson16_numbers.js.
  *
- * Usage:  node scripts/check_lesson17_numbers.js      (~4 minutes)
+ * Usage:  node scripts/check_lesson17_numbers.js      (~5 minutes)
  * Exit 0 iff every check passes. Needs Google Chrome and python3; Rscript
  * for the R panels (skipped, and said so, without it).
  */
@@ -45,7 +52,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8797;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_board","A_time","B_board","B_time","B_runs","C_board","C_genes","C_time","D_board","D_time","D_sparrow","D_pairs"];
+const CANVAS_IDS = ["A_board","A_time","B_board","B_time","B_runs","C_board","C_genes","C_time","D_board","D_mirror","D_time","D_sparrow","D_assign"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
@@ -141,21 +148,54 @@ tgt(SC, 2, [{ so: -0.3, sb: 0, m: 0.005 }, { so: -0.3, sb: -0.6, m: 0.005 }, { s
 
 /* ================= D ================= */
 const allE = v => ({ e0: v, e1: v, e2: v, e3: v, e4: v, e5: v }), only = o => Object.assign(allE(0), o);
+/* counting colours: a young genome goes with the colour it carries most (a tie to the first); the share it gets wrong */
+const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed + 99); let w = 0;
+  for (let k = 0; k < 4; k++) for (let r = 0; r < n; r++) { const g = D_young(q.P, pair.pops[k], rng), c = [0, 0, 0, 0, 0];
+    for (const ch of g) for (let i = 0; i < L; i++) c[mgHue(ch[i])]++;
+    let b = 1; for (let h = 2; h < 5; h++) if (c[h] > c[b]) b = h; if (b - 1 !== k) w++; }
+  return w / (4 * n); };
 {
-  const f = [0, 0.002, 0.005, 0.01, 0.02].map(m => { const r = play(SD, 0, allE(m), 1)[0]; return r.fst; });
+  const f = [0, 0.002, 0.005, 0.01, 0.02].map(m => play(SD, 0, Object.assign(allE(m), { N: 25 }), 1)[0].fst);
   check("D: F_ST at 100 falls as every pair's migration rises (m 0 / .002 / .005 / .01 / .02: " + f.map(v => v.toFixed(2)).join(" / ") + ")", f.every((v, i) => i === 0 || v < f[i - 1]) && f[0] === 1);
-  const n = [10, 25, 50].map(N => play(SD, 2, { N }, 1)[0].fst);
-  check("D: with every pair held at .01, F_ST falls as N rises (N 10 / 25 / 50: " + n.map(v => v.toFixed(2)).join(" / ") + ")", n[0] > n[1] && n[1] > n[2]);
-  play(SD, 0, allE(0.01), 1); D_paint();
-  const nums = (document.getElementById("D_boardRead").textContent.match(/within ([0-9.]+) · pooled ([0-9.]+) · F_ST = [(]pooled − within[)] [/] pooled = ([0-9.]+)/) || []).slice(1).map(Number);
-  check("D: the board's (pooled - within) / pooled agrees with its F_ST (" + nums.join(", ") + ")", nums.length === 3 && Math.abs((nums[1] - nums[0]) / nums[1] - nums[2]) < 0.012);
-  SD.round = 2; SD.done = false; openRound(SD); const pale3 = document.querySelectorAll("#D_paths .paths-arrow.locked").length, hit3 = document.querySelectorAll("#D_paths .paths-hit").length;
-  SD.round = 0; openRound(SD); const pale1 = document.querySelectorAll("#D_paths .paths-arrow.locked").length, hit1 = document.querySelectorAll("#D_paths .paths-hit").length;
-  check("D: round 3's six held arrows are pale and take no drag (" + pale3 + " pale, " + hit3 + " draggable); round 1's are live (" + pale1 + ", " + hit1 + ")", pale3 === 6 && hit3 === 0 && pale1 === 0 && hit1 === 6);
+  const n = [10, 25, 50].map(N => play(SD, 0, Object.assign(allE(0.01), { N }), 1)[0].fst);
+  check("D: with every pair at .01, F_ST falls as N rises (N 10 / 25 / 50: " + n.map(v => v.toFixed(2)).join(" / ") + ")", n[0] > n[1] && n[1] > n[2]);
+  const st = mgStats(SD.last.pairs[0], true), avgF = st.F.reduce((a, b) => a + b, 0) / 4;
+  check("D: the four F's average to F_ST (" + st.F.map(v => v.toFixed(3)).join(", ") + " -> " + avgF.toFixed(4) + "; F_ST " + st.fst.toFixed(4) + ")", Math.abs(avgF - st.fst) < 1e-9);
+  play(SD, 0, Object.assign(allE(0.01), { N: 25 }), 1); D_paint();
+  const t = document.getElementById("D_mirrorRead").textContent, nums = (t.match(/within ([0-9.]+) · pooled ([0-9.]+) · F_ST = [(]pooled − within[)] [/] pooled = ([0-9.]+) = the four F's averaged, [(]([0-9.]+) [+] ([0-9.]+) [+] ([0-9.]+) [+] ([0-9.]+)[)] [/] 4/) || []).slice(1).map(Number);
+  check("D: under the mirror, (pooled - within) / pooled and the four F's averaged agree with F_ST (" + nums.join(", ") + ")",
+        nums.length === 7 && Math.abs((nums[1] - nums[0]) / nums[1] - nums[2]) < 0.012 && Math.abs((nums[3] + nums[4] + nums[5] + nums[6]) / 4 - nums[2]) < 0.012);
+  /* the theory at its two ends: four solid populations, and four identical ones */
+  const P0 = { n: 4, founders: 1, N: 25, R: 1, sel: null, mig: [] }, solid = { pops: mgStart(P0, 5) }, same = { pops: [0, 1, 2, 3].map(() => solid.pops[1]) };
+  const t0 = D_theory(P0, solid, mulberry32(3)), t1 = D_theory(P0, same, mulberry32(3));
+  check("D: the theory places young from four solid populations without a miss (" + t0 + ") and from four identical ones at guessing (" + t1 + " wrong)", t0 === 0 && t1 === 0.75);
+  /* the five rounds, played as practice: F_ST (20 sets) and, on set 1, the theory and counting colours */
+  const R = D_PRESETS.map(pr => [0, 1].map(() => { play(SD, 0, Object.assign({}, pr.e, { N: 25 }), 1); const q = SD.last; return { fst: sumAt(q, 100).fst, th: DX.placing.theory, cw: countWrong(q, 100) }; }));
+  const avg = (r, k) => (r[0][k] + r[1][k]) / 2, fs = R.map(r => avg(r, "fst")), th = R.map(r => avg(r, "th")), cw = R.map(r => avg(r, "cw"));
+  check("D: the five rounds run from most differentiated to least (F_ST, 20 sets: " + fs.map(v => v.toFixed(2)).join(" / ") + ")", fs.every((v, i) => i === 0 || v < fs[i - 1]) && fs[0] > 0.7 && fs[4] < 0.1);
+  check("D: the theory misses more as F_ST falls (wrong, rounds 1 / 5: " + th[0].toFixed(3) + " / " + th[4].toFixed(3) + "; all " + th.map(v => v.toFixed(2)).join(" ") + ")", th[0] < 0.06 && th[4] > 0.08 && th[4] > th[0] && th.every(v => v < 0.75));
+  check("D: counting colours does as well as it needs to in round 1 and nears guessing in round 5 (wrong " + cw.map(v => v.toFixed(2)).join(" / ") + "); the theory beats it in every round",
+        cw[0] < 0.3 && cw[4] > 0.5 && th.every((v, i) => v <= cw[i] + 0.01));
+  /* a round holds its migration and N; practice frees them */
+  SD.round = 1; SD.done = false; SD.waiting = false; DX.placing = null; document.getElementById("D_practice").checked = false; syncStage(SD);
+  const label = document.getElementById("D_go").textContent;
+  goStage(SD);
+  const set = readSet(SD), want = Object.assign({}, D_PRESETS[1].e, { N: 25 }), pale = document.querySelectorAll("#D_paths .paths-arrow.locked").length, hit = document.querySelectorAll("#D_paths .paths-hit").length;
+  check("D: Start round 2 of 5 ('" + label + "') holds that round's migration and N 25 (" + JSON.stringify(set).replace(/"/g, "") + "), six arrows pale (" + pale + "), none draggable (" + hit + ")",
+        label === "Start round 2 of 5" && Object.keys(want).every(k => set[k] === want[k]) && pale === 6 && hit === 0 && document.getElementById("D_N").dataset.held === "1");
+  finishNow(SD); SD.waiting = false; DX.placing = null; document.getElementById("D_practice").checked = true; SD.round = 0;
+  goStage(SD); finishNow(SD);
+  const pale2 = document.querySelectorAll("#D_paths .paths-arrow.locked").length, n0 = DX.placing.picks.length;
+  /* a genome dragged from the card onto its own population's box, through pointer events */
+  D_paint();
+  const cv = document.getElementById("D_place"), r = cv.getBoundingClientRect(), k = r.width / DPL.W, born = DX.placing.young[DX.placing.i].k;
+  const at = (x, y) => ({ clientX: r.left + x * k, clientY: r.top + y * k, pointerId: 1, bubbles: true });
+  cv.dispatchEvent(new PointerEvent("pointerdown", at(210, 125))); cv.dispatchEvent(new PointerEvent("pointermove", at(DPL.at[born][0], DPL.at[born][1])));
+  cv.dispatchEvent(new PointerEvent("pointerup", at(DPL.at[born][0], DPL.at[born][1])));
+  const pk = DX.placing.picks[n0];
+  check("D: practice frees every arrow (" + pale2 + " pale); the overlay shows over the diagram (" + Math.round(r.width) + " wide) and a genome dragged onto the population it was born in is placed, right",
+        pale2 === 0 && !cv.hidden && r.width > 200 && pk && pk.k === born && pk.ok);
 }
-tgt(SD, 0, [allE(0.01), allE(0.02), only({ e0: 0.02, e1: 0.02, e4: 0.02, e5: 0.02 })], [allE(0), allE(0.005), only({ e0: 0.02, e3: 0.02, e5: 0.02 })]);
-tgt(SD, 1, [only({ e0: 0.02, e5: 0.02 }), only({ e0: 0.05, e5: 0.05, e4: 0.002 })], [allE(0.02), only({ e0: 0.05, e5: 0.05, e4: 0.05 }), allE(0)]);
-tgt(SD, 2, [{ N: 10 }], [{ N: 25 }, { N: 50 }]);
 
 /* ================= the flow, scored ================= */
 {
@@ -180,12 +220,36 @@ tgt(SD, 2, [{ N: 10 }], [{ N: 25 }, { N: 50 }]);
   check("B flow: opening records 0; three hits (bits " + b.bits + "); B waits for ten runs (" + waitB + ") and a pick (" + stillB + "), then opens C", b.miss && b.bits === "011" && waitB && stillB && Gates.B.done);
   const c = flow(SC, [{ so: 0.3, sb: -0.3 }, { m: 0.05 }, { so: -0.3, sb: 0, m: 0.005 }]);
   check("C flow: opening records 0; three hits (bits " + c.bits + ") finish C", c.miss && c.bits === "011" && Gates.C.done);
-  const d = flow(SD, [allE(0.02), only({ e0: 0.02, e5: 0.02 }), { N: 10 }]);
-  check("D flow: opening records 0; three hits (bits " + d.bits + ") finish D and the lesson", d.miss && d.bits === "011" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
+}
+{
+  /* D: practice ticked at the start; a practice run's ten add a row and no bit; each round's ten written as placed (a
+     pattern of right and wrong), its F_ST in the notes, Go held until placed; Stop placing only in practice */
+  const S = SD; S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; DX.placing = null; DX.rows = [];
+  document.getElementById("D_practice").checked = true; openRound(S); syncStage(S);
+  const start = document.getElementById("D_go").textContent;
+  goStage(S); finishNow(S);
+  const stopShown = !document.getElementById("D_stop").hidden;
+  for (let i = 0; i < 10; i++) D_place(DX.placing.young[DX.placing.i].k);
+  const pracRow = DX.rows.length === 1 && DX.rows[0].practice && DX.rows[0].right === 10, noBit = [...Array(50).keys()].every(i => !Score.isAnswered("scaffold", BIT["D" + (i + 1)]));
+  document.getElementById("D_practice").checked = false; syncStage(S);
+  const pat = [1, 0, 1, 1, 0, 1, 1, 1, 0, 1], got = [], held = [], notes = [];
+  for (let r = 0; r < 5; r++) {
+    goStage(S); finishNow(S);
+    held.push(document.getElementById("D_go").disabled && document.getElementById("D_practice").disabled && document.getElementById("D_stop").hidden);
+    for (let i = 0; i < 10; i++) { const y = DX.placing.young[DX.placing.i]; D_place(pat[i] ? y.k : (y.k + 1) % 4); }
+    got.push([...Array(10).keys()].map(i => Score.getBit("scaffold", BIT["D" + (10 * r + i + 1)])).join(""));
+    notes.push(Score.getNote("D_fst" + (r + 1)));
+  }
+  const rows = DX.rows.filter(x => !x.practice);
+  check("D flow: practice ticked at the start (Go reads '" + start + "'); a practice run's ten add a row (" + pracRow + "), no bit (" + noBit + "), and Stop placing shows (" + stopShown + ")",
+        start === "Practice run" && pracRow && noBit && stopShown);
+  check("D flow: each round holds Go until placed (" + held.join(",") + "); writes its ten as placed (" + got.join(" ") + "); its F_ST to the notes (" + notes.join(" ") + ", rows " + rows.map(x => x.fst.toFixed(2)).join(" ") + ")",
+        held.every(Boolean) && got.every(g => g === pat.join("")) && notes.every((v, i) => v === rows[i].fst.toFixed(2)) && rows.length === 5);
+  check("D flow: five rounds placed finish D and the lesson", Gates.D.done && document.getElementById("done-banner").classList.contains("shown") && rows.every(x => x.right === 7));
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 12 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 59 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();

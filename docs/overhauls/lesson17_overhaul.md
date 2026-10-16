@@ -1,14 +1,18 @@
 # Lesson 17 — migration: fragments that cross, what sets their size, selection at one gene, four populations and F_ST
 
-**File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review)
+**File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review); third pass the same evening (D placing rounds)
 **Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · second pass built (v2); LOCKS `x`; JM to review; voice still owed
+**Status** · pass 3 built (v3: D as placing rounds); LOCKS `x`; JM to review; voice still owed
 **Last touched** · 2026-10-15
 
 ## What the lesson is
 
 - Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
 - Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
+
+## JM's D request, 2026-10-15 evening (verbatim)
+
+> I'm really liking lesson 17. Part D's main visualization & control panel are fantastic. I want to do an unorthodox target here, though. Instead of a bowling round, I want a prediction round. The students are given free play with the controls until they're satisfied and they start round. Then a preset arrangement of migration rates locked in, the populations evolve, and then they are shown the F_st in a plot below the main visualization where the F for each population is displayed, along with the F_st in a kind of mirror of the control panel. The students are then in the target window shown a genome and they move it to the correct population. They sssign 10 genomes to a population this way, and their correct rate & the Fst are recorded in a table. They continue this for 4 more locked sets of migration rates and their assignment is plotted against the Fst's they were shown + the theoretical error rate. In study mode/with practice toggled, they can set the migration rates as they wish and after running they get the same activity. Could you please adjust D in that way?
 
 ## JM's review, 2026-10-15 (verbatim)
 
@@ -41,10 +45,19 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
        orange's gene 20 60%+ blue at 100 (raise m). 3 a sweep that drags little: orange's gene 20 70%+ blue, its ends under 40%, at 60.
        Gene-by-gene and over-time panels show share blue, each population. No F_ST in C.
     D  Four populations, each starting all its own colour (one allele a gene): orange, blue, red, purple. Migration per pair as
-       six two-headed arrows (paths.js, `both`), N a slider. Board with each population's colour mix and the pooled mix; within and
-       pooled heterozygosity on colour; F_ST overall, over time, and for each pair (grid). Sparrow strip moved here from old D.
-       1 alike: F_ST under 0.2 (N 25 held). 2 two pairs: orange-blue and red-purple under 0.2, every cross pair over 0.4.
-       3 every pair held at m .01: F_ST over 0.25 (smaller N: drift).
+       six two-headed arrows (paths.js, `both`), N a slider. Board with each population's colour mix and the pooled mix.
+       Pass 3 (JM's D request): under the board, the mirror: set 1 on the diagram's square, each box a population's colours
+       gene by gene (a column a gene) and its F = (pooled - its within) / pooled; each line that pair's F_ST; the middle the
+       pooled colours and F_ST (the four F's averaged, printed under it). Over time: F_ST, F each population, H, other, fragments.
+       Rounds: practice is ticked at the start (free play: own migration and N). Unticked, Go reads "Start round k of 5": it holds
+       the round's migration (pale arrows) and N 25 and plays 100 generations in 20 sets. Every run, round or practice, ends in
+       ten young genomes from set 1 (two parents in one population, a quarter each; none on the board), one at a time on a
+       canvas laid over the diagram: drag the genome to a box, or click a box. Right/wrong after each. Ten placed: a row in
+       "Your placements" (run, F_ST, right of 10, wrong, theory wrong) and dots on placed wrong against F_ST, with the theory on
+       the same populations (rings; the rounds' joined in F_ST order) and guessing at 75%. Practice placings can be stopped.
+       The five rounds: one link O-B .01; orange the hub .01; a chain O-B-P-R .02; every pair .02; every pair .05.
+       One bit a placed genome (D1-D50); each round's F_ST in the notes (D_fst1-5). Pass 2's three targets and pairs grid retired.
+       Sparrow strip as before.
 
 ## Measured (node prototype of the pass-2 engine, 2026-10-15; N 25, 40 beads)
 
@@ -67,8 +80,31 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
           every pair .01: N 10 .36 (.34-.38), 25 .17, 50 .09 (drift)
           balance for n islands, m to each of 3: 1/(1 + 4N(3m)(4/3)^2) = .16 / .32 / .09 at N 25 / 10 / 50, m .01 (R panel only)
 
+## Measured for pass 3 (node prototype, 2026-10-15 evening; N 25, set at 100, 8-10 seeds)
+
+"Theory" = a judge who knows set 1's colours gene by gene and places a young genome where it most likely came from (genes taken one at a time, a missing colour counted rare: (count + 0.5) / (2N + 2)); scored on 100 young a population. "Count colours" = place it with the colour it carries most.
+
+        arrangement                       F_ST (range)      F orange / blue / red / purple   theory wrong (range)   count colours wrong
+        one link O-B .01                  .85 (.82-.89)     .71 .70 1.00 1.00               .008 (0-.03)           .17
+        orange the hub .01                .40 (.29-.48)     .17 .50 .43 .49                 .031 (0-.11)           .34
+        chain O-B-P-R .02                 .28 (.20-.43)     .32 .17 .41 .22                 .039 (0-.08)           .56
+        every pair .02                    .10 (.06-.14)     .13 .09 .09 .08                 .073 (.03-.15)         .78
+        every pair .05                    .04 (.03-.06)     .05 .02 .05 .03                 .191 (.11-.25)         .77
+        two pairs .02 / .05               .69 / .67         ~.7 each                        .033 / .116            .46 / .49
+        every pair .002 / .005 / .01      .57 / .28 / .12-.16                               .006 / .043 / .05
+
+- Theory is not a function of F_ST alone: two linked pairs at .05 read F_ST .67 and still misplace 12% (partners confused). So the theory is computed on each run's own set 1, not drawn as one curve.
+- Counting colours fails below F_ST ~.4: with steady migration every population drifts toward the same overall mix, and what is left to tell them apart is which colour each has at each gene. F_ST is gene by gene; so is the mirror's colour strip.
+- Each population's F = (pooled − its own within) / pooled; the four averaged are F_ST exactly.
+
 ## Open for JM
 
+0. D, pass 3 (placing rounds):
+   - By eye, students will sit well above the theory below F_ST ~.3. Counting colours (what an eye does first) misplaces 50-80% there; the judge reads which colour sits at which gene, which is what the mirror's columns show. Whether to give the student something closer to that (a population's columns beside the genome on the card) is open.
+   - "The F for each population" built as (pooled - its within) / pooled: how differentiated that population is from the four pooled; the four average to F_ST exactly. Not lesson 11's F (1 - Ho/He), which stays near 0 under random mating.
+   - Theory = the judge above, on each run's set 1, not one curve: it is not a function of F_ST alone (two linked pairs at F_ST .67 misplace 12%). It treats genes as independent, so it is close to the best possible, not provably it.
+   - Practice starts ticked in D only (free play first, per the request); every other stage starts unticked.
+   - The five presets are a first choice (spread F_ST .85 / .40 / .28 / .10 / .04, two with unequal F's); swap freely.
 1. Voice blocks: none yet, all four stages.
 2. D's pairwise F_ST between two populations that share no colour at all sits near 0.67, not 1 (each is itself a mix; F_ST is 1 only when each population is one colour). No target leans on it; say so in lecture or the voice if it comes up.
 3. Mutation is no longer in the lesson (old C's U went with old C). Add it back to D?
@@ -88,6 +124,11 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 7 | — | engine generalised to n populations; prototype measurements above | done |
 | 8 | — | checks rewritten for B-D; version 2 | done |
 | 9 | — | JM's review; voice | todo |
+| 10 | D | placing round (JM 10-15 evening): free play (practice ticked at the start), Start round k locks a preset and N 25; 10 young of set 1 dragged onto the diagram's boxes; 50 bits; F_ST per round in the notes | done |
+| 11 | D | the mirror under the board: each population's F and colours gene by gene, F_ST on each line, F_ST overall in the middle (the four F's averaged); pairs grid retired | done |
+| 12 | D | your placements: table (F_ST, right of 10, wrong, theory) and wrong against F_ST with the theory for each run | done |
+| 13 | — | checks for the new D (41 + four R panels, ~1 min); version 3, scaffold 59 | done |
+| 14 | D | JM's review of the placing rounds | todo |
 
 ## Rulings
 
@@ -108,3 +149,5 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 - Free the pulse size in a B round with a floor on fragment length: big pulses merge neighbouring fragments (M 10 at G 20 reads 4.4 beads, M 4 reads 3.1).
 - Put F_ST in C (JM: it came too early); D builds it.
 - Fuse the two F's: D's F_ST is between populations; lesson 11's 1 - Ho/He within one stays near 0 under random mating.
+- Draw D's theory as one curve against F_ST: arrangements with the same F_ST place differently (two pairs: partners confused).
+- Show the young genome to be placed from the board: it would be found bead for bead. They are young of set 1, not its members.
