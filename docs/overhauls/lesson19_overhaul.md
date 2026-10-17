@@ -2,13 +2,19 @@
 
 **File** · `app/lessons/lesson19.html` — first draft 2026-10-17
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · first draft built (v1, scaffold 8: A1-A3 B1-B3 C1-C2); LOCKS `x`; JM to review; voice owed (JM to dictate)
+**Status** · pass 2 built (v2, scaffold 9: A1-A4 drawn rounds, B1-B3, C1-C2); LOCKS `x`; JM to review; voice owed (JM to dictate)
 **Last touched** · 2026-10-17
 
 ## What the lesson is
 
 - Lesson 17's engine and bead strings, with three additions: mutations in each population's own colour, incompatible pairs of genes, and a choosy allele. Barriers between populations build up while they are apart, an inversion holds them, and choosiness spreads where the two meet. F_ST between the two populations is on screen throughout: over time (A), gene by gene (B), against choosiness (C).
 - Worth protecting: nothing on screen says "incompatible" in advance of what the run shows. Every barrier comes out of mutations that did nothing at home.
+
+## JM's note, 2026-10-17, mid-build (verbatim)
+
+> One general note: I'd like to transition to more "students draw what they expect". I like bowling activities, but more activities where the students manipulate a graph to produce what they think the controls will do, then hit go, then a series of simulations run & how often the student drawn prediction falls inside the cloud is recorded & shown
+
+Done for A (pass 2); B and C are still bowling. REVISIONS_PLANNED row 15.
 
 ## JM's brief, 2026-10-17 (verbatim)
 
@@ -25,8 +31,13 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
        Displays: board (pair 1), over time across the split and contact (F_ST, mutations a chromosome, incompatible pairs in a
        hybrid, hybrid fitness, other colour), a hybrid's grid (rows its orange mutations, columns its blue, red = incompatible),
        your runs (mutations and incompatible pairs against generations apart).
-       Targets: 1 hybrids half to three quarters as fit (generations apart); 2 m .05 held, still apart after 100 generations of
-       contact (F_ST .25+); 3 150 apart held, fuse them anyway (F_ST under .2). Task: five times apart on your runs.
+       Pass 1 (98e3698): three bowling targets. Pass 2 (JM's note above): four drawn rounds. Practice ticked at the start (free
+       play, own settings, draw or not). Unticked, a round holds its settings and the measure: drag across the over-time plot to
+       set a dot every 25 generations (Go waits until all are set; Clear drawing); Go plays 50 pairs; the cloud is the middle
+       90% of them at each generation; a dot inside (give or take 2% of the axis) turns green. One bit a round (half the dots or
+       more inside), "kofn" in the notes (A_in1-4), a row in "Your predictions" and a dot on its plot; Next round. Rounds:
+       1 hybrid fitness, 200 apart, m .05; 2 F_ST, 50 apart, m .1; 3 F_ST, 150 apart, m .05; 4 F_ST, 150 apart, m .2.
+       Task: five times apart on your runs.
     B  An inversion. Lesson 17's start (each population all its own colour, every gene different), no new mutations; two pairs
        incompatible, marked: orange at gene 10 with blue at 15, orange at 30 with blue at 34. The blue population carries an
        inversion the student drags across the gene strip. N 25, 50 pairs, 100 generations.
@@ -85,6 +96,13 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
              young whose parents look different, 200 apart m .2: 1-2%
           Checks: `scripts/check_lesson19_numbers.js`, 29 checks + two canvas widths + three R panels, ~2 minutes.
 
+        A's drawn rounds (the page; a drawing's dots inside: the 50 pairs' median / straight to the contact value / one
+        straight line / right while apart then flat at contact):
+          1 hybrid fitness 13/13 11/13 7/13 13/13; 2 F_ST 50 apart m .1: 7/7 7/7 5/7 3/7; 3 F_ST 150 apart: 11/11 11/11 5/11
+          11/11; 4 F_ST m .2: 11/11 11/11 5/11 7/11
+          incompatible pairs can't be drawn usefully: the 50 pairs spread 5-15 at contact (a straight line scores 12/13)
+          50 apart at m .05: the cloud after contact sometimes reaches .48; "flat at contact" scored 3, 5 and 7 of 7: m .1 instead
+
 ## Why C is built the way it is (measured dead ends, 2026-10-17)
 
 - N 25: drift swamps the choosy allele (its pull is about m x (1 - hybrid fitness), ~.05). N 100 gives a clean signal.
@@ -103,7 +121,9 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
 7. C1 is cleared by the top of the m slider (200 apart held): a floor, not a window. C2 holds the same m and wants the opposite fate, which is the contrast; a window on C1 (e.g. 30-45%) would add aiming without adding an idea.
 8. C's "hybrid fitness" after contact is a young of one genome from each place, migrants included, so it climbs as the places mix. A defines a hybrid at contact, when the two are still pure.
 9. B's R slider runs .25 to 8 (17's ran .25 to 4): islands need R 4, and 8 shows the islands no narrower.
-10. The quote corpus file `quoteable/quotes/quotes_bio202.yaml` does not parse as YAML: line 574, the `notes:` of 202_lec07_03 has unescaped double quotes inside a double-quoted string. Not touched.
+10. A's drawn rounds (pass 2): the cloud is the middle 90% of 50 pairs; at m .05 after contact it is wide (some pairs fuse, the rest hold), so round 3 forgives a lot. Narrower (middle 50%) would score harder; your call. The bit is "half the dots or more inside"; the count itself is in the notes.
+11. B and C could take the same drawing: B, the gene-by-gene F_ST profile the inversion will leave (a cloud per gene); C, the choosy allele's course after contact. Not built; say if you want them.
+12. The quote corpus file `quoteable/quotes/quotes_bio202.yaml` does not parse as YAML: line 574, the `notes:` of 202_lec07_03 has unescaped double quotes inside a double-quoted string. Not touched.
 
 ## Items
 
@@ -114,9 +134,11 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
 | 3 | — | `check_lesson19_numbers.js` (29 + R panels) | done |
 | 4 | — | LOCKS row (x), index card | done |
 | 5 | — | JM's review; voice | todo |
+| 6 | A | pass 2: four drawn rounds (draw, Go, share inside the cloud recorded and shown) in place of the three bowling targets; v2, scaffold 9; checks rewritten | done |
 
 ## Rulings
 
+- 2026-10-17 (mid-build): more "students draw what they expect"; bowling stays, but more drawn predictions scored against the cloud of runs.
 - 2026-10-17: 19 speciation, 20 phylogeny, 21 species selection and macroevolutionary rates (pencilled). 19: 17's interactives; F_ST between the two populations shown varying; incompatibilities, inversions and reinforcement factor in or emerge.
 
 ## Do not

@@ -20,10 +20,13 @@
  *      pair's first gene and orange at its second fits both populations;
  *      a choosy population of two looks makes almost no mixed young and an
  *      unchoosy one about half; gene 20 gives 1, .75, .5.
- *   A. each target hit by its intended setting and missed by the naive
- *      ones (twice each, practice); hybrid fitness falls with time apart;
- *      incompatible pairs grow faster than the mutations do; every run is
- *      two dots on your runs.
+ *   A. practice is free play; a round holds its settings and measure and
+ *      Go waits for a drawing; one drag sets every dot and Clear takes them
+ *      away; each round's median is inside its cloud, one straight line is
+ *      not, and "it holds at contact" misses where the two fuse; the cloud
+ *      stays on its axis; hybrid fitness falls with time apart; incompatible
+ *      pairs grow faster than the mutations do; every run is two dots on
+ *      your runs; a practice drawing is a row and no bit.
  *   B. each round holds what it says; each target hit by its setting and
  *      missed by the opening and the near misses (an inversion over one
  *      gene of the pair, or over none); with the inversion across both
@@ -33,9 +36,10 @@
  *   C. the choosy allele is absent apart and 1 in 5 at contact; the two
  *      targets hit and missed as measured; few young of mixed parents
  *      once it is common.
- *   Flow. Each stage: a miss records 0 and the target stays; hits open
- *      Next target; A waits for five times apart and C for six runs. Every
- *      bit written.
+ *   Flow. A: four drawn rounds, each scored once (half the dots inside or
+ *      more), its count in the notes, Next round after each; A waits for
+ *      five times apart. B, C: a miss records 0 and the target stays; hits
+ *      open Next target; C waits for six runs. Every bit written.
  *   All. every canvas fits its panel (1500 and 1000 wide); the three R
  *      panels run (Rscript; shortened).
  *
@@ -124,11 +128,48 @@ const hues = F => { const s = new Set(); for (const g of F) for (const c of g) f
 }
 
 /* ================= A ================= */
-tgt(SA, 0, [{ G: 50 }], [{ G: 25 }, { G: 100 }]);
-tgt(SA, 1, [{ G: 150 }, { G: 200 }], [{ G: 25 }, { G: 50 }]);
-tgt(SA, 2, [{ m: 0.1 }, { m: 0.2 }], [{ m: 0.02 }, { m: 0.05 }]);
+/* practice (free play) at a round's settings: the 50 pairs' median at each dot, and how drawings score against the run */
+const A_run = (G, m, meas) => { SA.done = false; SA.waiting = false; document.getElementById("A_practice").checked = true; openRound(SA); setC(SA, { G, m });
+  document.getElementById("A_meas").value = meas; AX.pred = null; goStage(SA); finishNow(SA); return SA.last; };
+const A_median = (q, meas) => A_knots(q.G).map(t => { const s = q.hist.find(h => h.t === t); return qtl(s.pairs.map(p => MEAS_A[meas].vals(p)[0]).sort((a, b) => a - b), 0.5); });
+const A_score = (q, meas, ys) => { const r = A_inside(q, { meas, G: q.G, ys }); return r.k / r.n; };
 {
-  const n0 = AX.dots.length, at = G => play(SA, 1, { G }, 1)[0].C, c = [25, 50, 100, 200].map(at);
+  const S = SA; S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; AX.pred = null;
+  const prac = document.getElementById("A_practice"); prac.checked = true; openRound(S); A_paint();
+  const free = document.getElementById("A_G").dataset.held === "" && !document.getElementById("A_meas").disabled && document.getElementById("A_go").textContent === "Practice run" && !document.getElementById("A_go").disabled;
+  prac.checked = false; prac.dispatchEvent(new Event("change"));
+  const set = readSet(S), held = document.getElementById("A_G").dataset.held === "1" && document.getElementById("A_m").dataset.held === "1", meas = document.getElementById("A_meas");
+  const blocked = document.getElementById("A_go").disabled;
+  check("A: practice ticked at the start is free play (" + free + "); unticked, round 1 holds 200 apart and m .05 (" + set.G + ", " + set.m + ", held " + held + "), shows hybrid fitness and holds it (" + meas.value + ", " + meas.disabled + "), and Go waits for a drawing (" + blocked + ")",
+        free && set.G === 200 && set.m === 0.05 && held && meas.value === "w" && meas.disabled && blocked);
+  /* draw by dragging across the plot: a flat line at 0.5 */
+  const cv = document.getElementById("A_time"), r = cv.getBoundingClientRect(), F = cv._tf, k = r.width / TM.W;
+  const at = (t, v) => ({ clientX: r.left + (F.T.px + t / F.G * F.T.pw) * k, clientY: r.top + (F.T.py + F.T.ph - v / F.ymax * F.T.ph) * k, pointerId: 1, bubbles: true });
+  cv.dispatchEvent(new PointerEvent("pointerdown", at(0, 0.5))); cv.dispatchEvent(new PointerEvent("pointermove", at(140, 0.5))); cv.dispatchEvent(new PointerEvent("pointermove", at(300, 0.5))); cv.dispatchEvent(new PointerEvent("pointerup", at(300, 0.5)));
+  const pd = A_pred(), go = !document.getElementById("A_go").disabled;
+  check("A: one drag across the plot sets all " + (pd ? pd.ys.length : 0) + " dots (" + (pd ? pd.ys.map(v => v == null ? "-" : v.toFixed(2)).join(" ") : "none") + ") and Go is free",
+        !!pd && pd.ys.length === 13 && pd.ys.every(v => v != null && Math.abs(v - 0.5) < 0.02) && go);
+  document.getElementById("A_clear").click();
+  check("A: Clear drawing takes it away and Go waits again", !A_pred() && document.getElementById("A_go").disabled);
+}
+/* each round's cloud: the median inside; the naive drawings out */
+const A_good = [];
+{
+  const R = [[200, 0.05, "w"], [50, 0.1, "fst"], [150, 0.05, "fst"], [150, 0.2, "fst"]].map(([G, m, meas]) => {
+    const q = A_run(G, m, meas), md = A_median(q, meas), K = A_knots(q.G), iC = K.indexOf(q.apart), end = md[md.length - 1];
+    A_good.push(md);
+    return { G, m, meas, med: A_score(q, meas, md), line: A_score(q, meas, K.map(t => md[0] + (end - md[0]) * t / q.G)), flat: A_score(q, meas, K.map((t, i) => t <= q.apart ? md[i] : md[iC])) };
+  });
+  check("A: each round's own median is inside its cloud (" + R.map(x => x.med.toFixed(2)).join(" / ") + ")", R.every(x => x.med === 1));
+  check("A: one straight line from start to end misses the F_ST rounds' clouds (inside " + R.slice(1).map(x => x.line.toFixed(2)).join(" / ") + ") and much of the hybrid fitness one (" + R[0].line.toFixed(2) + ")",
+        R.slice(1).every(x => x.line <= 0.8) && R.slice(1).some(x => x.line <= 0.5) && R[0].line <= 0.8);
+  check("A: 'holds at its contact value' misses where the two fuse (50 apart, m .1: " + R[1].flat.toFixed(2) + ", m .2 " + R[3].flat.toFixed(2) + ") and fits where they mostly hold (150 apart, m .05: " + R[2].flat.toFixed(2) + ")",
+        R[1].flat <= 0.6 && R[3].flat <= 0.75 && R[2].flat >= 0.8);
+  const q = A_run(200, 0.05, "inc"), hiMax = Math.max(...q.hist.map(h => A_band(q, "inc", h.t).hi));
+  check("A: incompatible pairs, 200 apart: the cloud stays on its axis (highest " + hiMax.toFixed(1) + " of " + MEAS_A.inc.ymax + ")", hiMax <= MEAS_A.inc.ymax);
+}
+{
+  const n0 = AX.dots.length, c = [25, 50, 100, 200].map(G => contactSum(A_run(G, 0.05, "fst")));
   check("A: hybrid fitness at contact falls with time apart (25 / 50 / 100 / 200: " + c.map(x => x.w.toFixed(2)).join(" / ") + ")", c.every((x, i) => i === 0 || x.w < c[i - 1].w));
   const mut = (c[3].mut[0] + c[3].mut[1]) / (c[2].mut[0] + c[2].mut[1]), inc = c[3].inc / c[2].inc, kp = c[3].kp / c[2].kp;
   check("A: from 100 to 200 generations apart, mutations a chromosome grow " + mut.toFixed(2) + "x, pairs of them in a hybrid " + kp.toFixed(2) + "x, incompatible pairs " + inc.toFixed(2) + "x (the snowball)",
@@ -137,6 +178,11 @@ tgt(SA, 2, [{ m: 0.1 }, { m: 0.2 }], [{ m: 0.02 }, { m: 0.05 }]);
   A_paint();
   const t = document.getElementById("A_runsRead").textContent, last = AX.dots[AX.dots.length - 1];
   check("A: the runs readout is the last run's own numbers (" + t.slice(0, 160) + ")", t.includes(last.G + " generations apart") && t.includes(last.inc.toFixed(1)) && t.includes(last.w.toFixed(2)));
+  /* a practice run with a drawing: a practice row, no bit */
+  const rows0 = AX.rows.length; SA.done = false; document.getElementById("A_practice").checked = true; openRound(SA); setC(SA, { G: 50, m: 0.1 }); document.getElementById("A_meas").value = "fst";
+  AX.pred = { meas: "fst", G: 150, ys: A_good[1].slice() }; goStage(SA); finishNow(SA);
+  const row = AX.rows[rows0];
+  check("A: a practice run with a drawing adds a practice row (" + (row ? row.k + " of " + row.n : "none") + ") and writes no bit", AX.rows.length === rows0 + 1 && row.practice && [0, 1, 2, 3].every(i => !Score.isAnswered("scaffold", BIT["A" + (i + 1)])));
 }
 
 /* ================= B ================= */
@@ -190,11 +236,25 @@ tgt(SC, 1, [{ G: 0 }], [{ G: 100 }, { G: 200 }]);
     }
     return { miss, bits: intended.map((_, r) => Score.getBit("scaffold", BIT[S.K + (r + 1)])).join("") };
   };
-  AX.dots = [];
-  const a = flow(SA, { G: 25 }, [{ G: 50 }, { G: 150 }, { m: 0.1 }]);
-  const waitA = !Gates.A.done;
-  for (const G of [0, 200]) { setC(SA, { G }); goStage(SA); finishNow(SA); }
-  check("A flow: a miss records 0 and the target stays; three hits (bits " + a.bits + "); A waits for five times apart (" + waitA + "), then opens B", a.miss && a.bits === "011" && waitA && Gates.A.done);
+  /* A: four drawn rounds, each scored once: the median of a practice run at the round's settings (good) in rounds 1, 3 and 4,
+     a flat line at 1 in round 2 (bad); bits 1 when half the dots or more are inside */
+  {
+    const S = SA; S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; AX.dots = []; AX.rows = [];
+    document.getElementById("A_practice").checked = false; openRound(S); A_paint();
+    const got = [], notes = [], nextShown = [];
+    for (let r = 0; r < 4; r++) {
+      const G = readSet(S).G + A_CONTACT, n = A_knots(G).length;
+      AX.pred = { meas: ruleOf(S).meas, G, ys: r === 1 ? Array(n).fill(1) : A_good[r].slice() };
+      goStage(S); finishNow(S);
+      got.push(Score.getBit("scaffold", BIT["A" + (r + 1)])); notes.push(Score.getNote("A_in" + (r + 1)));
+      if (r < 3) { nextShown.push(!document.getElementById("A_next").hidden); nextRound(S); }
+    }
+    const rows = AX.rows.filter(x => !x.practice), noteOk = rows.every((x, i) => notes[i] === x.k + "of" + x.n);
+    const waitA = S.done && !Gates.A.done;
+    for (const G of [0, 25, 100]) { setC(S, { G }); goStage(S); finishNow(S); }
+    check("A flow: four drawn rounds, each once (bits " + got.join("") + ", notes " + notes.join(" ") + "); Next round after each (" + nextShown.join(",") + "); A waits for five times apart (" + waitA + "), then opens B",
+          got.join("") === "1011" && noteOk && rows.length === 4 && nextShown.every(Boolean) && waitA && Gates.A.done);
+  }
   const b = flow(SB, { ia: -1 }, [{ ia: 9, ib: 14 }, { m: 0.05 }, { R: 0.5 }]);
   check("B flow: a miss records 0; three hits (bits " + b.bits + ") open C", b.miss && b.bits === "011" && Gates.B.done);
   CX.dots = [];
@@ -205,7 +265,7 @@ tgt(SC, 1, [{ G: 0 }], [{ G: 100 }, { G: 200 }]);
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 8 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 9 && n === D, n + " written");
 }
 {
   FIT_EPOCH++; paintAll();
