@@ -2,13 +2,19 @@
 
 **File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review); third pass the same evening (D placing rounds)
 **Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · pass 3 built (v3: D as placing rounds); LOCKS `x`; JM to review; voice still owed
-**Last touched** · 2026-10-15
+**Status** · pass 3 built (v3: D as placing rounds), decluttered 2026-10-17; LOCKS `x`; JM to review; voice still owed
+**Last touched** · 2026-10-17 (declutter)
 
 ## What the lesson is
 
 - Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
 - Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
+
+## JM on clutter, 2026-10-17 (verbatim)
+
+> For lesson 17, the screen is cluttered. This is a pervasive issue. I've included some images of unnecessary captions, and plots that should be moved away. Also the R code panels should always be last & default to be collapsed please
+
+- His two images: D's sparrows panel with its caption ("sparrows: average F_ST 0.54, genes at 0.9 or more 22% · your orange and blue ..."), and D's board caption ("orange other colours 75%, fragments a chromosome 5.3 · blue ...").
 
 ## JM on D's F and theory, 2026-10-15 late (verbatim)
 
@@ -137,6 +143,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 13 | — | checks for the new D (41 + four R panels, ~1 min); version 3, scaffold 59 | done |
 | 14 | D | JM's review of the placing rounds | todo |
 | 15 | D | heterozygosity per population in place of F (mirror boxes, over-time menu, readouts, bullets, R); within/pooled off the page; checks: heterozygosity is the genomes' own count, 0 where no one trades, rises then levels off (42 + R) | done |
+| 16 | A-D | declutter (JM 10-17): every summary line under a board or plot cut (A board + over time; B over time + your runs, board keeps only the pick feedback; C board + over time; D board, mirror, over time, sparrows, placements); D's sparrows panel moved under the stage; R panel last in each stage, collapsed (`details.rcode`); checks: the mirror's drawn numbers read off its canvas in place of the cut caption | done |
 
 ## Rulings
 

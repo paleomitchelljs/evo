@@ -175,9 +175,6 @@ const A_good = [];
   check("A: from 100 to 200 generations apart, mutations a chromosome grow " + mut.toFixed(2) + "x, pairs of them in a hybrid " + kp.toFixed(2) + "x, incompatible pairs " + inc.toFixed(2) + "x (the snowball)",
         mut > 1.4 && mut < 2.1 && inc > 1.25 * mut && kp > 1.25 * mut);
   check("A: every run, practice too, adds its two dots to your runs (" + n0 + " -> " + AX.dots.length + ")", AX.dots.length === n0 + 4);
-  A_paint();
-  const t = document.getElementById("A_runsRead").textContent, last = AX.dots[AX.dots.length - 1];
-  check("A: the runs readout is the last run's own numbers (" + t.slice(0, 160) + ")", t.includes(last.G + " generations apart") && t.includes(last.inc.toFixed(1)) && t.includes(last.w.toFixed(2)));
   /* a practice run with a drawing: a practice row, no bit */
   const rows0 = AX.rows.length; SA.done = false; document.getElementById("A_practice").checked = true; openRound(SA); setC(SA, { G: 50, m: 0.1 }); document.getElementById("A_meas").value = "fst";
   AX.pred = { meas: "fst", G: 150, ys: A_good[1].slice() }; goStage(SA); finishNow(SA);
@@ -273,6 +270,14 @@ tgt(SC, 1, [{ G: 0 }], [{ G: 100 }, { G: 200 }]);
   for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
+}
+{
+  /* the layout (JM, 2026-10-17, on lesson 17): the R code last in each stage and closed; no summary line under a board or
+     plot; the sparrows under B's grid, not in it */
+  const last = ["A", "B", "C"].map(K => { const els = document.querySelectorAll("#stage" + K + " .panel"), el = els[els.length - 1]; return el.matches("details.rcode") && !el.open && !!el.querySelector("#code" + K) && !!el.querySelector("#" + K + "_dl"); });
+  const reads = document.querySelectorAll(".readout").length, sp = document.getElementById("B_sparrow");
+  check("layout: each stage ends in its R code, closed (" + last.join(",") + "); no readout lines (" + reads + "); the sparrows sit under B's grid",
+        last.every(Boolean) && reads === 0 && !!sp.closest(".tail") && !sp.closest(".grid"));
 }
 A_code(); B_code(); C_code();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");

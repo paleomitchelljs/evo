@@ -26,8 +26,8 @@
  *      that opens it misses; the fitness line agrees with 1, 1 - hs, 1 - s.
  *   D. F_ST falls as migration rises and as N rises, and heterozygosity
  *      rises with migration, then levels off; each population's heterozygosity is its
- *      genomes' own count, 0 where no one trades, and the mirror's readout
- *      agrees with it and with F_ST; the five rounds run from most differentiated
+ *      genomes' own count, 0 where no one trades, and the numbers drawn on
+ *      the mirror agree with it and with F_ST, overall and pair by pair; the five rounds run from most differentiated
  *      to least; the theory places solid populations without a miss and
  *      identical ones at guessing (75% wrong), misses more as F_ST falls,
  *      and beats counting colours, which is fine in round 1 and near
@@ -171,9 +171,15 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   const pr1 = SD.last.pairs[0], st = mgStats(pr1, true), mine = pr1.pops.map(hetOf);
   check("D: each population's heterozygosity is its genomes' own count, and 0 where no one trades (one link, orange / blue / red / purple: " + st.het.map(v => v.toFixed(3)).join(" / ") + ")",
         st.het.every((v, k) => Math.abs(v - mine[k]) < 1e-12) && st.het[2] === 0 && st.het[3] === 0 && st.het[0] > 0.05 && st.het[1] > 0.05);
-  const t = document.getElementById("D_mirrorRead").textContent, nums = (t.match(/orange ([0-9.]+) · blue ([0-9.]+) · red ([0-9.]+) · purple ([0-9.]+) · F_ST, how different the four are from each other: ([0-9.]+)/) || []).slice(1).map(Number);
-  check("D: under the mirror, the four heterozygosities and F_ST are set 1's (" + nums.join(", ") + ")",
-        nums.length === 5 && nums.slice(0, 4).every((v, k) => Math.abs(v - mine[k]) < 0.006) && Math.abs(nums[4] - mgFst(mgCounts(pr1), [0, 1, 2, 3]).fst) < 0.006);
+  /* the mirror has no caption (JM, 2026-10-17: clutter): its numbers are read off what it draws. In drawing order: the six
+     pairs' F_ST on the lines (D_PAIRS' order), then each box's heterozygosity; "F_ST x.xx" in the middle */
+  const drawn = [], keep = cardText;
+  cardText = function (ctx, txt) { if (ctx.canvas.id === "D_mirror") drawn.push(String(txt)); return keep.apply(this, arguments); };
+  D_drawMirror(pr1, st); cardText = keep;
+  const nums = drawn.filter(x => /^[0-9][.][0-9][0-9]$/.test(x)).map(Number), mid = drawn.find(x => /^F_ST [0-9.]+$/.test(x)), hc1 = mgCounts(pr1);
+  check("D: the mirror draws set 1's heterozygosities (" + nums.slice(6).join(", ") + "), each pair's F_ST (" + nums.slice(0, 6).join(", ") + ") and F_ST overall ('" + mid + "')",
+        nums.length === 10 && nums.slice(6).every((v, k) => Math.abs(v - mine[k]) < 0.006) && nums.slice(0, 6).every((v, j) => Math.abs(v - mgFst(hc1, D_PAIRS[j]).fst) < 0.006) &&
+        !!mid && Math.abs(+mid.slice(5) - mgFst(hc1, [0, 1, 2, 3]).fst) < 0.006);
   /* the theory at its two ends: four solid populations, and four identical ones */
   const P0 = { n: 4, founders: 1, N: 25, R: 1, sel: null, mig: [] }, solid = { pops: mgStart(P0, 5) }, same = { pops: [0, 1, 2, 3].map(() => solid.pops[1]) };
   const t0 = D_theory(P0, solid, mulberry32(3)), t1 = D_theory(P0, same, mulberry32(3));
@@ -266,6 +272,14 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
+}
+{
+  /* the layout (JM, 2026-10-17): the R code last in each stage and closed; no summary line under a board or plot (B's
+     board keeps the pick's feedback); the sparrows under D's grid, not in it */
+  const last = ["A", "B", "C", "D"].map(K => { const els = document.querySelectorAll("#stage" + K + " .panel"), el = els[els.length - 1]; return el.matches("details.rcode") && !el.open && !!el.querySelector("#code" + K) && !!el.querySelector("#" + K + "_dl"); });
+  const reads = [...document.querySelectorAll(".readout")].map(e => e.id), sp = document.getElementById("D_sparrow");
+  check("layout: each stage ends in its R code, closed (" + last.join(",") + "); the only readout left is B's pick (" + reads.join(",") + "); the sparrows sit under D's grid",
+        last.every(Boolean) && reads.join() === "B_boardRead" && !!sp.closest(".tail") && !sp.closest(".grid"));
 }
 A_code(); B_code(); C_code(); D_code();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");

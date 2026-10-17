@@ -135,6 +135,7 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
 | 4 | — | LOCKS row (x), index card | done |
 | 5 | — | JM's review; voice | todo |
 | 6 | A | pass 2: four drawn rounds (draw, Go, share inside the cloud recorded and shown) in place of the three bowling targets; v2, scaffold 9; checks rewritten | done |
+| 7 | A-C | declutter, from JM's note on 17 (2026-10-17: *"the screen is cluttered. This is a pervasive issue ... the R code panels should always be last & default to be collapsed"*): all eleven readout lines cut (B's bars/ticks legend moved into its bullet), B's sparrows under the stage, R code last and collapsed; checks: layout check in place of the runs-caption check | done |
 
 ## Rulings
 
