@@ -40,6 +40,10 @@
  *      until placed; five rounds finish the lesson. Every bit written.
  *   All. every canvas fits its panel (1500 and 1000 wide); the four R
  *      panels run (Rscript; C and D shortened).
+ *   Layout (JM, 2026-10-17). Each stage ends in its R code, closed; no
+ *      summary lines; the setup bullets are hover text (every mark has
+ *      words, hover shows and hides them); the observed data is a closed
+ *      box under the stage.
  *
  * Same harness as check_lesson16_numbers.js.
  *
@@ -267,6 +271,24 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   check("all " + D + " declared bits written", D === 59 && n === D, n + " written");
 }
 {
+  /* hover text in place of setup bullets (JM, 2026-10-17): no bullet list left; every ⓘ has words behind it; hovering one
+     shows them in the floating box, hovering off hides it; a click passed from a label to its slider keeps it up. The
+     observed data is an optional box, closed at load */
+  const infos = [...document.querySelectorAll(".info")], tipOf = el => el.dataset.tip ? document.getElementById(el.dataset.tip) : el.querySelector(".tip");
+  const empty = infos.filter(el => !tipOf(el) || !tipOf(el).textContent.trim()).length, pop = document.querySelector(".tip-pop");
+  const perStage = "A,B,C,D".split(",").map(K => document.querySelectorAll("#stage" + K + " .info").length);
+  const ev = (el, type) => el.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+  const lab = infos.find(el => el.closest("label") && el.closest("label").querySelector("input[type=range]"));
+  ev(infos[0], "mouseover"); const shown = !pop.hidden && pop.textContent === tipOf(infos[0]).textContent;
+  ev(document.body, "mouseover"); const gone = pop.hidden;
+  ev(lab, "mouseover"); ev(lab.closest("label").querySelector("input"), "click"); const kept = !pop.hidden;
+  ev(document.body, "click"); const hid = pop.hidden;
+  const box = document.getElementById("D_spBox");
+  check("hover text: no bullet list (" + document.querySelectorAll("ul.setup").length + "); " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; hover shows, off hides, a label's click keeps it, a click elsewhere hides; the observed data closed at load",
+        document.querySelectorAll("ul.setup, .stage-intro").length === 0 && empty === 0 && perStage.every(n => n >= 3) && shown && gone && kept && hid && box.matches("details.opt") && !box.open && box.contains(document.getElementById("D_sparrow")));
+  for (const d of document.querySelectorAll("details.opt")) d.open = true;   /* opened, as a student would, for the fit check below */
+}
+{
   FIT_EPOCH++; paintAll();
   const over = [];
   for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement;
@@ -293,6 +315,7 @@ L_.join(" ;; ");
 
 const INNER_NARROW = `
 for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const d of document.querySelectorAll("details.opt")) d.open = true;
 FIT_EPOCH++; paintAll();
 const over = [];
 for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement;

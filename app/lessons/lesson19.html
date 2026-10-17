@@ -47,11 +47,21 @@
   button.code-dl:hover { background:#f4f2ec; }
   /* under a stage's grid: what is read after the work (observed data), then the R code, last and collapsed (JM, 2026-10-17, on lesson 17) */
   .tail { display:flex; flex-direction:column; gap:16px; margin-top:16px; }
-  details.rcode > summary { cursor:pointer; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; list-style:none; }
-  details.rcode > summary::-webkit-details-marker { display:none; }
-  details.rcode > summary::before { content:"\25B8"; display:inline-block; width:14px; }
-  details.rcode[open] > summary::before { content:"\25BE"; }
-  details.rcode[open] > summary { margin-bottom:10px; }
+  /* optional boxes: closed until opened (the R code, observed data) */
+  details.rcode > summary, details.opt > summary { cursor:pointer; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; list-style:none; }
+  details.rcode > summary::-webkit-details-marker, details.opt > summary::-webkit-details-marker { display:none; }
+  details.rcode > summary::before, details.opt > summary::before { content:"\25B8"; display:inline-block; width:14px; }
+  details.rcode[open] > summary::before, details.opt[open] > summary::before { content:"\25BE"; }
+  details.rcode[open] > summary, details.opt[open] > summary { margin-bottom:10px; }
+  /* hover text in place of setup bullets (JM, 2026-10-17: "The bullet points could really be turned into hover text"):
+     an .info (a heading, a control's label, or a bare mark) carries a hidden .tip; it shows on hover, focus or tap */
+  .info { cursor:help; }
+  .info::after { content:"i"; display:inline-block; width:13px; height:13px; margin-left:5px; border:1px solid currentColor; border-radius:50%; font:italic 600 10px/13px Georgia,serif; text-align:center; text-transform:none; letter-spacing:0; vertical-align:1px; opacity:.55; }
+  .info:hover::after, .info:focus::after { opacity:1; }
+  .info:focus { outline:none; }
+  .info .tip { display:none; }
+  .tip-pop { position:fixed; z-index:20; max-width:340px; background:var(--panel); color:var(--ink); border:1px solid var(--rule); border-radius:6px; box-shadow:0 4px 14px rgba(0,0,0,.13); padding:9px 11px; font-size:13px; line-height:1.4; }
+  .tip-pop > span { display:block; } .tip-pop > span + span { margin-top:6px; }
   pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
              font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
   pre.code .line { display:block; padding:0 6px; border-radius:2px; }
@@ -121,30 +131,16 @@
   <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
 
-  <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
-    <ul class="setup">
-      <li>One population of grey genomes splits in two: orange on the left, blue on the right, 25 hermaphrodite genomes each. Each genome: two chromosomes of 40 genes, drawn as beads, as in Lesson 17.</li>
-      <li>While apart, each population takes new mutations in its own colour: orange on the left, blue on the right. Nothing helps or harms at home.</li>
-      <li>Before the run, some pairs of genes were made incompatible, 2 in every 100: an orange mutation at one gene with a blue mutation at the other, in the same genome, halves its fitness. Each incompatible pair it carries halves it again.</li>
-      <li>Then the two come back into contact: each generation, each genome swaps places with one in the other population with chance <b>m</b>, for 100 generations.</li>
-      <li>A hybrid: a young of one orange and one blue genome. Its grid: across, the genes where it carries a blue mutation; down, an orange one; red, a pair that is incompatible.</li>
-      <li>F<sub>ST</sub>: how different the two populations are, as in Lesson 17. 0: the same mix at every gene. 1: nothing in common.</li>
-      <li>Draw on the over-time plot: drag across it to set a dot every 25 generations, your guess at what the menu's measure will do.</li>
-      <li><b>Go</b> plays the split and the contact in 50 pairs of populations; pair 1 is drawn up close. The shaded cloud: the middle 90% of the 50 at each generation. A dot inside it turns green, outside it red.</li>
-      <li>Practice, ticked at the start: your own settings, draw or not, nothing counts. Untick it for round 1 of 4: each round holds its settings and what to draw.</li>
-      <li>Your runs: every run adds two dots at its time apart. Your predictions: each drawing's dots inside the cloud.</li>
-    </ul>
-  </div>
+  <!-- voice: none yet; JM to dictate. The setup bullets are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
 
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3 id="A_boardH">Pair 1</h3>
+        <h3><span class="info" tabindex="0"><span id="A_boardH">Pair 1</span><span class="tip"><span>One population of grey genomes splits in two: orange on the left, blue on the right, 25 hermaphrodite genomes each. Each genome: two chromosomes of 40 genes, drawn as beads, as in Lesson 17.</span><span>While apart, each population takes new mutations in its own colour: orange on the left, blue on the right. Nothing helps or harms at home.</span></span></span></h3>
         <canvas id="A_board" width="760" height="236"></canvas>
       </div>
       <div class="panel">
-        <div class="watchbar"><label>Over time, 50 pairs: <select id="A_meas">
+        <div class="watchbar"><label><span class="info" tabindex="0">Over time, 50 pairs:<span class="tip"><span>Draw on it: drag across the plot to set a dot every 25 generations, your guess at what the menu's measure will do.</span><span>After <b>Go</b>, the shaded cloud: the middle 90% of the 50 at each generation. A dot inside it turns green, outside it red.</span><span>F<sub>ST</sub>: how different the two populations are, as in Lesson 17. 0: the same mix at every gene. 1: nothing in common.</span></span></span> <select id="A_meas">
           <option value="fst">F_ST</option>
           <option value="mut">mutations a chromosome</option>
           <option value="inc">incompatible pairs in a hybrid</option>
@@ -154,23 +150,23 @@
         <canvas id="A_time" width="760" height="250"></canvas>
       </div>
       <div class="panel">
-        <h3 id="A_gridH">A hybrid of pair 1</h3>
+        <h3><span class="info" tabindex="0"><span id="A_gridH">A hybrid of pair 1</span><span class="tip"><span>Before the run, some pairs of genes were made incompatible, 2 in every 100: an orange mutation at one gene with a blue mutation at the other, in the same genome, halves its fitness. Each incompatible pair it carries halves it again.</span><span>A hybrid: a young of one orange and one blue genome. Across, the genes where it carries a blue mutation; down, an orange one; red, a pair that is incompatible.</span></span></span></h3>
         <canvas id="A_grid" width="760" height="300"></canvas>
       </div>
       <div class="panel">
-        <h3>Your runs</h3>
+        <h3><span class="info" tabindex="0">Your runs<span class="tip"><span>Every run adds two dots at its time apart.</span></span></span></h3>
         <canvas id="A_runs" width="760" height="250"></canvas>
       </div>
     </div>
     <div class="col">
       <div class="panel tcard">
-        <h3>Predict <span class="pips" id="A_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Predict<span class="tip"><span><b>Go</b> plays the split and the contact in 50 pairs of populations; pair 1 is drawn up close.</span></span></span> <span class="pips" id="A_pips"></span></h3>
         <p class="ttext" id="A_ttext"></p>
         <ul class="rules" id="A_rules"></ul>
         <div class="controls">
           <div class="tbar" id="A_GRow"><label>generations apart <input type="range" id="A_G" min="0" max="6" step="1" value="4"></label><b id="A_GV"></b></div>
-          <div class="tbar" id="A_mRow"><label>migration after contact, m <input type="range" id="A_m" min="0" max="6" step="1" value="4"></label><b id="A_mV"></b></div>
-          <div class="practice-row"><input type="checkbox" id="A_practice" checked /><label for="A_practice">practice — your own settings; nothing counts</label></div>
+          <div class="tbar" id="A_mRow"><label><span class="info" tabindex="0">migration after contact, m<span class="tip"><span>Then the two come back into contact: each generation, each genome swaps places with one in the other population with chance m, for 100 generations.</span></span></span> <input type="range" id="A_m" min="0" max="6" step="1" value="4"></label><b id="A_mV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" checked /><label for="A_practice">practice — your own settings; nothing counts</label><span class="info" tabindex="0"><span class="tip"><span>Practice, ticked at the start: your own settings, draw or not, nothing counts. Untick it for round 1 of 4: each round holds its settings and what to draw.</span></span></span></div>
           <div class="buttons">
             <button id="A_go" class="accent">Go</button>
             <button id="A_next" class="ghost" hidden>Next round</button>
@@ -180,7 +176,7 @@
         <div class="verdict" id="A_verdict"></div>
       </div>
       <div class="panel">
-        <h3>Your predictions</h3>
+        <h3><span class="info" tabindex="0">Your predictions<span class="tip"><span>Each drawing's dots inside the cloud.</span></span></span></h3>
         <div class="dtab-wrap"><table class="dtab" id="A_table"></table></div>
         <canvas id="A_inside" width="480" height="220"></canvas>
       </div>
@@ -208,26 +204,16 @@
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Finish Stage A to unlock this section.</div>
 
-  <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
-    <ul class="setup">
-      <li>Lesson 17's two populations: long apart, every gene its own colour, orange on the left and blue on the right. No new mutations.</li>
-      <li>Two pairs of genes are incompatible: an orange allele at gene 10 with a blue one at gene 15; an orange allele at gene 30 with a blue one at gene 34. Each pair in a genome halves its fitness. Every other gene does nothing.</li>
-      <li>The blue population can carry an inversion: drag across the strip under the genes to set it, click it to take it away. A bracket marks an inverted chromosome on the board, in either population.</li>
-      <li>As in Lesson 16: a genome with one inverted and one standard chromosome does not cross over inside the inversion.</li>
-      <li>Gene by gene: F<sub>ST</sub> at each gene, bars the 50 pairs' average, ticks pair 1; the arcs join each incompatible pair.</li>
-      <li><b>Go</b> plays 100 generations of contact in 50 pairs. Tick practice for a run that does not count.</li>
-    </ul>
-  </div>
+  <!-- voice: none yet; JM to dictate. The setup bullets are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
 
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3 id="B_boardH">Pair 1</h3>
+        <h3><span class="info" tabindex="0"><span id="B_boardH">Pair 1</span><span class="tip"><span>Lesson 17's two populations: long apart, every gene its own colour, orange on the left and blue on the right. No new mutations.</span><span>Two pairs of genes are incompatible: an orange allele at gene 10 with a blue one at gene 15; an orange allele at gene 30 with a blue one at gene 34. Each pair in a genome halves its fitness. Every other gene does nothing.</span><span>A bracket marks an inverted chromosome, in either population.</span></span></span></h3>
         <canvas id="B_board" width="760" height="236"></canvas>
       </div>
       <div class="panel">
-        <h3 id="B_genesH">Gene by gene, 50 pairs: F_ST</h3>
+        <h3><span class="info" tabindex="0"><span id="B_genesH">Gene by gene, 50 pairs: F_ST</span><span class="tip"><span>F<sub>ST</sub> at each gene: bars, the 50 pairs' average; ticks, pair 1. The arcs join each incompatible pair.</span></span></span></h3>
         <canvas id="B_genes" width="760" height="270"></canvas>
       </div>
       <div class="panel">
@@ -242,7 +228,7 @@
     </div>
     <div class="col">
       <div class="panel tcard">
-        <h3>Target <span class="pips" id="B_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>The blue population can carry an inversion: drag across the strip under the genes to set it, click it to take it away.</span><span>As in Lesson 16: a genome with one inverted and one standard chromosome does not cross over inside the inversion.</span><span><b>Go</b> plays 100 generations of contact in 50 pairs.</span></span></span> <span class="pips" id="B_pips"></span></h3>
         <p class="ttext" id="B_ttext"></p>
         <ul class="rules" id="B_rules"></ul>
         <div class="controls" id="B_controls">
@@ -269,10 +255,10 @@
     </div>
   </div>
   <div class="stage-body tail">
-    <div class="panel">
-      <h3>Observed data: house and Spanish sparrows</h3>
+    <details class="panel opt" id="B_spBox">
+      <summary>Observed data: house and Spanish sparrows</summary>
       <canvas id="B_sparrow" width="760" height="150"></canvas>
-    </div>
+    </details>
     <details class="panel rcode">
       <summary>R code</summary>
       <button id="B_dl" class="code-dl">Download .R</button>
@@ -286,21 +272,12 @@
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Finish Stage B to unlock this section.</div>
 
-  <div class="panel stage-intro">
-    <!-- voice: none yet; JM to dictate. Bullets mechanical (JM, 2026-10-14) -->
-    <ul class="setup">
-      <li>A's world again, with the same incompatible pairs: a grey population splits, each half takes mutations in its own colour, then they come back into contact. Now 100 genomes a population.</li>
-      <li>Gene 20 (boxed) suits each place: each population starts with its own allele there. The other population's allele at gene 20 multiplies fitness by 0.75 with one copy, 0.5 with two, as in Lesson 17 C.</li>
-      <li>Gene 1 is the choosy gene. At contact, 1 chromosome in 5 in each population carries the choosy allele (a black bead). It did nothing while apart.</li>
-      <li>How a genome looks: the share of its mutations that are orange (the swatch beside it, orange to blue). A genome with the choosy allele turns a partner down with a chance equal to how different the two look, and the partner is drawn again.</li>
-      <li><b>Go</b> plays the split and 150 generations of contact in 20 pairs of populations. Your runs: every run adds a dot. Tick practice for a run that does not count.</li>
-    </ul>
-  </div>
+  <!-- voice: none yet; JM to dictate. The setup bullets are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
 
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3 id="C_boardH">Pair 1</h3>
+        <h3><span class="info" tabindex="0"><span id="C_boardH">Pair 1</span><span class="tip"><span>Gene 20 (boxed) suits each place: each population starts with its own allele there. The other population's allele at gene 20 multiplies fitness by 0.75 with one copy, 0.5 with two, as in Lesson 17 C.</span><span>Gene 1 is the choosy gene. At contact, 1 chromosome in 5 in each population carries the choosy allele (a black bead). It did nothing while apart.</span><span>How a genome looks: the share of its mutations that are orange (the swatch beside it, orange to blue). A genome with the choosy allele turns a partner down with a chance equal to how different the two look, and the partner is drawn again.</span></span></span></h3>
         <canvas id="C_board" width="760" height="236"></canvas>
       </div>
       <div class="panel">
@@ -313,13 +290,13 @@
         <canvas id="C_time" width="760" height="250"></canvas>
       </div>
       <div class="panel">
-        <h3>Your runs</h3>
+        <h3><span class="info" tabindex="0">Your runs<span class="tip"><span>Every run adds a dot.</span></span></span></h3>
         <canvas id="C_runs" width="760" height="250"></canvas>
       </div>
     </div>
     <div class="col">
       <div class="panel tcard">
-        <h3>Target <span class="pips" id="C_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>A's world again, with the same incompatible pairs: a grey population splits, each half takes mutations in its own colour, then they come back into contact. Now 100 genomes a population.</span><span><b>Go</b> plays the split and 150 generations of contact in 20 pairs of populations.</span></span></span> <span class="pips" id="C_pips"></span></h3>
         <p class="ttext" id="C_ttext"></p>
         <ul class="rules" id="C_rules"></ul>
         <div class="controls">
@@ -1546,6 +1523,7 @@ function wire() {
   B_wireGenes(); A_wireDraw();
   $("A_meas").addEventListener("change", () => { if (AX.pred && !A_pred()) AX.pred = null; A_paint(); });
   $("B_meas").addEventListener("change", B_paint);
+  $("B_spBox").addEventListener("toggle", B_paint);   /* closed, the strip has no room to fit: draw it once opened */
   $("C_meas").addEventListener("change", C_paint);
   for (const K of ["A", "B", "C"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson19_stage" + K + ".R", RTEXT["code" + K]));
   let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
@@ -1578,6 +1556,28 @@ Score.init({
     FIT_EPOCH++; paintAll();
   }
 });
+/* hover text (JM, 2026-10-17): an .info's hidden .tip (or the .tip its data-tip names) shows in one floating box on
+   hover or keyboard focus; a tap shows it on a touch screen, a tap elsewhere hides it */
+(function () {
+  const pop = document.createElement("div"); pop.className = "tip-pop"; pop.hidden = true; document.body.appendChild(pop);
+  let on = null;
+  const tipOf = el => el.dataset.tip ? document.getElementById(el.dataset.tip) : el.querySelector(".tip");
+  const show = el => {
+    const tip = tipOf(el); if (!tip) return;
+    on = el; pop.innerHTML = tip.innerHTML; pop.hidden = false;
+    const r = el.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+    pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+    pop.style.top = (r.bottom + 6 + h > innerHeight - 8 && r.top - 6 - h > 8 ? r.top - 6 - h : r.bottom + 6) + "px";
+  };
+  const hide = () => { on = null; pop.hidden = true; };
+  document.addEventListener("mouseover", e => { const el = e.target.closest(".info"); if (el !== on) el ? show(el) : hide(); });
+  document.addEventListener("focusin", e => { const el = e.target.closest(".info"); if (el) show(el); });
+  document.addEventListener("focusout", e => { if (e.target.closest(".info") === on) hide(); });
+  /* a click on a label passes on to its slider or menu: that click is not "elsewhere" */
+  document.addEventListener("click", e => { const el = e.target.closest(".info"), host = on && (on.closest("label") || on);
+    if (el) { if (el !== on) show(el); } else if (!(host && host.contains(e.target))) hide(); });
+  window.addEventListener("scroll", hide, { passive: true });
+})();
 </script>
 </body>
 </html>

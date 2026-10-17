@@ -2,13 +2,17 @@
 
 **File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review); third pass the same evening (D placing rounds)
 **Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · pass 3 built (v3: D as placing rounds), decluttered 2026-10-17; LOCKS `x`; JM to review; voice still owed
-**Last touched** · 2026-10-17 (declutter)
+**Status** · pass 3 built (v3: D as placing rounds), decluttered and bullets made hover text 2026-10-17; LOCKS `x`; JM to review; voice still owed
+**Last touched** · 2026-10-17 (declutter; hover text)
 
 ## What the lesson is
 
 - Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
 - Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
+
+## JM on hover text, 2026-10-17 (verbatim)
+
+> We should more liberally use hover text and optional boxes in general. The bullet points could really be turned into hover text over the intro. I don't want to overwhelm students with reading, basically. I want attention drawn and fixed to controls, output, and predictions
 
 ## JM on clutter, 2026-10-17 (verbatim)
 
@@ -144,6 +148,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 14 | D | JM's review of the placing rounds | todo |
 | 15 | D | heterozygosity per population in place of F (mirror boxes, over-time menu, readouts, bullets, R); within/pooled off the page; checks: heterozygosity is the genomes' own count, 0 where no one trades, rises then levels off (42 + R) | done |
 | 16 | A-D | declutter (JM 10-17): every summary line under a board or plot cut (A board + over time; B over time + your runs, board keeps only the pick feedback; C board + over time; D board, mirror, over time, sparrows, placements); D's sparrows panel moved under the stage; R panel last in each stage, collapsed (`details.rcode`); checks: the mirror's drawn numbers read off its canvas in place of the cut caption | done |
+| 17 | A-D | hover text (JM 10-17): every setup bullet moved onto the box or control it describes (an ⓘ beside a panel heading, slider label or practice label; tip shown on hover, focus or tap); bullets that repeat a label dropped (practice); the bullet-only intro panels removed until JM dictates a voice; D's sparrows an optional box (closed, drawn when opened); 19 marks (A 4, B 3, C 7: the s/h tip shared by all four sliders, D 5); checks: no bullet list or intro panel, every mark has words, hover shows and hides, a label's click passed to its slider keeps the tip up, the box closed at load and the canvas fitting once opened (44 + R) | done |
 
 ## Rulings
 

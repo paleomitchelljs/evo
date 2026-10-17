@@ -136,6 +136,7 @@ One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). 
 | 5 | — | JM's review; voice | todo |
 | 6 | A | pass 2: four drawn rounds (draw, Go, share inside the cloud recorded and shown) in place of the three bowling targets; v2, scaffold 9; checks rewritten | done |
 | 7 | A-C | declutter, from JM's note on 17 (2026-10-17: *"the screen is cluttered. This is a pervasive issue ... the R code panels should always be last & default to be collapsed"*): all eleven readout lines cut (B's bars/ticks legend moved into its bullet), B's sparrows under the stage, R code last and collapsed; checks: layout check in place of the runs-caption check | done |
+| 8 | A-C | hover text, from JM's note (2026-10-17: *"The bullet points could really be turned into hover text over the intro. I don't want to overwhelm students with reading"*): bullets onto the boxes and controls they describe, intro panels removed until a voice, B's sparrows an optional box (closed); 14 marks (A 8, B 3, C 3); checks as 17's (35 + R) | done |
 
 ## Rulings
 
