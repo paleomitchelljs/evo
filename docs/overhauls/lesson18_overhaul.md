@@ -66,7 +66,7 @@
 | 3 | — | `check_lesson18_numbers.js` | done |
 | 4 | — | JM rules on the open points; key answers settled | todo |
 | 5 | A-F | streamlined (JM, 2026-10-13): setup bullets, R panels, Download .R, To-finish boxes gone; the exam's question text stays; sliders became lesson 14's arrow diagrams (paths.js) on A1, A2, B, D, E2, F; C and E1 keep plain sliders | done |
-
+| 6 | A-F | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): no bullets or R here; the eight lines of key arithmetic each in a closed "The numbers" box under their plot (docs/overhauls/declutter_sweep.md) | done |
 ## Rulings
 
 - 2026-10-12: lesson 18 is an interactive exam key: a bespoke simulation per question, a target that looks like the question's data (brief above).

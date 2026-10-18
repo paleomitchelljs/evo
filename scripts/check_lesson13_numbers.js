@@ -522,7 +522,7 @@ const C_SOL = { tall: { bb: 3.5 }, weather: { bb: 7 }, genes: { a: 0.7 }, wet: {
   const num = (txt, re) => { const m = re.exec(txt); return m ? +m[1] : NaN; };
   const setB = v => { document.getElementById("C_bb").value = v; document.getElementById("C_bb").dispatchEvent(new Event("input")); };
   C.run = null; setB(0); const flat = dag();
-  setB(3); const txt = dag(), card = document.getElementById("C_cardRead").textContent, ex = PD_expect(C_START, C_setNow())[0].per;
+  setB(3); const txt = dag(), card = (document.getElementById("C_cardRead") || { textContent: "" }).textContent, ex = PD_expect(C_START, C_setNow())[0].per;
   const got = [num(txt, /cov\\(w, z\\) ([-+][0-9.]+)/), num(txt, /E\\(wΔz\\) ([-+][0-9.]+)/)], want = [ex.cov, ex.E].map(v => +v.toFixed(2));
   /* the arrow redraws as it is set: its stroke thickens (numbers show only on a selected arrow) */
   const visible = id => { const h = document.querySelector('#pathsC .paths-hit[data-arrow="' + id + '"]'); return h ? h.nextElementSibling : null; };
@@ -717,7 +717,7 @@ const D_SOL = { along: { fb: 4.5 }, eaten: { fd: 6 }, patch: { fb: -6.5 }, follo
   window.setInterval = fn => { loop = true; stop = false; for (let k = 0; k < 20000 && !stop; k++) fn(); loop = false; return 0; };
   window.clearInterval = id => { if (loop) stop = true; else realCI(id); };
   const out = [], stages = { A, B, C, D }, bitsSeen = [];
-  const read = id => document.getElementById(id).textContent;
+  const read = id => (document.getElementById(id) || { textContent: "" }).textContent;   /* C's and D's card lines are gone since the declutter */
   let aBefore = null, aAfter = null, cBefore = "", cAfter = "", dBefore = "", dAfter = "";
   try {
     for (const [S, go] of [["A", "A_run"], ["B", "B_run"], ["C", "C_run"], ["D", "D_run"]]) {

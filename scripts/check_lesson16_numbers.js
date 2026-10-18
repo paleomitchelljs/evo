@@ -41,8 +41,8 @@
  *      target 1 (genomes exactly you) hit by copying and missed by any
  *      mating, target 2 (genomes carrying some of you) hit by mating late or
  *      throughout and missed by copying and by mating only early; the
- *      population menu picks the board's population and its dark line; the
- *      readout agrees with the run; two targets and a comparison finish B.
+ *      population menu picks the board's population and its dark line; no
+ *      line under the plot (2026-10-17); two targets and a comparison finish B.
  *   C (copy or mate: a plan played in 100 populations; it was B until
  *      2026-10-12; hermaphrodites since that evening). A copy is its parent
  *      exactly and you, whole; a young from mating never is, and is half
@@ -190,11 +190,11 @@ Gates.A.open = true; FIT_EPOCH++;
   const why1 = txt("A_verdict");
   check("A: Go locks the sliders and fixes N; a miss records 0, adds no row, says why, offers Try again: '" + why1 + "'",
         running && bit("A1") === 0 && A.rows.length === 0 && why1 === "incorrect: that change is nonsynonymous. Try again." && txt("A_next") === "Try again" && /Gly/.test(txt("A_effect")));
-  /* the sentence under the runs (JM's): 1,000 populations, extinct in the run's count, after 4N generations */
-  const q = A.lastRes, said = txt("A_runsRead"), num = x => +x.replace(/,/g, "");
-  const sm = said.match(/^In ([\\d,]+) populations where this mutation arose, it went extinct in ([\\d,]+) after ([\\d,]+) generations[.]$/);
-  check("A: under the runs, one sentence that agrees with the run: '" + said + "'",
-        !!sm && num(sm[1]) === 1000 && q.runs.length === 1000 && num(sm[2]) === q.lost && num(sm[3]) === 4 * q.set.N && q.lost + q.here + q.fixed === 1000);
+  /* the runs: no line under them since the declutter (JM, 2026-10-17); the run's 1,000 populations each extinct,
+     still present or fixed */
+  const q = A.lastRes;
+  check("A: no line under the runs; the run's 1,000 populations are each extinct, still present or fixed",
+        !document.getElementById("A_runsRead") && q.runs.length === 1000 && q.lost + q.here + q.fixed === 1000);
   /* practice, a noncoding change: s held at 0, h held, N held -- all in view; nothing counts */
   A_nextChange(); el("A_practice").checked = true; A_sync();
   A_edit("sub", 3, "C");
@@ -307,16 +307,14 @@ Gates.A.open = true; FIT_EPOCH++;
   const avg = (a, k) => a.reduce((x, S) => x + S[k], 0) / a.length;
   check("B target 2 (" + c2.txt + ", where you last): mate 8 " + f(b8, "car") + " and copy 5 then mate 3 " + f(b3, "car") + " hit; copy 8 " + f(b0, "car") + " misses; mate 2 then copy 6 " + f(b2f, "car") + " spreads you less than mate 8",
         c2.meas === "car" && b8.concat(b3).every(S => S.j.ok) && b0.every(S => !S.j.ok) && avg(b2f, "car") < avg(b8, "car"));
-  /* the over-time panel: the readout agrees with the run; the population menu picks the board's population (and its dark
-     line), Start over goes back to the first still carrying you; no bar plot */
-  { B_paint(); const q = BG.run, rd = document.getElementById("B_timeRead").textContent.replace(/\\s+/g, " ");
-    const live = q.hist[q.t].filter(s => s.car > 0), m = rd.match(/populations still carrying you (\\d+) of 100; there, on average:\\s*genomes exactly you ([\\d.–]+) · carrying some of you ([\\d.–]+) · copies of you ([\\d.–]+) · sequence length ([\\d.–]+) letters\\s*copies of you over all 100, the lost ones as 0: ([\\d.]+)/);
-    const agrees = !!m && +m[1] === live.length && near(+m[3], live.reduce((a, s) => a + s.car, 0) / live.length, 0.051) && near(+m[6], q.hist[q.t].reduce((a, s) => a + s.copies, 0) / 100, 0.0051);
+  /* the over-time panel: no line under it since the declutter (JM, 2026-10-17); the population menu picks the board's
+     population (and its dark line), Start over goes back to the first still carrying you; no bar plot */
+  { B_paint(); const q = BG.run, agrees = !document.getElementById("B_timeRead");
     const sel = document.getElementById("B_pop"), first = B_shown(q), other = (first + 7) % 100;
     sel.value = String(other + 1); sel.dispatchEvent(new Event("change"));
     const picked = B_shown(q) === other && /^Population /.test(document.getElementById("B_boardH").textContent) && document.getElementById("B_boardH").textContent.startsWith("Population " + (other + 1) + " ");
     BG.round = 0; B_restart(); const back = BG.popSel == null && sel.value === String(B_shown(BG.run) + 1);
-    check("B: under the over-time plot, a readout that agrees with the run ('" + rd.slice(0, 120) + " ...'); the population menu puts population " + (other + 1) + " on the board; Start over goes back to the first still carrying you; no bar plot",
+    check("B: no line under the over-time plot; the population menu puts population " + (other + 1) + " on the board; Start over goes back to the first still carrying you; no bar plot",
           agrees && picked && back && !document.getElementById("B_pieces") && sel.options.length === 100); }
   pr.checked = false; BG.round = 0; BG.results = []; B_newRun(); B_sync();
   /* the flow: each round opens on its own measure; both targets and two genomes compared finish B */

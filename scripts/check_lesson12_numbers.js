@@ -432,14 +432,11 @@ const dHom = (a, b) => { let t = 0; for (const [, k] of dCount(a, b)) if (k === 
         "300 individuals: " + v.map(q => "h " + q.hm + " s " + q.sm + " → " + q.w.toFixed(3)).join(", ") + "; h -0.3 → " + od.toFixed(1));
 }
 {
-  /* the printed w-bar and homozygosity are the run's */
+  /* no line under D's card since the declutter (JM, 2026-10-17): the plot carries the run's w-bar and homozygosity */
   const keep = D.run, R = D_runAll(60, { hm: 0.3, hsd: 0.1, sm: 0.1, ssd: 0.05 }, mulberry32(44000));
-  D.run = R; D_drawTime();
-  const t = document.getElementById("D_read").textContent, mw = /\\(w̄\\)\\s+([0-9.]+)/.exec(t), mh = /homozygosity\\s+([0-9.]+)/.exec(t);
-  D.run = keep; D_paint();
-  const hoTxt = R.Ho[400] >= 10 ? R.Ho[400].toFixed(1) : f2(R.Ho[400]);
-  check("D the printed average fitness and homozygosity are the run's", !!(mw && mh) && mw[1] === f2(R.Wbar[400]) && mh[1] === hoTxt,
-        "printed " + (mw ? mw[1] : "?") + " and " + (mh ? mh[1] : "?") + "; the run's " + f2(R.Wbar[400]) + " and " + hoTxt);
+  D.run = R; D_drawTime(); D.run = keep; D_paint();
+  check("D no line under the card; a run carries w-bar and homozygosity every generation", !document.getElementById("D_read") && R.Wbar.length === R.Ho.length && R.Wbar.length > 400 && R.Wbar.every(isFinite) && R.Ho.every(isFinite),
+        R.Wbar.length + " generations");
 }
 /* a round's one number, run only as far as the round reads */
 const dSet = (r, lev) => ({ n: r.hold.n != null ? r.hold.n : lev.n, hm: r.hold.hm != null ? r.hold.hm : lev.hm, hsd: r.hold.hsd, sm: r.hold.sm, ssd: r.hold.ssd });

@@ -508,7 +508,7 @@ Open for JM (he is looking into these):
 | 4 | B | the s/h diagram; the good and bad loci | todo |
 | 5 | — | `check_lesson15_numbers.js`: neutral alleles neutral apart from the player's line; coalescence and MRCA as the panel draws them; the hawks' count exact; no oscillation | todo |
 | 6 | A | targets: click the pedigree at the MRCA of a locus, an allele's first mutant, the generation an allele fixed; play challenges | todo (JM: scoring later) |
-
+| 7 | A-D | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
 ## Do not
 
 - Say a tracked allele is neutral while it rides in the player's body without saying why it spreads (measured above).

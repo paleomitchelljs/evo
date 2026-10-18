@@ -42,12 +42,19 @@ images.
 Every stage carries, in order:
 
     a voice block          JM's own words
-    a setup list           what is on screen
-    the plots              the argument
-    an R code panel        the same model, as code
+    the plots              the argument, each with hover text saying what it shows
     the controls           what you can move
     a task list            what opens the next stage
     a solved banner        the conclusion, held back until it is earned
+    an R code panel        the same model, as code: last, and closed
+
+Since 2026-10-17 (JM: *"the screen is cluttered. This is a pervasive issue ... the R code panels should always be
+last & default to be collapsed"*; *"We should more liberally use hover text and optional boxes in general. The
+bullet points could really be turned into hover text ... I want attention drawn and fixed to controls, output, and
+predictions"*) the setup list is gone from the screen: each bullet is a tip on the box or control it describes
+(`app/assets/hover.css`, `hover.js`: an `.info` mark with a hidden `.tip`). Secondary material a student reads after
+the work (observed data beside the run, lesson 18's arithmetic) sits in a closed `details.opt`. `node
+scripts/check_layout.js` holds every page to this.
 
 Drop one when a stage genuinely has no use for it. Do not add a sixth kind of
 panel without a reason you could say out loud.
@@ -74,16 +81,24 @@ quote needs a bracketed explanation to work, it is the wrong quote.
 
 Panel and stage titles name the move, not the term.
 
-Everything else on the page is bare: labels, one-line bullets, numbers. If you
+Everything else on the page is bare: labels, numbers, and hover text. If you
 find yourself writing a paragraph outside a voice block, the picture is doing
-too little.
+too little. A line under a plot that says in numbers what the plot already shows
+is clutter (JM, 2026-10-17); a line a task or question reads, or a number drawn
+nowhere else, stays.
 
 Never **land** or **knob** on screen (JM, 2026-09-23). Say hit, succeed, set,
 slider, toggle.
 
 ---
 
-## 4. The setup bullets
+## 4. The setup bullets (hover text since 2026-10-17)
+
+Each bullet now sits as a tip on the box or control it describes, not in a list
+under the voice. A definition may live there and nowhere else (JM, 2026-10-17:
+the interactives *"reinforce concepts defined & learned in lecture and build
+intuition, not assess mastery **or** provide definitions"*). Read across a
+stage's tips, they still follow the pattern below.
 
 Almost always the same two openings, in this order:
 
@@ -262,7 +277,8 @@ is worth telling.
 ## 10. The R panel
 
 Every stage carries the model as real R, and the slider you touch highlights the
-line it sets. Offer the file for download. Header it `# Lesson N, Stage X -- <one
+line it sets. Offer the file for download. The panel is the last thing in the
+stage and closed until opened, with Download .R inside it (JM, 2026-10-17). Header it `# Lesson N, Stage X -- <one
 line about what this is>`.
 
 This is the one place technical names are legal — a variable has to be called

@@ -149,7 +149,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 15 | D | heterozygosity per population in place of F (mirror boxes, over-time menu, readouts, bullets, R); within/pooled off the page; checks: heterozygosity is the genomes' own count, 0 where no one trades, rises then levels off (42 + R) | done |
 | 16 | A-D | declutter (JM 10-17): every summary line under a board or plot cut (A board + over time; B over time + your runs, board keeps only the pick feedback; C board + over time; D board, mirror, over time, sparrows, placements); D's sparrows panel moved under the stage; R panel last in each stage, collapsed (`details.rcode`); checks: the mirror's drawn numbers read off its canvas in place of the cut caption | done |
 | 17 | A-D | hover text (JM 10-17): every setup bullet moved onto the box or control it describes (an ⓘ beside a panel heading, slider label or practice label; tip shown on hover, focus or tap); bullets that repeat a label dropped (practice); the bullet-only intro panels removed until JM dictates a voice; D's sparrows an optional box (closed, drawn when opened); 19 marks (A 4, B 3, C 7: the s/h tip shared by all four sliders, D 5); checks: no bullet list or intro panel, every mark has words, hover shows and hides, a label's click passed to its slider keeps the tip up, the box closed at load and the canvas fitting once opened (44 + R) | done |
-
+| 18 | A-D | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
 ## Rulings
 
 - 2026-10-08: 17 is migration; IBD blocks and haplotypes lead into it.

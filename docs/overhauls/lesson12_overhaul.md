@@ -323,7 +323,7 @@
 | 4 | B | four-allele race: allele rows (h, s each), genotype-fitness grid, 200 populations to one allele or 600 generations, traces and dots in the winner's colour, win-share bars against red outlines; five rounds; All neutral; checks (7 bars) | done |
 | 6 | D | mutation–selection balance: JM, 2026-09-24, *"A mutation-selection balance activity makes sense as a stage with manipulable h and s—either standalone or baked in somewhere."* Standalone D here (12 has the h and s machinery; the old slot-13 lesson's content). Built: 2000 individuals, 300 generations, target = purple over 200-300; plots of purple (with the arithmetic beside) and of copies made vs removed; voice 202_lec17_02, pink katydid in the banner; checks (7 bars) | done |
 | 5 | C | the valley: two loci, 50 populations, 1500 generations, stepped animation; landscape with a ball per population (stacks capped at 8 with a count), traces of each population's average, share gauge; five rounds holding depth or headcount; checks (6 bars) | done |
-
+| 6 | A-E | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
 ## Rulings
 
 - **2026-09-24** — selection is three lessons: 12 genetics, 13 regression, 14 birth–death and DAGs; frequency dependence later, probably 15.

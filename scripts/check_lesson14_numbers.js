@@ -562,7 +562,7 @@ const D_rate = (r, vals, n, seed) => { let k = 0; for (let q = 0; q < n; q++) if
       tick(false); btn.click();
       const scored = g.st.hits.length === n0 + 1 && g.waiting(), blocked = btn.disabled;
       const bit = S + (n0 + 1) + " " + (Score.getBit("scaffold", BIT[S + (n0 + 1)]) === (g.st.hits[n0] ? 1 : 0) ? "ok" : "WRONG");
-      const cardText = read(S + "_cardRead");
+      const cardText = document.getElementById(S + "_cardRead") ? read(S + "_cardRead") : "";   /* no line under the card at all since the declutter (2026-10-17) */
       tick(true); btn.click();
       const stillPrac = !btn.disabled && g.st.hits.length === n0 + 1 && g.waiting();
       tick(false);

@@ -678,19 +678,18 @@ checkSeries("B");
         t[0] === 1 && near(t[1], 0.67, 0.05) && near(t[2], 0.33, 0.05) && near(t[3], 0.12, 0.04) && near(t[4], 0.84, 0.04));
 }
 {
-  /* the two panels: the readout agrees with the run; D finishes on a division and one run of each panel, and that is
-     the end of the lesson */
-  const txt = id => document.getElementById(id).textContent.replace(/\\s+/g, " ").trim();
-  const reads = [];
+  /* the two panels: no line under them since the declutter (JM, 2026-10-17); each run is its own (its slider's jumps
+     and preference, 32 cells at most left); D finishes on a division and one run of each panel, and that is the end of
+     the lesson */
+  const runs = [];
   for (const [part, k, pref] of [[1, 1, 0], [2, 3, 0.8]]) {
     document.getElementById("D" + part + "_k").value = String(k); if (part === 2) document.getElementById("D2_pref").value = String(pref);
     cellsGo(part); cellsEnd(part);
-    const R = CELLS[part].run, rd = txt("D" + part + "_read"), m = rd.match(/^(\\d+) of 32 cells left after five divisions · (\\d+) jumps?, (\\d+) of them into a gene/);
-    reads.push(!!m && +m[1] === R.last.length && +m[2] === R.jumps.length && +m[3] === R.jumps.filter(j => j.gene).length && R.k === k && R.pref === (part === 2 ? pref : 0) &&
-               (R.last.length ? /where it ends up in the cells that survive is not random/.test(rd) : !/not random/.test(rd)));
+    const R = CELLS[part].run;
+    runs.push(!document.getElementById("D" + part + "_read") && R.k === k && R.pref === (part === 2 ? pref : 0) && R.last.length <= 32 && R.jumps.every(j => typeof j.gene === "boolean"));
   }
-  check("D cells: each panel's readout agrees with its run, and says the copies' places are not random when cells are left; D done, the lesson done",
-        reads.every(Boolean) && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"), reads.join(" "));
+  check("D cells: no line under either panel; each run is its slider's; D done, the lesson done",
+        runs.every(Boolean) && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"), runs.join(" "));
 }
 {
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;

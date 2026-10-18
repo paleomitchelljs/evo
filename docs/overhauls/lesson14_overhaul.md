@@ -523,7 +523,7 @@ Plan:
 | 9 | — | voice from JM (A-D all placeholders; C: 202_lec17_01 + 19_03, banner 19_01; D: 231_lec33a_01 + 202_lec16_05, banner 461_lec28_01) | todo |
 | 10 | A | 2026-10-01 review: no record in rounds; labels; allele names; births/deaths diagram; one-shot record; genome mock-up | done |
 | 11 | B | 2026-10-01 review: axis label; lactase one shot, named after; fifth round | done |
-
+| 12 | A-D | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
 ## Do not
 
 - Print a dN/dS from the LTEE counts against a guessed 3 : 1; derive the expectation first.

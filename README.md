@@ -31,6 +31,7 @@ app/scaffolds/sNN_*.html      27 guess-and-check drills
 app/interactives/descent.html pedigree explorer (unscored)
 app/assets/score.js           the submission-code library (name -> opaque passcode)
 app/assets/lock.js            reads LOCKS.txt; hides a page that is not open yet
+app/assets/hover.js, .css     hover text (an .info mark shows its hidden .tip) and the closed boxes: R code, observed data
 instructor/                   verify_code.html + aggregate.html (decode student codes)
 scripts/decode_codes.py       the same decoding at the command line, in batch
 data/clean/*.csv              real datasets used in the "real data" stages
@@ -54,6 +55,7 @@ sequence the course had stopped following, and they outranked JM.
 - `--style` and `--terms` are **reports, not gates.** `--style` flags giveaway phrases and prose jargon; `--terms` says where each term in [`ledger.json`](ledger.json) is first named, in lesson-number order. Since no vocabulary is taught at all, every line `--terms` prints for student-facing prose is something to look at.
 - [`ledger.json`](ledger.json) — a term list and two phrase lists, feeding those two reports. **Nothing in it blocks anything**, and it no longer carries course length, term budgets, naming delays, per-arc minute budgets or per-term unlock units; all of those were struck on 2026-09-17.
 - [`scripts/test_codec.py`](scripts/test_codec.py) — pins the Python decoder to the JavaScript one that mints the codes.
+- [`scripts/check_layout.js`](scripts/check_layout.js) — every page in headless Chrome, in study mode: no uncaught error, every literal `$("id")` names an element, no setup bullet list, every hover mark has words, each stage's R code last and closed, and no summary line under a plot beyond the ones kept on purpose (named in the script with why). JM, 2026-10-17: the screen was cluttered.
 
 The judgment-level checks a machine cannot run are in
 [`docs/LESSON_STYLE.md`](docs/LESSON_STYLE.md) §14.
@@ -63,6 +65,7 @@ Check every lesson:
 ```
 python3 scripts/check_lessons.py          # every page in app/lessons; exits 0 when clean
 python3 scripts/check_lessons.py app/lessons/lesson7.html   # one lesson
+node scripts/check_layout.js              # the declutter rules, every page (~3 minutes)
 ```
 
 ## Running

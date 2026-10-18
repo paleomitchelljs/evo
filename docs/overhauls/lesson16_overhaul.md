@@ -179,7 +179,7 @@ Read as (mine):
 | 48 | D | voice block + mechanical bullets | done: five, one per box; mutational load's gloss kept on the over-time bullet |
 | 49 | — | `version: 8` (B's scoring rules change; still scaffold 17); checks: B rewritten, `B_pieces` out of the canvas list, A's pop-up labels; three passes | done: 45 checks + four R panels. A pre-existing flake in D target 4's check (others' fewest above yours, run by run; 0.26 against 0.29 once) now compares the two runs' average |
 | 50 | — | REVISIONS_PLANNED row: bullets purely mechanical (JM: "the trend going forward for all") | done: row 14 |
-
+| 51 | A-D | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
 Measured (B, node prototype of the page's engine, scratch b1-b3.js; 100 populations; generation 8; averaged over the populations still carrying you; min / median / max over 12 starts unless said):
 
         left / exactly you / carrying some of you
