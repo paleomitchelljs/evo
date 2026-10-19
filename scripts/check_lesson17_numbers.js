@@ -32,7 +32,11 @@
  *      identical ones at guessing (75% wrong), misses more as F_ST falls,
  *      and beats counting colours, which is fine in round 1 and near
  *      guessing in round 5; a round holds its migration (pale, no drag)
- *      and N 25; a genome dragged onto a box is placed.
+ *      and N 25 in each population; a genome dragged onto a box is placed;
+ *      after the tenth the overlay is off the screen (computed display,
+ *      not the attribute), and no arrow, selected or not, draws red. N one
+ *      a population (2026-10-19): a small one among large ones is the least
+ *      heterozygous and the furthest from the rest.
  *   Flow. A-C: the opening run records 0 and the target stays; a hit opens
  *      Next target; B needs ten runs and a pick. D: practice ticked at the
  *      start; a practice run's ten genomes add a row and no bit; each round
@@ -40,7 +44,8 @@
  *      until placed; five rounds finish the lesson. Every bit written.
  *   All. every canvas fits its panel (1500 and 1000 wide); the four R
  *      panels run (Rscript; C and D shortened).
- *   Layout (JM, 2026-10-17). Each stage ends in its R code, closed; no
+ *   Layout (JM, 2026-10-17). Each stage opens on one intro panel, his
+ *      dictated voice alone (2026-10-19). Each stage ends in its R code, closed; no
  *      summary lines; the setup bullets are hover text (every mark has
  *      words, hover shows and hides them); the observed data is a closed
  *      box under the stage.
@@ -154,6 +159,8 @@ tgt(SC, 2, [{ so: -0.3, sb: 0, m: 0.005 }, { so: -0.3, sb: -0.6, m: 0.005 }, { s
 
 /* ================= D ================= */
 const allE = v => ({ e0: v, e1: v, e2: v, e3: v, e4: v, e5: v }), only = o => Object.assign(allE(0), o);
+/* N is one slider a population (2026-10-19, from JM's intro: "they don't tend to be of equal size") */
+const allN = v => ({ N0: v, N1: v, N2: v, N3: v });
 /* counting colours: a young genome goes with the colour it carries most (a tie to the first); the share it gets wrong */
 const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed + 99); let w = 0;
   for (let k = 0; k < 4; k++) for (let r = 0; r < n; r++) { const g = D_young(q.P, pair.pops[k], rng), c = [0, 0, 0, 0, 0];
@@ -161,17 +168,28 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
     let b = 1; for (let h = 2; h < 5; h++) if (c[h] > c[b]) b = h; if (b - 1 !== k) w++; }
   return w / (4 * n); };
 {
-  const fh = [0, 0.002, 0.005, 0.01, 0.02].map(m => play(SD, 0, Object.assign(allE(m), { N: 25 }), 1)[0]), f = fh.map(x => x.fst), h = fh.map(x => x.het);
+  const fh = [0, 0.002, 0.005, 0.01, 0.02].map(m => play(SD, 0, Object.assign(allE(m), allN(25)), 1)[0]), f = fh.map(x => x.fst), h = fh.map(x => x.het);
   check("D: F_ST at 100 falls as every pair's migration rises (m 0 / .002 / .005 / .01 / .02: " + f.map(v => v.toFixed(2)).join(" / ") + ")", f.every((v, i) => i === 0 || v < f[i - 1]) && f[0] === 1);
   /* and heterozygosity rises with it, then levels off: the four together are 4N genomes, drifting as one when well mixed
      (about 0.75 e^(-100 / 8N) by 100, 0.45 at N 25) */
   check("D: heterozygosity at 100 rises with it, from 0, then levels off near 0.75 e^(-100 / 8N) = " + (0.75 * Math.exp(-100 / 200)).toFixed(2) + " (" + h.map(v => v.toFixed(2)).join(" / ") + ")",
         h[0] === 0 && h[1] > 0.15 && h[2] > h[1] && h[3] > h[2] && Math.abs(h[4] - h[3]) < 0.04 && Math.abs(h[4] - 0.75 * Math.exp(-0.5)) < 0.06);
-  const n = [10, 25, 50].map(N => play(SD, 0, Object.assign(allE(0.01), { N }), 1)[0].fst);
+  const n = [10, 25, 50].map(N => play(SD, 0, Object.assign(allE(0.01), allN(N)), 1)[0].fst);
   check("D: with every pair at .01, F_ST falls as N rises (N 10 / 25 / 50: " + n.map(v => v.toFixed(2)).join(" / ") + ")", n[0] > n[1] && n[1] > n[2]);
+  /* sizes one a population: a small one among large ones drifts apart. Every pair at .01, orange N 10 and the rest 100, two
+     runs: orange less heterozygous (its own genomes) than the others on average, and further from them (its three pairwise
+     F_ST, averaged) than they are from one another; the sizes are what the sliders say. Measured 2026-10-19, 20 runs:
+     heterozygosity .37 vs .58, F_ST .17 vs .04, 20 of 20 even on min / max (with the rest at 50: 16 of 20, so not 50) */
+  const un = [0, 1].map(() => { play(SD, 0, Object.assign(allE(0.01), allN(100), { N0: 10 }), 1); const pr = SD.last.pairs[0], st = mgStats(pr, true);
+    return { het: st.het, pw: st.pw, sizes: pr.pops.map(F => F.length) }; });
+  const av = a => a.reduce((x, y) => x + y, 0) / a.length;
+  const hO = un.map(u => u.het[0]), hRest = un.map(u => av(u.het.slice(1))), pwO = un.map(u => av(u.pw.slice(0, 3))), pwRest = un.map(u => av(u.pw.slice(3)));
+  check("D: orange N 10 among three of 100 (sizes " + un[0].sizes.join("/") + "): orange less heterozygous (" + hO.map(v => v.toFixed(2)).join(", ") + " vs the others' " + hRest.map(v => v.toFixed(2)).join(", ") +
+        "), and further from the others (F_ST " + pwO.map(v => v.toFixed(2)).join(", ") + ") than they are from each other (" + pwRest.map(v => v.toFixed(2)).join(", ") + ")",
+        un.every(u => u.sizes.join() === "10,100,100,100") && hO.every((v, i) => v < hRest[i]) && pwO.every((v, i) => v > pwRest[i]));
   /* heterozygosity recounted here, genome by genome: a gene counts when its two chromosomes' hues differ */
   const hetOf = F => F.reduce((a, g) => { let n = 0; for (let i = 0; i < L; i++) if ((g[0][i] & 7) !== (g[1][i] & 7)) n++; return a + n / L; }, 0) / F.length;
-  play(SD, 0, Object.assign({}, D_PRESETS[0].e, { N: 25 }), 1); D_paint();
+  play(SD, 0, Object.assign({}, D_PRESETS[0].e, allN(25)), 1); D_paint();
   const pr1 = SD.last.pairs[0], st = mgStats(pr1, true), mine = pr1.pops.map(hetOf);
   check("D: each population's heterozygosity is its genomes' own count, and 0 where no one trades (one link, orange / blue / red / purple: " + st.het.map(v => v.toFixed(3)).join(" / ") + ")",
         st.het.every((v, k) => Math.abs(v - mine[k]) < 1e-12) && st.het[2] === 0 && st.het[3] === 0 && st.het[0] > 0.05 && st.het[1] > 0.05);
@@ -189,7 +207,7 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   const t0 = D_theory(P0, solid, mulberry32(3)), t1 = D_theory(P0, same, mulberry32(3));
   check("D: the theory places young from four solid populations without a miss (" + t0 + ") and from four identical ones at guessing (" + t1 + " wrong)", t0 === 0 && t1 === 0.75);
   /* the five rounds, played as practice: F_ST (20 sets) and, on set 1, the theory and counting colours */
-  const R = D_PRESETS.map(pr => [0, 1].map(() => { play(SD, 0, Object.assign({}, pr.e, { N: 25 }), 1); const q = SD.last; return { fst: sumAt(q, 100).fst, th: DX.placing.theory, cw: countWrong(q, 100) }; }));
+  const R = D_PRESETS.map(pr => [0, 1].map(() => { play(SD, 0, Object.assign({}, pr.e, allN(25)), 1); const q = SD.last; return { fst: sumAt(q, 100).fst, th: DX.placing.theory, cw: countWrong(q, 100) }; }));
   const avg = (r, k) => (r[0][k] + r[1][k]) / 2, fs = R.map(r => avg(r, "fst")), th = R.map(r => avg(r, "th")), cw = R.map(r => avg(r, "cw"));
   check("D: the five rounds run from most differentiated to least (F_ST, 20 sets: " + fs.map(v => v.toFixed(2)).join(" / ") + ")", fs.every((v, i) => i === 0 || v < fs[i - 1]) && fs[0] > 0.7 && fs[4] < 0.1);
   check("D: the theory misses more as F_ST falls (wrong, rounds 1 / 5: " + th[0].toFixed(3) + " / " + th[4].toFixed(3) + "; all " + th.map(v => v.toFixed(2)).join(" ") + ")", th[0] < 0.06 && th[4] > 0.08 && th[4] > th[0] && th.every(v => v < 0.75));
@@ -199,9 +217,9 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   SD.round = 1; SD.done = false; SD.waiting = false; DX.placing = null; document.getElementById("D_practice").checked = false; syncStage(SD);
   const label = document.getElementById("D_go").textContent;
   goStage(SD);
-  const set = readSet(SD), want = Object.assign({}, D_PRESETS[1].e, { N: 25 }), pale = document.querySelectorAll("#D_paths .paths-arrow.locked").length, hit = document.querySelectorAll("#D_paths .paths-hit").length;
+  const set = readSet(SD), want = Object.assign({}, D_PRESETS[1].e, allN(25)), pale = document.querySelectorAll("#D_paths .paths-arrow.locked").length, hit = document.querySelectorAll("#D_paths .paths-hit").length;
   check("D: Start round 2 of 5 ('" + label + "') holds that round's migration and N 25 (" + JSON.stringify(set).replace(/"/g, "") + "), six arrows pale (" + pale + "), none draggable (" + hit + ")",
-        label === "Start round 2 of 5" && Object.keys(want).every(k => set[k] === want[k]) && pale === 6 && hit === 0 && document.getElementById("D_N").dataset.held === "1");
+        label === "Start round 2 of 5" && Object.keys(want).every(k => set[k] === want[k]) && pale === 6 && hit === 0 && [0, 1, 2, 3].every(k => document.getElementById("D_N" + k).dataset.held === "1"));
   finishNow(SD); SD.waiting = false; DX.placing = null; document.getElementById("D_practice").checked = true; SD.round = 0;
   goStage(SD); finishNow(SD);
   const pale2 = document.querySelectorAll("#D_paths .paths-arrow.locked").length, n0 = DX.placing.picks.length;
@@ -211,9 +229,28 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   const at = (x, y) => ({ clientX: r.left + x * k, clientY: r.top + y * k, pointerId: 1, bubbles: true });
   cv.dispatchEvent(new PointerEvent("pointerdown", at(210, 125))); cv.dispatchEvent(new PointerEvent("pointermove", at(DPL.at[born][0], DPL.at[born][1])));
   cv.dispatchEvent(new PointerEvent("pointerup", at(DPL.at[born][0], DPL.at[born][1])));
-  const pk = DX.placing.picks[n0];
-  check("D: practice frees every arrow (" + pale2 + " pale); the overlay shows over the diagram (" + Math.round(r.width) + " wide) and a genome dragged onto the population it was born in is placed, right",
-        pale2 === 0 && !cv.hidden && r.width > 200 && pk && pk.k === born && pk.ok);
+  const pk = DX.placing.picks[n0], shownDisp = getComputedStyle(cv).display;
+  check("D: practice frees every arrow (" + pale2 + " pale); the overlay shows over the diagram (" + Math.round(r.width) + " wide, display " + shownDisp + ") and a genome dragged onto the population it was born in is placed, right",
+        pale2 === 0 && shownDisp !== "none" && r.width > 200 && pk && pk.k === born && pk.ok);
+  /* the rest dragged too: after the tenth the overlay is gone from the screen, not just marked hidden (JM, 2026-10-19: "the
+     drag genome hangs on the last one ... the little panel just sort of floating there": the page's canvas { display:block }
+     beat the hidden attribute) */
+  while (DX.placing) { D_paint(); const r2 = cv.getBoundingClientRect(), k2 = r2.width / DPL.W, b2 = DX.placing.young[DX.placing.i].k, at2 = (x, y) => ({ clientX: r2.left + x * k2, clientY: r2.top + y * k2, pointerId: 1, bubbles: true });
+    cv.dispatchEvent(new PointerEvent("pointerdown", at2(210, 125))); cv.dispatchEvent(new PointerEvent("pointermove", at2(DPL.at[b2][0], DPL.at[b2][1]))); cv.dispatchEvent(new PointerEvent("pointerup", at2(DPL.at[b2][0], DPL.at[b2][1]))); }
+  document.getElementById("D_pathsWrap").scrollIntoView({ block: "center" });
+  const r3 = document.getElementById("D_paths").querySelector("svg").getBoundingClientRect(), k3 = r3.width / DPL.W;
+  const goneDisp = getComputedStyle(cv).display, under = document.elementFromPoint(r3.left + DPL.at[0][0] * k3, r3.top + DPL.at[0][1] * k3);
+  check("D: after the tenth genome is dragged the overlay leaves the screen (display " + goneDisp + "), and the diagram is under the pointer again (" + (under && (under.closest("svg") ? "the diagram" : under.tagName)) + ")",
+        goneDisp === "none" && !!under && !!under.closest("#D_paths"));
+  /* migration is never below zero, so no arrow is drawn red, selected or not (JM, 2026-10-19: "Sometimes the arrow's body is
+     red when it should be blue"): paths.css draws a selected or focused arrow red unless the page says otherwise */
+  document.getElementById("D_e0").value = 3; syncVals(SD); D_PATHS.sync(); syncStage(SD);
+  const hit0 = document.querySelector('#D_paths .paths-hit[data-arrow="e0"]'); if (hit0) hit0.focus();
+  const strokes = [...document.querySelectorAll("#D_paths .paths-arrow")].map(a => getComputedStyle(a).stroke), selA = document.querySelector("#D_paths .paths-arrow.selected");
+  const red = strokes.filter(c => c.replace(/ /g, "") === "rgb(178,58,72)").length;
+  check("D: a selected arrow draws blue (" + (selA ? getComputedStyle(selA).stroke : "none selected") + "), and no arrow is red (" + red + " of " + strokes.length + ")",
+        !!selA && getComputedStyle(selA).stroke.replace(/ /g, "") === "rgb(47,107,143)" && red === 0);
+  if (hit0) hit0.blur(); document.getElementById("D_e0").value = 0; syncVals(SD); D_PATHS.sync();
 }
 
 /* ================= the flow, scored ================= */
@@ -284,8 +321,11 @@ const countWrong = (q, n) => { const pair = q.pairs[0], rng = mulberry32(q.seed 
   ev(lab, "mouseover"); ev(lab.closest("label").querySelector("input"), "click"); const kept = !pop.hidden;
   ev(document.body, "click"); const hid = pop.hidden;
   const box = document.getElementById("D_spBox");
-  check("hover text: no bullet list (" + document.querySelectorAll("ul.setup").length + "); " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; hover shows, off hides, a label's click keeps it, a click elsewhere hides; the observed data closed at load",
-        document.querySelectorAll("ul.setup, .stage-intro").length === 0 && empty === 0 && perStage.every(n => n >= 3) && shown && gone && kept && hid && box.matches("details.opt") && !box.open && box.contains(document.getElementById("D_sparrow")));
+  /* JM's dictated intros (2026-10-19): each stage opens on one intro panel holding his voice and nothing else */
+  const intros = "A,B,C,D".split(",").map(K => document.querySelectorAll("#stage" + K + " .stage-intro"));
+  const voiced = intros.every(l => l.length === 1 && l[0].querySelectorAll(".voice p").length >= 2 && !l[0].querySelector("ul, .info, input, canvas"));
+  check("hover text: no bullet list (" + document.querySelectorAll("ul.setup").length + "); " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; each intro panel his voice alone (" + intros.map(l => l.length ? l[0].querySelectorAll(".voice p").length + " paragraphs" : "none").join(", ") + "); hover shows, off hides, a label's click keeps it, a click elsewhere hides; the observed data closed at load",
+        document.querySelectorAll("ul.setup").length === 0 && voiced && empty === 0 && perStage.every(n => n >= 3) && shown && gone && kept && hid && box.matches("details.opt") && !box.open && box.contains(document.getElementById("D_sparrow")));
   for (const d of document.querySelectorAll("details.opt")) d.open = true;   /* opened, as a student would, for the fit check below */
 }
 {

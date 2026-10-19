@@ -2,13 +2,24 @@
 
 **File** · `app/lessons/lesson17.html` — first draft 2026-10-12; second pass 2026-10-15 (JM's review); third pass the same evening (D placing rounds)
 **Checks** · `node scripts/check_lesson17_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · pass 3 built (v3: D as placing rounds), decluttered and bullets made hover text 2026-10-17; LOCKS `x`; JM to review; voice still owed
-**Last touched** · 2026-10-17 (declutter; hover text)
+**Status** · pass 4 (2026-10-19): JM's dictated intros A-D in; beads called loci; D's two bugs fixed; N per population. LOCKS `x`
+**Last touched** · 2026-10-19 (JM's voice, D bugs, N per population)
 
 ## What the lesson is
 
 - Two populations swapping genomes: the other population's DNA turns up in fragments, cut shorter every generation; selection at one gene keeps it apart, lets it in, or is swamped; then four populations, and F_ST as how differentiated they are.
 - Worth protecting: everything read off bead strings (hue = population an allele arose in, shade = which allele), 16's displays; F_ST read as colour (each population its own colour = 1, all the same mix = 0).
+
+## JM's pass-4 notes, 2026-10-19 (verbatim, the technical asks; his intros are on the page, ASR fixes listed in each voice block's comment)
+
+> For the dropdown, everything here looks fine, except the share of beads and the other hue should just be a share of low side from the other population. We don't need the word be. We can just say locusts or loci.
+
+> I like Part B a lot. Um, I think the targets might be too large. Uh, they're pretty trivial to hit for the most part with just really short populations. Never crossovers help. Um, I do worry that they're maybe a little too big. Um, not because I don't want it to be assessed. don't want the massively smaller, but. Well. I take that back. I like the targets. given what we're looking at here. Okay, now, uh, we can just say locusts instead of beats.
+
+> Part T is good. The Interactive is a little buggy. Sometimes the arrow's body is red when it should be blue. Uh, because they're all increasing. And the drag option. The drag genome hangs on the last one. With the last one, not disappearing, and the last bubble not filling in, and the little panel just sort of floating there. Otherwise, I think it's great.
+
+- From his D intro: "they don't tend to be of equal size" and "You can also set the effective population size for each pair" -> N per population (built; practice only, rounds hold all four at 25).
+- Causes found: (1) the placing canvas's `hidden` lost to the page's `canvas { display:block }`, so after the tenth genome it stayed on screen with its last drawing (and over the diagram); the check read the attribute, not the display. (2) paths.css draws a selected or focused arrow red; 13, 14 and 18 override it to blue under lockColours, 17 never did.
 
 ## JM on hover text, 2026-10-17 (verbatim)
 
@@ -59,7 +70,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
        orange's gene 20 60%+ blue at 100 (raise m). 3 a sweep that drags little: orange's gene 20 70%+ blue, its ends under 40%, at 60.
        Gene-by-gene and over-time panels show share blue, each population. No F_ST in C.
     D  Four populations, each starting all its own colour (one allele a gene): orange, blue, red, purple. Migration per pair as
-       six two-headed arrows (paths.js, `both`), N a slider. Board with each population's colour mix and the pooled mix.
+       six two-headed arrows (paths.js, `both`), N a slider (one a population since 2026-10-19; a swap between two sizes: each genome of the smaller with chance m). Board with each population's colour mix and the pooled mix.
        Pass 3 (JM's D request): under the board, the mirror: set 1 on the diagram's square, each box a population's colours
        gene by gene (a column a gene) and its heterozygosity (JM, late: a genome's genes whose two chromosomes are different
        colours, averaged over its genomes); each line that pair's F_ST; the middle the pooled colours and F_ST ("0 all alike ·
@@ -122,7 +133,9 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
    - Theory = the judge above, on each run's set 1, not one curve: it is not a function of F_ST alone (two linked pairs at F_ST .67 misplace 12%). It treats genes as independent, so it is close to the best possible, not provably it.
    - Practice starts ticked in D only (free play first, per the request); every other stage starts unticked.
    - The five presets are a first choice (spread F_ST .85 / .40 / .28 / .10 / .04, two with unequal F's); swap freely.
-1. Voice blocks: none yet, all four stages.
+1. Voice blocks: JM's dictation in, 2026-10-19, all four stages (ASR fixes in each block's comment). Kept as said: A "crossovers happen per recombination" (the slider reads crossovers a chromosome); D "the homozygosity, our inbreeding statistic F" (the mirror shows heterozygosity, his 10-15 ruling); C "or actually assess your understanding".
+1a. N per population was built from D's intro ("they don't tend to be of equal size", "set the effective population size for each pair", read as each population). Practice only; rounds hold all four at 25. Measured (20 runs, every pair .01, orange N 10): rest at 100, orange heterozygosity .37 vs .58, its pairwise F_ST .17 vs .04 among the others, 20 of 20 on min/max; rest at 50, .35 vs .50 and .19 vs .08 but only 16 of 20 (so the check uses 100); m .005 / .02 with the rest at 50: 15-16 / 19 of 20. One slider again is a small revert if JM did not mean it.
+1b. C target 3's check flakes about 1 run in 10 (2026-10-19, 80 runs a setting, the same before and after this pass): its intended settings each miss 0-4% of single runs (so -.6 sb -.6 m .002: 3 of 80, g20 down to .66; so -.3 m .005: ends up to .40-.41), and the check asks six hits in a row. Not recalibrated (standing rule: not without JM); rerun.
 2. D's pairwise F_ST between two populations that share no colour at all sits near 0.67, not 1 (each is itself a mix; F_ST is 1 only when each population is one colour). No target leans on it; say so in lecture or the voice if it comes up.
 3. Mutation is no longer in the lesson (old C's U went with old C). Add it back to D?
 4. B's rounds each free one slider with the dispersal event held at 4 each way; the pulse-size slider is free only in practice and after the targets.
@@ -150,6 +163,11 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 16 | A-D | declutter (JM 10-17): every summary line under a board or plot cut (A board + over time; B over time + your runs, board keeps only the pick feedback; C board + over time; D board, mirror, over time, sparrows, placements); D's sparrows panel moved under the stage; R panel last in each stage, collapsed (`details.rcode`); checks: the mirror's drawn numbers read off its canvas in place of the cut caption | done |
 | 17 | A-D | hover text (JM 10-17): every setup bullet moved onto the box or control it describes (an ⓘ beside a panel heading, slider label or practice label; tip shown on hover, focus or tap); bullets that repeat a label dropped (practice); the bullet-only intro panels removed until JM dictates a voice; D's sparrows an optional box (closed, drawn when opened); 19 marks (A 4, B 3, C 7: the s/h tip shared by all four sliders, D 5); checks: no bullet list or intro panel, every mark has words, hover shows and hides, a label's click passed to its slider keeps the tip up, the box closed at load and the canvas fitting once opened (44 + R) | done |
 | 18 | A-D | declutter sweep (JM 10-17: "please go ahead and do a declutter sweep for past lessons"): bullets to hover text, R code last and closed, summary lines cut or kept as in docs/overhauls/declutter_sweep.md | done |
+| 19 | A-D | JM's dictated intros (2026-10-19) as voice blocks, ASR fixes only, listed in each block's comment; check: every intro panel holds a voice and no bullets | done |
+| 20 | A-C | "beads" -> loci on screen: menus ("share of loci from the other population", "average fragment length, in loci"), targets, axes, tips, B's pick | done |
+| 21 | D | the placing card left on screen after the tenth genome (canvas display beat `hidden`); check reads the computed display | done |
+| 22 | D | a selected/focused arrow drawn red: blue, as 13/14/18 (steppers in ink); check reads the computed stroke | done |
+| 23 | D | N per population (four sliders, two rows in the square's order); engine takes P.N as a number or one a population, a swap Binomial(smaller N, m); the judge's rare colour on each population's own 2N; rounds hold all four at 25; R panel; checks: a small population among large ones less heterozygous and more apart; scaffold and scoring unchanged, version stays 3 | done |
 ## Rulings
 
 - 2026-10-08: 17 is migration; IBD blocks and haplotypes lead into it.
