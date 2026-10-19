@@ -66,8 +66,9 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
        1 time (R 1 held): fragments 4+ beads; 2 R (20 generations held): 4+ beads; 3 R (5 generations held): under 6 beads.
        Your-runs plot and the shared-fragment pick unchanged.
     C  Old D, two populations: the blue allele at gene 20 has its own s and h in each population (1, 1 - hs, 1 - s; s > 0 harmful there).
-       1 local adaptation (m .02 held): orange under 30% blue at gene 20, blue over 70%. 2 swamping (s +.1 / -.6 held):
-       orange's gene 20 60%+ blue at 100 (raise m). 3 a sweep that drags little: orange's gene 20 70%+ blue, its ends under 40%, at 60.
+       1 local adaptation (m .02 held): orange under 35% blue at gene 20, blue 65%+. 2 swamping (s +.1 / -.6 held):
+       orange's gene 20 65%+ blue at 100 (raise m). 3 a sweep that drags little: orange's gene 20 65%+ blue, its ends under 45%, at 60.
+       (Bars as widened 2026-10-19; were 30 / 70, 60, 70 / 40.)
        Gene-by-gene and over-time panels show share blue, each population. No F_ST in C.
     D  Four populations, each starting all its own colour (one allele a gene): orange, blue, red, purple. Migration per pair as
        six two-headed arrows (paths.js, `both`), N a slider (one a population since 2026-10-19; a swap between two sizes: each genome of the smaller with chance m). Board with each population's colour mix and the pooled mix.
@@ -135,7 +136,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
    - The five presets are a first choice (spread F_ST .85 / .40 / .28 / .10 / .04, two with unequal F's); swap freely.
 1. Voice blocks: JM's dictation in, 2026-10-19, all four stages (ASR fixes in each block's comment). Kept as said: A "crossovers happen per recombination" (the slider reads crossovers a chromosome); D "the homozygosity, our inbreeding statistic F" (the mirror shows heterozygosity, his 10-15 ruling); C "or actually assess your understanding".
 1a. N per population was built from D's intro ("they don't tend to be of equal size", "set the effective population size for each pair", read as each population). Practice only; rounds hold all four at 25. Measured (20 runs, every pair .01, orange N 10): rest at 100, orange heterozygosity .37 vs .58, its pairwise F_ST .17 vs .04 among the others, 20 of 20 on min/max; rest at 50, .35 vs .50 and .19 vs .08 but only 16 of 20 (so the check uses 100); m .005 / .02 with the rest at 50: 15-16 / 19 of 20. One slider again is a small revert if JM did not mean it.
-1b. C target 3's check flakes about 1 run in 10 (2026-10-19, 80 runs a setting, the same before and after this pass): its intended settings each miss 0-4% of single runs (so -.6 sb -.6 m .002: 3 of 80, g20 down to .66; so -.3 m .005: ends up to .40-.41), and the check asks six hits in a row. Not recalibrated (standing rule: not without JM); rerun.
+1b. FIXED 2026-10-19 (JM: "Let's slightly widen C's bars"): 1 orange under 35 / blue 65+, 2 65+ (raised: its flake was the opening m .02 reaching 60), 3 gene 20 65+ / ends under 45; 3's check misses are the misconceptions (swamped, weak or no selection), -.3 at m .002 dropped (the right idea, lands now and then). Distributions in C's header comment. Was: C target 3's check flakes about 1 run in 10 (2026-10-19, 80 runs a setting, the same before and after this pass): its intended settings each miss 0-4% of single runs (so -.6 sb -.6 m .002: 3 of 80, g20 down to .66; so -.3 m .005: ends up to .40-.41), and the check asks six hits in a row. Not recalibrated (standing rule: not without JM); rerun.
 2. D's pairwise F_ST between two populations that share no colour at all sits near 0.67, not 1 (each is itself a mix; F_ST is 1 only when each population is one colour). No target leans on it; say so in lecture or the voice if it comes up.
 3. Mutation is no longer in the lesson (old C's U went with old C). Add it back to D?
 4. B's rounds each free one slider with the dispersal event held at 4 each way; the pulse-size slider is free only in practice and after the targets.
@@ -168,6 +169,7 @@ One engine (`mg*`): n populations (2 in A-C, 4 in D) of N hermaphrodite genomes,
 | 21 | D | the placing card left on screen after the tenth genome (canvas display beat `hidden`); check reads the computed display | done |
 | 22 | D | a selected/focused arrow drawn red: blue, as 13/14/18 (steppers in ink); check reads the computed stroke | done |
 | 23 | D | N per population (four sliders, two rows in the square's order); engine takes P.N as a number or one a population, a swap Binomial(smaller N, m); the judge's rare colour on each population's own 2N; rounds hold all four at 25; R panel; checks: a small population among large ones less heterozygous and more apart; scaffold and scoring unchanged, version stays 3 | done |
+| 24 | C | bars widened (JM 10-19: "Let's slightly widen C's bars. Shaky checks bother me only a little bit, but not zero"): 30/70 -> 35/65, 60 -> 65 (up), 70/40 -> 65/45; 80 runs a setting; check's target-3 misses = misconceptions | done |
 ## Rulings
 
 - 2026-10-08: 17 is migration; IBD blocks and haplotypes lead into it.

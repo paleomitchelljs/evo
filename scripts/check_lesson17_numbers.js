@@ -147,7 +147,10 @@ tgt(SB, 2, [{ R: 2 }, { R: 4 }], [{ R: 1 }, { R: 0.5 }]);
 tgt(SC, 0, [{ so: 0.3, sb: -0.3 }, { so: 0.6, sb: -0.6 }], [{ so: 0, sb: 0 }, { so: 0.3, sb: 0 }, { so: 0, sb: -0.3 }]);
 tgt(SC, 1, [{ m: 0.05 }, { m: 0.1 }], [{ m: 0.02 }, { m: 0.01 }]);
 tgt(SC, 2, [{ so: -0.3, sb: 0, m: 0.005 }, { so: -0.3, sb: -0.6, m: 0.005 }, { so: -0.6, sb: -0.6, m: 0.002 }],
-           [{ so: 0.1, sb: -0.6, m: 0.05 }, { so: 0, sb: -0.6, m: 0.05 }, { so: -0.3, sb: 0, m: 0.002 }, { so: -0.1, sb: 0, m: 0.005 }]);
+           [{ so: 0.1, sb: -0.6, m: 0.05 }, { so: 0, sb: -0.6, m: 0.05 }, { so: -0.3, sb: 0, m: 0.05 }, { so: -0.1, sb: 0, m: 0.005 }, { so: 0, sb: 0, m: 0.005 }]);
+/* the bars widened 2026-10-19 (JM: "slightly widen C's bars"); 3's misses are the misconceptions: swamped (m .05, ends 51+),
+   selection too weak (-.1, gene 20 57 at most) or none (31 at most). -.3 at m .002 (gene 20 42-69) is the right idea,
+   slow, and lands now and then: no longer listed */
 {
   SC.round = 1; SC.done = false; openRound(SC);
   const set = readSet(SC), held = ["so", "ho", "sb", "hb"].every(k => document.getElementById("C_" + k).dataset.held === "1");
