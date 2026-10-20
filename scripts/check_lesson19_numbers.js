@@ -2,54 +2,43 @@
 /*
  * check_lesson19_numbers.js -- the checks for app/lessons/lesson19.html.
  *
- * Lesson 19 is a draft (first pass, 2026-10-17, from JM's brief the same
- * day): speciation on lesson 17's engine. A a grey population splits, each
- * half takes mutations in its own colour, incompatible pairs build up and
- * hold the two apart in contact or not; B two incompatible pairs and an
- * inversion; C a choosy allele where the two meet. What has to hold:
+ * Lesson 19, pass 3 (2026-10-20, JM's brief that day): speciation as a
+ * process. A ponds and floods (incompatibilities build by drift until the
+ * floods stop mattering); B one incompatible pair placed on the chromosome;
+ * C a trait (genotype -> looks -> chance to live, a pond each); D a choosy
+ * allele at a locus the student places, with an inversion. What has to hold:
  *
- *   Engine. The split starts grey; apart, each population carries only its
- *      own colour and every genome there has fitness 1 (a pair costs
- *      nothing until the two meet); a genome's incompatible pairs agree
- *      with the list counted by hand; mutation runs at mu a gene, never at
- *      gene 1, always in the population's colour; with one inverted and one
- *      standard chromosome no crossover falls inside the inversion, and the
- *      gamete takes the arrangement of the chromosome that gave it the
- *      inversion's first gene, while two inverted chromosomes cross over
- *      inside as usual; B's pairs halve fitness and a chromosome blue at a
- *      pair's first gene and orange at its second fits both populations;
- *      a choosy population of two looks makes almost no mixed young and an
- *      unchoosy one about half; gene 20 gives 1, .75, .5.
- *   A. practice is free play; a round holds its settings and measure and
- *      Go waits for a drawing; one drag sets every dot and Clear takes them
- *      away; each round's median is inside its cloud, one straight line is
- *      not, and "it holds at contact" misses where the two fuse; the cloud
- *      stays on its axis; hybrid fitness falls with time apart; incompatible
- *      pairs grow faster than the mutations do; every run is two dots on
- *      your runs; a practice drawing is a row and no bit.
- *   B. each round holds what it says; each target hit by its setting and
- *      missed by the opening and the near misses (an inversion over one
- *      gene of the pair, or over none); with the inversion across both
- *      genes no chromosome that fits both ever forms, without it they do;
- *      dragging across the strip sets the inversion and a click on it
- *      takes it away.
- *   C. the choosy allele is absent apart and 1 in 5 at contact; the two
- *      targets hit and missed as measured; few young of mixed parents
- *      once it is common.
- *   Flow. A: four drawn rounds, each scored once (half the dots inside or
- *      more), its count in the notes, Next round after each; A waits for
- *      five times apart. B, C: a miss records 0 and the target stays; hits
- *      open Next target; C waits for six runs. Every bit written.
- *   All. every canvas fits its panel (1500 and 1000 wide); the three R
- *      panels run (Rscript; shortened).
- *   Layout (JM, 2026-10-17). Each stage ends in its R code, closed; no
- *      summary lines; the setup bullets are hover text (every mark has
- *      words, hover shows and hides them); the observed data is a closed
- *      box under the stage.
+ *   Engine. The split starts grey; with no floods each pond carries only
+ *      grey and its own colour and every fish there lives (a pair costs
+ *      nothing until the ponds meet); a hybrid's incompatible pairs agree
+ *      with a count by hand and any one of them kills it; mutation runs at
+ *      mu a locus; floods come only every T generations, about N m fish
+ *      each; F_ST is 1 for two ponds with nothing in common and 0 for two
+ *      the same; B's pair costs only with both alleles, and a chromosome
+ *      blue at the first locus and orange at the second fits both ponds;
+ *      C's chance to live follows the arrows and h for each look in each
+ *      pond; D's inversion stops crossing over inside it in a fish with one
+ *      inverted chromosome and not in a fish with two, and a gamete takes
+ *      the arrangement of the chromosome that gave it the inversion's first
+ *      locus; a choosy pond gives the look it prefers the births; the
+ *      table's fitness is its chance to live times its births, re-derived
+ *      here from the counts.
+ *   Targets. Each round's intended setting hits it and its opening (and the
+ *      near misses measured in the page's comments) miss it.
+ *   Flow. A miss records 0 and the target stays; hits open Next target;
+ *      each stage opens the next; the last ends the lesson; every bit
+ *      written.
+ *   Controls. B's two loci and D's choosy locus move by dragging along the
+ *      chromosome; D's toggles write their inputs and are held when a round
+ *      holds them; B's cost arrow is red (it lowers the chance to live).
+ *   Layout. Each stage ends in its R code, closed; no readout lines; every
+ *      hover mark has words; the hybrid box closed at load; every canvas
+ *      fits its panel (1500 and 1000 wide); the four R panels run (Rscript,
+ *      shortened).
  *
  * Same harness as check_lesson17_numbers.js.
  *
- * Usage:  node scripts/check_lesson19_numbers.js      (~4 minutes)
+ * Usage:  node scripts/check_lesson19_numbers.js      (~6 minutes)
  * Exit 0 iff every check passes. Needs Google Chrome and python3; Rscript
  * for the R panels (skipped, and said so, without it).
  */
@@ -60,231 +49,169 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8799;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_board","A_time","A_grid","A_runs","B_board","B_genes","B_time","B_sparrow","C_board","C_time","C_runs"];
+const CANVAS_IDS = ["A_board", "A_time", "A_grid", "B_board", "B_genes", "B_time", "C_board", "C_time", "C_surv", "C_got", "D_board", "D_genes", "D_time", "D_got"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
-for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 for (const k in Gates) Gates[k].open = true;
-const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error(S.K + ": no " + k + " = " + o[k] + " on the slider"); document.getElementById(S.K + "_" + k).value = i; } syncVals(S); };
-/* a setting played n times as practice against round r: the summaries at the end and at contact */
-const play = (S, r, o, n) => { S.round = r; S.waiting = false; S.done = false; document.getElementById(S.K + "_practice").checked = true; openRound(S); setC(S, o);
-  const out = []; for (let k = 0; k < (n || 2); k++) { goStage(S); finishNow(S); out.push({ S: sumAt(S.last, S.last.G), C: contactSum(S.last) }); } return out; };
-const hits = (S, r, o, n) => play(S, r, o, n).map(x => judge(S.cfg.rounds[r], x.S, x.C));
+const el = (S, k) => document.getElementById(S.K + "_" + k);
+const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), e = el(S, k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error(S.K + ": no " + k + " = " + o[k]); e.value = i + (+e.min || 0); } syncVals(S); };
+/* a setting played n times as practice from round r's holds: the summaries at the end */
+const play = (S, r, o, n) => { S.round = r; S.waiting = false; S.done = false; el(S, "practice").checked = true; openRound(S); setC(S, o);
+  const out = []; for (let k = 0; k < (n || 1); k++) { goStage(S); finishNow(S); out.push(sumAt(S.last, S.last.G)); } return out; };
 const show = o => JSON.stringify(o).replace(/"/g, "");
-const tgt = (S, r, good, badOnes) => {
-  const g = good.map(o => [o, hits(S, r, o)]), b = badOnes.map(o => [o, hits(S, r, o)]);
-  const gOk = g.map(([o, js]) => [o, js.every(j => j.ok), js.map(j => j.vals.join("/")).join(", ")]), bOk = b.map(([o, js]) => [o, js.every(j => !j.ok), js.map(j => j.vals.join("/")).join(", ")]);
-  check(S.K + " target " + (r + 1) + ": hit by " + gOk.map(x => show(x[0]) + " (" + x[2] + ")").join(", ") + "; missed by " + bOk.map(x => show(x[0]) + " (" + x[2] + ")").join(", "),
-        gOk.every(x => x[1]) && bOk.every(x => x[1]), gOk.filter(x => !x[1]).map(x => "no hit " + show(x[0])).concat(bOk.filter(x => !x[1]).map(x => "hit " + show(x[0]))).join("; "));
+const tgt = (S, r, good, badOnes, n) => {
+  const R = S.cfg.rounds[r], res = (o, want) => { const js = play(S, r, o, n).map(x => judge(R, x, S.last)); return [o, js.every(j => j.ok === want), js.map(j => j.vals.join("/")).join(", ")]; };
+  const g = good.map(o => res(o, true)), b = badOnes.map(o => res(o, false));
+  check(S.K + " target " + (r + 1) + ": hit by " + g.map(x => show(x[0]) + " (" + x[2] + ")").join(", ") + "; missed by " + b.map(x => show(x[0]) + " (" + x[2] + ")").join(", "),
+        g.every(x => x[1]) && b.every(x => x[1]), g.filter(x => !x[1]).map(x => "no hit " + show(x[0])).concat(b.filter(x => !x[1]).map(x => "hit " + show(x[0]))).join("; "));
 };
-const hues = F => { const s = new Set(); for (const g of F) for (const c of g) for (let i = 0; i < L; i++) s.add(c[i] & 7); return [...s].sort().join(""); };
+const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c of g) for (let i = 0; i < L; i++) s.add(w.kind[c[i]]); return [...s].sort().join(""); };
 
 /* ================= the engine ================= */
 {
-  const P = { N: 25, R: 1, mu: 0.004, cost: 0.5, clash: CLASH, m: 0.05, grey: true }, pr = { pops: mgStart(P, 7), rng: mulberry32(11) };
-  check("engine: the split starts grey: colours in the two populations " + hues(pr.pops[0]) + " / " + hues(pr.pops[1]), hues(pr.pops[0]) === "0" && hues(pr.pops[1]) === "0");
-  for (let t = 0; t < 120; t++) mgStep(P, pr, false);
-  const fit = pr.pops.map((F, k) => F.every(g => mgFit(P, g, k) === 1));
-  check("engine: 120 generations apart, the orange population carries grey and orange only (" + hues(pr.pops[0]) + "), the blue grey and blue only (" + hues(pr.pops[1]) + "), and every genome in both has fitness 1",
-        /^0?1$/.test(hues(pr.pops[0])) && /^0?2$/.test(hues(pr.pops[1])) && fit.every(Boolean));
-  /* incompatible pairs in hybrids, by the masks and by hand over the list */
-  const rng = mulberry32(5); let agree = 0, tot = 0, some = 0;
-  for (let r = 0; r < 200; r++) { const y = [mgGamete(P, pr.pops[0][r % 25], rng), mgGamete(P, pr.pops[1][(7 * r) % 25], rng)];
-    const has = (i, h) => (y[0][i] & 7) === h || (y[1][i] & 7) === h, hand = CLASH.list.filter(([i, j]) => has(i, 1) && has(j, 2)).length, n = mgClashes(P, y);
-    if (n === hand) agree++; if (n > 0) some++; tot++;
-    if (Math.abs(mgFit(P, y, 0) - Math.pow(0.5, hand)) > 1e-12) agree--; }
-  check("engine: a hybrid's incompatible pairs agree with the list counted by hand, and its fitness is 0.5 per pair (" + agree + " of " + tot + " hybrids; " + some + " carry at least one; the list holds " + CLASH.list.length + ")",
-        agree === tot && some > 50 && CLASH.list.length >= 24 && CLASH.list.length <= 32 && CLASH.list.every(([i, j]) => i !== j && i !== 0 && j !== 0 && i !== 19 && j !== 19));
-  /* mutation: mu a gene; never gene 1; the population's colour */
-  const c0 = new Int32Array(L + 1), Pm = { mu: 0.004 }, mr = mulberry32(9); let n = 0, g1 = 0, wrong = 0; const T = 40000;
-  for (let r = 0; r < T; r++) { const k = r % 2, c = mgMutate(Pm, c0, k, mr); for (let i = 0; i < L; i++) if (c[i] !== 0) { n++; if (i === 0) g1++; if ((c[i] & 7) !== k + 1) wrong++; } }
-  const want = 39 * 0.004;
-  check("engine: mutation, " + (n / T).toFixed(4) + " new alleles a chromosome a generation (39 genes x 0.004 = " + want.toFixed(4) + "); none at gene 1; all in the population's colour", Math.abs(n / T - want) < 0.008 && g1 === 0 && wrong === 0);
-  /* the inversion: genes 8-17 (7..16), crossing over at R 8 */
-  const Pi = { R: 8, inv: [7, 16] }, A = new Int32Array(L + 1).fill(1), B = new Int32Array(L + 1).fill(2); A[L] = 0; B[L] = 1;
-  const Bi = new Int32Array(L + 1).fill(3); Bi[L] = 1;
-  const ir = mulberry32(13); let split = 0, arrOk = 0, outside = 0, homoSplit = 0;
+  const P = { N: 25, mu: 0.004, p: 0.02, R: 1, m: 0, T: 10, start: "grey" }, w = pdWorld(P, 7);
+  check("engine: the split starts grey: kinds in the two ponds " + kinds(w, w.pops[0]) + " / " + kinds(w, w.pops[1]), kinds(w, w.pops[0]) === "0" && kinds(w, w.pops[1]) === "0");
+  for (let t = 0; t < 150; t++) pdStep(P, w);
+  const live = w.pops.map((F, k) => F.every(g => pdLive(P, w, g, k) === 1));
+  check("engine: 150 generations with no floods, the orange pond carries grey and orange only (" + kinds(w, w.pops[0]) + "), the blue grey and blue only (" + kinds(w, w.pops[1]) + "), and every fish in both would live",
+        /^0?1$/.test(kinds(w, w.pops[0])) && /^0?2$/.test(kinds(w, w.pops[1])) && live.every(Boolean));
+  /* hybrids: their incompatible pairs counted by hand; one is enough to kill */
+  const rng = mulberry32(5); let agree = 0, tot = 0, some = 0, dead = 0;
+  for (let r = 0; r < 200; r++) { const y = [pdGamete(P, w.pops[0][r % 25], rng, null), pdGamete(P, w.pops[1][(7 * r) % 25], rng, null)];
+    const o = new Set(), b = new Set(); for (const c of y) for (let i = 0; i < L; i++) { const k = w.kind[c[i]]; if (k === 1) o.add(c[i]); else if (k === 2) b.add(c[i]); }
+    let hand = 0; for (const x of o) for (const z of b) if (w.loc[x] !== w.loc[z] && pdHash(Math.min(x, z), Math.max(x, z), w.salt) < P.p) hand++;
+    const n = pdPairsA(P, w, y); if (n === hand) agree++; if (n > 0) some++; tot++; if ((pdLive(P, w, y, 0) === 0) === (hand > 0)) dead++; }
+  check("engine: a hybrid's incompatible pairs agree with a count by hand (" + agree + " of " + tot + "; " + some + " carry one or more) and a hybrid lives exactly when it carries none (" + dead + " of " + tot + ")",
+        agree === tot && dead === tot && some > 40);
+  /* mutation */
+  const Pm = { mu: 0.004 }, wm = pdWorld({ N: 1, start: "grey", R: 1 }, 3), c0 = wm.pops[0][0][0]; let n = 0; const T = 30000;
+  for (let r = 0; r < T; r++) { const c = pdMutate(Pm, wm, c0, r % 2); for (let i = 0; i < L; i++) if (c[i] !== c0[i]) { n++; if (wm.kind[c[i]] !== r % 2 + 1) n -= 1000; } }
+  check("engine: mutation, " + (n / T).toFixed(4) + " new alleles a chromosome a generation (40 x 0.004 = 0.16), each in its pond's colour", Math.abs(n / T - 0.16) < 0.008);
+  /* floods */
+  const Pf = { N: 50, mu: 0, R: 1, m: 0.2, T: 10, start: "grey" }, wf = pdWorld(Pf, 9); let off = 0, sw = 0, nf = 0;
+  for (let t = 1; t <= 300; t++) { pdStep(Pf, wf); if (t % 10) { if (wf.flood) off++; } else { nf++; sw += Math.max(0, wf.flood); } }
+  check("engine: floods only every 10th generation (" + off + " between), " + (sw / nf).toFixed(1) + " fish swapped a flood (50 x 0.2 = 10)", off === 0 && Math.abs(sw / nf - 10) < 2);
+  /* F_ST */
+  const wa = pdWorld({ N: 25, start: "apart", R: 1 }, 4), fa = pdFst(wa, null).fst, wg = pdWorld({ N: 25, start: "grey", R: 1 }, 4); wg.pops[1] = wg.pops[0].map(g => g.map(c => c.slice()));
+  check("engine: F_ST " + fa.toFixed(3) + " for two ponds with nothing in common, " + pdFst(wg, null).fst.toFixed(3) + " for two the same", Math.abs(fa - 1) < 1e-9 && Math.abs(pdFst(wg, null).fst) < 1e-9);
+  /* B's pair */
+  const PB = { N: 2, start: "apart", R: 1, pair: [9, 14], cost: 0.9 }, wb = pdWorld(PB, 2), Oc = wb.pops[0][0][0], Bc = wb.pops[1][0][0];
+  const fits = Bc.slice(); fits[14] = Oc[14];
+  const v = [pdLive(PB, wb, [Oc, Oc], 0), pdLive(PB, wb, [Oc, Bc], 0), pdLive(PB, wb, [fits, Oc], 0), pdLive(PB, wb, [fits, Bc], 1)];
+  check("engine: B's pair at loci 10 and 15, cost 0.9: orange fish " + v[0] + ", a first hybrid " + v[1].toFixed(2) + "; a chromosome blue at 10 and orange at 15 beside orange " + v[2] + " and beside blue " + v[3],
+        v[0] === 1 && Math.abs(v[1] - 0.1) < 1e-9 && v[2] === 1 && v[3] === 1);
+  /* C's arrows */
+  const PC = { N: 2, start: "grey", R: 1, trait: { at: 19, h: 0.25, b: [-0.5, 0.75], q0: [0, 1] } }, wc = pdWorld(PC, 2);
+  const g = d => { const a = wc.pops[0][0][0].slice(), b = a.slice(); a[19] = d >= 1 ? wc.DARK : wc.LIGHT; b[19] = d >= 2 ? wc.DARK : wc.LIGHT; return [a, b]; };
+  const got = [0, 1, 2].map(d => [pdLive(PC, wc, g(d), 0), pdLive(PC, wc, g(d), 1)].map(x => +x.toFixed(4)));
+  const want = [[1, 0.25], [0.875, 0.4375], [0.5, 1]];
+  check("engine: C, h 0.25, orange pond -0.5, blue pond +0.75: chance to live ○ ◐ ● " + got.map(x => x.join("/")).join(", ") + " (1 + b z or 1 - b (1 - z), z = 0, h, 1)", JSON.stringify(got) === JSON.stringify(want));
+  /* D's inversion: loci 20-31 (19..30) */
+  const PD = { R: 8, trait: { at: 19 }, pref: { at: 30 }, inv: true }, inv = pdInv(PD), A = new Int32Array(L + 1).fill(1), B2 = new Int32Array(L + 1).fill(2); A[L] = 0; B2[L] = 1;
+  const Bi = new Int32Array(L + 1).fill(3); Bi[L] = 1; const ir = mulberry32(13); let split = 0, arrOk = 0, outside = 0, homo = 0;
   for (let r = 0; r < 4000; r++) {
-    const gm = mgGamete(Pi, [A, B], ir), inside = new Set(); for (let i = 7; i <= 16; i++) inside.add(gm[i]);
-    if (inside.size > 1) split++; if (gm[L] === (gm[7] === 1 ? 0 : 1)) arrOk++; if (gm[0] !== gm[39]) outside++;
-    const hm = mgGamete(Pi, [B, Bi], ir), hin = new Set(); for (let i = 7; i <= 16; i++) hin.add(hm[i]); if (hin.size > 1) homoSplit++;
-  }
-  check("engine: one inverted, one standard: of 4000 gametes none mixes the two inside genes 8-17 (" + split + "), each takes the arrangement of the chromosome that gave it gene 8 (" + arrOk + "), and outside they still cross over (" + outside + " differ at the two ends); two inverted cross over inside (" + homoSplit + ")",
-        split === 0 && arrOk === 4000 && outside > 1000 && homoSplit > 1000);
-  /* B's pairs */
-  const PB = { cost: 0.5, clash: B_CLASH }, mk = f => { const c = new Int32Array(L + 1); for (let i = 0; i < L; i++) c[i] = f(i); return c; };
-  const O = mk(() => mgAl(1, 3, 1)), Bl = mk(() => mgAl(2, 3, 2)), bridge = mk(i => i === 9 || i === 29 ? mgAl(2, 3, 2) : mgAl(1, 3, 1));
-  const w = [mgFit(PB, [O, O], 0), mgFit(PB, [O, Bl], 0), mgFit(PB, [bridge, O], 0), mgFit(PB, [bridge, Bl], 1)];
-  const one = mk(i => i === 14 ? mgAl(2, 3, 2) : mgAl(1, 3, 1)), w1 = mgFit(PB, [one, O], 0);
-  check("engine: B's pairs: all orange " + w[0] + ", a first hybrid (both pairs) " + w[1] + ", one pair (blue at 15 only) " + w1 + "; a chromosome blue at 10 and 30, orange elsewhere, fits beside orange (" + w[2] + ") and beside blue (" + w[3] + ")",
-        w[0] === 1 && w[1] === 0.25 && w1 === 0.5 && w[2] === 1 && w[3] === 1);
-  /* the choosy allele: two looks in one population */
-  const twoLooks = choosy => { const Pc = { N: 100, R: 1, mu: 0, choose: true }, F = [];
-    for (let i = 0; i < 100; i++) { const c = mk(j => j === 0 ? (choosy ? mgAl(CHOOSY, 3, 7) : 0) : i < 50 ? mgAl(1, 3, 1) : mgAl(2, 3, 2)); F.push([c, c]); }
-    const pr2 = { pops: [F, F.slice()], rng: mulberry32(21), born: 0, mixed: 0 }; mgStep(Pc, pr2, false); return pr2.mixed / pr2.born; };
-  const mc = twoLooks(true), mn = twoLooks(false);
-  check("engine: half orange-looking, half blue-looking: young of mixed parents " + pc(mc) + " when all are choosy, " + pc(mn) + " when none is", mc < 0.03 && mn > 0.35 && mn < 0.65);
-  const PC = { g20: 0.5 }, own = mk(i => i === 19 ? mgAl(1, 3, 1) : 0), away = mk(i => i === 19 ? mgAl(2, 3, 1) : 0);
-  const g20 = [mgFit(PC, [own, own], 0), mgFit(PC, [own, away], 0), mgFit(PC, [away, away], 0), mgFit(PC, [away, away], 1)];
-  check("engine: gene 20 in the orange population, the blue allele 0 / 1 / 2 copies: " + g20.slice(0, 3).join(" / ") + "; two blue in the blue population " + g20[3], g20.join() === "1,0.75,0.5,1");
+    const gm = pdGamete(PD, [A, B2], ir, inv), ins = new Set(); for (let i = 19; i <= 30; i++) ins.add(gm[i]);
+    if (ins.size > 1) split++; if (gm[L] === (gm[19] === 1 ? 0 : 1)) arrOk++; if (gm[0] !== gm[39]) outside++;
+    const hm = pdGamete(PD, [B2, Bi], ir, inv), hin = new Set(); for (let i = 19; i <= 30; i++) hin.add(hm[i]); if (hin.size > 1) homo++; }
+  check("engine: D's inversion over loci 20-31: one inverted, one standard, none of 4000 gametes mixes inside (" + split + "), each takes the arrangement of the chromosome that gave it locus 20 (" + arrOk + "), crossing over outside goes on (" + outside + "); two inverted cross over inside (" + homo + ")",
+        split === 0 && arrOk === 4000 && outside > 1000 && homo > 1000);
+  /* D's choice: half light, half dark, every fish choosy for dark (strength 1) or no one choosy */
+  const births = choosy => { const Pc = { N: 100, R: 1, mu: 0, start: "grey", trait: { at: 19, h: 0.5, b: [0, 0], q0: [0, 0] }, pref: { at: 30, a: 1, want: 1, q0: [choosy ? 1 : 0, 0] } }, wd = pdWorld(Pc, 21);
+    wd.pops[0].forEach((f, i) => { if (i >= 50) for (const c of f) c[19] = wd.DARK; }); pdStep(Pc, wd); const t = wd.gen[0]; return [t.births[0] / t.adults[0], t.births[2] / t.adults[2]]; };
+  const bc = births(true), bn = births(false);
+  check("engine: a pond half light, half dark: births a light / a dark fish " + bc.map(x => x.toFixed(2)).join(" / ") + " when every fish is choosy for dark, " + bn.map(x => x.toFixed(2)).join(" / ") + " when none is",
+        bc[1] > 1.8 * bc[0] && Math.abs(bn[0] - bn[1]) < 0.4);
 }
 
-/* ================= A ================= */
-/* practice (free play) at a round's settings: the 50 pairs' median at each dot, and how drawings score against the run */
-const A_run = (G, m, meas) => { SA.done = false; SA.waiting = false; document.getElementById("A_practice").checked = true; openRound(SA); setC(SA, { G, m });
-  document.getElementById("A_meas").value = meas; AX.pred = null; goStage(SA); finishNow(SA); return SA.last; };
-const A_median = (q, meas) => A_knots(q.G).map(t => { const s = q.hist.find(h => h.t === t); return qtl(s.pairs.map(p => MEAS_A[meas].vals(p)[0]).sort((a, b) => a - b), 0.5); });
-const A_score = (q, meas, ys) => { const r = A_inside(q, { meas, G: q.G, ys }); return r.k / r.n; };
+/* ================= the targets ================= */
+tgt(SA, 0, [{ mu: 0.004 }, { mu: 0.006 }], [{ mu: 0.002 }, { mu: 0.001 }]);
+tgt(SA, 1, [{ m: 0.1, T: 25 }, { m: 0.05, T: 25 }, { m: 0.1, T: 50 }], [{ m: 0.2, T: 25 }, { m: 0.3, T: 25 }]);
+tgt(SA, 2, [{ T: 5 }, { m: 0.3 }, { p: 0 }], [{ p: 0.02, m: 0.2, T: 10 }]);
+tgt(SA, 3, [{ N: 25 }, { N: 10 }], [{ N: 50 }]);
+tgt(SB, 0, [{ i: 19, j: 20 }, { i: 18, j: 20 }], [{ i: 4, j: 35 }, { i: 14, j: 25 }]);
+tgt(SB, 1, [{ cost: 1 }], [{ cost: 0.9 }, { cost: 0.75 }]);
+tgt(SB, 2, [{ m: 0.2 }, { m: 0.3 }], [{ m: 0.1 }, { m: 0.05 }]);
+tgt(SC, 0, [{ bo: -0.5, bb: 0.5 }, { bo: -1, bb: 1 }], [{ bo: 0, bb: 0 }, { bo: -0.25, bb: 0 }]);
+tgt(SC, 1, [{ h: 0.75 }, { h: 1 }], [{ h: 0.5 }, { h: 0 }]);
+tgt(SC, 2, [{ m: 0.2, T: 2 }], [{ m: 0.1, T: 2 }, { m: 0.05, T: 1 }]);
+tgt(SD, 0, [{ want: 1 }], [{ want: 0 }]);
+tgt(SD, 1, [{ inv: 1 }, { at: 30, inv: 1 }], [{ at: 38, inv: 0 }, { at: 25, inv: 0 }]);
+tgt(SD, 2, [{ bo: -0.5 }], [{ bo: -1, bb: 1 }]);
 {
-  const S = SA; S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; AX.pred = null;
-  const prac = document.getElementById("A_practice"); prac.checked = true; openRound(S); A_paint();
-  const free = document.getElementById("A_G").dataset.held === "" && !document.getElementById("A_meas").disabled && document.getElementById("A_go").textContent === "Practice run" && !document.getElementById("A_go").disabled;
-  prac.checked = false; prac.dispatchEvent(new Event("change"));
-  const set = readSet(S), held = document.getElementById("A_G").dataset.held === "1" && document.getElementById("A_m").dataset.held === "1", meas = document.getElementById("A_meas");
-  const blocked = document.getElementById("A_go").disabled;
-  check("A: practice ticked at the start is free play (" + free + "); unticked, round 1 holds 200 apart and m .05 (" + set.G + ", " + set.m + ", held " + held + "), shows hybrid fitness and holds it (" + meas.value + ", " + meas.disabled + "), and Go waits for a drawing (" + blocked + ")",
-        free && set.G === 200 && set.m === 0.05 && held && meas.value === "w" && meas.disabled && blocked);
-  /* draw by dragging across the plot: a flat line at 0.5 */
-  const cv = document.getElementById("A_time"), r = cv.getBoundingClientRect(), F = cv._tf, k = r.width / TM.W;
-  const at = (t, v) => ({ clientX: r.left + (F.T.px + t / F.G * F.T.pw) * k, clientY: r.top + (F.T.py + F.T.ph - v / F.ymax * F.T.ph) * k, pointerId: 1, bubbles: true });
-  cv.dispatchEvent(new PointerEvent("pointerdown", at(0, 0.5))); cv.dispatchEvent(new PointerEvent("pointermove", at(140, 0.5))); cv.dispatchEvent(new PointerEvent("pointermove", at(300, 0.5))); cv.dispatchEvent(new PointerEvent("pointerup", at(300, 0.5)));
-  const pd = A_pred(), go = !document.getElementById("A_go").disabled;
-  check("A: one drag across the plot sets all " + (pd ? pd.ys.length : 0) + " dots (" + (pd ? pd.ys.map(v => v == null ? "-" : v.toFixed(2)).join(" ") : "none") + ") and Go is free",
-        !!pd && pd.ys.length === 13 && pd.ys.every(v => v != null && Math.abs(v - 0.5) < 0.02) && go);
-  document.getElementById("A_clear").click();
-  check("A: Clear drawing takes it away and Go waits again", !A_pred() && document.getElementById("A_go").disabled);
+  /* the table's fitness re-derived from the run's own counts: a young fish's chance to live x births a fish of its look, relative */
+  play(SC, 0, { bo: -0.5, bb: 0.5 }, 1); const q = SC.last, G = gotOf(q), t0 = q.t - 19; let worst = 0, avg = [];
+  [0, 1].forEach(k => { let born = [0, 0, 0], lived = [0, 0, 0], br = [0, 0, 0], ad = [0, 0, 0];
+    for (const h of q.hist) if (h.t >= t0) for (const s of h.runs) for (let d = 0; d < 3; d++) { born[d] += s.trk[k][d]; lived[d] += s.trk[k][3 + d]; br[d] += s.trk[k][6 + d]; ad[d] += s.trk[k][9 + d]; }
+    const bAll = (br[0] + br[1] + br[2]) / (ad[0] + ad[1] + ad[2]), f = [0, 1, 2].map(d => lived[d] / born[d] * (br[d] / ad[d] / bAll));
+    const fbar = (f[0] * born[0] + f[1] * born[1] + f[2] * born[2]) / (born[0] + born[1] + born[2]);
+    for (let d = 0; d < 3; d++) worst = Math.max(worst, Math.abs(f[d] / fbar - G[k].fr[d]));
+    avg.push((G[k].fr[0] * born[0] + G[k].fr[1] * born[1] + G[k].fr[2] * born[2]) / (born[0] + born[1] + born[2])); });
+  check("C's table: fitness re-derived from the counts agrees (worst gap " + worst.toExponential(1) + "); the average young's fitness is 1 in each pond (" + avg.map(x => x.toFixed(3)).join(" / ") + ")", worst < 1e-9 && avg.every(x => Math.abs(x - 1) < 1e-9));
 }
-/* each round's cloud: the median inside; the naive drawings out */
-const A_good = [];
-{
-  const R = [[200, 0.05, "w"], [50, 0.1, "fst"], [150, 0.05, "fst"], [150, 0.2, "fst"]].map(([G, m, meas]) => {
-    const q = A_run(G, m, meas), md = A_median(q, meas), K = A_knots(q.G), iC = K.indexOf(q.apart), end = md[md.length - 1];
-    A_good.push(md);
-    return { G, m, meas, med: A_score(q, meas, md), line: A_score(q, meas, K.map(t => md[0] + (end - md[0]) * t / q.G)), flat: A_score(q, meas, K.map((t, i) => t <= q.apart ? md[i] : md[iC])) };
-  });
-  check("A: each round's own median is inside its cloud (" + R.map(x => x.med.toFixed(2)).join(" / ") + ")", R.every(x => x.med === 1));
-  check("A: one straight line from start to end misses the F_ST rounds' clouds (inside " + R.slice(1).map(x => x.line.toFixed(2)).join(" / ") + ") and much of the hybrid fitness one (" + R[0].line.toFixed(2) + ")",
-        R.slice(1).every(x => x.line <= 0.8) && R.slice(1).some(x => x.line <= 0.5) && R[0].line <= 0.8);
-  check("A: 'holds at its contact value' misses where the two fuse (50 apart, m .1: " + R[1].flat.toFixed(2) + ", m .2 " + R[3].flat.toFixed(2) + ") and fits where they mostly hold (150 apart, m .05: " + R[2].flat.toFixed(2) + ")",
-        R[1].flat <= 0.6 && R[3].flat <= 0.75 && R[2].flat >= 0.8);
-  const q = A_run(200, 0.05, "inc"), hiMax = Math.max(...q.hist.map(h => A_band(q, "inc", h.t).hi));
-  check("A: incompatible pairs, 200 apart: the cloud stays on its axis (highest " + hiMax.toFixed(1) + " of " + MEAS_A.inc.ymax + ")", hiMax <= MEAS_A.inc.ymax);
-}
-{
-  const n0 = AX.dots.length, c = [25, 50, 100, 200].map(G => contactSum(A_run(G, 0.05, "fst")));
-  check("A: hybrid fitness at contact falls with time apart (25 / 50 / 100 / 200: " + c.map(x => x.w.toFixed(2)).join(" / ") + ")", c.every((x, i) => i === 0 || x.w < c[i - 1].w));
-  const mut = (c[3].mut[0] + c[3].mut[1]) / (c[2].mut[0] + c[2].mut[1]), inc = c[3].inc / c[2].inc, kp = c[3].kp / c[2].kp;
-  check("A: from 100 to 200 generations apart, mutations a chromosome grow " + mut.toFixed(2) + "x, pairs of them in a hybrid " + kp.toFixed(2) + "x, incompatible pairs " + inc.toFixed(2) + "x (the snowball)",
-        mut > 1.4 && mut < 2.1 && inc > 1.25 * mut && kp > 1.25 * mut);
-  check("A: every run, practice too, adds its two dots to your runs (" + n0 + " -> " + AX.dots.length + ")", AX.dots.length === n0 + 4);
-  /* a practice run with a drawing: a practice row, no bit */
-  const rows0 = AX.rows.length; SA.done = false; document.getElementById("A_practice").checked = true; openRound(SA); setC(SA, { G: 50, m: 0.1 }); document.getElementById("A_meas").value = "fst";
-  AX.pred = { meas: "fst", G: 150, ys: A_good[1].slice() }; goStage(SA); finishNow(SA);
-  const row = AX.rows[rows0];
-  check("A: a practice run with a drawing adds a practice row (" + (row ? row.k + " of " + row.n : "none") + ") and writes no bit", AX.rows.length === rows0 + 1 && row.practice && [0, 1, 2, 3].every(i => !Score.isAnswered("scaffold", BIT["A" + (i + 1)])));
-}
-
-/* ================= B ================= */
-{
-  const held = [0, 1, 2].map(r => { SB.round = r; SB.done = false; openRound(SB); const s = readSet(SB), h = k => document.getElementById("B_" + k).dataset.held === "1";
-    return r === 0 ? s.R === 4 && s.m === 0.02 && h("R") && h("m") && !h("ia") : r === 1 ? s.ia === 7 && s.ib === 16 && s.R === 4 && h("ia") && h("R") && !h("m") : s.ia === -1 && s.m === 0.02 && h("ia") && h("m") && !h("R"); });
-  check("B: round 1 holds R 4 and m .02; round 2 the inversion across 8-17 and R 4; round 3 no inversion and m .02 (" + held.join(", ") + ")", held.every(Boolean));
-}
-/* an inversion over gene 15 alone (genes 14-23) still lets crossing over through four of the five gaps between 10 and 15; over genes
-   11-20 it leaves only one, holds in part (.41-.66 measured) and is not asserted */
-tgt(SB, 0, [{ ia: 9, ib: 14 }, { ia: 7, ib: 16 }], [{ ia: -1 }, { ia: 13, ib: 22 }, { ia: 4, ib: 11 }, { ia: 0, ib: 7 }]);
-tgt(SB, 1, [{ m: 0.05 }, { m: 0.1 }], [{ m: 0.02 }, { m: 0.01 }]);
-tgt(SB, 2, [{ R: 0.5 }, { R: 0.25 }], [{ R: 2 }, { R: 4 }, { R: 8 }]);
-{
-  const inv = play(SB, 0, { ia: 7, ib: 16 }, 1)[0].S, none = play(SB, 0, { ia: -1 }, 1)[0].S;
-  /* in every snapshot of the inverted run, not one chromosome blue at 10 and orange at 15 */
-  play(SB, 0, { ia: 7, ib: 16 }, 1); const maxInv = Math.max(...SB.last.hist.flatMap(h => h.pairs.map(p => p.br[0])));
-  check("B: across both genes, no chromosome that fits both populations ever forms (most in any pair at any time " + maxInv + "); without the inversion they do (" + pc(none.br[0]) + " at 100)", maxInv === 0 && inv.br[0] === 0 && none.br[0] > 0.05);
-  /* the strip: drag from gene 5 to 18, then click inside to take it away */
-  SB.round = 0; SB.done = true; SB.waiting = false; openRound(SB); B_paint();
-  const cv = document.getElementById("B_genes"), r = cv.getBoundingClientRect(), k = r.width / BGn.W;
-  const at = (g, y) => ({ clientX: r.left + (BGn.px + (g + 0.5) * BGn.pw / L) * k, clientY: r.top + y * k, pointerId: 1, bubbles: true });
-  const y = BGn.stripY + BGn.stripH / 2;
-  cv.dispatchEvent(new PointerEvent("pointerdown", at(4, y))); cv.dispatchEvent(new PointerEvent("pointermove", at(10, y))); cv.dispatchEvent(new PointerEvent("pointermove", at(17, y))); cv.dispatchEvent(new PointerEvent("pointerup", at(17, y)));
-  const s1 = readSet(SB), line1 = document.getElementById("B_invLine").textContent;
-  cv.dispatchEvent(new PointerEvent("pointerdown", at(9, y))); cv.dispatchEvent(new PointerEvent("pointerup", at(9, y)));
-  const s2 = readSet(SB);
-  check("B: dragging across the strip from gene 5 to 18 inverts 5-18 (" + s1.ia + "-" + s1.ib + ", '" + line1 + "'); a click on it takes it away (" + s2.ia + ")",
-        s1.ia === 4 && s1.ib === 17 && /genes 5 to 18/.test(line1) && s2.ia === -1);
-  SB.done = false;
-}
-
-/* ================= C ================= */
-{
-  const r = play(SC, 0, { G: 200, m: 0.2 }, 1)[0], q = SC.last, before = q.hist.filter(h => h.t < q.apart).every(h => h.pairs.every(p => p.ch == null)), c = q.contact.pairs.map(p => p.ch), cm = meanOf(c);
-  check("C: no choosy allele while apart (" + before + "); at contact " + pc(cm) + " of chromosomes carry it (1 in 5); young whose parents look different at the end " + pc(r.S.mixed),
-        before && cm > 0.17 && cm < 0.23 && r.S.mixed < 0.05);
-}
-tgt(SC, 0, [{ m: 0.2 }], [{ m: 0.05 }, { m: 0 }]);
-tgt(SC, 1, [{ G: 0 }], [{ G: 100 }, { G: 200 }]);
 
 /* ================= the flow, scored ================= */
 {
-  /* a miss first, then each round's intended setting; the bits as recorded */
   const flow = (S, missing, intended) => {
-    S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; document.getElementById(S.K + "_practice").checked = false; openRound(S); syncStage(S);
+    S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; el(S, "practice").checked = false; openRound(S); syncStage(S);
     setC(S, missing); goStage(S); finishNow(S); const miss = Score.getBit("scaffold", BIT[S.K + "1"]) === 0 && !S.waiting;
     for (let r = 0; r < intended.length; r++) {
       setC(S, intended[r]); goStage(S); finishNow(S);
-      if (r < intended.length - 1) { const shown = !document.getElementById(S.K + "_next").hidden; nextRound(S); if (!shown) return { miss, bits: "next hidden at " + r }; }
+      if (r < intended.length - 1) { const shown = !el(S, "next").hidden; nextRound(S); if (!shown) return { miss, bits: "next hidden at " + r }; }
     }
     return { miss, bits: intended.map((_, r) => Score.getBit("scaffold", BIT[S.K + (r + 1)])).join("") };
   };
-  /* A: four drawn rounds, each scored once: the median of a practice run at the round's settings (good) in rounds 1, 3 and 4,
-     a flat line at 1 in round 2 (bad); bits 1 when half the dots or more are inside */
-  {
-    const S = SA; S.round = 0; S.results = []; S.done = false; S.waiting = false; S.last = null; AX.dots = []; AX.rows = [];
-    document.getElementById("A_practice").checked = false; openRound(S); A_paint();
-    const got = [], notes = [], nextShown = [];
-    for (let r = 0; r < 4; r++) {
-      const G = readSet(S).G + A_CONTACT, n = A_knots(G).length;
-      AX.pred = { meas: ruleOf(S).meas, G, ys: r === 1 ? Array(n).fill(1) : A_good[r].slice() };
-      goStage(S); finishNow(S);
-      got.push(Score.getBit("scaffold", BIT["A" + (r + 1)])); notes.push(Score.getNote("A_in" + (r + 1)));
-      if (r < 3) { nextShown.push(!document.getElementById("A_next").hidden); nextRound(S); }
-    }
-    const rows = AX.rows.filter(x => !x.practice), noteOk = rows.every((x, i) => notes[i] === x.k + "of" + x.n);
-    const waitA = S.done && !Gates.A.done;
-    for (const G of [0, 25, 100]) { setC(S, { G }); goStage(S); finishNow(S); }
-    check("A flow: four drawn rounds, each once (bits " + got.join("") + ", notes " + notes.join(" ") + "); Next round after each (" + nextShown.join(",") + "); A waits for five times apart (" + waitA + "), then opens B",
-          got.join("") === "1011" && noteOk && rows.length === 4 && nextShown.every(Boolean) && waitA && Gates.A.done);
-  }
-  const b = flow(SB, { ia: -1 }, [{ ia: 9, ib: 14 }, { m: 0.05 }, { R: 0.5 }]);
-  check("B flow: a miss records 0; three hits (bits " + b.bits + ") open C", b.miss && b.bits === "011" && Gates.B.done);
-  CX.dots = [];
-  const c = flow(SC, { m: 0.02 }, [{ m: 0.2 }, { G: 0 }]);
-  const waitC = !Gates.C.done;
-  while (CX.dots.length < 6) { goStage(SC); finishNow(SC); }
-  check("C flow: a miss records 0; two hits (bits " + c.bits + "); C waits for six runs (" + waitC + "), then the lesson ends", c.miss && c.bits === "01" && waitC && Gates.C.done && document.getElementById("done-banner").classList.contains("shown"));
-}
-{
+  const a = flow(SA, { mu: 0.002 }, [{ mu: 0.004 }, { m: 0.05, T: 25 }, { T: 5 }, { N: 10 }]);
+  check("A flow: a miss records 0; four hits (bits " + a.bits + ") open B", a.miss && a.bits === "0111" && Gates.A.done && Gates.B.open);
+  const b = flow(SB, { i: 4, j: 35 }, [{ i: 19, j: 20 }, { cost: 1 }, { m: 0.3 }]);
+  check("B flow: a miss records 0; three hits (bits " + b.bits + ") open C", b.miss && b.bits === "011" && Gates.B.done && Gates.C.open);
+  const c = flow(SC, { bo: 0, bb: 0 }, [{ bo: -1, bb: 1 }, { h: 1 }, { m: 0.2, T: 2 }]);
+  check("C flow: a miss records 0; three hits (bits " + c.bits + ") open D", c.miss && c.bits === "011" && Gates.C.done && Gates.D.open);
+  const d = flow(SD, { want: 0 }, [{ want: 1 }, { inv: 1 }, { bo: -0.5 }]);
+  check("D flow: a miss records 0; three hits (bits " + d.bits + ") end the lesson", d.miss && d.bits === "011" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 9 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 13 && n === D, n + " written");
+}
+
+/* ================= the controls ================= */
+{
+  /* B: drag ▲ from locus 5 to locus 12 along the chromosome */
+  SB.done = true; SB.waiting = false; openRound(SB); setC(SB, { i: 4, j: 35 }); B_paint();
+  const cv = document.getElementById("B_genes"), r = cv.getBoundingClientRect(), k = r.width / BGn.W;
+  const at = g => ({ clientX: r.left + (BGn.px + (g + 0.5) * BGn.pw / L) * k, clientY: r.top + BGn.sy * k, pointerId: 1, bubbles: true });
+  cv.dispatchEvent(new PointerEvent("pointerdown", at(4))); cv.dispatchEvent(new PointerEvent("pointermove", at(8))); cv.dispatchEvent(new PointerEvent("pointermove", at(11))); cv.dispatchEvent(new PointerEvent("pointerup", at(11)));
+  const s1 = readSet(SB);
+  /* D: drag ♥ to locus 31; the toggles */
+  SD.done = true; SD.waiting = false; openRound(SD); setC(SD, { at: 20, inv: 0, want: 1 }); D_paint();
+  const dv = document.getElementById("D_genes"), dr = dv.getBoundingClientRect(), dk = dr.width / DGn.W;
+  const dat = g => ({ clientX: dr.left + (DGn.px + (g + 0.5) * DGn.pw / L) * dk, clientY: dr.top + (DGn.sy - 27) * dk, pointerId: 1, bubbles: true });
+  dv.dispatchEvent(new PointerEvent("pointerdown", dat(20))); dv.dispatchEvent(new PointerEvent("pointermove", dat(26))); dv.dispatchEvent(new PointerEvent("pointermove", dat(30))); dv.dispatchEvent(new PointerEvent("pointerup", dat(30)));
+  const box = document.getElementById("D_invBox"); box.checked = true; box.dispatchEvent(new Event("change"));
+  const lt = document.getElementById("D_wantL"); lt.checked = true; lt.dispatchEvent(new Event("change"));
+  const s2 = readSet(SD);
+  /* a round that holds them: round 1 holds the inversion; round 2 holds the look */
+  SD.done = false; SD.round = 0; openRound(SD); syncStage(SD); const h1 = box.disabled && !lt.disabled;
+  SD.round = 1; openRound(SD); syncStage(SD); const h2 = !box.disabled && lt.disabled;
+  check("controls: dragging ▲ along B's chromosome moves the orange allele's locus 5 -> " + (s1.i + 1) + "; dragging ♥ along D's moves the choosy locus 21 -> " + (s2.at + 1) + "; D's toggles set the inversion (" + s2.inv + ") and the look (" + s2.want + "); round 1 holds the inversion and frees the look (" + h1 + "), round 2 the other way (" + h2 + ")",
+        s1.i === 11 && s1.j === 35 && s2.at === 30 && s2.inv === 1 && s2.want === 0 && h1 && h2);
+  SD.done = true; openRound(SD);
+  SB.done = true; openRound(SB); setC(SB, { cost: 0.9 }); B_PATHS.sync();
+  const arrow = document.querySelector('#B_paths .paths-arrow[data-of="cost"]') || [...document.querySelectorAll("#B_paths .paths-arrow")].find(a => a.classList.contains("down"));
+  check("controls: B's cost arrow is drawn as a negative (red) arrow (" + (arrow ? arrow.getAttribute("class") : "none") + ")", !!arrow && arrow.classList.contains("down"));
 }
 {
-  /* hover text in place of setup bullets (JM, 2026-10-17): no bullet list left; every ⓘ has words behind it; hovering one
-     shows them in the floating box, hovering off hides it; a click passed from a label to its slider keeps it up. The
-     observed data is an optional box, closed at load */
-  const infos = [...document.querySelectorAll(".info")], tipOf = el => el.dataset.tip ? document.getElementById(el.dataset.tip) : el.querySelector(".tip");
-  const empty = infos.filter(el => !tipOf(el) || !tipOf(el).textContent.trim()).length, pop = document.querySelector(".tip-pop");
-  const perStage = "A,B,C".split(",").map(K => document.querySelectorAll("#stage" + K + " .info").length);
-  const ev = (el, type) => el.dispatchEvent(new MouseEvent(type, { bubbles: true }));
-  const lab = infos.find(el => el.closest("label") && el.closest("label").querySelector("input[type=range]"));
-  ev(infos[0], "mouseover"); const shown = !pop.hidden && pop.textContent === tipOf(infos[0]).textContent;
-  ev(document.body, "mouseover"); const gone = pop.hidden;
-  ev(lab, "mouseover"); ev(lab.closest("label").querySelector("input"), "click"); const kept = !pop.hidden;
-  ev(document.body, "click"); const hid = pop.hidden;
-  const box = document.getElementById("B_spBox");
-  check("hover text: no bullet list (" + document.querySelectorAll("ul.setup").length + "); " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; hover shows, off hides, a label's click keeps it, a click elsewhere hides; the observed data closed at load",
-        document.querySelectorAll("ul.setup, .stage-intro").length === 0 && empty === 0 && perStage.every(n => n >= 3) && shown && gone && kept && hid && box.matches("details.opt") && !box.open && box.contains(document.getElementById("B_sparrow")));
-  for (const d of document.querySelectorAll("details.opt")) d.open = true;   /* opened, as a student would, for the fit check below */
+  /* hover text: every mark has words; hover shows them and moving off hides them; the hybrid box closed at load */
+  const infos = [...document.querySelectorAll(".info")], tipOf = e => e.dataset.tip ? document.getElementById(e.dataset.tip) : e.querySelector(".tip");
+  const empty = infos.filter(e => !tipOf(e) || !tipOf(e).textContent.trim()).length, pop = document.querySelector(".tip-pop");
+  const perStage = "A,B,C,D".split(",").map(K => document.querySelectorAll("#stage" + K + " .info").length);
+  const ev = (e, type) => e.dispatchEvent(new MouseEvent(type, { bubbles: true }));
+  ev(infos[0], "mouseover"); const shown = !pop.hidden && pop.textContent === tipOf(infos[0]).textContent; ev(document.body, "mouseover"); const gone = pop.hidden;
+  const hy = document.getElementById("A_hyBox");
+  check("hover text: no bullet list; " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; hover shows, off hides; the hybrid box closed at load",
+        document.querySelectorAll("ul.setup, .stage-intro").length === 0 && empty === 0 && perStage.every(n => n >= 3) && shown && gone && hy.matches("details.opt") && !hy.open);
+  for (const d of document.querySelectorAll("details.opt")) d.open = true;
 }
 {
   FIT_EPOCH++; paintAll();
@@ -292,26 +219,18 @@ tgt(SC, 1, [{ G: 0 }], [{ G: 100 }, { G: 200 }]);
   for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement;
     if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
+  const last = ["A", "B", "C", "D"].map(K => { const els = document.querySelectorAll("#stage" + K + " .panel"), e = els[els.length - 1]; return e.matches("details.rcode") && !e.open && !!e.querySelector("#code" + K) && !!e.querySelector("#" + K + "_dl"); });
+  check("layout: each stage ends in its R code, closed (" + last.join(",") + "); no readout lines (" + document.querySelectorAll(".readout").length + ")", last.every(Boolean) && document.querySelectorAll(".readout").length === 0);
 }
-{
-  /* the layout (JM, 2026-10-17, on lesson 17): the R code last in each stage and closed; no summary line under a board or
-     plot; the sparrows under B's grid, not in it */
-  const last = ["A", "B", "C"].map(K => { const els = document.querySelectorAll("#stage" + K + " .panel"), el = els[els.length - 1]; return el.matches("details.rcode") && !el.open && !!el.querySelector("#code" + K) && !!el.querySelector("#" + K + "_dl"); });
-  const reads = document.querySelectorAll(".readout").length, sp = document.getElementById("B_sparrow");
-  check("layout: each stage ends in its R code, closed (" + last.join(",") + "); no readout lines (" + reads + "); the sparrows sit under B's grid",
-        last.every(Boolean) && reads === 0 && !!sp.closest(".tail") && !sp.closest(".grid"));
-}
-A_code(); B_code(); C_code();
+A_code(); B_code(); C_code(); D_code();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
 say("RAN " + ran);
-say("RA " + RTEXT.codeA.replace(/\\n/g, "\\\\n"));
-say("RB " + RTEXT.codeB.replace(/\\n/g, "\\\\n"));
-say("RC " + RTEXT.codeC.replace(/\\n/g, "\\\\n"));
+for (const K of ["A", "B", "C", "D"]) say("R" + K + " " + RTEXT["code" + K].replace(/\\n/g, "\\\\n"));
 L_.join(" ;; ");
 `;
 
 const INNER_NARROW = `
-for (const s of ["A","B","C"]) document.getElementById("stage"+s).classList.remove("stage-locked");
+for (const s of ["A","B","C","D"]) document.getElementById("stage"+s).classList.remove("stage-locked");
 for (const d of document.querySelectorAll("details.opt")) d.open = true;
 FIT_EPOCH++; paintAll();
 const over = [];
@@ -343,7 +262,7 @@ const cleanup = () => { try { process.kill(-server.pid); } catch (e) {} try { fs
 process.on("exit", cleanup);
 
 setTimeout(() => {
-  const r = spawnSync(CHROME, ["--headless=new", "--disable-gpu", "--virtual-time-budget=2400000", "--dump-dom", `http://127.0.0.1:${PORT}/_check_l19_${PORT}.html`],
+  const r = spawnSync(CHROME, ["--headless=new", "--disable-gpu", "--virtual-time-budget=4000000", "--dump-dom", `http://127.0.0.1:${PORT}/_check_l19_${PORT}.html`],
                       { encoding: "utf8", maxBuffer: 1 << 28 });
   const dec = s => s.replace(/&quot;/g, '"').replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
   const m = /<pre id="out">([\s\S]*?)<\/pre>/.exec(r.stdout || ""), m2 = /<pre id="out2">([\s\S]*?)<\/pre>/.exec(r.stdout || "");
@@ -351,23 +270,22 @@ setTimeout(() => {
   const text = dec(m[1]), lines = text.split(" ;; ");
   let bad = !/ALL BARS PASS/.test(text);
   const tagged = t => (lines.find(l => l.startsWith(t + " ")) || "").slice(t.length + 1).replace(/\\n/g, "\n");
-  for (const line of lines) if (!/^(RA|RB|RC) /.test(line)) console.log(line);
+  for (const line of lines) if (!/^R[ABCD] /.test(line)) console.log(line);
   const reported = lines.filter(l => /^(ok|FAIL)\s/.test(l)).length;
   const ranLine = /^RAN (\d+)$/.exec((lines.find(l => /^RAN \d+$/.test(l)) || ""));
   if (!ranLine || +ranLine[1] !== reported) { console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported + " came back"); bad = true; }
   const narrow = m2 ? dec(m2[1]) : "FAIL narrow frame gave nothing";
   console.log(narrow); if (!/^ok/.test(narrow)) bad = true;
-  const rs = (code, tail) => spawnSync("Rscript", ["-e", code + (tail || "")], { encoding: "utf8", timeout: 240000 });
   const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
-  /* shortened: A 10 generations apart and 10 of contact; B 20 generations; C 30 genomes, 5 apart and 5 of contact */
-  const shortA = s => s.replace(/^G <- \d+/m, "G <- 10").replace("1:(G + 100)", "1:(G + 10)");
-  const shortB = s => s.replace("G <- 100", "G <- 20");
-  const shortC = s => s.replace("N <- 100", "N <- 30").replace("Gc <- 150", "Gc <- 5").replace(/^G <- \d+/m, "G <- 5");
+  /* shortened: A 30 generations, B and C 20, D 15 at 30 fish */
+  const SHORT = { RA: s => s.replace("for (t in 1:400)", "for (t in 1:30)"), RB: s => s.replace("for (t in 1:150)", "for (t in 1:20)"),
+                  RC: s => s.replace("for (t in 1:200)", "for (t in 1:20)"), RD: s => s.replace("for (t in 1:300)", "for (t in 1:15)").replace("N <- 100", "N <- 30") };
   if (probeR.error) console.log("skip R panels  (no Rscript)");
-  else for (const [tag, name, fix] of [["RA", "A (10 apart, 10 in contact here)", shortA], ["RB", "B (20 generations here)", shortB], ["RC", "C (30 genomes, 5 + 5 generations here)", shortC]]) {
-    const o = rs(fix(tagged(tag)), "\ncat('\\nOK\\n')");
-    const ok = /OK/.test(o.stdout || "");
-    console.log((ok ? "ok   " : "FAIL ") + "the R panel for " + name + " runs" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
+  else for (const tag of ["RA", "RB", "RC", "RD"]) {
+    const src = tagged(tag), fixed = SHORT[tag](src);
+    if (fixed === src) { console.log("FAIL the R panel for " + tag.slice(1) + ": its loop was not found to shorten"); bad = true; continue; }
+    const o = spawnSync("Rscript", ["-e", fixed + "\ncat('\\nOK\\n')"], { encoding: "utf8", timeout: 240000 }), ok = /OK/.test(o.stdout || "");
+    console.log((ok ? "ok   " : "FAIL ") + "the R panel for " + tag.slice(1) + " runs (shortened)" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
     if (!ok) bad = true;
   }
   cleanup();

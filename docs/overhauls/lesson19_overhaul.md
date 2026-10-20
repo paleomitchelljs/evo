@@ -1,150 +1,133 @@
-# Lesson 19 — speciation: apart and back in contact, an inversion, a choosy allele
+# Lesson 19 — speciation as a process: ponds and floods, one incompatible pair, a trait, a preference
 
-**File** · `app/lessons/lesson19.html` — first draft 2026-10-17
-**Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py`
-**Status** · pass 2 built (v2, scaffold 9: A1-A4 drawn rounds, B1-B3, C1-C2); LOCKS `x`; JM to review; voice owed (JM to dictate)
-**Last touched** · 2026-10-17
+**File** · `app/lessons/lesson19.html` — pass 3 (redraft) 2026-10-20; v2 archived as `app/archive/lesson19_v2_2026-10-17.html`
+**Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · pass 3 built (v3, scaffold 13: A1-A4, B1-B3, C1-C3, D1-D3); checks green (34 + R, ~2 min); LOCKS `x`; JM to review; voice owed (JM to dictate)
+**Last touched** · 2026-10-20
 
 ## What the lesson is
 
-- Lesson 17's engine and bead strings, with three additions: mutations in each population's own colour, incompatible pairs of genes, and a choosy allele. Barriers between populations build up while they are apart, an inversion holds them, and choosiness spreads where the two meet. F_ST between the two populations is on screen throughout: over time (A), gene by gene (B), against choosiness (C).
-- Worth protecting: nothing on screen says "incompatible" in advance of what the run shows. Every barrier comes out of mutations that did nothing at home.
+- Two ponds from one population; floods now and then mix them. Incompatibilities build up by drift and mutation until floods stop doing anything (A); one pair made explicit, and the island it holds (B); a trait that survives better in one pond than the other (C); a mate preference on the same trait, at a locus the student places, with an inversion to lock them (D).
+- Worth protecting: fitness is never set. Survival (ecology, incompatibilities) and births (mate choice) are; fitness is what comes out (JM).
 
-## JM's note, 2026-10-17, mid-build (verbatim)
+## JM's brief, 2026-10-20 (verbatim, the whole message; 20 and 21 docs quote their parts)
 
-> One general note: I'd like to transition to more "students draw what they expect". I like bowling activities, but more activities where the students manipulate a graph to produce what they think the controls will do, then hit go, then a series of simulations run & how often the student drawn prediction falls inside the cloud is recorded & shown
+> Ideas to redraft lessons 19, 20, and 21:
+>
+> I have ideas, lessons, 19, 20, and 21. These 3 lessons are all going to follow the concept of species. 19 should be on speciation as a process. 20 should be on biologics. And 21 should be on comparative methods and species selection. You should build on the previous. So by the end of 19, they should be seen a phylogeny generated through their population diverging. By the end of 20, there should be similar traits along their tree. And by 21, it should be seen species selection, changing the frequency of traits over time as a traits in self-control. Space station and extinction probabilities. For 19, There should be based extensively on the simulation machinery we built up in the migration lesson 17. Specifically, I'd like a scenario in which. They start with one population, and multiple wheels, and they diverge. So we should have a drift-based speciation. Model. where incompatibilities develop. Over time, as species, populations break. I'm imagining a slider that controls the mutation rate. Recombination rate. Migration rate. And the probability that 2 alleals at different low si are incompatible. We'll also need a slider for, uh, how often migration pulses can occur. I think setting this up. With an example like fish in ponds, where every time there's a flood, fish can move across ponds and intermingle, whereas in non-flood years, they're restricted. There's a good system. And we have just sort of periodic flood, some frequency. We track introgression rates over time and FST over time. And when the pulses, the goal is to have it such that the pulses no longer change FST, no longer decrease FST, no longer increase in progression. Because once the pulses no longer have an effect on SST, then You've got to Different populations. Attract their neutral diversity over time as well. Imagine like a drop down toward Target. Um, The other big one I want for the speciation. It's probably going to be part what I just described should be part A. Part D should be a more interactive one based more explicitly on low side. I'm imagining a situation where you have a focal locus. With 2 alleles, A and B with 2 different colors. And each genotype gives you a different phenotype. So AA gives you one phenotype, AB, gives you another phenotype. BB gives you a 3rd phenotype, and students can adjust H to modulate what the intermediate, the header as I go phenotype is. Uh, and the students can manipulate the fitness of each tree type. So it'd be a causal diagram with genotype, phenotype, phenotype, to fitness. Maybe that would be part C and part D would add another layer where we have a mate preference allel. Where you can prefer at some frequency, different phenotypes. So there is a, Survival aspect about how well they live, and a reproductive birth rate aspect for how many offspring they have. Make choice affects birth rate. Uh, phenotype. The insight would affect birth rate by a mate choice and survival. Probability. Um, by ecology, basically. You would have. The main choice of Leo located different positions on the chromosome. relative to the, uh, relative to the trait inducing, allel. And we could even have an inversion, and at least some targets are given the option to invert it. to lock them together. Importantly, fitness would be a derived characteristic in this one, actually. So we should have survival, and mate choice, as our two things, and fitness is the number of offspring who survive. So we track those 2 things separately. I think that's the better way to do it. Instead of having students set fitness. Fitness is the outcome of survival and mating probability. So for earlier activities. Mating is random. With respect to phenotype, and only survivals effective like being a type, and then the ladder one, the ladder a classic, we have mating success also impacted by phenotype. But, at some different allel that has a preference. So the same phenotype is driving both, but the heritability is different. This way, we can get at reinforcement, and we can get at the key aspects of how unsteady it is. We'd also need for the speciation activities, a strong effect, or a way to illustrate the effect of just drift being required to build up incompatibilities. So especially for the early activities, affect the population size and mutation rate are important. The faster you're fixing differences, Well, more likely they are to be incompatible when they come back. So it's kind of my visions for A, D is the full sweet C is the medium, and B would be something intermediate between them for less than 19. For less than 20. We take the speciation results and build them up with more than two populations. [... 20 and 21: see lesson20_overhaul.md, lesson21_overhaul.md ...] As always, the goal of these activities is not to assess, but rather to illustrate. It helps build intuition in the students. You should be extremely low text. I'm sure rely on visuals instead of words, wherever possible. Thing to be aware of is, There are a few colorblind students in the class. I want to be, making sure we're using symbols and colors that work well. for them.
 
-Done for A (pass 2); B and C are still bowling. REVISIONS_PLANNED row 15.
+Readings of the speech-to-text: wheels / alleals = alleles; low si / low side / Leo = loci; SST = F_ST; in progression = introgression; Attract = Track; header as I go = heterozygote; tree type = genotype; Make choice = mate choice; ladder = latter; sweet = suite; unsteady = unstable (read as: reinforcement is fragile); "drop down toward Target" = a drop-down to choose what the plot shows (17's and 19 v2's watch menu).
 
-## JM's brief, 2026-10-17 (verbatim)
+## Stages as built (pass 3)
 
-> Lessons 19 & 20 should be on speciation (19) and phylogeny (20). Species selection & macroevolutionary rates will be 21, I think. For 19, I'd like the migration style interactives and we should show how Fst between the two populations varies. I'm envisioning something where Dobzhansky-Muller incompatibilities & the role of inversions & re-enforcement all factor in and/or emerge from simulations that are very similar to what the students have recently done
+One engine for all four (`pd*`): two ponds of N hermaphrodite fish, one chromosome of 40 loci (17's beads), parents at random (A-C) or by preference (D), young live or die (incompatibilities, ecology), young made until N live (deaths counted). Floods every T generations: each fish swaps ponds with chance m (17's swap), at the start of the generation, so a flood shows up in the young it leaves. F_ST on allele identity (17's formula). Snapshots every generation (every 2 at N 50+).
 
-## Stages as planned
+    A  Ponds and floods. One grey population (3 alleles a locus) splits. New alleles in the pond's colour. A new orange and a new
+       blue allele at different loci are incompatible with chance p (a hash of the two: the same two, the same answer); one of
+       each kills a young fish. Sliders: fish a pond, mutation, chance a pair is incompatible, crossovers, flood size, generations
+       between floods. Board; over time (F_ST, alleles from the other pond, diversity within each pond, a hybrid's chance to live,
+       incompatible pairs in a hybrid), floods as ≈ on the axis; "A hybrid, up close" (closed box: its pairs as a grid).
+       16 runs, 400 generations. Rounds: 1 floods .2/10 held, mutation free (opens .002): F_ST ≥ .3; 2 mutation .001, floods free
+       (opens .2/25): F_ST ≥ .3; 3 mutation .004, p and floods free (opens .02, .2/10): F_ST < .1; 4 N free (opens 50): diversity
+       within each pond < .3.
+    B  One pair. Ponds start apart (one allele a locus, each its own colour). ▲ (the orange allele's locus) and ■ (the blue's)
+       dragged along the chromosome under an F_ST-by-locus bar plot; the pair's cost on a red arrow onto the dashed "orange allele
+       alone -> chance to live" arrow. 16 runs, 150 generations, N 50. Rounds: 1 loci free (opens 5/36): F_ST ≥ .5 at both;
+       2 cost free (opens .9): the same; 3 loci 20/21, floods free (opens .1/5): F_ST < .35 at both.
+    C  A trait at locus 20: light / dark allele (lightness, not hue); ○ ◐ ●. DAG: genotype -h-> looks -> lives? orange pond, lives?
+       blue pond (signed arrows) -> fitness <- births (at random). Survival picture (looks across, chance to live up, a line a
+       pond, ○ ◐ ● on each). "What each look got": lived, births (1 = average), fitness (lived x births, 1 = the average young),
+       last 20 generations. 16 runs, 200 generations, N 50, dark at 50% in both at the split. Rounds: 1 arrows free (open 0, 0):
+       dark < 30% orange, > 70% blue; 2 arrows -1/+1, h free (opens .5): dark < 8% in orange; 3 floods free (open .1/2): F_ST ≥ .5
+       at the trait, < .1 at the others.
+    D  A choosy allele (one copy: choosy) prefers ○ or ● (radio); how choosy on an arrow onto the dashed looks -> births arrow;
+       ♥ dragged along the chromosome; inversion (checkbox) from the trait locus to ♥ on every chromosome that starts choosy.
+       Births come from being chosen; fitness derived. 12 runs, 300 generations, N 100, dark 5% / 95%, choosy 20% in both,
+       floods .1 every generation. Rounds: 1 inversion at 21 held, the look free (opens light): choosy ≥ 40% blue and < 20%
+       orange; 2 locus and inversion free (open 39, none): the same; 3 arrows free (open -1/+1): the two ponds' choosy shares
+       within 10 points.
 
-One engine (17's `mg*`, copied: 19 is its second caller, so no extraction yet). Two populations of N genomes, one chromosome of 40 genes, Wright-Fisher, parents picked by fitness, R crossovers a chromosome, migration as 17's swaps.
+## Measured on the page's engine (2026-10-20; the numbers per round are in the page's comments above each ROUNDS)
 
-    A  Apart, then back in contact. One grey population splits in two; while apart, each takes new mutations in its own colour
-       (orange left, blue right; mu .004 a gene a generation); nothing helps or harms at home. Before the run, 2 in every 100
-       ordered pairs of genes (orange at i, blue at j) are made incompatible: each such pair in one genome halves its fitness.
-       Then 100 generations of contact at m. Sliders: generations apart, m. N 25, R 1, 50 pairs.
-       Displays: board (pair 1), over time across the split and contact (F_ST, mutations a chromosome, incompatible pairs in a
-       hybrid, hybrid fitness, other colour), a hybrid's grid (rows its orange mutations, columns its blue, red = incompatible),
-       your runs (mutations and incompatible pairs against generations apart).
-       Pass 1 (98e3698): three bowling targets. Pass 2 (JM's note above): four drawn rounds. Practice ticked at the start (free
-       play, own settings, draw or not). Unticked, a round holds its settings and the measure: drag across the over-time plot to
-       set a dot every 25 generations (Go waits until all are set; Clear drawing); Go plays 50 pairs; the cloud is the middle
-       90% of them at each generation; a dot inside (give or take 2% of the axis) turns green. One bit a round (half the dots or
-       more inside), "kofn" in the notes (A_in1-4), a row in "Your predictions" and a dot on its plot; Next round. Rounds:
-       1 hybrid fitness, 200 apart, m .05; 2 F_ST, 50 apart, m .1; 3 F_ST, 150 apart, m .05; 4 F_ST, 150 apart, m .2.
-       Task: five times apart on your runs.
-    B  An inversion. Lesson 17's start (each population all its own colour, every gene different), no new mutations; two pairs
-       incompatible, marked: orange at gene 10 with blue at 15, orange at 30 with blue at 34. The blue population carries an
-       inversion the student drags across the gene strip. N 25, 50 pairs, 100 generations.
-       Displays: board with brackets on inverted chromosomes, F_ST gene by gene with the pairs and the inversion drawn, over
-       time (F_ST at each pair, all genes, chromosomes that fit both populations), the sparrows from 17 D.
-       Targets: 1 R 4, m .02 held: hold genes 10 and 15 (F_ST .7+ at both) -> invert across both; 2 inversion over 8-17 held:
-       mix them anyway (under .4) -> m .05+; 3 no inversion, m .02 held: hold the pair another way (.65+) -> R .5 or .25 (opens
-       at R 1, which straddles .6). Inversion set by dragging across a strip under the gene-by-gene plot; a click removes it.
-    C  A choosy allele. A's world (split, apart, incompatible pairs, contact), with N 100 (chance matters less), gene 20 held
-       apart by local adaptation as in 17 C (the other population's allele 1, .75, .5), gene 1 the choosy gene: 20% of
-       chromosomes carry the choosy allele at contact. A choosy genome turns a partner down with chance = how different
-       they look (look: the share of its mutations in orange). 150 generations of contact. Sliders: generations apart, m.
-       Displays: board (look swatch, choosy bead), over time (choosy share, young from mixed pairs, F_ST, hybrid fitness), your
-       runs (choosy share at the end against m, coloured by time apart).
-       Targets: 1 200 apart held: choosy allele half of all chromosomes or more at contact 150 -> m .2 (opens at m .1, .39-.45);
-       2 m .2 held: choosy allele under 10% -> 50 apart or fewer (opens at 100). Task: six runs on your runs plot.
+    A  round 1, mutation .002 / .003 / .004 / .006 / .008: F_ST .10-.14 / .17-.31 / .37-.46 / .38-.41 / .33-.35 (more mutation,
+       more diversity, a lower ceiling on F_ST)
+    B  round 1, loci 5/36 .09-.27 ... 18/23 .43-.51, 19/21 .67-.72, 20/21 .75-.85; round 2, cost .9 .09-.27, 1 .93-.94 (every
+       first hybrid dies: the whole chromosome holds)
+    C  round 2, h 0 / .25 / .5 / .75 / 1: dark in orange .22-.24 / .16 / .10 / .05 / .00, in blue 1.00 / .95 / .90 / .85 / .76
+    D  inversion: choosy .05-.12 orange / .50-.79 blue; adjacent, no inversion .06-.18 / .53-.64; far (39) .16/.20 or .53/.58:
+       unlinked, it ends up in both ponds or neither. Needs the orange pond to keep dark out: arrows -.5/+1 .24/.24-.33/.33.
+    colourblind (Machado 2009 simulation, CIE76 ΔE, normal / protan / deutan / tritan): pond orange-blue 106 / 84 / 98 / 99;
+       trait light-dark 81 everywhere; DAG red-blue 72 / 33 / 53 / 95; held pale red-blue 35 / 15 / 22 / 48 (the sign is also on
+       the number); verdict green-red 78 / 19 / 10 / 87 (so every verdict carries ✓/✗ and the word)
 
-## Measured (node prototype of the engine, scratchpad, 2026-10-17)
+## Measured (node prototype, scratchpad `pond.js`, 2026-10-20)
 
-        A, N 25, mu .004, R 1, 2/100 pairs incompatible, each halves fitness, six incompatibility maps (23-31 pairs), 50 pairs each
-          generations apart            25      50      75      100     150     200
-          mutations a chromosome       3.7     7.3     10.5    12.9    18.3    22.7
-          incompatible pairs, hybrid   .27     1.0     2.3     3.4     6.4     10.3     (the snowball: pairs of mutations 13 / 54 / 111 / 168 / 333 / 515)
-          hybrid fitness at contact    .87-.91 .60-.70 .36-.48 .20-.29 .03-.10  .01
-          F_ST at contact              .15     .29     .37     .46     .59     .69
-          F_ST after 100 at m .05      .05-.07 .07-.09 .14-.22 .27-.37 .45-.54  .58
-          150 apart, after 100 at m:   0 .75, .02 .62, .05 .45-.54, .1 .09-.14, .2 .01-.02
-          m .02 is a poor contrast: mutation during contact keeps F_ST up (0 apart reads .18 after 100)
-        B, 17's start, pairs (10, 15) (30, 34), each halves fitness, N 25, 50 pairs, at 100 (F_ST at 10 / 15)
-          R 4, m .02: none .34/.31; inverted 8-17 .82/.82 (pair 2 .54); 10-15 .81; 11-20 (15 only) .57/.58; 5-12 (10 only) .39/.43;
-            1-8 .36/.35; 28-37 (pair 2) .47/.53, pair 2 .73
-          inverted 8-17, R 4, m .01 / .02 / .05 / .1: .92 / .82 / .25 / .00
-          none, m .02, R .5 / 1 / 2 / 4 / 8: .73 / .63 / .54 / .33 / .35
-          R 1: the whole chromosome holds without an inversion (one chromosome is all linked); islands need R 4
-          cost .9 or m .02 at R 1: everything held; cost .5, m .05, R 1-2: everything mixes, inverted or not
-        C, A's world at N 100, gene 20 local adaptation s .5 h .5, choosy 20% at contact, 10 pairs, choosy share at contact 150
-          apart \ m       0     .02   .05   .1    .2
-          50 (w .58)     .20   .16   .30   .14   .00
-          100 (w .19)    .20   .29   .27   .42   .52
-          150 (w .05)    .25   .18   .40   .46   .59
-          200 (w .01)    .13   .24   .38   .49   .71
-          young from mixed pairs at m .2: S 1 .014-.06, the effect off .15-.2
-          F_ST between the places barely moves with choosiness (hybrids already rarely breed; the migrants themselves set it)
-
-        The page itself, 2026-10-17 (three runs each unless said; A's list held 26 pairs on that load)
-          A  hybrid fitness at contact, 25 / 50 / 75 / 100 / 150 / 200 apart: .88 / .59-.70 / .42-.45 / .19-.28 / .09 / .01-.03
-             F_ST after 100 at m .05: 0 apart .05, 25 .06-.07, 50 .06-.11, 75 .17-.18, 100 .30-.35, 150 .41-.53, 200 .49-.58
-             150 apart, m .02 / .1 / .2: .62-.66 / .11-.12 / .02
-             100 -> 200 apart: mutations 1.66x, pairs of mutations in a hybrid 2.77x, incompatible pairs 2.93x
-          B  F_ST at 10 / 15 at 100: none .29-.48; inverted 8-17 .78-.82; 10-15 .79-.81; 11-20 (15 only) .41-.66; 14-23 untested on
-             the page (prototype .38); 5-12 .31-.44; 1-8 .29-.43; inverted 8-17 at m .01 / .05 / .1: .9 / .19-.28 / 0
-             none at m .02, R .25 / .5 / 1 / 2 / 4 / 8: .76-.82 / .71-.78 / .57-.64 / .43-.66 / .29-.48 / .22-.36
-             chromosomes that fit both (blue at 10, orange at 15): none ~.4 at 100; inverted across both: never one
-          C  20 pairs, choosy share at contact 150: 200 apart, m 0 / .02 / .05 / .1 / .2: .13-.29 / .16-.26 / .27-.34 / .39-.45 / .59-.68
-             150 apart m .1 .44-.50, m .2 .55-.58; 100 apart m .2 .46-.59; m .2 at 50 apart 0-.09, at 0 apart 0
-             young whose parents look different, 200 apart m .2: 1-2%
-          Checks: `scripts/check_lesson19_numbers.js`, 29 checks + two canvas widths + three R panels, ~2 minutes.
-
-        A's drawn rounds (the page; a drawing's dots inside: the 50 pairs' median / straight to the contact value / one
-        straight line / right while apart then flat at contact):
-          1 hybrid fitness 13/13 11/13 7/13 13/13; 2 F_ST 50 apart m .1: 7/7 7/7 5/7 3/7; 3 F_ST 150 apart: 11/11 11/11 5/11
-          11/11; 4 F_ST m .2: 11/11 11/11 5/11 7/11
-          incompatible pairs can't be drawn usefully: the 50 pairs spread 5-15 at contact (a straight line scores 12/13)
-          50 apart at m .05: the cloud after contact sometimes reaches .48; "flat at contact" scored 3, 5 and 7 of 7: m .1 instead
-
-## Why C is built the way it is (measured dead ends, 2026-10-17)
-
-- N 25: drift swamps the choosy allele (its pull is about m x (1 - hybrid fitness), ~.05). N 100 gives a clean signal.
-- Without local adaptation, choosy migrants find each other and breed true in the other place: both kinds live in each place and F_ST between places FALLS as choosiness rises (m .05: .31 with, .59 without). Gene 20 (17 C's) stops that.
-- One place (the two merged): one kind takes over within ~20 generations whatever the choosiness; 0/20 kept both.
-- Mate search limited to 3 tries: choosiness barely spreads (10% to 18%).
+    A, N 25, mu .004 a locus, R 1, p .02, lethal + dominant, flood at the start of a generation, measured on the young
+      floods every 50 at m .2, one run: flood 50 F_ST .40 -> .26 (introgression 9%, gone by 53); floods 100-400: F_ST
+        unmoved (.43/.39, .51/.52, .62/.62 ...), except one migrant-x-migrant flood at 250 (.72 -> .52, back by 253)
+      migrant alleles still there 10 generations after a flood (%), 8 runs, by flood:
+        T 5:  m .1 113 9 41 2 ...    m .2 never apart (0/8)   m .4 0/8 apart
+        T 10: m .1 apart 8/8         m .2 7/8                 m .4 0/8 (F_ST .03 at 400)
+        T 25: m .1 8/8 (24% kept at the first flood, then 0)  m .2 7/8   m .4 2/8 (30-70% kept every flood)
+        T 50: m .1 8/8   m .2 8/8   m .4 3/8          T 100: m .1, .2 8/8; m .4 3/8
+      flood m .5 (every fish 50:50) never separates: one mixed pond, then a hybrid swarm
+    N barely changes the waiting time (sweep, T 50 m .2, floods stop by): N 10 mu .004 50-150 (one never); N 25 50-200;
+      N 50 50-100; N 100 50-100. mu .001: N 10-100 mostly never by 500. mu sets the pace; N sets how lumpy (small N: every hybrid
+      the same fate) and how fast F_ST climbs between floods (drift), and diversity within a pond (HS .22-.36 at N 25, .70+ at N 100)
+    incompatibilities recessive (two copies at both loci): never apart at T 50 m .2 (F1 hybrids live and backcross);
+      two copies at one locus: N 10 sometimes, N 100 never
+    F_ST on allele identity tops out near 1 - HS (HS .3 -> F_ST ~.5-.6 when fully apart); on colour (grey/orange/blue) it climbs
+      toward .9. The page uses identity (the real thing; drift of the grey alleles counts)
+    speed: 2 ponds x N 25 x 400 generations ~ 0.05 s a run
 
 ## Open for JM
 
-1. Voice: none yet. Corpus candidates (quoteable, BIO 202): A 202_lec24_02 (sugar flask: "a separation that stops fixation"), 202_lec20_03 (drift and migration mirror images); B 202_lec12_04 (inversions lock genes together; gives away little); C 202_lec26_05 and 202_lec28_01 both state C's finding (giveaways; better as the solved banner or after). 202_lec25_06 states B's finding.
-2. C's choosy allele is one-allele (choose a partner who looks like you): it needs no linkage. Your lecture (202_lec26_05, lec27_04) frames reinforcement as a race with recombination, a preference that must be linked to the incompatibility or sit inside an inversion. A two-allele version locked in B's inversion is buildable from the same engine; say if you want it.
-3. B leaves A's world for 17's (every gene differs, two marked pairs): in A's world the islands are buried in noise (one chromosome is all linked; most genes never differed).
-4. A's rule is dominant: one copy of each mutation in a pair is enough to clash, so first-generation hybrids suffer.
-5. "Incompatible pairs" on screen; no "Dobzhansky-Muller", no "reinforcement". "Choosy allele", "look".
-6. C's F_ST barely responds to choosiness (above): the visible outcome is the choosy share and the young from mixed pairs.
-7. C1 is cleared by the top of the m slider (200 apart held): a floor, not a window. C2 holds the same m and wants the opposite fate, which is the contrast; a window on C1 (e.g. 30-45%) would add aiming without adding an idea.
-8. C's "hybrid fitness" after contact is a young of one genome from each place, migrants included, so it climbs as the places mix. A defines a hybrid at contact, when the two are still pure.
-9. B's R slider runs .25 to 8 (17's ran .25 to 4): islands need R 4, and 8 shows the islands no narrower.
-10. A's drawn rounds (pass 2): the cloud is the middle 90% of 50 pairs; at m .05 after contact it is wide (some pairs fuse, the rest hold), so round 3 forgives a lot. Narrower (middle 50%) would score harder; your call. The bit is "half the dots or more inside"; the count itself is in the notes.
-11. B and C could take the same drawing: B, the gene-by-gene F_ST profile the inversion will leave (a cloud per gene); C, the choosy allele's course after contact. Not built; say if you want them.
-12. The quote corpus file `quoteable/quotes/quotes_bio202.yaml` does not parse as YAML: line 574, the `notes:` of 202_lec07_03 has unescaped double quotes inside a double-quoted string. Not touched.
+1. N and drift (your "the faster you're fixing differences"): in this model the build-up runs on mutation x time and barely on
+   N (sweep above). Theory says the same for neutral substitutions (Orr & Orr 1996, Evolution 50: waiting time to speciation by
+   drift is roughly independent of population size; I am fairly but not fully sure of the citation). What N does change on
+   screen: F_ST climbs faster between floods, diversity within a pond drops, and small ponds give every hybrid the same fate.
+   N is a slider; no target claims small ponds speciate faster. Say if you want a model where it does (e.g. incompatibilities
+   only between fixed differences).
+2. Incompatibilities are lethal and dominant in A (one copy of each kills): recessive ones never beat floods every 50 at m .2.
+   B uses a partial cost on its arrow, because a lethal pair kills every F1 and nothing crosses at all.
+3. Colourblind: ponds stay orange/blue (safe pair, measured above); grey = before the split. C/D's trait is lightness, never a
+   hue; genotypes also by symbol (○ ◐ ●). Hit/miss by ✓/✗. The course's green/red verdict colours collapse for red-green
+   colourblind eyes (ΔE 10-19): worth a REVISIONS row (symbols on every verdict in 1-18)? Not added without your word.
+4. The redraft drops v2's three things: drawn rounds (A is bowling again; JM's "the goal is ... the pulses no longer change FST"
+   reads as a target), the one-allele choosy allele (now JM's two-locus version: the position matters), B's sparrow data.
+5. D is reinforcement in one direction: one choosy allele that prefers one look. It sorts by pond only when locked to the trait;
+   unlinked it spreads into both ponds or neither (the two-allele problem). A pair of choosy alleles (one each way) was the
+   first prototype: one preference swept both ponds (runaway) in most runs. Kept simple.
+6. A's crossovers slider does little (a pair kills; one chromosome): .07-.12 F_ST across R .25-4. It matters in B and D.
+7. C's floods at .2 every 5 are strong gene flow; one pond selecting alone takes the dark allele into both (0, +.25: 100% / 100%).
+8. D's floods run every generation (.1): reinforcement needs hybrids every generation to work against.
 
 ## Items
 
 | # | Stage | What | Status |
 |---|-------|------|--------|
-| 1 | — | prototype engine (mutation, incompatible pairs, inversion, choosy allele), measure A-C | done |
-| 2 | A-C | build the page from 17's | done |
-| 3 | — | `check_lesson19_numbers.js` (29 + R panels) | done |
-| 4 | — | LOCKS row (x), index card | done |
-| 5 | — | JM's review; voice | todo |
-| 6 | A | pass 2: four drawn rounds (draw, Go, share inside the cloud recorded and shown) in place of the three bowling targets; v2, scaffold 9; checks rewritten | done |
-| 7 | A-C | declutter, from JM's note on 17 (2026-10-17: *"the screen is cluttered. This is a pervasive issue ... the R code panels should always be last & default to be collapsed"*): all eleven readout lines cut (B's bars/ticks legend moved into its bullet), B's sparrows under the stage, R code last and collapsed; checks: layout check in place of the runs-caption check | done |
-| 8 | A-C | hover text, from JM's note (2026-10-17: *"The bullet points could really be turned into hover text over the intro. I don't want to overwhelm students with reading"*): bullets onto the boxes and controls they describe, intro panels removed until a voice, B's sparrows an optional box (closed); 14 marks (A 8, B 3, C 3); checks as 17's (35 + R) | done |
+| 1 | — | archive v2; overhaul doc | done |
+| 2 | A | engine (floods, identity F_ST, lethal pairs), measure, rounds | done |
+| 3 | B | one pair, placed by drag; DAG; targets on holding where it sits | done |
+| 4 | C | trait locus, h and the survival arrows on a DAG, survival plot, what each look got | done |
+| 5 | D | choosy locus by drag, the look it prefers, inversion; births vs survival | done |
+| 6 | — | `check_lesson19_numbers.js` rewritten (34 + four R panels, ~2 min) | done |
+| 7 | — | colourblind pass: ✓/✗ on verdicts, trait by lightness and ○ ◐ ●, the blue pond's lines dashed, ▲ / ■ for B's loci | done |
+| 8 | — | JM's review; voice | todo |
 
 ## Rulings
 
-- 2026-10-17 (mid-build): more "students draw what they expect"; bowling stays, but more drawn predictions scored against the cloud of runs.
-- 2026-10-17: 19 speciation, 20 phylogeny, 21 species selection and macroevolutionary rates (pencilled). 19: 17's interactives; F_ST between the two populations shown varying; incompatibilities, inversions and reinforcement factor in or emerge.
+- 2026-10-20: 19 speciation as a process, built on 17's machinery; one population with many alleles diverging by drift; incompatibilities; sliders for mutation, recombination, migration, the chance two alleles at different loci are incompatible, how often floods come. Fish in ponds, floods. Track introgression, F_ST, neutral diversity; a drop-down. The goal: floods stop changing F_ST and introgression.
+- 2026-10-20: C = focal locus, AA/AB/BB phenotypes, h sets the heterozygote, genotype -> phenotype -> fitness diagram, mating random. D = a preference allele at another locus, placed on the chromosome; an inversion in some targets. Fitness derived: survival and mate choice set, fitness = offspring that survive.
+- 2026-10-20: illustrate, not assess; extremely low text; colourblind students: symbols and colours that work for them.
+- 2026-10-17 (pass 2): more "students draw what they expect"; bowling stays.
 
 ## Do not
 
-- Measure C's reinforcement on F_ST between places without local adaptation: it runs backwards (coexistence).
-- Hold B's islands at R 1: the whole chromosome holds.
-- Name the pairs' mechanism on screen before a run shows it.
+- Set fitness anywhere in C or D: survival and births are set; fitness is read off the run.
+- Code the trait by hue: lightness and symbols only.
+- Measure a flood on the adults it moved (the dip is mechanical); measure it on the young it leaves.
+
+## Pass 1-2 (v2, 2026-10-17, archived)
+
+A split/apart/contact as four drawn rounds; B two pinned pairs + a draggable inversion on 17's start (R 4); C one-allele choosy at N 100 with 17 C's gene 20. Measurements and dead ends kept in git history (this file before 2026-10-20). Carried forward: islands need R 4 on one 40-locus chromosome; reinforcement without local adaptation runs backwards (choosy migrants breed true abroad, F_ST falls); N 25 drift swamps a choosy allele; 3-try mate search barely moves it.
