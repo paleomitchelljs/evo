@@ -22,7 +22,7 @@ One stage, no letter; nine steps; a slider joins the controls as the steps open 
 
     engine     19's fish and chromosomes; populations split with chance b a generation (cap 6), each half its own population, never
                meeting; 8N (at least 200) generations of the first population before 0, so traced lineages have met. Parent links at
-               8 traced loci (3, 8, ..., 38); the alleles' trees traced from the run. Hybrids judged by 19 A's rule (new alleles from
+               8 traced loci (3, 8, ..., 38); the alleles' trees traced from the run. Hybrids judged by 19 C's rule (pass 4 moved incompatibilities from A to C) (new alleles from
                populations that had parted, pair chance 0.02, one kills) — never in the run, only between pairs for the plot.
                Size: every allele's effect N(0, .6) by hash; a fish 20 + its 80 effects; nothing selects on it.
     displays   the populations' tree as bars (letters on the living, top to bottom); one locus's lineages in red inside it; that

@@ -23,7 +23,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
     species    200 fish; p, the share carrying the disperser allele: dispersers leave 1 + s young (s the student's), mutation
                .0005 each way, binomial drift. A barrier cuts a 10-fish piece off (chance .1 x room, room = 1 - species / 40); each
                generation dispersers cross with chance d x (p + piece's p) / 2 and it rejoins; cut off 40 generations, it is a new
-               species (19 A's idea). Lost with chance .002 whatever it carries; the clade's last species never.
+               species (19 C's idea since 19 pass 4). Lost with chance .002 whatever it carries; the clade's last species never.
     sliders    advantage to a disperser (0, .002, .005, .01, .02); how far dispersers go (.02, .05, .1, .2, .5)
     displays   clade 1's tree, branches shaded by p (light few, dark many: one hue); over time (the clade's average, 16 clades
                thin + their average; each species of clade 1; species living); the clade's change taken apart (three parts and
@@ -56,7 +56,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
    protect a species" lever barely moved species selection here (speciation swamps it); a range-based model made dispersers'
    species split more, not less. Say if you want extinction tied to the trait anyway.
 2. The link from dispersal to splitting is never stated: the tip says dispersers cross barriers and a piece left alone 40
-   generations is a species (19 A). Students see light (few dispersers) branches splitting more.
+   generations is a species (19 C). Students see light (few dispersers) branches splitting more.
 3. Comparative methods are one panel (sister clades). The fossil horses (data/clean/horse_*) could carry a real-data version of
    the Price breakdown or the sister-clade test; not attempted.
 4. Species count once each in the clade's average (the way species selection is usually counted), not by their fish.

@@ -1,0 +1,1588 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 19</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 7px; font-size:13px; }
+  .tbar label { display:flex; align-items:center; gap:8px; }
+  .tbar input[type=range] { width:150px; accent-color:var(--accent2); }
+  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:48px; display:inline-block; }
+  .tbar.held { color:var(--muted); }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard ul.rules { list-style:none; margin:8px 0 10px; padding:0; font:12.5px ui-monospace,Menlo,monospace; }
+  .tcard ul.rules li { padding:2px 0; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:2px 0 8px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  #B_genes, #D_genes { touch-action:none; }
+
+  /* the diagrams (lessons 13 and 14's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour. Blue and red stay apart for colourblind eyes by lightness, and the sign is on the number too */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  .pathwrap .paths-box-bg.pond-orange { fill:#fbe3cc; stroke:#e8730c; }
+  .pathwrap .paths-box-bg.pond-blue { fill:#dbe8f1; stroke:#2f6b8f; }
+  #paths-head-down path { fill:#b23a48; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows (lesson 17's note) */
+  .controls.pending .paths-hit, .controls.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 19</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+</nav>
+
+<!-- ========== STAGE A — ponds and floods: incompatibilities build by drift until floods stop mattering (JM, 2026-10-20) ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <!-- voice: none yet; JM to dictate. Setup words are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_boardH">The two ponds</span><span class="tip"><span>One population of fish splits into two ponds: orange on the left, blue on the right. Each fish: two chromosomes of 40 loci, drawn as beads.</span><span>Grey: the alleles the population started with. A new allele takes its pond's colour, orange or blue.</span><span>Run 1 of the 16 that <b>Go</b> plays.</span></span></span></h3>
+        <canvas id="A_board" width="760" height="236"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><span class="info" tabindex="0">Over time, 16 runs:<span class="tip"><span>≈ on the bottom edge: a flood.</span><span>F<sub>ST</sub>: how different the two ponds are, as in Lesson 17. 0: the same mix of alleles. Measured on the young each generation, so a flood counts only through the young it leaves.</span><span>Diversity: the chance two alleles at a locus, drawn from one pond, are different.</span><span>A hybrid: a young fish with one parent from each pond.</span></span></span> <select id="A_meas">
+          <option value="fst">F_ST between the ponds</option>
+          <option value="intro">alleles from the other pond</option>
+          <option value="hs">diversity within each pond</option>
+          <option value="hw">a hybrid's chance to live</option>
+          <option value="hp">incompatible pairs in a hybrid</option>
+        </select></label></div>
+        <canvas id="A_time" width="760" height="260"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>Each generation every fish is replaced by young of two parents from its own pond. Each young fish lives or dies; young are made until each pond has its fish again.</span><span>A young fish carrying an incompatible pair dies. Nothing else helps or harms.</span><span><b>Go</b> plays 400 generations, 16 times.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <ul class="rules" id="A_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="A_NRow"><label>fish a pond <input type="range" id="A_N" min="0" max="3" step="1" value="1"></label><b id="A_NV"></b></div>
+          <div class="tbar" id="A_muRow"><label><span class="info" tabindex="0">mutation rate<span class="tip"><span>The chance a locus on a young chromosome takes a new allele, in its pond's colour.</span></span></span> <input type="range" id="A_mu" min="0" max="5" step="1" value="2"></label><b id="A_muV"></b></div>
+          <div class="tbar" id="A_pRow"><label><span class="info" tabindex="0">chance a pair is incompatible<span class="tip"><span>Any new allele from one pond and any new allele from the other, at two different loci, are an incompatible pair with this chance. One copy of each in a young fish is enough.</span><span>Inside one pond, the two never meet.</span></span></span> <input type="range" id="A_p" min="0" max="4" step="1" value="3"></label><b id="A_pV"></b></div>
+          <div class="tbar" id="A_RRow"><label>crossovers a chromosome <input type="range" id="A_R" min="0" max="4" step="1" value="2"></label><b id="A_RV"></b></div>
+          <div class="tbar" id="A_mRow"><label><span class="info" tabindex="0">flood size<span class="tip"><span>In a flood, each fish swaps ponds with a fish from the other with this chance. 0.5: the two ponds mixed as one.</span></span></span> <input type="range" id="A_m" min="0" max="5" step="1" value="3"></label><b id="A_mV"></b></div>
+          <div class="tbar" id="A_TRow"><label>generations between floods <input type="range" id="A_T" min="0" max="5" step="1" value="2"></label><b id="A_TV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the four targets. <span class="hint" id="A_rounds_now">0 of 4</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel opt" id="A_hyBox">
+      <summary>A hybrid, up close</summary>
+      <canvas id="A_grid" width="760" height="270"></canvas>
+    </details>
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — one incompatible pair, placed on the chromosome (between A's many and C's one trait) ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <!-- voice: none yet; JM to dictate -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_boardH">The two ponds</span><span class="tip"><span>The ponds have been apart a long time: every locus in the orange pond carries the orange pond's allele, every locus in the blue pond the blue pond's.</span><span>Run 1 of the 16 that <b>Go</b> plays. The pair's two loci are boxed.</span></span></span></h3>
+        <canvas id="B_board" width="760" height="236"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">F<sub>ST</sub>, locus by locus<span class="tip"><span>Bars: F<sub>ST</sub> between the ponds at each locus, the 16 runs averaged.</span><span>Under them, the chromosome. Drag ▲ (the orange allele) and ■ (the blue allele) along it to set where the incompatible pair sits.</span></span></span></h3>
+        <canvas id="B_genes" width="760" height="210"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><span class="info" tabindex="0">Over time, 16 runs:<span class="tip"><span>≈ on the bottom edge: a flood.</span></span></span> <select id="B_meas">
+          <option value="pair">F_ST at the pair's two loci</option>
+          <option value="all">F_ST, every locus</option>
+          <option value="hw">a hybrid's chance to live</option>
+        </select></label></div>
+        <canvas id="B_time" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The pair<span class="tip"><span>The orange pond's allele at ▲ and the blue pond's allele at ■, in one young fish (one copy of each is enough), lower its chance to live. Either alone does nothing.</span><span>Click the red arrow, then drag it up or down to set how much. Pale: held this target.</span></span></span></h3>
+        <div class="pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>Fish a pond: 50. No new mutations. <b>Go</b> plays 150 generations, 16 times.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <ul class="rules" id="B_rules"></ul>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_cost" min="-5" max="0" step="1" value="-4"><input type="range" id="B_i" min="0" max="39" step="1" value="4"><input type="range" id="B_j" min="0" max="39" step="1" value="35"></div>
+          <div class="tbar" id="B_RRow"><label>crossovers a chromosome <input type="range" id="B_R" min="0" max="4" step="1" value="2"></label><b id="B_RV"></b></div>
+          <div class="tbar" id="B_mRow"><label>flood size <input type="range" id="B_m" min="0" max="4" step="1" value="2"></label><b id="B_mV"></b></div>
+          <div class="tbar" id="B_TRow"><label>generations between floods <input type="range" id="B_T" min="0" max="3" step="1" value="2"></label><b id="B_TV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="B_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE C — a trait: genotype -> phenotype -> survival, fitness read off the run (JM, 2026-10-20) ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <!-- voice: none yet; JM to dictate -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="C_boardH">The two ponds</span><span class="tip"><span>One population split into two ponds. Locus 20, boxed, is the trait locus: a light allele (white) and a dark allele (black).</span><span>The square left of each fish: how dark it looks. ○ two light alleles, ● two dark, ◐ one of each.</span><span>Run 1 of the 16 that <b>Go</b> plays.</span></span></span></h3>
+        <canvas id="C_board" width="760" height="236"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><span class="info" tabindex="0">Over time, 16 runs:<span class="tip"><span>≈ on the bottom edge: a flood.</span><span>Other loci: the 39 loci that do nothing.</span></span></span> <select id="C_meas">
+          <option value="dark">dark allele in each pond</option>
+          <option value="ftr">F_ST at the trait locus</option>
+          <option value="fneu">F_ST at the other loci</option>
+          <option value="hyb">young with one light and one dark allele</option>
+        </select></label></div>
+        <canvas id="C_time" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genotype to fitness<span class="tip"><span>Click an arrow, then drag it up or down. Pale: held this target. Grey: fixed.</span><span>genotype → looks: where ◐ sits between ○ and ●.</span><span>looks → chance to live, one arrow a pond. Blue (+): darker fish live more. Red (−): lighter fish live more.</span><span>Births: here every surviving fish breeds at random. Fitness is not set anywhere: it is the young a fish leaves, read off the run.</span></span></span></h3>
+        <div class="pathwrap"><div id="C_paths"></div></div>
+        <canvas id="C_surv" width="460" height="200"></canvas>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>Fish a pond: 50. <b>Go</b> plays 200 generations, 16 times.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <ul class="rules" id="C_rules"></ul>
+        <div class="controls" id="C_controls">
+          <div hidden><input type="range" id="C_h" min="0" max="4" step="1" value="2"><input type="range" id="C_bo" min="-4" max="4" step="1" value="0"><input type="range" id="C_bb" min="-4" max="4" step="1" value="0"></div>
+          <div class="tbar" id="C_mRow"><label>flood size <input type="range" id="C_m" min="0" max="4" step="1" value="3"></label><b id="C_mV"></b></div>
+          <div class="tbar" id="C_TRow"><label>generations between floods <input type="range" id="C_T" min="0" max="3" step="1" value="2"></label><b id="C_TV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent">Go</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">What each look got<span class="tip"><span>Over the run's last 20 generations, each pond: the share of young that lived, births (1 = the pond's average), and fitness: the two multiplied (1 = the pond's average).</span></span></span></h3>
+        <canvas id="C_got" width="460" height="170"></canvas>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="C_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE D — a choosy allele at a locus the student places; an inversion to lock it to the trait (JM, 2026-10-20) ========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Finish Stage C to unlock this section.</div>
+
+  <!-- voice: none yet; JM to dictate -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="D_boardH">The two ponds</span><span class="tip"><span>C's ponds, after the trait has come apart: the orange pond mostly light, the blue pond mostly dark. Locus 20, boxed, is the trait locus.</span><span>A dot right of a fish's square: it carries the choosy allele.</span><span>Run 1 of the 12 that <b>Go</b> plays.</span></span></span></h3>
+        <canvas id="D_board" width="760" height="236"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The chromosome<span class="tip"><span>The trait locus (◐) sits at 20. Drag ♥, the choosy locus, along the chromosome to set where it sits.</span><span>Ticked, an inversion runs from the trait locus to the choosy locus on every chromosome that starts with the choosy allele: in a fish with one inverted and one standard chromosome, no crossover falls inside it.</span></span></span></h3>
+        <canvas id="D_genes" width="760" height="130"></canvas>
+        <div class="toggles" id="D_invRow"><label><input type="checkbox" id="D_invBox"> inversion from the trait locus to the choosy locus</label></div>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><span class="info" tabindex="0">Over time, 12 runs:<span class="tip"><span>≈ on the bottom edge: a flood.</span><span>Young whose parents look different: one parent ○ and the other ●, or one of them ◐.</span></span></span> <select id="D_meas">
+          <option value="choosy">choosy allele in each pond</option>
+          <option value="mixed">young whose parents look different</option>
+          <option value="dark">dark allele in each pond</option>
+          <option value="fneu">F_ST at the other loci</option>
+        </select></label></div>
+        <canvas id="D_time" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Survival, births, fitness<span class="tip"><span>C's diagram, with births no longer at random. A fish with the choosy allele (one copy is enough) turns down partners that do not look the way it prefers; the arrow sets how strongly. A turned-down partner breeds less.</span><span>Fitness is not set anywhere: it comes out of the chance to live and the births.</span></span></span></h3>
+        <div class="pathwrap"><div id="D_paths"></div></div>
+        <div class="toggles" id="D_wantRow"><span>the choosy allele prefers</span><label><input type="radio" name="D_want" id="D_wantL" value="0"> ○ light</label><label><input type="radio" name="D_want" id="D_wantD" value="1" checked> ● dark</label></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>Fish a pond: 100. The choosy allele starts in 1 in 5 chromosomes in each pond. <b>Go</b> plays 300 generations, 12 times.</span></span></span> <span class="pips" id="D_pips"></span></h3>
+        <p class="ttext" id="D_ttext"></p>
+        <ul class="rules" id="D_rules"></ul>
+        <div class="controls" id="D_controls">
+          <div hidden><input type="range" id="D_h" min="0" max="4" step="1" value="2"><input type="range" id="D_bo" min="-4" max="4" step="1" value="-4"><input type="range" id="D_bb" min="-4" max="4" step="1" value="4"><input type="range" id="D_a" min="0" max="4" step="1" value="4"><input type="range" id="D_at" min="0" max="39" step="1" value="20"><input type="range" id="D_want" min="0" max="1" step="1" value="0"><input type="range" id="D_inv" min="0" max="1" step="1" value="0"></div>
+          <div class="tbar" id="D_mRow"><label>flood size <input type="range" id="D_m" min="0" max="4" step="1" value="2"></label><b id="D_mV"></b></div>
+          <div class="tbar" id="D_TRow"><label>generations between floods <input type="range" id="D_T" min="0" max="3" step="1" value="0"></label><b id="D_TV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="D_go" class="accent">Go</button>
+            <button id="D_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">What each look got<span class="tip"><span>As in C, over the run's last 20 generations: the share of young that lived, births (1 = the pond's average) and fitness, the two multiplied.</span></span></span></h3>
+        <canvas id="D_got" width="460" height="170"></canvas>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="D_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedD">That is the last stage.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="D_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeD"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 19. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 19 — speciation as a process. Pass 3, 2026-10-20, from JM's
+   brief the same day (verbatim in docs/overhauls/lesson19_overhaul.md,
+   with the plan, the measurements and the open points). Pass 2 is
+   app/archive/lesson19_v2_2026-10-17.html.
+
+   A  ponds and floods: one population splits into two ponds; floods now
+      and then swap fish between them. New alleles from the two ponds turn
+      out incompatible in hybrids, by chance; once enough have built up,
+      a flood stops changing F_ST and stops bringing alleles in.
+   B  one incompatible pair, placed by the student on the chromosome; the
+      pair's cost on a diagram. Close together it holds; far apart a
+      crossover builds a chromosome that fits both ponds and it dissolves.
+   C  a trait: a light and a dark allele at locus 20; genotype -> looks
+      (h) -> chance to live (one arrow a pond); births at random; fitness
+      read off the run, never set.
+   D  a choosy allele at a locus the student places: births now depend on
+      looks through the choosers. It spreads where the fish it prefers
+      live and hybrids die, if it stays with the trait: close by, or in an
+      inversion. Survival and births tracked apart; fitness derived.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+const pc = v => v == null ? "–" : Math.round(100 * v) + "%";
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16 and 17 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|replicate|tabulate|c|which|rep|sapply|lapply|length|cumsum|unlist|sample|ifelse|apply|matrix|any|abs|list|table|max|min|outer|setdiff|unique|vapply|seq_len)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+/* ====== gates ========================================================
+   A stage opens the next by being worked through; a miss never shuts a
+   door. One bit per scored attempt (JM, 2026-09-30): one a target, the
+   first scored try at each, retried until hit (A1-A4, B1-B3, C1-C3,
+   D1-D3). */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
+const BIT = { A1: 0, A2: 1, A3: 2, A4: 3, B1: 4, B2: 5, B3: 6, C1: 7, C2: 8, C3: 9, D1: 10, D2: 11, D3: 12 };
+function record(pos, ok) {
+  if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
+  Score.recordCheckpoint(pos, ok);
+}
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) {
+    $("done-banner").classList.add("shown");
+    if (typeof Score !== "undefined" && Score.finish) Score.finish();
+    $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
+  $("stage" + nx).classList.remove("stage-locked");
+  const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true;
+  FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) {
+  if (Gates[stage].done) return;
+  Gates[stage].done = true;
+  $("solved" + stage).classList.add("shown");
+  unlockNext(stage);
+}
+
+/* =====================================================================
+   THE ENGINE (all four stages): lesson 17's two populations of
+   hermaphrodite genomes and bead strings, rebuilt around survival. Lesson
+   20 rebuilds the same fish around populations that split (with parent
+   links) and 21 works with whole species: one idea, three engines, no
+   shared code worth moving to app/assets/ yet.
+
+   A world: two ponds (0 orange, 1 blue) of N fish; a fish is two
+   chromosomes of L = 40 loci, an Int32Array of L + 1 (slot L: 1 when the
+   chromosome carries D's inversion). A locus holds an allele: an integer
+   indexing the world's registry, which keeps each allele's kind (0 grey,
+   from before the split; 1 orange or 2 blue, arisen in that pond; 3
+   light, 4 dark: the trait; 5 choosy, 6 not), its locus and its shade.
+
+   A generation, in this order:
+   1  a flood, when the generation is a multiple of T: Binomial(N, m)
+      fish swap ponds (17's swap). Fish that swapped breed where they land.
+   2  in each pond, young are made until N have lived: a parent at random,
+      a partner at random (D: a choosy parent, one copy of the choosy
+      allele or two, turns a partner down with chance a x |the look it
+      prefers - the partner's look|, then draws again, up to 30 times),
+      one gamete from each. A gamete: one chromosome, switching at each gap
+      with chance R / 39; with one inverted and one standard chromosome no
+      switch falls inside the inversion. Mutation (A): each locus of each
+      young chromosome takes a new allele in the pond's colour with chance
+      mu. Then the young fish lives with its chance to live (below) or
+      dies; deaths are counted, never shown as fish.
+   Its chance to live, the product of:
+      A  0 when it carries an incompatible pair: a new orange allele and a
+         new blue one at two different loci, incompatible with chance p
+         (decided once a pair, by a hash of the two alleles: the same two
+         alleles are always the same answer); one copy of each is enough.
+      B  1 - cost for the pair: the orange pond's allele at locus i and the
+         blue pond's at j, one copy of each enough.
+      C, D  its looks z (0 light, h one of each, 1 dark) in its pond: with
+         the pond's arrow b, 1 - b (1 - z) when b > 0 (darker lives more),
+         1 + b z when b < 0 (lighter lives more).
+   F_ST: as in lesson 17, from the chance two alleles at a locus differ,
+   within each pond (averaged) and pooled (the two ponds weighted equally),
+   each averaged over the loci: (pooled - within) / pooled. On alleles,
+   not colours: the grey alleles count.
+   ===================================================================== */
+const L = 40, ARR = L;
+const K_GREY = 0, K_OR = 1, K_BL = 2, K_LIGHT = 3, K_DARK = 4, K_CHOOSY = 5, K_RAND = 6;
+function pdBinom(n, p, rng) { let k = 0; for (let i = 0; i < n; i++) if (rng() < p) k++; return k; }
+function pdShuffle(n, rng) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pdHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; h = Math.imul(h, 0x846ca68b); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+/* a new allele in world w's registry */
+function pdAl(w, kind, locus, shade) {
+  if (w.next >= w.kind.length) { const grow = (A, T) => { const B = new T(A.length * 2); B.set(A); return B; };
+    w.kind = grow(w.kind, Uint8Array); w.loc = grow(w.loc, Int8Array); w.shade = grow(w.shade, Uint8Array); }
+  const id = w.next++; w.kind[id] = kind; w.loc[id] = locus; w.shade[id] = shade; return id;
+}
+/* P: { N, mu, R, p, cost, pairs [[i, j]], m, T, start "grey" | "apart", trait { at, h, b [b0, b1], q0 [dark share pond 0, 1] },
+        pref { at, a, want 0 | 1, q0 }, inv (true: from the trait locus to the choosy locus, on chromosomes starting choosy) } */
+function pdWorld(P, seed) {
+  const rng = mulberry32(seed), w = { rng, salt: seed & 0xffff, kind: new Uint8Array(4096), loc: new Int8Array(4096), shade: new Uint8Array(4096), next: 1, t: 0 };
+  w.LIGHT = pdAl(w, K_LIGHT, -1, 0); w.DARK = pdAl(w, K_DARK, -1, 5); w.CHOOSY = pdAl(w, K_CHOOSY, -1, 5); w.RAND = pdAl(w, K_RAND, -1, 0);
+  /* founders: grey, three alleles a locus at random shares, one set for both ponds (one population split in two); apart, one
+     allele a locus in each pond, in its colour (lesson 17 D's start) */
+  const grey = P.start === "grey" ? Array.from({ length: L }, (_, i) => { const u = [0, 1, 2].map(() => 0.2 + rng()), s = u[0] + u[1] + u[2];
+    return u.map((x, j) => ({ id: pdAl(w, K_GREY, i, [1, 3, 5][j]), p: x / s })); }) : null;
+  const own = P.start === "grey" ? null : [0, 1].map(k => Array.from({ length: L }, (_, i) => pdAl(w, k + 1, i, 3)));
+  const inv = pdInv(P);
+  w.pops = [0, 1].map(k => Array.from({ length: P.N }, () => {
+    const g = [new Int32Array(L + 1), new Int32Array(L + 1)];
+    for (const c of g) {
+      for (let i = 0; i < L; i++) {
+        if (grey) { let u = rng(), j = 0; while (j < 2 && u > grey[i][j].p) { u -= grey[i][j].p; j++; } c[i] = grey[i][j].id; }
+        else c[i] = own[k][i];
+      }
+      if (P.trait) c[P.trait.at] = rng() < P.trait.q0[k] ? w.DARK : w.LIGHT;
+      if (P.pref) c[P.pref.at] = rng() < P.pref.q0[k] ? w.CHOOSY : w.RAND;
+      c[ARR] = inv && c[P.pref.at] === w.CHOOSY ? 1 : 0;
+    }
+    return g;
+  }));
+  w.trk = [0, 1].map(() => ({ born: [0, 0, 0], lived: [0, 0, 0], births: [0, 0, 0], adults: [0, 0, 0] }));
+  return w;
+}
+/* D's inversion: from the trait locus to the choosy locus, both included (null when off) */
+const pdInv = P => P.inv && P.trait && P.pref ? [Math.min(P.trait.at, P.pref.at), Math.max(P.trait.at, P.pref.at)] : null;
+function pdGamete(P, g, rng, inv) {
+  const xo = P.R / (L - 1), het = !!inv && g[0][ARR] !== g[1][ARR];
+  let k = rng() < 0.5 ? 0 : 1, o = null, kA = k;
+  for (let i = 1; i < L; i++) {
+    if (inv && i === inv[0] + 1) kA = k;
+    if (rng() < xo) { if (het && i > inv[0] && i <= inv[1]) continue; if (!o) o = g[k].slice(); k ^= 1; for (let j = i; j < L; j++) o[j] = g[k][j]; }
+  }
+  if (o && inv) o[ARR] = g[kA][ARR];
+  return o || g[k];
+}
+/* mutation: the next mutated locus a geometric draw away (lesson 19 v2's), never at the trait or choosy locus */
+function pdMutate(P, w, c, pond) {
+  if (!P.mu) return c;
+  const lq = Math.log(1 - P.mu), rng = w.rng; let o = c;
+  for (let i = Math.floor(Math.log(1 - rng()) / lq); i < L; i += 1 + Math.floor(Math.log(1 - rng()) / lq)) {
+    if ((P.trait && i === P.trait.at) || (P.pref && i === P.pref.at)) continue;
+    if (o === c) o = c.slice();
+    o[i] = pdAl(w, pond + 1, i, 1 + Math.floor(rng() * 5));
+  }
+  return o;
+}
+/* A: a fish's incompatible pairs (new orange x new blue, different loci, hash < p), each pair counted once */
+function pdPairsA(P, w, g) {
+  let a = null, b = null;
+  for (const c of g) for (let i = 0; i < L; i++) { const id = c[i], k = w.kind[id]; if (k === K_OR) (a || (a = [])).push(id); else if (k === K_BL) (b || (b = [])).push(id); }
+  if (!a || !b) return 0;
+  const ua = a.length > 1 ? [...new Set(a)] : a, ub = b.length > 1 ? [...new Set(b)] : b; let n = 0;
+  for (const x of ua) for (const y of ub) if (w.loc[x] !== w.loc[y] && pdHash(x < y ? x : y, x < y ? y : x, w.salt) < P.p) n++;
+  return n;
+}
+/* B: the pair, the orange pond's allele at i with the blue pond's at j (one copy of each) */
+function pdPairB(P, w, g) {
+  const [i, j] = P.pair;
+  return (w.kind[g[0][i]] === K_OR || w.kind[g[1][i]] === K_OR) && (w.kind[g[0][j]] === K_BL || w.kind[g[1][j]] === K_BL) ? 1 : 0;
+}
+const pdDark = (P, w, g) => (g[0][P.trait.at] === w.DARK ? 1 : 0) + (g[1][P.trait.at] === w.DARK ? 1 : 0);
+const pdLook = (P, d) => d === 0 ? 0 : d === 2 ? 1 : P.trait.h;
+/* a young fish's chance to live in pond k */
+function pdLive(P, w, g, k) {
+  let s = 1;
+  if (P.p) { if (pdPairsA(P, w, g)) return 0; }
+  if (P.pair) { if (pdPairB(P, w, g)) s *= 1 - P.cost; }
+  if (P.trait) { const z = pdLook(P, pdDark(P, w, g)), b = P.trait.b[k]; s *= b >= 0 ? 1 - b * (1 - z) : 1 + b * z; }
+  return s;
+}
+const pdChoosy = (P, w, g) => g[0][P.pref.at] === w.CHOOSY || g[1][P.pref.at] === w.CHOOSY;
+function pdStep(P, w) {
+  const rng = w.rng, inv = pdInv(P); w.t++;
+  w.flood = 0;
+  if (P.T && P.m > 0 && w.t % P.T === 0) {
+    const n = pdBinom(P.N, P.m, rng); w.flood = n || -1;
+    const ia = pdShuffle(P.N, rng), ib = pdShuffle(P.N, rng);
+    for (let q = 0; q < n; q++) { const t = w.pops[0][ia[q]]; w.pops[0][ia[q]] = w.pops[1][ib[q]]; w.pops[1][ib[q]] = t; }
+  }
+  w.mixed = 0; w.made = 0;
+  const gen = [0, 1].map(() => ({ born: [0, 0, 0], lived: [0, 0, 0], births: [0, 0, 0], adults: [0, 0, 0] }));
+  w.pops = w.pops.map((F, k) => {
+    const N = F.length, young = [], tr = gen[k];
+    const dk = P.trait ? F.map(g => pdDark(P, w, g)) : null, lk = dk ? dk.map(d => pdLook(P, d)) : null;
+    const ch = P.pref ? F.map(g => pdChoosy(P, w, g)) : null;
+    if (dk) for (const d of dk) tr.adults[d]++;
+    let tries = 0;
+    while (young.length < P.N && tries < 60 * P.N) {
+      tries++;
+      const a = Math.floor(rng() * N); let b = Math.floor(rng() * (N - 1)); if (b >= a) b++;
+      if (ch && ch[a]) for (let t = 0; t < 30; t++) { if (rng() >= P.pref.a * Math.abs(P.pref.want - lk[b])) break; b = Math.floor(rng() * (N - 1)); if (b >= a) b++; }
+      const y = [pdMutate(P, w, pdGamete(P, F[a], rng, inv), k), pdMutate(P, w, pdGamete(P, F[b], rng, inv), k)];
+      let d = 0;
+      if (dk) { d = pdDark(P, w, y); tr.born[d]++; tr.births[dk[a]]++; tr.births[dk[b]]++; w.made++; if (lk[a] !== lk[b]) w.mixed++; }
+      if (rng() < pdLive(P, w, y, k)) { young.push(y); if (dk) tr.lived[d]++; }
+    }
+    while (young.length < P.N) young.push(F[Math.floor(rng() * N)]);   /* never reached at the settings on the page */
+    return young;
+  });
+  w.gen = gen;
+}
+/* F_ST over the loci in idx (all when null), and locus by locus; within-pond diversity, each pond */
+function pdFst(w, idx) {
+  const by = new Float64Array(L), hs2 = [0, 0]; let HT = 0, HS = 0, n = 0;
+  const c0 = new Map(), c1 = new Map();
+  for (let i = 0; i < L; i++) {
+    c0.clear(); c1.clear();
+    for (const g of w.pops[0]) for (const c of g) c0.set(c[i], (c0.get(c[i]) || 0) + 1);
+    for (const g of w.pops[1]) for (const c of g) c1.set(c[i], (c1.get(c[i]) || 0) + 1);
+    const n0 = 2 * w.pops[0].length, n1 = 2 * w.pops[1].length; let s0 = 0, s1 = 0, sb = 0;
+    for (const [id, x] of c0) { const p0 = x / n0, p1 = (c1.get(id) || 0) / n1, pb = (p0 + p1) / 2; s0 += p0 * p0; s1 += p1 * p1; sb += pb * pb; }
+    for (const [id, x] of c1) if (!c0.has(id)) { const p1 = x / n1, pb = p1 / 2; s1 += p1 * p1; sb += pb * pb; }
+    const hs = 1 - (s0 + s1) / 2, ht = 1 - sb; by[i] = ht > 1e-9 ? (ht - hs) / ht : 0;
+    if (!idx || idx.has(i)) { HS += hs; HT += ht; hs2[0] += 1 - s0; hs2[1] += 1 - s1; n++; }
+  }
+  return { fst: HT > 1e-9 ? (HT - HS) / HT : 0, by, hs: hs2.map(v => v / n) };
+}
+/* each pond's new alleles (orange and blue), and the share of them from the other pond */
+function pdIntro(w) {
+  return w.pops.map((F, k) => { let own = 0, oth = 0; const mine = k + 1, other = 2 - k;
+    for (const g of F) for (const c of g) for (let i = 0; i < L; i++) { const kd = w.kind[c[i]]; if (kd === mine) own++; else if (kd === other) oth++; }
+    return own + oth ? oth / (own + oth) : 0; });
+}
+/* n hybrids: a young of a random orange-pond fish and a random blue-pond one; their chance to live and their incompatible pairs */
+function pdHybrids(P, w, rng, n) {
+  let live = 0, pairs = 0; const F0 = w.pops[0], F1 = w.pops[1], inv = pdInv(P);
+  for (let r = 0; r < n; r++) {
+    const y = [pdGamete(P, F0[Math.floor(rng() * F0.length)], rng, inv), pdGamete(P, F1[Math.floor(rng() * F1.length)], rng, inv)];
+    if (P.p) pairs += pdPairsA(P, w, y);
+    live += pdLive(P, w, y, 0);
+  }
+  return { live: live / n, pairs: pairs / n };
+}
+const pdFreq = (w, id, at) => w.pops.map(F => { let n = 0; for (const g of F) for (const c of g) if (c[at] === id) n++; return n / (2 * F.length); });
+
+/* ====== drawing shared by the stages ====== */
+/* shades: grey (before the split), orange, blue (lesson 17's) */
+const SHADE = [
+  ["#ebe8df", "#d6d2c6", "#c9c4b6", "#bdb8aa", "#a29d8f", "#827e72"],
+  ["#f8d2ae", "#f2b07a", "#ec8f45", "#e8730c", "#b95b08", "#874205"],
+  ["#cfe0ec", "#a3c3da", "#6f9fc2", "#2f6b8f", "#245672", "#183e53"],
+];
+const LIGHT_COL = "#f6f4ec", DARK_COL = "#262624";
+function beadCol(w, a) {
+  const k = w.kind[a];
+  if (k <= K_BL) return SHADE[k][Math.min(5, w.shade[a])];
+  return k === K_LIGHT ? LIGHT_COL : k === K_DARK ? DARK_COL : k === K_CHOOSY ? INK : "#d6d2c6";
+}
+/* looks as a grey: 0 light to 1 dark */
+const lookCol = z => { const v = Math.round(246 - z * (246 - 38)); return "rgb(" + v + "," + (v - 1) + "," + (v - 6) + ")"; };
+const POPCOL = [ORANGE, BLUE], POPNAME = ["orange pond", "blue pond"];
+/* the board: run 1's two ponds side by side, two columns of fish each, a fish's two chromosomes as two bead strings, at most 26
+   fish a pond. opts: box [loci boxed], look (each fish's looks as a square left of it, and a dot when it is choosy), inv (a
+   bracket over every inverted chromosome), note (top right) */
+const BD = { W: 760, H: 236, popW: 372, cw: 184, bw: 4.1, bh: 5, rh: 15.5, y0: 34, show: 26 };
+function drawBoard(cvId, w, P, opts) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, BD.W, BD.H), inv = pdInv(P);
+  opts = opts || {};
+  const sw = opts.look ? 12 : 0;
+  w.pops.forEach((F, k) => {
+    const x0 = k * (BD.popW + 16);
+    cardText(ctx, POPNAME[k] + (F.length > BD.show ? " · first " + BD.show + " of " + F.length + " fish" : ""), x0, 10, { size: 12, bold: true, col: POPCOL[k] });
+    F.slice(0, BD.show).forEach((g, j) => {
+      const x = x0 + (j % 2) * BD.cw + sw, y = BD.y0 + Math.floor(j / 2) * BD.rh;
+      if (opts.look) { ctx.fillStyle = lookCol(pdLook(P, pdDark(P, w, g))); ctx.fillRect(x - sw, y, 7, 2 * BD.bh + 1); ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.6; ctx.strokeRect(x - sw + 0.3, y + 0.3, 6.4, 2 * BD.bh + 0.4);
+        if (P.pref && pdChoosy(P, w, g)) { ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(x - 2.4, y + BD.bh + 0.5, 1.7, 0, 6.2832); ctx.fill(); } }
+      g.forEach((c, ci) => {
+        for (let i = 0; i < L; i++) { ctx.fillStyle = beadCol(w, c[i]); ctx.fillRect(x + i * BD.bw, y + ci * (BD.bh + 1), BD.bw - 0.5, BD.bh); }
+        if (inv && c[ARR]) { const xa = x + inv[0] * BD.bw - 0.5, xb = x + (inv[1] + 1) * BD.bw - 0.5, yb = ci ? y + 2 * BD.bh + 2.5 : y - 1.5;
+          ctx.strokeStyle = INK; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(xa, yb + (ci ? -1.5 : 1.5)); ctx.lineTo(xa, yb); ctx.lineTo(xb, yb); ctx.lineTo(xb, yb + (ci ? -1.5 : 1.5)); ctx.stroke(); }
+      });
+      for (const gi of opts.box || []) { ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.8; ctx.strokeRect(x + gi * BD.bw - 0.6, y - 0.6, BD.bw + 0.6, 2 * BD.bh + 2.2); }
+    });
+  });
+  if (opts.note) cardText(ctx, opts.note, BD.W - 2, 10, { size: 11, col: MUTED, align: "right" });
+  ctx.restore();
+}
+
+/* over time: thin lines for every run (one a pond when the measure has one a pond, in the pond's colour, the blue pond's
+   dashed), the average thick; ≈ on the bottom edge at each flood; a target's window at the end. q null: the empty frame */
+const TM = { W: 760, H: 260, px: 50, py: 14, pw: 680 };
+function drawTime(cvId, q, meas, M, rule, frame) {
+  const cv = $(cvId); if (!cv) return;
+  const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas], G = q ? q.G : frame.G, Tf = q ? q.P.T : frame.T, mf = q ? q.P.m : frame.m;
+  let ymax = m.ymax;
+  if (q && m.auto) for (const s of q.hist) for (const pr of s.runs) for (const v of m.vals(pr)) if (v != null) ymax = Math.max(ymax, Math.ceil(v / m.auto) * m.auto);
+  const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - Math.min(v, ymax) / ymax * T.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
+  /* floods: a faint line up the plot and ≈ under the axis (at most one mark every 6 px) */
+  if (Tf && mf > 0) { let lastX = -99; ctx.strokeStyle = "rgba(47,107,143,0.13)"; ctx.lineWidth = 1;
+    for (let t = Tf; t <= G; t += Tf) { const x = xs(t); if (x - lastX < 6) continue; lastX = x; ctx.beginPath(); ctx.moveTo(x, T.py); ctx.lineTo(x, T.py + T.ph); ctx.stroke(); cardText(ctx, "≈", x, T.py + T.ph + 6, { size: 10, col: BLUE, align: "center" }); } }
+  for (let k = 0; k <= 4; k++) { const v = ymax * k / 4; cardText(ctx, m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2)), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  const step = G > 200 ? 50 : G > 100 ? 25 : 20;
+  for (let t = 0; t <= G; t += step) cardText(ctx, String(t), xs(t), T.py + T.ph + 18, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (rule) for (const u of rule.rules) if (u.meas === meas) {
+    const lo = u.lo == null ? 0 : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7 + (u.pond != null ? 8 * u.pond - 4 : 0);
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = u.pond != null ? POPCOL[u.pond] : INK; ctx.lineWidth = 1.6; if (u.pond === 1) ctx.setLineDash([3, 2]); ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi)); ctx.setLineDash([]);
+  }
+  if (q) {
+    const nPer = m.vals(q.hist[0].runs[0]).length, dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
+    for (let i = 0; i < q.runs.length; i++) for (let k = 0; k < nPer; k++) {
+      const pts = []; for (const s of q.hist) { const v = m.vals(s.runs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
+      polyline(ctx, pts, nPer > 1 ? POPCOL[k] : INK, 1, 0.13);
+    }
+    for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.runs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, nPer > 1 ? POPCOL[k] : INK, 2.6, 1, dash(k));
+    }
+    if (nPer > 1) (m.keys || POPNAME).forEach((nm, k) => { const y = T.py + 9 + 14 * k; polyline(ctx, [[T.px + T.pw - 150, y], [T.px + T.pw - 126, y]], POPCOL[k], 2.4, 1, dash(k)); cardText(ctx, nm, T.px + T.pw - 120, y, { size: 11, col: POPCOL[k], bold: true }); });
+  } else cardText(ctx, "Go plays it here.", T.px + T.pw / 2, T.py + T.ph / 2, { size: 12.5, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+/* the run's snapshot at generation t (the last one before, if none at t), each number averaged over the runs; an array (one a
+   pond, or a locus) averaged entry by entry */
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R[0][key];
+    if (typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0 && v0.length != null && typeof v0[0] === "number") out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key][i])));
+  }
+  return out;
+}
+/* the average over generations t0..t1 of a run's summaries (C, D's last 20 generations) */
+function sumOver(q, key, t0) {
+  const hs = q.hist.filter(h => h.t >= t0); if (!hs.length) return null;
+  const v0 = hs[0].runs[0][key];
+  if (typeof v0 === "number") return meanOf(hs.flatMap(h => h.runs.map(p => p[key])));
+  return Array.from(v0, (_, i) => meanOf(hs.flatMap(h => h.runs.map(p => p[key][i]))));
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19 v2's), shared by A-D ======
+   cfg: ctl [{key, vals, fmt, hidden}], rounds [{text, open, hold, rules [{meas, pond, lo, hi, txt, ok(S, q), val(S, q)}]}],
+   start(set, seed) -> { P, runs, G, every, stat(w, q) }, paint(); hooks: afterOpen(), afterRun(q), onInput(key), afterSync(busy).
+   S is the run's summary at its end. A control with `hidden` has no slider row: a diagram's arrow or a drag writes it. */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => $(S.K + "_practice").checked || S.done;
+/* a control's value: its input's position counted from the input's min (a signed arrow's input runs -4..4 around 0) */
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function syncVals(S) { for (const c of S.cfg.ctl) { const v = $(S.K + "_" + c.key + "V"); if (v) v.textContent = (c.fmt || String)(c.vals[ctlIdx($(S.K + "_" + c.key))]); } }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null, row = $(S.K + "_" + c.key + "Row");
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : ""; if (row) row.classList.toggle("held", held);
+  }
+  syncVals(S); S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.stat(w, q)) }); }
+function stepOnce(q) {
+  q.t++;
+  for (const w of q.runs) pdStep(q.P, w);
+  if (q.t === q.G || q.t % q.every === 0) snap(q);
+}
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const set = readSet(S), r = S.done ? null : ruleOf(S);
+  const seed = pageSeed("l19" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S, q) { const each = r.rules.map(u => u.ok(S, q)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S, q)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G), q);
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.waiting && S.round >= S.cfg.rounds.length - 1) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.cfg.afterRun) S.cfg.afterRun(q);
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
+  $(K + "_ttext").textContent = free ? S.cfg.freeText : r.text;
+  const q = S.last && S.last.r === r ? S.last : null, j = q && q.j;
+  $(K + "_rules").innerHTML = free ? "" : r.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
+    ' <span style="color:var(--muted)">(' + (j ? "this run " + j.vals[k] : "not run yet") + ")</span></li>").join("");
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      syncVals(S); S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      /* an arrow or a drag writes its input on every step and fires no "change": count a drag once */
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the board shows the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set);
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l19" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0], P: q.P }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+/* a stage's diagram: hold an arrow pale (readonly) when its input is held, and redraw */
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const fmtT = v => "every " + v;
+
+/* =====================================================================
+   STAGE A — ponds and floods (JM, 2026-10-20: "They start with one
+   population, and multiple [alleles], and they diverge ... a drift-based
+   speciation model where incompatibilities develop ... fish in ponds,
+   where every time there's a flood, fish can move across ponds and
+   intermingle ... the goal is to have it such that the pulses no longer
+   change FST, no longer decrease FST, no longer increase introgression").
+   16 runs, 400 generations, measured on the young every generation.
+   Measurements and rounds: see the block above A_ROUNDS.
+   ===================================================================== */
+const A_NV = [10, 25, 50, 100], A_MUV = [0, 0.001, 0.002, 0.004, 0.006, 0.008], A_PV = [0, 0.005, 0.01, 0.02, 0.05],
+      A_RV = [0.25, 0.5, 1, 2, 4], A_MV = [0, 0.05, 0.1, 0.2, 0.3, 0.5], A_TV = [2, 5, 10, 25, 50, 100], A_G = 400, A_RUNS = 16;
+/* MEASURED (the page's engine in node, 2026-10-20; F_ST at 400, the 16 runs averaged, 2-4 sets of 16 each):
+     1  N 25, p .02, R 1, floods every 10 at .2; mutation .002 .10-.14, .003 .17-.31, .004 .37-.46, .006 .38-.41, .008 .33-.35
+        (more mutation, more diversity within a pond, so F_ST tops out lower). Opens at .002; .004 and up hit .3.
+     2  N 25, mutation .001, p .02: floods (m, every T) .2/25 .14-.24 (opens); .1/25 .45-.62; .2/50 .29-.46; .2/100 .40-.59;
+        .1/50 .58-.67; .05/25 .73. Smaller or rarer floods: one step either way mostly hits .3.
+     3  N 25, mutation .004: p .02 with .2/10 .42-.46 (opens); .2/5 .05-.06; .3/10 .04-.08; p .01 .15-.21; p .005 .07; p 0 .06-.07.
+        More floods hit under .1 in one step; the chance of a pair takes two (p .005).
+     4  mutation .002, p .02, floods .2/25: diversity within a pond N 10 .12-.16, 25 .21-.25, 50 .32-.36, 100 .47-.51. Opens at 50.
+   Crossing over barely matters here (a pair kills, one chromosome): mutation .002 at R .25 / 1 / 4: F_ST .07-.10 / .10-.12 / .08-.10.
+   N barely changes when the floods stop mattering (scratchpad sweep): mutation sets the pace. */
+const A_FST = (lo, hi) => ({ meas: "fst", lo, hi, txt: "F_ST at generation 400: " + (hi == null ? lo + " or more" : "under " + hi),
+  ok: S => (lo == null || S.fst >= lo) && (hi == null || S.fst < hi), val: S => f2(S.fst) });
+const A_ROUNDS = [
+  { hold: { N: 25, p: 0.02, R: 1, m: 0.2, T: 10 }, open: { mu: 0.002 },
+    text: "A flood every 10 generations. Keep the two ponds apart anyway: F_ST of 0.3 or more at generation 400.", rules: [A_FST(0.3, null)] },
+  { hold: { N: 25, mu: 0.001, p: 0.02, R: 1 }, open: { m: 0.2, T: 25 },
+    text: "Mutation is slower now. Change the floods so the ponds come apart: F_ST of 0.3 or more at generation 400.", rules: [A_FST(0.3, null)] },
+  { hold: { N: 25, mu: 0.004, R: 1 }, open: { p: 0.02, m: 0.2, T: 10 },
+    text: "Plenty of mutation. Keep the ponds one population: F_ST under 0.1 at generation 400.", rules: [A_FST(null, 0.1)] },
+  { hold: { mu: 0.002, p: 0.02, R: 1, m: 0.2, T: 25 }, open: { N: 50 },
+    text: "Diversity within each pond under 0.3 at generation 400.",
+    rules: [{ meas: "hs", lo: 0, hi: 0.3, txt: "diversity within each pond at 400: under 0.3", ok: S => S.hs[0] < 0.3 && S.hs[1] < 0.3, val: S => S.hs.map(f2).join(" / ") }] },
+];
+function A_stat(w, q) {
+  const f = pdFst(w, null), intro = pdIntro(w), every = q.t % 10 === 0 || q.t === q.G, hy = pdHybrids(q.P, w, w.hrng, every ? 12 : 3);
+  return { fst: f.fst, hs: f.hs, intro, hw: hy.live, hp: hy.pairs };
+}
+const SA = mkStage("A", {
+  ctl: [{ key: "N", vals: A_NV }, { key: "mu", vals: A_MUV }, { key: "p", vals: A_PV }, { key: "R", vals: A_RV }, { key: "m", vals: A_MV }, { key: "T", vals: A_TV, fmt: fmtT }],
+  rounds: A_ROUNDS, ms: 14,
+  freeText: "All four targets hit. Run any setting you like: 400 generations, 16 times.",
+  start: (set, seed) => {
+    const P = { N: set.N, mu: set.mu, p: set.p, R: set.R, m: set.m, T: set.T, start: "grey" };
+    return { P, G: A_G, every: set.N >= 50 ? 2 : 1, stat: A_stat,
+      runs: Array.from({ length: A_RUNS }, (_, i) => { const w = pdWorld(P, seed + 1 + 7919 * i); w.hrng = mulberry32(seed + 5 + 7919 * i); return w; }) };
+  },
+  paint: () => A_paint(),
+});
+const MEAS_A = {
+  fst: { lab: "F_ST between the ponds", ymax: 1, vals: s => [s.fst] },
+  intro: { lab: "new alleles from the other pond", ymax: 0.5, pct: true, vals: s => s.intro },
+  hs: { lab: "diversity within each pond", ymax: 1, vals: s => s.hs },
+  hw: { lab: "a hybrid's chance to live", ymax: 1, vals: s => [s.hw] },
+  hp: { lab: "incompatible pairs in a hybrid", ymax: 4, auto: 4, vals: s => [s.hp] },
+};
+function A_paint() {
+  const S = SA, q = shownRun(S), pv = q ? null : previewRun(S), w = q ? q.runs[0] : pv.w, P = q ? q.P : pv.P, t = q ? q.t : 0;
+  drawBoard("A_board", w, P, { note: q && w.flood > 0 && q.t % P.T === 0 ? "≈ flood: " + w.flood + " fish swapped" : "" });
+  $("A_boardH").textContent = "The two ponds · run 1 · generation " + t;
+  const set = readSet(S);
+  drawTime("A_time", q, $("A_meas").value, MEAS_A, S.done ? null : ruleOf(S), { G: A_G, T: set.T, m: set.m });
+  if ($("A_hyBox").open) A_drawGrid(q, w, P);
+  syncStage(S); A_code();
+}
+/* a hybrid of run 1 as it stands: down, the loci where it carries a new orange allele; across, a new blue one; a cell for each
+   pair, dark red when the pair is incompatible (one is enough to kill it) */
+const AGr = { W: 760, H: 270, x0: 44, y0: 26, side: 220 };
+function A_drawGrid(q, w, P) {
+  const cv = $("A_grid"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, AGr.W, AGr.H), rng = mulberry32((q ? q.seed : 17) + 977 * (q ? q.t : 0) + 3), inv = null;
+  const y = [pdGamete(P, w.pops[0][Math.floor(rng() * w.pops[0].length)], rng, inv), pdGamete(P, w.pops[1][Math.floor(rng() * w.pops[1].length)], rng, inv)];
+  const rows = [], cols = []; for (const c of y) for (let i = 0; i < L; i++) { const id = c[i], k = w.kind[id]; if (k === K_OR && !rows.includes(id)) rows.push(id); else if (k === K_BL && !cols.includes(id)) cols.push(id); }
+  rows.sort((a, b) => w.loc[a] - w.loc[b]); cols.sort((a, b) => w.loc[a] - w.loc[b]);
+  const cell = Math.min(14, AGr.side / Math.max(1, rows.length, cols.length)); let n = 0;
+  cardText(ctx, "its new blue alleles, by locus →", AGr.x0, 9, { size: 11, col: BLUE });
+  ctx.save(); ctx.translate(11, AGr.y0 + AGr.side / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "its new orange alleles, by locus →", 0, 0, { size: 11, col: ORANGE, align: "center" }); ctx.restore();
+  if (!rows.length || !cols.length) cardText(ctx, "No pairs yet: a hybrid needs new alleles from both ponds.", AGr.x0, AGr.y0 + 40, { size: 12, col: MUTED });
+  rows.forEach((a, r) => cols.forEach((b, c) => {
+    const bad = w.loc[a] !== w.loc[b] && pdHash(a < b ? a : b, a < b ? b : a, w.salt) < P.p; if (bad) n++;
+    ctx.fillStyle = bad ? "#7a1f2b" : "#ebe8df"; ctx.fillRect(AGr.x0 + c * cell, AGr.y0 + r * cell, cell - 1, cell - 1);
+  }));
+  const tx = AGr.x0 + AGr.side + 50, line = (t, v, k, col) => { cardText(ctx, t, tx, 40 + 26 * k, { size: 13, col: MUTED }); cardText(ctx, v, tx + 320, 40 + 26 * k, { size: 14, mono: true, bold: true, col: col || INK, align: "right" }); };
+  line("new orange alleles it carries", String(rows.length), 0, ORANGE);
+  line("new blue alleles it carries", String(cols.length), 1, BLUE);
+  line("pairs: one of each", String(rows.length * cols.length), 2);
+  line("incompatible pairs", String(n), 3, "#7a1f2b");
+  line("does it live?", n ? "no" : "yes", 4);
+  ctx.fillStyle = "#7a1f2b"; ctx.fillRect(tx, 182, 11, 11); cardText(ctx, "an incompatible pair", tx + 17, 188, { size: 11.5, col: INK });
+  ctx.fillStyle = "#ebe8df"; ctx.fillRect(tx, 202, 11, 11); cardText(ctx, "a pair that is fine", tx + 17, 208, { size: 11.5, col: INK });
+  ctx.restore();
+}
+function A_code() {
+  const s = readSet(SA);
+  codeInto("codeA", [
+    ["", "# Lesson 19, Stage A -- one population splits into two ponds; floods swap fish; new alleles from the two ponds can be incompatible"],
+    ["N", "N <- " + s.N + "                                     # fish a pond"],
+    ["mu", "mu <- " + s.mu + "                                  # chance a locus takes a new allele"],
+    ["p", "p <- " + s.p + "                                    # chance a new orange allele and a new blue one are incompatible"],
+    ["R", "R <- " + s.R + "; L <- 40                           # crossovers a chromosome, loci"],
+    ["m", "m <- " + s.m + "                                     # chance a fish swaps ponds in a flood"],
+    ["T", "Tf <- " + s.T + "                                    # generations between floods"],
+    ["", "pond <- c(); loc <- c(); next_id <- 4             # pond[id]: where allele id arose (0: before the split); loc[id]: its locus"],
+    ["", "start <- function() lapply(1:N, function(i) list(sample(1:3, L, TRUE), sample(1:3, L, TRUE)))"],
+    ["", "pop <- list(start(), start()); pond[1:3] <- 0"],
+    ["", "bad <- function(a, b) (((a * 7919 + b * 104729) %% 100003) / 100003) < p   # the same two alleles: always the same answer"],
+    ["", "lives <- function(g) { a <- unique(unlist(g)); o <- a[pond[a] == 1]; b <- a[pond[a] == 2]"],
+    ["", "  !any(outer(o, b, function(x, y) loc[x] != loc[y] & bad(pmin(x, y), pmax(x, y)))) }   # one incompatible pair kills"],
+    ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2; ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["", "mutate <- function(ch, k) { for (i in which(runif(L) < mu)) { ch[i] <- next_id; pond[next_id] <<- k; loc[next_id] <<- i; next_id <<- next_id + 1 }; ch }"],
+    ["", "for (t in 1:400) {"],
+    ["T", "  if (t %% Tf == 0) { n <- rbinom(1, N, m); a <- sample(N, n); b <- sample(N, n); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp }"],
+    ["", "  pop <- lapply(1:2, function(k) { young <- list()"],
+    ["", "    while (length(young) < N) { ab <- sample(N, 2); y <- list(mutate(gamete(pop[[k]][[ab[1]]]), k), mutate(gamete(pop[[k]][[ab[2]]]), k))"],
+    ["", "      if (lives(y)) young[[length(young) + 1]] <- y }"],
+    ["", "    young })"],
+    ["", "}"],
+    ["", "het <- function(x) 1 - sum((table(x) / length(x))^2)   # the chance two alleles differ"],
+    ["", "within <- mean(sapply(1:L, function(i) mean(sapply(pop, function(P) het(sapply(P, function(g) c(g[[1]][i], g[[2]][i])))))))"],
+    ["", "pooled <- mean(sapply(1:L, function(i) { x <- lapply(pop, function(P) unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i]))))"],
+    ["", "  f <- (table(factor(x[[1]], unique(unlist(x)))) / length(x[[1]]) + table(factor(x[[2]], unique(unlist(x)))) / length(x[[2]])) / 2; 1 - sum(f^2) }))"],
+    ["", "c(F_ST = (pooled - within) / pooled)"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE B — one incompatible pair (between A's many pairs and C's one
+   trait). Lesson 17 D's start: each pond one allele a locus in its own
+   colour, every locus different. No mutation. The orange pond's allele at
+   locus i with the blue pond's at j, in one young fish (one copy of each),
+   multiplies its chance to live by 1 - cost; the student drags i and j
+   along the chromosome and sets the cost on the diagram.
+   A pair dissolves when a crossover between its loci, in a fish with one
+   chromosome from each pond, makes a chromosome blue at i and orange at j:
+   it fits both ponds, and it spreads. Close together, that crossover is
+   rare. Measurements and rounds: see the block above B_ROUNDS.
+   ===================================================================== */
+const B_COSTV = [1, 0.9, 0.75, 0.5, 0.25, 0],   /* in the input's order: its -5 is a cost of 1 (a red arrow, thickest) */ B_LOCI = Array.from({ length: L }, (_, i) => i), B_RV = [0.25, 0.5, 1, 2, 4], B_MV = [0.02, 0.05, 0.1, 0.2, 0.3],
+      B_TV = [1, 2, 5, 10], B_G = 150, B_RUNS = 16;
+const B_PAIR = (lo, hi) => ({ meas: "pair", lo, hi, txt: "F_ST at both of the pair's loci at 150: " + (hi == null ? lo + " or more" : "under " + hi),
+  ok: S => S.pair.every(v => (lo == null || v >= lo) && (hi == null || v < hi)), val: S => S.pair.map(f2).join(" / ") });
+/* MEASURED (the page's engine in node, 2026-10-20; F_ST at the pair's two loci at 150, 16 runs averaged, two sets of 16):
+     1  cost .9, R 1, floods .1 every 5: loci 5 and 36 .09-.27; 11 / 31 .09-.31; 15 / 26 .11-.30; 18 / 23 .43-.51; 19 / 22 .63-.66;
+        19 / 21 .67-.72; 20 / 21 .75-.85 (and the whole chromosome follows: ends .46-.56). Opens at 5 / 36.
+     2  loci 5 / 36, same floods: cost .5 .00-.02, .75 .02-.04, .9 .09-.27, 1 .93-.94 (every first-generation hybrid dies, so
+        nothing crosses at all: the whole chromosome holds). Opens at .9.
+     3  loci 20 / 21, cost .9: floods .05 every 5 .91-.95; .1 every 5 .75-.85 (opens); .2 every 5 .21-.28; .1 every 2 .29-.42;
+        .1 every 1 .01; R 4 at .1 every 5 .56-.60. */
+const B_ROUNDS = [
+  { hold: { cost: 0.9, R: 1, m: 0.1, T: 5 }, open: { i: 4, j: 35 },
+    text: "Move the pair so it holds the ponds apart where it sits: F_ST of 0.5 or more at both its loci at generation 150.", rules: [B_PAIR(0.5, null)] },
+  { hold: { i: 4, j: 35, R: 1, m: 0.1, T: 5 }, open: { cost: 0.9 },
+    text: "The pair far apart again. Hold the ponds apart with the arrow instead: F_ST of 0.5 or more at both its loci.", rules: [B_PAIR(0.5, null)] },
+  { hold: { i: 19, j: 20, cost: 0.9 }, open: { R: 1, m: 0.1, T: 5 },
+    text: "The pair side by side. Mix the ponds anyway: F_ST under 0.35 at both its loci at generation 150.", rules: [B_PAIR(null, 0.35)] },
+];
+function B_stat(w, q) {
+  const f = pdFst(w, null), hy = q.t % 5 === 0 || q.t === q.G ? pdHybrids(q.P, w, w.hrng, 12) : { live: null };
+  return { all: f.fst, by: f.by, pair: [f.by[q.P.pair[0]], f.by[q.P.pair[1]]], hw: hy.live };
+}
+let B_PATHS = null;
+const SB = mkStage("B", {
+  ctl: [{ key: "cost", vals: B_COSTV, hidden: true }, { key: "i", vals: B_LOCI, hidden: true, line: "pair" }, { key: "j", vals: B_LOCI, hidden: true, line: "pair" },
+        { key: "R", vals: B_RV }, { key: "m", vals: B_MV }, { key: "T", vals: B_TV, fmt: fmtT }],
+  rounds: B_ROUNDS, ms: 30,
+  freeText: "All three targets hit. Run any setting you like: 150 generations, 16 times.",
+  start: (set, seed) => {
+    const P = { N: 50, mu: 0, R: set.R, m: set.m, T: set.T, start: "apart", pair: [set.i, set.j], cost: set.cost };
+    return { P, G: B_G, every: 1, stat: B_stat,
+      runs: Array.from({ length: B_RUNS }, (_, i) => { const w = pdWorld(P, seed + 1 + 7919 * i); w.hrng = mulberry32(seed + 5 + 7919 * i); return w; }) };
+  },
+  afterOpen: () => holdArrows(B_PATHS, "B", ["cost"]),
+  onInput: () => { if (B_PATHS) B_PATHS.sync(); },
+  paint: () => B_paint(),
+});
+const MEAS_B = {
+  pair: { lab: "F_ST at the pair's loci", ymax: 1, keys: ["▲ the orange allele's locus", "■ the blue allele's locus"], vals: s => s.pair },
+  all: { lab: "F_ST, every locus", ymax: 1, vals: s => [s.all] },
+  hw: { lab: "a hybrid's chance to live", ymax: 1, vals: s => [s.hw] },
+};
+function B_mountPaths() {
+  B_PATHS = Paths.init({
+    mount: "#B_paths", width: 460, height: 210,
+    boxes: [
+      { id: "o", label: "orange allele at ▲", x: 96, y: 40, w: 168, h: 34, cls: "pond-orange" },
+      { id: "b", label: "blue allele at ■", x: 96, y: 170, w: 168, h: 34, cls: "pond-blue" },
+      { id: "live", label: "young fish's chance to live", x: 360, y: 40, w: 180, h: 34, kind: "outcome" },
+    ],
+    arrows: [
+      { id: "oz", from: "o", to: "live", readonly: true, ghost: true, label: "orange allele alone" },
+      { id: "cost", onto: "oz", from: "b", input: "B_cost", signed: true, label: "the pair's cost", fmt: v => "−" + B_COSTV[Math.round(v) + 5] },
+    ],
+    valuesOnSelect: true, lockColours: true,
+  });
+}
+/* F_ST locus by locus (bars), the chromosome under them, ▲ (the orange allele) and ■ (the blue allele) dragged along it */
+const BGn = { W: 760, H: 210, px: 50, py: 12, pw: 690, ph: 120, sy: 168 };
+function B_drawGenes(q) {
+  const cv = $("B_genes"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, BGn.W, BGn.H), set = readSet(SB), S = q ? sumAt(q, q.t) : null, bw = BGn.pw / L, xs = i => BGn.px + (i + 0.5) * bw, ys = v => BGn.py + BGn.ph - v * BGn.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(BGn.px, BGn.py); ctx.lineTo(BGn.px, BGn.py + BGn.ph); ctx.lineTo(BGn.px + BGn.pw, BGn.py + BGn.ph); ctx.stroke();
+  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), BGn.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  ctx.save(); ctx.translate(13, BGn.py + BGn.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "F_ST", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (S) for (let i = 0; i < L; i++) { const v = S.by[i]; ctx.fillStyle = i === set.i || i === set.j ? INK : "#a29d8f"; ctx.fillRect(BGn.px + i * bw + 1, ys(v), bw - 2, BGn.py + BGn.ph - ys(v)); }
+  else cardText(ctx, "Go plays it here.", BGn.px + BGn.pw / 2, BGn.py + BGn.ph / 2, { size: 12.5, col: MUTED, align: "center" });
+  /* the chromosome */
+  const held = $("B_i").dataset.held === "1";
+  ctx.fillStyle = "#ebe8df"; ctx.fillRect(BGn.px, BGn.sy - 5, BGn.pw, 10); ctx.strokeStyle = "#cfccc2"; ctx.strokeRect(BGn.px, BGn.sy - 5, BGn.pw, 10);
+  for (let i = 0; i < L; i += 1) if (i % 5 === 4 || i === 0) cardText(ctx, String(i + 1), xs(i), BGn.sy + 26, { size: 10, col: MUTED, align: "center" });
+  const tri = (x, col) => { ctx.fillStyle = col; ctx.beginPath(); ctx.moveTo(x, BGn.sy - 9); ctx.lineTo(x - 7, BGn.sy + 6); ctx.lineTo(x + 7, BGn.sy + 6); ctx.closePath(); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.stroke(); };
+  const sq = (x, col) => { ctx.fillStyle = col; ctx.fillRect(x - 6, BGn.sy - 6, 12, 12); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.strokeRect(x - 6, BGn.sy - 6, 12, 12); };
+  ctx.globalAlpha = held ? 0.45 : 1; tri(xs(set.i), ORANGE); sq(xs(set.j), BLUE); ctx.globalAlpha = 1;
+  cardText(ctx, "locus", BGn.px + BGn.pw / 2, BGn.H - 6, { size: 11, col: MUTED, align: "center" });
+  ctx.restore();
+}
+function B_wireGenes() {
+  const cv = $("B_genes"); let drag = null;
+  const locAt = e => { const p = framePt(cv, e, BGn.W); return { i: Math.max(0, Math.min(L - 1, Math.floor((p.x - BGn.px) / (BGn.pw / L)))), y: p.y }; };
+  const can = () => Gates.B.open && !SB.run && !SB.waiting && $("B_i").dataset.held !== "1";
+  cv.addEventListener("pointerdown", e => {
+    if (!can()) return; const at = locAt(e); if (at.y < BGn.sy - 22 || at.y > BGn.sy + 22) return;
+    const set = readSet(SB); drag = Math.abs(at.i - set.i) <= Math.abs(at.i - set.j) ? "i" : "j";
+    e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    move(at.i);
+  });
+  const move = i => { const other = drag === "i" ? "j" : "i"; if (i === +$("B_" + other).value) return; const el = $("B_" + drag); if (+el.value === i) return; el.value = i; el.dispatchEvent(new Event("input")); };
+  cv.addEventListener("pointermove", e => { if (!drag) { const at = locAt(e); cv.style.cursor = can() && Math.abs(at.y - BGn.sy) < 22 ? "ew-resize" : "default"; return; } move(locAt(e).i); });
+  const up = () => { if (drag) bump("B"); drag = null; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+}
+function B_paint() {
+  const S = SB, q = shownRun(S), pv = q ? null : previewRun(S), w = q ? q.runs[0] : pv.w, P = q ? q.P : pv.P, t = q ? q.t : 0, set = readSet(S);
+  drawBoard("B_board", w, P, { box: [set.i, set.j], note: q && w.flood > 0 && q.t % P.T === 0 ? "≈ flood: " + w.flood + " fish swapped" : "" });
+  $("B_boardH").textContent = "The two ponds · run 1 · generation " + t;
+  B_drawGenes(q);
+  drawTime("B_time", q, $("B_meas").value, MEAS_B, S.done ? null : ruleOf(S), { G: B_G, T: set.T, m: set.m });
+  syncStage(S); B_code();
+}
+function B_code() {
+  const s = readSet(SB);
+  codeInto("codeB", [
+    ["", "# Lesson 19, Stage B -- two ponds long apart; one incompatible pair: the orange allele at locus i with the blue at j"],
+    ["", "N <- 50; L <- 40"],
+    ["pair", "i <- " + (s.i + 1) + "; j <- " + (s.j + 1) + "                          # where the pair sits"],
+    ["cost", "cost <- " + s.cost + "                                 # how much the pair lowers a young fish's chance to live"],
+    ["R", "R <- " + s.R + "                                       # crossovers a chromosome"],
+    ["m", "m <- " + s.m + "                                     # chance a fish swaps ponds in a flood"],
+    ["T", "Tf <- " + s.T + "                                    # generations between floods"],
+    ["", "pop <- list(rep(list(list(rep(1, L), rep(1, L))), N), rep(list(list(rep(2, L), rep(2, L))), N))   # 1 orange, 2 blue"],
+    ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2; ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["", "live <- function(g) if ((g[[1]][i] == 1 || g[[2]][i] == 1) && (g[[1]][j] == 2 || g[[2]][j] == 2)) 1 - cost else 1"],
+    ["", "for (t in 1:150) {"],
+    ["T", "  if (t %% Tf == 0) { n <- rbinom(1, N, m); a <- sample(N, n); b <- sample(N, n); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][b]; pop[[2]][b] <- tmp }"],
+    ["", "  pop <- lapply(1:2, function(k) { young <- list()"],
+    ["", "    while (length(young) < N) { ab <- sample(N, 2); y <- list(gamete(pop[[k]][[ab[1]]]), gamete(pop[[k]][[ab[2]]]))"],
+    ["", "      if (runif(1) < live(y)) young[[length(young) + 1]] <- y }"],
+    ["", "    young })"],
+    ["", "}"],
+    ["", "blue <- sapply(pop, function(P) sapply(1:L, function(x) mean(unlist(lapply(P, function(g) c(g[[1]][x], g[[2]][x]))) == 2)))"],
+    ["", "het <- function(q) 2 * q * (1 - q); qb <- rowMeans(blue)"],
+    ["", "Fst <- (het(qb) - (het(blue[, 1]) + het(blue[, 2])) / 2) / het(qb)   # locus by locus"],
+    ["pair", "round(Fst[c(i, j)], 2)"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE C — a trait (JM, 2026-10-20: "a focal locus with 2 alleles ...
+   each genotype gives you a different phenotype ... students can adjust h
+   to modulate ... the heterozygous phenotype ... a causal diagram with
+   genotype, phenotype, phenotype to fitness"; "fitness would be a derived
+   characteristic ... survival, and mate choice ... fitness is the number of
+   offspring who survive"; "for earlier activities, mating is random").
+   One population split in two (A's start, no mutation), the dark allele
+   at half the chromosomes in both; floods. Locus 20 (index 19).
+   ===================================================================== */
+const C_HV = [0, 0.25, 0.5, 0.75, 1], C_BV = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 1], C_MV = [0.05, 0.1, 0.2, 0.3, 0.5], C_TV = [1, 2, 5, 10],
+      C_G = 200, C_RUNS = 16, TRAIT = 19;
+const fmtB = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
+/* MEASURED (the page's engine in node, 2026-10-20; the dark allele in each pond at 200, 16 runs averaged):
+     1  h .5, floods .2 every 5; the arrows (orange pond, blue pond): 0, 0 .40 / .40 (opens); -.25, +.25 .26 / .71; -.5, +.5 .21 / .81;
+        -1, +1 .10 / .90; -.5, +1 .21 / .90; -1, +.5 .10 / .78. One pond pulling alone takes the allele everywhere: 0, +.25 1.00 / 1.00.
+     2  arrows -1, +1, floods .2 every 5; h 0 .22-.24 / 1.00; .25 .16 / .95; .5 .10-.11 / .90 (opens); .75 .05 / .83-.86; 1 .00 / .76:
+        a dark allele hides in a fish that looks light, so h decides which pond keeps the other's allele.
+     3  h .5, arrows -1, +1; F_ST at the trait locus / the other loci: floods .05 every 1 .84-.86 / .16-.18; .1 every 2 .73-.79 /
+        .16 (opens); .1 every 1 .70-.71 / .09; .2 every 2 .58 / .07; .2 every 1 .51-.52 / .04; .2 every 5 .64 / .15. */
+const C_ROUNDS = [
+  { hold: { h: 0.5, m: 0.2, T: 5 }, open: { bo: 0, bb: 0 },
+    text: "Make the ponds differ at the trait: at generation 200, the dark allele under 30% in the orange pond and over 70% in the blue pond.",
+    rules: [{ meas: "dark", pond: 0, lo: 0, hi: 0.3, txt: "dark allele, orange pond: under 30%", ok: S => S.dark[0] < 0.3, val: S => pc(S.dark[0]) },
+            { meas: "dark", pond: 1, lo: 0.7, hi: 1, txt: "dark allele, blue pond: over 70%", ok: S => S.dark[1] > 0.7, val: S => pc(S.dark[1]) }] },
+  { hold: { bo: -1, bb: 1, m: 0.2, T: 5 }, open: { h: 0.5 },
+    text: "Each pond kills the other's look. Leave the dark allele almost nowhere to hide in the orange pond: under 8% at generation 200.",
+    rules: [{ meas: "dark", pond: 0, lo: 0, hi: 0.08, txt: "dark allele, orange pond: under 8%", ok: S => S.dark[0] < 0.08, val: S => pc(S.dark[0]) }] },
+  { hold: { h: 0.5, bo: -1, bb: 1 }, open: { m: 0.1, T: 2 },
+    text: "Hold the trait locus apart while the other loci mix: at generation 200, F_ST of 0.5 or more at the trait locus and under 0.1 at the others.",
+    rules: [{ meas: "ftr", lo: 0.5, hi: 1, txt: "F_ST at the trait locus: 0.5 or more", ok: S => S.ftr >= 0.5, val: S => f2(S.ftr) },
+            { meas: "fneu", lo: 0, hi: 0.1, txt: "F_ST at the other loci: under 0.1", ok: S => S.fneu < 0.1, val: S => f2(S.fneu) }] },
+];
+const C_NEU = new Set(B_LOCI.filter(i => i !== TRAIT));
+/* per pond: dark allele share; F_ST at the trait locus and the other loci; young with one light and one dark allele; and the
+   generation's survival and births by genotype (0, 1, 2 dark alleles) */
+function C_stat(w, q) {
+  const f = pdFst(w, q.neu), dark = pdFreq(w, w.DARK, TRAIT), g = w.gen;
+  const het = w.pops.map(F => F.filter(x => pdDark(q.P, w, x) === 1).length / F.length);
+  const out = { dark, ftr: f.by[TRAIT], fneu: f.fst, hyb: het, mixed: w.made ? w.mixed / w.made : null };
+  if (g) out.trk = g.map(x => x.born.concat(x.lived, x.births, x.adults));   /* [pond][born 0-2, lived 0-2, births 0-2, adults 0-2] */
+  return out;
+}
+let C_PATHS = null;
+const SC = mkStage("C", {
+  ctl: [{ key: "h", vals: C_HV, hidden: true }, { key: "bo", vals: C_BV, hidden: true, line: "b" }, { key: "bb", vals: C_BV, hidden: true, line: "b" },
+        { key: "m", vals: C_MV }, { key: "T", vals: C_TV, fmt: fmtT }],
+  rounds: C_ROUNDS, ms: 26,
+  freeText: "All three targets hit. Run any setting you like: 200 generations, 16 times.",
+  start: (set, seed) => {
+    const P = { N: 50, mu: 0, R: 1, m: set.m, T: set.T, start: "grey", trait: { at: TRAIT, h: set.h, b: [set.bo, set.bb], q0: [0.5, 0.5] } };
+    return { P, G: C_G, every: 1, stat: C_stat, neu: C_NEU, runs: Array.from({ length: C_RUNS }, (_, i) => pdWorld(P, seed + 1 + 7919 * i)) };
+  },
+  afterOpen: () => holdArrows(C_PATHS, "C", ["h", "bo", "bb"]),
+  onInput: () => { if (C_PATHS) C_PATHS.sync(); },
+  paint: () => C_paint(),
+});
+const MEAS_C = {
+  dark: { lab: "dark allele", ymax: 1, pct: true, vals: s => s.dark },
+  ftr: { lab: "F_ST at the trait locus", ymax: 1, vals: s => [s.ftr] },
+  fneu: { lab: "F_ST at the other loci", ymax: 1, vals: s => [s.fneu] },
+  hyb: { lab: "fish with one of each allele", ymax: 1, pct: true, vals: s => s.hyb },
+};
+/* the diagram: genotype -> looks (h) -> chance to live, one arrow a pond (b, signed) -> fitness <- births; in D, the choosy
+   allele onto looks -> births */
+function mountTraitPaths(K, withChoosy) {
+  const fmtH = v => "◐ at " + C_HV[Math.round(v)], fb = v => fmtB(C_BV[Math.round(v) + 4]);
+  const boxes = [
+    { id: "g", label: "genotype ○ ◐ ●", x: 72, y: 34, w: 126, h: 34 },
+    { id: "z", label: "looks", x: 72, y: 160, w: 100, h: 34 },
+    { id: "so", label: "lives? orange pond", x: 262, y: 70, w: 150, h: 34, cls: "pond-orange" },
+    { id: "sb", label: "lives? blue pond", x: 262, y: 160, w: 150, h: 34, cls: "pond-blue" },
+    { id: "bi", label: withChoosy ? "births" : "births (at random)", x: 262, y: 250, w: 150, h: 34 },
+    { id: "fit", label: "fitness", x: 420, y: 160, w: 76, h: 40, kind: "outcome" },
+  ];
+  const arrows = [
+    { id: "h", from: "g", to: "z", input: K + "_h", label: "where ◐ looks", fmt: fmtH },
+    { id: "bo", from: "z", to: "so", input: K + "_bo", signed: true, label: "looks → lives, orange pond", fmt: fb },
+    { id: "bb", from: "z", to: "sb", input: K + "_bb", signed: true, label: "looks → lives, blue pond", fmt: fb },
+    { id: "f1", from: "so", to: "fit", readonly: true, dark: true, label: "" },
+    { id: "f2", from: "sb", to: "fit", readonly: true, dark: true, label: "" },
+    { id: "f3", from: "bi", to: "fit", readonly: true, dark: true, label: "" },
+  ];
+  if (withChoosy) {
+    boxes.push({ id: "ch", label: "choosy allele", x: 72, y: 300, w: 120, h: 34 });
+    arrows.push({ id: "zb", from: "z", to: "bi", readonly: true, ghost: true, label: "looks → births" });
+    arrows.push({ id: "a", from: "ch", onto: "zb", ontoAt: 0.55, input: K + "_a", label: "how choosy", fmt: v => String(C_HV[Math.round(v)]) });
+  }
+  return Paths.init({ mount: "#" + K + "_paths", width: 470, height: withChoosy ? 330 : 280, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+/* the looks -> chance to live picture: looks across (light to dark), chance to live up; a line a pond (the blue pond's dashed);
+   ○ ◐ ● on each at their looks */
+const CSv = { W: 460, H: 200, px: 46, py: 26, pw: 380, ph: 126 };
+function drawSurv(cvId, P) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CSv.W, CSv.H), xs = z => CSv.px + z * CSv.pw, ys = v => CSv.py + CSv.ph - v * CSv.ph, b = P.trait.b, h = P.trait.h;
+  const grd = ctx.createLinearGradient(CSv.px, 0, CSv.px + CSv.pw, 0); grd.addColorStop(0, lookCol(0)); grd.addColorStop(1, lookCol(1));
+  ctx.fillStyle = grd; ctx.fillRect(CSv.px, CSv.py + CSv.ph + 4, CSv.pw, 8); ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.6; ctx.strokeRect(CSv.px, CSv.py + CSv.ph + 4, CSv.pw, 8);
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CSv.px, CSv.py); ctx.lineTo(CSv.px, CSv.py + CSv.ph); ctx.lineTo(CSv.px + CSv.pw, CSv.py + CSv.ph); ctx.stroke();
+  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), CSv.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  cardText(ctx, "light", CSv.px, CSv.H - 12, { size: 11, col: MUTED }); cardText(ctx, "dark", CSv.px + CSv.pw, CSv.H - 12, { size: 11, col: MUTED, align: "right" });
+  cardText(ctx, "looks", CSv.px + CSv.pw / 2, CSv.H - 12, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(12, CSv.py + CSv.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "chance to live", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  const live = (bk, z) => bk >= 0 ? 1 - bk * (1 - z) : 1 + bk * z;
+  [0, 1].forEach(k => {
+    polyline(ctx, [[xs(0), ys(live(b[k], 0))], [xs(1), ys(live(b[k], 1))]], POPCOL[k], 2.4, 1, k ? [6, 4] : null);
+    [[0, "○"], [h, "◐"], [1, "●"]].forEach(([z, sym]) => { const x = xs(z), y = ys(live(b[k], z));
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(x, y, 7, 0, 6.2832); ctx.fill(); cardText(ctx, sym, x, y + 0.5, { size: 14, col: POPCOL[k], align: "center" }); });
+  });
+  POPNAME.forEach((nm, k) => { const x = CSv.px + 150 * k, y = 7; polyline(ctx, [[x, y], [x + 22, y]], POPCOL[k], 2.2, 1, k ? [6, 4] : null); cardText(ctx, nm, x + 27, y, { size: 11, col: POPCOL[k], bold: true }); });
+  ctx.restore();
+}
+/* what each look got, over the run's last 20 generations: each pond, ○ ◐ ●: the share of young that lived, births (1 = the
+   pond's average), fitness = the two multiplied (1 = the pond's average) */
+const CGt = { W: 460, H: 170 };
+function drawGot(cvId, q) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CGt.W, CGt.H);
+  if (!q || q.t < 2) { cardText(ctx, "Go fills this in.", CGt.W / 2, CGt.H / 2, { size: 12.5, col: MUTED, align: "center" }); ctx.restore(); return; }
+  const got = gotOf(q), cols = [["lived", 1], ["births", 2], ["fitness", 2]], x0 = 132, cw = 104, rowH = 22;
+  cols.forEach(([nm], c) => cardText(ctx, nm, x0 + c * cw + cw / 2, 10, { size: 11, col: MUTED, align: "center", bold: true }));
+  [0, 1].forEach(k => {
+    const { sv, br, fr } = got[k], y0 = 26 + k * (3 * rowH + 10);
+    cardText(ctx, POPNAME[k], 0, y0 + rowH * 1.5, { size: 11.5, bold: true, col: POPCOL[k] });
+    ["○", "◐", "●"].forEach((sym, d) => {
+      const y = y0 + d * rowH + rowH / 2; cardText(ctx, sym, x0 - 14, y, { size: 13, col: INK, align: "center" });
+      [[sv[d], 1], [br[d], 2], [fr[d], 2]].forEach(([v, top], c) => {
+        const bx = x0 + c * cw + 4, bwid = cw - 34;
+        ctx.fillStyle = "#efeee8"; ctx.fillRect(bx, y - 6, bwid, 12);
+        if (v != null) { ctx.fillStyle = POPCOL[k]; ctx.fillRect(bx, y - 6, Math.min(1, v / top) * bwid, 12); }
+        if (top === 2) { ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(bx + bwid / 2, y - 8); ctx.lineTo(bx + bwid / 2, y + 8); ctx.stroke(); }
+        cardText(ctx, v == null ? "–" : v.toFixed(2), bx + bwid + 3, y, { size: 10.5, mono: true, col: v == null ? MUTED : INK });
+      });
+    });
+  });
+  ctx.restore();
+}
+/* each pond's table over the run's last 20 generations, by look (○ ◐ ●): sv the share of young that lived; br births per adult,
+   relative to the pond's average; fr fitness, a young fish's chance to live times the births of a fish of its look, relative to
+   the average young born */
+function gotOf(q) {
+  const trk = sumOverTrk(q, Math.max(1, q.t - 19));
+  return [0, 1].map(k => {
+    const t = trk[k], born = t.slice(0, 3), lived = t.slice(3, 6), births = t.slice(6, 9), adults = t.slice(9, 12);
+    const sv = [0, 1, 2].map(d => born[d] ? lived[d] / born[d] : null);
+    const bAll = births.reduce((a, b) => a + b, 0) / Math.max(1, adults.reduce((a, b) => a + b, 0));
+    const br = [0, 1, 2].map(d => adults[d] ? births[d] / adults[d] / bAll : null);
+    const fz = [0, 1, 2].map(d => sv[d] != null && br[d] != null ? sv[d] * br[d] : null);
+    let fs = 0, fn = 0; for (let d = 0; d < 3; d++) if (fz[d] != null) { fs += fz[d] * born[d]; fn += born[d]; }
+    const fAll = fn ? fs / fn : null;
+    return { sv, br, fr: fz.map(v => v != null && fAll ? v / fAll : null), born, lived, births, adults };
+  });
+}
+/* the tracked counts summed over generations t0 on: [pond][born 0-2, lived 0-2, births 0-2, adults 0-2] */
+function sumOverTrk(q, t0) {
+  const out = [new Float64Array(12), new Float64Array(12)];
+  for (const h of q.hist) if (h.t >= t0) for (const s of h.runs) if (s.trk) for (let k = 0; k < 2; k++) for (let i = 0; i < 12; i++) out[k][i] += s.trk[k][i];
+  return out.map(a => Array.from(a));
+}
+function C_paint() {
+  const S = SC, q = shownRun(S), pv = q ? null : previewRun(S), w = q ? q.runs[0] : pv.w, P = q ? q.P : pv.P, t = q ? q.t : 0, set = readSet(S);
+  drawBoard("C_board", w, P, { box: [TRAIT], look: true, note: q && w.flood > 0 && q.t % P.T === 0 ? "≈ flood: " + w.flood + " fish swapped" : "" });
+  $("C_boardH").textContent = "The two ponds · run 1 · generation " + t;
+  drawTime("C_time", q, $("C_meas").value, MEAS_C, S.done ? null : ruleOf(S), { G: C_G, T: set.T, m: set.m });
+  drawSurv("C_surv", { trait: { h: set.h, b: [set.bo, set.bb] } });
+  drawGot("C_got", q);
+  syncStage(S); C_code();
+}
+function C_code() {
+  const s = readSet(SC);
+  codeInto("codeC", [
+    ["", "# Lesson 19, Stage C -- a trait: genotype -> looks -> chance to live, a different arrow in each pond; births at random"],
+    ["", "N <- 50; L <- 40; R <- 1; trait <- 20"],
+    ["h", "h <- " + s.h + "                                       # where one-of-each looks: 0 light, 1 dark"],
+    ["b", "b <- c(orange = " + s.bo + ", blue = " + s.bb + ")                 # looks -> chance to live: + darker lives more, - lighter"],
+    ["m", "m <- " + s.m + "                                     # chance a fish swaps ponds in a flood"],
+    ["T", "Tf <- " + s.T + "                                    # generations between floods"],
+    ["", "looks <- function(g) c(0, h, 1)[(g[[1]][trait] == 2) + (g[[2]][trait] == 2) + 1]     # 1 light allele, 2 dark"],
+    ["", "live <- function(z, bk) if (bk >= 0) 1 - bk * (1 - z) else 1 + bk * z"],
+    ["", "start <- function() lapply(1:N, function(i) list(c(sample(3:5, L, TRUE)), c(sample(3:5, L, TRUE))))"],
+    ["", "pop <- lapply(1:2, function(k) lapply(start(), function(g) lapply(g, function(ch) { ch[trait] <- sample(1:2, 1); ch })))"],
+    ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < R / (L - 1)))) %% 2; ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["", "for (t in 1:200) {"],
+    ["T", "  if (t %% Tf == 0) { n <- rbinom(1, N, m); a <- sample(N, n); c2 <- sample(N, n); tmp <- pop[[1]][a]; pop[[1]][a] <- pop[[2]][c2]; pop[[2]][c2] <- tmp }"],
+    ["", "  pop <- lapply(1:2, function(k) { young <- list()"],
+    ["", "    while (length(young) < N) { ab <- sample(N, 2); y <- list(gamete(pop[[k]][[ab[1]]]), gamete(pop[[k]][[ab[2]]]))"],
+    ["b", "      if (runif(1) < live(looks(y), b[k])) young[[length(young) + 1]] <- y }   # births at random; who lives is the trait's"],
+    ["", "    young })"],
+    ["", "}"],
+    ["", "sapply(pop, function(P) mean(unlist(lapply(P, function(g) c(g[[1]][trait], g[[2]][trait]))) == 2))   # dark allele, each pond"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE D — a choosy allele (JM, 2026-10-20: "a mate preference allele
+   ... a survival aspect about how well they live, and a reproductive
+   birth rate aspect for how many offspring they have ... the mate choice
+   loci located [at] different positions on the chromosome relative to
+   the trait-inducing allele. And we could even have an inversion, and at
+   least some targets are given the option to invert it to lock them
+   together ... fitness is the outcome of survival and mating probability
+   ... This way, we can get at reinforcement, and ... how unstable it is").
+   C's ponds after the trait has come apart (dark at 5% of the orange
+   pond's chromosomes, 95% of the blue's), N 100. The choosy allele starts
+   at 1 in 5 chromosomes in each pond; the student sets the look it
+   prefers, how choosy, where it sits, and an inversion from the trait
+   locus to it on the chromosomes that start with it.
+   ===================================================================== */
+const D_AV = [0, 0.25, 0.5, 0.75, 1], D_MV = [0.02, 0.05, 0.1, 0.2, 0.3], D_TV = [1, 2, 5, 10], D_G = 300, D_RUNS = 12;
+/* MEASURED (the page's engine in node, 2026-10-20; the choosy allele in the orange / blue pond at 300, 12 runs averaged, sets of 12):
+     1  h .5, arrows -1, +1, how choosy 1, the choosy locus at 21 in the inversion, floods .1 every generation: prefers light .47-.60
+        / .03 (opens); prefers dark .05-.12 / .50-.79.
+     2  prefers dark, no inversion: locus 21 .06-.18 / .53-.64; 19 .05-.12 / .32-.66; 23 .63 / .71 and .25 / .37; 26 .27-.36 /
+        .35-.43; 31 .10-.25 / .23-.33; 39 .16 / .20 and .53 / .58 (opens): far from the trait it ends up in both ponds or
+        neither. With the inversion, wherever the locus sits, the same as 1 (the inversion holds trait and choosy allele together;
+        only the neutral loci caught inside it differ: F_ST at the others .06 at 21 to .21-.28 at 39).
+     3  the inversion at 21, prefers dark: arrows (orange, blue) -1, +1 .05-.12 / .50-.79 (opens); -1, +.5 .02-.11 / .36-.64;
+        -.75, +1 .13-.17 / .43-.62; -.75, +.5 .08-.13 / .30-.38; -.5, +1 .24 / .24, .28 / .32, .33 / .33; -.5, +.5 .14-.30 /
+        .12-.37: once the orange pond lets dark fish live, both ponds go dark and the choosy allele has nothing to sort.
+   How choosy (1 as above): 0 .15-.30 / .18-.20; .5 .03-.11 / .30-.36; .75 .03-.13 / .35-.66. */
+const D_CH = (pond, lo, hi) => ({ meas: "choosy", pond, lo, hi, txt: "choosy allele, " + POPNAME[pond] + ": " + (hi == null ? Math.round(100 * lo) + "% or more" : "under " + Math.round(100 * hi) + "%"),
+  ok: S => (lo == null || S.choosy[pond] >= lo) && (hi == null || S.choosy[pond] < hi), val: S => pc(S.choosy[pond]) });
+const D_ROUNDS = [
+  { hold: { h: 0.5, bo: -1, bb: 1, a: 1, at: 20, inv: 1, m: 0.1, T: 1 }, open: { want: 0 },
+    text: "Make the choosy allele common in the blue pond and rare in the orange pond, at generation 300.", rules: [D_CH(1, 0.4, null), D_CH(0, null, 0.2)] },
+  { hold: { h: 0.5, bo: -1, bb: 1, a: 1, want: 1, m: 0.1, T: 1 }, open: { at: 38, inv: 0 },
+    text: "The same, with the choosy locus and the inversion yours to set.", rules: [D_CH(1, 0.4, null), D_CH(0, null, 0.2)] },
+  { hold: { h: 0.5, a: 1, want: 1, at: 20, inv: 1, m: 0.1, T: 1 }, open: { bo: -1, bb: 1 },
+    text: "Now stop the choosy allele sorting by pond: at generation 300, its share in the two ponds within 10 points of each other.",
+    rules: [{ meas: "choosy", txt: "choosy allele, blue pond minus orange pond: under 10 points", ok: S => Math.abs(S.choosy[1] - S.choosy[0]) < 0.1, val: S => Math.round(100 * Math.abs(S.choosy[1] - S.choosy[0])) + " points" }] },
+];
+/* the look the choosy allele prefers and the inversion are toggles; the stage machine sees them as two more controls */
+function D_stat(w, q) {
+  const s = C_stat(w, q);
+  s.choosy = pdFreq(w, w.CHOOSY, q.P.pref.at);
+  return s;
+}
+let D_PATHS = null;
+const SD = mkStage("D", {
+  ctl: [{ key: "h", vals: C_HV, hidden: true }, { key: "bo", vals: C_BV, hidden: true, line: "b" }, { key: "bb", vals: C_BV, hidden: true, line: "b" },
+        { key: "a", vals: D_AV, hidden: true }, { key: "at", vals: B_LOCI, hidden: true }, { key: "want", vals: [0, 1], hidden: true, toggle: true }, { key: "inv", vals: [0, 1], hidden: true, toggle: true },
+        { key: "m", vals: D_MV }, { key: "T", vals: D_TV, fmt: fmtT }],
+  rounds: D_ROUNDS, ms: 40,
+  freeText: "All three targets hit. Run any setting you like: 300 generations, 12 times.",
+  start: (set, seed) => {
+    const P = { N: 100, mu: 0, R: 1, m: set.m, T: set.T, start: "grey", trait: { at: TRAIT, h: set.h, b: [set.bo, set.bb], q0: [0.05, 0.95] },
+      pref: { at: set.at, a: set.a, want: set.want, q0: [0.2, 0.2] }, inv: !!set.inv };
+    const neu = new Set(B_LOCI.filter(i => i !== TRAIT && i !== set.at));
+    return { P, G: D_G, every: 1, stat: D_stat, neu, runs: Array.from({ length: D_RUNS }, (_, i) => pdWorld(P, seed + 1 + 7919 * i)) };
+  },
+  afterOpen: () => { holdArrows(D_PATHS, "D", ["h", "bo", "bb", "a"]); D_syncToggles(); },
+  onInput: () => { if (D_PATHS) D_PATHS.sync(); D_syncToggles(); },
+  afterSync: busy => D_syncToggles(busy),
+  paint: () => D_paint(),
+});
+const MEAS_D = {
+  choosy: { lab: "choosy allele", ymax: 1, pct: true, vals: s => s.choosy },
+  mixed: { lab: "young whose parents look different", ymax: 0.5, pct: true, vals: s => [s.mixed] },
+  dark: { lab: "dark allele", ymax: 1, pct: true, vals: s => s.dark },
+  fneu: { lab: "F_ST at the other loci", ymax: 1, vals: s => [s.fneu] },
+};
+/* the toggles write the hidden inputs D_want and D_inv; held, they are disabled */
+function D_syncToggles(busy) {
+  const want = $("D_want"), inv = $("D_inv");
+  $("D_wantL").checked = want.value === "0"; $("D_wantD").checked = want.value === "1"; $("D_invBox").checked = inv.value === "1";
+  const lockW = !!busy || SD.waiting || !!SD.run || want.dataset.held === "1", lockI = !!busy || SD.waiting || !!SD.run || inv.dataset.held === "1";
+  $("D_wantL").disabled = $("D_wantD").disabled = lockW; $("D_invBox").disabled = lockI;
+  $("D_wantRow").classList.toggle("held", want.dataset.held === "1"); $("D_invRow").classList.toggle("held", inv.dataset.held === "1");
+}
+/* the chromosome: the trait locus (◐, fixed at 20) and ♥ the choosy locus, dragged; the inversion's bracket when ticked */
+const DGn = { W: 760, H: 130, px: 50, pw: 690, sy: 70 };
+function D_drawGenes() {
+  const cv = $("D_genes"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, DGn.W, DGn.H), set = readSet(SD), bw = DGn.pw / L, xs = i => DGn.px + (i + 0.5) * bw, held = $("D_at").dataset.held === "1";
+  ctx.fillStyle = "#ebe8df"; ctx.fillRect(DGn.px, DGn.sy - 5, DGn.pw, 10); ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.strokeRect(DGn.px, DGn.sy - 5, DGn.pw, 10);
+  for (let i = 0; i < L; i++) if (i % 5 === 4 || i === 0) cardText(ctx, String(i + 1), xs(i), DGn.sy + 30, { size: 10, col: MUTED, align: "center" });
+  cardText(ctx, "locus", DGn.px + DGn.pw / 2, DGn.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (set.inv) { const a = Math.min(TRAIT, set.at), b = Math.max(TRAIT, set.at), xa = DGn.px + a * bw, xb = DGn.px + (b + 1) * bw;
+    ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(xa, DGn.sy + 9); ctx.lineTo(xa, DGn.sy + 14); ctx.lineTo(xb, DGn.sy + 14); ctx.lineTo(xb, DGn.sy + 9); ctx.stroke();
+    cardText(ctx, "inversion", xb + 6, DGn.sy + 14, { size: 11, col: INK }); }
+  ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(xs(TRAIT), DGn.sy, 9, 0, 6.2832); ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.stroke();
+  cardText(ctx, "◐", xs(TRAIT), DGn.sy + 0.5, { size: 15, col: INK, align: "center" });
+  ctx.globalAlpha = held ? 0.45 : 1; ctx.strokeStyle = HOT; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(xs(set.at), DGn.sy - 5); ctx.lineTo(xs(set.at), DGn.sy - 18); ctx.stroke();
+  cardText(ctx, "♥", xs(set.at), DGn.sy - 27, { size: 19, col: HOT, align: "center" }); ctx.globalAlpha = 1;
+  ctx.restore();
+}
+function D_wireGenes() {
+  const cv = $("D_genes"); let drag = false;
+  const locAt = e => { const p = framePt(cv, e, DGn.W); return { i: Math.max(0, Math.min(L - 1, Math.floor((p.x - DGn.px) / (DGn.pw / L)))), y: p.y }; };
+  const can = () => Gates.D.open && !SD.run && !SD.waiting && $("D_at").dataset.held !== "1";
+  const move = i => { if (i === TRAIT) return; const el = $("D_at"); if (+el.value === i) return; el.value = i; el.dispatchEvent(new Event("input")); };
+  cv.addEventListener("pointerdown", e => { if (!can()) return; const at = locAt(e); if (at.y < DGn.sy - 42 || at.y > DGn.sy + 14) return; drag = true; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} move(at.i); });
+  cv.addEventListener("pointermove", e => { if (!drag) { const at = locAt(e); cv.style.cursor = can() && at.y > DGn.sy - 42 && at.y < DGn.sy + 14 ? "ew-resize" : "default"; return; } move(locAt(e).i); });
+  const up = () => { if (drag) bump("D"); drag = false; };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  const setTo = (id, v) => { const el = $(id); el.value = v; el.dispatchEvent(new Event("input")); bump("D"); };
+  $("D_wantL").addEventListener("change", () => setTo("D_want", 0)); $("D_wantD").addEventListener("change", () => setTo("D_want", 1));
+  $("D_invBox").addEventListener("change", () => setTo("D_inv", $("D_invBox").checked ? 1 : 0));
+}
+function D_paint() {
+  const S = SD, q = shownRun(S), pv = q ? null : previewRun(S), w = q ? q.runs[0] : pv.w, P = q ? q.P : pv.P, t = q ? q.t : 0, set = readSet(S);
+  drawBoard("D_board", w, P, { box: [TRAIT, set.at], look: true, note: q && w.flood > 0 && q.t % P.T === 0 ? "≈ flood: " + w.flood + " fish swapped" : "" });
+  $("D_boardH").textContent = "The two ponds · run 1 · generation " + t;
+  D_drawGenes();
+  drawTime("D_time", q, $("D_meas").value, MEAS_D, S.done ? null : ruleOf(S), { G: D_G, T: set.T, m: set.m });
+  drawGot("D_got", q);
+  syncStage(S); D_code();
+}
+function D_code() {
+  const s = readSet(SD);
+  codeInto("codeD", [
+    ["", "# Lesson 19, Stage D -- C's ponds with a choosy allele: births depend on looks through the choosers; fitness comes out"],
+    ["", "N <- 100; L <- 40; R <- 1; trait <- 20"],
+    ["h", "h <- " + s.h + "; b <- c(" + s.bo + ", " + s.bb + ")                       # as in C"],
+    ["a", "a <- " + s.a + "                                       # how choosy: chance to turn down a partner that looks fully wrong"],
+    ["want", "want <- " + s.want + "                                    # the look the choosy allele prefers: 0 light, 1 dark"],
+    ["at", "at <- " + (s.at + 1) + "                                     # the choosy locus"],
+    ["inv", "inv <- " + (s.inv ? "TRUE" : "FALSE") + "                                # an inversion from the trait locus to the choosy locus"],
+    ["m", "m <- " + s.m + "; Tf <- " + s.T + "                             # floods"],
+    ["", "looks <- function(g) c(0, h, 1)[(g[[1]][trait] == 2) + (g[[2]][trait] == 2) + 1]"],
+    ["", "live <- function(z, bk) if (bk >= 0) 1 - bk * (1 - z) else 1 + bk * z"],
+    ["", "choosy <- function(g) g[[1]][at] == 9 || g[[2]][at] == 9                   # 9: the choosy allele"],
+    ["", "lo <- min(trait, at); hi <- max(trait, at)"],
+    ["", "gamete <- function(g) { cut <- runif(L - 1) < R / (L - 1)"],
+    ["inv", "  if (inv && g[[1]][L + 1] != g[[2]][L + 1]) cut[lo:(hi - 1)] <- FALSE   # no crossover inside the inversion"],
+    ["", "  side <- (sample(0:1, 1) + cumsum(c(0, cut))) %% 2; ch <- ifelse(side == 0, g[[1]][1:L], g[[2]][1:L])"],
+    ["", "  c(ch, if (side[lo] == 0) g[[1]][L + 1] else g[[2]][L + 1]) }"],
+    ["", "mk <- function(k) { ch <- c(sample(3:5, L, TRUE), 0); ch[trait] <- 1 + (runif(1) < c(0.05, 0.95)[k]); ch[at] <- if (runif(1) < 0.2) 9 else 8"],
+    ["", "  ch[L + 1] <- inv && ch[at] == 9; ch }"],
+    ["", "pop <- lapply(1:2, function(k) lapply(1:N, function(i) list(mk(k), mk(k))))"],
+    ["", "for (t in 1:300) {"],
+    ["m", "  if (t %% Tf == 0) { n <- rbinom(1, N, m); x <- sample(N, n); y <- sample(N, n); tmp <- pop[[1]][x]; pop[[1]][x] <- pop[[2]][y]; pop[[2]][y] <- tmp }"],
+    ["", "  pop <- lapply(1:2, function(k) { P <- pop[[k]]; z <- sapply(P, looks); young <- list()"],
+    ["", "    while (length(young) < N) { i <- sample(N, 1); j <- sample(setdiff(1:N, i), 1)"],
+    ["a", "      if (choosy(P[[i]])) for (tr in 1:30) { if (runif(1) >= a * abs(want - z[j])) break; j <- sample(setdiff(1:N, i), 1) }"],
+    ["", "      y <- list(gamete(P[[i]]), gamete(P[[j]])); if (runif(1) < live(looks(y), b[k])) young[[length(young) + 1]] <- y }"],
+    ["", "    young })"],
+    ["", "}"],
+    ["", "sapply(pop, function(P) mean(sapply(P, function(g) (g[[1]][at] == 9) + (g[[2]][at] == 9)) / 2))   # choosy allele, each pond"],
+  ]);
+}
+
+function paintAll() { A_paint(); B_paint(); C_paint(); D_paint(); }
+function wire() {
+  B_mountPaths();
+  C_PATHS = mountTraitPaths("C", false);
+  D_PATHS = mountTraitPaths("D", true);
+  for (const S of [SA, SB, SC, SD]) wireStage(S);
+  B_wireGenes(); D_wireGenes();
+  $("A_meas").addEventListener("change", A_paint);
+  $("A_hyBox").addEventListener("toggle", A_paint);   /* closed, the grid has no room to fit: draw it once opened */
+  $("B_meas").addEventListener("change", B_paint);
+  $("C_meas").addEventListener("change", C_paint);
+  $("D_meas").addEventListener("change", D_paint);
+  for (const K of ["A", "B", "C", "D"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson19_stage" + K + ".R", RTEXT["code" + K]));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  /* instructor bypass / study mode: every stage open. Study mode leaves the targets to be done (JM, 2026-10-08); the
+     instructor bypass fills them as hit, so a code in his name decodes with every bit set */
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of [SA, SB, SC, SD]) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); }
+      for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l19reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson19",
+  version: 3,      /* 1: first draft, A-C (2026-10-17): A three targets, B three, C two. 2: the same day, A's targets become
+                      four drawn rounds, one bit each (9). 3: pass 3 (2026-10-20, JM's brief): A ponds and floods (4), B one
+                      pair (3), C a trait (3), D a choosy allele (3) */
+  scaffold: 13,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l19reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>

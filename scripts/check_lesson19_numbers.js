@@ -2,43 +2,42 @@
 /*
  * check_lesson19_numbers.js -- the checks for app/lessons/lesson19.html.
  *
- * Lesson 19, pass 3 (2026-10-20, JM's brief that day): speciation as a
- * process. A ponds and floods (incompatibilities build by drift until the
- * floods stop mattering); B one incompatible pair placed on the chromosome;
- * C a trait (genotype -> looks -> chance to live, a pond each); D a choosy
- * allele at a locus the student places, with an inversion. What has to hold:
+ * Lesson 19, pass 4 (2026-10-22, JM's review of pass 3): speciation as a
+ * process. A pulsed migration (floods) and F_ST across the genome; B
+ * sticklebacks, two food genes placed on the chromosome; C new mutations
+ * that make incompatibilities; D mate choice on a throat colour. What has to
+ * hold:
  *
- *   Engine. The split starts grey; with no floods each pond carries only
- *      grey and its own colour and every fish there lives (a pair costs
- *      nothing until the ponds meet); a hybrid's incompatible pairs agree
- *      with a count by hand and any one of them kills it; mutation runs at
- *      mu a locus; floods come only every T generations, about N m fish
- *      each; F_ST is 1 for two ponds with nothing in common and 0 for two
- *      the same; B's pair costs only with both alleles, and a chromosome
- *      blue at the first locus and orange at the second fits both ponds;
- *      C's chance to live follows the arrows and h for each look in each
- *      pond; D's inversion stops crossing over inside it in a fish with one
- *      inverted chromosome and not in a fish with two, and a gamete takes
- *      the arrangement of the chromosome that gave it the inversion's first
- *      locus; a choosy pond gives the look it prefers the births; the
- *      table's fitness is its chance to live times its births, re-derived
- *      here from the counts.
- *   Targets. Each round's intended setting hits it and its opening (and the
+ *   Engine. A starts grey, and with no floods each pond carries only grey
+ *      and its own colour, every fish surviving (nothing selects in A);
+ *      mutation runs at mu a locus; floods come only every T generations,
+ *      about N m fish each; F_ST is 1 for two ponds with nothing in common
+ *      and 0 for two the same; B's chance to survive follows the diet and
+ *      the food in each pond, by hand; C's hybrid incompatible pairs agree
+ *      with a count by hand and each lowers survival by its cost; D's
+ *      choice gives a rare throat colour fewer births and mixes few throats
+ *      when choosy, as many as chance when not; the valley sets the hybrid;
+ *      D's inversion stops crossing over inside it in a fish with one
+ *      inverted chromosome; the correlation is 1 for a matched start; the
+ *      table's fitness is its survival times its births, re-derived here.
+ *   Targets. Each round's intended settings hit it and its opening (and the
  *      near misses measured in the page's comments) miss it.
  *   Flow. A miss records 0 and the target stays; hits open Next target;
  *      each stage opens the next; the last ends the lesson; every bit
  *      written.
- *   Controls. B's two loci and D's choosy locus move by dragging along the
- *      chromosome; D's toggles write their inputs and are held when a round
- *      holds them; B's cost arrow is red (it lowers the chance to live).
+ *   Controls. B's two genes and D's throat gene move by dragging along the
+ *      chromosome; D's ◐ moves by dragging on the fitness surface; D's
+ *      toggles write their inputs and are held when a round holds them; C's
+ *      cost arrow is red (it lowers survival).
  *   Layout. Each stage ends in its R code, closed; no readout lines; every
- *      hover mark has words; the hybrid box closed at load; every canvas
- *      fits its panel (1500 and 1000 wide); the four R panels run (Rscript,
- *      shortened).
+ *   hover mark has words; the hybrid box closed at load; every canvas fits
+ *   its panel (1500 and 1000 wide); the four R panels run (Rscript,
+ *   shortened).
  *
- * Same harness as check_lesson17_numbers.js.
+ * Same harness as check_lesson17_numbers.js. The page seeds itself afresh on
+ * every load, so each run of this check draws new runs.
  *
- * Usage:  node scripts/check_lesson19_numbers.js      (~6 minutes)
+ * Usage:  node scripts/check_lesson19_numbers.js      (~3 minutes)
  * Exit 0 iff every check passes. Needs Google Chrome and python3; Rscript
  * for the R panels (skipped, and said so, without it).
  */
@@ -49,7 +48,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8799;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_board", "A_time", "A_grid", "B_board", "B_genes", "B_time", "C_board", "C_time", "C_surv", "C_got", "D_board", "D_genes", "D_time", "D_got"];
+const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "C_board", "C_time", "C_dmi", "C_grid", "D_board", "D_genes", "D_time", "D_fit", "D_got"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
@@ -72,20 +71,12 @@ const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c o
 
 /* ================= the engine ================= */
 {
-  const P = { N: 25, mu: 0.004, p: 0.02, R: 1, m: 0, T: 10, start: "grey" }, w = pdWorld(P, 7);
+  const P = { N: 25, mu: 0.004, R: 1, m: 0, T: 10, start: "grey" }, w = pdWorld(P, 7);
   check("engine: the split starts grey: kinds in the two ponds " + kinds(w, w.pops[0]) + " / " + kinds(w, w.pops[1]), kinds(w, w.pops[0]) === "0" && kinds(w, w.pops[1]) === "0");
   for (let t = 0; t < 150; t++) pdStep(P, w);
   const live = w.pops.map((F, k) => F.every(g => pdLive(P, w, g, k) === 1));
-  check("engine: 150 generations with no floods, the orange pond carries grey and orange only (" + kinds(w, w.pops[0]) + "), the blue grey and blue only (" + kinds(w, w.pops[1]) + "), and every fish in both would live",
+  check("engine: A, 150 generations with no floods: the orange pond carries grey and orange only (" + kinds(w, w.pops[0]) + "), the blue grey and blue only (" + kinds(w, w.pops[1]) + "), and every fish in both survives for sure (nothing selects)",
         /^0?1$/.test(kinds(w, w.pops[0])) && /^0?2$/.test(kinds(w, w.pops[1])) && live.every(Boolean));
-  /* hybrids: their incompatible pairs counted by hand; one is enough to kill */
-  const rng = mulberry32(5); let agree = 0, tot = 0, some = 0, dead = 0;
-  for (let r = 0; r < 200; r++) { const y = [pdGamete(P, w.pops[0][r % 25], rng, null), pdGamete(P, w.pops[1][(7 * r) % 25], rng, null)];
-    const o = new Set(), b = new Set(); for (const c of y) for (let i = 0; i < L; i++) { const k = w.kind[c[i]]; if (k === 1) o.add(c[i]); else if (k === 2) b.add(c[i]); }
-    let hand = 0; for (const x of o) for (const z of b) if (w.loc[x] !== w.loc[z] && pdHash(Math.min(x, z), Math.max(x, z), w.salt) < P.p) hand++;
-    const n = pdPairsA(P, w, y); if (n === hand) agree++; if (n > 0) some++; tot++; if ((pdLive(P, w, y, 0) === 0) === (hand > 0)) dead++; }
-  check("engine: a hybrid's incompatible pairs agree with a count by hand (" + agree + " of " + tot + "; " + some + " carry one or more) and a hybrid lives exactly when it carries none (" + dead + " of " + tot + ")",
-        agree === tot && dead === tot && some > 40);
   /* mutation */
   const Pm = { mu: 0.004 }, wm = pdWorld({ N: 1, start: "grey", R: 1 }, 3), c0 = wm.pops[0][0][0]; let n = 0; const T = 30000;
   for (let r = 0; r < T; r++) { const c = pdMutate(Pm, wm, c0, r % 2); for (let i = 0; i < L; i++) if (c[i] !== c0[i]) { n++; if (wm.kind[c[i]] !== r % 2 + 1) n -= 1000; } }
@@ -97,59 +88,82 @@ const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c o
   /* F_ST */
   const wa = pdWorld({ N: 25, start: "apart", R: 1 }, 4), fa = pdFst(wa, null).fst, wg = pdWorld({ N: 25, start: "grey", R: 1 }, 4); wg.pops[1] = wg.pops[0].map(g => g.map(c => c.slice()));
   check("engine: F_ST " + fa.toFixed(3) + " for two ponds with nothing in common, " + pdFst(wg, null).fst.toFixed(3) + " for two the same", Math.abs(fa - 1) < 1e-9 && Math.abs(pdFst(wg, null).fst) < 1e-9);
-  /* B's pair */
-  const PB = { N: 2, start: "apart", R: 1, pair: [9, 14], cost: 0.9 }, wb = pdWorld(PB, 2), Oc = wb.pops[0][0][0], Bc = wb.pops[1][0][0];
-  const fits = Bc.slice(); fits[14] = Oc[14];
-  const v = [pdLive(PB, wb, [Oc, Oc], 0), pdLive(PB, wb, [Oc, Bc], 0), pdLive(PB, wb, [fits, Oc], 0), pdLive(PB, wb, [fits, Bc], 1)];
-  check("engine: B's pair at loci 10 and 15, cost 0.9: orange fish " + v[0] + ", a first hybrid " + v[1].toFixed(2) + "; a chromosome blue at 10 and orange at 15 beside orange " + v[2] + " and beside blue " + v[3],
-        v[0] === 1 && Math.abs(v[1] - 0.1) < 1e-9 && v[2] === 1 && v[3] === 1);
-  /* C's arrows */
-  const PC = { N: 2, start: "grey", R: 1, trait: { at: 19, h: 0.25, b: [-0.5, 0.75], q0: [0, 1] } }, wc = pdWorld(PC, 2);
-  const g = d => { const a = wc.pops[0][0][0].slice(), b = a.slice(); a[19] = d >= 1 ? wc.DARK : wc.LIGHT; b[19] = d >= 2 ? wc.DARK : wc.LIGHT; return [a, b]; };
-  const got = [0, 1, 2].map(d => [pdLive(PC, wc, g(d), 0), pdLive(PC, wc, g(d), 1)].map(x => +x.toFixed(4)));
-  const want = [[1, 0.25], [0.875, 0.4375], [0.5, 1]];
-  check("engine: C, h 0.25, orange pond -0.5, blue pond +0.75: chance to live ○ ◐ ● " + got.map(x => x.join("/")).join(", ") + " (1 + b z or 1 - b (1 - z), z = 0, h, 1)", JSON.stringify(got) === JSON.stringify(want));
+  /* B's food: genes at 10 and 30, arrows 1 and 0.5, S 0.8. Diet d = 0.5 + (1 (z1 - .5) + .5 (z2 - .5)) / 2; top 0.875;
+     survival 1 - 0.8 (0.875 - food), food d in orange, 1 - d in blue */
+  const PB = { N: 2, start: "apart", R: 1, eco: { at: [9, 29], a: [1, 0.5], S: 0.8, v: 0, q0: [[1, 1], [0, 0]] } }, wb = pdWorld(PB, 2);
+  const mk = (b1, b2) => { const a = wb.pops[0][0][0].slice(), b = a.slice(); a[9] = b1 >= 1 ? wb.BEN : wb.LIM; b[9] = b1 >= 2 ? wb.BEN : wb.LIM; a[29] = b2 >= 1 ? wb.BEN : wb.LIM; b[29] = b2 >= 2 ? wb.BEN : wb.LIM; return [a, b]; };
+  const hand = (b1, b2, k) => { const d = 0.5 + (1 * (b1 / 2 - 0.5) + 0.5 * (b2 / 2 - 0.5)) / 2, f = k ? 1 - d : d; return 1 - 0.8 * (0.875 - f); };
+  let worst = 0; for (const b1 of [0, 1, 2]) for (const b2 of [0, 1, 2]) for (const k of [0, 1]) worst = Math.max(worst, Math.abs(pdLive(PB, wb, mk(b1, b2), k) - hand(b1, b2, k)));
+  check("engine: B's chance to survive, every genotype at both genes in both ponds, agrees with the diet by hand (worst gap " + worst.toExponential(1) + "): benthic at both, orange pond " + pdLive(PB, wb, mk(2, 2), 0).toFixed(3) + ", blue " + pdLive(PB, wb, mk(2, 2), 1).toFixed(3) + "; a first hybrid " + pdLive(PB, wb, mk(1, 1), 0).toFixed(3),
+        worst < 1e-12 && pdLive(PB, wb, mk(2, 2), 0) === 1 && pdLive(PB, wb, mk(0, 0), 1) === 1);
+  /* C's pairs: counted by hand; each lowers survival by its cost */
+  const PC = { N: 25, mu: 0.004, p: 0.02, cost: 0.5, R: 1, m: 0, T: 10, start: "grey" }, wc = pdWorld(PC, 7);
+  for (let t = 0; t < 150; t++) pdStep(PC, wc);
+  const rng = mulberry32(5); let agree = 0, tot = 0, some = 0, cst = 0;
+  for (let r = 0; r < 200; r++) { const y = [pdGamete(PC, wc.pops[0][r % 25], rng, null), pdGamete(PC, wc.pops[1][(7 * r) % 25], rng, null)];
+    const o = new Set(), b = new Set(); for (const c of y) for (let i = 0; i < L; i++) { const k = wc.kind[c[i]]; if (k === 1) o.add(c[i]); else if (k === 2) b.add(c[i]); }
+    let h = 0; for (const x of o) for (const z of b) if (wc.loc[x] !== wc.loc[z] && pdHash(Math.min(x, z), Math.max(x, z), wc.salt) < PC.p) h++;
+    if (pdPairs(PC, wc, y) === h) agree++; if (h > 0) some++; tot++; if (Math.abs(pdLive(PC, wc, y, 0) - Math.pow(0.5, h)) < 1e-12) cst++; }
+  check("engine: C, a hybrid's incompatible pairs agree with a count by hand (" + agree + " of " + tot + "; " + some + " carry one or more) and its chance to survive is (1 - cost) to that power (" + cst + " of " + tot + ")",
+        agree === tot && cst === tot && some > 40);
+  /* D's choice, through pdStep: a pond of 100 with a share q of fish black-throated and benthic (both genes two copies) and the
+     rest red and limnetic, nothing selecting; births per black / red fish (pdStep's tracking, by Bmp6), and the share of young
+     with one parent of each (Bmp6 one copy each), summed over 30 fresh ponds */
+  const dtest = (q, a) => { let br = [0, 0], ad = [0, 0], mixed = 0, tot = 0;
+    for (let r = 0; r < 30; r++) {
+      const Pd = { N: 100, R: 1, mu: 0, start: "grey", eco: { at: [19], a: [1], S: 0, v: 0, q0: [[0], [0]] }, disp: { at: 20, h: 0.5, a, tries: 4, q0: [0, 0] } }, wd = pdWorld(Pd, 21 + r);
+      wd.pops[0].forEach((f, i) => { const blk = i < 100 * q; for (const c of f) { c[19] = blk ? wd.BEN : wd.LIM; c[20] = blk ? wd.BLACK : wd.RED; } });
+      pdStep(Pd, wd); const t = wd.gen[0]; br[0] += t.births[2]; ad[0] += t.adults[2]; br[1] += t.births[0]; ad[1] += t.adults[0]; mixed += t.born[1]; tot += t.born[0] + t.born[1] + t.born[2]; }
+    return { perRare: br[0] / ad[0], perCommon: br[1] / ad[1], mixed: mixed / tot }; };
+  const d1 = dtest(0.1, 1), d0 = dtest(0.1, 0), dh = dtest(0.5, 1), dr = dtest(0.5, 0);
+  check("engine: D's choice: throats 1 black in 10, everyone choosy: births a black / a red fish " + d1.perRare.toFixed(2) + " / " + d1.perCommon.toFixed(2) + " (no one choosy " + d0.perRare.toFixed(2) + " / " + d0.perCommon.toFixed(2) + "); half and half, young of mixed parents " + Math.round(100 * dh.mixed) + "% choosy, " + Math.round(100 * dr.mixed) + "% not",
+        d1.perRare < 0.8 * d1.perCommon && Math.abs(d0.perRare - d0.perCommon) < 0.25 && dh.mixed < 0.08 && Math.abs(dr.mixed - 0.5) < 0.05);
+  /* the valley: Bmp6 ○ ◐ ● in the orange pond, S 0.4, v 0.3 -> 0.6, 0.5, 1 */
+  const PV = { N: 2, start: "apart", R: 1, eco: { at: [19], a: [1], S: 0.4, v: 0.3, q0: [[1], [0]] } }, wv = pdWorld(PV, 2);
+  const gv = d => { const a = wv.pops[0][0][0].slice(), b = a.slice(); a[19] = d >= 1 ? wv.BEN : wv.LIM; b[19] = d >= 2 ? wv.BEN : wv.LIM; return [a, b]; };
+  const vv = [0, 1, 2].map(d => [pdLive(PV, wv, gv(d), 0), pdLive(PV, wv, gv(d), 1)].map(x => +x.toFixed(4)));
+  check("engine: D, S 0.4, valley 0.3: chance to survive ○ ◐ ● " + vv.map(x => x.join("/")).join(", ") + " (orange / blue)", JSON.stringify(vv) === JSON.stringify([[0.6, 1], [0.5, 0.5], [1, 0.6]]));
   /* D's inversion: loci 20-31 (19..30) */
-  const PD = { R: 8, trait: { at: 19 }, pref: { at: 30 }, inv: true }, inv = pdInv(PD), A = new Int32Array(L + 1).fill(1), B2 = new Int32Array(L + 1).fill(2); A[L] = 0; B2[L] = 1;
+  const PI = { R: 8, eco: { at: [19] }, disp: { at: 30 }, inv: true }, inv = pdInv(PI), A = new Int32Array(L + 1).fill(1), B2 = new Int32Array(L + 1).fill(2); A[L] = 0; B2[L] = 1;
   const Bi = new Int32Array(L + 1).fill(3); Bi[L] = 1; const ir = mulberry32(13); let split = 0, arrOk = 0, outside = 0, homo = 0;
   for (let r = 0; r < 4000; r++) {
-    const gm = pdGamete(PD, [A, B2], ir, inv), ins = new Set(); for (let i = 19; i <= 30; i++) ins.add(gm[i]);
+    const gm = pdGamete(PI, [A, B2], ir, inv), ins = new Set(); for (let i = 19; i <= 30; i++) ins.add(gm[i]);
     if (ins.size > 1) split++; if (gm[L] === (gm[19] === 1 ? 0 : 1)) arrOk++; if (gm[0] !== gm[39]) outside++;
-    const hm = pdGamete(PD, [B2, Bi], ir, inv), hin = new Set(); for (let i = 19; i <= 30; i++) hin.add(hm[i]); if (hin.size > 1) homo++; }
+    const hm = pdGamete(PI, [B2, Bi], ir, inv), hin = new Set(); for (let i = 19; i <= 30; i++) hin.add(hm[i]); if (hin.size > 1) homo++; }
   check("engine: D's inversion over loci 20-31: one inverted, one standard, none of 4000 gametes mixes inside (" + split + "), each takes the arrangement of the chromosome that gave it locus 20 (" + arrOk + "), crossing over outside goes on (" + outside + "); two inverted cross over inside (" + homo + ")",
         split === 0 && arrOk === 4000 && outside > 1000 && homo > 1000);
-  /* D's choice: half light, half dark, every fish choosy for dark (strength 1) or no one choosy */
-  const births = choosy => { const Pc = { N: 100, R: 1, mu: 0, start: "grey", trait: { at: 19, h: 0.5, b: [0, 0], q0: [0, 0] }, pref: { at: 30, a: 1, want: 1, q0: [choosy ? 1 : 0, 0] } }, wd = pdWorld(Pc, 21);
-    wd.pops[0].forEach((f, i) => { if (i >= 50) for (const c of f) c[19] = wd.DARK; }); pdStep(Pc, wd); const t = wd.gen[0]; return [t.births[0] / t.adults[0], t.births[2] / t.adults[2]]; };
-  const bc = births(true), bn = births(false);
-  check("engine: a pond half light, half dark: births a light / a dark fish " + bc.map(x => x.toFixed(2)).join(" / ") + " when every fish is choosy for dark, " + bn.map(x => x.toFixed(2)).join(" / ") + " when none is",
-        bc[1] > 1.8 * bc[0] && Math.abs(bn[0] - bn[1]) < 0.4);
+  const PM = { N: 50, start: "apart", R: 1, inv: true, eco: { at: [19], a: [1], S: 0.4, v: 0, q0: [[1], [0]] }, disp: { at: 25, h: 0.5, a: 1, tries: 4, q0: [1, 0] } };
+  const wM = pdWorld(PM, 5), wS = pdWorld(Object.assign({}, PM, { disp: Object.assign({}, PM.disp, { q0: [0.3, 0.3] }) }), 5);
+  check("engine: D, the throat colour-food correlation " + pdMatch(PM, wM).toFixed(2) + " for a matched start, " + pdMatch(PM, wS).toFixed(2) + " for the same mix in both; the orange pond's chromosomes start inverted (" + wM.pops[0].every(g => g[0][L] === 1 && g[1][L] === 1) + "), the blue's not (" + wM.pops[1].every(g => g[0][L] === 0) + ")",
+        Math.abs(pdMatch(PM, wM) - 1) < 1e-9 && Math.abs(pdMatch(PM, wS)) < 0.25 && wM.pops[0].every(g => g[0][L] === 1 && g[1][L] === 1) && wM.pops[1].every(g => g[0][L] === 0));
 }
 
 /* ================= the targets ================= */
-tgt(SA, 0, [{ mu: 0.004 }, { mu: 0.006 }], [{ mu: 0.002 }, { mu: 0.001 }]);
-tgt(SA, 1, [{ m: 0.1, T: 25 }, { m: 0.05, T: 25 }, { m: 0.1, T: 50 }], [{ m: 0.2, T: 25 }, { m: 0.3, T: 25 }]);
-tgt(SA, 2, [{ T: 5 }, { m: 0.3 }, { p: 0 }], [{ p: 0.02, m: 0.2, T: 10 }]);
-tgt(SA, 3, [{ N: 25 }, { N: 10 }], [{ N: 50 }]);
-tgt(SB, 0, [{ i: 19, j: 20 }, { i: 18, j: 20 }], [{ i: 4, j: 35 }, { i: 14, j: 25 }]);
-tgt(SB, 1, [{ cost: 1 }], [{ cost: 0.9 }, { cost: 0.75 }]);
-tgt(SB, 2, [{ m: 0.2 }, { m: 0.3 }], [{ m: 0.1 }, { m: 0.05 }]);
-tgt(SC, 0, [{ bo: -0.5, bb: 0.5 }, { bo: -1, bb: 1 }], [{ bo: 0, bb: 0 }, { bo: -0.25, bb: 0 }]);
-tgt(SC, 1, [{ h: 0.75 }, { h: 1 }], [{ h: 0.5 }, { h: 0 }]);
-tgt(SC, 2, [{ m: 0.2, T: 2 }], [{ m: 0.1, T: 2 }, { m: 0.05, T: 1 }]);
-tgt(SD, 0, [{ want: 1 }], [{ want: 0 }]);
-tgt(SD, 1, [{ inv: 1 }, { at: 30, inv: 1 }], [{ at: 38, inv: 0 }, { at: 25, inv: 0 }]);
-tgt(SD, 2, [{ bo: -0.5 }], [{ bo: -1, bb: 1 }]);
+tgt(SA, 0, [{ T: 25 }, { T: 50 }, { m: 0.3, T: 25 }], [{ m: 0.2, T: 10 }, { m: 0.1, T: 10 }]);
+tgt(SA, 1, [{ N: 10 }], [{ N: 25 }, { N: 50 }]);
+tgt(SA, 2, [{ m: 0.05 }, { m: 0.02 }], [{ m: 0.1 }, { m: 0.2 }]);
+tgt(SB, 0, [{ a1: 1, a2: 0 }, { a1: 0.75, a2: 0 }], [{ a1: 0.5, a2: 0.5 }, { a1: 1, a2: 0.5 }, { a1: 0, a2: 0 }]);
+tgt(SB, 1, [{ R: 0.5 }, { R: 0.25 }], [{ R: 1 }, { R: 2 }]);
+tgt(SB, 2, [{ i: 19, j: 20 }, { i: 30, j: 31 }], [{ i: 9, j: 29 }, { i: 14, j: 25 }]);
+tgt(SB, 3, [{ m: 0.2, T: 2 }, { m: 0.3, T: 2 }], [{ m: 0.1, T: 2 }, { m: 0.1, T: 5 }]);
+tgt(SC, 0, [{ mu: 0.004 }, { p: 0.05 }], [{ mu: 0.002 }, { mu: 0.001 }]);
+tgt(SC, 1, [{ m: 0.2, T: 2 }, { m: 0.3, T: 5 }], [{ m: 0.2, T: 10 }, { m: 0.2, T: 5 }]);
+tgt(SC, 2, [{ mu: 0.004 }, { mu: 0.006 }], [{ p: 0 }, { mu: 0.001 }]);
+tgt(SD, 0, [{ c: 1 }], [{ c: 0 }, { c: 0.5 }]);
+tgt(SD, 1, [{ start: 0 }], [{ start: 1 }]);
+tgt(SD, 2, [{ at: 20 }, { inv: 1 }, { at: 20, R: 1 }], [{ at: 39, R: 4 }, { at: 39, R: 1 }]);
+tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
 {
-  /* the table's fitness re-derived from the run's own counts: a young fish's chance to live x births a fish of its look, relative */
-  play(SC, 0, { bo: -0.5, bb: 0.5 }, 1); const q = SC.last, G = gotOf(q), t0 = q.t - 19; let worst = 0, avg = [];
+  /* the table's fitness re-derived from the run's own counts: a young fish's chance to survive x births of a fish of its
+     genotype, relative */
+  play(SD, 0, { c: 1 }, 1); const q = SD.last, G = gotOf(q), t0 = q.t - 19; let worst = 0, avg = [];
   [0, 1].forEach(k => { let born = [0, 0, 0], lived = [0, 0, 0], br = [0, 0, 0], ad = [0, 0, 0];
     for (const h of q.hist) if (h.t >= t0) for (const s of h.runs) for (let d = 0; d < 3; d++) { born[d] += s.trk[k][d]; lived[d] += s.trk[k][3 + d]; br[d] += s.trk[k][6 + d]; ad[d] += s.trk[k][9 + d]; }
-    const bAll = (br[0] + br[1] + br[2]) / (ad[0] + ad[1] + ad[2]), f = [0, 1, 2].map(d => lived[d] / born[d] * (br[d] / ad[d] / bAll));
-    const fbar = (f[0] * born[0] + f[1] * born[1] + f[2] * born[2]) / (born[0] + born[1] + born[2]);
-    for (let d = 0; d < 3; d++) worst = Math.max(worst, Math.abs(f[d] / fbar - G[k].fr[d]));
-    avg.push((G[k].fr[0] * born[0] + G[k].fr[1] * born[1] + G[k].fr[2] * born[2]) / (born[0] + born[1] + born[2])); });
-  check("C's table: fitness re-derived from the counts agrees (worst gap " + worst.toExponential(1) + "); the average young's fitness is 1 in each pond (" + avg.map(x => x.toFixed(3)).join(" / ") + ")", worst < 1e-9 && avg.every(x => Math.abs(x - 1) < 1e-9));
+    const bAll = (br[0] + br[1] + br[2]) / (ad[0] + ad[1] + ad[2]), f = [0, 1, 2].map(d => born[d] && ad[d] ? lived[d] / born[d] * (br[d] / ad[d] / bAll) : null);
+    let fs = 0, fn = 0; for (let d = 0; d < 3; d++) if (f[d] != null) { fs += f[d] * born[d]; fn += born[d]; }
+    for (let d = 0; d < 3; d++) if (f[d] != null) worst = Math.max(worst, Math.abs(f[d] / (fs / fn) - G[k].fr[d]));
+    let as = 0, an = 0; for (let d = 0; d < 3; d++) if (G[k].fr[d] != null) { as += G[k].fr[d] * born[d]; an += born[d]; } avg.push(as / an); });
+  check("D's table: fitness re-derived from the counts agrees (worst gap " + worst.toExponential(1) + "); the average young's fitness is 1 in each pond (" + avg.map(x => x.toFixed(3)).join(" / ") + ")", worst < 1e-9 && avg.every(x => Math.abs(x - 1) < 1e-9));
 }
 
 /* ================= the flow, scored ================= */
@@ -163,43 +177,47 @@ tgt(SD, 2, [{ bo: -0.5 }], [{ bo: -1, bb: 1 }]);
     }
     return { miss, bits: intended.map((_, r) => Score.getBit("scaffold", BIT[S.K + (r + 1)])).join("") };
   };
-  const a = flow(SA, { mu: 0.002 }, [{ mu: 0.004 }, { m: 0.05, T: 25 }, { T: 5 }, { N: 10 }]);
-  check("A flow: a miss records 0; four hits (bits " + a.bits + ") open B", a.miss && a.bits === "0111" && Gates.A.done && Gates.B.open);
-  const b = flow(SB, { i: 4, j: 35 }, [{ i: 19, j: 20 }, { cost: 1 }, { m: 0.3 }]);
-  check("B flow: a miss records 0; three hits (bits " + b.bits + ") open C", b.miss && b.bits === "011" && Gates.B.done && Gates.C.open);
-  const c = flow(SC, { bo: 0, bb: 0 }, [{ bo: -1, bb: 1 }, { h: 1 }, { m: 0.2, T: 2 }]);
+  const a = flow(SA, { m: 0.2, T: 10 }, [{ T: 50 }, { N: 10 }, { m: 0.02 }]);
+  check("A flow: a miss records 0; three hits (bits " + a.bits + ") open B", a.miss && a.bits === "011" && Gates.A.done && Gates.B.open);
+  const b = flow(SB, { a1: 0.5, a2: 0.5 }, [{ a1: 1, a2: 0 }, { R: 0.25 }, { i: 19, j: 20 }, { m: 0.3, T: 2 }]);
+  check("B flow: a miss records 0; four hits (bits " + b.bits + ") open C", b.miss && b.bits === "0111" && Gates.B.done && Gates.C.open);
+  const c = flow(SC, { mu: 0.001 }, [{ mu: 0.006 }, { m: 0.2, T: 2 }, { mu: 0.006 }]);
   check("C flow: a miss records 0; three hits (bits " + c.bits + ") open D", c.miss && c.bits === "011" && Gates.C.done && Gates.D.open);
-  const d = flow(SD, { want: 0 }, [{ want: 1 }, { inv: 1 }, { bo: -0.5 }]);
-  check("D flow: a miss records 0; three hits (bits " + d.bits + ") end the lesson", d.miss && d.bits === "011" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
+  const d = flow(SD, { c: 0 }, [{ c: 1 }, { start: 0 }, { at: 20, R: 1 }, { v: 0 }]);
+  check("D flow: a miss records 0; four hits (bits " + d.bits + ") end the lesson", d.miss && d.bits === "0111" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
-  check("all " + D + " declared bits written", D === 13 && n === D, n + " written");
+  check("all " + D + " declared bits written", D === 14 && n === D, n + " written");
 }
 
 /* ================= the controls ================= */
 {
-  /* B: drag ▲ from locus 5 to locus 12 along the chromosome */
-  SB.done = true; SB.waiting = false; openRound(SB); setC(SB, { i: 4, j: 35 }); B_paint();
-  const cv = document.getElementById("B_genes"), r = cv.getBoundingClientRect(), k = r.width / BGn.W;
-  const at = g => ({ clientX: r.left + (BGn.px + (g + 0.5) * BGn.pw / L) * k, clientY: r.top + BGn.sy * k, pointerId: 1, bubbles: true });
-  cv.dispatchEvent(new PointerEvent("pointerdown", at(4))); cv.dispatchEvent(new PointerEvent("pointermove", at(8))); cv.dispatchEvent(new PointerEvent("pointermove", at(11))); cv.dispatchEvent(new PointerEvent("pointerup", at(11)));
+  /* B: drag ▲ from locus 10 to locus 15 along the chromosome */
+  SB.done = true; SB.waiting = false; openRound(SB); setC(SB, { i: 9, j: 29 }); B_paint();
+  const cv = document.getElementById("B_genes"), r = cv.getBoundingClientRect(), k = r.width / GN.W, sy = +cv.dataset.cssH - 42;
+  const at = g => ({ clientX: r.left + (GN.px + (g + 0.5) * GN.pw / L) * k, clientY: r.top + sy * k, pointerId: 1, bubbles: true });
+  cv.dispatchEvent(new PointerEvent("pointerdown", at(9))); cv.dispatchEvent(new PointerEvent("pointermove", at(12))); cv.dispatchEvent(new PointerEvent("pointermove", at(14))); cv.dispatchEvent(new PointerEvent("pointerup", at(14)));
   const s1 = readSet(SB);
-  /* D: drag ♥ to locus 31; the toggles */
-  SD.done = true; SD.waiting = false; openRound(SD); setC(SD, { at: 20, inv: 0, want: 1 }); D_paint();
-  const dv = document.getElementById("D_genes"), dr = dv.getBoundingClientRect(), dk = dr.width / DGn.W;
-  const dat = g => ({ clientX: dr.left + (DGn.px + (g + 0.5) * DGn.pw / L) * dk, clientY: dr.top + (DGn.sy - 27) * dk, pointerId: 1, bubbles: true });
-  dv.dispatchEvent(new PointerEvent("pointerdown", dat(20))); dv.dispatchEvent(new PointerEvent("pointermove", dat(26))); dv.dispatchEvent(new PointerEvent("pointermove", dat(30))); dv.dispatchEvent(new PointerEvent("pointerup", dat(30)));
+  /* D: drag ♥ to locus 31, and never onto Bmp6; drag ◐ to the top of the surface; the toggles */
+  SD.done = true; SD.waiting = false; openRound(SD); setC(SD, { at: 20, inv: 0, start: 0, v: 0.4 }); D_paint();
+  const dv = document.getElementById("D_genes"), dr = dv.getBoundingClientRect(), dk = dr.width / GN.W, dsy = +dv.dataset.cssH - 42;
+  const dat = g => ({ clientX: dr.left + (GN.px + (g + 0.5) * GN.pw / L) * dk, clientY: dr.top + (dsy - 25) * dk, pointerId: 1, bubbles: true });
+  dv.dispatchEvent(new PointerEvent("pointerdown", dat(20))); dv.dispatchEvent(new PointerEvent("pointermove", dat(19))); const onFood = readSet(SD).at;
+  dv.dispatchEvent(new PointerEvent("pointermove", dat(26))); dv.dispatchEvent(new PointerEvent("pointermove", dat(30))); dv.dispatchEvent(new PointerEvent("pointerup", dat(30)));
+  const fv = document.getElementById("D_fit"), fr = fv.getBoundingClientRect(), fk = fr.width / DFt.W, hp = D_fitXY(0.4);
+  const fat = y => ({ clientX: fr.left + hp.x * fk, clientY: fr.top + y * fk, pointerId: 2, bubbles: true });
+  fv.dispatchEvent(new PointerEvent("pointerdown", fat(hp.y))); fv.dispatchEvent(new PointerEvent("pointermove", fat(D_fitXY(0.1).y))); fv.dispatchEvent(new PointerEvent("pointermove", fat(D_fitXY(0).y))); fv.dispatchEvent(new PointerEvent("pointerup", fat(D_fitXY(0).y)));
   const box = document.getElementById("D_invBox"); box.checked = true; box.dispatchEvent(new Event("change"));
-  const lt = document.getElementById("D_wantL"); lt.checked = true; lt.dispatchEvent(new Event("change"));
+  const sm = document.getElementById("D_startS"); sm.checked = true; sm.dispatchEvent(new Event("change"));
   const s2 = readSet(SD);
-  /* a round that holds them: round 1 holds the inversion; round 2 holds the look */
-  SD.done = false; SD.round = 0; openRound(SD); syncStage(SD); const h1 = box.disabled && !lt.disabled;
-  SD.round = 1; openRound(SD); syncStage(SD); const h2 = !box.disabled && lt.disabled;
-  check("controls: dragging ▲ along B's chromosome moves the orange allele's locus 5 -> " + (s1.i + 1) + "; dragging ♥ along D's moves the choosy locus 21 -> " + (s2.at + 1) + "; D's toggles set the inversion (" + s2.inv + ") and the look (" + s2.want + "); round 1 holds the inversion and frees the look (" + h1 + "), round 2 the other way (" + h2 + ")",
-        s1.i === 11 && s1.j === 35 && s2.at === 30 && s2.inv === 1 && s2.want === 0 && h1 && h2);
+  /* rounds that hold them: round 2 holds the inversion and frees the start; round 3 the other way */
+  SD.done = false; SD.round = 1; openRound(SD); syncStage(SD); const h1 = box.disabled && !sm.disabled;
+  SD.round = 2; openRound(SD); syncStage(SD); const h2 = !box.disabled && sm.disabled;
+  check("controls: dragging ▲ along B's chromosome moves Bmp6 10 -> " + (s1.i + 1) + "; ♥ along D's stops short of Bmp6 (" + (onFood + 1) + ") and moves the throat gene 21 -> " + (s2.at + 1) + "; ◐ dragged up sets the valley 0.4 -> " + s2.v + "; the toggles set the inversion (" + s2.inv + ") and the start (" + s2.start + "); round 2 holds the inversion and frees the start (" + h1 + "), round 3 the other way (" + h2 + ")",
+        s1.i === 14 && s1.j === 29 && onFood !== 19 && s2.at === 30 && s2.v === 0 && s2.inv === 1 && s2.start === 1 && h1 && h2);
   SD.done = true; openRound(SD);
-  SB.done = true; openRound(SB); setC(SB, { cost: 0.9 }); B_PATHS.sync();
-  const arrow = document.querySelector('#B_paths .paths-arrow[data-of="cost"]') || [...document.querySelectorAll("#B_paths .paths-arrow")].find(a => a.classList.contains("down"));
-  check("controls: B's cost arrow is drawn as a negative (red) arrow (" + (arrow ? arrow.getAttribute("class") : "none") + ")", !!arrow && arrow.classList.contains("down"));
+  SC.done = true; openRound(SC); setC(SC, { cost: 0.5 }); C_PATHS.sync();
+  const arrow = document.querySelector('#C_paths .paths-arrow[data-of="cost"]');
+  check("controls: C's cost arrow is drawn as a negative (red) arrow (" + (arrow ? arrow.getAttribute("class") : "none") + ")", !!arrow && arrow.classList.contains("down"));
 }
 {
   /* hover text: every mark has words; hover shows them and moving off hides them; the hybrid box closed at load */
@@ -208,7 +226,7 @@ tgt(SD, 2, [{ bo: -0.5 }], [{ bo: -1, bb: 1 }]);
   const perStage = "A,B,C,D".split(",").map(K => document.querySelectorAll("#stage" + K + " .info").length);
   const ev = (e, type) => e.dispatchEvent(new MouseEvent(type, { bubbles: true }));
   ev(infos[0], "mouseover"); const shown = !pop.hidden && pop.textContent === tipOf(infos[0]).textContent; ev(document.body, "mouseover"); const gone = pop.hidden;
-  const hy = document.getElementById("A_hyBox");
+  const hy = document.getElementById("C_hyBox");
   check("hover text: no bullet list; " + infos.length + " marks (" + perStage.join("/") + " a stage), " + empty + " empty; hover shows, off hides; the hybrid box closed at load",
         document.querySelectorAll("ul.setup, .stage-intro").length === 0 && empty === 0 && perStage.every(n => n >= 3) && shown && gone && hy.matches("details.opt") && !hy.open);
   for (const d of document.querySelectorAll("details.opt")) d.open = true;
@@ -278,8 +296,8 @@ setTimeout(() => {
   console.log(narrow); if (!/^ok/.test(narrow)) bad = true;
   const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
   /* shortened: A 30 generations, B and C 20, D 15 at 30 fish */
-  const SHORT = { RA: s => s.replace("for (t in 1:400)", "for (t in 1:30)"), RB: s => s.replace("for (t in 1:150)", "for (t in 1:20)"),
-                  RC: s => s.replace("for (t in 1:200)", "for (t in 1:20)"), RD: s => s.replace("for (t in 1:300)", "for (t in 1:15)").replace("N <- 100", "N <- 30") };
+  const SHORT = { RA: s => s.replace("for (t in 1:400)", "for (t in 1:30)"), RB: s => s.replace("for (t in 1:200)", "for (t in 1:20)"),
+                  RC: s => s.replace("for (t in 1:400)", "for (t in 1:20)"), RD: s => s.replace("for (t in 1:300)", "for (t in 1:15)").replace("N <- 100", "N <- 30") };
   if (probeR.error) console.log("skip R panels  (no Rscript)");
   else for (const tag of ["RA", "RB", "RC", "RD"]) {
     const src = tagged(tag), fixed = SHORT[tag](src);

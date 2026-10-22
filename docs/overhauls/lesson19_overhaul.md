@@ -1,13 +1,116 @@
-# Lesson 19 — speciation as a process: ponds and floods, one incompatible pair, a trait, a preference
+# Lesson 19 — speciation as a process: pulsed migration, sticklebacks, incompatibilities, mate choice
 
-**File** · `app/lessons/lesson19.html` — pass 3 (redraft) 2026-10-20; v2 archived as `app/archive/lesson19_v2_2026-10-17.html`
+**File** · `app/lessons/lesson19.html` — pass 4 2026-10-22 (JM's review of pass 3); pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html`, v2 as `lesson19_v2_2026-10-17.html`
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 3 built (v3, scaffold 13: A1-A4, B1-B3, C1-C3, D1-D3); checks green (34 + R, ~2 min); LOCKS `x`; JM to review; voice owed (JM to dictate)
-**Last touched** · 2026-10-20
+**Status** · pass 4 built (v4, scaffold 14: A1-A3, B1-B4, C1-C3, D1-D4); checks green (36 + four R panels, ~3 min); LOCKS `x`; JM to review; voice owed (JM to dictate)
+**Last touched** · 2026-10-22
+
+## Pass 4 — JM's review, 2026-10-22 (verbatim)
+
+> Some revisions to lesson 19: For A, "flood size" should be "migration during flood"
+>
+> I am also thinking we take out incompaitibilites from Part A. They need to be taught what those are by later stages.
+>
+> Also crossovers a chromosome should be crossovers per chromosome
+>
+> Part B: I like the visualization. I think we need to refine a few things. One simple chance: "chance a hybrid lives" as a dropdown should just be "hybrid survival rate". The DAG is also maybe too abstract. Let's anchor this to sticklebacks. They're well studied, and we can reference specific loci. We can also adjust for pedagogical reasons (eg, place real loci at varying unreal positions). They'll also work when we expand to mate choice later. The DAG should show genes influencing phenotypes influencing food pool influencing prob of surviving to reproduce.
+>
+> Part A is meant to show pulsed migration & Fst across the genome. Part B should be focused on how Fst at (and around) a locus can vary.
+>
+> Part C should build on Part B by having new mutations arising that produce incompatibilities. This should show hybrid fitness decreasing over time.
+>
+> Part D should bring in mate choice. A preference for mating with genetically similar individuals resulting from some tractible phenotype (mating display?). Idea is two different mating displays, with two alleles, and the ability to vary h. The student should, through exploring the sliders, find that when mating displays allele correlates with ecology you can separate populations, but when they don't the populations end up fusing (with some ecology phenotype going extinct even if it is very fit locally). The role of both frequent migration, fitness landscapes of hybrids, and recombination should be emphasized here.
+>
+> Incorporating fitness surfaces where they make sense, even just as a small inset display, is ideal.
+
+### Stages as built (pass 4)
+
+One engine (`pd*`, pass 3's): two ponds of N hermaphrodite fish, one chromosome of 40 loci, young made until N live, floods
+every T at the start of a generation (each fish swaps with chance m), F_ST on allele identity, measured on the young.
+New: food genes (benthic / limnetic alleles), a diet d (0.5 + the genes' arrows x (benthic share - .5), averaged), food d in
+the orange pond and 1 - d in the blue, survival 1 - S (top - food) - v 4 food (1 - food), top = the best-fed fish's food;
+a throat gene (red / black, h); choice = turn a partner down with chance choosy x |throat difference|, at most 4 times.
+
+    A  pulsed migration. A's pass 3 start (grey split, mutation in pond colours), no incompatibilities. Sliders: fish a pond,
+       mutation, crossovers per chromosome, migration during flood, generations between floods. New panel: F_ST across the
+       genome (bars: 16 runs averaged a locus; dots: run 1). Menu: F_ST, alleles from the other pond, diversity. 400 gens.
+       Rounds: 1 the last flood lowers F_ST by .12+ (floods free, open .2/10); 2 floods .2/25, F_ST at 399 .4+ (N free, open
+       25); 3 a flood every 10, F_ST at 400 .2+ (migration free, open .2).
+    B  sticklebacks, ponds long apart (17 D's start), orange pond benthic (bottom prey), blue limnetic (plankton). ▲ Bmp6
+       (pharyngeal teeth) and ■ a gill-raker gene, dragged under the F_ST bars. DAG: gene -> phenotype (grey) -> food pool
+       (two settable arrows: how much each trait changes the food a fish gets) -> survives to breed (grey; S .8 fixed).
+       Inset: each pond's fitness surface, ▲ genotype x ■ genotype, shade = survival, dots = run 1's fish. Menu: F_ST at the
+       genes, every locus, hybrid survival rate, benthic allele at ▲. N 50, 200 gens. Rounds: 1 F_ST .4+ at ▲, < .15 at ■
+       (arrows free, open .5/.5); 2 F_ST .42+ averaged over the four loci beside ▲ (crossovers free, open 1); 3 arrows
+       .5/.5, floods .1/2: F_ST .3+ at both (genes free, open 10/30); 4 side by side: F_ST < .2 at both (floods free).
+    C  B's sticklebacks just after the split (grey neutral loci, genes at 10 and 30 sorted, arrows held .5), mutation; a new
+       orange x a new blue allele at different loci incompatible with chance p (pass 3 A's hash rule); each pair costs
+       `cost` (red arrow onto survives). Inset: one pair's two-locus fitness surface (3 x 3, each pond's path). "A hybrid,
+       up close" (closed). Menu: hybrid survival rate, incompatible pairs, F_ST, alleles from the other pond. N 25 (no
+       slider), 400 gens. Rounds: 1 hybrid survival < 20% (mutation, p free; open .002/.02); 2 mutation .004: survival 60%+
+       (floods free, open .2/10); 3 floods .2/25 (A round 1's): the last flood lowers F_ST by < .12 (mutation, p, cost free; open .001).
+    D  mate choice. Ponds long apart; Bmp6 (locus 20) the one food gene (arrow 1, S .4); the throat gene (♥, dragged; h on
+       its arrow); every fish prefers its own throat colour (how choosy on an arrow onto throat colour -> births); hybrid
+       valley set by dragging ◐ on the fitness surface (survival vs Bmp6 genotype, a line a pond); throat start matched
+       (black benthic, red limnetic) or the same mix (30% black both); inversion (Bmp6 to ♥, orange pond's chromosomes).
+       Menu: benthic allele, black-throat allele, throat colour-food correlation, F_ST at the other loci, hybrid survival.
+       "What each Bmp6 genotype got" (survived, births, fitness). N 100, 300 gens, 16 runs. Rounds: 1 floods .2 every
+       gen, valley .4, matched: both food types left in 10+ of 16 runs (choosy free, open 0); 2 choosy 1: same (start free,
+       open same mix); 3 choosy .75, floods .15: correlation .5+ (♥, crossovers, inversion free; open locus 40, R 4); 4 same
+       mix, choosy 1: both left in 10+ of 16 (valley and floods free, open .4, .2/1).
+
+### Measured (node prototype of the page's engine, scratchpad `eng.js`, 2026-10-22; per round, in the page's comments)
+
+    A  drop at the last flood: .2/10 .07-.08; .2/25 .15-.20; .2/50 .23-.27; .2/100 .34-.37. F_ST at 399, .2/25: N 10 .52-.61,
+       25 .28-.31, 50 .16. F_ST at 400, every 10: m .02 .38-.43, .05 .24-.30, .1 .13-.17, .2 .07. Mutation barely moves F_ST.
+    B  (150 gens) arrows 1/0 .56-.65/.02-.08; .5/.5 .42-.50; width (200 gens, 4 loci beside ▲) R .25 .59-.69, .5 .45-.56,
+       1 .31-.38, 2 .20-.26; side by side vs far at .5/.5, floods .1/2: .32-.43 vs .13-.27 (coupling, modest).
+    C  hybrid survival at 400: food alone .80; mutation .001 .72, .002 .37, .004 .04; floods .2/2 .73 at mutation .004.
+       Drop at a .2/25 flood: p 0 .21-.27 (A's), mutation .004 .07-.08. Bigger ponds fall faster (N 10 .52-.66, 100 .07-.15).
+    D  (k = looks) k 30: a shared throat splits each pond into two throat "species" (no fusion); k 4-5 fuses. k 4, floods
+       .2/1, valley .4: choosy 0 / .5 / .75 lost 16 / 16 / 15 of 16; 1 lost 2-3. Same mix lost 13-15. Valley .1 or 0 lost 0
+       (kept runs well mixed, benthic ~.6/.35). Floods .3 every gen fuse everything. Recombination: choosy .75, floods .15:
+       correlation beside Bmp6 .98, locus 31 .43-.68, locus 40 .03-.10, locus 40 R 4 .00, + inversion 1.00; on extinction
+       at floods .2 it is modest (far R 4 lost 5-9 vs beside 2-3). h 0 / 1: the recessive throat's pond leaks.
+    colourblind (Machado 2009, CIE76 ΔE, normal / protan / deutan / tritan): throat red-black 77 / 40 / 60 / 89; food
+       light-dark 81 throughout; red throat vs orange pond 35 / 37 / 28 / 14 (they never share a place on the board).
+
+### Open for JM (pass 4)
+
+1. B's genes: Bmp6 is real (pharyngeal teeth, Paxton benthics, chr 21; Cleves et al. 2014). Gill rakers have no named gene
+   (QTL on chr 4 and 20; Glazer et al. 2014), so ■ is "a gill-raker gene". The food pool is one box; which food each pond
+   holds is in the hover text and the fitness-surface inset. Two settable arrows (trait -> food); food -> survival grey.
+2. C: real benthic x limnetic hybrids show little intrinsic incompatibility (Hatfield & Schluter 1999; Thompson et al. 2022
+   PLOS Biology: environment-dependent). C is framed as the ponds run on; said in a code comment, not on screen. Fine?
+3. C and pond size: bigger ponds lower the hybrid survival rate faster (a pair needs one copy each, so rare new alleles
+   count). The opposite of "the faster you fix differences"; fish a pond is held at 25 in C, no slider. Want a version
+   where only fixed differences clash?
+4. D's choice is a matching rule (prefer your own throat colour), not a separate preference allele. The fusion needs a
+   limited search (4 looks): with 30 looks a throat shared by both ponds split each pond into two throat species instead.
+   Real stickleback females do hybridise more when their own type is rare; the hover text says "up to 4 times".
+5. D's target counts runs where neither food allele is lost. With floods every generation a kept run's ponds are well
+   mixed (~.8/.2); the stage is about extinction under fusion (Enos Lake), not full separation.
+6. Recombination in D shows mostly on the throat colour-food correlation (round 3, choosiness .75). At full choosiness
+   hybrids are too rare for crossing over to matter. The inversion is kept (10-20 brief).
+7. Fitness surfaces: B (each pond, teeth x gill rakers), C (one incompatible pair, 3 x 3), D (survival by Bmp6 genotype,
+   ◐ draggable). A has none (nothing selects).
+8. Still open from pass 3: the course's green/red verdict colours collapse for red-green colourblind eyes (ΔE 10-19);
+   19 marks every verdict ✓/✗. A REVISIONS row for 1-18? Not added without your word.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 9 | — | overhaul doc, plan; pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html` | done |
+| 10 | — | engine: food genes (diet, food, valley), throat gene + matching choice (4 looks), incompatibility cost | done |
+| 11 | A | strip incompatibilities; renames; genome bars; measure; rounds | done |
+| 12 | B | sticklebacks: genes, DAG, fitness surface, drag; measure; rounds | done |
+| 13 | C | mutations + incompatibilities on B; DMI inset; hybrid box; measure; rounds | done |
+| 14 | D | throat gene, choice, valley drag, start matched/same; measure; rounds | done |
+| 15 | — | R panels; `check_lesson19_numbers.js` rewritten (36 + R); lessons 20/21 "19 A" -> "19 C"; colourblind red/black | done |
+| 16 | — | JM's review; voice | todo |
 
 ## What the lesson is
 
-- Two ponds from one population; floods now and then mix them. Incompatibilities build up by drift and mutation until floods stop doing anything (A); one pair made explicit, and the island it holds (B); a trait that survives better in one pond than the other (C); a mate preference on the same trait, at a locus the student places, with an inversion to lock them (D).
+- Two ponds; floods now and then mix them. Pulsed migration and F_ST across the genome (A); sticklebacks whose food genes hold F_ST up at and around themselves (B); new mutations that make hybrids fail, until floods stop counting (C); mate choice on a throat colour that separates the ponds when it matches the food and fuses them, losing a food type, when it does not (D).
 - Worth protecting: fitness is never set. Survival (ecology, incompatibilities) and births (mate choice) are; fitness is what comes out (JM).
 
 ## JM's brief, 2026-10-20 (verbatim, the whole message; 20 and 21 docs quote their parts)
@@ -18,115 +121,30 @@
 
 Readings of the speech-to-text: wheels / alleals = alleles; low si / low side / Leo = loci; SST = F_ST; in progression = introgression; Attract = Track; header as I go = heterozygote; tree type = genotype; Make choice = mate choice; ladder = latter; sweet = suite; unsteady = unstable (read as: reinforcement is fragile); "drop down toward Target" = a drop-down to choose what the plot shows (17's and 19 v2's watch menu).
 
-## Stages as built (pass 3)
-
-One engine for all four (`pd*`): two ponds of N hermaphrodite fish, one chromosome of 40 loci (17's beads), parents at random (A-C) or by preference (D), young live or die (incompatibilities, ecology), young made until N live (deaths counted). Floods every T generations: each fish swaps ponds with chance m (17's swap), at the start of the generation, so a flood shows up in the young it leaves. F_ST on allele identity (17's formula). Snapshots every generation (every 2 at N 50+).
-
-    A  Ponds and floods. One grey population (3 alleles a locus) splits. New alleles in the pond's colour. A new orange and a new
-       blue allele at different loci are incompatible with chance p (a hash of the two: the same two, the same answer); one of
-       each kills a young fish. Sliders: fish a pond, mutation, chance a pair is incompatible, crossovers, flood size, generations
-       between floods. Board; over time (F_ST, alleles from the other pond, diversity within each pond, a hybrid's chance to live,
-       incompatible pairs in a hybrid), floods as ≈ on the axis; "A hybrid, up close" (closed box: its pairs as a grid).
-       16 runs, 400 generations. Rounds: 1 floods .2/10 held, mutation free (opens .002): F_ST ≥ .3; 2 mutation .001, floods free
-       (opens .2/25): F_ST ≥ .3; 3 mutation .004, p and floods free (opens .02, .2/10): F_ST < .1; 4 N free (opens 50): diversity
-       within each pond < .3.
-    B  One pair. Ponds start apart (one allele a locus, each its own colour). ▲ (the orange allele's locus) and ■ (the blue's)
-       dragged along the chromosome under an F_ST-by-locus bar plot; the pair's cost on a red arrow onto the dashed "orange allele
-       alone -> chance to live" arrow. 16 runs, 150 generations, N 50. Rounds: 1 loci free (opens 5/36): F_ST ≥ .5 at both;
-       2 cost free (opens .9): the same; 3 loci 20/21, floods free (opens .1/5): F_ST < .35 at both.
-    C  A trait at locus 20: light / dark allele (lightness, not hue); ○ ◐ ●. DAG: genotype -h-> looks -> lives? orange pond, lives?
-       blue pond (signed arrows) -> fitness <- births (at random). Survival picture (looks across, chance to live up, a line a
-       pond, ○ ◐ ● on each). "What each look got": lived, births (1 = average), fitness (lived x births, 1 = the average young),
-       last 20 generations. 16 runs, 200 generations, N 50, dark at 50% in both at the split. Rounds: 1 arrows free (open 0, 0):
-       dark < 30% orange, > 70% blue; 2 arrows -1/+1, h free (opens .5): dark < 8% in orange; 3 floods free (open .1/2): F_ST ≥ .5
-       at the trait, < .1 at the others.
-    D  A choosy allele (one copy: choosy) prefers ○ or ● (radio); how choosy on an arrow onto the dashed looks -> births arrow;
-       ♥ dragged along the chromosome; inversion (checkbox) from the trait locus to ♥ on every chromosome that starts choosy.
-       Births come from being chosen; fitness derived. 12 runs, 300 generations, N 100, dark 5% / 95%, choosy 20% in both,
-       floods .1 every generation. Rounds: 1 inversion at 21 held, the look free (opens light): choosy ≥ 40% blue and < 20%
-       orange; 2 locus and inversion free (open 39, none): the same; 3 arrows free (open -1/+1): the two ponds' choosy shares
-       within 10 points.
-
-## Measured on the page's engine (2026-10-20; the numbers per round are in the page's comments above each ROUNDS)
-
-    A  round 1, mutation .002 / .003 / .004 / .006 / .008: F_ST .10-.14 / .17-.31 / .37-.46 / .38-.41 / .33-.35 (more mutation,
-       more diversity, a lower ceiling on F_ST)
-    B  round 1, loci 5/36 .09-.27 ... 18/23 .43-.51, 19/21 .67-.72, 20/21 .75-.85; round 2, cost .9 .09-.27, 1 .93-.94 (every
-       first hybrid dies: the whole chromosome holds)
-    C  round 2, h 0 / .25 / .5 / .75 / 1: dark in orange .22-.24 / .16 / .10 / .05 / .00, in blue 1.00 / .95 / .90 / .85 / .76
-    D  inversion: choosy .05-.12 orange / .50-.79 blue; adjacent, no inversion .06-.18 / .53-.64; far (39) .16/.20 or .53/.58:
-       unlinked, it ends up in both ponds or neither. Needs the orange pond to keep dark out: arrows -.5/+1 .24/.24-.33/.33.
-    colourblind (Machado 2009 simulation, CIE76 ΔE, normal / protan / deutan / tritan): pond orange-blue 106 / 84 / 98 / 99;
-       trait light-dark 81 everywhere; DAG red-blue 72 / 33 / 53 / 95; held pale red-blue 35 / 15 / 22 / 48 (the sign is also on
-       the number); verdict green-red 78 / 19 / 10 / 87 (so every verdict carries ✓/✗ and the word)
-
-## Measured (node prototype, scratchpad `pond.js`, 2026-10-20)
-
-    A, N 25, mu .004 a locus, R 1, p .02, lethal + dominant, flood at the start of a generation, measured on the young
-      floods every 50 at m .2, one run: flood 50 F_ST .40 -> .26 (introgression 9%, gone by 53); floods 100-400: F_ST
-        unmoved (.43/.39, .51/.52, .62/.62 ...), except one migrant-x-migrant flood at 250 (.72 -> .52, back by 253)
-      migrant alleles still there 10 generations after a flood (%), 8 runs, by flood:
-        T 5:  m .1 113 9 41 2 ...    m .2 never apart (0/8)   m .4 0/8 apart
-        T 10: m .1 apart 8/8         m .2 7/8                 m .4 0/8 (F_ST .03 at 400)
-        T 25: m .1 8/8 (24% kept at the first flood, then 0)  m .2 7/8   m .4 2/8 (30-70% kept every flood)
-        T 50: m .1 8/8   m .2 8/8   m .4 3/8          T 100: m .1, .2 8/8; m .4 3/8
-      flood m .5 (every fish 50:50) never separates: one mixed pond, then a hybrid swarm
-    N barely changes the waiting time (sweep, T 50 m .2, floods stop by): N 10 mu .004 50-150 (one never); N 25 50-200;
-      N 50 50-100; N 100 50-100. mu .001: N 10-100 mostly never by 500. mu sets the pace; N sets how lumpy (small N: every hybrid
-      the same fate) and how fast F_ST climbs between floods (drift), and diversity within a pond (HS .22-.36 at N 25, .70+ at N 100)
-    incompatibilities recessive (two copies at both loci): never apart at T 50 m .2 (F1 hybrids live and backcross);
-      two copies at one locus: N 10 sometimes, N 100 never
-    F_ST on allele identity tops out near 1 - HS (HS .3 -> F_ST ~.5-.6 when fully apart); on colour (grey/orange/blue) it climbs
-      toward .9. The page uses identity (the real thing; drift of the grey alleles counts)
-    speed: 2 ponds x N 25 x 400 generations ~ 0.05 s a run
-
-## Open for JM
-
-1. N and drift (your "the faster you're fixing differences"): in this model the build-up runs on mutation x time and barely on
-   N (sweep above). Theory says the same for neutral substitutions (Orr & Orr 1996, Evolution 50: waiting time to speciation by
-   drift is roughly independent of population size; I am fairly but not fully sure of the citation). What N does change on
-   screen: F_ST climbs faster between floods, diversity within a pond drops, and small ponds give every hybrid the same fate.
-   N is a slider; no target claims small ponds speciate faster. Say if you want a model where it does (e.g. incompatibilities
-   only between fixed differences).
-2. Incompatibilities are lethal and dominant in A (one copy of each kills): recessive ones never beat floods every 50 at m .2.
-   B uses a partial cost on its arrow, because a lethal pair kills every F1 and nothing crosses at all.
-3. Colourblind: ponds stay orange/blue (safe pair, measured above); grey = before the split. C/D's trait is lightness, never a
-   hue; genotypes also by symbol (○ ◐ ●). Hit/miss by ✓/✗. The course's green/red verdict colours collapse for red-green
-   colourblind eyes (ΔE 10-19): worth a REVISIONS row (symbols on every verdict in 1-18)? Not added without your word.
-4. The redraft drops v2's three things: drawn rounds (A is bowling again; JM's "the goal is ... the pulses no longer change FST"
-   reads as a target), the one-allele choosy allele (now JM's two-locus version: the position matters), B's sparrow data.
-5. D is reinforcement in one direction: one choosy allele that prefers one look. It sorts by pond only when locked to the trait;
-   unlinked it spreads into both ponds or neither (the two-allele problem). A pair of choosy alleles (one each way) was the
-   first prototype: one preference swept both ponds (runaway) in most runs. Kept simple.
-6. A's crossovers slider does little (a pair kills; one chromosome): .07-.12 F_ST across R .25-4. It matters in B and D.
-7. C's floods at .2 every 5 are strong gene flow; one pond selecting alone takes the dark allele into both (0, +.25: 100% / 100%).
-8. D's floods run every generation (.1): reinforcement needs hybrids every generation to work against.
-
-## Items
-
-| # | Stage | What | Status |
-|---|-------|------|--------|
-| 1 | — | archive v2; overhaul doc | done |
-| 2 | A | engine (floods, identity F_ST, lethal pairs), measure, rounds | done |
-| 3 | B | one pair, placed by drag; DAG; targets on holding where it sits | done |
-| 4 | C | trait locus, h and the survival arrows on a DAG, survival plot, what each look got | done |
-| 5 | D | choosy locus by drag, the look it prefers, inversion; births vs survival | done |
-| 6 | — | `check_lesson19_numbers.js` rewritten (34 + four R panels, ~2 min) | done |
-| 7 | — | colourblind pass: ✓/✗ on verdicts, trait by lightness and ○ ◐ ●, the blue pond's lines dashed, ▲ / ■ for B's loci | done |
-| 8 | — | JM's review; voice | todo |
-
 ## Rulings
 
 - 2026-10-20: 19 speciation as a process, built on 17's machinery; one population with many alleles diverging by drift; incompatibilities; sliders for mutation, recombination, migration, the chance two alleles at different loci are incompatible, how often floods come. Fish in ponds, floods. Track introgression, F_ST, neutral diversity; a drop-down. The goal: floods stop changing F_ST and introgression.
 - 2026-10-20: C = focal locus, AA/AB/BB phenotypes, h sets the heterozygote, genotype -> phenotype -> fitness diagram, mating random. D = a preference allele at another locus, placed on the chromosome; an inversion in some targets. Fitness derived: survival and mate choice set, fitness = offspring that survive.
 - 2026-10-20: illustrate, not assess; extremely low text; colourblind students: symbols and colours that work for them.
+- 2026-10-22: A = pulsed migration and F_ST across the genome, no incompatibilities; "migration during flood", "crossovers per chromosome". B = sticklebacks, real loci at unreal positions, genes -> phenotypes -> food pool -> survival; F_ST at and around a locus; "hybrid survival rate". C = new mutations make incompatibilities, hybrid fitness falls over time. D = mate choice on a display (two alleles, h); matched to ecology separates, not matched fuses with a locally fit type lost; frequent migration, hybrid fitness landscapes, recombination. Fitness surfaces as insets where they make sense.
 - 2026-10-17 (pass 2): more "students draw what they expect"; bowling stays.
 
 ## Do not
 
-- Set fitness anywhere in C or D: survival and births are set; fitness is read off the run.
-- Code the trait by hue: lightness and symbols only.
+- Set fitness anywhere in B-D: survival and births are set; fitness is read off the run.
+- Code a food type or a throat by hue alone: food by lightness and ○ ◐ ●, throat red to black (lightness carries it).
+- Put incompatibilities back in A (JM, 2026-10-22: "They need to be taught what those are by later stages").
+- Give D's fish unlimited looks: with 30, a shared throat makes two species inside each pond and nothing fuses.
 - Measure a flood on the adults it moved (the dip is mechanical); measure it on the young it leaves.
+
+## Pass 3 (v3, 2026-10-20, archived as app/archive/lesson19_v3_2026-10-20.html)
+
+A ponds and floods with lethal dominant incompatibilities by drift until floods stopped mattering (4 rounds); B one
+incompatible pair placed by drag, its cost on an arrow; C a light/dark trait locus with h and signed survival arrows a pond,
+births at random, fitness derived; D a one-copy choosy allele placed by drag, preferring a look, with an inversion. Its
+measurements, prototype notes (scratchpad `pond.js`) and open points are in git history (this file before 2026-10-22).
+Carried forward: lethal dominant pairs were needed to beat floods (recessive never did); N barely set the pace (Orr & Orr
+1996); a two-allele preference ran away to one preference in both ponds.
 
 ## Pass 1-2 (v2, 2026-10-17, archived)
 
