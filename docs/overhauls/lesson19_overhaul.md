@@ -2,8 +2,53 @@
 
 **File** · `app/lessons/lesson19.html` — pass 4 2026-10-22 (JM's review of pass 3); pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html`, v2 as `lesson19_v2_2026-10-17.html`
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 4 built (v4, scaffold 14: A1-A3, B1-B4, C1-C3, D1-D4); checks green (36 + four R panels, ~3 min); LOCKS `x`; JM to review; voice owed (JM to dictate)
+**Status** · pass 5 built (JM's second 10-22 review): v5 (A's targets changed), scaffold 14 kept (A1-A3, B1-B4, C1-C3, D1-D4); checks green (40 + four R panels, ~3 min); LOCKS `x`; voice owed (JM to dictate)
 **Last touched** · 2026-10-22
+
+## Pass 5 — JM's review, 2026-10-22, evening (verbatim; the scheduler lines in the same paste belong to another project)
+
+> Part A: I don't like the text/numeric targets in the "Target" box. Let's just have them target an average genome-wide Fst and put the "Fst across the genome" graph smaller and directly over the controls with a red box shown.
+>
+> Part B: Great--though again I'd prefer the text gone & the visual target. A representation of what the final graph (either the dropdown or the Fst across the genome) "should" look like if they're successful. A single representative graph shrunk and unlabeled in the Target panel would work. No text, just an image of what they want & the controls (some locked) to get there.
+>
+> For the drop-down plot, we should have the dropdown first & "over time" follows it, with 16 runs excluded. The gene legend (triangle Bmp6 & gill raker) currently float over the simulation lines--I'd rather they be to the right of their respective target area.
+>
+> For C/D, I think the "Fitness Surface" figure should go on the left side to bring the control panel up closer to the DAG. Both should also lose the qualifier after the comma. Just fitness surface with details in the (i)
+>
+> Also all of the "unlock" messages are unnecessary--eg "All three targets hit. Run any setting you like: 400 generations, 16 times.". The freeing of the controls & "TO FINISH" turning green is sufficient--we can just remove that text from the Target boxes.
+>
+> Also the "pracitce -- a run with this ticked does not count" should just be "practice"
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 17 | A | genome graph into the Target card (460 x 150), over the controls; red box = the window; a line at F_ST over the genome; no target text; rounds rebuilt on that one measure | done |
+| 18 | A | floods at 1, 1 + T, ... (`P.ph`, `pdFloodAt`): generation 400 is just before a flood for every T (at multiples of T the last flood fell on 400 and cut every run by about (1 - 2m)^2 at the moment it was judged) | done |
+| 19 | B | no target text; `B_tpic`, an unlabeled sketch of a hit (`B_picBars`), red boxes on the judged loci, drawn where ▲ and ■ sit now | done |
+| 20 | all | "<menu> over time" (menu first, no "16 runs"); line names right of their target windows (`labRoom`) | done |
+| 21 | C, D | fitness surface to the left column (last panel); headings "Fitness surface", the rest in the ⓘ; D's start toggle into the card's controls. B's heading the same (not moved) | done |
+| 22 | all | no free-play text once a stage is done; practice label "practice" | done |
+| 23 | — | check: A's flood timing, A's rounds, the line = the bars' average, B's pictures judged by their own rounds, wordless cards; REVISIONS rows 18-20 | done |
+
+### Measured (pass 5; scratchpad `eng.js`, `measA*.js`: the page's engine lifted into node)
+
+    A  the measure: F_ST over the genome = in each run, the average over the loci of each locus's F_ST, leaving out loci where
+       both ponds carry one allele (undefined; counted as 0 they made N 10 read .12 against N 25's .09-.11). The ratio over the
+       genome (17's) runs .03-.13 above the drawn bars; this sits within .01 of their mean at every setting measured.
+       At 400 (just before a flood), N 25: .2 every 10 .10-.12 (opens 1); every 25 .20-.25; migration .1 .14-.18; .05 .22-.28.
+       Floods .2 every 10: N 10 .20-.24, 25 .10-.12, 50 .07, 100 .04. N 10: every 5 .15, every 2 .07, .5 every 10 .16-.19.
+       Windows: 1 floods free, .15 or more; 2 N free, .15 or more; 3 N 10, floods free, .17 or less (opens .20-.24).
+       Loci left out at 400: N 10 36-54%, N 25 4-14%, N 50 1-2%.
+
+### Open for JM (pass 5)
+
+1. C and D's Target cards still print a sentence and a rules list. Same treatment as A and B (a picture, no words)?
+2. B's picture is a sketch of a hit (heights inside the windows, widths read off measured runs), not a run: a run at the
+   intended setting would show round 3's answer (the genes side by side). It is drawn where ▲ and ■ sit now, so in round 3
+   it shows two peaks until they are moved.
+3. A's F_ST is now the bars' average, not lesson 17's ratio over the genome (B-D keep the ratio). The R panel computes the same.
+4. B's fitness surface keeps its place (between the diagram and the card); only its heading changed. Move it left too?
+5. D's "throat colour at the start" toggle moved into the Target card's controls with the panel's move.
+6. Rows 18-20 of `docs/REVISIONS_PLANNED.md`: the same changes for 10-18, 20, 21, counted there. Not applied outside 19.
 
 ## Pass 4 — JM's review, 2026-10-22 (verbatim)
 
@@ -34,8 +79,8 @@ a throat gene (red / black, h); choice = turn a partner down with chance choosy 
     A  pulsed migration. A's pass 3 start (grey split, mutation in pond colours), no incompatibilities. Sliders: fish a pond,
        mutation, crossovers per chromosome, migration during flood, generations between floods. New panel: F_ST across the
        genome (bars: 16 runs averaged a locus; dots: run 1). Menu: F_ST, alleles from the other pond, diversity. 400 gens.
-       Rounds: 1 the last flood lowers F_ST by .12+ (floods free, open .2/10); 2 floods .2/25, F_ST at 399 .4+ (N free, open
-       25); 3 a flood every 10, F_ST at 400 .2+ (migration free, open .2).
+       Rounds (pass 4, replaced in pass 5: see "Measured (pass 5)"): 1 the last flood lowers F_ST by .12+ (floods free, open
+       .2/10); 2 floods .2/25, F_ST at 399 .4+ (N free, open 25); 3 a flood every 10, F_ST at 400 .2+ (migration free, open .2).
     B  sticklebacks, ponds long apart (17 D's start), orange pond benthic (bottom prey), blue limnetic (plankton). ▲ Bmp6
        (pharyngeal teeth) and ■ a gill-raker gene, dragged under the F_ST bars. DAG: gene -> phenotype (grey) -> food pool
        (two settable arrows: how much each trait changes the food a fish gets) -> survives to breed (grey; S .8 fixed).

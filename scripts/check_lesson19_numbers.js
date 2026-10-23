@@ -2,8 +2,9 @@
 /*
  * check_lesson19_numbers.js -- the checks for app/lessons/lesson19.html.
  *
- * Lesson 19, pass 4 (2026-10-22, JM's review of pass 3): speciation as a
- * process. A pulsed migration (floods) and F_ST across the genome; B
+ * Lesson 19, pass 5 (2026-10-22, JM's second review): speciation as a
+ * process. A pulsed migration (floods) and F_ST across the genome, every
+ * target a window on F_ST over the whole genome; B
  * sticklebacks, two food genes placed on the chromosome; C new mutations
  * that make incompatibilities; D mate choice on a throat colour. What has to
  * hold:
@@ -11,7 +12,8 @@
  *   Engine. A starts grey, and with no floods each pond carries only grey
  *      and its own colour, every fish surviving (nothing selects in A);
  *      mutation runs at mu a locus; floods come only every T generations,
- *      about N m fish each; F_ST is 1 for two ponds with nothing in common
+ *      about N m fish each, and A's at 1, 1 + T, ... so that 400 is the
+ *      generation before a flood; F_ST is 1 for two ponds with nothing in common
  *      and 0 for two the same; B's chance to survive follows the diet and
  *      the food in each pond, by hand; C's hybrid incompatible pairs agree
  *      with a count by hand and each lowers survival by its cost; D's
@@ -21,7 +23,8 @@
  *      inverted chromosome; the correlation is 1 for a matched start; the
  *      table's fitness is its survival times its births, re-derived here.
  *   Targets. Each round's intended settings hit it and its opening (and the
- *      near misses measured in the page's comments) miss it.
+ *      near misses measured in the page's comments) miss it. B's picture of
+ *      each round, judged by that round's own rules, is a hit.
  *   Flow. A miss records 0 and the target stays; hits open Next target;
  *      each stage opens the next; the last ends the lesson; every bit
  *      written.
@@ -29,7 +32,10 @@
  *      chromosome; D's ◐ moves by dragging on the fitness surface; D's
  *      toggles write their inputs and are held when a round holds them; C's
  *      cost arrow is red (it lowers survival).
- *   Layout. Each stage ends in its R code, closed; no readout lines; every
+ *   Layout. A's and B's Target cards have no words, only their picture
+ *   (A's genome graph, B's sketch) over the controls; no card says anything
+ *   once its stage is done; the practice box reads "practice"; C's and D's
+ *   fitness surfaces in the left column; each stage ends in its R code, closed; no readout lines; every
  *   hover mark has words; the hybrid box closed at load; every canvas fits
  *   its panel (1500 and 1000 wide); the four R panels run (Rscript,
  *   shortened).
@@ -48,7 +54,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8799;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "C_board", "C_time", "C_dmi", "C_grid", "D_board", "D_genes", "D_time", "D_fit", "D_got"];
+const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "B_tpic", "C_board", "C_time", "C_dmi", "C_grid", "D_board", "D_genes", "D_time", "D_fit", "D_got"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
@@ -85,6 +91,11 @@ const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c o
   const Pf = { N: 50, mu: 0, R: 1, m: 0.2, T: 10, start: "grey" }, wf = pdWorld(Pf, 9); let off = 0, sw = 0, nf = 0;
   for (let t = 1; t <= 300; t++) { pdStep(Pf, wf); if (t % 10) { if (wf.flood) off++; } else { nf++; sw += Math.max(0, wf.flood); } }
   check("engine: floods only every 10th generation (" + off + " between), " + (sw / nf).toFixed(1) + " fish swapped a flood (50 x 0.2 = 10)", off === 0 && Math.abs(sw / nf - 10) < 2);
+  /* A's floods: at 1, 1 + T, ...; for every T on A's slider, none at 400 and one T - 1 generations before it */
+  const ph = A_TV.map(T => { const Pa = SA.cfg.start({ N: 10, mu: 0, R: 1, m: 0.2, T }, 3).P, at = []; for (let t = 1; t <= A_G; t++) if (pdFloodAt(Pa, t)) at.push(t);
+    return { T, first: at[0], last: at[at.length - 1], n: at.length }; });
+  check("engine: A's floods come at generation 1 and every T after: " + ph.map(x => "every " + x.T + ": " + x.first + " ... " + x.last + " (" + x.n + ")").join(", ") + "; generation 400 is the one before a flood",
+        ph.every(x => x.first === 1 && x.last === A_G - x.T + 1 && x.n === A_G / x.T));
   /* F_ST */
   const wa = pdWorld({ N: 25, start: "apart", R: 1 }, 4), fa = pdFst(wa, null).fst, wg = pdWorld({ N: 25, start: "grey", R: 1 }, 4); wg.pops[1] = wg.pops[0].map(g => g.map(c => c.slice()));
   check("engine: F_ST " + fa.toFixed(3) + " for two ponds with nothing in common, " + pdFst(wg, null).fst.toFixed(3) + " for two the same", Math.abs(fa - 1) < 1e-9 && Math.abs(pdFst(wg, null).fst) < 1e-9);
@@ -139,9 +150,28 @@ const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c o
 }
 
 /* ================= the targets ================= */
-tgt(SA, 0, [{ T: 25 }, { T: 50 }, { m: 0.3, T: 25 }], [{ m: 0.2, T: 10 }, { m: 0.1, T: 10 }]);
+tgt(SA, 0, [{ T: 25 }, { m: 0.05 }, { m: 0.1, T: 25 }, { T: 50 }], [{ m: 0.2, T: 10 }, { m: 0.3, T: 5 }]);
 tgt(SA, 1, [{ N: 10 }], [{ N: 25 }, { N: 50 }]);
-tgt(SA, 2, [{ m: 0.05 }, { m: 0.02 }], [{ m: 0.1 }, { m: 0.2 }]);
+tgt(SA, 2, [{ T: 5 }, { T: 2 }, { m: 0.5, T: 5 }], [{ m: 0.2, T: 10 }, { T: 25 }]);
+{
+  /* A's line is the bars' average: F_ST over the genome (each run's average over the loci that vary, then the runs averaged)
+     against the mean of the bars drawn, at N 25 and at N 10 (where many loci carry one allele in both ponds and are left out) */
+  const gap = [[0, { T: 25 }], [2, { m: 0.2, T: 10 }]].map(([r, o]) => { const S = play(SA, r, o, 1)[0], last = SA.last.hist[SA.last.hist.length - 1].runs;
+    const out = last.reduce((n, p) => n + p.by.filter(v => Number.isNaN(v)).length, 0) / last.length;
+    return { N: SA.last.P.N, fst: S.fst, bars: meanOf(S.by), out }; });
+  check("A's line is the bars' average: " + gap.map(g => "N " + g.N + " " + f2(g.fst) + " vs " + f2(g.bars) + " (" + g.out.toFixed(1) + " loci a run left out)").join("; "),
+        gap.every(g => Math.abs(g.fst - g.bars) < 0.015) && gap[1].out > 5);
+}
+{
+  /* B's picture of each round: its sketch at the round's own gene places (round 3 also at the start, far apart, and side by
+     side), judged by the round's rules, is a hit */
+  const pics = [[0, {}], [1, {}], [2, {}], [2, { i: 19, j: 20 }], [3, {}]].map(([r, o]) => {
+    const R = SB.cfg.rounds[r], set = Object.assign({}, readSet(SB), { i: 9, j: 29 }, R.open || {}, R.hold || {}, o), bars = B_picBars(set, R);
+    const S = { by: bars, genes: [bars[set.i], bars[set.j]] }, q = { P: { eco: { at: [set.i, set.j] } } };
+    return { r, at: (set.i + 1) + "/" + (set.j + 1), ok: judge(R, S, q).ok, vals: judge(R, S, q).vals.join(" ") };
+  });
+  check("B's pictures, each judged by its own round: " + pics.map(x => "round " + (x.r + 1) + " at " + x.at + " " + (x.ok ? "hit" : "MISS") + " (" + x.vals + ")").join("; "), pics.every(x => x.ok));
+}
 tgt(SB, 0, [{ a1: 1, a2: 0 }, { a1: 0.75, a2: 0 }], [{ a1: 0.5, a2: 0.5 }, { a1: 1, a2: 0.5 }, { a1: 0, a2: 0 }]);
 tgt(SB, 1, [{ R: 0.5 }, { R: 0.25 }], [{ R: 1 }, { R: 2 }]);
 tgt(SB, 2, [{ i: 19, j: 20 }, { i: 30, j: 31 }], [{ i: 9, j: 29 }, { i: 14, j: 25 }]);
@@ -177,7 +207,7 @@ tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }
     }
     return { miss, bits: intended.map((_, r) => Score.getBit("scaffold", BIT[S.K + (r + 1)])).join("") };
   };
-  const a = flow(SA, { m: 0.2, T: 10 }, [{ T: 50 }, { N: 10 }, { m: 0.02 }]);
+  const a = flow(SA, { m: 0.2, T: 10 }, [{ T: 50 }, { N: 10 }, { T: 2 }]);
   check("A flow: a miss records 0; three hits (bits " + a.bits + ") open B", a.miss && a.bits === "011" && Gates.A.done && Gates.B.open);
   const b = flow(SB, { a1: 0.5, a2: 0.5 }, [{ a1: 1, a2: 0 }, { R: 0.25 }, { i: 19, j: 20 }, { m: 0.3, T: 2 }]);
   check("B flow: a miss records 0; four hits (bits " + b.bits + ") open C", b.miss && b.bits === "0111" && Gates.B.done && Gates.C.open);
@@ -218,6 +248,18 @@ tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }
   SC.done = true; openRound(SC); setC(SC, { cost: 0.5 }); C_PATHS.sync();
   const arrow = document.querySelector('#C_paths .paths-arrow[data-of="cost"]');
   check("controls: C's cost arrow is drawn as a negative (red) arrow (" + (arrow ? arrow.getAttribute("class") : "none") + ")", !!arrow && arrow.classList.contains("down"));
+}
+{
+  /* the cards (JM, 2026-10-22): A's and B's carry no words, their picture right above the controls; a done stage's card says
+     nothing; the practice box says "practice"; C's and D's fitness surfaces sit in the left column */
+  const bare = ["A", "B"].map(K => { const c = document.querySelector("#stage" + K + " .tcard"), cv = c.querySelector("canvas");
+    return !c.querySelector(".ttext, ul.rules") && !!cv && cv.nextElementSibling === c.querySelector(".controls"); });
+  const quiet = ["A", "B", "C", "D"].map(K => { syncStage(ST[K]); const t = document.getElementById(K + "_ttext"), r = document.getElementById(K + "_rules");
+    return ST[K].done && (!t || t.textContent === "") && (!r || r.innerHTML === ""); });
+  const prac = [...document.querySelectorAll(".practice-row label")].map(l => l.textContent.trim());
+  const left = ["C_dmi", "D_fit"].map(id => { const e = document.getElementById(id); return e.closest(".col") === e.closest(".grid").querySelector(".col"); });
+  check("cards: A and B wordless with the picture over the controls (" + bare.join(",") + "); done cards say nothing (" + quiet.join(",") + "); practice boxes read " + JSON.stringify([...new Set(prac)]) + " (" + prac.length + "); C's and D's fitness surfaces in the left column (" + left.join(",") + ")",
+        bare.every(Boolean) && quiet.every(Boolean) && prac.length === 4 && prac.every(x => x === "practice") && left.every(Boolean));
 }
 {
   /* hover text: every mark has words; hover shows them and moving off hides them; the hybrid box closed at load */
