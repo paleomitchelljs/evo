@@ -2,10 +2,11 @@
 /*
  * check_lesson19_numbers.js -- the checks for app/lessons/lesson19.html.
  *
- * Lesson 19, pass 6 (2026-10-23, JM's dictation): speciation as a
+ * Lesson 19, pass 7 (2026-10-23, JM's review of pass 6): speciation as a
  * process. A pulsed migration (floods) and F_ST across the genome, every
  * target a window on F_ST over the whole genome; B sticklebacks, two food
- * genes placed on the chromosome, each pond's snails and plankton set; C new
+ * genes placed on the chromosome, each pond's snails and plankton set
+ * apart (lesson 12's columns); C new
  * mutations that make incompatibilities; D mate choice: a preference gene
  * and a throat gene. What has to hold:
  *
@@ -14,9 +15,10 @@
  *      mutation runs at mu a locus; floods come only every T generations,
  *      about N m fish each, and A's at 1, 1 + T, ... so that 400 is the
  *      generation before a flood; F_ST is 1 for two ponds with nothing in common
- *      and 0 for two the same; B's chance to survive follows the diet and
- *      each pond's snails and plankton, by hand, and the best genotype
- *      falls in the bands the page names (1/3, 2/3); C's hybrid incompatible
+ *      and 0 for two the same; B's chance to survive follows each pond's
+ *      snails and plankton and the traits' cost, by hand, and each gene
+ *      answers to its own food alone (Bmp6 to snails, the gill-raker gene
+ *      to plankton, neither when its food sits at the middle); C's hybrid incompatible
  *      pairs agree with a count by hand and each lowers survival by its
  *      cost; D's choice gives a rare throat colour fewer matings and mixes
  *      few throats when choosy, as many as chance when not or when every
@@ -27,18 +29,22 @@
  *      table's number of offspring is its survival times its mating
  *      frequency, re-derived here.
  *   Targets. Each round's intended settings hit it and its opening (and the
- *      near misses measured in the page's comments) miss it. B's picture of
- *      each round, judged by that round's own rules, is a hit.
+ *      near misses measured in the page's comments) miss it. Each round's
+ *      picture (B's sketch of the genome, C's and D's example charts),
+ *      judged by that round's own rules, is a hit.
  *   Flow. A miss records 0 and the target stays; hits open Next target;
  *      each stage opens the next; the last ends the lesson; every bit
  *      written.
- *   Controls. B's two genes and D's throat and preference genes move by
+ *   Controls. B's food columns set each pond's snails and plankton by
+ *      click or drag, the 0 clears one, and a held one stays put; B's two
+ *      genes and D's throat and preference genes move by
  *      dragging along the chromosome, a held one staying put; D's ◐ moves by
  *      dragging on the fitness surface; D's
  *      toggles write their inputs and are held when a round holds them; C's
  *      cost arrow is red (it lowers survival).
- *   Layout. JM's intro in each stage; A's and B's Target cards have no words, only their picture
- *   (A's genome graph, B's sketch) over the controls; no card says anything
+ *   Layout. JM's intro in each stage; no Target card has words, only its picture
+ *   (A's genome graph, B's sketch, C's and D's example charts) over the
+ *   controls, and C's and D's menus turn to the plot the picture is; no card says anything
  *   once its stage is done; the practice box reads "practice"; C's and D's
  *   fitness surfaces in the left column; each stage ends in its R code, closed; no readout lines; every
  *   hover mark has words; the hybrid box closed at load; every canvas fits
@@ -59,7 +65,7 @@ const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8799;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
-const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "B_tpic", "C_board", "C_time", "C_dmi", "C_grid", "D_board", "D_genes", "D_time", "D_fit", "D_got"];
+const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "B_tpic", "B_food", "C_board", "C_time", "C_dmi", "C_grid", "C_tpic", "D_board", "D_genes", "D_time", "D_fit", "D_got", "D_tpic"];
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
@@ -104,20 +110,26 @@ const kinds = (w, F) => { const s = new Set(); for (const g of F) for (const c o
   /* F_ST */
   const wa = pdWorld({ N: 25, start: "apart", R: 1 }, 4), fa = pdFst(wa, null).fst, wg = pdWorld({ N: 25, start: "grey", R: 1 }, 4); wg.pops[1] = wg.pops[0].map(g => g.map(c => c.slice()));
   check("engine: F_ST " + fa.toFixed(3) + " for two ponds with nothing in common, " + pdFst(wg, null).fst.toFixed(3) + " for two the same", Math.abs(fa - 1) < 1e-9 && Math.abs(pdFst(wg, null).fst) < 1e-9);
-  /* B's food: genes at 10 and 30, snails 75% of the orange pond's food and 25% of the blue's, S 0.8. What a fish eats, from its
-     benthic shares b1, b2: snails (2 b1 + b2) / 3, plankton 1 - (b1 + 2 b2) / 3; food sn snails + (1 - sn) plankton; survival
-     1 - 0.8 (top - food), top max(sn, 1 - sn, 2/3) */
-  const PB = { N: 2, start: "apart", R: 1, eco: { at: [9, 29], sn: [0.75, 0.25], S: 0.8, v: 0, q0: [[1, 1], [0, 0]] } }, wb = pdWorld(PB, 2);
+  /* B's food: genes at 10 and 30; the orange pond 3 snails and 1 plankton of 4, the blue 1 and 4; S 0.8. Teeth t = benthic
+     share at Bmp6, rakers r = limnetic share at the gill-raker gene; food sn t + pl r less 0.5 (t + r); survival
+     1 - 0.8 (top - food), top the best genotype's */
+  const SN = [0.75, 0.25], PL = [0.25, 1];
+  const PB = { N: 2, start: "apart", R: 1, eco: { at: [9, 29], sn: SN, pl: PL, S: 0.8, v: 0, q0: [[1, 1], [0, 0]] } }, wb = pdWorld(PB, 2);
   const mk = (b1, b2) => { const a = wb.pops[0][0][0].slice(), b = a.slice(); a[9] = b1 >= 1 ? wb.BEN : wb.LIM; b[9] = b1 >= 2 ? wb.BEN : wb.LIM; a[29] = b2 >= 1 ? wb.BEN : wb.LIM; b[29] = b2 >= 2 ? wb.BEN : wb.LIM; return [a, b]; };
-  const hand = (z1, z2, k) => { const b1 = z1 / 2, b2 = z2 / 2, sn = [0.75, 0.25][k], f = sn * (2 * b1 + b2) / 3 + (1 - sn) * (1 - (b1 + 2 * b2) / 3); return 1 - 0.8 * (Math.max(sn, 1 - sn, 2 / 3) - f); };
+  const hand = (z1, z2, k) => { const t = z1 / 2, r = 1 - z2 / 2, val = (tt, rr) => (SN[k] - 0.5) * tt + (PL[k] - 0.5) * rr;
+    let top = -9; for (const tt of [0, 0.5, 1]) for (const rr of [0, 0.5, 1]) top = Math.max(top, val(tt, rr)); return 1 - 0.8 * (top - val(t, r)); };
   let worst = 0; for (const b1 of [0, 1, 2]) for (const b2 of [0, 1, 2]) for (const k of [0, 1]) worst = Math.max(worst, Math.abs(pdLive(PB, wb, mk(b1, b2), k) - hand(b1, b2, k)));
   check("engine: B's chance to survive, every genotype at both genes in both ponds, agrees with the snails and plankton by hand (worst gap " + worst.toExponential(1) + "): benthic at both, orange pond " + pdLive(PB, wb, mk(2, 2), 0).toFixed(3) + ", blue " + pdLive(PB, wb, mk(2, 2), 1).toFixed(3) + "; a first hybrid " + pdLive(PB, wb, mk(1, 1), 0).toFixed(3),
         worst < 1e-12 && Math.abs(pdLive(PB, wb, mk(2, 2), 0) - 1) < 1e-12 && Math.abs(pdLive(PB, wb, mk(0, 0), 1) - 1) < 1e-12);
-  /* the bands: the best genotype (benthic alleles at Bmp6, at the gill-raker gene) at each share of snails on B's slider */
-  const band = B_SNV.map(sn => { const E = { at: [9, 29], sn: [sn, sn], S: 0.8, v: 0 }; let best = "", bv = -1;
-    for (const z1 of [0, 1, 2]) for (const z2 of [0, 1, 2]) { const v = pdEatZ(E, 0, z1, z2); if (v > bv + 1e-12) { bv = v; best = z1 + "" + z2; } } return best; });
-  check("engine: B's best genotype by snails " + B_SNV.map((v, i) => Math.round(100 * v) + "% " + band[i]).join(", ") + " (limnetic under 1/3, teeth and many rakers between, benthic over 2/3)",
-        band.join(",") === "00,00,20,22,22");
+  /* each gene answers to its own food: over every snails x plankton on B's columns, two benthic alleles at Bmp6 against none
+     change survival by 0.8 (snails - 0.5) whatever the plankton and the other gene; two benthic alleles at the gill-raker gene
+     (few rakers) against none by -0.8 (plankton - 0.5) whatever the snails */
+  let g1 = 0, g2 = 0; const at1 = [], at2 = [];
+  for (const sn of B_FOODV) for (const pl of B_FOODV) { const E = { at: [9, 29], sn: [sn, sn], pl: [pl, pl], S: 0.8 };
+    for (const z of [0, 1, 2]) { g1 = Math.max(g1, Math.abs(pdEatZ(E, 0, 2, z) - pdEatZ(E, 0, 0, z) - 0.8 * (sn - 0.5))); g2 = Math.max(g2, Math.abs(pdEatZ(E, 0, z, 2) - pdEatZ(E, 0, z, 0) + 0.8 * (pl - 0.5))); } }
+  B_FOODV.forEach(v => { const E = { at: [9, 29], sn: [v, v], pl: [v, v], S: 0.8 }; at1.push(+(pdEatZ(E, 0, 2, 1) - pdEatZ(E, 0, 0, 1)).toFixed(2)); at2.push(+(pdEatZ(E, 0, 1, 0) - pdEatZ(E, 0, 1, 2)).toFixed(2)); });
+  check("engine: each gene answers to its own food: Bmp6's benthic allele (two copies against none) adds " + at1.join(", ") + " at snails 0-4, whatever the plankton (worst gap " + g1.toExponential(1) + "); the gill-raker gene's limnetic allele adds " + at2.join(", ") + " at plankton 0-4, whatever the snails (" + g2.toExponential(1) + "); at 2 of 4 neither selects",
+        g1 < 1e-12 && g2 < 1e-12 && at1.join() === "-0.4,-0.2,0,0.2,0.4" && at2.join() === "-0.4,-0.2,0,0.2,0.4");
   /* C's pairs: counted by hand; each lowers survival by its cost */
   const PC = { N: 25, mu: 0.004, p: 0.02, cost: 0.5, R: 1, m: 0, T: 10, start: "grey" }, wc = pdWorld(PC, 7);
   for (let t = 0; t < 150; t++) pdStep(PC, wc);
@@ -184,19 +196,31 @@ tgt(SA, 2, [{ T: 5 }, { T: 2 }, { m: 0.5, T: 5 }], [{ m: 0.2, T: 10 }, { T: 25 }
     return { r, at: (set.i + 1) + "/" + (set.j + 1), ok: judge(R, S, q).ok, vals: judge(R, S, q).vals.join(" ") };
   });
   check("B's pictures, each judged by its own round: " + pics.map(x => "round " + (x.r + 1) + " at " + x.at + " " + (x.ok ? "hit" : "MISS") + " (" + x.vals + ")").join("; "), pics.every(x => x.ok));
+  /* C's and D's example charts: each curve's end judged by its round (C's third on the curve's own falls at its last four floods,
+     against its first) */
+  const cp = SC.cfg.rounds.map((R, r) => { const f = R.pic.lines[0].f, G = R.pic.G;
+    if (r < 2) { const j = judge(R, { hw: f(G) }, null); return { r, ok: j.ok, v: f2(f(G)) }; }
+    const fall = t => f(t - 1) - f(t), late = meanOf([0, 1, 2, 3].map(k => fall(G - 25 * k)));
+    return { r, ok: late < 0.16 && fall(25) > 0.16, v: "falls " + f2(fall(25)) + " at the first flood, " + f2(late) + " at the last four" }; });
+  const dp = SD.cfg.rounds.map((R, r) => { const [o, b] = R.pic.lines.map(l => l.f(R.pic.G)), j = judge(R, { apart: o >= 0.5 && b <= 0.5 ? 1 : 0 }, null); return { r, ok: j.ok, v: f2(o) + "/" + f2(b) }; });
+  check("C's and D's example charts, each judged by its own round: C " + cp.map(x => (x.r + 1) + " " + (x.ok ? "hit" : "MISS") + " (" + x.v + ")").join(", ") + "; D " + dp.map(x => (x.r + 1) + " " + (x.ok ? "hit" : "MISS") + " (" + x.v + ")").join(", "),
+        cp.every(x => x.ok) && dp.every(x => x.ok));
 }
-tgt(SB, 0, [{ so: 0.75, sb: 0.25 }, { so: 1, sb: 0 }, { so: 0.75, sb: 0 }], [{ so: 0.5, sb: 0.5 }, { so: 0.75, sb: 0.5 }, { so: 0.5, sb: 0 }]);
-tgt(SB, 1, [{ so: 0.5, sb: 0.25 }, { so: 0.5, sb: 0 }], [{ so: 0.75, sb: 0.25 }, { so: 0.75, sb: 0 }, { so: 0.5, sb: 0.5 }]);
-tgt(SB, 2, [{ R: 0.5 }, { R: 0.25 }], [{ R: 1 }, { R: 2 }]);
-tgt(SB, 3, [{ m: 0.3, T: 2 }, { m: 0.2, T: 1 }], [{ m: 0.2, T: 2 }, { m: 0.1, T: 5 }]);
-tgt(SB, 4, [{ i: 19, j: 20 }, { i: 9, j: 10 }], [{ i: 9, j: 29 }, { i: 14, j: 25 }]);
+/* B's food as orange snails, plankton / blue snails, plankton, 0-1 (the columns' 0-4 over 4) */
+const fd = (so, po, sb, pb) => ({ so, po, sb, pb });
+tgt(SB, 0, [fd(1, 0, 0, 1), fd(0.75, 0.25, 0.25, 0.75), fd(1, 1, 0, 0)], [fd(0.5, 0.5, 0.5, 0.5), fd(0.75, 0.5, 0.25, 0.5), fd(0.5, 1, 0.5, 0)]);
+tgt(SB, 1, [fd(1, 0, 1, 1), fd(0.75, 0, 0.75, 1), fd(0.25, 0.25, 0.25, 0.75)], [fd(1, 0, 0, 1), fd(1, 1, 0, 0), fd(0.75, 0.5, 0.25, 0.5)]);
+tgt(SB, 2, [{ R: 1 }, { R: 0.5 }], [{ R: 2 }, { R: 4 }]);
+tgt(SB, 3, [{ m: 0.3, T: 2 }, { m: 0.5, T: 5 }], [{ m: 0.2, T: 2 }, { m: 0.1, T: 5 }]);
+/* genes 11 apart (15 and 26) sit on the bar (.28-.37): closer is the right way, so they are not asked to miss */
+tgt(SB, 4, [{ i: 19, j: 20 }, { i: 9, j: 10 }], [{ i: 9, j: 29 }, { i: 0, j: 39 }]);
 tgt(SC, 0, [{ mu: 0.002 }, { p: 0.05 }], [{ mu: 0.001 }, { p: 0.01 }]);
 tgt(SC, 1, [{ m: 0.2, T: 2 }, { m: 0.5, T: 5 }], [{ m: 0.2, T: 10 }, { m: 0.3, T: 5 }, { m: 0.5, T: 10 }]);
 tgt(SC, 2, [{ mu: 0.002 }, { mu: 0.004 }], [{ mu: 0.001 }, { p: 0 }]);
 tgt(SD, 0, [{ c: 1 }], [{ c: 0.75 }, { c: 0 }]);
 tgt(SD, 1, [{ start: 0 }], [{ start: 1 }]);
 tgt(SD, 2, [{ pat: 21 }, { inv: 1 }], [{ pat: 39 }]);
-tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
+tgt(SD, 3, [{ v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
 {
   /* the table's number of offspring re-derived from the run's own counts: a young fish's chance to survive x the matings of a
      fish of its genotype, relative */
@@ -223,11 +247,11 @@ tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }
   };
   const a = flow(SA, { m: 0.2, T: 10 }, [{ T: 50 }, { N: 10 }, { T: 2 }]);
   check("A flow: a miss records 0; three hits (bits " + a.bits + ") open B", a.miss && a.bits === "011" && Gates.A.done && Gates.B.open);
-  const b = flow(SB, { so: 0.5, sb: 0.5 }, [{ so: 1, sb: 0 }, { so: 0.5, sb: 0 }, { R: 0.25 }, { m: 0.3, T: 2 }, { i: 19, j: 20 }]);
+  const b = flow(SB, fd(0.5, 0.5, 0.5, 0.5), [fd(1, 0, 0, 1), { sb: 1 }, { R: 0.5 }, { m: 0.5, T: 2 }, { i: 19, j: 20 }]);
   check("B flow: a miss records 0; five hits (bits " + b.bits + ") open C", b.miss && b.bits === "01111" && Gates.B.done && Gates.C.open);
   const c = flow(SC, { mu: 0.001 }, [{ mu: 0.006 }, { m: 0.2, T: 2 }, { mu: 0.006 }]);
   check("C flow: a miss records 0; three hits (bits " + c.bits + ") open D", c.miss && c.bits === "011" && Gates.C.done && Gates.D.open);
-  const d = flow(SD, { c: 0.75 }, [{ c: 1 }, { start: 0 }, { pat: 21 }, { v: 0 }]);
+  const d = flow(SD, { c: 0.75 }, [{ c: 1 }, { start: 0 }, { pat: 21 }, { T: 2 }]);
   check("D flow: a miss records 0; four hits (bits " + d.bits + ") end the lesson", d.miss && d.bits === "0111" && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
   const D = Object.keys(BIT).length; let n = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) n++;
   check("all " + D + " declared bits written", D === 15 && n === D, n + " written");
@@ -241,6 +265,21 @@ tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }
   const at = g => ({ clientX: r.left + (GN.px + (g + 0.5) * GN.pw / L) * k, clientY: r.top + sy * k, pointerId: 1, bubbles: true });
   cv.dispatchEvent(new PointerEvent("pointerdown", at(9))); cv.dispatchEvent(new PointerEvent("pointermove", at(12))); cv.dispatchEvent(new PointerEvent("pointermove", at(14))); cv.dispatchEvent(new PointerEvent("pointerup", at(14)));
   const s1 = readSet(SB);
+  /* B's food: drag the blue pond's plankton column from its bottom slot to its top; click the 0 under the orange pond's snails;
+     then in round 3 (food held) a click changes nothing */
+  setC(SB, fd(0.5, 0.5, 0.5, 0.5)); B_paint();
+  const fv0 = document.getElementById("B_food"), fr0 = fv0.getBoundingClientRect(), fk0 = fr0.width / FD.W;
+  const fat0 = (key, y) => ({ clientX: fr0.left + FD.cols.find(c => c[0] === key)[2] * fk0, clientY: fr0.top + y * fk0, pointerId: 3, bubbles: true });
+  const slotY = n => FD.bot - (n - 0.5) * FD.sh;
+  fv0.dispatchEvent(new PointerEvent("pointerdown", fat0("pb", slotY(1)))); const pb1 = readSet(SB).pb;
+  fv0.dispatchEvent(new PointerEvent("pointermove", fat0("pb", slotY(3)))); fv0.dispatchEvent(new PointerEvent("pointermove", fat0("pb", slotY(4)))); fv0.dispatchEvent(new PointerEvent("pointerup", fat0("pb", slotY(4))));
+  fv0.dispatchEvent(new PointerEvent("pointerdown", fat0("so", FD.bot + 10))); fv0.dispatchEvent(new PointerEvent("pointerup", fat0("so", FD.bot + 10)));
+  const sf = readSet(SB);
+  SB.done = false; SB.round = 2; openRound(SB); syncStage(SB); B_paint(); const heldSo = readSet(SB).so;
+  fv0.dispatchEvent(new PointerEvent("pointerdown", fat0("so", slotY(2)))); fv0.dispatchEvent(new PointerEvent("pointerup", fat0("so", slotY(2))));
+  const sh3 = readSet(SB).so; SB.done = true; openRound(SB);
+  check("controls: B's food columns: pressing the blue pond's plankton at its bottom slot sets " + pb1 * 4 + " of 4, dragging up to the top " + sf.pb * 4 + "; the 0 under the orange pond's snails clears them (" + sf.so * 4 + "); in round 3, where the food is held, a click leaves it (" + heldSo * 4 + " -> " + sh3 * 4 + ")",
+        pb1 === 0.25 && sf.pb === 1 && sf.so === 0 && heldSo === 1 && sh3 === 1);
   /* D: drag ♥ to locus 31, and never onto Bmp6; then ◆ to locus 30, never onto Bmp6 or ♥ (at 31 now); drag ◐ to the top of the surface;
      the toggles */
   SD.done = true; SD.waiting = false; openRound(SD); setC(SD, { at: 20, pat: 21, inv: 0, start: 0, v: 0.4 }); D_paint();
@@ -274,14 +313,17 @@ tgt(SD, 3, [{ v: 0.1 }, { v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }
 {
   /* the cards (JM, 2026-10-22): A's and B's carry no words, their picture right above the controls; a done stage's card says
      nothing; the practice box says "practice"; C's and D's fitness surfaces sit in the left column */
-  const bare = ["A", "B"].map(K => { const c = document.querySelector("#stage" + K + " .tcard"), cv = c.querySelector("canvas");
-    return !c.querySelector(".ttext, ul.rules") && !!cv && cv.nextElementSibling === c.querySelector(".controls"); });
+  const bare = ["A", "B", "C", "D"].map(K => { const c = document.querySelector("#stage" + K + " .tcard"), cv = c.querySelector("canvas");
+    return !c.querySelector(".ttext, ul.rules, p") && !!cv && cv.nextElementSibling === c.querySelector(".controls"); });
+  /* C's and D's menus turn to the plot each round's picture is */
+  const menus = [[SC, 2, "C_meas"], [SD, 1, "D_meas"]].map(([S, r, id]) => { S.done = false; S.round = r; document.getElementById(id).value = "hw"; openRound(S);
+    const ok = document.getElementById(id).value === S.cfg.rounds[r].pic.meas; S.done = true; openRound(S); return ok; });
   const quiet = ["A", "B", "C", "D"].map(K => { syncStage(ST[K]); const t = document.getElementById(K + "_ttext"), r = document.getElementById(K + "_rules");
     return ST[K].done && (!t || t.textContent === "") && (!r || r.innerHTML === ""); });
   const prac = [...document.querySelectorAll(".practice-row label")].map(l => l.textContent.trim());
   const left = ["C_dmi", "D_fit"].map(id => { const e = document.getElementById(id); return e.closest(".col") === e.closest(".grid").querySelector(".col"); });
-  check("cards: A and B wordless with the picture over the controls (" + bare.join(",") + "); done cards say nothing (" + quiet.join(",") + "); practice boxes read " + JSON.stringify([...new Set(prac)]) + " (" + prac.length + "); C's and D's fitness surfaces in the left column (" + left.join(",") + ")",
-        bare.every(Boolean) && quiet.every(Boolean) && prac.length === 4 && prac.every(x => x === "practice") && left.every(Boolean));
+  check("cards: A, B, C and D wordless with the picture over the controls (" + bare.join(",") + "); C's and D's menus turn to the picture's plot (" + menus.join(",") + "); done cards say nothing (" + quiet.join(",") + "); practice boxes read " + JSON.stringify([...new Set(prac)]) + " (" + prac.length + "); C's and D's fitness surfaces in the left column (" + left.join(",") + ")",
+        bare.every(Boolean) && menus.every(Boolean) && quiet.every(Boolean) && prac.length === 4 && prac.every(x => x === "practice") && left.every(Boolean));
 }
 {
   /* hover text: every mark has words; hover shows them and moving off hides them; the hybrid box closed at load */

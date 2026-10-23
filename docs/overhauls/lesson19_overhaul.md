@@ -2,8 +2,67 @@
 
 **File** · `app/lessons/lesson19.html` — pass 4 2026-10-22 (JM's review of pass 3); pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html`, v2 as `lesson19_v2_2026-10-17.html`
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 6 built (JM's 10-23 dictation): intros A-D, B's food per pond (five targets), C on B's food, D's preference gene, renames; v6, scaffold 15; LOCKS `x`
+**Status** · pass 7 (JM's 10-23 review of pass 6): B's snails and plankton set apart in each pond, C and D's cards wordless; v7, scaffold 15; LOCKS `x`
 **Last touched** · 2026-10-23
+
+## Pass 7 — JM, 2026-10-23, evening (verbatim)
+
+> Lesson 19 B: "Genes to survival" -> "Genes, Traits, & Survival
+>
+> Something feels weird here--it's kind of hard to get separation for the two genes on Fst since there's no control over the number of plankton. What's the intended result here? Something like snails/plankton abundance per pond like in the birds/bees activities from the earlier lessons might be better and more intuitive for producing specific separation (or lack thereof) at the plankton-eating locus.
+>
+> Part D: Let's remove the text from the target "Mutation is fast now. Keep hybrids alive with the floods: the hybrid survival rate 40% or more at generation 400.". I'd rather an example chart, like hybrid survival target, that the students try to hit.
+
+Why it felt weird: pass 6's one slider a pond set the snails' share, plankton the rest, and each trait cost a little on the other
+food. So both genes answered to the same number, at thresholds no one could see (Bmp6's benthic allele paid over 1/3 snails, the
+gill-raker gene's over 2/3). Separating ■ alone took 75/50, which nobody would guess.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 30 | B, C | diagram heading "Genes, Traits, & Survival" (C's diagram is B's plus one box: same name) | done |
+| 31 | B | food model: each pond's snails and plankton set apart (0-4 each, lesson 12's birds/bees columns, click or drag); teeth eat snails, rakers plankton, each costs something to grow, so it pays only where its food is plentiful (over 2 of 4). Each gene answers to its own food only | done |
+| 32 | B | diagram: genes → traits → snails eaten / plankton eaten → survival, traits → cost to grow → survival ("less"); crossed arrows gone | done |
+| 33 | B | five rounds rebuilt on the new food (both genes apart; the plankton gene only; width; floods erase; side by side); migration .5 added to B's slider | done |
+| 34 | C | food held at plenty of snails, no plankton (orange) and the reverse (blue); re-measured; card wordless: an example chart a round, red box, the menu switched to the judged plot | done |
+| 35 | D | card wordless: an example chart (benthic allele in each pond, red boxes); rule changed to one the chart can show (see Open 3) | done |
+| 36 | — | check rewritten for B's food, C and D's cards; v7 | done |
+
+### Measured (pass 7; scratchpad `eng.js` + `newfood.js`, the page's engine lifted into node; 16 runs averaged, 3-10 sets)
+
+    B  (200 gens, N 50, genes at 10 and 30, R 1; F_ST at ▲ / ■; food orange snails, plankton / blue snails, plankton, 0-4)
+       floods .05/5: 2,2/2,2 .02-.11 / .05-.09; 3,3/3,3 .00/.00 (one allele wins both); 4,0/0,4 .82-.86 both; 3,1/1,3 .62-.78;
+       4,4/0,0 .78-.89; 3,2/1,2 .61-.68 / .01-.07 (▲ only); 2,0/2,4 .11-.24 / .73-.82 (▲ unselected, at the background);
+       4,0/4,4 .00 / .72-.80; 3,0/3,4 .00 / .75-.81; 1,1/1,3 .00 / .60-.72 (■ only). One-sided (one pond 2) holds nothing.
+       3 4,0/0,4, floods .1/5, four loci beside ▲: R .25 .62-.66; .5 .47-.57; 1 .32-.42; 2 .14-.25 (open); 4 .12-.16; bar .28.
+       4 4,0/0,4, both genes by floods: .05/5 .81-.88; .1/5 .70-.76; .2/5 .47-.49; .1/2 .54-.60; .2/2 .24-.36 (open); .3/2
+         .12-.19; .2/1 .13-.22; .3/1 .07-.10; .5/5 .04-.09; .5/2 .02-.07; .5/1 .01-.03; bar under .23.
+       5 4,0/0,4, .2/2: far (10/30) .24-.36 (open); 11 apart (15/26) .28-.37; 2 apart .37-.47; side by side (20/21) .36-.45,
+         (10/11) .39-.48; bar .35 (far's highest .34, side by side's lowest .36: no setting measured gave a wider gap, weaker food
+         3,1/1,3 included; side by side holds about 1.4 times what far apart does). (At .3/2: far .11-.19, side by side .21-.30.)
+    C  (food 4,0/0,4: a first hybrid's food alone .60, as pass 6's) 1 open mutation .001 .28-.43; .002 .00-.07; p .05 .08-.21;
+       p .01 .39-.55; bar 25%. 2 mutation .004: .2/10 .00-.02 (open); .3/5 .05-.08; .5/10 .21-.23; .2/2 .49-.51; .3/2 .55-.57;
+       .5/5 .54-.57; bar 40%. 3 floods .2/25, fall over the last four: open .21-.28; mutation .002 .11-.14; .004 .03-.04;
+       cost .5 .17-.21; p .05 .14-.18; p 0 .28-.30; bar .16.
+    D  (engine unchanged) runs with the orange pond's benthic allele 50%+ and the blue's 50% or less, of 16 / pass 6's rule
+       (both food types left): choosy .75 0/0; 1 11-15/11-15; present in both 0-1/0-1; ◆ at 40 2-4/2-4; + inversion 15/15;
+       ◆ at 19 11-14/11-15; present in both, choosy 1: valley .1 8-13/15-16, 0 13-14/16, .3 0/0; floods .2/2 16/16, .15/1
+       14-15/14-15, .1/1 16/16. The two rules part only where hybrids are fine and the ponds mix (valley .1 or 0).
+
+### Open for JM (pass 7)
+
+1. The cost of growing teeth or rakers is mine: without one, teeth and rakers win everywhere and no food holds the ponds apart.
+   It sits at 2 of 4 (the middle): more food than that and the trait pays, less and it costs. A food at 2 in both ponds
+   selects nothing.
+2. "The plankton gene only" (round 2) asks ▲ under .3, not at 0: snails left in the middle (2 and 2) select nothing at
+   Bmp6, and its F_ST then sits at the background (.11-.24), which counts as no separation.
+3. D's rule was "both food types left in 9 of 16 runs", which no chart shows with a box. Now: the orange pond's benthic
+   allele 50% or more and the blue's 50% or less, in 9 of 16 runs: the chart's two red boxes. It differs only for round 4's
+   valley route: a shallow valley (.1) kept both foods in 15-16 runs but kept the ponds apart in only 8-13; a valley of 0 in 13-14.
+   Lower gene flow (floods every 2, or .15) lands either way.
+4. JM's message names Part D, but the sentence he quoted is C's round 2. Both C's and D's cards are now wordless.
+5. B round 5 (genes side by side) is tight on both sides: side by side holds only about 1.4 times what far apart does at
+   any setting measured, so the bar (.35) sits within .02-.04 of far apart's highest and side by side's lowest. Genes 11
+   apart (15 and 26) can land. The check passes it; a student who puts them side by side should land, but not with room.
 
 ## Pass 6 — JM, 2026-10-23 (verbatim, three messages)
 
