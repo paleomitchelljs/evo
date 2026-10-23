@@ -2,10 +2,70 @@
 
 **File** · `app/lessons/lesson19.html` — pass 4 2026-10-22 (JM's review of pass 3); pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html`, v2 as `lesson19_v2_2026-10-17.html`
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 5 built (JM's second 10-22 review): v5 (A's targets changed), scaffold 14 kept (A1-A3, B1-B4, C1-C3, D1-D4); checks green (40 + four R panels, ~3 min); LOCKS `x`; voice owed (JM to dictate)
-**Last touched** · 2026-10-22
+**Status** · pass 6 built (JM's 10-23 dictation): intros A-D, B's food per pond (five targets), C on B's food, D's preference gene, renames; v6, scaffold 15; LOCKS `x`
+**Last touched** · 2026-10-23
+
+## Pass 6 — JM, 2026-10-23 (verbatim, three messages)
+
+> Lesson 19 text. Partet. This lesson is going to take all of the population genetics, processes we have learned. And look at how they can produce differences between populations. We will have drift, mutation, selection, and importantly, migration. The key number to look at here is FST. This is our F statistic. he observed relatively expected heterozygotes, compared not within one individual, but between individuals within a sub population, so the sub population, S, relative to the total population, T, and the level of inbreeding within that sub population, F. Scratch that last bit. FST is the level of inbreeding, F, in the subpopulation, S, relative to the inbreeding of the total population. T. You can think of this very directly as how different the 2 subpopulations are from one another. Higher value of FST. Means, The 2 populations are perfectly different. They, you can tell, readily which population an individual came from by its genes. An FST of 0 means that the populations are perfectly the same. You cannot tell genetically which population that came from. We're going to use, as our example here, fish in ponds. Imagine 2 ponds, we'll call them orange and blue. There are fish in each pond. Fish can only move from one pond to the other pond when there's a flood. We're going to control how often a flood occurs, generations between floods, and how many fish move during each flood, the migration during flood. We will also control the number of fish in the pond, the mutation rate, which is going to be the same across ponds, and the recommodation rate. For this first part, those are the only toggles we're going to have. Your goal is to reach the target FST using these tockles. Part B. We're sticking with pawns and fish, and we're still monitoring FST. We're now going to base these fish a little more biologically on the stickleback. Stickleback is a little fish. And it can have multiple different forms. Some of them have pharyngeal teeth, teeth in their throat. The extent of these phringeal teeth are controlled by a locust called BMP6. Having these pharyngeal teeth make them very good at eating prey on the bottom, large prey, things like snails. There's another locust that controls their gill rakers. These are fine structures in their throat that help them filter food out of the water. Like plankton. These genes are at separate low si, however, the presence of pharyngeal teeth, and the presence of gill rakers. Trash aspect. These are 2 different genes that increase the fish's ability to eat food. In our 2 ponds. We're going to control the effect each of these have. On the food pool. What food do they eat? So, you're going to control the effect of phryngeal teeth and go riggers on the food pool, actually. Oh, well, stick with it. You'll have this as a little diagram where you can control how much fringe your teeth help. The fish access new food and how much gill rakers help the fish access new food. The pawns are I... dentical, except for which alleges are present at the beginning. There is a fitness surface shown, which shows the fitness of the BMP and Gilraker locus genotypes as a little pair of boxes. They show the position of the fish at the beginning, and the color of the boxes shows you the relative fitness as a result of that. You're going to control how much fringeal teeth and gill rakers influence their differences in food. Your goal here is to, again, generate differences between the populations. Except this time, you're going to generate differences at specific low si. So what you're controlling here again is migration rate. During a flood, the frequency of floods, the recombination rate, and now fitness. Part C. The individual lo si we looked at in the above in part B. We're not the only low side. Many other low site involve mutations. Sometimes mutation can arise in one population, and a different mutation can arise in a different population. Isolated these two mutations, each arisen in a different population, are fine. They have no fitness effect. But, due to apostasis, if I combine the new pop, the new mutation from population orange, with the new mutation from population blue, they may have an incompatibility. Something that causes fish that have both of these new alleges to have lower fitness. We call that an incompatible pair. For this, we're again going to control the same general patterns we did before, with mutation rate, being particularly important, and the chance that a pair of mutations is incompatible. Using these dials, we're going to run and see what it does to things like hybrid survival rate. And FST between the ponds. Part D. We're gonna go and focus in only on BMP 6 again. And we're adding a new gene. This throat gene. This throat gene controls the color of the throat of a fish, the color of the skin. There will also be a gene for a preference. Actually, this leads to a fundamental problem here. We have the throat color. locust, but we actually don't have a locust for the preference. We should have. A preference allel. So there should be, The food illeal which controls survival in the 2 populations. A preference allele, which controls how strongly fish tend to meet with individuals of a particular color. So. AA prefers to meet with orange fish, BB prefers to meet with bluefish, and AB is non-selective. And then a throat color gene. That controls the color of the throat. The location of the throat gene and the preference gene is the important bit, because that's what can be scrambled by recombination. So that one needs more revision. I'm also not super happy with the incompatible pair. I'd rather wish and see that we had the ability to manipulate the amount of food, the 2 different types in the 2 populations. For, for instance, part B. Like BMP 6 causes pharyngeal teeth in part B. Phringeal teeth cause you to eat snails. Gilrick or gene causes Gilrickers in part B. Bill rakers lie plankton, and what we adjust is the number of plankton compared to the number of snails in the 2 populations to bring this back harder to fitness. And then we still end up with the same sort of diagram, but then we end up with a thing where. Um, It's a little bit more realistic. Part season compatible pairs still somewhat bother me because the mechanism of incompatibility is not shown, but I guess that probably doesn't matter.
+
+> Lesson 19 / Part D: / DAG changes: / - "Survives to breed" = "survival" / - "Births" = "mating frequency" / - "Fitness" = "number of offspring" / - "prefers its own color" = "choosiness for mates" / For Target: / - "throat color at the start" = "initial throat alleles" / - "matched to the food" = "throat alleles arose in different ponds" / - "the same mix in both" = "throat alleles present in both ponds" / "What each Bmp6 genotype got" box should have the name changed to "Fitness by Bmp6 genotype"
+
+> A key learning outcome should be that selection has a hard time differentiating populations with high gene flow.
+
+Readings: locust / low si / lo si / low side / low site = locus / loci; pawns = ponds; tockles = toggles; recommodation = recombination;
+apostasis = epistasis; alleges / allel / illeal = alleles / allele; meet = mate; Gilrick or / Bill rakers = gill-raker gene /
+gill rakers; "Part season compatible" = Part C's incompatible.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 24 | all | JM's intros as voice blocks (A, B, C dictated; D spliced from his design lines); edits in each block's comment | done |
+| 25 | B | food per pond (snails 0-100%, two sliders in the card) replaces the trait → food arrows; DAG genes → traits → snails / plankton eaten → survival, all fixed, crossed "less" arrows for the trade-off; five rounds, one on gene flow erasing selection, one on genes side by side | done |
+| 26 | C | food held at 100 / 0% snails; rounds re-measured; round 3 judged on the last four floods | done |
+| 27 | D | a preference gene ◆ (prefers black / prefers red; one of each takes anyone), dragged like ♥; inversion over the three genes; JM's renames (DAG, start toggle, table); two new menu lines | done |
+| 28 | B-D | "survives to breed" → "survival" in B and C's diagrams too (one node, one name) | done |
+| 29 | — | check rewritten for the new B, C, D (42 + R); v6, scaffold 15 (B1-B5) | done |
+
+### Built and measured (pass 6; scratchpad `eng.js`, `measB/C/C3/C4/D.js`: the page's engine lifted into node)
+
+    engine  what a fish eats, from its benthic shares b1 (Bmp6) and b2 (gill-raker gene): snails (2 b1 + b2) / 3, plankton
+            1 - (b1 + 2 b2) / 3; food = snails' share of the pond x snails + the rest x plankton; survival 1 - S (top - food).
+            Without the cost on the other food, teeth + many rakers is best everywhere and nothing holds the ponds apart; with
+            the full cost the two genes act as one. Bands: Bmp6's benthic allele helps over 1/3 snails, the gill-raker gene's
+            over 2/3; between, teeth and many rakers. D (one gene): snails b1, plankton 1 - b1, ponds 100 / 0%.
+    B  (200 gens, N 50, genes at 10 and 30, R 1; F_ST at ▲ / ■; snails orange / blue)
+       floods .05/5: 50/50 .00/.00 (one allele wins both: under the rest, .11); 75/25 .39-.57/.50-.63; 100/0 .85; 75/50 .00/.35;
+       50/0 .56/.00; 50/25 .39-.46/.00. 1 both .3+ (open 50/50); 2 ▲ .25+, ■ under .1 (open 75/25).
+       3 100/0, floods .1/5, four loci beside ▲: R .25 .59-.65, .5 .49-.53, 1 .26-.37 (open), 2 .16-.20; bar .42.
+       4 100/0, ▲ by floods: .1/5 .69-.74, .2/5 .44-.47, .1/2 .43-.51, .2/2 .20-.26 (open), .1/1 .29-.33, .3/2 .01-.04,
+         .2/1 .00; bar under .1. Past ~.15 fish a generation swapped the strongest food holds nothing.
+       5 100/0, .2/2: far .20-.26 (open), 5 apart .29-.31, 2 apart .34-.40, side by side .38-.46; bar .32.
+    C  (100 / 0% snails held; 75 / 25 let the food genes mix, food alone .92) food alone .60. 1 open mutation .001 .39-.42,
+       .002 .05, p .05 .08-.16; bar under 25%. 2 mutation .004: .2/10 .01 (open), .3/5 .07-.10, .5/10 .26, .2/2 .49-.62 (some runs
+       fuse, some not), .5/5 .69; bar 40%. 3 floods .2/25, the fall at the last four floods averaged (one flood: .06-.17 at one setting):
+       open mutation .001 cost .25 .20-.26, mutation .002 .10-.12, .004 .02-.04, cost .5 .15-.19, p .05 .14-.19; bar .16.
+    D  (300 gens, N 100, floods .2/1, valley .4, ♥ 21, ◆ 22, kept of 16) choosy 0/.5/.75 0, 1 14-15; present in both 1-2;
+       ◆ at 40 2-6 (R 2 0-2, R 4 0), at 22 with R 4 8-10, at 19 12-13, at 40 + inversion 15, R .25 9-13; present in both,
+       choosy 1: valley .3 0-2, .2 0, .1 15-16, floods .2/2 16, .15/1 13-15. Bar: 9 or more of 16 (hits 12-16, misses 0-6).
+
+### Open for JM (pass 6)
+
+1. B's trade-off (each trait twice on its own food, once against the other) is mine; nothing differentiates without one.
+   Drawn as two crossed fixed arrows marked "less". B's diagram has no settable arrow now: the food is two sliders in the card.
+2. Voice edits (each block's comment lists them): A "Higher value of FST. Means ... perfectly different" read as "An F_ST of
+   1 means"; B cut "however ... Trash aspect." (unreadable) and the sentences his change replaced, among them "The ponds are
+   identical, except for which alleles are present at the beginning"; "Gill rakers lie plankton" read as "like"; "now
+   fitness" and C's "dials" kept as said; D spliced from his design notes, "AA prefers orange fish, BB blue fish" read as
+   black- and red-throated (the throats stay red and black: pond colours are not throat colours).
+3. D's start toggle sets the preference alleles with the throat alleles (arose in different ponds: prefers black with black
+   throats in the orange pond; present in both: 3 in 10 prefers-black in each). Separate toggle wanted?
+4. C's food is 100 / 0% (hybrid food alone .60, was .80); round 2's bar 40% (was 60%); round 3 on four floods, opening at a
+   pair cost of .25. D round 1 opens at choosiness .75 (was 0) so one step lands.
+5. B has five targets (B5 new): scaffold 15, v6.
+6. Still open from pass 5: C and D's Target cards print a sentence and a rules list.
 
 ## Pass 5 — JM's review, 2026-10-22, evening (verbatim; the scheduler lines in the same paste belong to another project)
+
 
 > Part A: I don't like the text/numeric targets in the "Target" box. Let's just have them target an average genome-wide Fst and put the "Fst across the genome" graph smaller and directly over the controls with a red box shown.
 >
@@ -155,7 +215,7 @@ a throat gene (red / black, h); choice = turn a partner down with chance choosy 
 
 ## What the lesson is
 
-- Two ponds; floods now and then mix them. Pulsed migration and F_ST across the genome (A); sticklebacks whose food genes hold F_ST up at and around themselves (B); new mutations that make hybrids fail, until floods stop counting (C); mate choice on a throat colour that separates the ponds when it matches the food and fuses them, losing a food type, when it does not (D).
+- Two ponds; floods now and then mix them. Pulsed migration and F_ST across the genome (A); sticklebacks whose food genes hold F_ST up at and around themselves where the ponds' snails and plankton favour different alleles, until frequent floods erase it (B; JM 2026-10-23: "selection has a hard time differentiating populations with high gene flow"); new mutations that make hybrids fail, until floods stop counting (C); a preference gene and a throat gene that separate the ponds when they arose apart and sit together, and fuse them, losing a food type, when present in both ponds or parted by crossing over (D).
 - Worth protecting: fitness is never set. Survival (ecology, incompatibilities) and births (mate choice) are; fitness is what comes out (JM).
 
 ## JM's brief, 2026-10-20 (verbatim, the whole message; 20 and 21 docs quote their parts)
@@ -180,6 +240,8 @@ Readings of the speech-to-text: wheels / alleals = alleles; low si / low side / 
 - Code a food type or a throat by hue alone: food by lightness and ○ ◐ ●, throat red to black (lightness carries it).
 - Put incompatibilities back in A (JM, 2026-10-22: "They need to be taught what those are by later stages").
 - Give D's fish unlimited looks: with 30, a shared throat makes two species inside each pond and nothing fuses.
+- Drop B's cost of a trait on the other food: teeth + many rakers would win everywhere and no food mix could hold the ponds apart.
+- Judge C's flood drop on one flood: at one setting it ran .06-.17 over 8 sets of 16 runs.
 - Measure a flood on the adults it moved (the dip is mechanical); measure it on the young it leaves.
 
 ## Pass 3 (v3, 2026-10-20, archived as app/archive/lesson19_v3_2026-10-20.html)
