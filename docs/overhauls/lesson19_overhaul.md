@@ -2,8 +2,34 @@
 
 **File** · `app/lessons/lesson19.html` — pass 4 2026-10-22 (JM's review of pass 3); pass 3 archived as `app/archive/lesson19_v3_2026-10-20.html`, v2 as `lesson19_v2_2026-10-17.html`
 **Checks** · `node scripts/check_lesson19_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 7 (JM's 10-23 review of pass 6): B's snails and plankton set apart in each pond, C and D's cards wordless; v7, scaffold 15; LOCKS `x`
+**Status** · pass 8 (JM, 10-23, late): sentences in B 5's and D 3's cards for their drags; D judged on F_ST at Bmp6; B 5 and C 2 re-barred; blank plots before Go; v8. Pass 7 (JM's 10-23 review of pass 6): B's snails and plankton set apart in each pond, C and D's cards wordless; v7, scaffold 15
 **Last touched** · 2026-10-23
+
+## Pass 8 — JM, 2026-10-23, late (verbatim)
+
+> Let's put a sentence "Slide the square and triangle symbols on the Fst Across the Genome plot on the left to control physical distance between the loci" as there is no visual cue that that option exists and students won't see it.
+
+| # | Stage | What | Status |
+|---|-------|------|--------|
+| 37 | B | round 5 (genes open, everything else held): the sentence in the Target card, over the picture; rounds 1-4 hold the genes, so it shows in round 5 only, and not once the stage is done. "F<sub>ST</sub> across the genome" as the panel heading spells it | done |
+| 38 | — | check: B's card may carry that one sentence; it shows in round 5 only; a drag moves ▲ in round 5 and not in round 4 | done |
+| 39 | C | intro: "Many other loci involve mutations" -> "Every locus has a chance for mutations to occur" (JM) | done |
+| 40 | D | round 3: "Adjust the position of the preference locus on the F<sub>ST</sub> across the genome plot at left." in the card (JM: "regardless") | done |
+| 41 | D | judging: the card's chart and the verdict disagreed (below); every round now judged and pictured on F<sub>ST</sub> at Bmp6, the 16 runs' average, red box at 300, .15 or more (JM chose it); "F_ST at Bmp6" first in the menu; R panel ends on it; v8. Round 4's flat valley alone (.1, 0) now reads .08-.12, under the bar: fewer floods or fewer fish a flood clear it (measurements in the page's MEASURED block) | done |
+| 42 | B | round 5's bar failed a side-by-side hit on one draw (10/11: .38/.34 against .35); now judged on the two genes' average, bar .35 (far .26-.33, side by side .37-.50, 8 sets each) | done |
+| 43 | C | round 2's intended hit (migration .2 every 2) missed on one draw: a cliff, .33-.52 over 16 sets; bar 40% -> 28% (.5 every 10, the highest miss, .13-.23) | done |
+| 44 | all | "Go plays it here." gone from the empty plots: blank before Go (JM: "we don't need to label what will change before it changes. They'll see it.") | done |
+
+Exception to the wordless cards (REVISIONS rows 18-20), JM's own: a control with no visual cue gets a sentence.
+
+> In Part C, let's also change "Many other loci involve mutations" into "Every locus has a chance for mutations to occur."
+>
+> Target 3 of Part D is also hittable without using the inversion, but it doesn't register as correct without using the inversion. It also needs a short sentence saying "Adjust the position of the preference locus on the Fst across the genome plot at left" in the target, regardless.
+
+Why D 3 read as a hit and scored a miss: the rule counted runs (orange 50%+ benthic, blue 50% or less, 9 of 16), the chart's
+thick lines averaged all 16. A fused run goes all benthic or all limnetic in both ponds, so fused runs average near 50% and
+the thick lines sat in the red boxes on a miss. Measured (3 draws each): ◆ at 31, averages in the boxes 3 of 3, 4-7 runs
+apart; ◆ left at 40, in 1 of 3, 2-5 apart; ◆ at 16-26, 9-14 apart, hits. The drag scored; the picture misled.
 
 ## Pass 7 — JM, 2026-10-23, evening (verbatim)
 

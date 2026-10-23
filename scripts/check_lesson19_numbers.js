@@ -31,7 +31,8 @@
  *   Targets. Each round's intended settings hit it and its opening (and the
  *      near misses measured in the page's comments) miss it. Each round's
  *      picture (B's sketch of the genome, C's and D's example charts),
- *      judged by that round's own rules, is a hit.
+ *      judged by that round's own rules, is a hit. D's verdict is what its
+ *      chart draws: the thick line's end against the red box.
  *   Flow. A miss records 0 and the target stays; hits open Next target;
  *      each stage opens the next; the last ends the lesson; every bit
  *      written.
@@ -42,7 +43,8 @@
  *      dragging on the fitness surface; D's
  *      toggles write their inputs and are held when a round holds them; C's
  *      cost arrow is red (it lowers survival).
- *   Layout. JM's intro in each stage; no Target card has words, only its picture
+ *   Layout. JM's intro in each stage; no Target card has words but B round
+ *   5's and D round 3's one sentence on a drag, only its picture
  *   (A's genome graph, B's sketch, C's and D's example charts) over the
  *   controls, and C's and D's menus turn to the plot the picture is; no card says anything
  *   once its stage is done; the practice box reads "practice"; C's and D's
@@ -202,7 +204,7 @@ tgt(SA, 2, [{ T: 5 }, { T: 2 }, { m: 0.5, T: 5 }], [{ m: 0.2, T: 10 }, { T: 25 }
     if (r < 2) { const j = judge(R, { hw: f(G) }, null); return { r, ok: j.ok, v: f2(f(G)) }; }
     const fall = t => f(t - 1) - f(t), late = meanOf([0, 1, 2, 3].map(k => fall(G - 25 * k)));
     return { r, ok: late < 0.16 && fall(25) > 0.16, v: "falls " + f2(fall(25)) + " at the first flood, " + f2(late) + " at the last four" }; });
-  const dp = SD.cfg.rounds.map((R, r) => { const [o, b] = R.pic.lines.map(l => l.f(R.pic.G)), j = judge(R, { apart: o >= 0.5 && b <= 0.5 ? 1 : 0 }, null); return { r, ok: j.ok, v: f2(o) + "/" + f2(b) }; });
+  const dp = SD.cfg.rounds.map((R, r) => { const e = R.pic.lines[0].f(R.pic.G), j = judge(R, { fb: e }, null); return { r, ok: j.ok && R.pic.meas === "fb", v: f2(e) }; });
   check("C's and D's example charts, each judged by its own round: C " + cp.map(x => (x.r + 1) + " " + (x.ok ? "hit" : "MISS") + " (" + x.v + ")").join(", ") + "; D " + dp.map(x => (x.r + 1) + " " + (x.ok ? "hit" : "MISS") + " (" + x.v + ")").join(", "),
         cp.every(x => x.ok) && dp.every(x => x.ok));
 }
@@ -220,7 +222,16 @@ tgt(SC, 2, [{ mu: 0.002 }, { mu: 0.004 }], [{ mu: 0.001 }, { p: 0 }]);
 tgt(SD, 0, [{ c: 1 }], [{ c: 0.75 }, { c: 0 }]);
 tgt(SD, 1, [{ start: 0 }], [{ start: 1 }]);
 tgt(SD, 2, [{ pat: 21 }, { inv: 1 }], [{ pat: 39 }]);
-tgt(SD, 3, [{ v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
+/* a flat valley alone (.1, 0) keeps the ponds only a little apart, F_ST at Bmp6 .08-.12, under the bar: asked neither way */
+tgt(SD, 3, [{ T: 2 }, { m: 0.15 }], [{ v: 0.4 }, { v: 0.2 }]);
+{
+  /* D's verdict is what its chart draws (pass 8): the thick line's end, the 16 runs' average, against the red box. Pass 7's
+     count put the thick lines in the boxes on a miss with ◆ at 31 */
+  const agree = [[2, { pat: 30 }], [2, { pat: 39 }], [3, { v: 0 }]].map(([r, o]) => { const S = play(SD, r, o, 1)[0], R = SD.cfg.rounds[r], j = judge(R, S, SD.last);
+    const end = meanOf(SD.last.hist[SD.last.hist.length - 1].runs.map(p => MEAS_D[R.pic.meas].vals(p)[0])), box = R.pic.boxes[0];
+    return { o, ok: R.rules[0].meas === R.pic.meas && j.ok === (end >= box.lo && end <= box.hi), v: f2(end) + (j.ok ? " hit" : " miss") }; });
+  check("D's verdict is its chart's: the thick line's end against the red box agrees with the score (" + agree.map(a => "round " + (a.o.v != null ? 4 : 3) + " " + show(a.o) + " " + a.v).join(", ") + ")", agree.every(a => a.ok));
+}
 {
   /* the table's number of offspring re-derived from the run's own counts: a young fish's chance to survive x the matings of a
      fish of its genotype, relative */
@@ -314,7 +325,9 @@ tgt(SD, 3, [{ v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
   /* the cards (JM, 2026-10-22): A's and B's carry no words, their picture right above the controls; a done stage's card says
      nothing; the practice box says "practice"; C's and D's fitness surfaces sit in the left column */
   const bare = ["A", "B", "C", "D"].map(K => { const c = document.querySelector("#stage" + K + " .tcard"), cv = c.querySelector("canvas");
-    return !c.querySelector(".ttext, ul.rules, p") && !!cv && cv.nextElementSibling === c.querySelector(".controls"); });
+    /* but B's and D's one sentence, over the picture (below) */
+    const words = [...c.querySelectorAll(".ttext, ul.rules, p")].filter(e => !((e.id === "B_ttext" || e.id === "D_ttext") && e.nextElementSibling === cv));
+    return !words.length && !!cv && cv.nextElementSibling === c.querySelector(".controls"); });
   /* C's and D's menus turn to the plot each round's picture is */
   const menus = [[SC, 2, "C_meas"], [SD, 1, "D_meas"]].map(([S, r, id]) => { S.done = false; S.round = r; document.getElementById(id).value = "hw"; openRound(S);
     const ok = document.getElementById(id).value === S.cfg.rounds[r].pic.meas; S.done = true; openRound(S); return ok; });
@@ -324,6 +337,24 @@ tgt(SD, 3, [{ v: 0 }, { T: 2 }, { m: 0.1 }], [{ v: 0.4 }, { v: 0.2 }]);
   const left = ["C_dmi", "D_fit"].map(id => { const e = document.getElementById(id); return e.closest(".col") === e.closest(".grid").querySelector(".col"); });
   check("cards: A, B, C and D wordless with the picture over the controls (" + bare.join(",") + "); C's and D's menus turn to the picture's plot (" + menus.join(",") + "); done cards say nothing (" + quiet.join(",") + "); practice boxes read " + JSON.stringify([...new Set(prac)]) + " (" + prac.length + "); C's and D's fitness surfaces in the left column (" + left.join(",") + ")",
         bare.every(Boolean) && menus.every(Boolean) && quiet.every(Boolean) && prac.length === 4 && prac.every(x => x === "practice") && left.every(Boolean));
+  /* B's sentence (JM, 2026-10-23, late: "there is no visual cue that that option exists"): round 5 only, the one round the genes
+     are open; and what it says is so: a drag moves ▲ in round 5, not in round 4, where the genes are held */
+  const bt = document.getElementById("B_ttext"), cv = document.getElementById("B_genes");
+  const dragB = () => { B_paint(); const r = cv.getBoundingClientRect(), k = r.width / GN.W, sy = +cv.dataset.cssH - 42;
+    const at = g => ({ clientX: r.left + (GN.px + (g + 0.5) * GN.pw / L) * k, clientY: r.top + sy * k, pointerId: 1, bubbles: true });
+    cv.dispatchEvent(new PointerEvent("pointerdown", at(9))); cv.dispatchEvent(new PointerEvent("pointermove", at(12))); cv.dispatchEvent(new PointerEvent("pointerup", at(12)));
+    return readSet(SB).i; };
+  const said = [0, 1, 2, 3, 4].map(r => { SB.done = false; SB.waiting = false; SB.round = r; openRound(SB); syncStage(SB); return bt.textContent; });
+  const moved5 = dragB(); SB.round = 3; openRound(SB); syncStage(SB); const moved4 = dragB();
+  SB.round = 4; SB.done = true; openRound(SB); syncStage(SB);
+  check("cards: B's sentence on the drag shows in round 5 only (" + said.map(t => t ? "text" : "-").join(",") + "; done: " + (bt.textContent ? "text" : "-") + "), \\"" + said[4] + "\\"; a drag moves ▲ 10 -> " + (moved5 + 1) + " in round 5, " + (moved4 + 1) + " in round 4",
+        said.slice(0, 4).every(t => t === "") && /^Slide the square and triangle symbols on the FST across the genome plot/.test(said[4]) && bt.textContent === "" && moved5 === 12 && moved4 === 9);
+  /* D's: round 3 only, the one round ◆ is open (its drag is tested with the controls) */
+  const dt = document.getElementById("D_ttext");
+  const saidD = [0, 1, 2, 3].map(r => { SD.done = false; SD.waiting = false; SD.round = r; openRound(SD); syncStage(SD); return dt.textContent; });
+  SD.round = 3; SD.done = true; openRound(SD); syncStage(SD);
+  check("cards: D's sentence on the preference gene shows in round 3 only (" + saidD.map(t => t ? "text" : "-").join(",") + "; done: " + (dt.textContent ? "text" : "-") + "), \\"" + saidD[2] + "\\"",
+        saidD[0] === "" && saidD[1] === "" && saidD[3] === "" && /^Adjust the position of the preference locus on the FST across the genome plot at left/.test(saidD[2]) && dt.textContent === "");
 }
 {
   /* hover text: every mark has words; hover shows them and moving off hides them; the hybrid box closed at load */
