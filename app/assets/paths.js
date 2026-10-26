@@ -133,7 +133,7 @@
     (opts.boxes || []).forEach(b => {
       boxes[b.id] = { id: b.id, label: b.label || b.id, sub: b.sub || null,
                       x: b.x, y: b.y, w: b.w || 170, h: b.h || 48,
-                      kind: b.kind || "cause", hidden: !!b.hidden, cls: b.cls || null };
+                      kind: b.kind || "cause", hidden: !!b.hidden, cls: b.cls || null, glyph: b.glyph || null };
       order.push(b.id);
     });
     const arrows = (opts.arrows || []).map(a => ({
@@ -470,6 +470,7 @@
           const t = svg("text", { x: b.x, y: ty, class: "paths-box-sub" });
           t.textContent = b.sub; g.appendChild(t);
         }
+        if (b.glyph) b.glyph(g, svg, b);   // a picture at the box's left end: glyph(g, svg, box)
         gBoxes.appendChild(g);
       });
 
