@@ -55,6 +55,8 @@ can make a suite of changes all at once."*
 | 21 | **A plot is blank before Go**: no "Go plays it here." (or any label of what will appear) on an empty plot | lesson 19 `drawGenes` / `drawTime` (2026-10-23). JM: *"Let's also remove "Go plays it here" and just have blank plots be blank before hitting Go--we don't need to label what will change before it changes. They'll see it."* | 17: 1, 20: 3 (one "Go plays it here: a dot for each pair once there are two populations."), 21: 4 | 2026-10-23: `grep -c "plays it here" app/lessons/*.html` |
 | 22 | **Exception to row 18: one sentence in a target card when the round's control has no visual cue of its own** (a symbol dragged along a plot), shown in that round only | lesson 19 B round 5 (▲ ■ on F<sub>ST</sub> across the genome) and D round 3 (◆), 2026-10-23. JM: *"there is no visual cue that that option exists and students won't see it"* | any round whose only open control is a drag on a plot | 2026-10-23 |
 
+| 23 | **Different target box for uncertainty intervals on lines** Lesson 19 Part C Target 3 has a "target box" that is all values of Fst--the actual target is the variance around the Fst-over-time line, but the best way to show that (a ribbon around the curve as the target box) isn't there. Instead the current system shows the individual gray lines, which is not clear to students. | 2026-10-25 |
+
 JM's words, 2026-09-24: *"lessons 1-8 could use bowling style games added,
 lessons 1-10 could use practice toggles, lessons 1-6 need new interactives
 beyond just sliders."*
