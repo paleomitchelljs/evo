@@ -2,8 +2,8 @@
 
 **File** · `app/lessons/lesson20.html` — first draft 2026-10-20 (v1, one stage)
 **Checks** · `node scripts/check_lesson20_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 2 PROPOSED 2026-10-23 (A one split as a pedigree, B the current stage, C new alleles along the tree); nothing built; LOCKS `x`
-**Last touched** · 2026-10-26 (JM ruled on Open 1-6)
+**Status** · pass 2 IN PROGRESS: A built (v2, scaffold 14, 2026-10-26); the current stage is now B with steps 5-9 still in it; C not started; LOCKS `x`
+**Last touched** · 2026-10-26 (A built; check 27 bars, `step 4` flaky from before)
 
 ## What the lesson is
 
@@ -115,12 +115,32 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 | 6 | pass 2 plan; A and C measured | done |
 | 7 | JM rules on Open 1-6 (2026-10-26, see Rulings) | done |
 | 8 | A: node prototype on the page's engine (2n → two of n, small founding group at 0); T1/T2 windows over 16 pedigrees; F_ST against ✓ | done 2026-10-26 (see Measured, item 8) |
-| 9 | A: pedigree port from 15 onto `tr*` data; split line; ponds by half; 4 marked copies' tree + chips | todo |
-| 10 | A: reads 1-3, targets T1-T2 | todo |
-| 11 | B: steps 1-4; pairs plot F_ST only; REVISIONS 18-21 | todo |
+| 9 | A: pedigree port from 15 onto `tr*` data; split line; ponds by half; 4 marked copies' tree + chips | done 2026-10-26 (`pdWorld`, `pdLayout`, `drawPed`; three views, click = red up / blue down, lock, Clear) |
+| 10 | A: reads 1-3, targets T1-T2 | done 2026-10-26 (bits 0-4; reads need Lock in; T1 >= 70% at n 4 from g1 5, T2 <= 28% at g1 5 from n 4; see Measured, item 10) |
+| 11 | B: steps 1-4; pairs plot F_ST only; REVISIONS 18-21 | partly: stage renamed B (ids `B_`, bits 5-13); steps 5-9, the hybrid and size plots and the wordless-card rows are still as v1 |
 | 12 | C: ticks, allele picker, "new alleles that differ"; reads C1-C3; target; steps 5-9 moved; Anolis | todo |
 | 13 | scoring v2, scaffold recount; R panels A, B, C; `check_lesson20_numbers.js` across A-C | todo |
 | 14 | JM's voice A-C | todo |
+
+## Measured, item 10 (2026-10-26, the page's engine, 60 Gos of 16 pedigrees a cell; mean ± sd across Gos [range])
+
+    share of the 128 loci ✓, F 3, g0 10, mutation .001:
+                g1       5                10               15               20               30
+      n 4      .38±.07 [.20-.52]  .62±.05 [.47-.73]  .78±.04 [.69-.86]  .87±.03  .95±.02
+      n 6      .26±.05 [.17-.38]  .45±.05 [.33-.56]  .62±.05 [.51-.76]  .74±.04  .88±.03
+      n 8      .21±.04 [.13-.33]  .34±.06 [.23-.51]  .50±.05 [.38-.63]  .61±.06  .77±.04
+    (agrees with item 8: .37 / .61 / .77 / .87 / .96 at n 4.) Bars set on these:
+      T1 n held 4, g1 from 5: >= 70%. Hits g1 5 0 of 20, g1 10 1-4 of 20, g1 15 16-20 of 20.
+      T2 g1 held 5, n from 4: <= 28%. Hits n 4 about 1 in 10, n 6 about 6 in 10, n 8 about 9 in 10 (n 6 is the soft one: the sd is .05 and the step is .12).
+    F_ST per locus, 60 pedigrees at n 6, g1 10: loci that sort .28, loci that do not .15: the panel stays.
+    ✓ here = the orange pair met each other and the blue pair met each other, and no copy met one of the other pond first; ✗ = a mixed clade; – = a pair not met by generation 0.
+
+## Built so far (A)
+
+- reads need **Lock in** (a click also draws lines, so a click cannot be the answer); a wrong copy records 0 and the read stays on a new locus; R3 answered shows the four-copy tree and the chips; targets show them always.
+- reads redeal when either slider moves; targets hold one slider and open the other at the intended starting value.
+- the wordless-card rows (REVISIONS 18-22) not applied to A's cards yet; voice (item 14) none.
+- `check_lesson20_numbers.js`: 27 bars. `step 4` (B) is flaky at HEAD too (7 of 10 hit at N 5 but the opening hit 1; it needs 0): a bar to loosen or sample more, not touched.
 
 ## Rulings
 
