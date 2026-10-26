@@ -375,6 +375,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
 <script>
@@ -2520,6 +2521,8 @@ const CR_ROUNDS = [
 const CR = { brood: [], more: null, race: null, aim: null, raceNo: 0, round: 0, results: [], waiting: false, done: false, run: null, runs: 0, demo: null, G: 1 };
 const CR_playDone = () => (CR.brood.length >= RC_BROOD && !!CR.more) || INSTRUCTOR;
 const CR_practising = () => $("C_practice").checked || CR.done;
+/* the race targets in any order (JM, 2026-10-26); each is scored once, so a target already tried is practice only */
+const CR_tried = i => CR.results[i] !== undefined, CR_nTried = () => CR_ROUNDS.filter((_, i) => CR_tried(i)).length;
 /* ---- a race the student swims ---- */
 function CR_newRace(seed, G, you) {
   const rng = mulberry32(seed), sp = raceDeal(rng, G), r = { sp, t: 0, G, you, winner: null, tWin: null, over: false };
@@ -2573,11 +2576,11 @@ function CR_result(r, G, seed) {
 function CR_go() {
   if (CR.run || CR.race || !CR_playDone()) return;
   const r = CR_rule(), practice = CR_practising();
-  if (!practice && CR.waiting) return;
+  if (!practice && (CR.waiting || CR_tried(CR.round))) return;
   const G = +$("C_speed").value, seed = pageSeed("l15round", 1, 999999) + 104729 * CR.runs++ + 7919 * CR.round;
   const res = CR_result(r, G, seed);
   if (!practice) {
-    record(BIT["C" + (CR.round + 1)], res.ok); CR.results.push(res.ok); CR.waiting = true;
+    record(BIT["C" + (CR.round + 1)], res.ok); CR.results[CR.round] = res.ok; CR.waiting = true;
   }
   bump("C");
   CR.run = { r, G, res, practice, shown: 0, total: r.kind === "brood" ? r.eggs : r.gens, t: 0 };
@@ -2593,10 +2596,11 @@ function CR_endRun() {
   const q = CR.run; if (!q) return;
   q.shown = q.total; CR.last = q; CR.run = null;
   $("C_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.res.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
-  if (!q.practice && CR.results.length >= CR_ROUNDS.length) { CR.done = true; CR.waiting = false; }
+  if (!q.practice && CR_nTried() >= CR_ROUNDS.length) { CR.done = true; CR.waiting = false; }
   C_checkDone(); C_sync(); C_paint();
 }
-function CR_nextRound() { if (!CR.waiting || CR.run) return; CR.waiting = false; CR.round = Math.min(CR.round + 1, CR_ROUNDS.length - 1); CR.last = null; $("C_verdict").innerHTML = ""; C_sync(); C_paint(); }
+function CR_gotoRound(i) { if (CR.run || CR.done || CR.race || (i === CR.round && !CR.waiting)) return; CR.waiting = false; CR.round = i; CR.last = null; $("C_verdict").innerHTML = ""; C_sync(); C_paint(); }
+function CR_nextRound() { if (!CR.waiting || CR.run) return; const n = CR_ROUNDS.length; let i = CR.round; for (let k = 1; k <= n; k++) { const j = (CR.round + k) % n; if (!CR_tried(j)) { i = j; break; } } CR_gotoRound(i); }
 /* a race the computer swims at the slider's speed, to see it */
 function CR_demo() { if (CR.race || CR.run) return; CR.demo = CR_newRace(pageSeed("l15demo", 1, 999999) + 104729 * (CR.raceNo++), +$("C_speed").value, null); C_loop(); }
 
@@ -2648,7 +2652,7 @@ function CQ_answer(opt) {
   C_checkDone(); C_sync();
 }
 function C_checkDone() {
-  if (CR.results.length >= CR_ROUNDS.length && CQ.solved) finishStage("C");
+  if (CR_nTried() >= CR_ROUNDS.length && CQ.solved) finishStage("C");
 }
 
 /* ---- the loop: a race, a run or a division animating ---- */
@@ -2732,7 +2736,7 @@ function CR_drawPop() {
     ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = "#9a968a"; ctx.beginPath(); ctx.moveTo(f(0.5), y - 14); ctx.lineTo(f(0.5), y + 8); ctx.stroke(); ctx.restore();
     if (share != null) { const X = f(share); ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(X, y - 1); ctx.lineTo(X - 6, y - 11); ctx.lineTo(X + 6, y - 11); ctx.closePath(); ctx.fill(); }
   };
-  if (CR_playDone() && (q || !CR.more || CR.round > 0 || CR.waiting || CR.results.length)) {
+  if (CR_playDone() && (q || !CR.more || CR.round > 0 || CR.waiting || CR_nTried())) {
     const r = q ? q.r : CR_rule();
     if (r.kind === "brood") {
       $("C_popTitle").textContent = "This snake's young";
@@ -2860,12 +2864,12 @@ function C_sync() {
   const pd = CR_playDone(), r = CR_rule(), busy = !!(CR.race || CR.run);
   $("C_raceGo").hidden = pd; $("C_raceGo").disabled = busy || CR.brood.length >= RC_BROOD;
   $("C_more").hidden = !(CR.brood.length >= RC_BROOD && !CR.more);
-  $("C_go").disabled = !pd || busy || (CR.waiting && !CR_practising());
+  $("C_go").disabled = !pd || busy || ((CR.waiting || CR_tried(CR.round)) && !CR_practising());
   $("C_go").textContent = CR_practising() ? "Practice run" : "Go";
   $("C_next").hidden = !CR.waiting || !!CR.run;
   $("C_speed").disabled = !pd || !!CR.run;
   $("C_speedV").textContent = "×" + (+$("C_speed").value).toFixed(2);
-  $("C_pips").innerHTML = CR_ROUNDS.map((_, i) => i < CR.results.length ? '<span class="' + (CR.results[i] ? "ok" : "off") + '">●</span>' : i === CR.round && !CR.done ? "◉" : "○").join(" ");
+  $("C_pips").innerHTML = Pips.html(CR_ROUNDS.length, i => CR_tried(i) ? (CR.results[i] ? "ok" : "off") : false, CR.done ? -1 : CR.round, !!CR.run || !pd || CR.done);
   const qo = CQ_open();
   $("C_q").hidden = !qo; $("C_cardH").textContent = qo ? "Question" : "Target";
   $("C_ttext").hidden = qo && !CQ.solved;
@@ -3053,6 +3057,7 @@ function wire() {
   $("C_more").addEventListener("click", CR_raceMore);
   $("C_go").addEventListener("click", CR_go);
   $("C_next").addEventListener("click", CR_nextRound);
+  Pips.wire($("C_pips"), CR_gotoRound);
   $("C_practice").addEventListener("change", C_sync);
   $("C_speed").addEventListener("input", () => { C_sync(); CR_demo(); });
   $("C_speed").addEventListener("change", () => bump("C"));

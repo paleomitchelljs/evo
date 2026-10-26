@@ -156,6 +156,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
 <script>
@@ -429,10 +430,13 @@ function endRun() {
   }
   paint();
 }
+/* the targets can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one, or ends the lesson */
+function gotoRound(i) { if (AX.run || AX.done || (i === AX.round && !AX.waiting) || AX.results.filter(Boolean).length >= ROUNDS.length) return; AX.waiting = false; AX.round = i; AX.last = null; $("A_verdict").innerHTML = ""; openRound(); paint(); }
 function nextRound() {
   if (!AX.waiting) return; AX.waiting = false;
-  if (AX.round >= ROUNDS.length - 1) { AX.done = true; openRound(); finishLesson(); paint(); return; }
-  AX.round++; AX.last = null; $("A_verdict").innerHTML = ""; openRound(); paint();
+  const n = ROUNDS.length; let i = -1; for (let k = 1; k <= n; k++) { const j = (AX.round + k) % n; if (!AX.results[j]) { i = j; break; } }
+  if (i < 0) { AX.done = true; openRound(); finishLesson(); paint(); return; }
+  AX.round = i; AX.last = null; $("A_verdict").innerHTML = ""; openRound(); paint();
 }
 const predFull = () => !!AX.pred && AX.pred.ys.every(v => v != null);
 
@@ -581,7 +585,7 @@ function drawSisters(q) {
 }
 function syncCard() {
   const busy = !!AX.run, r = ruleOf(), free = AX.done;
-  $("A_pips").innerHTML = free ? "" : ROUNDS.map((_, i) => AX.results[i] ? '<span class="ok">●</span>' : i === AX.round ? "◉" : "○").join(" ");
+  $("A_pips").innerHTML = free ? "" : Pips.html(ROUNDS.length, i => AX.results[i], AX.round, busy);
   let text = free ? "All three done. Run any setting you like: 1000 generations, 16 clades." : "Round " + (AX.round + 1) + " of 3. " + r.text;
   if (!free && r.kind === "draw" && !busy && !AX.waiting) { const set = AX.pred ? AX.pred.ys.filter(v => v != null).length : 0; text += practising() ? " (Practice: draw or not.)" : " " + set + " of " + KNOTS.length + " dots set."; }
   $("A_ttext").textContent = text;
@@ -646,6 +650,7 @@ function wire() {
   for (const c of CTL) { $("A_" + c.key).addEventListener("input", () => { syncVals(); paint(); highlightByDataLine("codeA", c.key); }); $("A_" + c.key).addEventListener("change", bump); }
   $("A_go").addEventListener("click", goRun);
   $("A_next").addEventListener("click", nextRound);
+  Pips.wire($("A_pips"), gotoRound);
   $("A_practice").addEventListener("change", () => { openRound(); paint(); });
   $("A_meas").addEventListener("change", paint);
   $("A_dl").addEventListener("click", () => downloadText("lesson21.R", RTEXT.codeA));

@@ -410,6 +410,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/paths.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
@@ -570,16 +571,18 @@ function endPart(S) {
       if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
     }
     $(S.P + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
-    if (S.waiting && S.round >= S.cfg.rounds.length - 1) { S.done = true; S.waiting = false; openRound(S); }
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
   }
   if (S.cfg.afterRun) S.cfg.afterRun(q);
   checkStages();
   S.cfg.paint();
 }
-function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.P + "_verdict").innerHTML = ""; S.cfg.paint(); }
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.P + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
 function syncPart(S) {
   const busy = !!S.run, free = S.done, r = ruleOf(S), P = S.P;
-  $(P + "_pips").innerHTML = free ? "" : S.cfg.rounds.length < 2 ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
+  $(P + "_pips").innerHTML = free ? "" : S.cfg.rounds.length < 2 ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
   $(P + "_ttext").textContent = free ? S.cfg.freeText : r.text;
   const q = S.last && S.last.r === r ? S.last : null, j = q && q.j;
   $(P + "_rules").innerHTML = free ? "" : r.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
@@ -595,6 +598,7 @@ function wirePart(S) {
   const P = S.P; buildControls(S); S.arrowIds = S.arrowIds || {};
   $(P + "_go").addEventListener("click", () => goPart(S));
   $(P + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(P + "_pips"), i => gotoRound(S, i));
   $(P + "_practice").addEventListener("change", () => syncPart(S));
   for (const c of S.cfg.ctl) {
     $(P + "_" + c.key).addEventListener("input", () => { syncVals(S); S.cfg.paint(); const now = Date.now(); if (now - (S.lastBump || 0) > 500) bump(S.cfg.stage); S.lastBump = now; });

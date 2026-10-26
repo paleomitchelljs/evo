@@ -471,6 +471,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
 <script>
@@ -1393,10 +1394,12 @@ function B_endRun() {
     if (j.ok) { BG.results[BG.round] = true; BG.waiting = true; }
   }
   $("B_verdict").innerHTML = (q.practice ? "practice: " : "") + (j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>' + (q.practice ? "" : " — Start over to try again"));
-  if (BG.waiting && BG.round >= B_ROUNDS.length - 1) { BG.done = true; BG.waiting = false; B_checkDone(); }
+  if (BG.results.filter(Boolean).length >= B_ROUNDS.length) { BG.done = true; BG.waiting = false; B_checkDone(); }
 }
 function B_checkDone() { if (BG.done && BG.picked) finishStage("B"); }
-function B_nextRound() { if (!BG.waiting) return; BG.waiting = false; BG.round = Math.min(BG.round + 1, B_ROUNDS.length - 1); $("B_choice").value = "copy"; $("B_meas").value = B_rule().meas; B_newRun(); B_paint(); }
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one (A is one sequence built in order, and stays so) */
+function B_gotoRound(i) { if (BG.busy || BG.done || (i === BG.round && !BG.waiting)) return; BG.waiting = false; BG.round = i; $("B_choice").value = "copy"; $("B_meas").value = B_rule().meas; B_newRun(); B_paint(); }
+function B_nextRound() { if (!BG.waiting) return; const n = B_ROUNDS.length; let i = BG.round; for (let k = 1; k <= n; k++) { const j = (BG.round + k) % n; if (!BG.results[j]) { i = j; break; } } B_gotoRound(i); }
 function B_restart() { if (BG.busy || BG.waiting) return; bump("B"); B_newRun(); B_paint(); }
 
 /* ---- drawing ---- */
@@ -1510,7 +1513,7 @@ function B_drawTime() {
 }
 function B_sync() {
   const q = BG.run, free = BG.done, r = B_rule(), started = q && q.t > 0, over = q && q.t >= q.G;
-  $("B_pips").innerHTML = free ? "" : B_ROUNDS.map((_, i) => BG.results[i] ? '<span class="ok">●</span>' : i === BG.round ? "◉" : "○").join(" ");
+  $("B_pips").innerHTML = free ? "" : Pips.html(B_ROUNDS.length, i => BG.results[i], BG.round, BG.busy);
   $("B_ttext").textContent = free ? "Both targets taken. Play as long as you like: twenty generations a run." : r.text;
   const S = q ? B_sum(q, q.t) : null, j = q && q.judged;
   const li = (ok, txt, val) => '<li><span class="' + (j ? (ok ? "ok" : "off") : "") + '">' + (j ? (ok ? "✓" : "✗") : "·") + "</span> " + txt + ' <span style="color:var(--muted)">(' + val + ")</span></li>";
@@ -1554,6 +1557,7 @@ function B_wire() {
   $("B_step5").addEventListener("click", () => B_go(5));
   $("B_restart").addEventListener("click", B_restart);
   $("B_next").addEventListener("click", B_nextRound);
+  Pips.wire($("B_pips"), B_gotoRound);
   $("B_practice").addEventListener("change", B_sync);
   $("B_meas").addEventListener("change", () => { bump("B"); B_drawTime(); });
   /* which of the 100 populations the board shows (JM: "a drop down menu letting you see alternative randomization histories") */
@@ -1688,11 +1692,12 @@ function C_endRun() {
       if (ok) { CG.results[q.round] = true; CG.waiting = true; }
     }
     $("C_verdict").innerHTML = (q.practice ? "practice: " : "") + (ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
-    if (CG.waiting && q.round >= C_ROUNDS.length - 1) { CG.done = true; CG.waiting = false; finishStage("C"); }
+    if (CG.results.filter(Boolean).length >= C_ROUNDS.length) { CG.done = true; CG.waiting = false; finishStage("C"); }
   }
   C_paint();
 }
-function C_nextRound() { if (!CG.waiting) return; CG.waiting = false; CG.round = Math.min(CG.round + 1, C_ROUNDS.length - 1); C_openRound(); $("C_verdict").innerHTML = ""; C_paint(); }
+function C_gotoRound(i) { if (CG.run || CG.done || (i === CG.round && !CG.waiting)) return; CG.waiting = false; CG.round = i; CG.last = null; C_openRound(); $("C_verdict").innerHTML = ""; C_paint(); }
+function C_nextRound() { if (!CG.waiting) return; const n = C_ROUNDS.length; let i = CG.round; for (let k = 1; k <= n; k++) { const j = (CG.round + k) % n; if (!CG.results[j]) { i = j; break; } } C_gotoRound(i); }
 let C_on = false, C_t0 = 0;
 function C_loop() { if (C_on) return; C_on = true; C_t0 = 0; requestAnimationFrame(C_frame); }
 /* 5 generations a second for 10 or 20, 10 for 40, 25 for 100; at most ~14 ms of work a frame */
@@ -1828,7 +1833,7 @@ function C_drawPrice() {
 }
 function C_sync() {
   const busy = !!CG.run, free = CG.done, r = C_rule(), w = C_world();
-  $("C_pips").innerHTML = free ? "" : C_ROUNDS.map((_, i) => CG.results[i] ? '<span class="ok">●</span>' : i === CG.round ? "◉" : "○").join(" ");
+  $("C_pips").innerHTML = free ? "" : Pips.html(C_ROUNDS.length, i => CG.results[i], CG.round, !!CG.run);
   $("C_ttext").textContent = free ? "All three targets taken. Set the world and the plan, and play as you like." : r.text;
   for (const k of ["env", "U", "N"]) { $("C_" + k).disabled = busy || !free; $("C_" + k + "Row").classList.toggle("held", !free); }
   $("C_fill").disabled = busy || CG.waiting;
@@ -1885,6 +1890,7 @@ function C_wire() {
   $("C_fill").addEventListener("change", () => { C_fillPlan(C_world().N); bump("C"); C_drawPlan(); C_code(); highlightByDataLine("codeC", "plan"); });
   $("C_go").addEventListener("click", C_go);
   $("C_next").addEventListener("click", C_nextRound);
+  Pips.wire($("C_pips"), C_gotoRound);
   $("C_practice").addEventListener("change", C_sync);
   for (const id of ["C_meas", "C_unit"]) $(id).addEventListener("change", () => { C_drawTime(); C_drawPrice(); });
   for (const [id, key] of [["C_env", "env"], ["C_U", "U"], ["C_N", "plan"]]) $(id).addEventListener("change", () => { if (id === "C_N") C_fillPlan(+$("C_N").value); CG.last = null; bump("C"); C_paint(); highlightByDataLine("codeC", key); });
@@ -2047,11 +2053,12 @@ function D_endRun() {
       if (j.ok) { DG.results[q.round] = true; DG.waiting = true; }
     }
     $("D_verdict").innerHTML = (q.practice ? "practice: " : "") + (j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
-    if (DG.waiting && DG.round >= D_ROUNDS.length - 1) { DG.done = true; DG.waiting = false; finishStage("D"); }
+    if (DG.results.filter(Boolean).length >= D_ROUNDS.length) { DG.done = true; DG.waiting = false; finishStage("D"); }
   }
   D_paint();
 }
-function D_nextRound() { if (!DG.waiting) return; DG.waiting = false; DG.round = Math.min(DG.round + 1, D_ROUNDS.length - 1); DG.last = null; D_openRound(); $("D_verdict").innerHTML = ""; D_paint(); }
+function D_gotoRound(i) { if (DG.run || DG.done || (i === DG.round && !DG.waiting)) return; DG.waiting = false; DG.round = i; DG.last = null; D_openRound(); $("D_verdict").innerHTML = ""; D_paint(); }
+function D_nextRound() { if (!DG.waiting) return; const n = D_ROUNDS.length; let i = DG.round; for (let k = 1; k <= n; k++) { const j = (DG.round + k) % n; if (!DG.results[j]) { i = j; break; } } D_gotoRound(i); }
 let D_on = false, D_t0 = 0;
 function D_loop() { if (D_on) return; D_on = true; D_t0 = 0; requestAnimationFrame(D_frame); }
 /* about 25 generations a second: work out what is due, at most ~14 ms a frame */
@@ -2164,7 +2171,7 @@ function D_drawGenes() {
 }
 function D_sync() {
   const busy = !!DG.run, free = DG.done, r = D_rule();
-  $("D_pips").innerHTML = free ? "" : D_ROUNDS.map((_, i) => DG.results[i] ? '<span class="ok">●</span>' : i === DG.round ? "◉" : "○").join(" ");
+  $("D_pips").innerHTML = free ? "" : Pips.html(D_ROUNDS.length, i => DG.results[i], DG.round, !!DG.run);
   $("D_ttext").textContent = free ? "All four targets taken. Run any world you like: 100 generations." : r.text;
   const q = DG.last && DG.last.r === r ? DG.last : null, j = q && q.j;
   $("D_rules").innerHTML = free ? "" : r.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
@@ -2210,6 +2217,7 @@ function D_paint() { D_drawBoard(); D_drawTime(); D_drawGenes(); D_sync(); D_cod
 function D_wire() {
   $("D_go").addEventListener("click", D_go);
   $("D_next").addEventListener("click", D_nextRound);
+  Pips.wire($("D_pips"), D_gotoRound);
   $("D_practice").addEventListener("change", D_sync);
   $("D_meas").addEventListener("change", D_drawTime);
   for (const [id, key] of [["D_inv", "inv"], ["D_two", "two"]]) $(id).addEventListener("change", () => { bump("D"); if (!DG.run && !DG.last) D_drawBoard(); D_code(); highlightByDataLine("codeD", key); });

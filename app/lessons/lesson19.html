@@ -468,6 +468,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
 <script src="../assets/paths.js"></script>
@@ -1178,16 +1179,18 @@ function endStage(S) {
       if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
     }
     $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
-    if (S.waiting && S.round >= S.cfg.rounds.length - 1) { S.done = true; S.waiting = false; openRound(S); }
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
   }
   if (S.cfg.afterRun) S.cfg.afterRun(q);
   if (S.done) finishStage(S.K);
   S.cfg.paint();
 }
-function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
 function syncStage(S) {
   const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
-  $(K + "_pips").innerHTML = free ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
   /* the cards have no words, only a picture (JM, 2026-10-22), but for a sentence on a drag with no cue of its own, B round 5's
      and D round 3's (2026-10-23); a done stage's card says nothing: its controls come free and To finish turns green */
   const q = S.last && S.last.r === r ? S.last : null, j = q && q.j;
@@ -1207,6 +1210,7 @@ function wireStage(S) {
   const K = S.K;
   $(K + "_go").addEventListener("click", () => goStage(S));
   $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
   $(K + "_practice").addEventListener("change", () => S.cfg.paint());
   for (const c of S.cfg.ctl) {
     $(K + "_" + c.key).addEventListener("input", () => {
@@ -1397,7 +1401,7 @@ const B_ROUNDS = [
     rules: [{ meas: "genes", pond: 0, lo: 0, hi: 0.3, ok: S => S.genes[0] < 0.3, val: S => f2(S.genes[0]) },
             { meas: "genes", pond: 1, lo: 0.3, hi: 1, ok: S => S.genes[1] >= 0.3, val: S => f2(S.genes[1]) }] },
   { hold: Object.assign({ i: 9, j: 29, m: 0.1, T: 5 }, B_APART), open: { R: 2 },
-    pic: { peaks: [["i", 0.7, 5], ["j", 0.7, 1.1]], boxes: [[s => [[s.i - 2, s.i + 2]], 0.28, 1]] },
+    pic: { peaks: [["i", 0.7, 5], ["j", 0.7, 5]], boxes: [[s => [[s.i - 2, s.i + 2]], 0.28, 1]] },   /* the same hill at both genes: only the grey bars beside ▲ are judged, so the sketch must not say the two differ (JM, 2026-10-26) */
     rules: [{ ok: (S, q) => B_NEAR(S, q) >= 0.28, val: (S, q) => f2(B_NEAR(S, q)) }] },
   { hold: Object.assign({ i: 9, j: 29, R: 1 }, B_APART), open: { m: 0.2, T: 2 },
     pic: { peaks: [["i", 0.13, 1.1], ["j", 0.13, 1.1]], boxes: [[s => [[s.i, s.i]], 0, 0.23], [s => [[s.j, s.j]], 0, 0.23]] },

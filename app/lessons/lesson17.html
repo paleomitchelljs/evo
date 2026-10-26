@@ -479,6 +479,7 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
 <script src="../assets/paths.js"></script>
@@ -915,18 +916,20 @@ function endStage(S) {
       if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
     }
     $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">correct</span>' : '<span class="off">incorrect</span>');
-    if (S.waiting && S.round >= S.cfg.rounds.length - 1) { S.done = true; S.waiting = false; openRound(S); }
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
   }
   if (S.cfg.afterRun) S.cfg.afterRun(q);
   checkStage(S);
   S.cfg.paint();
 }
 function checkStage(S) { if (S.done && (!S.cfg.extraDone || S.cfg.extraDone())) finishStage(S.K); }
-function nextRound(S) { if (!S.waiting) return; S.waiting = false; S.round = Math.min(S.round + 1, S.cfg.rounds.length - 1); S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
 function syncStage(S) {
   if (S.cfg.sync) return S.cfg.sync();
   const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
-  $(K + "_pips").innerHTML = free ? "" : S.cfg.rounds.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === S.round ? "◉" : "○").join(" ");
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
   $(K + "_ttext").textContent = free ? S.cfg.freeText : r.text;
   const q = S.last && S.last.r === r ? S.last : null, j = q && q.j;
   $(K + "_rules").innerHTML = free ? "" : r.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
@@ -943,6 +946,7 @@ function wireStage(S) {
   const K = S.K;
   $(K + "_go").addEventListener("click", () => goStage(S));
   $(K + "_next").addEventListener("click", () => nextRound(S));
+  if (!S.cfg.sync) Pips.wire($(K + "_pips"), i => gotoRound(S, i));
   $(K + "_practice").addEventListener("change", () => syncStage(S));
   for (const c of S.cfg.ctl) {
     $(K + "_" + c.key).addEventListener("input", () => {
@@ -1406,6 +1410,8 @@ const SD = mkStage("D", {
   paint: () => D_paint(),
 });
 /* hold a round's migration and N 25 in each population (pr), or free every control (null) */
+/* D's rounds in any order too (JM, 2026-10-26): a circle opens that round, unless a run or the ten genomes are under way */
+Pips.wire($("D_pips"), i => { if (SD.run || DX.placing || SD.done || i === SD.round) return; SD.round = i; $("D_verdict").innerHTML = ""; D_hold(null); D_paint(); });
 function D_hold(pr) {
   for (const c of SD.cfg.ctl) {
     const el = $("D_" + c.key), v = pr ? (c.key[0] === "N" ? 25 : pr.e[c.key]) : null;
@@ -1480,13 +1486,13 @@ function D_endPlacing(p) {
   const nk = "D_fst" + (p.round + 1);
   if (typeof Score !== "undefined" && Score.setNote && Score.getNote && Score.getNote(nk) == null) Score.setNote(nk, f2(p.fst));
   SD.results[p.round] = true; SD.waiting = false;
-  if (p.round >= D_PRESETS.length - 1) SD.done = true; else SD.round = p.round + 1;
+  if (SD.results.filter(Boolean).length >= D_PRESETS.length) SD.done = true; else { const n = D_PRESETS.length; for (let k = 1; k <= n; k++) { const j = (p.round + k) % n; if (!SD.results[j]) { SD.round = j; break; } } }
   D_hold(null);
   checkStage(SD);
 }
 function D_sync() {
   const S = SD, busy = !!S.run, p = DX.placing, placing = !!p && !busy, scored = !!p && !p.practice, prac = practising(S), nR = D_PRESETS.length, k = S.round;
-  $("D_pips").innerHTML = S.done ? "" : D_PRESETS.map((_, i) => S.results[i] ? '<span class="ok">●</span>' : i === k ? "◉" : "○").join(" ");
+  $("D_pips").innerHTML = S.done ? "" : Pips.html(nR, i => S.results[i], k, busy || !!p);
   $("D_ttext").textContent =
     placing ? "Genome " + (p.i + 1) + " of " + D_YOUNG + ": young, born in one of set 1's four populations. Drag it to the population it came from, or click that population."
     : busy ? (S.run.practice ? "Your setting, playing: 100 generations." : "Round " + (k + 1) + " of " + nR + ", playing: 100 generations.")
