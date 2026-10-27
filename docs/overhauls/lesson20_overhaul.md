@@ -127,15 +127,20 @@ read spreads far too narrow).
       C3 12+ populations, 4+ ✓ (opens N 25): N 5-10, every population split every 70+ 8/8; N 25 0/8. (Planned "a window of
          matching" between C1 and C2: at 2-6 ✓ the opening landed 2 trees in 6, at 3-5 the best setting 6 in 8.)
       C4 6+ populations, every locus the same tree, a ✗ among them (N held 100; crossovers free, opens 1): 0 8/8; .25-4 0/8
-- **D (2026-10-28, JM: "a simple single trait that influences both speciation and extinction. Lessons 21+ can add trade-offs").**
-  One trait, colonial; two arrows, colonial → splitting and colonial → loss; one slider, how often colonial arises (lost at
-  .005). One step a million years, 200 of them; splitting .1, loss .05 a species, room 60; arrows ×0.4-×2.7. The pass-3
-  symbiotic trait, its arrows and the combination arrow are gone, and so is the target that was a trade-off (colonial rises
-  though it raises loss). The dashed curve is the closed form (300 clades .796 against .795). Targets (16 clades):
-      D1 colonial 65%+ though it arises at .002 (splitting free): ×1.6 .52-.69; ×2.7 .71-.85
-      D2 colonial 50%+ (loss free): ×0.6 .37-.56; ×0.4 .53-.69
-      D3 colonial 25% or under though it arises at .005 (both free; none .36-.50): loss ×1.6 .10-.22, ×2.7 .04-.22
-      D4 back on the dashed curve, 30-55% (opens at splitting ×2.7, .78-.89): none .36-.50; ×1.6 .71-.81; ×0.6 .17-.33
+- **D (2026-10-28, JM: "a simple single trait that influences both speciation and extinction. Lessons 21+ can add trade-offs";
+  then "dispersal ability as the trait, as high dispersers having low extinction and low speciation while low dispersers have
+  the reverse is intuitive").** One trait: a species' fish disperse far or stay close. Two arrows, dispersal → splitting and
+  dispersal → loss, ×0.25 / ×0.5 / none / ×2 / ×4; one slider, how often far dispersal arises (lost at .005). One step a
+  million years, 200 of them; splitting .1, loss .05 a species, room 60. The dashed curve is the closed form (300 clades .796
+  against .795). Pass 3's corals (colonial, symbiotic, their combination, the trade-off target) are gone. Targets (16 clades,
+  10 Gos a cell measured):
+      D1 far dispersers 60%+ though dispersal arises at .002, splitting held (loss free): ×0.5 .39-.63; ×0.25 .64-.78
+      D2 far dispersers 30% or under though it arises at .005, loss held (splitting free): none .32-.50; ×0.5 .13-.30; ×0.25 .11-.31
+      D3 dispersers split ×0.5 (held): back on the dashed curve, 38-58% (loss free): none .13-.30; ×0.5 .30-.51; ×0.25 .60-.67
+      D4 the same hold, far dispersers 60%+: loss ×0.25 .60-.67
+  D3 and D4 together are your pairing: dispersers split less and are lost less, and which wins sets their share.
+  Lesson 21 (unchanged) builds on dispersal lowering splitting through migration; 20 D now states that link as an arrow.
+
 - **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
   common ancestor of two tips").** A random tree of 8-12 species, lineages joined two at a time with the forks evenly spaced
   (waiting times like A's crowded the young forks against the letters), each fork's branches drawn up or down at random.
@@ -310,6 +315,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 - 2026-10-26 (JM, on Open 1-6): (1) a small founding group, so most cross pairs meet inside the pedigree; (2) four marked copies, yes; (3) A and B keep different splits: A's rows keep their width, B regrows after halving, but not necessarily to identical Ns (some variance in population size; read as: each half regrows to its own N drawn around the slider's N, not all to the same one); (4) steps 5-9 move from B to C; (5) "where did it arise" is scored as a bet; (6) C's target is a drawn round (REVISIONS row 15: draw against time apart, a cloud of trees).
 - 2026-10-27 (JM's review of pass 2, verbatim above): four stages. A keeps the pedigree, adds mutations, the split's timing, mutation rate, size and generations, and the distribution of when copies meet against the split; reads and pattern targets. B incompatibilities (19 C) and a mate-preference allele (19 D) that avoids unfit hybrids, built on A, run longer; fitness for hybrids by loci and landscapes for hybrids and not. C the student splits populations by clicking, no cap of six; the populations' tree in black over the full time range, each locus's tree thin in colour, matching / predating / mismatching; targets on amounts of matching. D splitting and loss as functions of traits in a causal diagram, no genetics (Simpson's corals); species selection, never named.
 - 2026-10-28 (JM): don't change lesson 19; look at it and 15. 20 D a single trait that influences both speciation and extinction (trade-offs from 21 on). A Part E: a random phylogeny, click the nearest relative of a random tip and the common ancestor of two tips.
+- 2026-10-28 (JM): D's trait is dispersal ability: high dispersers lower extinction and lower speciation, low dispersers the reverse.
 
 ## Do not
 

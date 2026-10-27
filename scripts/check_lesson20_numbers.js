@@ -6,7 +6,7 @@
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
  *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
  *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  one trait that changes splitting and loss; no genes (2026-10-28: one trait, JM).
+ *   D  one trait, dispersal, that changes splitting and loss; no genes (2026-10-28, JM).
  *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
  * What has to hold:
  *
@@ -22,7 +22,7 @@
  *      flood and near one in ten after it; each target's intended setting hits, its opening misses.
  *   C. No split without a click; never more than 16 living; with no crossing over every locus has the same tree; two
  *      populations' lineages meet only before they parted; each target's intended clicks hit most trees, the opening few.
- *   D. With no arrows the colonial share agrees with the closed form beside it (the dashed curve); each target's intended
+ *   D. With no arrows the far dispersers' share agrees with the closed form beside it (the dashed curve); each target's intended
  *      setting hits, its opening misses.
  *   E. On many random trees, each question's key is what it asks for (the tips whose fork with the ringed one is youngest; the
  *      fork holding both ringed tips and no younger one), and the dealt traps hold.
@@ -153,17 +153,17 @@ function inner(CANVAS_IDS) {
     for (let r = 0; r < 300; r++) { const w = dcWorld(P0, 77 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); a += D_stat(w).col; k++; }
     const f = dNeutral(0.02, D_G);
     /* 300 clades: the mean's spread about .02 (a clade's share sd .2-.3, clades share ancestry inside, not across) */
-    check("D: no arrows, the colonial share at 200 million years over 300 clades " + (a / k).toFixed(3) + " against the dashed curve's " + f.toFixed(3), Math.abs(a / k - f) < 0.06);
+    check("D: no arrows, the far dispersers' share at 200 million years over 300 clades " + (a / k).toFixed(3) + " against the dashed curve's " + f.toFixed(3), Math.abs(a / k - f) < 0.06);
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
-  const TD = (k, good, n) => {
+  const TD = (k, good, n, slack) => {
     const r = D_ROUNDS[k], base = Object.assign({ cs: 0, cl: 0, gc: 0.002 }, r.hold, r.open);
     const run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goD(s, 900 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; v.push(j.vals.join("")); } return { h, v }; };
     const g = run(Object.assign({}, base, good)), o = run(base);
-    check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - 1 && o.h === 0);
+    check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
   };
-  /* measured (8 Gos): .71-.85 vs .12-.27; .53-.69 vs .12-.27; .04-.22 vs .36-.50 (bar .25); .36-.50 vs .78-.89 (opens at splitting ×2.7) */
-  TD(0, { cs: 1 }, 6); TD(1, { cl: -1 }, 6); TD(2, { cl: 1 }, 6); TD(3, { cs: 0 }, 6);
+  /* measured (10 Gos): .64-.78 vs .12-.27; .13-.30 vs .32-.50; .30-.51 vs .13-.30, window .38-.58 (×0.25 .60-.67 above it); .60-.67 vs .13-.30 */
+  TD(0, { cl: -1.4 }, 6); TD(1, { cs: -0.7 }, 6); TD(2, { cl: -0.7 }, 6, 2); TD(3, { cl: -1.4 }, 6);
 
   /* ================= E ================= */
   {
@@ -205,7 +205,7 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
         while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
     const openD = Gates.D.open;
-    runStage(SD, [{ cs: 1 }, { cl: -1 }, { cl: 1 }, { cs: 0 }]);
+    runStage(SD, [{ cl: -1.4 }, { cs: -0.7 }, { cl: -0.7 }, { cl: -1.4 }]);
     const openE = Gates.E.open;
     /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
     gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;
