@@ -2,7 +2,7 @@
 
 **File** · `app/lessons/lesson20.html` — first draft 2026-10-20 (v1, one stage); pass 2 2026-10-26 (A built); pass 3 2026-10-27 (four stages, JM's review)
 **Checks** · `node scripts/check_lesson20_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 3 built (v3, scaffold 21: A 0-7, B 8-11, C 12-15, D 16-20), checks green (`check_lesson20_numbers.js` 30 + narrow fit; `check_lessons.py`; `check_layout.js`); JM to review; voice owed for A-D; LOCKS `x`
+**Status** · pass 3 built, then D cut to one trait and E added (2026-10-28; v4, scaffold 26: A 0-7, B 8-11, C 12-15, D 16-19, E 20-25), checks green (`check_lesson20_numbers.js` 30 + narrow fit; `check_lessons.py`; `check_layout.js`); JM to review; voice owed for A-D; LOCKS `x`
 **Last touched** · 2026-10-27
 
 ## JM, 2026-10-27 (verbatim, dictated; "less than 19" = lesson 20, "parade" = part A)
@@ -127,16 +127,23 @@ read spreads far too narrow).
       C3 12+ populations, 4+ ✓ (opens N 25): N 5-10, every population split every 70+ 8/8; N 25 0/8. (Planned "a window of
          matching" between C1 and C2: at 2-6 ✓ the opening landed 2 trees in 6, at 3-5 the best setting 6 in 8.)
       C4 6+ populations, every locus the same tree, a ✗ among them (N held 100; crossovers free, opens 1): 0 8/8; .25-4 0/8
-- **D.** One step a million years, 200 of them; splitting .1, loss .05 a species, room 60; traits gained at the slider's
-  chance, lost at .005; arrows ×0.4-×2.7 on log scale; the arrow from symbiotic onto colonial → splitting is the
-  combination. At splitting .04 / loss .02 / trait loss .01 the strongest arrow moved the colonial share .17 → .53 only:
-  traits that change faster than species split and are lost swamp the sorting. The over-time plot carries the closed form
-  beside the run (the dashed curve, g / (g + .005) (1 - e^-(g + .005)t); 300 clades .786 against .795). Targets (16 clades):
-      D1 colonial 60%+ though it arises at .002 (splitting free): ×1.6 .44-.55; ×2.7 .68-.83
-      D2 colonial 50%+ (loss free): ×0.6 .37-.55; ×0.4 .51-.71
-      D3 colonial 40%+ though loss ×1.6 is held (splitting free): ×1.6 .16-.24; ×2.7 .52-.65
-      D4 colonial 20% or under though it arises at .005 (splitting and loss free; no arrows .34-.64): loss ×2.7 .04-.18; ×0.6 and ×1.6 .07-.16
-      D5 colonial and symbiotic 50%+ (only the arrow onto colonial → splitting free): ×1.6 .31-.49; ×2.7 .62-.71
+- **D (2026-10-28, JM: "a simple single trait that influences both speciation and extinction. Lessons 21+ can add trade-offs").**
+  One trait, colonial; two arrows, colonial → splitting and colonial → loss; one slider, how often colonial arises (lost at
+  .005). One step a million years, 200 of them; splitting .1, loss .05 a species, room 60; arrows ×0.4-×2.7. The pass-3
+  symbiotic trait, its arrows and the combination arrow are gone, and so is the target that was a trade-off (colonial rises
+  though it raises loss). The dashed curve is the closed form (300 clades .796 against .795). Targets (16 clades):
+      D1 colonial 65%+ though it arises at .002 (splitting free): ×1.6 .52-.69; ×2.7 .71-.85
+      D2 colonial 50%+ (loss free): ×0.6 .37-.56; ×0.4 .53-.69
+      D3 colonial 25% or under though it arises at .005 (both free; none .36-.50): loss ×1.6 .10-.22, ×2.7 .04-.22
+      D4 back on the dashed curve, 30-55% (opens at splitting ×2.7, .78-.89): none .36-.50; ×1.6 .71-.81; ×0.6 .17-.33
+- **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
+  common ancestor of two tips").** A random tree of 8-12 species, lineages joined two at a time with the forks evenly spaced
+  (waiting times like A's crowded the young forks against the letters), each fork's branches drawn up or down at random.
+  Click a letter or a fork, then Lock in; a wrong answer shows the right one and Another tree asks again. Six questions:
+  E1-E3 the nearest relative of a ringed tip (every tip across its last fork counts; E2 deals a tip whose nearest relatives
+  are a group, E3 one whose neighbour on the page is not among them); E4-E6 the common ancestor of two ringed tips (E5 two
+  far apart on the page whose fork is not the oldest, E6 two side by side whose fork is the oldest). Lessons 15 and 19 read
+  for the move (15 B: pick the copy, then This one); 19 unchanged.
 
 ## Open for JM (pass 3)
 
@@ -272,7 +279,8 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 | 17 | B: two ponds apart then floods; incompatibilities; choosy allele; landscape and loci grid; diagram; B1-B4 measured | done 2026-10-27 |
 | 18 | C: click to split (16), black tree + loci, chips, pairs, your runs; C1-C4 measured. D: species engine, diagram, tree, shares; D1-D5 measured | done 2026-10-27 |
 | 19 | scoring v3 (21 bits), R panels A-D, `check_lesson20_numbers.js` (30 + narrow) | done 2026-10-27; the four R panels run (B and C shortened, as the check does) |
-| 20 | JM's voice A-D; JM's review of pass 3 | todo |
+| 20 | JM's voice A-E; JM's review of pass 3 | todo |
+| 21 | D one trait (four targets); E reading a tree (six questions); checks 30 + narrow, R panels A-E run | done 2026-10-28 |
 
 ## Measured, item 10 (2026-10-26, the page's engine, 60 Gos of 16 pedigrees a cell; mean ± sd across Gos [range])
 
@@ -301,6 +309,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 
 - 2026-10-26 (JM, on Open 1-6): (1) a small founding group, so most cross pairs meet inside the pedigree; (2) four marked copies, yes; (3) A and B keep different splits: A's rows keep their width, B regrows after halving, but not necessarily to identical Ns (some variance in population size; read as: each half regrows to its own N drawn around the slider's N, not all to the same one); (4) steps 5-9 move from B to C; (5) "where did it arise" is scored as a bet; (6) C's target is a drawn round (REVISIONS row 15: draw against time apart, a cloud of trees).
 - 2026-10-27 (JM's review of pass 2, verbatim above): four stages. A keeps the pedigree, adds mutations, the split's timing, mutation rate, size and generations, and the distribution of when copies meet against the split; reads and pattern targets. B incompatibilities (19 C) and a mate-preference allele (19 D) that avoids unfit hybrids, built on A, run longer; fitness for hybrids by loci and landscapes for hybrids and not. C the student splits populations by clicking, no cap of six; the populations' tree in black over the full time range, each locus's tree thin in colour, matching / predating / mismatching; targets on amounts of matching. D splitting and loss as functions of traits in a causal diagram, no genetics (Simpson's corals); species selection, never named.
+- 2026-10-28 (JM): don't change lesson 19; look at it and 15. 20 D a single trait that influences both speciation and extinction (trade-offs from 21 on). A Part E: a random phylogeny, click the nearest relative of a random tip and the common ancestor of two tips.
 
 ## Do not
 

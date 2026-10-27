@@ -6,7 +6,8 @@
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
  *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
  *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  traits that change splitting and loss; no genes.
+ *   D  one trait that changes splitting and loss; no genes (2026-10-28: one trait, JM).
+ *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
  * What has to hold:
  *
  *   A engine. Below the split every fish has both parents in its own pond; every link points at the parent chromosome carrying
@@ -23,7 +24,9 @@
  *      populations' lineages meet only before they parted; each target's intended clicks hit most trees, the opening few.
  *   D. With no arrows the colonial share agrees with the closed form beside it (the dashed curve); each target's intended
  *      setting hits, its opening misses.
- *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 21 bits written.
+ *   E. On many random trees, each question's key is what it asks for (the tips whose fork with the ringed one is youngest; the
+ *      fork holding both ringed tips and no younger one), and the dealt traps hold.
+ *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 26 bits written.
  *   Layout. The R code last and closed in every stage; hover marks with words; every canvas fits (1500 and 1000 wide).
  *
  * Bars are sized off the spreads measured on the page's engine (the comments above each stage's rounds in lesson20.html):
@@ -37,14 +40,14 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8798;
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const CANVAS_IDS = ["A_ped", "A_meet", "A_tpic", "B_board", "B_time", "B_fit", "B_tpic", "C_tree", "C_pairs", "C_runs", "C_tpic", "D_tree", "D_time", "D_tpic"];
+const CANVAS_IDS = ["A_ped", "A_meet", "A_tpic", "B_board", "B_time", "B_fit", "B_tpic", "C_tree", "C_pairs", "C_runs", "C_tpic", "D_tree", "D_time", "D_tpic", "E_tree"];
 
 /* runs inside the page (an iframe): returns the report as one string */
 function inner(CANVAS_IDS) {
   const L_ = [], say = s => L_.push(s);
   let bad = 0, ran = 0;
   const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok ? "ok   " : "FAIL ") + name + (detail ? "  -- " + detail : "")); };
-  for (const k of ["A", "B", "C", "D"]) { document.getElementById("stage" + k).classList.remove("stage-locked"); }
+  for (const k of ["A", "B", "C", "D", "E"]) { document.getElementById("stage" + k).classList.remove("stage-locked"); }
   Gates.A.open = true;
   const $ = id => document.getElementById(id);
 
@@ -146,7 +149,7 @@ function inner(CANVAS_IDS) {
 
   /* ================= D ================= */
   {
-    const P0 = { cs: 0, cl: 0, ss: 0, sl: 0, int: 0, gc: 0.02, gs: 0.002 }; let a = 0, k = 0;
+    const P0 = { cs: 0, cl: 0, gc: 0.02 }; let a = 0, k = 0;
     for (let r = 0; r < 300; r++) { const w = dcWorld(P0, 77 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); a += D_stat(w).col; k++; }
     const f = dNeutral(0.02, D_G);
     /* 300 clades: the mean's spread about .02 (a clade's share sd .2-.3, clades share ancestry inside, not across) */
@@ -154,13 +157,29 @@ function inner(CANVAS_IDS) {
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TD = (k, good, n) => {
-    const r = D_ROUNDS[k], base = Object.assign({ cs: 0, cl: 0, ss: 0, sl: 0, int: 0, gc: 0.002, gs: 0.002 }, r.hold, r.open);
+    const r = D_ROUNDS[k], base = Object.assign({ cs: 0, cl: 0, gc: 0.002 }, r.hold, r.open);
     const run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goD(s, 900 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; v.push(j.vals.join("")); } return { h, v }; };
     const g = run(Object.assign({}, base, good)), o = run(base);
     check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - 1 && o.h === 0);
   };
-  /* measured (8 Gos): .68-.83 vs .12-.29; .51-.71 vs .12-.29; .52-.65 vs .03-.12; .04-.18 vs .34-.64; .62-.71 vs .14-.29 */
-  TD(0, { cs: 1 }, 6); TD(1, { cl: -1 }, 6); TD(2, { cs: 1 }, 6); TD(3, { cl: 1 }, 6); TD(4, { int: 1 }, 6);
+  /* measured (8 Gos): .71-.85 vs .12-.27; .53-.69 vs .12-.27; .04-.22 vs .36-.50 (bar .25); .36-.50 vs .78-.89 (opens at splitting ×2.7) */
+  TD(0, { cs: 1 }, 6); TD(1, { cl: -1 }, 6); TD(2, { cl: 1 }, 6); TD(3, { cs: 0 }, 6);
+
+  /* ================= E ================= */
+  {
+    let n = 0, bad = [], traps = 0;
+    for (let r = 0; r < 60; r++) for (let it = 0; it < 6; it++) {
+      const T = etTree(5000 + 104729 * r + it), q = EITEMS[it].deal(T); if (!q) continue; n++;
+      const tips = T.order, forks = T.nodes.filter(x => x.kids.length).map(x => x.id);
+      if (q.what === "tip") { const a = q.ring[0], d = id => { const m = etMrca(T, a, id); return T.nodes[m].age; }, best = Math.min(...tips.filter(t => t !== a).map(d));
+        if (!tips.filter(t => t !== a).every(t => q.key.includes(t) === (d(t) === best))) bad.push(EITEMS[it].id + " key");
+        if (it === 1 && q.key.length < 2) bad.push("E2 one"); if (it === 2) { if (!etNeighbours(T, a).some(x => !q.key.includes(x))) bad.push("E3 trap"); else traps++; } }
+      else { const [a, b] = q.ring, m = q.key[0], under = new Set(etTips(T, m));
+        if (!(under.has(a) && under.has(b)) || T.nodes[m].kids.some(k => { const u = new Set(etTips(T, k)); return u.has(a) && u.has(b); })) bad.push(EITEMS[it].id + " fork");
+        if (it === 4 && (m === T.root || Math.abs(T.nodes[a].row - T.nodes[b].row) < 4)) bad.push("E5 trap"); if (it === 5) { if (m !== T.root || Math.abs(T.nodes[a].row - T.nodes[b].row) !== 1) bad.push("E6 trap"); else traps++; } }
+    }
+    check("E: " + n + " dealt questions; a nearest-relative key is every tip whose fork with the ringed one is the youngest, a common-ancestor key the fork holding both and no younger one; the traps hold (" + traps + " page neighbours not nearest / oldest fork)", n > 300 && !bad.length, bad.slice(0, 5).join(", "));
+  }
 
   /* ================= the flow, by the stages' own buttons ================= */
   {
@@ -186,10 +205,15 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
         while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
     const openD = Gates.D.open;
-    runStage(SD, [{ cs: 1 }, { cl: -1 }, { cs: 1 }, { cl: 1 }, { int: 1 }]);
+    runStage(SD, [{ cs: 1 }, { cl: -1 }, { cl: 1 }, { cs: 0 }]);
+    const openE = Gates.E.open;
+    /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
+    gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;
+    $("E_deal").click(); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); const hitE = !!EX.results[0];
+    for (let i = 1; i < 6; i++) { gotoItemE(i); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); }
     const D = Object.keys(BIT).length; let nb = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) nb++;
-    check("flow: B's four done opens C (" + openC + "), C's four by clicks opens D (" + openD + "), D's five end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
-          openC && openD && Gates.D.done && $("done-banner").classList.contains("shown") && D === 21 && nb === D);
+    check("flow: B's four done opens C (" + openC + "), C's four by clicks opens D (" + openD + "), D's four open E (" + openE + "); in E a wrong pick records 0 (" + missE + "), another tree and the right one solve it (" + hitE + "); E's six end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
+          openC && openD && openE && missE && hitE && Gates.E.done && $("done-banner").classList.contains("shown") && D === 26 && nb === D);
   }
   /* ================= layout ================= */
   {
@@ -199,16 +223,16 @@ function inner(CANVAS_IDS) {
     FIT_EPOCH++; paintAll();
     const over = []; for (const id of CANVAS_IDS) { const cv = document.getElementById(id); if (!cv || cv.hidden) continue; const host = cv.parentElement; if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
     check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
-    const lastOk = ["A", "B", "C", "D"].every(k => { const els = document.querySelectorAll("#stage" + k + " .panel"), last = els[els.length - 1]; return last.matches("details.rcode") && !last.open; });
+    const lastOk = ["A", "B", "C", "D", "E"].every(k => { const els = document.querySelectorAll("#stage" + k + " .panel"), last = els[els.length - 1]; return last.matches("details.rcode") && !last.open; });
     check("layout: the R code last and closed in every stage; no readout lines", lastOk && document.querySelectorAll(".readout").length === 0);
   }
   say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
   say("RAN " + ran);
-  for (const k of ["A", "B", "C", "D"]) say("R" + k + " " + RTEXT["code" + k].replace(/\n/g, "\\n"));
+  for (const k of ["A", "B", "C", "D", "E"]) say("R" + k + " " + RTEXT["code" + k].replace(/\n/g, "\\n"));
   return L_.join(" ;; ");
 }
 function narrow(CANVAS_IDS) {
-  for (const k of ["A", "B", "C", "D"]) document.getElementById("stage" + k).classList.remove("stage-locked");
+  for (const k of ["A", "B", "C", "D", "E"]) document.getElementById("stage" + k).classList.remove("stage-locked");
   FIT_EPOCH++; paintAll();
   const over = []; for (const id of CANVAS_IDS) { const cv = document.getElementById(id); if (!cv || cv.hidden) continue; const host = cv.parentElement; if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   return (over.length ? "FAIL " : "ok   ") + "every canvas fits its panel (" + window.innerWidth + " wide)" + (over.length ? "  -- " + over.join(", ") : "");
@@ -241,14 +265,14 @@ setTimeout(() => {
   if (!m) { console.error("no result -- is Chrome at " + CHROME + " ?"); cleanup(); process.exit(2); }
   const text = dec(m[1]), lines = text.split(" ;; ");
   let bad = !/ALL BARS PASS/.test(text);
-  for (const line of lines) if (!/^R[ABCD] /.test(line)) console.log(line);
+  for (const line of lines) if (!/^R[ABCDE] /.test(line)) console.log(line);
   const reported = lines.filter(l => /^(ok|FAIL)\s/.test(l)).length, ranLine = /^RAN (\d+)$/.exec((lines.find(l => /^RAN \d+$/.test(l)) || ""));
   if (!ranLine || +ranLine[1] !== reported) { console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported + " came back"); bad = true; }
   const nar = m2 ? dec(m2[1]) : "FAIL narrow frame gave nothing"; console.log(nar); if (!/^ok/.test(nar)) bad = true;
   /* the R panels, shortened, when R is here */
   const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
   if (probeR.error) console.log("skip R panels  (no Rscript)");
-  else for (const k of ["A", "B", "C", "D"]) {
+  else for (const k of ["A", "B", "C", "D", "E"]) {
     let src = (lines.find(l => l.startsWith("R" + k + " ")) || "").slice(3).replace(/\\n/g, "\n");
     if (k === "B") src = src.replace(/^T(apart <- )\d+/m, "Tapart <- 10").replace("(Tapart + 150)", "(Tapart + 10)");
     if (k === "C") src = src.replace(/^N <- \d+/m, "N <- 5").replace("G <- 400", "G <- 30");
