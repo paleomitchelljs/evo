@@ -1,0 +1,1259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 20</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px; padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px; font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px; background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by ✓ / ✗ and the word as well as colour (colourblind students, JM 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 7px; font-size:13px; }
+  .tbar[hidden] { display:none; }
+  .tbar label { display:flex; align-items:center; gap:8px; }
+  .tbar input[type=range] { width:150px; accent-color:var(--accent2); }
+  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:48px; display:inline-block; }
+  .tbar.held { color:var(--muted); }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard ul.rules { list-style:none; margin:8px 0 10px; padding:0; font:12.5px ui-monospace,Menlo,monospace; }
+  .tcard ul.rules li { padding:2px 0; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .panel[hidden] { display:none; }
+  #B_tree { cursor:default; }
+  .chips { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-top:6px; }
+  .chip { font:12px ui-monospace,Menlo,monospace; padding:3px 0; background:#fff; border:1px solid var(--rule); border-radius:3px; cursor:pointer; color:var(--ink); }
+  .chip.on { border-color:var(--accent); background:var(--accent-soft); }
+  .rules .ok, .rules .off { display:inline-block; width:14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 20</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<!-- ========== STAGE A — one split, as a pedigree (JM, 2026-10-23: "a more granular view reusing the coalescence locus-vs-individual
+     style pedigrees of lesson 15 with the genomic-level-view-of-population-splitting visuals of 19 ... An activity to help the student
+     conceptualize the pedigree along a single split.") ========== -->
+<section class="stage stage-locked" id="stageA">
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <!-- voice: none yet; JM to dictate. Setup words are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_pedH">One pond splits in two</span><span class="tip"><span>Each row is a generation of fish. Each fish has two chromosomes, drawn as two rows of beads (the eight loci traced here); a young fish's chromosomes come from its two parents, one chromosome each, each passed on from one of the parent's two.</span><span>The dashed line: the pond splits in two, orange left, blue right, and the two never meet again. Click a bead: red lines go up to the copies it came from, blue lines down to every copy passed on from it.</span></span></span></h3>
+        <div class="watchbar" id="A_views">
+          <label><span class="info" tabindex="0">view<span class="tip"><span>Fish, chromosomes, or one locus.</span></span></span>
+            <select id="A_view"><option value="org">fish</option><option value="chr" selected>chromosomes</option><option value="loc">one locus</option></select></label>
+          <label id="A_locRow" hidden>locus <select id="A_loc"></select></label>
+          <label><input type="checkbox" id="A_lock"> lock</label>
+          <button id="A_clear" class="ghost" style="background:transparent;color:#333;border:1px solid var(--rule);border-radius:4px;padding:3px 9px;font-size:12.5px;cursor:pointer">Clear</button>
+        </div>
+        <div id="A_pedwrap" style="max-height:600px; overflow-y:auto; overflow-x:hidden"><canvas id="A_ped" width="780" height="300"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">F<sub>ST</sub> across the genome<span class="tip"><span>How different the two ponds' alleles are at each of the 40 loci, in the last generation, as in Lesson 19. The eight traced loci are marked.</span></span></span></h3>
+        <canvas id="A_fst" width="780" height="170"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Question<span class="tip"><span>Five questions, in any order: three reads on the pedigree, then two targets. <b>‹ ›</b> moves between them.</span><span>A read: click a copy in the pedigree (its lines show), then <b>Lock in</b>. A target: <b>Go</b> draws sixteen pedigrees with your settings; the first is drawn here.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <div class="buttons" style="margin:0 0 8px"><button class="ghost" id="A_prev">‹</button><button class="ghost" id="A_nextq">›</button></div>
+        <p class="ttext" id="A_ttext"></p>
+        <ul class="rules" id="A_rules"></ul>
+        <div class="controls">
+          <div class="tbar" id="A_nRow"><label>fish a pond <input type="range" id="A_n" min="0" max="2" step="1" value="1"></label><b id="A_nV"></b></div>
+          <div class="tbar" id="A_g1Row"><label><span class="info" tabindex="0">generations since the split<span class="tip"><span>Before the split the pond is held at ten generations of 2 &times; the fish a pond.</span></span></span> <input type="range" id="A_g1" min="0" max="4" step="1" value="1"></label><b id="A_g1V"></b></div>
+          <div class="practice-row" id="A_pracRow" hidden><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_lockin" class="accent">Lock in</button>
+            <button id="A_go" class="accent" hidden>Go</button>
+            <button id="A_deal" class="ghost">Another locus</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel" id="A_treeBox" hidden>
+        <h3><span class="info" tabindex="0">The four marked copies' tree<span class="tip"><span>The four ringed copies (1, 2 orange; 3, 4 blue), traced back at one locus: where each pair's lineages met. Below, the eight loci: ✓ the orange pair met each other and the blue pair met each other, ✗ a copy from one pond met a copy from the other first, – a pair had not met by generation 0. Click one to draw it.</span></span></span></h3>
+        <canvas id="A_tree4" width="400" height="190"></canvas>
+        <div class="chips" id="A_chips"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="steps">The five questions. <span class="hint" id="A_steps_now">0 of 5</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== ONE STAGE — a population that keeps splitting; the alleles' trees inside it (JM, 2026-10-20: "This one might
+     honestly be a single stage ... many targets and questions and additionally unlocking sliders ... a long time staring at this
+     thing that produces, at the end, a phylogeny as it goes along. Dynamically.") ========== -->
+<section class="stage stage-locked" id="stageB">
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <!-- voice: none yet; JM to dictate. Setup words are hover text on the boxes and controls they describe (JM, 2026-10-17) -->
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_treeH">The populations' tree</span><span class="tip"><span>One population of fish (grey bar, left) keeps splitting in two. Each bar is a population, from the generation it began to the generation it split or the present; the letters name the populations living now.</span><span>The red lines inside: at one locus, one chromosome from each living population, traced back through its parents, generation by generation, until they meet.</span><span>Right: that locus's tree beside the populations' tree. Below it the eight loci traced: ✓ its tree matches the populations' tree, ✗ it does not. Click one to draw it.</span></span></span></h3>
+        <canvas id="B_tree" width="780" height="400"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><span class="info" tabindex="0">Every pair of populations:<span class="tip"><span>A dot for each pair of living populations, at the number of generations since they parted.</span><span>F<sub>ST</sub>: how different their alleles are, as in Lesson 19. A hybrid: a young fish with one parent from each, as in Lesson 19 C: a new allele from one with a new allele from the other is an incompatible pair with chance 0.02, and one kills it.</span></span></span> <select id="B_meas">
+          <option value="fst">F_ST</option>
+          <option value="hw">a hybrid's chance to live</option>
+          <option value="sz" id="B_measSz" disabled>size difference</option>
+        </select></label></div>
+        <canvas id="B_pairs" width="780" height="250"></canvas>
+      </div>
+      <div class="panel" id="B_sizeBox" hidden>
+        <h3><span class="info" tabindex="0"><span id="B_sizeH">Size along the tree</span><span class="tip"><span>Each population's average size, generation by generation; where a line forks, the population split.</span><span>Every allele at every locus adds a little to a fish's size or takes a little off: the grey alleles, and each new allele as it arises. Nothing helps or harms a fish of any size.</span></span></span></h3>
+        <canvas id="B_size" width="780" height="250"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Step<span class="tip"><span>Each generation every fish is replaced by young of two parents from its own population, as in Lessons 17 and 19. A population splits in two with the chance you set, each half its own population from then on, never meeting again; at most six populations.</span><span><b>Go</b> plays 400 generations, one tree. A slider joins the controls as the steps open it.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <ul class="rules" id="B_rules"></ul>
+        <div class="controls" id="B_controls">
+          <div class="tbar" id="B_bRow"><label><span class="info" tabindex="0">chance a population splits<span class="tip"><span>Each generation, each population splits in two with this chance.</span></span></span> <input type="range" id="B_b" min="0" max="6" step="1" value="1"></label><b id="B_bV"></b></div>
+          <div class="tbar" id="B_NRow" hidden><label>fish a population <input type="range" id="B_N" min="0" max="4" step="1" value="2"></label><b id="B_NV"></b></div>
+          <div class="tbar" id="B_muRow" hidden><label><span class="info" tabindex="0">mutation rate<span class="tip"><span>The chance a locus on a young chromosome takes a new allele.</span></span></span> <input type="range" id="B_mu" min="0" max="5" step="1" value="2"></label><b id="B_muV"></b></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice — a run with this ticked does not count</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next step</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="steps">Work through the nine steps. <span class="hint" id="B_steps_now">0 of 9</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">That is the last step.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel opt" id="B_anoBox">
+      <summary>Observed data: Anolis lizards</summary>
+      <canvas id="B_anolis" width="1240" height="300"></canvas>
+    </details>
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 20. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script>
+/* =====================================================================
+   LESSON 20 — phylogeny. First draft 2026-10-20, from JM's brief that day
+   (verbatim in docs/overhauls/lesson20_overhaul.md, with the plan, the
+   measurements and the open points). One stage, nine steps; a slider
+   joins the controls as the steps open it.
+
+   A population that keeps splitting (19's ponds, never flooded): the
+   populations' tree grows as it plays. Inside it, one chromosome from
+   each living population traced back through its parents at eight loci:
+   their trees disagree with the populations' tree when populations are
+   big and split fast. Every pair of populations: F_ST and a hybrid's
+   chance to live against the generations since they parted. At the end,
+   a size every allele adds to or takes from, drifting along the tree.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+const pc = v => v == null ? "–" : Math.round(100 * v) + "%";
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rnorm|replicate|tabulate|c|which|rep|sapply|lapply|length|cumsum|unlist|sample|ifelse|apply|matrix|any|abs|list|table|max|min|setdiff|unique|seq_len|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+/* ====== gates: one bit a step, the first try at it (JM, 2026-09-30: one bit per scored attempt) ====== */
+const Gates = { B: { open: false, done: false } };
+const BIT = { S1: 5, S2: 6, S3: 7, S4: 8, S5: 9, S6: 10, S7: 11, S8: 12, S9: 13 };   /* 0-4: stage A's reads and targets (PBIT) */
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump() { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("B"); }
+function tick(task, on, hint) {
+  const li = document.querySelector('#tasksB li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $("B_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function finishLesson() {
+  if (Gates.B.done) return; Gates.B.done = true; $("solvedB").classList.add("shown");
+  $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish();
+  $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+/* =====================================================================
+   THE ENGINE: lesson 19's (fish of two chromosomes of L = 40 loci, young
+   from two parents at random, crossing over R = 1 a chromosome, mutation
+   at mu a locus), with populations that split instead of two ponds that
+   flood: rewritten for many populations and the parent links, so the
+   code is its own (lesson 21 works with whole species; nothing shared
+   enough to move to app/assets/ yet).
+
+   An allele is an integer indexing the world's registry: the population
+   it arose in (-1 for the grey alleles the first population started
+   with), its locus, and its effect on size.
+   The world starts with one population of N fish, three grey alleles a
+   locus at random shares, and runs `burn` generations before generation
+   0 (8N, at least 200, so the alleles traced back have almost always met
+   by then; not drawn; any that have not are joined at the root). From generation 1, each living population splits with chance
+   b a generation, while fewer than six live: its fish are shuffled and
+   halved, each half a new population that makes N young the next
+   generation, and the two never meet.
+   A generation, in each living population: N young, each from two
+   different parents at random, one gamete each (a chromosome, switching
+   at each gap with chance R / 39); each locus of each young chromosome
+   takes a new allele with chance mu. For the eight traced loci, each
+   young chromosome remembers which parent chromosome its allele there
+   came from: the links the alleles' trees are traced through.
+   A hybrid of two living populations: a young of a random fish of each.
+   Two new alleles in it are an incompatible pair with chance P_INC (a
+   hash of the two, so always the same answer) when they arose at
+   different loci in populations that had parted (neither an ancestor of
+   the other); one pair kills it (19 C's rule, at a cost of 1). The populations never
+   meet, so nothing in the run itself is ever killed.
+   Size: every allele's effect is drawn once (a normal deviate x 0.6, by a
+   hash of the allele); a fish's size is 20 plus the effects of its 80
+   alleles. Nothing selects on it.
+   ===================================================================== */
+const L = 40, TRACED = [2, 7, 12, 17, 22, 27, 32, 37], NT = TRACED.length, CAP = 6, G = 400, R = 1, P_INC = 0.02, SIZE_SD = 0.6;
+const LETTERS = "ABCDEF";
+function trHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; h = Math.imul(h, 0x846ca68b); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+function trAl(w, origin, locus) {
+  if (w.next >= w.org.length) { const g = (A, T) => { const B = new T(A.length * 2); B.set(A); return B; }; w.org = g(w.org, Int16Array); w.loc = g(w.loc, Int8Array); w.eff = g(w.eff, Float32Array); }
+  const id = w.next++; w.org[id] = origin; w.loc[id] = locus;
+  const u = Math.max(1e-9, trHash(id, 17, w.salt)), v = trHash(id, 91, w.salt);
+  w.eff[id] = SIZE_SD * Math.sqrt(-2 * Math.log(u)) * Math.cos(6.2831853 * v);
+  return id;
+}
+/* P: { N, b, mu } */
+function trWorld(P, seed) {
+  const rng = mulberry32(seed), burn = Math.max(200, 8 * P.N);
+  const w = { P, rng, salt: seed & 0xffff, org: new Int16Array(8192), loc: new Int8Array(8192), eff: new Float32Array(8192), next: 1, t: -burn, burn, pops: [], alive: [] };
+  const fd = Array.from({ length: L }, (_, i) => { const u = [0, 1, 2].map(() => 0.2 + rng()), s = u[0] + u[1] + u[2]; return u.map((x, j) => ({ id: trAl(w, -1, i), p: x / s })); });
+  const draw = () => { const c = new Int32Array(L); for (let i = 0; i < L; i++) { let u = rng(), j = 0; while (j < 2 && u > fd[i][j].p) { u -= fd[i][j].p; j++; } c[i] = fd[i][j].id; } return c; };
+  w.pops.push({ id: 0, parent: -1, born: -burn, ended: null, kids: [], F: Array.from({ length: P.N }, () => [draw(), draw()]), links: [], map: null, linkT0: null, sz: [] });
+  w.alive = [0];
+  return w;
+}
+const trIsAnc = (w, a, b) => { while (b >= 0) { if (b === a) return true; b = w.pops[b].parent; } return false; };
+function trGamete(g, rng) {
+  const xo = R / (L - 1); let k = rng() < 0.5 ? 0 : 1, o = null; const side = new Uint8Array(NT); let ti = 0;
+  for (let i = 0; i < L; i++) {
+    if (i > 0 && rng() < xo) { if (!o) o = g[k].slice(); k ^= 1; for (let j = i; j < L; j++) o[j] = g[k][j]; }
+    if (ti < NT && TRACED[ti] === i) side[ti++] = k;
+  }
+  return [o || g[k], side];
+}
+function trMutate(w, c, pid) {
+  const mu = w.P.mu; if (!mu) return c;
+  const lq = Math.log(1 - mu), rng = w.rng; let o = c;
+  for (let i = Math.floor(Math.log(1 - rng()) / lq); i < L; i += 1 + Math.floor(Math.log(1 - rng()) / lq)) { if (o === c) o = c.slice(); o[i] = trAl(w, pid, i); }
+  return o;
+}
+const trSizeOf = (w, g) => { let s = 20; for (const c of g) for (let i = 0; i < L; i++) s += w.eff[c[i]]; return s; };
+const trMeanSize = (w, F) => F.reduce((a, g) => a + trSizeOf(w, g), 0) / F.length;
+function trStep(w) {
+  const P = w.P, rng = w.rng; w.t++;
+  if (w.t >= 1) for (const pid of w.alive.slice()) {
+    if (w.alive.length >= CAP || rng() >= P.b) continue;
+    const p = w.pops[pid], N = p.F.length, idx = Array.from({ length: N }, (_, i) => i);
+    for (let i = N - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), t = idx[i]; idx[i] = idx[j]; idx[j] = t; }
+    p.ended = w.t;
+    for (const h of [idx.slice(0, N >> 1), idx.slice(N >> 1)]) {
+      const d = { id: w.pops.length, parent: pid, born: w.t, ended: null, kids: [], F: h.map(i => p.F[i]), links: [], map: Int16Array.from(h), linkT0: w.t, sz: [] };
+      w.pops.push(d); p.kids.push(d.id);
+    }
+    w.alive = w.alive.filter(x => x !== pid).concat(p.kids);
+  }
+  if (w.alive.length > 1) { const order = [], walk = x => { const q = w.pops[x]; if (q.ended == null) order.push(x); else q.kids.forEach(walk); }; walk(0); w.alive = order; }
+  for (const pid of w.alive) {
+    const p = w.pops[pid], F = p.F, N = F.length, young = new Array(P.N), link = new Int16Array(2 * P.N * NT);
+    for (let i = 0; i < P.N; i++) {
+      const a = Math.floor(rng() * N); let b = Math.floor(rng() * (N - 1)); if (b >= a) b++;
+      const [ga, sa] = trGamete(F[a], rng), [gb, sb] = trGamete(F[b], rng);
+      young[i] = [trMutate(w, ga, pid), trMutate(w, gb, pid)];
+      for (let t = 0; t < NT; t++) { link[(2 * i) * NT + t] = 2 * a + sa[t]; link[(2 * i + 1) * NT + t] = 2 * b + sb[t]; }
+    }
+    p.F = young; if (p.linkT0 == null) p.linkT0 = w.t; p.links.push(link);
+    if (w.t >= 0 && (w.t % 4 === 0 || w.t === G || w.t === p.born)) p.sz.push([w.t, trMeanSize(w, young)]);
+  }
+}
+/* one step back at traced locus k: the chromosome in slot `slot` of population pid's young of generation gen came from slot s of
+   generation gen - 1 (in the parent population when gen was the population's first) */
+function trBack(w, pid, gen, slot, k) {
+  const p = w.pops[pid], j = gen - p.linkT0, s = p.links[j][slot * NT + k];
+  if (j === 0 && p.map) return [p.parent, 2 * p.map[s >> 1] + (s & 1)];
+  return [pid, s];
+}
+/* the alleles' tree at traced locus k: chromosome 0 of fish 0 in each living population (a tip each, by bit), traced back.
+   steps: from the present back, every generation, the lineages and where they are; merges: [{mask, t}] */
+function trTrace(w, k, keepSteps) {
+  let lin = w.alive.map((pid, i) => ({ pid, slot: 0, mask: 1 << i })); const merges = [], steps = []; let gen = w.t;
+  if (keepSteps) steps.push({ gen, lin: lin.map(x => ({ pid: x.pid, mask: x.mask })) });
+  while (lin.length > 1 && gen > w.pops[0].born + 1) {
+    for (const x of lin) { const r = trBack(w, x.pid, gen, x.slot, k); x.pid = r[0]; x.slot = r[1]; }
+    gen--;
+    const m = new Map(), out = [];
+    for (const x of lin) { const key = x.pid * 100000 + x.slot; if (m.has(key)) { const y = m.get(key); y.mask |= x.mask; merges.push({ mask: y.mask, t: gen }); } else { m.set(key, x); out.push(x); } }
+    lin = out;
+    if (keepSteps && gen >= 0) steps.push({ gen, lin: lin.map(x => ({ pid: x.pid, mask: x.mask })) });
+  }
+  return { merges, steps, left: lin.length };
+}
+/* the populations' tree as clades of living populations (bit masks), and whether a locus's tree has a clade it lacks */
+function trClades(w) {
+  const bit = new Map(w.alive.map((pid, i) => [pid, 1 << i])), out = new Set();
+  const maskOf = pid => { const p = w.pops[pid]; return p.ended == null ? (bit.get(pid) || 0) : p.kids.reduce((m, c) => m | maskOf(c), 0); };
+  for (const p of w.pops) if (p.ended != null) out.add(maskOf(p.id));
+  return out;
+}
+const popcount = m => { let n = 0; while (m) { n += m & 1; m >>= 1; } return n; };
+function trAgrees(w, tr) { const pc = trClades(w), all = (1 << w.alive.length) - 1; return tr.merges.every(m => m.mask === all || pc.has(m.mask)); }
+/* F_ST between two living populations (lesson 17's: from the chance two alleles differ, within and pooled, over the loci) */
+function trFst(w, A, B) {
+  const FA = w.pops[A].F, FB = w.pops[B].F, c0 = new Map(), c1 = new Map(); let HT = 0, HS = 0;
+  for (let i = 0; i < L; i++) { c0.clear(); c1.clear();
+    for (const g of FA) for (const c of g) c0.set(c[i], (c0.get(c[i]) || 0) + 1);
+    for (const g of FB) for (const c of g) c1.set(c[i], (c1.get(c[i]) || 0) + 1);
+    const n0 = 2 * FA.length, n1 = 2 * FB.length; let s0 = 0, s1 = 0, sb = 0;
+    for (const [id, x] of c0) { const p0 = x / n0, p1 = (c1.get(id) || 0) / n1, pb = (p0 + p1) / 2; s0 += p0 * p0; s1 += p1 * p1; sb += pb * pb; }
+    for (const [id, x] of c1) if (!c0.has(id)) { const p1 = x / n1; s1 += p1 * p1; sb += p1 * p1 / 4; }
+    HS += 1 - (s0 + s1) / 2; HT += 1 - sb; }
+  return HT > 1e-9 ? (HT - HS) / HT : 0;
+}
+/* a hybrid of A and B's chance to live, from n hybrids (a fixed draw a pair and generation, so a paused page keeps its numbers) */
+function trHybrid(w, A, B, n) {
+  const rng = mulberry32(A * 7919 + B * 104729 + w.t), FA = w.pops[A].F, FB = w.pops[B].F; let live = 0;
+  for (let r = 0; r < n; r++) {
+    const y = [trGamete(FA[Math.floor(rng() * FA.length)], rng)[0], trGamete(FB[Math.floor(rng() * FB.length)], rng)[0]];
+    const ids = []; for (const c of y) for (let i = 0; i < L; i++) if (w.org[c[i]] >= 0 && !ids.includes(c[i])) ids.push(c[i]);
+    let dead = false;
+    for (let i = 0; i < ids.length && !dead; i++) for (let j = i + 1; j < ids.length; j++) { const x = ids[i], z = ids[j], ox = w.org[x], oz = w.org[z];
+      if (w.loc[x] !== w.loc[z] && !trIsAnc(w, ox, oz) && !trIsAnc(w, oz, ox) && trHash(Math.min(x, z), Math.max(x, z), w.salt) < P_INC) { dead = true; break; } }
+    if (!dead) live++;
+  }
+  return live / n;
+}
+/* the generation two living populations parted (their last shared population's split) */
+function trParted(w, A, B) { const anc = new Set(); for (let x = A; x >= 0; x = w.pops[x].parent) anc.add(x); let y = B; while (!anc.has(y)) y = w.pops[y].parent; return w.pops[y].ended; }
+/* every pair of living populations now: generations since they parted, F_ST, a hybrid's chance to live, size difference */
+function trPairs(w, nh) {
+  const out = [];
+  for (let i = 0; i < w.alive.length; i++) for (let j = i + 1; j < w.alive.length; j++) {
+    const A = w.alive[i], B = w.alive[j], pa = w.pops[A], pb = w.pops[B];
+    out.push({ i, j, ago: w.t - trParted(w, A, B), fst: trFst(w, A, B), hw: trHybrid(w, A, B, nh), sz: Math.abs(trMeanSize(w, pa.F) - trMeanSize(w, pb.F)) });
+  }
+  return out;
+}
+/* every traced locus: does its tree match the populations'? */
+const trAgreeAll = w => TRACED.map((_, k) => trAgrees(w, trTrace(w, k, false)));
+
+/* ====== the tree, drawn: populations as bars (time across), the living letters at the right; the traced locus's lineages inside;
+   its tree as a cladogram beside, and the eight loci's ✓ / ✗ under that. Letters go to the living populations top to bottom ====== */
+const TR = { W: 780, H: 400, px: 18, pw: 520, py: 16, ph: 330, tube: 22, cx: 588, cw: 150 };
+function trLayout(w) {
+  const ys = new Map(), order = [];
+  const walk = pid => { const p = w.pops[pid]; if (p.ended == null) { order.push(pid); return; } p.kids.forEach(walk); };
+  walk(0);
+  const n = order.length, gap = n > 1 ? TR.ph / n : 0;
+  order.forEach((pid, i) => ys.set(pid, TR.py + (n > 1 ? gap * (i + 0.5) : TR.ph / 2)));
+  const yOf = pid => { if (ys.has(pid)) return ys.get(pid); const p = w.pops[pid]; const v = p.kids.reduce((s, c) => s + yOf(c), 0) / p.kids.length; ys.set(pid, v); return v; };
+  yOf(0);
+  return { ys, order };
+}
+function drawTree(w, sel, picks, sizes, ref) {
+  const cv = $("B_tree"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, TR.W, TR.H);
+  const xs = t => TR.px + Math.max(0, t) / G * TR.pw, axisY = TR.py + TR.ph + 18;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(TR.px, axisY - 8); ctx.lineTo(TR.px + TR.pw, axisY - 8); ctx.stroke();
+  for (let t = 0; t <= G; t += 100) cardText(ctx, String(t), xs(t), axisY + 4, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", TR.px + TR.pw / 2, axisY + 20, { size: 11, col: MUTED, align: "center" });
+  if (!w) { cardText(ctx, "Go plays it here.", TR.px + TR.pw / 2, TR.py + TR.ph / 2, { size: 12.5, col: MUTED, align: "center" }); ctx.restore(); return null; }
+  const { ys, order } = trLayout(w), h = TR.tube, now = w.t;
+  /* bars, then the forks */
+  ctx.fillStyle = "#efede6"; ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1;
+  for (const p of w.pops) { const x0 = xs(p.born), x1 = xs(p.ended == null ? now : p.ended), y = ys.get(p.id); if (x1 <= x0 && p.id) continue;
+    ctx.fillRect(x0, y - h / 2, Math.max(1, x1 - x0), h); ctx.strokeRect(x0, y - h / 2, Math.max(1, x1 - x0), h); }
+  for (const p of w.pops) if (p.ended != null && p.kids.length) { const x = xs(p.ended), ya = ys.get(p.kids[0]), yb = ys.get(p.kids[1]);
+    ctx.fillRect(x - h / 2, Math.min(ya, yb) - h / 2, h, Math.abs(yb - ya) + h); ctx.strokeRect(x - h / 2, Math.min(ya, yb) - h / 2, h, Math.abs(yb - ya) + h); }
+  for (const p of w.pops) if (p.ended != null && p.kids.length) { const x = xs(p.ended), ya = ys.get(p.kids[0]), yb = ys.get(p.kids[1]);   /* cover the inner edges */
+    ctx.fillRect(x - h / 2 + 1, Math.min(ya, yb) - h / 2 + 1, h - 2, Math.abs(yb - ya) + h - 2); }
+  /* the traced locus's lineages: within a bar, the lineages in it spread across its width, in a fixed order */
+  const tr = sel != null ? trTrace(w, sel, true) : null;
+  if (tr) {
+    let prev = null;
+    for (const st of tr.steps) {
+      const by = new Map(); for (const x of st.lin) { if (!by.has(x.pid)) by.set(x.pid, []); by.get(x.pid).push(x); }
+      const pos = new Map();
+      for (const [pid, arr] of by) { arr.sort((a, b) => a.mask - b.mask); arr.forEach((x, j) => pos.set(x.mask, [xs(st.gen), ys.get(pid) - h / 2 + h * (j + 1) / (arr.length + 1)])); }
+      if (prev) for (const [mask, pt] of pos) for (const [m0, p0] of prev) if ((m0 & mask) === m0) polyline(ctx, [p0, pt], HOT, 1.5, 0.9);
+      prev = pos;
+    }
+    if (prev && prev.size > 1) { const pts = [...prev.values()], y = pts.reduce((s, p) => s + p[1], 0) / pts.length; for (const p of pts) polyline(ctx, [p, [TR.px, y]], HOT, 1.5, 0.5, [3, 3]); }
+  }
+  /* letters, the picked ones ringed; sizes when shown */
+  order.forEach((pid, i) => { const y = ys.get(pid), x = xs(now) + 14, ring = picks && picks.includes(i);
+    if (ring) { ctx.strokeStyle = INK; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 11, 0, 6.2832); ctx.stroke(); }
+    else if (ref === i) { ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.setLineDash([3, 2]); ctx.beginPath(); ctx.arc(x, y, 11, 0, 6.2832); ctx.stroke(); ctx.setLineDash([]); }
+    cardText(ctx, LETTERS[i], x, y + 0.5, { size: 15, bold: true, col: INK, align: "center" });
+    if (sizes) cardText(ctx, sizes[i].toFixed(1), x + 18, y + 0.5, { size: 12, mono: true, col: BLUE }); });
+  /* the locus's own tree, beside: tips in the populations' order; its forks at the generation the lineages met */
+  if (tr) {
+    const cx = TR.cx, cw = TR.cw, n = order.length, ty = i => ys.get(order[i]), tmin = Math.min(0, ...tr.merges.map(m => m.t)), cxs = t => cx + (t - tmin) / (now - tmin) * cw;
+    cardText(ctx, "locus " + (TRACED[sel] + 1) + "'s tree", cx + cw / 2, TR.py - 4, { size: 11.5, bold: true, col: HOT, align: "center" });
+    const node = new Map(); for (let i = 0; i < n; i++) node.set(1 << i, { x: cxs(now), y: ty(i) });
+    const sorted = tr.merges.slice().sort((a, b) => b.t - a.t);
+    for (const m of sorted) {
+      const kids = [...node.keys()].filter(k => (k & m.mask) === k && k !== m.mask); if (kids.length < 2) continue;
+      const x = cxs(m.t), yv = kids.map(k => node.get(k).y);
+      for (const k of kids) { const nd = node.get(k); polyline(ctx, [[nd.x, nd.y], [x, nd.y]], HOT, 1.6); node.delete(k); }
+      polyline(ctx, [[x, Math.min(...yv)], [x, Math.max(...yv)]], HOT, 1.6);
+      node.set(m.mask, { x, y: (Math.min(...yv) + Math.max(...yv)) / 2 });
+    }
+    if (node.size > 1) { const left = [...node.values()], x = cx - 4;   /* lineages that had not met by the founding population's start */
+      for (const nd of left) polyline(ctx, [[nd.x, nd.y], [x, nd.y]], HOT, 1.6, 1, [3, 3]);
+      polyline(ctx, [[x, Math.min(...left.map(v => v.y))], [x, Math.max(...left.map(v => v.y))]], HOT, 1.6, 1, [3, 3]); }
+    for (let i = 0; i < n; i++) cardText(ctx, LETTERS[i], cxs(now) + 9, ty(i) + 0.5, { size: 12, bold: true, col: INK, align: "center" });
+    /* the eight loci */
+    const ag = trAgreeAll(w), y0 = TR.py + TR.ph + 2, bw = 36;
+    ag.forEach((ok, k) => { const x = cx - 14 + (k % 4) * (bw + 4), y = y0 + Math.floor(k / 4) * 22;
+      ctx.fillStyle = k === sel ? "#f4d3d7" : "#fff"; ctx.fillRect(x, y, bw, 18); ctx.strokeStyle = k === sel ? HOT : "#cfccc2"; ctx.lineWidth = k === sel ? 1.6 : 1; ctx.strokeRect(x, y, bw, 18);
+      cardText(ctx, (TRACED[k] + 1) + " " + (ok ? "✓" : "✗"), x + bw / 2, y + 9.5, { size: 11, col: ok ? INK : HOT, bold: !ok, align: "center" }); });
+    w._agree = ag;
+  }
+  ctx.restore();
+  return { ys, order, xs };
+}
+
+/* ====== pairs: a dot a pair, at the generations since they parted ====== */
+const PR = { W: 780, H: 250, px: 50, py: 14, pw: 690, ph: 186 };
+const MEAS = { fst: { lab: "F_ST", ymax: 1 }, hw: { lab: "a hybrid's chance to live", ymax: 1 }, sz: { lab: "size difference", ymax: 8, auto: true } };
+function drawPairs(pairs, meas, rule, picks) {
+  const cv = $("B_pairs"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, PR.W, PR.H), m = MEAS[meas];
+  let ymax = m.ymax; if (m.auto && pairs) for (const p of pairs) ymax = Math.max(ymax, Math.ceil(p[meas] / 2) * 2);
+  const xs = t => PR.px + t / G * PR.pw, ys = v => PR.py + PR.ph - Math.min(v, ymax) / ymax * PR.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(PR.px, PR.py); ctx.lineTo(PR.px, PR.py + PR.ph); ctx.lineTo(PR.px + PR.pw, PR.py + PR.ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) cardText(ctx, String(+(ymax * k / 4).toFixed(2)), PR.px - 6, ys(ymax * k / 4), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= G; t += 100) cardText(ctx, String(t), xs(t), PR.py + PR.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generations since the two parted", PR.px + PR.pw / 2, PR.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, PR.py + PR.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (rule && rule.meas === meas) { ctx.fillStyle = "rgba(29,29,27,0.07)"; const x0 = xs(rule.x0), y0 = ys(rule.hi), y1 = ys(rule.lo); ctx.fillRect(x0, y0, PR.px + PR.pw - x0, y1 - y0);
+    ctx.strokeStyle = INK; ctx.setLineDash([4, 3]); ctx.strokeRect(x0, y0, PR.px + PR.pw - x0, y1 - y0); ctx.setLineDash([]); }
+  if (!pairs || !pairs.length) { cardText(ctx, "Go plays it here: a dot for each pair once there are two populations.", PR.px + PR.pw / 2, PR.py + PR.ph / 2, { size: 12, col: MUTED, align: "center" }); ctx.restore(); return; }
+  for (const p of pairs) {
+    const x = xs(p.ago), y = ys(p[meas]), picked = picks && picks.length === 2 && ((picks[0] === p.i && picks[1] === p.j) || (picks[0] === p.j && picks[1] === p.i));
+    ctx.fillStyle = picked ? HOT : INK; ctx.beginPath(); ctx.arc(x, y, picked ? 5.5 : 4, 0, 6.2832); ctx.fill();
+    cardText(ctx, LETTERS[p.i] + LETTERS[p.j], x + 7, y - 7, { size: 10.5, col: picked ? HOT : MUTED, bold: picked });
+  }
+  ctx.restore();
+}
+/* size along the tree: each population's average size, its line forking where it split */
+const SZ = { W: 780, H: 250, px: 50, py: 14, pw: 650, ph: 196 };
+function drawSize(w, show) {
+  const cv = $("B_size"); if (!cv || $("B_sizeBox").hidden) return;
+  const { ctx } = frameCanvas(cv, SZ.W, SZ.H);
+  const xs = t => SZ.px + Math.max(0, t) / G * SZ.pw;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SZ.px, SZ.py); ctx.lineTo(SZ.px, SZ.py + SZ.ph); ctx.lineTo(SZ.px + SZ.pw, SZ.py + SZ.ph); ctx.stroke();
+  for (let t = 0; t <= G; t += 100) cardText(ctx, String(t), xs(t), SZ.py + SZ.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", SZ.px + SZ.pw / 2, SZ.H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, SZ.py + SZ.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "average size", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (!w || !show) { cardText(ctx, w ? "Hidden until you pick." : "Go plays it here.", SZ.px + SZ.pw / 2, SZ.py + SZ.ph / 2, { size: 12.5, col: MUTED, align: "center" }); ctx.restore(); return; }
+  let lo = Infinity, hi = -Infinity; for (const p of w.pops) for (const [, v] of p.sz) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+  lo = Math.floor(lo - 0.5); hi = Math.ceil(hi + 0.5);
+  const ys = v => SZ.py + SZ.ph - (v - lo) / (hi - lo) * SZ.ph;
+  for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4; cardText(ctx, v.toFixed(1), SZ.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (const p of w.pops) { const pts = p.sz.map(([t, v]) => [xs(t), ys(v)]);
+    if (p.parent >= 0) { const par = w.pops[p.parent], last = par.sz[par.sz.length - 1]; if (last) pts.unshift([xs(last[0]), ys(last[1])]); }
+    polyline(ctx, pts, BLUE, 1.8, 0.95); }
+  const { order } = trLayout(w);
+  order.forEach((pid, i) => { const p = w.pops[pid], last = p.sz[p.sz.length - 1]; if (last) cardText(ctx, LETTERS[i], xs(last[0]) + 8, ys(last[1]), { size: 12.5, bold: true, col: INK }); });
+  ctx.restore();
+}
+
+/* =====================================================================
+   THE STEPS. Targets (one run each, judged at generation 400) and
+   questions (clicks on the tree, judged at once). A target's first
+   scored run is its bit; a question's first answer is its bit; either
+   is retried until it is right. Practice runs count for nothing.
+   MEASURED (node prototype of this engine, scratchpad eng20.js, 2026-10-20;
+   share of single trees, 20 each):
+     six populations by 400:  b .002 .10-.50 (once splitting starts it snowballs); .004 .25-.40; .008 .75-.85; .016 .99
+       (2,970 of 2,999 trees; one in 600 never splits at all). Opens at .001.
+     six populations and 6+ of 8 loci disagreeing:  N 5 b .008 .05; N 10 b .008 .25; N 25 b .008 .55, b .016 .80;
+       N 50 b .008 .85, b .016 1.0
+     five or more populations and at most two of 8 disagreeing (the page's engine, 30 trees):  N 5 b .004 .30, b .008 .60,
+       b .016 .30; N 10 b .004 .27, b .008 .17; N 25 and up 0-.07. Stricter versions hit less (four or more and at most one:
+       N 5 b .004-.008 .33). Short gaps between two splits are what spoil it: a failed tree shows two forks close together.
+     every pair parted 100+ generations ago two species (under 10% of hybrids live), b .008, the page's engine, 30 trees each
+       at N 10 / 25 / 50:  mutation .001 .10 / .03 / 0; .002 .37 / .50 / .40; .004 .93 / .83 / .87; .006 .97 / .90 / .90 (most
+       misses: no pair had parted 100 generations ago, the first split came late)
+     the earlier "oldest pair two species, newest pair not" hit only 1 in 4 trees at its best settings (it hangs on when the
+       random splits fall): cut for the question in step 6 instead.
+   ===================================================================== */
+const BV = [0, 0.001, 0.002, 0.004, 0.008, 0.016, 0.03], NV = [5, 10, 25, 50, 100], MUV = [0, 0.0005, 0.001, 0.002, 0.004, 0.006];
+const CTL = [{ key: "b", vals: BV }, { key: "N", vals: NV }, { key: "mu", vals: MUV }];
+/* the population a question asks about: one of the pair from the most recent split whose two halves are both still living, so
+   its closest relative is one population (A when there is none) */
+function refTip(w) {
+  let best = null; for (const p of w.pops) if (p.ended != null && p.kids.every(k => w.pops[k].ended == null) && (!best || p.ended > best.ended)) best = p;
+  return best ? w.alive.indexOf(best.kids[0]) : 0;
+}
+const sisterOf = (w, ia) => { const pid = w.alive[ia], p = w.pops[pid], par = w.pops[p.parent]; const sib = par.kids.find(k => k !== pid);
+  const tips = new Set(), walk = x => { const q = w.pops[x]; if (q.ended == null) tips.add(w.alive.indexOf(x)); else q.kids.forEach(walk); }; walk(sib); return tips; };
+const STEPS = [
+  { kind: "target", free: ["b"], hold: { N: 25, mu: 0.001 }, open: { b: 0.001 },
+    text: "Grow six populations by generation 400.",
+    rules: [{ txt: "populations at 400: 6", ok: q => q.w.alive.length >= 6, val: q => String(q.w.alive.length) }] },
+  { kind: "pick1", text: "Click the population most closely related to {X} (ringed), on the tree (its letter).", needs: 3,
+    judge: (w, i) => { const x = refTip(w); return i !== x && sisterOf(w, x).has(i); }, explain: w => { const x = refTip(w); return "most closely related to " + LETTERS[x] + ": " + [...sisterOf(w, x)].sort().map(i => LETTERS[i]).join(" or "); } },
+  { kind: "target", free: ["b", "N"], hold: { mu: 0.001 }, open: { N: 5, b: 0.008 },
+    text: "Make the alleles tell a different story: six populations, and six or more of the eight loci with a tree that does not match.",
+    rules: [{ txt: "populations at 400: 6", ok: q => q.w.alive.length >= 6, val: q => String(q.w.alive.length) },
+            { txt: "loci that do not match: 6 or more", ok: q => q.dis >= 6, val: q => q.dis + " of 8" }] },
+  { kind: "target", free: ["b", "N"], hold: { mu: 0.001 }, open: { N: 50, b: 0.008 },
+    text: "Now the opposite: five populations or more, and no more than two of the eight loci with a tree that does not match.",
+    rules: [{ txt: "populations at 400: 5 or more", ok: q => q.w.alive.length >= 5, val: q => String(q.w.alive.length) },
+            { txt: "loci that do not match: 2 at most", ok: q => q.dis <= 2, val: q => q.dis + " of 8" }] },
+  { kind: "target", free: ["b", "N", "mu"], open: { mu: 0.001, N: 25, b: 0.008 },
+    text: "Make every pair that parted 100 or more generations ago two species: under 10% of their hybrids live.",
+    rules: [{ meas: "hw", x0: 100, lo: 0, hi: 0.1, txt: "pairs parted 100+ ago: every one under 10%", ok: q => { const o = q.pairs.filter(p => p.ago >= 100); return o.length > 0 && o.every(p => p.hw < 0.1); },
+              val: q => { const o = q.pairs.filter(p => p.ago >= 100); return o.length ? "highest " + pc(Math.max(...o.map(p => p.hw))) : "no such pair"; } }] },
+  { kind: "pick2", text: "Click the two populations whose hybrids you expect to live best (two letters).", needs: 3, meas: "hw",
+    judge: (w, a, b, q) => { const ago = q.pairs.map(p => p.ago), mn = Math.min(...ago); return q.pairs.some(p => p.ago === mn && ((p.i === a && p.j === b) || (p.i === b && p.j === a))); },
+    explain: (w, q) => { const best = q.pairs.slice().sort((x, y) => y.hw - x.hw)[0]; return "the pair that parted most recently: " + q.pairs.filter(p => p.ago === Math.min(...q.pairs.map(x => x.ago))).map(p => LETTERS[p.i] + LETTERS[p.j]).join(", ") + "; best hybrids this time: " + LETTERS[best.i] + LETTERS[best.j] + " (" + pc(best.hw) + ")"; } },
+];
+/* the size trees: a bet, placed before the sizes show. The bit is the bet (A's closest relative), not whether it paid off this
+   time: MEASURED (the page's engine, 25-30 trees of four or more populations, b .008): A's closest relative was also the closest
+   in size in 9-15 of 25 trees (N 5-50, mutation .001-.004), against 1 in 5 for a guess; the average size gap rises with time
+   apart (N 5, mutation .001: 1.8 / 3.6 / 4.7 / 6.5 for pairs parted 0-99 / 100-199 / 200-299 / 300+ generations). One tree
+   is noisy, the average is not: the Anolis box shows the average over 3,321 real pairs. */
+for (let k = 0; k < 3; k++) STEPS.push({ kind: "pick1", sizes: true, fresh: true, needs: 3, meas: "sz",
+  text: "Size, tree " + (k + 1) + " of 3. Sizes are hidden. After Go, click the population you expect to be closest in size to {X} (ringed).",
+  judge: (w, i) => { const x = refTip(w); return i !== x && sisterOf(w, x).has(i); },
+  explain: (w, q) => { const x = refTip(w), pa = q.pairs.filter(p => p.i === x || p.j === x).sort((u, v) => u.sz - v.sz)[0], o = pa.i === x ? pa.j : pa.i;
+    return LETTERS[x] + "'s closest relative: " + [...sisterOf(w, x)].sort().map(i => LETTERS[i]).join(" or ") + "; closest to " + LETTERS[x] + " in size this time: " + LETTERS[o] + " (" + pa.sz.toFixed(1) + " apart)"; } });
+
+const AX = { step: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0, sel: 2, picks: [], answered: false, verdict: "" };
+const stepOf = () => STEPS[Math.min(AX.step, STEPS.length - 1)];
+const practising = () => $("B_practice").checked || AX.done;
+const unlocked = key => AX.done || STEPS.slice(0, AX.step + 1).some(s => s.free && s.free.includes(key));
+function readSet() { const o = {}; for (const c of CTL) o[c.key] = c.vals[+$("B_" + c.key).value]; return o; }
+function syncVals() { for (const c of CTL) $("B_" + c.key + "V").textContent = String(c.vals[+$("B_" + c.key).value]); }
+function openStep() {
+  const s = stepOf();
+  for (const c of CTL) {
+    const el = $("B_" + c.key), row = $("B_" + c.key + "Row"), held = !AX.done && s.kind === "target" && !(s.free || []).includes(c.key);
+    if (!AX.done && s.open && s.open[c.key] != null) el.value = c.vals.indexOf(s.open[c.key]);
+    if (!AX.done && s.hold && s.hold[c.key] != null) el.value = c.vals.indexOf(s.hold[c.key]);
+    el.dataset.held = held ? "1" : ""; row.classList.toggle("held", held); row.hidden = !unlocked(c.key);
+  }
+  if (s.meas && !AX.done) $("B_meas").value = s.meas;
+  if (s.sizes || AX.done) { $("B_sizeBox").hidden = false; $("B_measSz").disabled = false; }
+  AX.picks = []; AX.answered = false; syncVals();
+}
+/* ---- a run ---- */
+function goRun() {
+  if (AX.run || AX.waiting) return;
+  const set = readSet(), seed = pageSeed("l20", 1, 999999) + 104729 * AX.runs++ + 7919 * AX.step;
+  const w = trWorld(set, seed); while (w.t < 0) trStep(w);
+  const s = AX.done ? null : stepOf();
+  AX.run = { w, set, seed, practice: practising(), step: AX.step, s, pairs: [], hidden: !!(s && s.sizes) };
+  AX.picks = []; AX.answered = false; $("B_verdict").innerHTML = ""; bump(); paint(); loop();
+}
+function loop() { if (AX.on) return; AX.on = true; AX.t0 = 0; requestAnimationFrame(frame); }
+function frame(ts) {
+  const q = AX.run;
+  if (q) {
+    if (!AX.t0) AX.t0 = ts;
+    const due = Math.min(G, Math.ceil((ts - AX.t0) / 14)), t0 = performance.now();
+    while (q.w.t < due && performance.now() - t0 < 14) stepRun(q);
+    paint();
+    if (q.w.t >= G) endRun();
+  }
+  if (AX.run) requestAnimationFrame(frame); else AX.on = false;
+}
+function stepRun(q) { trStep(q.w); if (q.w.t % 20 === 0 && q.w.alive.length > 1) q.pairs = trPairs(q.w, 12); }
+function finishNow() { const q = AX.run; if (!q) return; while (q.w.t < G) stepRun(q); endRun(); }
+function endRun() {
+  const q = AX.run; if (!q) return;
+  AX.run = null; AX.last = q;
+  q.pairs = q.w.alive.length > 1 ? trPairs(q.w, 40) : []; q.agree = trAgreeAll(q.w); q.dis = q.agree.filter(x => !x).length;
+  const s = q.s;
+  if (s && s.kind === "target") {
+    q.j = { each: s.rules.map(u => u.ok(q)), vals: s.rules.map(u => u.val(q)) }; q.j.ok = q.j.each.every(Boolean);
+    if (!q.practice) { const pos = BIT["S" + (q.step + 1)]; if (firstTry(pos)) record(pos, q.j.ok); if (q.j.ok) { AX.results[q.step] = true; AX.waiting = true; } }
+    AX.verdict = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+  } else AX.verdict = "";
+  paint();
+}
+/* ---- a question: clicks on the tree's letters ---- */
+const treeFor = s => { const q = AX.last; return q && (!s.fresh || q.step === AX.step) ? q : null; };
+function askable() { const s = stepOf(), q = treeFor(s); return !AX.done && !AX.run && !AX.waiting && s.kind !== "target" && !!q && q.w.alive.length >= s.needs && !AX.answered; }
+function onTreeClick(e) {
+  const q = AX.last, cv = $("B_tree"); if (!q || AX.run) return;
+  const pt = framePt(cv, e, TR.W), L0 = trLayout(q.w), xs = t => TR.px + t / G * TR.pw;
+  /* a letter, or a locus chip */
+  const i = L0.order.findIndex(pid => Math.hypot(pt.x - (xs(q.w.t) + 14), pt.y - L0.ys.get(pid)) < 14);
+  const y0 = TR.py + TR.ph + 2, bw = 36;
+  for (let k = 0; k < NT; k++) { const x = TR.cx - 14 + (k % 4) * (bw + 4), y = y0 + Math.floor(k / 4) * 22; if (pt.x >= x && pt.x <= x + bw && pt.y >= y && pt.y <= y + 18) { AX.sel = k; paint(); return; } }
+  if (i < 0 || !askable()) return;
+  const s = stepOf();
+  if (s.kind === "pick1") { if (i === refTip(q.w)) return; answer(s.judge(q.w, i), s.explain(q.w, q), [refTip(q.w), i]); return; }
+  if (AX.picks.includes(i)) { AX.picks = AX.picks.filter(x => x !== i); paint(); return; }
+  AX.picks.push(i); if (AX.picks.length < 2) { paint(); return; }
+  answer(s.judge(q.w, AX.picks[0], AX.picks[1], q), s.explain(q.w, q), AX.picks.slice());
+}
+function answer(ok, why, picks) {
+  const pos = BIT["S" + (AX.step + 1)]; if (firstTry(pos)) record(pos, ok);
+  AX.answered = true; AX.picks = picks; bump();
+  AX.verdict = (ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ not the best bet</span>') + " — " + why;
+  if (AX.last) AX.last.hidden = false;
+  /* a wrong answer stays open on the same tree; a pick of two on the size trees counts either way, one tree a step */
+  if (ok || stepOf().fresh) { AX.results[AX.step] = true; AX.waiting = true; } else { AX.answered = false; AX.picks = []; }
+  paint();
+}
+function nextStep() {
+  if (!AX.waiting) return; AX.waiting = false;
+  if (AX.step >= STEPS.length - 1) { AX.done = true; openStep(); finishLesson(); paint(); return; }
+  AX.step++; AX.verdict = ""; openStep(); paint();
+}
+function syncCard() {
+  const s = stepOf(), busy = !!AX.run, n = AX.results.filter(Boolean).length;
+  $("B_pips").innerHTML = AX.done ? "" : STEPS.map((_, i) => AX.results[i] ? '<span class="ok">●</span>' : i === AX.step ? "◉" : "○").join(" ");
+  const tq = treeFor(s), X = tq && tq.w.alive.length > 1 ? LETTERS[refTip(tq.w)] : "the ringed population";
+  let text = AX.done ? "All nine steps done. Run any setting you like: 400 generations, one tree." : "Step " + (AX.step + 1) + " of 9. " + s.text.replace("{X}", X);
+  if (!AX.done && s.kind !== "target" && !busy && !AX.waiting) {
+    const q = treeFor(s);
+    if (!q) text += " Go first.";
+    else if (q.w.alive.length < s.needs) text += " This tree has fewer than " + s.needs + " populations: Go again.";
+    else if (s.kind === "pick2" && AX.picks.length === 1) text += " One picked: " + LETTERS[AX.picks[0]] + ".";
+  }
+  $("B_ttext").textContent = text;
+  const q = AX.last && AX.last.step === AX.step && AX.last.s === s ? AX.last : null, j = q && q.j;
+  $("B_rules").innerHTML = AX.done || s.kind !== "target" ? "" : s.rules.map((u, k) => '<li><span class="' + (j ? (j.each[k] ? "ok" : "off") : "") + '">' + (j ? (j.each[k] ? "✓" : "✗") : "·") + "</span> " + u.txt +
+    ' <span style="color:var(--muted)">(' + (j ? "this run " + j.vals[k] : "not run yet") + ")</span></li>").join("");
+  for (const c of CTL) $("B_" + c.key).disabled = busy || AX.waiting || $("B_" + c.key).dataset.held === "1";
+  $("B_practice").disabled = busy || AX.done || AX.waiting || s.kind !== "target";
+  if (s.kind !== "target" && !AX.done) $("B_practice").checked = false;
+  $("B_go").disabled = busy || AX.waiting || (!AX.done && s.kind !== "target" && !!treeFor(s) && treeFor(s).w.alive.length >= s.needs);
+  $("B_go").textContent = practising() && s.kind === "target" ? "Practice run" : "Go";
+  $("B_next").hidden = !AX.waiting || busy; $("B_next").textContent = AX.step >= STEPS.length - 1 ? "Finish" : "Next step";
+  $("B_verdict").innerHTML = AX.verdict;
+  tick("steps", n >= STEPS.length, n + " of 9");
+  $("B_tree").style.cursor = askable() ? "pointer" : "default";
+}
+function paint() {
+  const q = AX.run || AX.last, w = q ? q.w : null, s = stepOf();
+  const sizesShown = !!q && (!q.hidden || AX.done) && ($("B_sizeBox").hidden === false);
+  let sizes = null; if (w && sizesShown) { const { order } = trLayout(w); sizes = order.map(pid => trMeanSize(w, w.pops[pid].F)); }
+  const askRef = !AX.done && s.kind === "pick1" && w && treeFor(s) && treeFor(s).w === w && w.alive.length > 1 ? refTip(w) : null;
+  drawTree(w, w && w.alive.length > 1 ? AX.sel : null, AX.picks, sizes, askRef);
+  $("B_treeH").textContent = "The populations' tree · generation " + (w ? Math.max(0, w.t) : 0) + (w ? " · " + w.alive.length + " population" + (w.alive.length > 1 ? "s" : "") : "");
+  const meas = $("B_meas").value === "sz" && !sizesShown ? "fst" : $("B_meas").value;
+  const rule = !AX.done && s.kind === "target" ? (s.rules.find(u => u.meas) || null) : null;
+  drawPairs(q ? q.pairs : null, meas, rule, AX.answered || AX.waiting ? AX.picks : null);
+  drawSize(w, sizesShown);
+  syncCard(); B_code();
+}
+
+/* ====== observed data: Anolis lizards. The tree (Losos, Mahler; data/clean/anolis_tree.nwk) and snout-vent length (log mm,
+   data/clean/anolis_svl.csv), 82 species, inline. Left, the tree with each species' length as a bar; right, every pair's
+   length ratio (larger / smaller) against the time since they parted on the tree, binned (MEASURED: the 20 pairs parted under
+   1 tree unit differ by 0.06 log units, about 6%; the 2,803 parted 5 or more, by 0.46, about 58%) ====== */
+const ANOLIS_NWK = "((((((((ahli:0.785,allogus:0.785):0.654,rubribarbus:1.44):2.086,imias:3.526):0.768,((((sagrei:1.546,(bremeri:0.658,quadriocellifer:0.658):0.887):0.369,ophiolepis:1.915):0.523,mestrei:2.438):0.779,(((jubar:0.713,homolechis:0.713):0.543,confusus:1.256):0.253,guafe:1.509):1.708):1.077):0.826,((((garmani:1.2,opalinus:1.2):0.118,grahami:1.318):1.307,valencienni:2.625):0.736,lineatopus:3.361):1.759):0.402,(((evermanni:1.281,stratulus:1.281):2.113,(((krugi:1.961,pulchellus:1.961):0.788,(gundlachi:2.319,poncensis:2.319):0.429):0.182,(cooki:2.372,cristatellus:2.372):0.559):0.464):0.897,(((brevirostris:1.654,(caudalis:1.023,marron:1.023):0.631):0.16,websteri:1.815):0.59,distichus:2.405):1.886):1.231):0.209,(((((alumina:1.609,semilineatus:1.609):1.316,olssoni:2.925):1.573,insolitus:4.498):0.718,((((whitemani:2.052,((haetianus:1.602,breslini:1.602):0.418,((armouri:0.89,cybotes:0.89):0.265,shrevei:1.155):0.864):0.033):0.64,(longitibialis:1.513,strahmi:1.513):1.179):0.549,marcanoi:3.241):1.503,(((baleatus:0.25,barahonae:0.25):0.316,ricordii:0.566):2.278,cuvieri:2.844):1.9):0.472):0.456,(((((((altitudinalis:1.049,oporinus:1.049):0.553,isolepis:1.603):1.523,(allisoni:1.776,porcatus:1.776):1.35):0.222,loysiana:3.348):0.511,guazuma:3.859):0.279,((placidus:1.122,sheplani:1.122):2.264,(alayoni:2.276,(angusticeps:1.303,paternus:1.303):0.973):1.11):0.752):0.473,((alutaceus:0.725,inexpectatus:0.725):2.426,(((clivicola:2.016,(cupeyalensis:0.516,cyanopleurus:0.516):1.499):0.714,(alfaroi:1.681,macilentus:1.681):1.048):0.055,vanidicus:2.785):0.366):1.461):1.06):0.06):0.268,(((((baracoae:0.351,(noblei:0.128,smallwoodi:0.128):0.223):0.171,luteogularis:0.522):0.107,equestris:0.63):3.778,(((bahorucoensis:2.305,(dolichocephalus:0.906,hendersoni:0.906):1.399):1.518,darlingtoni:3.822):0.197,(((aliniger:1.07,singularis:1.07):0.826,chlorocyanus:1.896):1.281,coelestinus:3.178):0.842):0.388):0.962,occultus:5.37):0.63);";
+const ANOLIS_SVL = {"ahli":4.039,"allogus":4.04,"rubribarbus":4.078,"imias":4.1,"sagrei":4.067,"bremeri":4.113,"quadriocellifer":3.902,"ophiolepis":3.638,"mestrei":3.987,"jubar":3.953,"homolechis":4.033,"confusus":3.938,"guafe":3.877,"garmani":4.769,"opalinus":3.838,"grahami":4.154,"valencienni":4.322,"lineatopus":4.129,"evermanni":4.166,"stratulus":3.87,"krugi":3.887,"pulchellus":3.799,"gundlachi":4.188,"poncensis":3.82,"cooki":4.092,"cristatellus":4.19,"brevirostris":3.874,"caudalis":3.912,"marron":3.832,"websteri":3.917,"distichus":3.929,"alumina":3.589,"semilineatus":3.697,"olssoni":3.794,"insolitus":3.8,"whitemani":4.097,"haetianus":4.317,"breslini":4.051,"armouri":4.122,"cybotes":4.211,"shrevei":3.983,"longitibialis":4.242,"strahmi":4.274,"marcanoi":4.079,"baleatus":5.053,"barahonae":5.077,"ricordii":5.014,"cuvieri":4.875,"altitudinalis":3.843,"oporinus":3.846,"isolepis":3.657,"allisoni":4.375,"porcatus":4.259,"loysiana":3.701,"guazuma":3.764,"placidus":3.774,"sheplani":3.683,"alayoni":3.816,"angusticeps":3.789,"paternus":3.803,"alutaceus":3.555,"inexpectatus":3.537,"clivicola":3.759,"cupeyalensis":3.462,"cyanopleurus":3.63,"alfaroi":3.527,"macilentus":3.716,"vanidicus":3.626,"baracoae":5.043,"noblei":5.083,"smallwoodi":5.035,"luteogularis":5.101,"equestris":5.114,"bahorucoensis":3.827,"dolichocephalus":3.909,"hendersoni":3.86,"darlingtoni":4.302,"aliniger":4.037,"singularis":4.058,"chlorocyanus":4.275,"coelestinus":4.298,"occultus":3.663};
+function anoParse(s) { let i = 0; const node = () => { const n = { kids: [], len: 0 }; if (s[i] === "(") { i++; n.kids.push(node()); while (s[i] === ",") { i++; n.kids.push(node()); } i++; }
+  let nm = ""; while (i < s.length && !":,();".includes(s[i])) nm += s[i++]; n.name = nm; if (s[i] === ":") { i++; let v = ""; while (i < s.length && !",();".includes(s[i])) v += s[i++]; n.len = +v; } return n; }; return node(); }
+let ANO = null;
+function anoBuild() {
+  if (ANO) return ANO;
+  const root = anoParse(ANOLIS_NWK), tips = [];
+  (function walk(n, d, path) { n.d = d + n.len; n.path = path.concat([n]); if (!n.kids.length) tips.push(n); n.kids.forEach(k => walk(k, n.d, n.path)); })(root, 0, []);
+  const H = Math.max(...tips.map(t => t.d)), bins = [0, 1, 2, 3, 4, 5, 6.1].map(v => v), sums = bins.slice(1).map(() => [0, 0]);
+  for (let i = 0; i < tips.length; i++) for (let j = i + 1; j < tips.length; j++) {
+    const s = new Set(tips[i].path); let m = null; for (const x of tips[j].path) if (s.has(x)) m = x;
+    const ago = H - m.d, d = Math.abs(ANOLIS_SVL[tips[i].name] - ANOLIS_SVL[tips[j].name]);
+    for (let b = 0; b < sums.length; b++) if (ago >= bins[b] && ago < bins[b + 1]) { sums[b][0] += d; sums[b][1]++; }
+  }
+  return (ANO = { root, tips, H, bins, mean: sums.map(([s, n]) => n ? s / n : null), n: sums.map(x => x[1]) });
+}
+function drawAnolis() {
+  const cv = $("B_anolis"); if (!cv || !$("B_anoBox").open) return;
+  const A = anoBuild(), { ctx } = frameCanvas(cv, 1240, 300), n = A.tips.length;
+  /* the tree, tips top to bottom; bars of length */
+  const tx = d => 10 + d / A.H * 380, ty = i => 14 + i * (272 / n);
+  A.tips.forEach((t, i) => t.y = ty(i));
+  (function yset(nd) { if (!nd.kids.length) return nd.y; nd.y = nd.kids.reduce((s, k) => s + yset(k), 0) / nd.kids.length; return nd.y; })(A.root);
+  ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.9;
+  (function draw(nd, x0) { const x = tx(nd.d); ctx.beginPath(); ctx.moveTo(tx(x0), nd.y); ctx.lineTo(x, nd.y); ctx.stroke();
+    if (nd.kids.length) { ctx.beginPath(); ctx.moveTo(x, Math.min(...nd.kids.map(k => k.y))); ctx.lineTo(x, Math.max(...nd.kids.map(k => k.y))); ctx.stroke(); nd.kids.forEach(k => draw(k, nd.d)); } })(A.root, 0);
+  const lo = 3.4, hi = 5.2;
+  A.tips.forEach(t => { const v = ANOLIS_SVL[t.name]; ctx.fillStyle = BLUE; ctx.fillRect(400, t.y - 1.3, (v - lo) / (hi - lo) * 180, 2.6); });
+  cardText(ctx, "82 Anolis species: the tree, and each one's body length", 10, 6, { size: 11.5, bold: true, col: INK });
+  cardText(ctx, "body length →", 400, 292, { size: 10.5, col: MUTED });
+  /* every pair's difference, binned by time since they parted */
+  const px = 680, pw = 520, py = 26, ph = 230, ymax = 0.6, xs = v => px + v / 6 * pw, ys = v => py + ph - v / ymax * ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + ph); ctx.lineTo(px + pw, py + ph); ctx.stroke();
+  for (const v of [0, 0.2, 0.4, 0.6]) cardText(ctx, Math.round((Math.exp(v) - 1) * 100) + "%", px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let v = 0; v <= 6; v++) cardText(ctx, String(v), xs(v), py + ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "time since the two parted (the tree's units)", px + pw / 2, py + ph + 28, { size: 11, col: MUTED, align: "center" });
+  cardText(ctx, "every pair: how much bigger the larger one is, on average", px, 10, { size: 11.5, bold: true, col: INK });
+  A.mean.forEach((m, b) => { if (m == null) return; const x0 = xs(A.bins[b]) + 3, x1 = xs(Math.min(6, A.bins[b + 1])) - 3; ctx.fillStyle = "#a3c3da"; ctx.fillRect(x0, ys(m), x1 - x0, ys(0) - ys(m)); ctx.strokeStyle = BLUE; ctx.strokeRect(x0, ys(m), x1 - x0, ys(0) - ys(m));
+    cardText(ctx, A.n[b] + " pairs", (x0 + x1) / 2, ys(m) - 8, { size: 10, col: MUTED, align: "center" }); });
+  ctx.restore();
+}
+
+function B_code() {
+  const s = readSet();
+  codeInto("codeB", [
+    ["", "# Lesson 20 -- one population keeps splitting; its pieces drift apart; F_ST and size between two of them"],
+    ["N", "N <- " + s.N + "; L <- 40; G <- 400                  # fish a population, loci, generations"],
+    ["b", "b <- " + s.b + "                                     # chance a population splits, each generation"],
+    ["mu", "mu <- " + s.mu + "                                  # chance a locus takes a new allele"],
+    ["", "next_id <- 4; eff <- rnorm(3, 0, 0.6)                   # every allele's effect on size"],
+    ["", "start <- function() lapply(1:N, function(i) list(sample(1:3, L, TRUE), sample(1:3, L, TRUE)))"],
+    ["", "gamete <- function(g) { side <- (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < 1 / (L - 1)))) %% 2; ifelse(side == 0, g[[1]], g[[2]]) }"],
+    ["mu", "mutate <- function(ch) { for (i in which(runif(L) < mu)) { ch[i] <- next_id; eff[next_id] <<- rnorm(1, 0, 0.6); next_id <<- next_id + 1 }; ch }"],
+    ["", "pops <- list(start())"],
+    ["", "for (t in 1:G) {"],
+    ["b", "  for (k in seq_along(pops)) if (length(pops) < 6 && runif(1) < b) { h <- sample(N); pops[[length(pops) + 1]] <- pops[[k]][h[-(1:(N %/% 2))]]; pops[[k]] <- pops[[k]][h[1:(N %/% 2)]] }"],
+    ["", "  pops <- lapply(pops, function(P) lapply(1:N, function(i) { ab <- sample(length(P), 2); list(mutate(gamete(P[[ab[1]]])), mutate(gamete(P[[ab[2]]]))) }))"],
+    ["", "}"],
+    ["", "size <- sapply(pops, function(P) mean(sapply(P, function(g) 20 + sum(eff[c(g[[1]], g[[2]])]))))"],
+    ["", "het <- function(x) 1 - sum((table(x) / length(x))^2)"],
+    ["", "fst <- function(P, Q) { al <- function(P, i) unlist(lapply(P, function(g) c(g[[1]][i], g[[2]][i])))"],
+    ["", "  w <- mean(sapply(1:L, function(i) (het(al(P, i)) + het(al(Q, i))) / 2)); p <- mean(sapply(1:L, function(i) het(c(al(P, i), al(Q, i))))); (p - w) / p }"],
+    ["", "list(populations = length(pops), size = round(size, 1), F_ST_1_2 = if (length(pops) > 1) fst(pops[[1]], pops[[2]]) else NA)"],
+  ]);
+}
+
+/* =====================================================================
+   STAGE A — one split, as a pedigree (pass 2, 2026-10-26; plan and
+   measurements in docs/overhauls/lesson20_overhaul.md).
+
+   A small founding group (PD.F fish, three alleles a locus) breeds for
+   PD.G0 generations in one pond of 2n fish, then the pond's fish are
+   shuffled and halved: n to the orange pond, n to the blue, the two never
+   meeting again, and each breeds n young a generation for g1 more. The row
+   keeps its width. The engine is stage B's own pieces (trAl, trGamete,
+   trMutate: the same fish, chromosomes, crossing over and mutation); the
+   links are kept for the eight traced loci the same way, a fish's parents
+   and, for each locus, which of each parent's two chromosomes it came from.
+   The four marked copies are chromosome 0 of the first two fish of each
+   pond in the last generation, the same four at every locus.
+   ===================================================================== */
+const PD = { F: 3, G0: 10, MU: 0.001 }, PN = [4, 6, 8], PG1 = [5, 10, 15, 20, 30], NPED = 16, SHADE = ["#ffffff", "#c9c5b8", "#6b6b68"];
+function pdWorld(n, g1, seed) {
+  const rng = mulberry32(seed), w = { n, g1, g0: PD.G0, G: PD.G0 + g1, rng, P: { mu: PD.MU }, salt: seed & 0xffff, org: new Int16Array(4096), loc: new Int8Array(4096), eff: new Float32Array(4096), next: 1, rows: [] };
+  const fd = Array.from({ length: L }, (_, i) => { const u = [0, 1, 2].map(() => 0.2 + rng()), s = u[0] + u[1] + u[2]; return u.map((x, j) => ({ id: trAl(w, -1, i), p: x / s })); });
+  const draw = () => { const c = new Int32Array(L); for (let i = 0; i < L; i++) { let u = rng(), j = 0; while (j < 2 && u > fd[i][j].p) { u -= fd[i][j].p; j++; } c[i] = fd[i][j].id; } return c; };
+  w.rows.push(Array.from({ length: PD.F }, () => ({ g: [draw(), draw()], pa: null, sd: null, pond: 0 })));
+  const young = (prev, pool, k, pond) => {
+    const out = [];
+    for (let i = 0; i < k; i++) {
+      const ia = Math.floor(rng() * pool.length); let ib = Math.floor(rng() * (pool.length - 1)); if (ib >= ia) ib++; const a = pool[ia], b = pool[ib];
+      const [ga, sa] = trGamete(prev[a].g, rng), [gb, sb] = trGamete(prev[b].g, rng), sd = new Uint8Array(2 * NT);
+      for (let t = 0; t < NT; t++) { sd[t] = sa[t]; sd[NT + t] = sb[t]; }
+      out.push({ g: [trMutate(w, ga, pond), trMutate(w, gb, pond)], pa: [a, b], sd, pond });
+    }
+    return out;
+  };
+  const all = prev => prev.map((_, i) => i);
+  for (let t = 1; t <= w.G; t++) {
+    const prev = w.rows[t - 1];
+    if (t <= w.g0) {
+      let row = young(prev, all(prev), 2 * n, 0);
+      if (t === w.g0) {   /* the split: shuffled, the first n orange, the rest blue; the parent links stay as they were */
+        const idx = row.map((_, i) => i); for (let i = idx.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), x = idx[i]; idx[i] = idx[j]; idx[j] = x; }
+        const o = idx.slice(0, n).sort((a, b) => a - b), b = idx.slice(n).sort((a, b) => a - b);
+        row = o.map(i => Object.assign(row[i], { pond: 0 })).concat(b.map(i => Object.assign(row[i], { pond: 1 })));
+      }
+      w.rows.push(row);
+    } else {
+      const po = [], pb = []; prev.forEach((f, i) => (f.pond ? pb : po).push(i));
+      w.rows.push(young(prev, po, n, 0).concat(young(prev, pb, n, 1)));
+    }
+  }
+  return w;
+}
+const pdTips = w => { const n = w.n; return [{ fish: 0, side: 0 }, { fish: 1, side: 0 }, { fish: n, side: 0 }, { fish: n + 1, side: 0 }]; };
+/* the lineages of the given tips (indexes into pdTips) at traced locus k, back through the parent links; a merge is the copy
+   two lineages share: { mask (bits of the tips' places in `which`), t, fish, side } */
+function pdTrace(w, which, k) {
+  const tips = pdTips(w); let lin = which.map((ti, b) => ({ fish: tips[ti].fish, side: tips[ti].side, mask: 1 << b })); const merges = [];
+  for (let t = w.G; t >= 1 && lin.length > 1; t--) {
+    for (const x of lin) { const f = w.rows[t][x.fish], s = x.side; x.fish = f.pa[s]; x.side = f.sd[s * NT + k]; }
+    const m = new Map(), out = [];
+    for (const x of lin) { const key = x.fish * 2 + x.side; if (m.has(key)) { const y = m.get(key); y.mask |= x.mask; merges.push({ mask: y.mask, t: t - 1, fish: y.fish, side: y.side }); } else { m.set(key, x); out.push(x); } }
+    lin = out;
+  }
+  return { merges, left: lin.length };
+}
+/* the four marked copies at locus k: ✓ both pairs met and no copy met one from the other pond first, ✗ a mixed clade, - otherwise */
+function pdChip(w, k) {
+  const tr = pdTrace(w, [0, 1, 2, 3], k), ok = new Set([3, 12, 15]);
+  if (tr.merges.some(m => !ok.has(m.mask))) return "x";
+  return tr.merges.some(m => m.mask === 3) && tr.merges.some(m => m.mask === 12) ? "v" : "-";
+}
+const pdChips = w => w._chips || (w._chips = TRACED.map((_, k) => pdChip(w, k)));
+/* F_ST at each of the 40 loci between the two ponds in the last generation (alleles counted, 2n chromosomes a pond) */
+function pdFst(w) {
+  const row = w.rows[w.G], out = [];
+  for (let i = 0; i < L; i++) {
+    const c = [new Map(), new Map()], n = [0, 0];
+    for (const f of row) for (const ch of f.g) { c[f.pond].set(ch[i], (c[f.pond].get(ch[i]) || 0) + 1); n[f.pond]++; }
+    const ids = new Set([...c[0].keys(), ...c[1].keys()]); let s0 = 0, s1 = 0, sb = 0;
+    for (const id of ids) { const p0 = (c[0].get(id) || 0) / n[0], p1 = (c[1].get(id) || 0) / n[1], pb = (p0 + p1) / 2; s0 += p0 * p0; s1 += p1 * p1; sb += pb * pb; }
+    const HS = 1 - (s0 + s1) / 2, HT = 1 - sb; out.push(HT > 1e-9 ? (HT - HS) / HT : 0);
+  }
+  return out;
+}
+/* sixteen pedigrees a Go: the first drawn, the share of the 128 loci ✓ judged */
+function pdBatch(n, g1, seed) {
+  const peds = [], seen = { v: 0, x: 0, d: 0 };
+  for (let r = 0; r < NPED; r++) { const w = pdWorld(n, g1, seed + 7919 * r); peds.push(w); for (const c of pdChips(w)) seen[c === "v" ? "v" : c === "x" ? "x" : "d"]++; }
+  return { peds, share: seen.v / (NPED * NT), seen };
+}
+
+/* ---- the pedigree, drawn: a port of lesson 15's (organism / chromosome / locus views, click = red up and blue down, lock, Clear) ---- */
+const PD_LEFT = 40, PD_TOP = 12, PD_PAD = 12, GAPF = 0.8, ROW_H = { org: 26, chr: 34, loc: 28 }, STR_Y = [5, 14];
+const PV = { view: "chr", locus: 0, lock: false, sel: [], last: null, lay: null };
+const AY = { item: 0, results: [], w: null, peds: null, share: null, read: null, answer: null, answered: false, verdict: "", runs: 0, deals: 0, shown: 1e9, done: false, run: null };
+const pdKey = it => it.kind === "fish" ? "f" + it.t + "|" + it.i : "c" + it.t + "|" + it.i + "|" + it.s + "|" + it.k;
+function pdUp(w, t, i, s, k) { const path = [{ t, i, s }]; while (t > 0) { const f = w.rows[t][i], ni = f.pa[s], ns = f.sd[s * NT + k]; t--; i = ni; s = ns; path.push({ t, i, s }); } return path; }
+function pdDown(w, t, i, s, k) {
+  const links = []; let front = [{ t, i, s }];
+  while (front.length) { const nx = []; for (const c of front) { if (c.t >= w.G) continue; w.rows[c.t + 1].forEach((f, j) => { for (const ks of [0, 1]) if (f.pa[ks] === c.i && f.sd[ks * NT + k] === c.s) { const d = { t: c.t + 1, i: j, s: ks }; links.push([c, d]); nx.push(d); } }); } front = nx; }
+  return links;
+}
+function pdLayout(w, Wd) {
+  const H = ROW_H[PV.view], slot = (Wd - PD_LEFT - 12) / (2 * w.n + GAPF), pos = [];
+  w.rows.forEach((row, t) => {
+    const split = t >= w.g0, pp = pos[t - 1], key = i => { const f = row[i]; return f.pa ? (pp[f.pa[0]].x + pp[f.pa[1]].x) / 2 : i; };
+    const order = ids => ids.slice().sort((a, b) => key(a) - key(b) || a - b);
+    const ids = row.map((_, i) => i), y = PD_TOP + t * H + (t >= w.g0 ? PD_PAD : 0), P = new Array(row.length);
+    if (!split) { const off = (2 * w.n - row.length) * slot / 2; order(ids).forEach((i, j) => { P[i] = { x: PD_LEFT + off + (j + 0.5) * slot, y }; }); }
+    else for (const pond of [0, 1]) order(ids.filter(i => row[i].pond === pond)).forEach((i, j) => { P[i] = { x: PD_LEFT + (pond * (w.n + GAPF) + j + 0.5) * slot, y }; });
+    pos.push(P);
+  });
+  const pw = Math.max(3, Math.min(8, (slot - 8) / NT)), gw = pw * NT;
+  return { slot, H, pos, pw, gw, rad: Math.min(3.2, pw * 0.42), lr: Math.max(3, Math.min(8, slot / 6)), height: PD_TOP * 2 + (w.G + 1) * H + PD_PAD };
+}
+function pdXY(L, c) {   /* where a copy sits in the view drawn */
+  const Q = L.pos[c.t][c.i]; if (!Q) return null;
+  if (PV.view === "org") return { x: Q.x, y: Q.y + 10 };
+  if (PV.view === "chr") return { x: Q.x - L.gw / 2 + L.pw * (c.k + 0.5), y: Q.y + STR_Y[c.s] };
+  return c.k === PV.locus ? { x: Q.x + (c.s ? 1 : -1) * (L.lr + 1.5), y: Q.y + 10 } : null;
+}
+function drawPed(scroll) {
+  const w = AY.w, wrap = $("A_pedwrap"), cv = $("A_ped"); if (!w || !wrap || !cv) return;
+  cv.dataset.cssW = String(Math.max(200, wrap.clientWidth)); delete cv.dataset.fitW;
+  const probe = pdLayout(w, Math.max(200, wrap.clientWidth)), { ctx, W: Wd } = setupCanvas(cv, probe.height);
+  ctx.clearRect(0, 0, Wd, probe.height);
+  const L = PV.lay = pdLayout(w, Wd), seg = (a, b) => { if (!a || !b) return; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); };
+  const last = Math.min(w.G, AY.shown);
+  ctx.font = "10px ui-monospace, Menlo, monospace"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+  for (let t = 0; t <= last; t++) { ctx.fillStyle = t === w.G ? INK : MUTED; ctx.fillText(String(t), PD_LEFT - 10, L.pos[t][0].y + 10); }
+  if (last >= w.g0) { const y = L.pos[w.g0][0].y - PD_PAD; ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(PD_LEFT - 4, y); ctx.lineTo(Wd - 4, y); ctx.stroke(); ctx.restore(); }
+  const shade = (w, ch) => SHADE[ch % 3];
+  for (let t = 0; t <= last; t++) w.rows[t].forEach((f, i) => {
+    const Q = L.pos[t][i], below = t >= w.g0, pc = below ? (f.pond ? BLUE : ORANGE) : "#8a877c";
+    if (PV.view === "org") {
+      ctx.fillStyle = "#fff"; ctx.strokeStyle = pc; ctx.lineWidth = below ? 2 : 1.2; const r = Math.min(L.slot * 0.3, 8);
+      if (below && f.pond) { ctx.fillRect(Q.x - r, Q.y + 10 - r, 2 * r, 2 * r); ctx.strokeRect(Q.x - r, Q.y + 10 - r, 2 * r, 2 * r); } else { ctx.beginPath(); ctx.arc(Q.x, Q.y + 10, r, 0, 6.2832); ctx.fill(); ctx.stroke(); }
+    } else if (PV.view === "chr") {
+      for (const s of [0, 1]) {
+        const y = Q.y + STR_Y[s]; ctx.strokeStyle = "#b9b4a6"; ctx.lineWidth = 1; seg({ x: Q.x - L.gw / 2 + L.pw * 0.5, y }, { x: Q.x + L.gw / 2 - L.pw * 0.5, y });
+        for (let b = 0; b < NT; b++) { const x = Q.x - L.gw / 2 + L.pw * (b + 0.5); ctx.fillStyle = shade(w, f.g[s][TRACED[b]]); ctx.beginPath(); ctx.arc(x, y, L.rad, 0, 6.2832); ctx.fill(); ctx.strokeStyle = "rgba(29,29,27,0.45)"; ctx.lineWidth = 0.6; ctx.stroke(); }
+      }
+      if (below) { ctx.strokeStyle = pc; ctx.lineWidth = 2; if (f.pond) seg({ x: Q.x - L.gw / 2, y: Q.y + 21 }, { x: Q.x + L.gw / 2, y: Q.y + 21 }); else { ctx.save(); ctx.setLineDash([4, 2]); seg({ x: Q.x - L.gw / 2, y: Q.y + 21 }, { x: Q.x + L.gw / 2, y: Q.y + 21 }); ctx.restore(); } }
+    } else {
+      for (const s of [0, 1]) { const x = Q.x + (s ? 1 : -1) * (L.lr + 1.5), y = Q.y + 10; ctx.fillStyle = shade(w, f.g[s][TRACED[PV.locus]]); ctx.beginPath(); ctx.arc(x, y, L.lr, 0, 6.2832); ctx.fill(); ctx.strokeStyle = below ? pc : "rgba(29,29,27,0.45)"; ctx.lineWidth = below ? 1.6 : 0.8; ctx.stroke(); }
+    }
+  });
+  /* the lines for what has been clicked */
+  ctx.save(); ctx.lineCap = "round";
+  for (const it of PV.sel) {
+    if (it.kind === "copy") {
+      if (PV.view === "loc" && it.k !== PV.locus) continue;
+      const at = c => pdXY(L, { t: c.t, i: c.i, s: c.s, k: it.k });
+      ctx.strokeStyle = "rgba(47,107,143,0.85)"; ctx.lineWidth = 1.6; for (const [a, b] of pdDown(w, it.t, it.i, it.s, it.k)) if (b.t <= last) seg(at(a), at(b));
+      ctx.strokeStyle = HOT; ctx.lineWidth = 2.2; const up = pdUp(w, it.t, it.i, it.s, it.k); for (let j = 1; j < up.length; j++) seg(at(up[j - 1]), at(up[j]));
+    } else {
+      const fx = c => L.pos[c.t][c.i] && { x: L.pos[c.t][c.i].x, y: L.pos[c.t][c.i].y + 10 };
+      let up = [{ t: it.t, i: it.i }]; ctx.strokeStyle = HOT; ctx.lineWidth = 1.8;
+      while (up.length) { const nx = new Map(); for (const c of up) if (c.t > 0) for (const p of w.rows[c.t][c.i].pa) { seg(fx(c), fx({ t: c.t - 1, i: p })); nx.set(p, { t: c.t - 1, i: p }); } up = [...nx.values()]; }
+      let dn = [{ t: it.t, i: it.i }]; ctx.strokeStyle = "rgba(47,107,143,0.85)"; ctx.lineWidth = 1.5;
+      while (dn.length) { const nx = new Map(); for (const c of dn) if (c.t < Math.min(w.G, last)) w.rows[c.t + 1].forEach((f, j) => { if (f.pa.includes(c.i)) { seg(fx(c), fx({ t: c.t + 1, i: j })); nx.set(j, { t: c.t + 1, i: j }); } }); dn = [...nx.values()]; }
+    }
+  }
+  for (const it of PV.sel) { const B = it.kind === "copy" ? pdXY(L, it) : { x: L.pos[it.t][it.i].x, y: L.pos[it.t][it.i].y + 10 }; if (!B) continue;
+    ctx.strokeStyle = INK; ctx.lineWidth = PV.last && pdKey(PV.last) === pdKey(it) ? 2 : 1.2; ctx.beginPath(); ctx.arc(B.x, B.y, PV.view === "org" ? 10 : PV.view === "loc" ? L.lr + 3 : L.rad + 3, 0, 6.2832); ctx.stroke(); }
+  /* the read's marks: the ringed copies in the last generation, dashed, numbered; the answer's copies ringed solid once answered */
+  if (AY.read && last >= w.G) {
+    const tips = pdTips(w);
+    AY.read.which.forEach((ti, b) => { const c = { t: w.G, i: tips[ti].fish, s: 0, k: AY.read.k }, B = PV.view === "loc" && PV.locus !== c.k ? null : pdXY(L, c); if (!B) return;
+      const r = PV.view === "org" ? 12 : (PV.view === "loc" ? L.lr : L.rad) + 5; ctx.save(); ctx.setLineDash([3, 2]); ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(B.x, B.y, r, 0, 6.2832); ctx.stroke(); ctx.restore();
+      cardText(ctx, String(ti + 1), B.x, B.y + r + 7, { col: HOT, bold: true, size: 11, align: "center" }); });
+    if (AY.answered) for (const a of AY.read.key) { const B = pdXY(L, { t: a.t, i: a.i, s: a.s, k: AY.read.k }) || (PV.view === "org" ? { x: L.pos[a.t][a.i].x, y: L.pos[a.t][a.i].y + 10 } : null); if (!B) continue;
+      ctx.strokeStyle = HOT; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(B.x, B.y, PV.view === "org" ? 12 : (PV.view === "loc" ? L.lr : L.rad) + 5, 0, 6.2832); ctx.stroke(); }
+  }
+  ctx.restore();
+  if (scroll) wrap.scrollTop = wrap.scrollHeight;
+}
+function pdHit(e) {
+  const L = PV.lay, w = AY.w, cv = $("A_ped"); if (!L || !w) return null;
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, last = Math.min(w.G, AY.shown);
+  for (let t = 0; t <= last; t++) { const row = L.pos[t]; for (let i = 0; i < row.length; i++) { const Q = row[i];
+    if (Math.abs(x - Q.x) > L.slot / 2 || y < Q.y - 3 || y > Q.y + L.H - 5) continue;
+    if (PV.view === "org") return { kind: "fish", t, i };
+    if (PV.view === "chr") { const s = y < Q.y + (STR_Y[0] + STR_Y[1]) / 2 ? 0 : 1, k = Math.floor((x - (Q.x - L.gw / 2)) / L.pw); return k >= 0 && k < NT && Math.abs(y - (Q.y + STR_Y[s])) <= L.rad + 3 ? { kind: "copy", t, i, s, k } : null; }
+    const s = x < Q.x ? 0 : 1, cx = Q.x + (s ? 1 : -1) * (L.lr + 1.5); return Math.hypot(x - cx, y - (Q.y + 10)) <= L.lr + 3 ? { kind: "copy", t, i, s, k: PV.locus } : null; } }
+  return null;
+}
+function pdClick(e) {
+  const h = pdHit(e); if (AY.run) return;
+  if (PV.lock) { if (!h) return; if (!PV.sel.some(s => pdKey(s) === pdKey(h))) PV.sel.push(h); PV.last = h; }
+  else if (!h) { PV.sel = []; PV.last = null; } else { PV.sel = [h]; PV.last = h; }
+  bumpA(); drawPed(false); syncA();
+}
+
+/* ---- the F_ST panel: 40 loci, the eight traced ones ringed, ✓ ✗ – once the chips are shown ---- */
+function drawFst() {
+  const cv = $("A_fst"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 780, 170), w = AY.w, px = 44, py = 12, pw = 716, ph = 118, xs = i => px + (i + 0.5) / L * pw;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + ph); ctx.lineTo(px + pw, py + ph); ctx.stroke();
+  const f = w && AY.shown >= w.G ? pdFst(w) : null, ymax = Math.max(0.5, f ? Math.ceil(Math.max(...f) * 10) / 10 : 0.5);
+  for (let k = 0; k <= 2; k++) cardText(ctx, (ymax * k / 2).toFixed(2).replace(/0$/, ""), px - 6, py + ph - ph * k / 2, { size: 10.5, col: MUTED, align: "right" });
+  for (const i of [0, 9, 19, 29, 39]) cardText(ctx, String(i + 1), xs(i), py + ph + 11, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "locus", px + pw / 2, 164, { size: 11, col: MUTED, align: "center" });
+  if (!f) { ctx.restore(); return; }
+  const chips = chipsShown() ? pdChips(w) : null;
+  f.forEach((v, i) => { const y = py + ph - Math.min(v, ymax) / ymax * ph, k = TRACED.indexOf(i);
+    ctx.fillStyle = k >= 0 ? INK : "#b9b4a6"; ctx.beginPath(); ctx.arc(xs(i), y, k >= 0 ? 3.4 : 2.4, 0, 6.2832); ctx.fill();
+    if (k >= 0) { const c = chips ? chips[k] : null; cardText(ctx, c === "v" ? "✓" : c === "x" ? "✗" : c ? "–" : "", xs(i), y - 10, { size: 12, bold: true, col: c === "x" ? HOT : INK, align: "center" }); } });
+  ctx.restore();
+}
+
+/* ---- the four marked copies' tree and the eight chips ---- */
+function drawTree4() {
+  const cv = $("A_tree4"), w = AY.w; if (!cv || $("A_treeBox").hidden || !w) return;
+  const { ctx } = frameCanvas(cv, 400, 190), k = PV.locus, tr = pdTrace(w, [0, 1, 2, 3], k), px = 30, pw = 300, ty = i => 24 + i * 38, xs = t => px + t / w.G * pw;
+  cardText(ctx, "locus " + (TRACED[k] + 1) + "'s tree", px, 8, { size: 11.5, bold: true, col: HOT });
+  const node = new Map(); for (let i = 0; i < 4; i++) node.set(1 << i, { x: xs(w.G), y: ty(i) });
+  for (const m of tr.merges.slice().sort((a, b) => b.t - a.t)) {
+    const kids = [...node.keys()].filter(q => (q & m.mask) === q && q !== m.mask); if (kids.length < 2) continue; const x = xs(m.t), yv = kids.map(q => node.get(q).y);
+    for (const q of kids) { polyline(ctx, [[node.get(q).x, node.get(q).y], [x, node.get(q).y]], HOT, 1.6); node.delete(q); }
+    polyline(ctx, [[x, Math.min(...yv)], [x, Math.max(...yv)]], HOT, 1.6); node.set(m.mask, { x, y: (Math.min(...yv) + Math.max(...yv)) / 2 });
+  }
+  if (node.size > 1) { const left = [...node.values()]; for (const nd of left) polyline(ctx, [[nd.x, nd.y], [px - 6, nd.y]], HOT, 1.6, 1, [3, 3]); polyline(ctx, [[px - 6, Math.min(...left.map(v => v.y))], [px - 6, Math.max(...left.map(v => v.y))]], HOT, 1.6, 1, [3, 3]); }
+  for (let i = 0; i < 4; i++) cardText(ctx, String(i + 1) + (i < 2 ? " ○" : " ■"), xs(w.G) + 8, ty(i), { size: 12, bold: true, col: INK });
+  const wy = (xs(w.g0) - 0); ctx.save(); ctx.setLineDash([4, 3]); ctx.strokeStyle = INK; ctx.lineWidth = 0.8; ctx.beginPath(); ctx.moveTo(wy, 14); ctx.lineTo(wy, 170); ctx.stroke(); ctx.restore();
+  ctx.restore();
+}
+function drawChips() {
+  const box = $("A_chips"), w = AY.w; if (!w || $("A_treeBox").hidden) return; const chips = pdChips(w);
+  box.innerHTML = chips.map((c, k) => '<button data-k="' + k + '" class="chip' + (k === PV.locus ? " on" : "") + '">' + (TRACED[k] + 1) + " " + (c === "v" ? "✓" : c === "x" ? "✗" : "–") + "</button>").join("");
+  box.querySelectorAll("button").forEach(b => b.addEventListener("click", () => { const k = +b.dataset.k; PV.locus = k; $("A_loc").value = String(k);
+    const tips = pdTips(w); PV.sel = tips.map(t => ({ kind: "copy", t: w.G, i: t.fish, s: 0, k })); PV.last = PV.sel[0]; if (PV.view === "org") { PV.view = "chr"; $("A_view").value = "chr"; } bumpA(); paintA(); }));
+}
+
+/* =====================================================================
+   THE FIVE QUESTIONS. Three reads on a pedigree dealt from the engine (a locus where the lineages do meet), then two targets
+   on the share of the 128 loci ✓ across sixteen pedigrees. A read's first locked-in answer is its bit; a wrong one is retried
+   on another locus. A target's first scored Go is its bit; practice counts for nothing.
+   ===================================================================== */
+const PBIT = { R1: 0, R2: 1, R3: 2, T1: 3, T2: 4 };
+const PITEMS = [
+  { id: "R1", kind: "read", which: [0, 2], text: "Ringed: copy 1 in the orange pond and copy 3 in the blue. Click the copy where their lineages meet, then Lock in." },
+  { id: "R2", kind: "read", which: [0, 1], text: "Ringed: copies 1 and 2, both in the orange pond. Click the copy where their lineages meet, then Lock in." },
+  { id: "R3", kind: "read", which: [0, 1, 2, 3], text: "Four ringed copies. Click the copy where the first two of them to meet do, then Lock in." },
+  { id: "T1", kind: "target", free: ["g1"], hold: { n: 4 }, open: { g1: 5 },
+    text: "Sixteen pedigrees a Go. Make the two ponds sort the copies: most loci ✓.",
+    rule: { txt: "loci ✓ across the 16: 70% or more", ok: q => q.share >= 0.70, val: q => pc(q.share) + " (" + q.seen.v + " of " + (NPED * NT) + ")" } },
+  { id: "T2", kind: "target", free: ["n"], hold: { g1: 5 }, open: { n: 4 },
+    text: "Now the opposite: few loci ✓.",
+    rule: { txt: "loci ✓ across the 16: 28% or less", ok: q => q.share <= 0.28, val: q => pc(q.share) + " (" + q.seen.v + " of " + (NPED * NT) + ")" } },
+];
+const itemA = () => PITEMS[AY.item];
+const chipsShown = () => itemA().kind === "target" || AY.answered;
+const readA = () => ({ n: PN[+$("A_n").value], g1: PG1[+$("A_g1").value] });
+function bumpA() { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation("A"); }
+/* a locus for the read: one where the lineages do meet inside the pedigree; the key = the copies that answer it */
+function dealRead(w, it, rng) {
+  const ks = TRACED.map((_, k) => k); for (let i = ks.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), x = ks[i]; ks[i] = ks[j]; ks[j] = x; }
+  for (const k of ks) { const tr = pdTrace(w, it.which, k); if (!tr.merges.length) continue;
+    if (it.id === "R3") { const tmax = Math.max(...tr.merges.map(m => m.t)); return { which: it.which, k, key: tr.merges.filter(m => m.t === tmax).map(m => ({ t: m.t, i: m.fish, s: m.side })) }; }
+    const m = tr.merges[0]; return { which: it.which, k, key: [{ t: m.t, i: m.fish, s: m.side }] }; }
+  return null;
+}
+function newPed(keepSel) {
+  const { n, g1 } = readA(), it = itemA(); let w = null, read = null;
+  for (let tries = 0; tries < 40 && !read; tries++) { w = pdWorld(n, g1, pageSeed("l20ped", 1, 999999) + 104729 * AY.deals++); if (it.kind !== "read") break; read = dealRead(w, it, mulberry32(w.salt + 5)); }
+  AY.w = w; AY.read = it.kind === "read" ? read : null; AY.answered = false; AY.shown = 1e9; AY.verdict = ""; AY.peds = null;
+  if (!keepSel) { PV.sel = []; PV.last = null; }
+  if (AY.read) { PV.locus = AY.read.k; $("A_loc").value = String(AY.read.k); }
+  paintA(); drawPed(true);
+}
+function lockIn() {
+  const it = itemA(), r = AY.read, p = PV.last; if (it.kind !== "read" || !r || !p || AY.answered || AY.results[AY.item]) return;
+  const ok = r.key.some(a => p.t === a.t && p.i === a.i && (p.kind === "fish" || (p.s === a.s && p.k === r.k)));
+  const pos = PBIT[it.id]; if (typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos)) record(pos, ok);
+  AY.answered = true; bumpA();
+  AY.verdict = ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ not that copy</span> — the ringed circle marks it';
+  if (ok) AY.results[AY.item] = true;
+  paintA();
+}
+function goTarget() {
+  const it = itemA(); if (it.kind !== "target" || AY.run) return;
+  const { n, g1 } = readA(), seed = pageSeed("l20ped", 1, 999999) + 104729 * AY.runs++ + 7919 * AY.item, b = pdBatch(n, g1, seed), practice = $("A_practice").checked || AY.results[AY.item];
+  AY.w = b.peds[0]; AY.read = null; AY.peds = b; PV.sel = []; PV.last = null; AY.answered = false; AY.shown = 0; AY.run = { b, it, practice, n, g1 }; bumpA();
+  const step = () => { const q = AY.run; if (!q) return; AY.shown++; paintA(); if (AY.shown >= AY.w.G) endTarget(); else setTimeout(step, 40); }; step();
+}
+function endTarget() {
+  const q = AY.run; if (!q) return; AY.run = null; AY.shown = 1e9; const it = q.it, qq = { share: q.b.share, seen: q.b.seen }, ok = it.rule.ok(qq);
+  if (!q.practice) { const pos = PBIT[it.id]; if (typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos)) record(pos, ok); if (ok) AY.results[AY.item] = true; }
+  AY.share = qq; AY.verdict = (q.practice ? "practice: " : "") + (ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>'); paintA();
+}
+function gotoItem(i) {
+  if (AY.run) return; AY.item = (i + PITEMS.length) % PITEMS.length; AY.verdict = ""; AY.share = null; const it = itemA();
+  for (const c of [["n", PN], ["g1", PG1]]) { const el = $("A_" + c[0]); if (it.open && it.open[c[0]] != null) el.value = c[1].indexOf(it.open[c[0]]); if (it.hold && it.hold[c[0]] != null) el.value = c[1].indexOf(it.hold[c[0]]); }
+  newPed(false);
+}
+function syncA() {
+  const it = itemA(), busy = !!AY.run, tgt = it.kind === "target", done = AY.results.filter(Boolean).length;
+  $("A_pips").innerHTML = Pips.html(PITEMS.length, i => AY.results[i], AY.item, busy);
+  $("A_ttext").textContent = "Question " + (AY.item + 1) + " of 5. " + it.text;
+  $("A_rules").innerHTML = tgt ? '<li><span class="' + (AY.share ? (it.rule.ok(AY.share) ? "ok" : "off") : "") + '">' + (AY.share ? (it.rule.ok(AY.share) ? "✓" : "✗") : "·") + "</span> " + it.rule.txt + ' <span style="color:var(--muted)">(' + (AY.share ? "this Go " + it.rule.val(AY.share) : "not run yet") + ")</span></li>" : "";
+  for (const key of ["n", "g1"]) { const held = tgt && !(it.free || []).includes(key); $("A_" + key).disabled = busy || (tgt && held); $("A_" + key + "Row").classList.toggle("held", tgt && held); }
+  $("A_nV").textContent = PN[+$("A_n").value]; $("A_g1V").textContent = PG1[+$("A_g1").value];
+  $("A_pracRow").hidden = !tgt; $("A_lockin").hidden = tgt; $("A_go").hidden = !tgt; $("A_deal").hidden = tgt;
+  $("A_lockin").disabled = !PV.last || AY.answered || !!AY.results[AY.item]; $("A_go").disabled = busy; $("A_go").textContent = $("A_practice").checked || AY.results[AY.item] ? "Practice run" : "Go";
+  $("A_practice").disabled = busy; $("A_verdict").innerHTML = AY.verdict;
+  $("A_treeBox").hidden = !chipsShown();
+  tickA(done);
+  $("A_ped").style.cursor = busy ? "default" : "pointer";
+}
+function tickA(done) { const li = document.querySelector('#tasksA li[data-task="steps"]'); if (li) li.classList.toggle("done", done >= PITEMS.length); $("A_steps_now").textContent = done + " of 5"; }
+function paintA() { drawPed(false); drawFst(); drawTree4(); drawChips(); syncA(); A_code(); }
+function fillLoc() { $("A_loc").innerHTML = TRACED.map((t, k) => '<option value="' + k + '">' + (t + 1) + "</option>").join(""); }
+function wireA() {
+  fillLoc();
+  $("A_view").addEventListener("change", () => { PV.view = $("A_view").value; $("A_locRow").hidden = PV.view !== "loc"; paintA(); });
+  $("A_loc").addEventListener("change", () => { PV.locus = +$("A_loc").value; paintA(); });
+  $("A_lock").addEventListener("change", () => { PV.lock = $("A_lock").checked; });
+  $("A_clear").addEventListener("click", () => { PV.sel = []; PV.last = null; paintA(); });
+  $("A_ped").addEventListener("click", pdClick);
+  for (const key of ["n", "g1"]) { $("A_" + key).addEventListener("input", () => { if (itemA().kind === "read" && !AY.run) newPed(false); else syncA(); }); $("A_" + key).addEventListener("change", bumpA); }
+  Pips.wire($("A_pips"), gotoItem);
+  $("A_prev").addEventListener("click", () => gotoItem(AY.item - 1)); $("A_nextq").addEventListener("click", () => gotoItem(AY.item + 1));
+  $("A_lockin").addEventListener("click", lockIn); $("A_go").addEventListener("click", goTarget); $("A_deal").addEventListener("click", () => { bumpA(); newPed(false); });
+  $("A_practice").addEventListener("change", syncA);
+  $("A_dl").addEventListener("click", () => downloadText("lesson20_a.R", RTEXT.codeA));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintA(); }, 120); });
+  gotoItem(0);
+}
+
+function A_code() {
+  const s = readA();
+  codeInto("codeA", [
+    ["", "# Lesson 20 A -- one pond splits in two; at eight loci, which copies share an ancestor"],
+    ["n", "n <- " + s.n + "                                  # fish a pond after the split (2 * n before it)"],
+    ["g1", "g1 <- " + s.g1 + "                                # generations since the split"],
+    ["", "g0 <- 10; F <- 3; L <- 8                        # generations before the split, founders, traced loci"],
+    ["", "# a young fish: two parents from the row above, and at each locus which of each parent's two chromosomes it got"],
+    ["", "young <- function(pool, k) lapply(1:k, function(i) list(parents = sample(pool, 2), side = sapply(1:2, function(s) (sample(0:1, 1) + cumsum(c(0, runif(L - 1) < 0.12))) %% 2)))"],
+    ["", "rows <- list(lapply(1:F, function(i) NULL))"],
+    ["", "for (t in 1:g0) rows[[t + 1]] <- young(seq_along(rows[[t]]), 2 * n)   # one pond"],
+    ["", "pond <- list(); pond[[g0 + 1]] <- sample(rep(1:2, n))                     # the split: half orange (1), half blue (2)"],
+    ["", "for (t in (g0 + 1):(g0 + g1)) { p <- pond[[t]]; rows[[t + 1]] <- c(young(which(p == 1), n), young(which(p == 2), n)); pond[[t + 1]] <- rep(1:2, each = n) }"],
+    ["", "G <- g0 + g1; tip <- function(i) list(t = G, i = i, s = 0)"],
+    ["", "back <- function(c, k) { f <- rows[[c + 1]][[c]]; list(t = c - 1, i = f, s = f) }"],
+    ["", "meet <- function(a, b, k) { while (a > 0) { a <- back(a, k); b <- back(b, k); if (a == b && a == b) return(a) }; NA }"],
+    ["", "pairs <- list(c(1, n + 1), c(1, n + 2), c(2, n + 1), c(2, n + 2))"],
+    ["", "sorted <- sapply(1:L, function(k) { within <- c(meet(tip(1), tip(2), k), meet(tip(n + 1), tip(n + 2), k))   # orange pair, blue pair"],
+    ["", "  across <- suppressWarnings(max(-1, sapply(pairs, function(p) meet(tip(p[1]), tip(p[2]), k)), na.rm = TRUE))"],
+    ["", "  !anyNA(within) && across < min(within) })                                                         # TRUE: each pond's pair met before any copy met one from the other pond"],
+    ["", "list(loci_sorted_by_pond = sum(sorted), of = L)"],
+  ]);
+}
+
+function wire() {
+  for (const c of CTL) {
+    $("B_" + c.key).addEventListener("input", () => { syncVals(); paint(); highlightByDataLine("codeB", c.key); });
+    $("B_" + c.key).addEventListener("change", bump);
+  }
+  $("B_go").addEventListener("click", goRun);
+  $("B_next").addEventListener("click", nextStep);
+  $("B_practice").addEventListener("change", paint);
+  $("B_meas").addEventListener("change", paint);
+  $("B_tree").addEventListener("click", onTreeClick);
+  $("B_anoBox").addEventListener("toggle", drawAnolis);
+  $("B_dl").addEventListener("click", () => downloadText("lesson20.R", RTEXT.codeB));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paint(); drawAnolis(); }, 120); });
+  openStep();
+  /* instructor bypass / study mode: the stage open. Study mode leaves the steps to be done (JM, 2026-10-08); the instructor
+     bypass fills them, so a code in his name decodes with every bit set */
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    Gates.B.open = true; $("stageB").classList.remove("stage-locked"); $("stageA").classList.remove("stage-locked");
+    if (!study) { AY.results = PITEMS.map(() => true); for (const k in PBIT) record(PBIT[k], true); }
+    if (!study) { AX.done = true; AX.waiting = false; AX.results = STEPS.map(() => true); for (const k in BIT) record(BIT[k], true); openStep(); }
+    FIT_EPOCH++; paint(); paintA();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l20reveal = reveal;
+}
+
+wire();
+wireA();
+paint();
+
+Score.init({
+  moduleId: "lesson20",
+  version: 2,      /* 2: pass 2 (2026-10-26): stage A, five questions, bits 0-4; stage B the nine steps, bits 5-13. 1: first draft (2026-10-20, JM's brief for 19-21): one stage, nine steps (four targets, five questions) */
+  scaffold: 14,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageB").classList.remove("stage-locked"); $("stageA").classList.remove("stage-locked"); Gates.B.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l20reveal();
+    FIT_EPOCH++; paint();
+  }
+});
+</script>
+</body>
+</html>
