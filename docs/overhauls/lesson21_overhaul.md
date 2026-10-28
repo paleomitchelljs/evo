@@ -5,6 +5,13 @@
 **Status** · first draft built (v1, species selection); pass 2 PLANNED (2026-10-28): speciation mechanics; the first draft's material to 22 D; LOCKS `x`
 **Last touched** · 2026-10-28 (plan consolidated; nothing built since the first draft)
 
+> **2026-10-28, from lesson 20's review (JM agreed):** 20 B no longer has the choosy allele or the tag. 21 B inherits both. The
+> engine pieces are in `git log` for `app/lessons/lesson20.html` before this change (`bwChoosy`, `B_START` = one chromosome in ten,
+> `bwFstTag`, the ◆ and tag loci 21 and 11, the "how choosy" arrow onto the partner-mix arrow, `B_TRIES` = 4 looks). Finding that
+> came with it: with how choosy 1, the choosy allele died out in half the runs and fixed in both ponds in the other half, one kind
+> replacing the other (hybrids .93-.98 only because one kind was left); no run kept two kinds side by side. Find settings that keep
+> two kinds apart before scoring reinforcement.
+
 ## Pass 2 plan (2026-10-28, proposed, not built): speciation mechanics
 
 JM, 2026-10-28 (verbatim): "Let's plot out lesson 21 & 22 a bit and see if we want to adjust 20 to foreshadow it at all. I'm
@@ -28,7 +35,7 @@ was revised the same day against what 14-20 already did; only the revised list, 
     19 B   F_ST high at and around a selected gene, how wide set by crossing over; floods erase it; two genes side by side
     19 C   new alleles from the two ponds incompatible by chance; hybrid survival falls (the snowball, run on, never counted)
     19 D   reinforcement, two-allele: throat gene + preference gene + Bmp6, dragged on the chromosome; an inversion over all three
-    20 B   one-allele choosy preference after contact; hybrid fitness landscape and loci grid; the snowball again (B1-B2)
+    20 B   hybrid fitness landscape and loci grid; the snowball again (B1-B2). (The one-allele choosy preference was here until 2026-10-28; it moved to 21 B)
 
 So every piece JM named has been on a page once; 21's job is to put them together as one process and make the part each
 skipped the whole stage. Revised against that:

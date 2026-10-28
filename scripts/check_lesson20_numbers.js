@@ -2,12 +2,12 @@
 /*
  * check_lesson20_numbers.js -- the checks for app/lessons/lesson20.html.
  *
- * Pass 3 (2026-10-27, JM's review): four stages.
+ * Pass 3 (2026-10-27, JM's review), reordered 2026-10-28: five stages.
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
- *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
- *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  wing length (VA, VE) -> gene flow and range size (dragged lines) -> speciation and extinction (2026-10-28, JM).
- *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
+ *   B  two ponds apart, then floods; incompatible new alleles; hybrid survival at contact (the choosy allele went to 21).
+ *   C  reading a tree: a ringed species' nearest relative, two species' common ancestor.
+ *   D  the student splits populations by clicking; each locus's tree over the populations' tree.
+ *   E  wing length (VA, VE) -> gene flow and range size (dragged lines) -> speciation and extinction (64 clades a Go).
  * What has to hold:
  *
  *   A engine. Below the split every fish has both parents in its own pond; every link points at the parent chromosome carrying
@@ -18,15 +18,14 @@
  *      allele and its parent copy does not.
  *   A targets. Each intended setting clears its bar in most Gos of 16 pedigrees, the opening in few; T3's too-high mutation
  *      misses (a window, not a floor).
- *   B. Inside a pond no fish carries an incompatible pair before the floods; the choosy allele is absent before the first
- *      flood and near one in ten after it; each target's intended setting hits, its opening misses.
+ *   B. Inside a pond no fish carries an incompatible pair before the floods; each target's intended setting hits, its opening misses.
  *   C. No split without a click; never more than 16 living; with no crossing over every locus has the same tree; two
  *      populations' lineages meet only before they parted; each target's intended clicks hit most trees, the opening few.
  *   D. A founder's genetic bias agrees with the breeder's equation (-VA x slope / (1 - f)); VA 0 changes nothing; a flat line no drift; each target's intended
  *      setting hits, its opening misses.
  *   E. On many random trees, each question's key is what it asks for (the tips whose fork with the ringed one is youngest; the
  *      fork holding both ringed tips and no younger one), and the dealt traps hold.
- *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 27 bits written.
+ *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 25 bits written.
  *   Layout. The R code last and closed in every stage; hover marks with words; every canvas fits (1500 and 1000 wide).
  *
  * Bars are sized off the spreads measured on the page's engine (the comments above each stage's rounds in lesson20.html):
@@ -40,14 +39,14 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8798;
 const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const CANVAS_IDS = ["A_ped", "A_meet", "A_tpic", "B_board", "B_time", "B_fit", "B_tpic", "C_tree", "C_pairs", "C_runs", "C_tpic", "D_tree", "D_time", "D_tpic", "E_tree"];
+const CANVAS_IDS = ["A_ped", "A_meet", "A_tpic", "B_board", "B_time", "B_fit", "B_tpic", "D_tree", "D_pairs", "D_runs", "D_tpic", "E_tree", "E_time", "E_tpic", "C_tree"];
 
 /* runs inside the page (an iframe): returns the report as one string */
 function inner(CANVAS_IDS) {
   const L_ = [], say = s => L_.push(s);
   let bad = 0, ran = 0;
   const check = (name, ok, detail) => { ran++; if (!ok) bad++; say((ok ? "ok   " : "FAIL ") + name + (detail ? "  -- " + detail : "")); };
-  for (const k of ["A", "B", "C", "D", "E"]) { document.getElementById("stage" + k).classList.remove("stage-locked"); }
+  for (const k of ["A", "B", "D", "E", "C"]) { document.getElementById("stage" + k).classList.remove("stage-locked"); }
   Gates.A.open = true;
   const $ = id => document.getElementById(id);
 
@@ -109,13 +108,12 @@ function inner(CANVAS_IDS) {
 
   /* ================= B ================= */
   {
-    const P = { N: BN, T: 100, mu: 0.004, m: 0.1, cost: 1, c: 1 }, w = bwWorld(P, 77);
-    let pairsIn = 0, chBefore = 0; while (w.t < P.T) { bwStep(w); for (const F of w.pops) for (const g of F) pairsIn += bwPairs(w, g); }
-    chBefore = bwFreq(w, w.CH); const hyb = bwHybrids(w, 60); bwStep(w); const chAfter = bwFreq(w, w.CH);
-    check("B engine: before the floods no fish carries an incompatible pair (" + pairsIn + "), though a hybrid would (survival " + hyb.toFixed(2) + "); the choosy allele absent (" + chBefore.map(v => v.toFixed(2)) + ") then near one in ten (" + chAfter.map(v => v.toFixed(2)) + ")",
-          pairsIn === 0 && hyb < 0.5 && chBefore.every(v => v === 0) && chAfter.every(v => v > 0.02 && v < 0.25));
+    const P = { N: BN, T: 100, mu: 0.004, m: 0.1, cost: 1 }, w = bwWorld(P, 77);
+    let pairsIn = 0; while (w.t < P.T) { bwStep(w); for (const F of w.pops) for (const g of F) pairsIn += bwPairs(w, g); }
+    const hyb = bwHybrids(w, 60);
+    check("B engine: before the floods no fish carries an incompatible pair (" + pairsIn + "), though a hybrid would (survival " + hyb.toFixed(2) + ")", pairsIn === 0 && hyb < 0.5);
   }
-  const goB = (set, seed) => { const q = SB.cfg.start(Object.assign({ cost: 1, c: 0, m: 0.05 }, set), seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
+  const goB = (set, seed) => { const q = SB.cfg.start(Object.assign({ cost: 1, m: 0.05 }, set), seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TB = (k, good, open, n) => {
     const r = B_ROUNDS[k], run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goB(s, 600 + 9973 * i + 17 * k), S = sumAt(q, q.G), j = judge(r, S, q); if (j.ok) h++; v.push(j.vals.join("/")); } return { h, v }; };
     const g = run(Object.assign({}, r.hold, r.open, good)), o = run(Object.assign({}, r.hold, r.open));
@@ -123,11 +121,11 @@ function inner(CANVAS_IDS) {
   };
   /* measured (16 runs averaged; bars re-set 2026-10-28): .08-.14 vs .88-.97 (bar .30); mutation held .001, 200 apart .10-.24 vs
      50 .85-.90 (bar .30); .44-.62 vs .00-.08 (bar .30); 50 apart .03-.21 vs 200 .45-.65 (bar .25) */
-  TB(0, { mu: 0.002 }, null, 2); TB(1, { T: 200 }, null, 2); TB(2, { c: 1 }, null, 2); TB(3, { T: 50 }, null, 2);
+  TB(0, { mu: 0.002 }, null, 4); TB(1, { T: 200 }, null, 4);
 
   /* ================= C ================= */
   const grow = (set, seed, sched) => { const w = ctWorld(set, seed); while (w.t < 0) ctStep(w);
-    while (w.t < C_G) { for (const pid of sched(w.t + 1, w)) if (!w.pending.includes(pid) && w.alive.length + w.pending.length < C_CAP) w.pending.push(pid); ctStep(w); } return w; };
+    while (w.t < D_G) { for (const pid of sched(w.t + 1, w)) if (!w.pending.includes(pid) && w.alive.length + w.pending.length < D_CAP) w.pending.push(pid); ctStep(w); } return w; };
   const seq = (d, k, t0) => (t, w) => (t >= (t0 || 1) && (t - (t0 || 1)) % d === 0 && w.alive.length < k) ? [w.alive.slice().sort((a, b) => w.pops[a].born - w.pops[b].born)[0]] : [];
   const bal = (d, k) => (t, w) => (t % d === 1 && w.alive.length < k) ? w.alive.slice(0, k - w.alive.length) : [];
   {
@@ -135,13 +133,13 @@ function inner(CANVAS_IDS) {
     const w2 = grow({ N: 50, mu: 0.001, R: 0 }, 8, seq(10, 6, 100)), loci = ctLoci(w2), same = ctJudgeOf(w2).same;
     let early = 0, n = 0;
     for (const l of ctLoci(w1)) for (const m of l.tr.merges) { for (let i = 0; i < w1.alive.length; i++) for (let j = i + 1; j < w1.alive.length; j++) if ((m.mask >> i & 1) && (m.mask >> j & 1)) { n++; if (m.t < ctParted(w1, w1.alive[i], w1.alive[j])) early++; } }
-    check("C engine: no click, one population all run (" + w0.alive.length + "); a click at every chance, never more than 16 (" + w1.alive.length + "); no crossing over, every locus the same tree (" + same + ", " + loci.map(l => l.cat).join("") + "); lineages of two populations meet only before they parted (" + early + " of " + n + ")",
+    check("D engine: no click, one population all run (" + w0.alive.length + "); a click at every chance, never more than 16 (" + w1.alive.length + "); no crossing over, every locus the same tree (" + same + ", " + loci.map(l => l.cat).join("") + "); lineages of two populations meet only before they parted (" + early + " of " + n + ")",
           w0.alive.length === 1 && w1.alive.length === 16 && same && early === n && n > 100);
   }
   const TC = (k, good, gs, open, os, n, minGood, maxOpen) => {
-    const run = (set, sc) => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const c = ctJudgeOf(grow(set, 300 + 104729 * i + k, sc)); if (C_ROUNDS[k].ok(c)) h++; v.push(c.n + ":" + c.v + "/" + c.p + "/" + c.x); } return { h, v }; };
+    const run = (set, sc) => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const c = ctJudgeOf(grow(set, 300 + 104729 * i + k, sc)); if (D_ROUNDS[k].ok(c)) h++; v.push(c.n + ":" + c.v + "/" + c.p + "/" + c.x); } return { h, v }; };
     const g = run(good, gs), o = run(open, os);
-    check("C target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " trees (" + g.v.join(" ") + "); the opening " + JSON.stringify(open).replace(/"/g, "") + " " + o.h + "/" + n + " (" + o.v.join(" ") + ")", g.h >= minGood && o.h <= maxOpen);
+    check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " trees (" + g.v.join(" ") + "); the opening " + JSON.stringify(open).replace(/"/g, "") + " " + o.h + "/" + n + " (" + o.v.join(" ") + ")", g.h >= minGood && o.h <= maxOpen);
   };
   /* measured (8 trees): 8/8 vs 0-1/8; 8/8 vs 0/8 (N 5, splits 10 apart); 8/8 vs 0/8; 8/8 vs 0/8 */
   TC(0, { N: 5, mu: 0.001, R: 1 }, seq(50, 6), { N: 50, mu: 0.001, R: 1 }, seq(50, 6), 6, 5, 1);
@@ -152,25 +150,33 @@ function inner(CANVAS_IDS) {
   /* ================= D ================= */
   {
     /* a founder's genetic bias against the breeder's equation for one fish that stays: E[g | stays] - G = -VA x slope / (1 - f(G)) where the line
-       is straight over the species' fish (the line .2 to .8 between 9 and 11 mm, slope .3 a mm; G 10, f .5): -.15 mm at VA .25,
+       is straight over the species' fish (the line .2 to .8 between 9 and 11 cm, slope .3 a cm; G 10, f .5): -.15 cm at VA .25,
        whatever VE (here VE 0 and .25: wider, more fish fall where the line is held at 0 or 1, and the line is no longer straight over them). 40,000 founders each: the mean's spread about .003 */
     const pr = [];
     for (const ve of [0, 0.25]) { const P = { va: 0.25, ve, p0: 0.2, p1: 0.8 }, rng = mulberry32(17 + ve); let s0 = 0; for (let i = 0; i < 40000; i++) s0 += dFounder(P, 10, rng) - 10; pr.push(s0 / 40000); }
-    const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, q0: 0.1, q1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < D_G; t++) dcStep(w1);
-    let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); flat += D_stat(w).mean - 10; }
-    check("D engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " mm (VE 0 / .25) against -VA x slope / (1 - f) = -.150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " mm)",
+    const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, q0: 0.1, q1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < E_G; t++) dcStep(w1);
+    let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < E_G; t++) dcStep(w); flat += E_stat(w).mean - 10; }
+    check("E engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " cm (VE 0 / .25) against -VA x slope / (1 - f) = -.150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " cm)",
           pr.every(v => Math.abs(v + 0.15) < 0.015) && w1.sp.every(x => x.G === 10) && Math.abs(flat / 200) < 0.15);
   }
-  const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
-  const TD = (k, good, n, slack) => {
-    const r = D_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 0, cl: 0 }, r.hold, r.open);
+  const goD = (set, seed) => { const q = SE.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
+  const TD = (k, good, n, slack, oslack) => {
+    const r = E_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 0, cl: 0 }, r.hold, r.open);
     const run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goD(s, 900 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; v.push(j.vals.join("")); } return { h, v }; };
     const g = run(Object.assign({}, base, good)), o = run(base);
-    check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
+    check("E target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h <= (oslack || 0));
   };
-  /* measured (6 Gos, mm; bars re-set 2026-10-28): 5.5-6.3 vs 10.0; 9.0-10.7 vs 8.1-8.9 (bar 9.0); change -.3 to +.4 vs -3.7 to -2.4;
+  /* measured (6 Gos, cm; bars re-set 2026-10-28): 5.5-6.3 vs 10.0; 9.0-10.7 vs 8.1-8.9 (bar 9.0); change -.3 to +.4 vs -3.7 to -2.4;
      range .3 → .7 8.2-9.6 vs 4.7-5.4 (bar 7.5); extinction -.7 alone 10.0-11.3 vs 7.5-8.2 (bar 9.5) */
-  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 6 }, 6); TD(3, { q0: 0.3, q1: 0.7 }, 6); TD(4, { cs: 0, cl: -0.7 }, 6);
+  /* the openings must not clear by chance (2026-10-28: E2's opening hit 27% of Gos with 16 clades and a bar of 9.0): 30 Gos each */
+  {
+    const open30 = (k, extra) => { const r = E_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 0, cl: 0 }, r.hold, r.open, extra); let h = 0;
+      for (let i = 0; i < 30; i++) { const q = goD(base, 61000 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; } return h; };
+    const e2o = open30(1, {}), e2b = open30(1, { ve: 0.5 }), e5o = open30(4, {}), e5b = open30(4, { cs: -0.7, cl: -0.7 }), e2g = open30(1, { ve: 4 }), e5g = open30(4, { cs: 0, cl: -0.7 });
+    check("E openings by chance, 30 Gos: E2 V_E 0 " + e2o + ", V_E .5 " + e2b + " (at most 2 of 30); E5 arrows 0 " + e5o + ", both -.7 " + e5b + " (at most 1); the intended settings E2 V_E 4 " + e2g + ", E5 extinction -.7 " + e5g + " (at least 28)",
+          e2o <= 2 && e2b <= 2 && e5o <= 1 && e5b <= 1 && e2g >= 28 && e5g >= 28);
+  }
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6, 1, 1); TD(2, { m: 6 }, 6); TD(3, { q0: 0.3, q1: 0.7 }, 6); TD(4, { cs: 0, cl: -0.7 }, 6);
 
   /* ================= E ================= */
   {
@@ -185,7 +191,7 @@ function inner(CANVAS_IDS) {
         if (!(under.has(a) && under.has(b)) || T.nodes[m].kids.some(k => { const u = new Set(etTips(T, k)); return u.has(a) && u.has(b); })) bad.push(EITEMS[it].id + " fork");
         if (it === 4 && (m === T.root || Math.abs(T.nodes[a].row - T.nodes[b].row) < 4)) bad.push("E5 trap"); if (it === 5) { if (m !== T.root || Math.abs(T.nodes[a].row - T.nodes[b].row) !== 1) bad.push("E6 trap"); else traps++; } }
     }
-    check("E: " + n + " dealt questions; a nearest-relative key is every tip whose fork with the ringed one is the youngest, a common-ancestor key the fork holding both and no younger one; the traps hold (" + traps + " page neighbours not nearest / oldest fork)", n > 300 && !bad.length, bad.slice(0, 5).join(", "));
+    check("C: " + n + " dealt questions; a nearest-relative key is every tip whose fork with the ringed one is the youngest, a common-ancestor key the fork holding both and no younger one; the traps hold (" + traps + " page neighbours not nearest / oldest fork)", n > 300 && !bad.length, bad.slice(0, 5).join(", "));
   }
 
   /* ================= the flow, by the stages' own buttons ================= */
@@ -205,22 +211,22 @@ function inner(CANVAS_IDS) {
     /* B, C, D: each target's intended setting, Go by the button, Next target */
     const runStage = (S, sets) => { for (let k = 0; k < sets.length; k++) { gotoRound(S, k); for (const [key, v] of Object.entries(sets[k])) { const c = S.cfg.ctl.find(x => x.key === key), el = $(S.K + "_" + key); el.value = String(c.vals.indexOf(v) + (+el.min || 0)); el.dispatchEvent(new Event("input")); }
       for (let tries = 0; tries < 4 && !S.results[k]; tries++) { $(S.K + "_go").click(); finishNow(S); } } };
-    runStage(SB, [{ mu: 0.002 }, { T: 400 }, { c: 1 }, { T: 50 }]);
+    runStage(SB, [{ mu: 0.002 }, { T: 400 }]);
     const openC = Gates.C.open;
-    const plans = [[5, seq(50, 6)], [25, seq(10, 6, 300)], [10, bal(70, 12)], [100, seq(10, 6, 100)]];
-    for (let k = 0; k < 4; k++) { gotoRoundC(k); setR("C_N", C_NV.indexOf(plans[k][0])); if (k === 3) setR("C_R", 0);
-      for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
-        while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
+    /* C, reading a tree: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
+    gotoItemC(0); CX.pick = CX.q.ring[0]; syncC(); $("C_lockin").click(); const missC = Score.getBit("scaffold", BIT.C1) === 0 && !CX.results[0] && CX.answered;
+    $("C_deal").click(); CX.pick = CX.q.key[0]; syncC(); $("C_lockin").click(); const hitC = !!CX.results[0];
+    for (let i = 1; i < 6; i++) { gotoItemC(i); CX.pick = CX.q.key[0]; syncC(); $("C_lockin").click(); }
     const openD = Gates.D.open;
-    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 14 }, { q0: 0, q1: 1 }, { cs: 0, cl: -1.4 }]);
+    const plans = [[5, seq(50, 6)], [25, seq(10, 6, 300)], [10, bal(70, 12)], [100, seq(10, 6, 100)]];
+    for (let k = 0; k < 4; k++) { gotoRoundD(k); setR("D_N", D_NV.indexOf(plans[k][0])); if (k === 3) setR("D_R", 0);
+      for (let tries = 0; tries < 5 && !DX.results[k]; tries++) { $("D_go").click(); const q = DX.run, w = q.w;
+        while (w.t < D_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endD(); } }
     const openE = Gates.E.open;
-    /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
-    gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;
-    $("E_deal").click(); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); const hitE = !!EX.results[0];
-    for (let i = 1; i < 6; i++) { gotoItemE(i); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); }
+    runStage(SE, [{ va: 1 }, { ve: 4 }, { m: 14 }, { q0: 0, q1: 1 }, { cs: 0, cl: -1.4 }]);
     const D = Object.keys(BIT).length; let nb = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) nb++;
-    check("flow: B's four done opens C (" + openC + "), C's four by clicks opens D (" + openD + "), D's five open E (" + openE + "); in E a wrong pick records 0 (" + missE + "), another tree and the right one solve it (" + hitE + "); E's six end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
-          openC && openD && openE && missE && hitE && Gates.E.done && $("done-banner").classList.contains("shown") && D === 27 && nb === D);
+    check("flow: B's two done opens C (" + openC + "), C's six (a wrong pick records 0 " + missC + ", another tree and the right one solve it " + hitC + ") open D (" + openD + "), D's four by clicks open E (" + openE + "), E's five end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
+          openC && openD && openE && missC && hitC && Gates.E.done && $("done-banner").classList.contains("shown") && D === 25 && nb === D);
   }
   /* ================= layout ================= */
   {
@@ -230,16 +236,16 @@ function inner(CANVAS_IDS) {
     FIT_EPOCH++; paintAll();
     const over = []; for (const id of CANVAS_IDS) { const cv = document.getElementById(id); if (!cv || cv.hidden) continue; const host = cv.parentElement; if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
     check("every canvas fits its panel (" + window.innerWidth + " wide)", over.length === 0, over.join(", "));
-    const lastOk = ["A", "B", "C", "D", "E"].every(k => { const els = document.querySelectorAll("#stage" + k + " .panel"), last = els[els.length - 1]; return last.matches("details.rcode") && !last.open; });
+    const lastOk = ["A", "B", "D", "E", "C"].every(k => { const els = document.querySelectorAll("#stage" + k + " .panel"), last = els[els.length - 1]; return last.matches("details.rcode") && !last.open; });
     check("layout: the R code last and closed in every stage; no readout lines", lastOk && document.querySelectorAll(".readout").length === 0);
   }
   say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
   say("RAN " + ran);
-  for (const k of ["A", "B", "C", "D", "E"]) say("R" + k + " " + RTEXT["code" + k].replace(/\n/g, "\\n"));
+  for (const k of ["A", "B", "D", "E", "C"]) say("R" + k + " " + RTEXT["code" + k].replace(/\n/g, "\\n"));
   return L_.join(" ;; ");
 }
 function narrow(CANVAS_IDS) {
-  for (const k of ["A", "B", "C", "D", "E"]) document.getElementById("stage" + k).classList.remove("stage-locked");
+  for (const k of ["A", "B", "D", "E", "C"]) document.getElementById("stage" + k).classList.remove("stage-locked");
   FIT_EPOCH++; paintAll();
   const over = []; for (const id of CANVAS_IDS) { const cv = document.getElementById(id); if (!cv || cv.hidden) continue; const host = cv.parentElement; if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }
   return (over.length ? "FAIL " : "ok   ") + "every canvas fits its panel (" + window.innerWidth + " wide)" + (over.length ? "  -- " + over.join(", ") : "");
@@ -279,10 +285,10 @@ setTimeout(() => {
   /* the R panels, shortened, when R is here */
   const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
   if (probeR.error) console.log("skip R panels  (no Rscript)");
-  else for (const k of ["A", "B", "C", "D", "E"]) {
+  else for (const k of ["A", "B", "D", "E", "C"]) {
     let src = (lines.find(l => l.startsWith("R" + k + " ")) || "").slice(3).replace(/\\n/g, "\n");
     if (k === "B") src = src.replace(/^T(apart <- )\d+/m, "Tapart <- 10").replace("(Tapart + 150)", "(Tapart + 10)");
-    if (k === "C") src = src.replace(/^N <- \d+/m, "N <- 5").replace("G <- 400", "G <- 30");
+    if (k === "D") src = src.replace(/^N <- \d+/m, "N <- 5").replace("G <- 400", "G <- 30");
     const o = spawnSync("Rscript", ["-e", src + "\ncat('\\nOK\\n')"], { encoding: "utf8", timeout: 240000 }), ok = /OK/.test(o.stdout || "");
     console.log((ok ? "ok   " : "FAIL ") + "the R panel of stage " + k + " runs" + (ok ? "" : "  -- " + (o.stderr || "").slice(0, 300)));
     if (!ok) bad = true;

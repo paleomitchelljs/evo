@@ -2,8 +2,32 @@
 
 **File** · `app/lessons/lesson20.html` — first draft 2026-10-20 (v1, one stage); pass 2 2026-10-26 (A built); pass 3 2026-10-27 (four stages, JM's review)
 **Checks** · `node scripts/check_lesson20_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 3 built, D rebuilt (wing length) and E added; review fixes of 2026-10-28 applied (target bars, B's tag F_ST, V_A units, C's runs axis); checks green (`check_lesson20_numbers.js` 31 + the five R panels; `check_lessons.py`; `check_layout.js`, 22 pages); JM to review; voice owed for A-E; LOCKS `x`
+**Status** · review changes of 2026-10-28 (evening) applied: see "Review changes" below; stages are now A pedigree, B ponds, C reading a tree, D splitting, E wing length; 25 bits (v6). Before that: pass 3 built, D rebuilt (wing length) and E added; review fixes of 2026-10-28 applied (target bars, B's tag F_ST, V_A units, C's runs axis); checks green (`check_lesson20_numbers.js` 31 + the five R panels; `check_lessons.py`; `check_layout.js`, 22 pages); JM to review; voice owed for A-E; LOCKS `x`
 **Last touched** · 2026-10-28
+
+## Review changes, 2026-10-28 evening (JM agreed with all six points of the review, and the first two minor ones)
+
+**Stage letters changed.** A one split as a pedigree; B two ponds, then contact; **C reading a tree (was E)**; **D the student
+splits populations (was C)**; **E wing length (was D)**. Everything below the table keeps the old letters in the history
+sections further down (Pass 3 as built, Items); read them with the map E→C, C→D, D→E. Bits: A 0-7, B 8-9, C 10-15, D 16-19,
+E 20-24 (25 in all; v6). Internal names follow the letters (`SE` the wing stage, `DX` the splitting stage, `CX` the tree
+reading; helper prefixes `ct*`, `et*`, `dc*`, `dFlow` and the rest keep their old names).
+
+| # | Review point | What was done |
+|---|---|---|
+| 1 | E2 (V_E free) miscalibrated: opening hit 27% of Gos | wing stage runs **64 clades** a Go (was 16); bar 9.1 (was 9.0). Hit rates, 30 Gos a cell: V_E 0 0-3%, .5 0%, 1 40%, 2 97%, 4 100%. 32 clades still let 13% through. Check: `E openings by chance` (30 Gos) |
+| 2 | B3 and the tag | choosy allele (B3, B4), the tag, "F_ST between tags", the how-choosy arrow and the ◆ bead are **out of 20 B**; B ends at contact with two targets (hybrids at the first flood: B1 mutation free, B2 generations apart free). Moved to 21 (lesson21_overhaul.md) |
+| 3 | tree reading came after the stage that needs it | reading a tree is now C, before the splitting stage |
+| 4 | clade tree hid extinction | every species gets a row: coloured if living or an ancestor of the living, **grey with a ×** if extinct and without living descendants; canvas taller (402) |
+| 5 | wing length in mm | cm throughout (axes, V_A / V_E in cm², hover text, R code) |
+| 6 | A's pedigree-to-plot bridge | after a read on one pair (A1, A2) the plot switches to "when two copies' lineages meet" and a red ▼ "this pair" marks the generation where that pair met |
+| minor | D5 both -.7 a coin flip | bar 10.0 (was 9.5): both -.7 0%, extinction -.7 alone 100% (30 Gos each) |
+| minor | green (before the split) beside orange | before-split new alleles carry a dark dot (pedigree beads); hover text says so |
+
+B re-measured without the choosy allele (16 Gos a cell): B1 mutation .0005 .75-.92, .001 .47-.64, .002 .11-.17, .004 .00-.01;
+B2 apart 25 .94-.97, 50 .80-.89, 100 .43-.65, 200 .06-.25, 400 .00-.02; bar 30%, a step from the end hits 16 of 16.
+
+Not changed (JM did not take them up): migration is listed in B's intro but held in both targets.
 
 ## Handoff, 2026-10-28 (read this first)
 
