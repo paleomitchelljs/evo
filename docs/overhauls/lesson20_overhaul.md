@@ -285,7 +285,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 | 18 | C: click to split (16), black tree + loci, chips, pairs, your runs; C1-C4 measured. D: species engine, diagram, tree, shares; D1-D5 measured | done 2026-10-27 |
 | 19 | scoring v3 (21 bits), R panels A-D, `check_lesson20_numbers.js` (30 + narrow) | done 2026-10-27; the four R panels run (B and C shortened, as the check does) |
 | 20 | JM's voice A-E; JM's review of pass 3 | todo |
-| 21 | D one trait (four targets); E reading a tree (six questions); checks 30 + narrow, R panels A-E run | done 2026-10-28 |
+| 21 | D one trait, dispersal, worded as speciation and extinction (JM, 2026-10-28: "Why such informal terminology? Why \"loss\" instead of extinction?"); E reading a tree (six questions); checks 30 + narrow, R panels A-E run | done 2026-10-28 |
 
 ## Measured, item 10 (2026-10-26, the page's engine, 60 Gos of 16 pedigrees a cell; mean ± sd across Gos [range])
 

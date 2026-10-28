@@ -153,7 +153,7 @@ function inner(CANVAS_IDS) {
     for (let r = 0; r < 300; r++) { const w = dcWorld(P0, 77 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); a += D_stat(w).col; k++; }
     const f = dNeutral(0.02, D_G);
     /* 300 clades: the mean's spread about .02 (a clade's share sd .2-.3, clades share ancestry inside, not across) */
-    check("D: no arrows, the far dispersers' share at 200 million years over 300 clades " + (a / k).toFixed(3) + " against the dashed curve's " + f.toFixed(3), Math.abs(a / k - f) < 0.06);
+    check("D: no arrows, the high-dispersal share at 200 million years over 300 clades " + (a / k).toFixed(3) + " against the dashed curve's " + f.toFixed(3), Math.abs(a / k - f) < 0.06);
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TD = (k, good, n, slack) => {
