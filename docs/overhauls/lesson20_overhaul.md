@@ -1,13 +1,260 @@
 # Lesson 20 — phylogeny: a population that keeps splitting, and the alleles inside it
 
-**File** · `app/lessons/lesson20.html` — first draft 2026-10-20 (v1, one stage)
+**File** · `app/lessons/lesson20.html` — first draft 2026-10-20 (v1, one stage); pass 2 2026-10-26 (A built); pass 3 2026-10-27 (four stages, JM's review)
 **Checks** · `node scripts/check_lesson20_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · pass 2 IN PROGRESS: A built (v2, scaffold 14, 2026-10-26); the current stage is now B with steps 5-9 still in it; C not started; LOCKS `x`
-**Last touched** · 2026-10-26 (A built; check 27 bars, `step 4` flaky from before)
+**Status** · pass 3 built, D rebuilt (wing length) and E added; review fixes of 2026-10-28 applied (target bars, B's tag F_ST, V_A units, C's runs axis); checks green (`check_lesson20_numbers.js` 31 + the five R panels; `check_lessons.py`; `check_layout.js`, 22 pages); JM to review; voice owed for A-E; LOCKS `x`
+**Last touched** · 2026-10-28
+
+## Handoff, 2026-10-28 (read this first)
+
+Where things stand, for the next session on 20, 21 or 22.
+
+- **The page.** Five stages: A one split as a pedigree with mutations (4 reads, 4 targets); B two ponds apart, incompatible new
+  alleles, floods, a choosy allele (4 targets); C the student splits populations, gene trees over the black tree (4 targets);
+  D wing length → gene flow → speciation and → range → extinction (5 targets); E reading a random tree (6 questions). 27 bits.
+  `version` and the scaffold count are in `Score.init`. No voice yet anywhere: JM to dictate.
+- **Review of 2026-10-28 and JM's answers** (the review's six points, his numbering):
+  1. D teaches two things, the founder's bias at speciation (D1-D3: a new species starts from a bird that stayed, Simpson's
+     "at the splits" term) and species sorting (D4-D5): JM, "I'm fine with both. We aren't naming them, and they're both
+     important." Nothing changed. 22 or a later 23 must keep the two apart when the Price terms are named.
+  2. V_A is a variance: a new species differs by about sqrt(V_A) mm, not "one V_A". Fixed in D's hover text and the comment.
+  3. B's choosy allele lowered F_ST between the ponds. JM: "if choosy immigrants stick with other immigrants you get two
+     disjunct populations in each pond. Tracking Fst by using a linked allele instead of physical location might work." Built:
+     a tag at locus 11 (orange in the orange pond, blue in the blue at the split, never mutating); the F_ST plot in B is now
+     between orange-tagged and blue-tagged chromosomes, both ponds pooled ("F_ST between the two kinds"; 0 once a kind is
+     lost). **What the tag showed (open, see Open for JM, pass 3 review, 1):** no run kept both kinds side by side in a pond.
+     With how choosy 1 (200 apart, mutation .002, migration .1; 8 runs), the choosy allele either died out (4 runs; the ponds
+     stayed apart by dying hybrids, the tag .56-.67) or went to 1 in both ponds while one kind replaced the other in both (4
+     runs; the tag lost, hybrids .93-.98 because one kind is left). B3 ("the choosy allele rises") is hit by those
+     replacements. Reinforcement that keeps two kinds apart did not happen at these settings.
+  4. Targets that hit only at a slider's end were loosened (JM: "Targets should not be hard to hit"): A6, A7/A8, B1-B4, D2,
+     D4, D5. New bars and the sweeps behind them are in "Pass 3 as built" below and in comments above each stage's targets;
+     the checks now test a setting a step from the end where one exists (A6 n 6, B2 200 apart, D3 start 6, D4 .3 → .7, D5
+     extinction -.7 alone).
+  5. Length (27 bits, five stages): JM, "Probably fine for now."
+  6. Small things, fixed: B's header comment said incompatible chance .02 (the page uses .05); D5's numbers disagreed between
+     the page and this doc (both now carry the 2026-10-28 sweep); C's "Your runs" axis now reads "generations between splits ÷
+     fish a population (log scale)" with "← splits close together, many fish" and "splits far apart, few fish →" in the plot
+     and the hover text to match.
+- **Measuring.** The check script needs `CHROME=<path to chrome> node scripts/check_lesson20_numbers.js` off a Mac (a wrapper
+  adding `--no-sandbox` when running as root) and `Rscript` for the R panels. For sweeps, load the page in headless Chromium
+  and call the engine (`pdBatch`, `bwWorld`/`bwStep`, `SB.cfg.start` + `stepOnce`, `SD.cfg.start`); seeds as the check uses
+  them.
+- **Next.** JM's voice A-E; JM's ruling on B3 (Open, pass 3 review, 1); then 21 (lesson21_overhaul.md: its reinforcement stage
+  must not be scored on F_ST between ponds, and needs the same finding resolved first) and 22 (lesson22_overhaul.md: grid vs
+  groups and the kin-competition check before any build).
+
+## JM, 2026-10-27 (verbatim, dictated; "less than 19" = lesson 20, "parade" = part A)
+
+> For less than 19. I'm still not particularly happy with uh, structure here. I do like the visualization in part A a lot. And the visualization part B is also pretty good. But the flow is off. I'd like the students too, for parade, use the visualization we currently have, but add in mutations explicitly. And I'd like for them to do a few simple tasks of tracking allegals that coalesce within each population separately, and allegals that coalesce before the population split. I'd also like the visualizations to show the frequency of coalescence times against the timing of the population split. And I was thinking they should be able to adjust the timing of the split, and the mutation rate, and the effective size, and the number of generations. And in this way they can generate different patterns. And the big thing would be the, a combination of some targets being clicking on coalescence as it is now, and others, like seeing the patterns that you get from these 2 divergent populations under different sets of incompatible sets of mutation rate, drift, and divergence times. you know, coalescence patterns throughout. First off. Second for part B. Here, I'd like to introduce incompatibilities, building on what they did in lesson 19. Um... And also the idea of, like, make preferences, again, expanding on lesson 19, uh, and basically, building on part A as well. Have the population run for a little bit longer. With the mutations accumulating as before. and have fitness for hybrids of different lowsi. Where they can see the fitness landscapes for hybrids and not hybrids. and have a meat preference a leal. That avoids the low fitness hybrids. Part C would be similar to our current part B, with the phylogy being generated. Big differences here. I like it to build more directly. It could be a different interactive. I like it to build more directly on the concepts and visualizations we did in A and B and there's what graphs and summary results they could plot. Um, I'd also like for them to not have the splits as limited with six. This will change what we can do, what is feasible and practical, but I would like for them to be able to produce larger number of larger numbers of splits and larger phylogenes. I would like the main population divergence philology to be shown in dark black, but then they can add the phylogenes for individual low sies, thin colorful lines, for coalescence plots, and see how many of them reflect the population patterns, the pattern of population splits versus predated versus Mismatch it. And so the targets could be something like, um, trying to get the genes to match the phylogeny, uh, trying to get the chance to mismatch and complete linear sorting and trying to get the genes to. Yeah, that's it. producing greater and smaller amounts of matching, which is not matching the actual population history they see. Actually, Instead of this one being growth, they should set the times of population split. Like we have the population running, and they click a button to split the population. And then they click a button, they split one of the splits, and they click, and they click, and they click, and the clicking is what causes the divergences. And they should be able to set things like the mutation rate and the recombination rate. But the clicking is what causes the splits and so they can figure out that. They should have to get certain amounts of matching versus mismatching due to incomplete lineage sorting individual gene topologies. Um, so I can use the visualization for before. But then, when it's done, it superimposes a black phylogeny showing the full time range, showing their actual history of population divergences, and they add on in different colors, genes that map, genes whose coalescence times match, low side whose genes coalescence times match, or mismatch the actual population history. Or D then would be the final one. This final one would allow them to set a rate of population divergence or a probability of population divergence. In a causal diagram. As a function of traits. So we don't have to do the genetics here. We have some trait like dispersal ability. On dispersability is high. The population diverges less when it's low, it diverges more. And they do that to look at the frequency of other traits over time. The idea is that this one would show species selection without naming it as such. Um, we would also have extinction rate. Probably they go extinct. could be a function of traits as well. We could build this off of something like the Carl Simpson Coral example, where you have colonial and symbiotic, non-colonial and non-symbiotic in the combinations they're in. And they have different probabilities of, The trade arising, and when they arise, they have different probabilities of different effects on BC and extinction. These are the reviews for lesson 20.
+
+Readings: allegals = alleles; lowsi / low sies = loci; meat preference a leal = mate-preference allele; philology / phylogy / phylogenes = phylogeny, phylogenies; "incompatible sets of mutation rate, drift, and divergence times" = different combinations of the three (read as: the same pattern from more than one combination); "complete linear sorting" = incomplete lineage sorting; "predated" = a gene tree with the populations' order whose forks sit further back than the populations' own (its lineages did not meet in the branch between two splits); "instead of this one being growth" = instead of splits arising by chance (v1's split chance b); BC = speciation; Carl Simpson's corals = Simpson 2013 (Evolution 67: coloniality and photosymbiosis in scleractinian corals, species selection).
+
+## Pass 3 plan (2026-10-27)
+
+    A  one split, as a pedigree (pass 2's A) + mutations drawn; four sliders; when pairs of copies meet against the split
+    B  NEW  two ponds run longer: incompatibilities from new alleles (19 C), then floods; a choosy allele (19 D) that avoids hybrids
+    C  pass 2's B rebuilt: the student splits populations by clicking them (no cap of six); N, mutation, crossing over;
+       at the end the populations' tree in black with each locus's tree in thin colour: matches / predates / mismatches
+    D  NEW  no genes: species with traits (colonial, symbiotic: Simpson's corals) whose splitting and loss the student sets
+       in a causal diagram; the traits' shares over time
+
+v1's size steps, the hybrid pairs plot and the Anolis box are cut (their ideas now live in B and D). Lesson 21 keeps
+dispersal and the Price breakdown; D here is its trait-only foreshadowing (Open 1).
+
+### A — one split, mutations, and when copies meet
+
+- engine: pass 2's (`pdWorld`), founding group 3 at generation 0, three founder alleles a locus; the pond splits at
+  generation s into n + n; G generations in all. Mutation: each traced copy takes a new allele with chance mu a generation.
+- beads: founder alleles white / light / mid grey (pass 2); a new allele by where it arose: before the split green, after it
+  in the orange pond orange, in the blue pond blue (19's colours; never by hue alone: ponds also by row side and the
+  dashed / solid underline).
+- sliders: fish a pond n (4 / 6 / 8 / 10), generations G (20 / 30 / 40 / 60), split at generation s (1 to G - 2, also
+  draggable on the plot), mutation rate (0 / .002 / .005 / .01 / .02 / .04).
+- plot, with a menu: "when pairs of copies meet" (every pair of copies in the last generation, at the 8 traced loci:
+  how many met in each generation; within orange, within blue, one from each; the split as a dashed line; pairs that
+  never met inside the pedigree in a bar at the left); "differences between copies" (the same pairs: how many of the 8
+  loci carry different alleles; three outlines again); F_ST across the genome (pass 2's).
+- reads (Lock in, first answer the bit): R1 a cross pair (where they meet, always above the line); R2 an orange pair;
+  R3 NEW a ringed copy carrying a new allele: click the copy where that allele arose; R4 four copies, where the first two
+  meet (pass 2's R3).
+- targets (16 pedigrees a Go, judged on the 16 together; wordless picture cards):
+  T1 within-pond pairs mostly meet after the split (n held, split free)
+  T2 within-pond pairs mostly meet before it (split held, n free)
+  T3 differences: cross pairs differ at many loci, within-pond few (G and split held, mutation free)
+  T4 the same picture with mutation held low: G / split free (the same pattern from another combination)
+  windows measured on the page's engine.
+
+### B — incompatibilities, then contact, then a choosy allele
+
+- engine: A's fish (20's `tr*` pieces) in two ponds of N 30 split from one population; apart for the generations set, new
+  alleles accumulating (orange, blue); then a flood every generation moves a share m of each pond. A new orange and a new
+  blue allele at different loci are incompatible with chance p (a hash, 19 C), each pair costs `cost` of the chance to
+  survive. A preference locus ◆: a choosy allele, present at 5% in both ponds from the split; a fish with a choosy allele
+  turns down a partner whose look (its new alleles' share from the other pond) is unlike its own, with chance c (one
+  choosy copy half that), up to 4 looks (19 D's rule, a one-allele model: no throat gene to come apart).
+- displays: the two ponds (19's board, fish with a look square); over time with a menu (hybrid survival, choosy allele each
+  pond, F_ST, new alleles from the other pond); the fitness landscape: chance to survive against the share of a fish's new
+  alleles from the blue pond (0 pure orange ... 1 pure blue), run 1's fish and sampled hybrids as dots; the loci grid:
+  orange new-allele loci down, blue across, a cell dark when hybrids carrying that pair die (19 C's grid, by locus); a
+  diagram (paths.js): new alleles → incompatible pairs → survival (cost arrow), choosy allele → mating (how choosy arrow).
+- targets (16 runs a Go): B1 hybrids fail at contact (mutation free); B2 the same with mutation held low (time apart free);
+  B3 the choosy allele rises in both ponds after contact (how choosy free); B4 it does not, hybrids fine (time apart free).
+
+### C — the student splits the populations
+
+- engine: pass 2's B (`trWorld`) with no chance split: a click on a living population's bar splits it then; at most 16.
+  N 5-100, mutation, crossing over R 0 / .25 / 1 / 4 a chromosome. 400 generations, played slowly enough to click
+  (pause button). Burn-in before 0 as before.
+- at the end: the populations' tree in thick black, lines on the time axis back past 0 to the oldest gene fork; each
+  traced locus's tree in thin colour, added and removed by its chip: blue solid matches (same order, every fork inside the
+  branch before its split), orange long-dashed predates (same order, a fork further back), red short-dashed mismatches.
+- plots: every pair of living populations, generations since they parted against differences (new alleles that differ) or
+  F_ST; your runs: one dot a run, the average generations between splits per fish across, the share of loci that match up.
+- targets (one tree a Go, judged at 400): C1 6+ populations, 6+ of 8 match; C2 6+ populations, 6+ mismatch; C3 10+
+  populations and between 3 and 5 match; C4 6+ populations and every locus the same tree (crossing over free).
+
+### D — traits that split and are lost
+
+- species-level engine, no genes: a clade from one species without either trait; each step a species splits with chance
+  λ, is lost with chance μ (its last species never), gains a trait with chance g (per trait, slider), loses it with .01;
+  a new species keeps its parent's traits; at most 80 living (splitting × room).
+- diagram (paths.js): colonial → splitting, colonial → loss, symbiotic → splitting, symbiotic → loss (signed arrows);
+  symbiotic onto colonial → splitting (the combination). Base chances fixed.
+- displays: clade 1's tree, lines by trait (colonial thick, symbiotic blue); the traits' shares among living species over
+  time (16 clades thin, average thick), and where a share settles with no arrows (g / (g + .01)) as a faint line; living
+  species.
+- targets (16 clades a Go): D1 colonial common though it arises rarely (splitting); D2 the same with splitting held (loss);
+  D3 colonial rises though it raises loss; D4 colonial falls though it arises often; D5 colonial-and-symbiotic the most
+  common combination.
+
+## Pass 3 as built (2026-10-27)
+
+Where the build departs from the plan above, and the numbers each target was set on (the full sweeps sit in comments above
+each stage's targets in `lesson20.html`; seeds kept apart between Gos: an early D sweep reused 15 of 16 clades between Gos and
+read spreads far too narrow).
+
+- **A.** Pass 2's four-copy tree and chips panel cut: "every pair of copies" took its place, one plot with a menu (when two
+  copies meet / loci where two copies differ / F_ST across the genome). The split is a slider and a handle dragged along the
+  meet plot; its top follows the generations. Reads A1, A2, A4 are pass 2's R1-R3; A3 is new (the copy where a new allele
+  arose; mutation held at .02 so one is always there). Targets, Go = 16 pedigrees, the red boxes on the plot and on a sketch
+  in the card:
+      A5 within-pond pairs met after the split, 70%+ (n 4, G 40; split free, opens 35): split 35 .41-.48, 30 .63-.73, 28 .71-.78, 25 .81-.85
+      A6 within-pond pairs met before it, 62%+ (G 40, split 35; fish free, opens 4): n 4 .55-.59, 6 .64-.69, 8 .72-.76, 10 .78-.80
+         (bar .72 until 2026-10-28: 8 and 10 only)
+      A7 within pairs at 2 or fewer loci and cross pairs at 5+, 55% each (n 4, G 60, split 10; mutation free, opens 0):
+         0 cross .00-.19; .002 cross .14-.49; .005 .94-.98 / .44-.81; .01 .80-.90 / .89-1.00; .02 .57-.64 / 1.00; .04 within
+         .24-.32 (a window; bar .70 until 2026-10-28: .01 alone)
+      A8 the same picture, mutation held .005 (G and split free, open 40 / 30): cross .02-.10 at the opening; G 60 split 2
+         .61-.94, 60/10 .44-.81, 40/2 .51-.84, 30/1 .45-.76, 40/10 .35-.65
+- **B.** 40 fish a pond; one population split at 0; apart for 25-400 generations; then 150 of floods (migration .02-.2 a
+  generation). Incompatible chance .05 (19 C's .02 was too slow for 40 fish: .32-.43 hybrids at mutation .002 after 100).
+  The choosy allele is a one-allele preference on the partner's mix of new alleles (no throat gene), one chromosome in ten at
+  the first flood. Plots: the two ponds; over time (hybrid survival, choosy allele, F_ST, alleles from the other pond); the
+  fitness landscape (survival against a young fish's mix, parents within each pond and across) or loci by loci (orange
+  locus x blue locus, darker the more an F1 loses); diagram with the cost and how-choosy arrows. Targets (16 runs):
+  Bars re-set 2026-10-28 (4 sets of 16 runs a cell):
+      B1 hybrids at the first flood 30% or under (100 apart; mutation free, opens .0005): .0005 .88-.97; .001 .54-.78; .002 .08-.14; .004 .03-.10
+      B2 the same, mutation held .001 (was .0005, where only 400 hit; apart free, opens 50): 50 .85-.90; 100 .50-.66; 200 .10-.24; 400 .00-.01
+      B3 choosy allele 30%+ in each pond after the floods (200 apart, mutation .002, migration .1; how choosy free, opens 0):
+         0 .00-.08; .25 .02-.16; .5 .04-.22; .75 .13-.55; 1 .44-.62 (the lower pond). Bar .40 until 2026-10-28.
+      B4 choosy allele 25% or under, how choosy held 1 (apart free, opens 200): 25 .09-.18; 50 .03-.21; 100 .36-.47; 200 .45-.65;
+         400 .46-.67 (the higher pond). Bar .20 until 2026-10-28.
+  With choosy fish the ponds' F_ST fell (.19-.31 against .57 with none). Read at first as both kinds living in each pond;
+  traced 2026-10-28 with the tag (Handoff, 3): one kind replacing the other in both ponds in about half the runs. B's F_ST
+  plot is now between the tags, not the ponds.
+- **C.** Up to 16 populations; 400 generations at 45 ms each, a Pause button; a split lands at the next generation, each half
+  growing to its own size around the slider's (lognormal, sd .2: your 2026-10-26 ruling). End: the black tree back past 0
+  to the oldest fork, the eight loci thin over it (blue ✓ / orange ↶ / red ✗, chips to add and remove each); every pair's
+  loci that differ or F_ST against time apart; your runs (generations between splits per fish against loci ✓, a log scale).
+  The R panel carries the student's own clicks. Targets (one tree a Go):
+      C1 6+ populations, 6+ ✓ (opens N 50): N 5 or 10 with splits 50+ apart 7-8/8 trees; N 25-50 0-2/8
+      C2 6+ populations, 6+ ✗ (opens N 5): quick splits (2 apart) or N 25+ 8/8; N 5 with splits 10 apart 0/8
+      C3 12+ populations, 4+ ✓ (opens N 25): N 5-10, every population split every 70+ 8/8; N 25 0/8. (Planned "a window of
+         matching" between C1 and C2: at 2-6 ✓ the opening landed 2 trees in 6, at 3-5 the best setting 6 in 8.)
+      C4 6+ populations, every locus the same tree, a ✗ among them (N held 100; crossovers free, opens 1): 0 8/8; .25-4 0/8
+- **D (2026-10-28, JM, three steps that day: "a simple single trait that influences both speciation and extinction"; "dispersal
+  ability as the trait"; then "a modification to the core DAG plot. Something where you shift a distribution (eg mean/var of
+  wing size), and adjust a correlation by dragging a line (eg between wing size & P(founding a new population)) which is
+  causally linked to more speciation and more extinction via arrows", with "an extra box on additive genetic variation +
+  environment controlling wing length", "We'll change by a Va unit each speciation", wing size as dispersal, replacing D).**
+  The diagram: additive genetic variation (V_A arrow) and environment (V_E arrow) → wing length, a box holding the first
+  species' fish as two curves (genetic values dark, wing lengths light), its centre dragged → P(founding a new population),
+  a box holding the line from 9 to 11 mm, both ends dragged, clade 1's species as dots on it → speciation and extinction
+  (signed arrows). `paths.js` gained `drag` on a box (one listener on the SVG; boxes without it unchanged; 8 pages' layout
+  and lesson 19's 47 checks green after it). A species carries G; its fish g ~ N(G, V_A), wing length g + e, e ~ N(0, V_E);
+  its founding chance the line averaged over its fish; speciation 0.1 exp(cs (2f - 1)) x room, extinction 0.05 exp(cl (2f -
+  1)); a new species' G is the g of one fish that dispersed (about sqrt(V_A) mm from its parent, biased by founding).
+  V_E: under a straight line it does nothing (the founders' bias is V_A x slope / f, h2 and S cancelling V_E: 12.0 mm at V_E 0,
+  11.9 at 4), so the line's handles sit 2 mm apart and a steep line is a threshold, where V_E blurs which fish found.
+  Then (2026-10-28, JM): "Larger wings = lower extinction/speciation due to larger Ne resulting from higher gene flow"; and
+  then "wing length should affect a bird's gene flow & census population size (total range). Then extinction is based on smaller
+  wings = smaller size, and speciation is based on lower gene flow = more fragments. Opens it up more to a later extension ... in
+  lesson 21 to show how a trait can have different effects on fitness between individuals in a population & between species
+  within a clade." Birds, not fish. Wing length → two boxes, each a line dragged at 9 and 11 mm: gene flow (the chance a bird
+  disperses) → speciation, and range size (census size) → extinction; both arrows negative in D1-D4. A new species starts from
+  a fragment, from a bird that stayed (chance 1 - gene flow), and leans toward short wings. The over-time menu adds gene flow
+  and range size (a clade's species averaged): 21's hook.
+  Targets (16 clades, 6 Gos measured; average wing length at 200 million years):
+  Re-measured 2026-10-28 (6 Gos a cell, seeds 900 + 104729 i, as the check runs them):
+      D1 V_A free (start 10, gene flow steep, range flat): 0 10.0; .25 7.6-7.9; .5 6.8-7.1; 1 5.5-6.3; 2 3.8-4.9. Bar 8.2 or under
+      D2 V_E free (start 12, V_A .25): 0 8.1-8.9; .5 8.3-9.2; 1 8.4-9.2; 2 8.9-10.5; 4 9.0-10.7. Bar 9.0 or more (was 9.4)
+      D3 the start free, change within 1 mm (opens 12: -3.7 to -2.4): 6 -.3 to +.4; 8 -.8 to -.6; 10 -2.3 to -2.0; 14 -1.0 to +.2
+      D4 the range line free (gene flow .4 → .6): flat 4.7-5.4; .4 → .6 6.9-8.8; .3 → .7 8.2-9.6; .2 → .8 8.5-9.4; 0 → 1 8.0-10.4;
+         falling 4.3-5.8. Bar 7.5 or more (was 8.5)
+      D5 the arrows free (gene flow .4 → .6, range .2 → .8): none 7.5-8.2; both -.7 7.8-10.2; extinction -.7 alone 10.0-11.3;
+         extinction -1.4 10.3-12.1; speciation -.7 with extinction -1.4 10.4-11.6; both -1.4 9.0-11.3; speciation +.7 with
+         extinction -.7 10.8-11.8; speciation -1.4 alone 3.2-4.8. Bar 9.5 or more (was 10.5)
+  Checks: a founder's bias -.148 / -.145 mm against -V_A x slope / (1 - f) = -.150; V_A 0 changes nothing; a flat line, no drift.
+
+- **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
+  common ancestor of two tips").** A random tree of 8-12 species, lineages joined two at a time with the forks evenly spaced
+  (waiting times like A's crowded the young forks against the letters), each fork's branches drawn up or down at random.
+  Click a letter or a fork, then Lock in; a wrong answer shows the right one and Another tree asks again. Six questions:
+  E1-E3 the nearest relative of a ringed tip (every tip across its last fork counts; E2 deals a tip whose nearest relatives
+  are a group, E3 one whose neighbour on the page is not among them); E4-E6 the common ancestor of two ringed tips (E5 two
+  far apart on the page whose fork is not the oldest, E6 two side by side whose fork is the oldest). Lessons 15 and 19 read
+  for the move (15 B: pick the copy, then This one); 19 unchanged.
+
+## Foreshadowing 21 and 22 (proposed 2026-10-28, not built)
+
+21 is now speciation mechanics (lesson21_overhaul.md, pass 2 plan), 22 the Price equation through kin selection
+(lesson22_overhaul.md). What 20 could change to lead into them:
+
+1. B overlaps 21. Recommended: 20 B keeps the snowball and the hybrid fitness landscape and ends at contact (targets B1-B2);
+   its choosy allele (B3-B4) moves to 21 B, which opens from 20 B's endpoint. 20 B then needs two new targets or none.
+2. D gets an inert arrow, wing length → a bird's own survival, drawn and held at 0 (LESSON_STYLE §11: a hook left visible but
+   inert). 22 D turns it on: the trait's effect on birds within a species against its effect on species within a clade.
+3. A's "when two copies meet" is 22's relatedness, and 11 and 15 are its ancestors (kinship; the snake game's pedigree). One
+   hover line in A could say "as in Lessons 11 and 15"; 22 B then says "as in Lesson 20 A".
+4. Real data for D (closed box): AVONET (data/clean/avonet_birds.csv, 11,009 species, unused so far): hand-wing index, the
+   birds' dispersal, against range size, the wing → range arrow measured in real birds.
+
+## Open for JM (pass 3 review, 2026-10-28)
+
+1. **B3 rewards one kind replacing the other, not reinforcement.** With the tag (Handoff, 3), every choosy run either lost
+   the choosy allele or fixed it while one kind took over both ponds; none kept two kinds apart. Options: (a) keep B3 and let
+   the over-time plot show the replacement (a real outcome: reinforcement can end in fusion or one kind's loss); (b) judge B3
+   on the choosy allele rising and the tag's F_ST staying high, after finding settings where that happens (lower migration,
+   a costlier hybrid, a choosy allele from the start of contact: not yet measured); (c) move the choosy allele to 21 (as the
+   21 plan's Open 1 proposes) and end 20 B at contact.
+
+## Open for JM (pass 3)
+
+1. D overlaps lesson 21 (species selection with dispersal and the Price breakdown). D here is trait-only (corals), no Price
+   terms; 21 is unchanged. Dispersal is not named in D: 21 is built so students find that dispersers split less.
+2. "Predates" is defined as above (same order, a fork older than the split before it). Say if you meant something else.
+3. A's split slider and the generations slider: the split must fall inside the run, so the split slider's top follows G.
+4. B's choosy allele is a one-allele preference (a partner's mix of new alleles), not 19 D's throat and preference genes:
+   nothing for crossing over to break apart, so the rise reads cleanly. Say if you want 19 D's two genes back here.
+5. B's incompatible chance is .05, not 19 C's .02 (40 fish a pond were too slow at .02).
+6. A's reads and C's targets keep one sentence each in the card (a read has no picture; C's control, a click on a bar, has no
+   cue of its own: REVISIONS row 22). Everything else is wordless.
+7. Voice: none yet for A-D.
 
 ## What the lesson is
 
-- One population that keeps splitting (apart, no floods: 19 A with migration off) into a tree drawn as it grows. Inside the tree, the alleles at a few loci traced back: their trees disagree with the populations' tree when the populations split fast and are large. F_ST between every pair; at the end, a trait evolving along the tree.
+- Since pass 3 (2026-10-27/28): one split as a pedigree (when copies meet against the split; mutations by where they arose); two ponds apart then in contact (incompatibilities, a choosy allele); a tree the student splits, with each locus's tree laid over it (match / predate / mismatch); a trait (wing length) setting speciation and extinction through gene flow and range; reading a tree. Before pass 3 (v1, kept below for the record): one population splitting by chance into a tree drawn as it grows, alleles at a few loci traced back, F_ST between every pair, a trait along the tree.
 - Worth protecting: the tree is drawn from the run, never asserted; every gene tree comes from parent links recorded in the run.
 
 ## JM, 2026-10-23 (verbatim)
@@ -117,10 +364,19 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 | 8 | A: node prototype on the page's engine (2n → two of n, small founding group at 0); T1/T2 windows over 16 pedigrees; F_ST against ✓ | done 2026-10-26 (see Measured, item 8) |
 | 9 | A: pedigree port from 15 onto `tr*` data; split line; ponds by half; 4 marked copies' tree + chips | done 2026-10-26 (`pdWorld`, `pdLayout`, `drawPed`; three views, click = red up / blue down, lock, Clear) |
 | 10 | A: reads 1-3, targets T1-T2 | done 2026-10-26 (bits 0-4; reads need Lock in; T1 >= 70% at n 4 from g1 5, T2 <= 28% at g1 5 from n 4; see Measured, item 10) |
-| 11 | B: steps 1-4; pairs plot F_ST only; REVISIONS 18-21 | partly: stage renamed B (ids `B_`, bits 5-13); steps 5-9, the hybrid and size plots and the wordless-card rows are still as v1 |
-| 12 | C: ticks, allele picker, "new alleles that differ"; reads C1-C3; target; steps 5-9 moved; Anolis | todo |
-| 13 | scoring v2, scaffold recount; R panels A, B, C; `check_lesson20_numbers.js` across A-C | todo |
-| 14 | JM's voice A-C | todo |
+| 11 | B: steps 1-4; pairs plot F_ST only; REVISIONS 18-21 | superseded by pass 3 (2026-10-27) |
+| 12 | C: ticks, allele picker, "new alleles that differ"; reads C1-C3; target; steps 5-9 moved; Anolis | superseded by pass 3 |
+| 13 | scoring v2, scaffold recount; R panels A, B, C; `check_lesson20_numbers.js` across A-C | superseded by pass 3 (item 19) |
+| 14 | JM's voice A-C | moved to item 20 |
+| 15 | JM's review of pass 2 (2026-10-27): A with mutations and four sliders; B incompatibilities and mate preference; C splits by click, gene trees over the black tree; D traits, splitting and loss | done (verbatim above) |
+| 16 | A: mutations drawn; G, split, mutation sliders; every pair of copies (meet / differ / F_ST); read A3; targets A5-A8 measured | done 2026-10-27 |
+| 17 | B: two ponds apart then floods; incompatibilities; choosy allele; landscape and loci grid; diagram; B1-B4 measured | done 2026-10-27 |
+| 18 | C: click to split (16), black tree + loci, chips, pairs, your runs; C1-C4 measured. D: species engine, diagram, tree, shares; D1-D5 measured | done 2026-10-27 |
+| 19 | scoring v3 (21 bits), R panels A-D, `check_lesson20_numbers.js` (30 + narrow) | done 2026-10-27; the four R panels run (B and C shortened, as the check does) |
+| 20 | JM's voice A-E; JM's review of pass 3 | todo |
+| 22 | D wing length: V_A, V_E, a dragged distribution and a dragged founding line, arrows to speciation and extinction; five targets; `paths.js` box drag; v5, scaffold 27 | done 2026-10-28 |
+| 23 | Review fixes (JM, 2026-10-28): target bars loosened (A6, A7/A8, B1-B4, D2, D4, D5), checks moved to a step from the end; B's F_ST by a tag at locus 11, not by pond (R panel too); V_A units; C's runs axis; stale comments | done 2026-10-28 (31 checks + five R panels, layout 22 pages) |
+| 21 | D one trait, dispersal, worded as speciation and extinction (JM, 2026-10-28: "Why such informal terminology? Why \"loss\" instead of extinction?"); E reading a tree (six questions); checks 30 + narrow, R panels A-E run | done 2026-10-28 |
 
 ## Measured, item 10 (2026-10-26, the page's engine, 60 Gos of 16 pedigrees a cell; mean ± sd across Gos [range])
 
@@ -148,6 +404,13 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 - 2026-10-23: the simulation stays, but later. First a granular view of one split: 15's locus-vs-individual pedigrees with 19's genome view of populations splitting. Then the current stage. Then perhaps mutations tracked along the tree.
 
 - 2026-10-26 (JM, on Open 1-6): (1) a small founding group, so most cross pairs meet inside the pedigree; (2) four marked copies, yes; (3) A and B keep different splits: A's rows keep their width, B regrows after halving, but not necessarily to identical Ns (some variance in population size; read as: each half regrows to its own N drawn around the slider's N, not all to the same one); (4) steps 5-9 move from B to C; (5) "where did it arise" is scored as a bet; (6) C's target is a drawn round (REVISIONS row 15: draw against time apart, a cloud of trees).
+- 2026-10-27 (JM's review of pass 2, verbatim above): four stages. A keeps the pedigree, adds mutations, the split's timing, mutation rate, size and generations, and the distribution of when copies meet against the split; reads and pattern targets. B incompatibilities (19 C) and a mate-preference allele (19 D) that avoids unfit hybrids, built on A, run longer; fitness for hybrids by loci and landscapes for hybrids and not. C the student splits populations by clicking, no cap of six; the populations' tree in black over the full time range, each locus's tree thin in colour, matching / predating / mismatching; targets on amounts of matching. D splitting and loss as functions of traits in a causal diagram, no genetics (Simpson's corals); species selection, never named.
+- 2026-10-28 (JM): don't change lesson 19; look at it and 15. 20 D a single trait that influences both speciation and extinction (trade-offs from 21 on). A Part E: a random phylogeny, click the nearest relative of a random tip and the common ancestor of two tips.
+- 2026-10-28 (JM): D's trait is dispersal ability: high dispersers lower extinction and lower speciation, low dispersers the reverse.
+- 2026-10-28 (JM): D rebuilt on the diagram: a wing-length distribution (V_A + V_E boxes) shifted by drag, a dragged line wing length → P(founding a new population), arrows to speciation and extinction; a new species changes by a V_A unit; wing size as dispersal. Replaces the high / low dispersal D.
+- 2026-10-28 (JM): larger wings lower extinction and speciation, through larger Ne from higher gene flow (the middle box is gene flow, its arrows negative).
+- 2026-10-28 (JM, on the review): (1) D teaching both the founder's bias and species sorting is fine, neither named; (2) fix V_A's units; (3) track F_ST with a linked allele, not by pond (the both-kinds-in-a-pond outcome need not be part of 20 yet); (4) targets should not be hard to hit: loosen any that hit only at a slider's end; (5) length fine for now; (6) fix the small things.
+- 2026-10-28 (JM): wing length sets a bird's gene flow (lower: more fragments, more speciation) and census size / total range (smaller: more extinction); 21 to break the trait's effects apart between individuals and between species.
 
 ## Do not
 

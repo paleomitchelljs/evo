@@ -86,6 +86,8 @@
 // (`captionUpright: true` turns it to run up the page, for an upright arrow).
 // A box's `cls: "..."` adds a class to its rectangle, for the page's CSS to
 // colour (lesson 17 D, 2026-10-15: four populations, each in its own colour).
+// A box's `drag: { hit, move, end, cursor }` makes the plot its `glyph` draws
+// something the student drags (lesson 20 D, 2026-10-28; see `boxDrag` below).
 
 (function (global) {
   "use strict";
@@ -133,7 +135,7 @@
     (opts.boxes || []).forEach(b => {
       boxes[b.id] = { id: b.id, label: b.label || b.id, sub: b.sub || null,
                       x: b.x, y: b.y, w: b.w || 170, h: b.h || 48,
-                      kind: b.kind || "cause", hidden: !!b.hidden, cls: b.cls || null, glyph: b.glyph || null };
+                      kind: b.kind || "cause", hidden: !!b.hidden, cls: b.cls || null, glyph: b.glyph || null, drag: b.drag || null };
       order.push(b.id);
     });
     const arrows = (opts.arrows || []).map(a => ({
@@ -677,6 +679,31 @@
         setValue(a, s.v + d * nudge * (ev.shiftKey ? 5 : 1));
       });
     }
+
+    // A box with `drag` is a small plot the student works by hand (lesson 20
+    // D, 2026-10-28: a wing-length distribution whose centre is dragged, a
+    // line whose ends are dragged; JM: "shift a distribution ... and adjust
+    // a correlation by dragging a line"). The box draws its plot with
+    // `glyph`; `drag` takes points in the diagram's own units:
+    //   hit(p, box) -> true where a drag may start, move(p, box, first) on
+    //   every step (the page writes its inputs and calls sync()), end(box),
+    //   and cursor(p, box) -> a CSS cursor when the pointer hovers there.
+    // One listener on the SVG, so the boxes can be rebuilt mid-drag.
+    let boxDrag = null;
+    const toView = ev => { const m = root.getScreenCTM(); if (!m) return { x: 0, y: 0 }; const pt = root.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const q = pt.matrixTransform(m.inverse()); return { x: q.x, y: q.y }; };
+    root.addEventListener("pointerdown", ev => {
+      const p = toView(ev);
+      for (const id of order) { const b = boxes[id]; if (!b.drag || b.hidden || !b.drag.hit(p, b)) continue;
+        boxDrag = b; ev.preventDefault(); try { root.setPointerCapture(ev.pointerId); } catch (e) {} b.drag.move(p, b, true); return; }
+    });
+    root.addEventListener("pointermove", ev => {
+      const p = toView(ev);
+      if (boxDrag) { ev.preventDefault(); boxDrag.drag.move(p, boxDrag, false); return; }
+      let cur = ""; for (const id of order) { const b = boxes[id]; if (b.drag && !b.hidden && b.drag.cursor) { const c = b.drag.cursor(p, b); if (c) { cur = c; break; } } }
+      root.style.cursor = cur;
+    });
+    const endDrag = () => { if (boxDrag && boxDrag.drag.end) boxDrag.drag.end(boxDrag); boxDrag = null; };
+    root.addEventListener("pointerup", endDrag); root.addEventListener("pointercancel", endDrag);
 
     const ctrl = {
       sync: render,

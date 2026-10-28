@@ -59,6 +59,12 @@ because it read the attribute. Hold a control (`disabled` + `held`) rather than
 hide it, or add `[hidden] { display:none }` for that class; in a check, read
 `getComputedStyle(el).display` and `disabled`, never `el.hidden`.
 
+**F_ST between places is not isolation between kinds once kinds can move.** Lesson 20 B (2026-10-28): with a choosy allele,
+F_ST between the two ponds fell from .57 to .19-.31. It read as two kinds sharing each pond; traced with a tag (a never-mutating
+allele marking the pond a chromosome started in), it was one kind replacing the other in both ponds in about half the runs.
+Measure isolation between kinds by a tag (F_ST between tagged chromosomes, both places pooled) or by hybrids' share, and look
+at single runs before reading an average.
+
 **A check that fails one run in twenty teaches nothing.** Size tolerances off
 the measured run-to-run spread and say in the comment what that spread was.
 
