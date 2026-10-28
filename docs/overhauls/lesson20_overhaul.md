@@ -167,6 +167,20 @@ read spreads far too narrow).
   far apart on the page whose fork is not the oldest, E6 two side by side whose fork is the oldest). Lessons 15 and 19 read
   for the move (15 B: pick the copy, then This one); 19 unchanged.
 
+## Foreshadowing 21 and 22 (proposed 2026-10-28, not built)
+
+21 is now speciation mechanics (lesson21_overhaul.md, pass 2 plan), 22 the Price equation through kin selection
+(lesson22_overhaul.md). What 20 could change to lead into them:
+
+1. B overlaps 21. Recommended: 20 B keeps the snowball and the hybrid fitness landscape and ends at contact (targets B1-B2);
+   its choosy allele (B3-B4) moves to 21 B, which opens from 20 B's endpoint. 20 B then needs two new targets or none.
+2. D gets an inert arrow, wing length → a bird's own survival, drawn and held at 0 (LESSON_STYLE §11: a hook left visible but
+   inert). 22 D turns it on: the trait's effect on birds within a species against its effect on species within a clade.
+3. A's "when two copies meet" is 22's relatedness. One hover line in A could carry the word forward; or nothing, and 22 B says
+   "as in Lesson 20 A".
+4. Real data for D (closed box): AVONET (data/clean/avonet_birds.csv, 11,009 species, unused so far): hand-wing index, the
+   birds' dispersal, against range size, the wing → range arrow measured in real birds.
+
 ## Open for JM (pass 3)
 
 1. D overlaps lesson 21 (species selection with dispersal and the Price breakdown). D here is trait-only (corals), no Price

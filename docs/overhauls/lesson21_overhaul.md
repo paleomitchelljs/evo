@@ -2,8 +2,51 @@
 
 **File** · `app/lessons/lesson21.html` — first draft 2026-10-20
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · first draft built (v1, scaffold 3: A1-A3); checks green (14 + R, ~1 min); LOCKS `x`; JM to review; voice owed
+**Status** · first draft built (v1, species selection); pass 2 PLANNED (2026-10-28): speciation mechanics; the first draft's material to 22 D; LOCKS `x`
 **Last touched** · 2026-10-20
+
+## Pass 2 plan (2026-10-28, proposed, not built): speciation mechanics
+
+JM, 2026-10-28 (verbatim): "Let's plot out lesson 21 & 22 a bit and see if we want to adjust 20 to foreshadow it at all. I'm
+thinking of 21 being hard into the mechanics of speciation per se. Bringing back a lot of the stuff of 19 to illustrate allopatric
+speciation, the snowballing of incompatibilities, and reinforcement (including inversions and magic traits and recombination as a
+race with differentiation)."
+
+The first draft below (species selection: a trait good for the fish, bad for splitting; Price one level up) moves to 22 D, where
+the Price equation is the subject (see lesson22_overhaul.md). 21 becomes four stages on 19's ponds and fish (`pd*` engine
+rebuilt in 21, 19 untouched), each a step 19 took in passing, now the whole stage:
+
+    A  apart: the snowball. Two ponds, no floods, new alleles (19 C). Two plots against time apart: new alleles that differ (a
+       line) and incompatible pairs (a curve that bends up: every new allele can clash with every one from the other pond).
+       Controls: mutation, chance a pair is incompatible, fish a pond. A drawn round (REVISIONS row 15): draw incompatible pairs
+       against time apart, then 16 runs; the share of the drawn curve inside the cloud. Targets: hybrids fail by a given time,
+       by mutation or by time apart (20 B's pair, now at full length); doubling time apart more than doubles the pairs.
+    B  contact: reinforcement. The ponds flood together after the snowball (19 A's floods). A choosy allele against hybrids:
+       first a one-allele preference (choose a partner like yourself: 20 B's), then a two-allele one (a preference gene and a
+       separate signal gene, 19 D's throat). Targets: the choosy allele rises only when hybrids are unfit; with the two-allele
+       version the ponds fuse at rates where the one-allele version holds.
+    C  recombination as a race. 19 D's dragged genes: a signal locus, a preference locus, a divergently selected (food) locus,
+       each placed on the chromosome; crossovers per chromosome a slider. Plots: the association between signal and food (19 D's
+       correlation) and F_ST at each, over time; the race drawn as two curves, how fast selection builds the association and
+       how fast crossing over breaks it. Targets: hold the ponds apart with the genes far apart (needs low crossing over), fuse
+       them with the genes beside each other (high migration), and find the distance where they just hold.
+    D  short cuts: inversions and magic traits. An inversion over the block (19 D's toggle) stops crossovers in heterozygotes;
+       a magic trait is one gene doing both jobs (the food allele is the mating cue: stickleback body size). Three versions on
+       one control set (signal + preference + food apart; the same in an inversion; a magic trait), each scored on the ponds
+       still apart after floods every generation. Real data, closed box: Heliconius colour pattern (a magic trait), stickleback
+       body size; Drosophila reinforcement (prezygotic isolation stronger between species that meet: Coyne & Orr) as a picture
+       only if a dataset can be sourced (none in data/clean; the archived 23's D was a TODO).
+
+Build notes: 19's engine (`pdWorld`, `pdStep`, floods, kinds, preference, inversion) is the base; 20 B's one-allele choosy rule
+and its fitness landscape / loci grid carry over. Extract-at-the-third-caller (WORK_ORDER): 19, 20 B and 21 make three callers of
+the two-pond engine; extracting it to app/assets/ is worth doing at 21's build, with 19's checks run before and after.
+
+Open for JM:
+1. 20 B already does the snowball and a one-allele choosy allele. Move B's reinforcement to 21 B (20 B keeps the snowball and
+   the hybrid fitness landscape, ending at the moment of contact, and 21 A opens from that number), or leave 20 B whole and
+   start 21 at the two-allele version?
+2. A real-data panel for the snowball (Coyne & Orr's Drosophila, hybrid inviability against genetic distance) needs a dataset
+   sourced and cleaned; worth it?
 
 ## What the lesson is
 
