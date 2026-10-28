@@ -88,6 +88,29 @@ covariance that makes it pay. The synthesis: 15 went down the levels (cells, gen
 2. D's species level: fold the archived 21's dispersal clade in, or only 20 D's wing-length clade with an individual-level arrow?
 3. Name Hamilton's rule on the page after students find it (the solved banner), or never?
 
+## Idea for 22 or a later 23 (JM, 2026-10-28, not planned)
+
+> I am also envisioning slotting a modified version of 20D where we have gene, organism, and species level features & have
+> students target different end frequencies of trait or the same ends via different toggles. Adding in things like evolving to
+> extinction would be interesting too (eg genes -> ecological specialization [herb-omni-carn?], with generalists having high
+> dispersal but low local abundance and specialists having low dispersal but high local abundance—I'm imagining students setting
+> local scale fitness landscapes for a trait and watching that percolate down through evolutionary time to produce various
+> outcomes). Maybe that's in 22, maybe a future 23.
+
+Readings: "percolate down through evolutionary time" = the local fitness landscape's effect carried forward to clade-level
+outcomes; "evolving to extinction" = selection inside species driving the species (or the clade) toward extinction.
+
+- Shape: 20 D's diagram with a box at each level (gene → organism → species), the student setting a local fitness landscape for
+  one trait (diet: herbivore / omnivore / carnivore); targets on the trait's end frequency across the clade, including the same
+  end reached by different toggles (lesson 20 A's T3/T4 pattern, one level up), and runs that end in extinction.
+- The trade-off as JM states it: generalists disperse far but are locally rare; specialists disperse little but are locally
+  abundant. Dispersal ties to speciation (20 D's gene-flow arrow); local abundance ties to extinction (20 D's range arrow).
+- Carries forward from the 2026-10-28 review of 20 D: the trait there changes only at speciation (a founder's bias, Simpson's
+  "at the splits" term), so a three-level version needs that term kept apart from species sorting, and the three Price terms
+  named apart (WORK_ORDER: never fused).
+- Where: 22 is already kin selection plus a species-level D. If both go in one lesson it is long; a 23 holding this and 22 D's
+  species level together is the likelier fit. JM to decide.
+
 ## Items
 
 | # | What | Status |
