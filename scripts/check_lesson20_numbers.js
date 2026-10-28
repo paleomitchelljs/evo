@@ -6,7 +6,7 @@
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
  *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
  *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  wing length (VA, VE) -> gene flow (a dragged line) -> speciation and extinction (2026-10-28, JM).
+ *   D  wing length (VA, VE) -> gene flow and range size (dragged lines) -> speciation and extinction (2026-10-28, JM).
  *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
  * What has to hold:
  *
@@ -154,20 +154,20 @@ function inner(CANVAS_IDS) {
        whatever VE (here VE 0 and .25: wider, more fish fall where the line is held at 0 or 1, and the line is no longer straight over them). 40,000 founders each: the mean's spread about .003 */
     const pr = [];
     for (const ve of [0, 0.25]) { const P = { va: 0.25, ve, p0: 0.2, p1: 0.8 }, rng = mulberry32(17 + ve); let s0 = 0; for (let i = 0; i < 40000; i++) s0 += dFounder(P, 10, rng) - 10; pr.push(s0 / 40000); }
-    const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < D_G; t++) dcStep(w1);
-    let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); flat += D_stat(w).mean - 10; }
+    const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, q0: 0.1, q1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < D_G; t++) dcStep(w1);
+    let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); flat += D_stat(w).mean - 10; }
     check("D engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " mm (VE 0 / .25) against -VA x slope / (1 - f) = -.150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " mm)",
           pr.every(v => Math.abs(v + 0.15) < 0.015) && w1.sp.every(x => x.G === 10) && Math.abs(flat / 200) < 0.15);
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TD = (k, good, n, slack) => {
-    const r = D_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, cs: 0, cl: 0 }, r.hold, r.open);
+    const r = D_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 0, cl: 0 }, r.hold, r.open);
     const run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goD(s, 900 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; v.push(j.vals.join("")); } return { h, v }; };
     const g = run(Object.assign({}, base, good)), o = run(base);
     check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
   };
-  /* measured (6 Gos, mm): 6.4-7.0 vs 10.0; 10.8-11.0 vs 9.1-10.0; change -.4 to +.6 vs -2.9 to -2.0; 6.2-7.2 vs 8.8-10.6; 10.9-12.0 vs 7.4-8.4 */
-  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 6 }, 6); TD(3, { p0: 0.2, p1: 0.8 }, 6); TD(4, { cs: 0.7, cl: -0.7 }, 6);
+  /* measured (6 Gos, mm): 6.0-6.5 vs 10.0; 9.0-10.7 vs 8.1-8.9 (bar 9.4); change -.5 to +.5 vs -3.7 to -3.3; 8.9-9.8 vs 4.5-5.8; 11.2-11.9 vs 7.4-8.4 */
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 14 }, 6); TD(3, { q0: 0, q1: 1 }, 6); TD(4, { cs: 0, cl: -1.4 }, 6);
 
   /* ================= E ================= */
   {
@@ -209,7 +209,7 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
         while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
     const openD = Gates.D.open;
-    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 6 }, { p0: 0.2, p1: 0.8 }, { cs: 0.7, cl: -0.7 }]);
+    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 14 }, { q0: 0, q1: 1 }, { cs: 0, cl: -1.4 }]);
     const openE = Gates.E.open;
     /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
     gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;

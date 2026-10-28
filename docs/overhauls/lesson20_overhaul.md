@@ -141,17 +141,21 @@ read spreads far too narrow).
   1)); a new species' G is the g of one fish that dispersed (a V_A unit, biased by founding).
   V_E: under a straight line it does nothing (the founders' bias is V_A x slope / f, h2 and S cancelling V_E: 12.0 mm at V_E 0,
   11.9 at 4), so the line's handles sit 2 mm apart and a steep line is a threshold, where V_E blurs which fish found.
-  Then (2026-10-28, JM, revising "wing size as dispersal": "Larger wings = lower extinction/speciation due to larger Ne resulting
-  from higher gene flow"): the middle box is gene flow (the chance a fish disperses to another of its species' populations), its
-  arrows held negative in D1-D4; a new species starts from a population cut off from the rest, so from a fish that stayed
-  (chance 1 - f), and leans toward short wings.
+  Then (2026-10-28, JM): "Larger wings = lower extinction/speciation due to larger Ne resulting from higher gene flow"; and
+  then "wing length should affect a bird's gene flow & census population size (total range). Then extinction is based on smaller
+  wings = smaller size, and speciation is based on lower gene flow = more fragments. Opens it up more to a later extension ... in
+  lesson 21 to show how a trait can have different effects on fitness between individuals in a population & between species
+  within a clade." Birds, not fish. Wing length → two boxes, each a line dragged at 9 and 11 mm: gene flow (the chance a bird
+  disperses) → speciation, and range size (census size) → extinction; both arrows negative in D1-D4. A new species starts from
+  a fragment, from a bird that stayed (chance 1 - gene flow), and leans toward short wings. The over-time menu adds gene flow
+  and range size (a clade's species averaged): 21's hook.
   Targets (16 clades, 6 Gos measured; average wing length at 200 million years):
-      D1 V_A free (start 10, steep): 0 10.0; .25 7.7-8.8; .5 6.7-8.1; 1 6.4-7.0. Bar 8.2 or under
-      D2 V_E free (start 12, V_A .25, steep): 0 9.1-10.0; 2 9.7-10.4; 4 10.8-11.0. Bar 10.6 or more
-      D3 the start free (V_A .25, steep), change within 1 mm (opens 12: -2.9 to -2.0): 6 -.9 to +.7; 14 -.8 to +.3
-      D4 the line free (start 10, V_A 1, V_E 1): flat 8.8-10.6; .2 → .8 6.2-7.2; 0 → 1 6.1-7.5. Bar 7.5 or under
-      D5 the arrows free (start 10, V_A 1, line .4 → .6): none 7.4-8.4; both -.7 7.2-9.0; speciation -.7, extinction -1.4 9.7-11.0;
-         extinction -1.4 10.6-11.6; speciation +.7, extinction -.7 10.9-12.0. Bar 10.3 or more
+      D1 V_A free (start 10, gene flow steep, range flat): 0 10.0; .25 7.7-8.0; 1 6.0-6.5. Bar 8.2 or under
+      D2 V_E free (start 12, V_A .25): 0 8.3-8.7; 2 9.3-9.8; 4 9.0-10.7. Bar 9.4 or more
+      D3 the start free, change within 1 mm (opens 12: -3.7 to -2.4): 6 -.4 to +.1; 14 -1.0 to +.5
+      D4 the range line free (gene flow .4 → .6): flat 4.5-5.8; .2 → .8 7.8-10.4; 0 → 1 8.0-10.4. Bar 8.5 or more
+      D5 the arrows free (gene flow .4 → .6, range .2 → .8): none 7.4-8.4; both -.7 7.8-10.4; extinction -1.4 10.3-12.1;
+         speciation -.7 with extinction -1.4 10.0-11.7. Bar 10.5 or more
   Checks: a founder's bias -.148 / -.145 mm against -V_A x slope / (1 - f) = -.150; V_A 0 changes nothing; a flat line, no drift.
 
 - **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
@@ -332,6 +336,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 - 2026-10-28 (JM): D's trait is dispersal ability: high dispersers lower extinction and lower speciation, low dispersers the reverse.
 - 2026-10-28 (JM): D rebuilt on the diagram: a wing-length distribution (V_A + V_E boxes) shifted by drag, a dragged line wing length → P(founding a new population), arrows to speciation and extinction; a new species changes by a V_A unit; wing size as dispersal. Replaces the high / low dispersal D.
 - 2026-10-28 (JM): larger wings lower extinction and speciation, through larger Ne from higher gene flow (the middle box is gene flow, its arrows negative).
+- 2026-10-28 (JM): wing length sets a bird's gene flow (lower: more fragments, more speciation) and census size / total range (smaller: more extinction); 21 to break the trait's effects apart between individuals and between species.
 
 ## Do not
 
