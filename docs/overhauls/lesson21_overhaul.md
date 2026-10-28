@@ -1,9 +1,9 @@
-# Lesson 21 — species selection: a trait good for the fish, bad for splitting
+# Lesson 21 — speciation mechanics (planned); first draft: species selection, a trait good for the fish, bad for splitting
 
 **File** · `app/lessons/lesson21.html` — first draft 2026-10-20
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · first draft built (v1, species selection); pass 2 PLANNED (2026-10-28): speciation mechanics; the first draft's material to 22 D; LOCKS `x`
-**Last touched** · 2026-10-20
+**Last touched** · 2026-10-28 (plan consolidated; nothing built since the first draft)
 
 ## Pass 2 plan (2026-10-28, proposed, not built): speciation mechanics
 
@@ -13,29 +13,9 @@ speciation, the snowballing of incompatibilities, and reinforcement (including i
 race with differentiation)."
 
 The first draft below (species selection: a trait good for the fish, bad for splitting; Price one level up) moves to 22 D, where
-the Price equation is the subject (see lesson22_overhaul.md). 21 becomes four stages on 19's ponds and fish (`pd*` engine
-rebuilt in 21, 19 untouched), each a step 19 took in passing, now the whole stage:
-
-    A  apart: the snowball. Two ponds, no floods, new alleles (19 C). Two plots against time apart: new alleles that differ (a
-       line) and incompatible pairs (a curve that bends up: every new allele can clash with every one from the other pond).
-       Controls: mutation, chance a pair is incompatible, fish a pond. A drawn round (REVISIONS row 15): draw incompatible pairs
-       against time apart, then 16 runs; the share of the drawn curve inside the cloud. Targets: hybrids fail by a given time,
-       by mutation or by time apart (20 B's pair, now at full length); doubling time apart more than doubles the pairs.
-    B  contact: reinforcement. The ponds flood together after the snowball (19 A's floods). A choosy allele against hybrids:
-       first a one-allele preference (choose a partner like yourself: 20 B's), then a two-allele one (a preference gene and a
-       separate signal gene, 19 D's throat). Targets: the choosy allele rises only when hybrids are unfit; with the two-allele
-       version the ponds fuse at rates where the one-allele version holds.
-    C  recombination as a race. 19 D's dragged genes: a signal locus, a preference locus, a divergently selected (food) locus,
-       each placed on the chromosome; crossovers per chromosome a slider. Plots: the association between signal and food (19 D's
-       correlation) and F_ST at each, over time; the race drawn as two curves, how fast selection builds the association and
-       how fast crossing over breaks it. Targets: hold the ponds apart with the genes far apart (needs low crossing over), fuse
-       them with the genes beside each other (high migration), and find the distance where they just hold.
-    D  short cuts: inversions and magic traits. An inversion over the block (19 D's toggle) stops crossovers in heterozygotes;
-       a magic trait is one gene doing both jobs (the food allele is the mating cue: stickleback body size). Three versions on
-       one control set (signal + preference + food apart; the same in an inversion; a magic trait), each scored on the ponds
-       still apart after floods every generation. Real data, closed box: Heliconius colour pattern (a magic trait), stickleback
-       body size; Drosophila reinforcement (prezygotic isolation stronger between species that meet: Coyne & Orr) as a picture
-       only if a dataset can be sourced (none in data/clean; the archived 23's D was a TODO).
+the Price equation is the subject (see lesson22_overhaul.md). 21 becomes four stages on 19's ponds and fish, each a step 19
+took in passing, now the whole stage. A first list of the four (snowball; reinforcement; the race; inversions and magic traits)
+was revised the same day against what 14-20 already did; only the revised list, below, stands.
 
 ### What 14-20 already did (read 2026-10-28, at JM's request: "inspect lessons 15-18 as well to see what we've used before")
 
@@ -54,15 +34,24 @@ So every piece JM named has been on a page once; 21's job is to put them togethe
 skipped the whole stage. Revised against that:
 
     A  the snowball, counted: the one new thing is the shape (incompatible pairs against time apart bend up; new alleles that
-       differ do not). A drawn round on that curve; short, and only if 20 B stops before it (Open 1).
+       differ do not). A drawn round on that curve; short, and only if 20 B stops before it (Open 1). Measure first: with 40
+       loci a newer allele replaces an older one at the same locus, so "loci that differ" saturates and the bend may be short.
     B  the race: 17 C's fragments and 19 B's F_ST peaks around a gene under divergent selection, now with floods every
        generation: how wide the island of differentiation grows depends on selection against crossing over; genes near the
        first one hitch a ride (divergence hitchhiking). New: the island grows or shrinks over time, and a second gene
        dropped inside it holds better than one outside (16 B's blocks, 17 C's fragments, 19 B's peaks at once).
     C  reinforcement, the three ways in one stage: one-allele (20 B), two-allele (19 D), magic trait (the food gene is the
-       cue). New: all three on one set of controls, scored on the same F_ST, so the difference is recombination's alone.
+       cue). New: all three on one set of controls, scored on the same measure, so the difference is recombination's alone.
+       **Not F_ST between ponds** (lesson 20 review, 2026-10-28): with choosy fish, 20 B's ponds lost their F_ST because one
+       kind replaced the other in both ponds in about half the runs, and two kinds sharing a pond would read the same way. Use
+       20 B's tag (a never-mutating allele marking where a chromosome started) and score on F_ST between the tags, with the
+       hybrids' share as a second line. And first find settings where reinforcement keeps two kinds apart at all: at 20 B's
+       (40 fish a pond, migration .1, cost 1) no run did (lesson20_overhaul.md, Handoff 3 and Open, pass 3 review).
     D  inversions win the race: 16 D's inversion (rare copies itself) placed over 19 D's three genes, now arising by mutation
        in one pond and spreading because it holds the good combination together. New: the inversion's own rise, not a toggle.
+       Measure first: the rise needs gene flow against local selection (Kirkpatrick & Barton 2006), unmeasured at 40 fish a pond.
+       Real data, closed box (carried from the first list): Heliconius colour pattern (a magic trait), stickleback body size;
+       Coyne & Orr's Drosophila only if a dataset can be sourced (none in data/clean).
 
 Build notes: 19's engine (`pdWorld`, `pdStep`, floods, kinds, preference, inversion) is the base; 20 B's one-allele choosy rule
 and its fitness landscape / loci grid carry over. Extract-at-the-third-caller (WORK_ORDER): 19, 20 B and 21 make three callers of
@@ -75,7 +64,7 @@ Open for JM:
 2. A real-data panel for the snowball (Coyne & Orr's Drosophila, hybrid inviability against genetic distance) needs a dataset
    sourced and cleaned; worth it?
 
-## What the lesson is
+## What the first draft is (v1, 2026-10-20; moves to 22 D)
 
 - A clade of species grows on 20's tree. A dispersal allele helps the fish that carry it, so it rises inside every species; but a species full of dispersers keeps its populations in touch (19's floods), splits less, and lasts longer or shorter. Across the clade the allele can fall while it rises in every species. The change splits into Price's two terms one level up (Simpson's way): species selection (species' births minus deaths against their trait) and the change inside species.
 - Worth protecting: the link from dispersal to splitting is not stated; it comes out of migration between a species' populations (19 A). Students find it.
@@ -120,7 +109,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
       gave dispersing species bigger ranges and more chances to split, reversing the effect; with N 50 drift beat s; tangled.
       An extinction lever (dispersers protect a species from loss) barely moved the between term (-.11 to -.27 at full): cut.
 
-## Open for JM
+## Open for JM (first draft, 2026-10-20; the pass 2 plan's two are in its section above)
 
 1. Extinction is the same for every species. Your brief: "speciation and extinction probabilities". An explicit "dispersers
    protect a species" lever barely moved species selection here (speciation swamps it); a range-based model made dispersers'

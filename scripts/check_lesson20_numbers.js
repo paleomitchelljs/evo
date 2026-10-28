@@ -100,9 +100,10 @@ function inner(CANVAS_IDS) {
     check("A target " + (item - 3) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + JSON.stringify(open).replace(/"/g, "") + " " + o.h + "/" + n + (f ? "; too far " + JSON.stringify(far).replace(/"/g, "") + " " + f.h + "/" + n : ""),
           g.h >= minGood && o.h <= maxOpen && (!f || f.h <= maxOpen));
   };
-  /* measured: .77 vs .43; .22 vs .43 (bar .28 after); T3 .77-.92 / .88-.99 vs 0 and .25-.35 within; T4 .73-.95 vs .00-.11 */
+  /* measured: .77 vs .43; before the split n 6 .64-.69 vs n 4 .55-.59 (bar .62, 2026-10-28: a step from the end hits); T3 .80-.90 /
+     .89-1.00 vs 0 and .24-.32 within (bar .55); T4 .61-.94 vs .02-.10 */
   TA(4, { n: 4, G: 40, s: 25, mu: 0.01 }, { n: 4, G: 40, s: 35, mu: 0.01 }, 5, 5, 0);
-  TA(5, { n: 10, G: 40, s: 35, mu: 0.01 }, { n: 4, G: 40, s: 35, mu: 0.01 }, 5, 5, 0);
+  TA(5, { n: 6, G: 40, s: 35, mu: 0.01 }, { n: 4, G: 40, s: 35, mu: 0.01 }, 5, 5, 0);
   TA(6, { n: 4, G: 60, s: 10, mu: 0.01 }, { n: 4, G: 60, s: 10, mu: 0 }, 5, 4, 0, { n: 4, G: 60, s: 10, mu: 0.04 });
   TA(7, { n: 4, G: 60, s: 1, mu: 0.005 }, { n: 4, G: 40, s: 30, mu: 0.005 }, 5, 4, 0);
 
@@ -120,8 +121,9 @@ function inner(CANVAS_IDS) {
     const g = run(Object.assign({}, r.hold, r.open, good)), o = run(Object.assign({}, r.hold, r.open));
     check("B target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h === n && o.h === 0);
   };
-  /* measured (16 runs averaged): .08-.14 vs .88-.97; .10-.19 vs .97-.99; .43-.59 vs .00-.07; .05 vs .43-.59 */
-  TB(0, { mu: 0.002 }, null, 2); TB(1, { T: 400 }, null, 2); TB(2, { c: 1 }, null, 2); TB(3, { T: 50 }, null, 2);
+  /* measured (16 runs averaged; bars re-set 2026-10-28): .08-.14 vs .88-.97 (bar .30); mutation held .001, 200 apart .10-.24 vs
+     50 .85-.90 (bar .30); .44-.62 vs .00-.08 (bar .30); 50 apart .03-.21 vs 200 .45-.65 (bar .25) */
+  TB(0, { mu: 0.002 }, null, 2); TB(1, { T: 200 }, null, 2); TB(2, { c: 1 }, null, 2); TB(3, { T: 50 }, null, 2);
 
   /* ================= C ================= */
   const grow = (set, seed, sched) => { const w = ctWorld(set, seed); while (w.t < 0) ctStep(w);
@@ -166,8 +168,9 @@ function inner(CANVAS_IDS) {
     const g = run(Object.assign({}, base, good)), o = run(base);
     check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
   };
-  /* measured (6 Gos, mm): 6.0-6.5 vs 10.0; 9.0-10.7 vs 8.1-8.9 (bar 9.4); change -.5 to +.5 vs -3.7 to -3.3; 8.9-9.8 vs 4.5-5.8; 11.2-11.9 vs 7.4-8.4 */
-  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 14 }, 6); TD(3, { q0: 0, q1: 1 }, 6); TD(4, { cs: 0, cl: -1.4 }, 6);
+  /* measured (6 Gos, mm; bars re-set 2026-10-28): 5.5-6.3 vs 10.0; 9.0-10.7 vs 8.1-8.9 (bar 9.0); change -.3 to +.4 vs -3.7 to -2.4;
+     range .3 → .7 8.2-9.6 vs 4.7-5.4 (bar 7.5); extinction -.7 alone 10.0-11.3 vs 7.5-8.2 (bar 9.5) */
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 6 }, 6); TD(3, { q0: 0.3, q1: 0.7 }, 6); TD(4, { cs: 0, cl: -0.7 }, 6);
 
   /* ================= E ================= */
   {

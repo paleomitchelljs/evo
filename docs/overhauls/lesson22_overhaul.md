@@ -88,6 +88,22 @@ covariance that makes it pay. The synthesis: 15 went down the levels (cells, gen
 2. D's species level: fold the archived 21's dispersal clade in, or only 20 D's wing-length clade with an individual-level arrow?
 3. Name Hamilton's rule on the page after students find it (the solved banner), or never?
 
+## Review notes (2026-10-28, before any build; not yet ruled on)
+
+- **Kin competition may cancel the grid's effect.** Short dispersal makes neighbours kin but also makes kin compete for the
+  same nests; with fixed density and local competition the two cancel and helping gains nothing from viscosity alone (Taylor
+  1992, Evol Ecol 6: altruism in viscous populations). The grid in A-C needs something that breaks the tie (helping raises local
+  numbers: empty nests or elastic density; or competition for nests that is not local), or groups that send their young to a
+  common pool. The prototype (item 3) should measure exactly this before Open 1 is settled: helping's change against dispersal
+  with everything else fixed.
+- **The split of cov(w, z) into "own cost" and "benefit from kin" is a regression.** It adds up exactly only when fitness is
+  linear in the bird's own helping and its neighbours'; otherwise a residual is left. Build fitness additive or show the
+  residual as its own bar (WORK_ORDER: terms never fused into a leftover; the same logic says a leftover is never hidden).
+- **r for the rule is the regression** of the helped bird's allele on the helper's, relative to the population; 20 A's "copies
+  meet within k generations" is the intuition bridge, not the number used.
+- **D one level up** inherits 20 D's founder's bias at speciation: name three terms (between species, within, at the splits),
+  not two (the archived 21's measurement: the splits term is large).
+
 ## Idea for 22 or a later 23 (JM, 2026-10-28, not planned)
 
 > I am also envisioning slotting a modified version of 20D where we have gene, organism, and species level features & have
