@@ -6,7 +6,7 @@
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
  *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
  *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  one trait, dispersal, that changes splitting and loss; no genes (2026-10-28, JM).
+ *   D  wing length (VA, VE) -> founding new populations (a dragged line) -> speciation and extinction (2026-10-28, JM).
  *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
  * What has to hold:
  *
@@ -22,11 +22,11 @@
  *      flood and near one in ten after it; each target's intended setting hits, its opening misses.
  *   C. No split without a click; never more than 16 living; with no crossing over every locus has the same tree; two
  *      populations' lineages meet only before they parted; each target's intended clicks hit most trees, the opening few.
- *   D. With no arrows the far dispersers' share agrees with the closed form beside it (the dashed curve); each target's intended
+ *   D. A founder's genetic bias agrees with the breeder's equation (VA x slope / f); VA 0 changes nothing; a flat line no drift; each target's intended
  *      setting hits, its opening misses.
  *   E. On many random trees, each question's key is what it asks for (the tips whose fork with the ringed one is youngest; the
  *      fork holding both ringed tips and no younger one), and the dealt traps hold.
- *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 26 bits written.
+ *   Flow. Working each stage through by its own buttons opens the next; the last ends the lesson; all 27 bits written.
  *   Layout. The R code last and closed in every stage; hover marks with words; every canvas fits (1500 and 1000 wide).
  *
  * Bars are sized off the spreads measured on the page's engine (the comments above each stage's rounds in lesson20.html):
@@ -149,21 +149,25 @@ function inner(CANVAS_IDS) {
 
   /* ================= D ================= */
   {
-    const P0 = { cs: 0, cl: 0, gc: 0.02 }; let a = 0, k = 0;
-    for (let r = 0; r < 300; r++) { const w = dcWorld(P0, 77 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); a += D_stat(w).col; k++; }
-    const f = dNeutral(0.02, D_G);
-    /* 300 clades: the mean's spread about .02 (a clade's share sd .2-.3, clades share ancestry inside, not across) */
-    check("D: no arrows, the high-dispersal share at 200 million years over 300 clades " + (a / k).toFixed(3) + " against the dashed curve's " + f.toFixed(3), Math.abs(a / k - f) < 0.06);
+    /* a founder's genetic bias against the breeder's equation for one fish: E[g | founds] - G = VA x slope / f(G) where the line
+       is straight over the species' fish (the line .2 to .8 between 9 and 11 mm, slope .3 a mm; G 10, f .5): .15 mm at VA .25,
+       whatever VE (here VE 0 and .25: wider, more fish fall where the line is held at 0 or 1, and the line is no longer straight over them). 40,000 founders each: the mean's spread about .003 */
+    const pr = [];
+    for (const ve of [0, 0.25]) { const P = { va: 0.25, ve, p0: 0.2, p1: 0.8 }, rng = mulberry32(17 + ve); let s0 = 0; for (let i = 0; i < 40000; i++) s0 += dFounder(P, 10, rng) - 10; pr.push(s0 / 40000); }
+    const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < D_G; t++) dcStep(w1);
+    let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); flat += D_stat(w).mean - 10; }
+    check("D engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " mm (VE 0 / .25) against VA x slope / f = .150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " mm)",
+          pr.every(v => Math.abs(v - 0.15) < 0.015) && w1.sp.every(x => x.G === 10) && Math.abs(flat / 200) < 0.15);
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TD = (k, good, n, slack) => {
-    const r = D_ROUNDS[k], base = Object.assign({ cs: 0, cl: 0, gc: 0.002 }, r.hold, r.open);
+    const r = D_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, cs: 0, cl: 0 }, r.hold, r.open);
     const run = s => { let h = 0; const v = []; for (let i = 0; i < n; i++) { const q = goD(s, 900 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; v.push(j.vals.join("")); } return { h, v }; };
     const g = run(Object.assign({}, base, good)), o = run(base);
     check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
   };
-  /* measured (10 Gos): .64-.78 vs .12-.27; .13-.30 vs .32-.50; .30-.51 vs .13-.30, window .38-.58 (×0.25 .60-.67 above it); .60-.67 vs .13-.30 */
-  TD(0, { cl: -1.4 }, 6); TD(1, { cs: -0.7 }, 6); TD(2, { cl: -0.7 }, 6, 2); TD(3, { cl: -1.4 }, 6);
+  /* measured (8 Gos, mm): 12.5-13.3 vs 8.0; 9.4-10.0 vs 10.7-11.2; change -.4 to +.5 vs +2.7 to +3.2; 5.3-6.2 vs 9.6-10.9; 8.8-9.7 vs 11.4-12.5 */
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 13 }, 6); TD(3, { p0: 0.8, p1: 0.2 }, 6); TD(4, { cs: -0.7, cl: 0.7 }, 6);
 
   /* ================= E ================= */
   {
@@ -205,15 +209,15 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
         while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
     const openD = Gates.D.open;
-    runStage(SD, [{ cl: -1.4 }, { cs: -0.7 }, { cl: -0.7 }, { cl: -1.4 }]);
+    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 13 }, { p0: 0.8, p1: 0.2 }, { cs: -0.7, cl: 0.7 }]);
     const openE = Gates.E.open;
     /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
     gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;
     $("E_deal").click(); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); const hitE = !!EX.results[0];
     for (let i = 1; i < 6; i++) { gotoItemE(i); EX.pick = EX.q.key[0]; syncE(); $("E_lockin").click(); }
     const D = Object.keys(BIT).length; let nb = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) nb++;
-    check("flow: B's four done opens C (" + openC + "), C's four by clicks opens D (" + openD + "), D's four open E (" + openE + "); in E a wrong pick records 0 (" + missE + "), another tree and the right one solve it (" + hitE + "); E's six end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
-          openC && openD && openE && missE && hitE && Gates.E.done && $("done-banner").classList.contains("shown") && D === 26 && nb === D);
+    check("flow: B's four done opens C (" + openC + "), C's four by clicks opens D (" + openD + "), D's five open E (" + openE + "); in E a wrong pick records 0 (" + missE + "), another tree and the right one solve it (" + hitE + "); E's six end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
+          openC && openD && openE && missE && hitE && Gates.E.done && $("done-banner").classList.contains("shown") && D === 27 && nb === D);
   }
   /* ================= layout ================= */
   {

@@ -127,19 +127,28 @@ read spreads far too narrow).
       C3 12+ populations, 4+ ✓ (opens N 25): N 5-10, every population split every 70+ 8/8; N 25 0/8. (Planned "a window of
          matching" between C1 and C2: at 2-6 ✓ the opening landed 2 trees in 6, at 3-5 the best setting 6 in 8.)
       C4 6+ populations, every locus the same tree, a ✗ among them (N held 100; crossovers free, opens 1): 0 8/8; .25-4 0/8
-- **D (2026-10-28, JM: "a simple single trait that influences both speciation and extinction. Lessons 21+ can add trade-offs";
-  then "dispersal ability as the trait, as high dispersers having low extinction and low speciation while low dispersers have
-  the reverse is intuitive").** One trait: a species' fish disperse far or stay close. Two arrows, dispersal → splitting and
-  dispersal → loss, ×0.25 / ×0.5 / none / ×2 / ×4; one slider, how often far dispersal arises (lost at .005). One step a
-  million years, 200 of them; splitting .1, loss .05 a species, room 60. The dashed curve is the closed form (300 clades .796
-  against .795). Pass 3's corals (colonial, symbiotic, their combination, the trade-off target) are gone. Targets (16 clades,
-  10 Gos a cell measured):
-      D1 far dispersers 60%+ though dispersal arises at .002, splitting held (loss free): ×0.5 .39-.63; ×0.25 .64-.78
-      D2 far dispersers 30% or under though it arises at .005, loss held (splitting free): none .32-.50; ×0.5 .13-.30; ×0.25 .11-.31
-      D3 dispersers split ×0.5 (held): back on the dashed curve, 38-58% (loss free): none .13-.30; ×0.5 .30-.51; ×0.25 .60-.67
-      D4 the same hold, far dispersers 60%+: loss ×0.25 .60-.67
-  D3 and D4 together are your pairing: dispersers split less and are lost less, and which wins sets their share.
-  Lesson 21 (unchanged) builds on dispersal lowering splitting through migration; 20 D now states that link as an arrow.
+- **D (2026-10-28, JM, three steps that day: "a simple single trait that influences both speciation and extinction"; "dispersal
+  ability as the trait"; then "a modification to the core DAG plot. Something where you shift a distribution (eg mean/var of
+  wing size), and adjust a correlation by dragging a line (eg between wing size & P(founding a new population)) which is
+  causally linked to more speciation and more extinction via arrows", with "an extra box on additive genetic variation +
+  environment controlling wing length", "We'll change by a Va unit each speciation", wing size as dispersal, replacing D).**
+  The diagram: additive genetic variation (V_A arrow) and environment (V_E arrow) → wing length, a box holding the first
+  species' fish as two curves (genetic values dark, wing lengths light), its centre dragged → P(founding a new population),
+  a box holding the line from 9 to 11 mm, both ends dragged, clade 1's species as dots on it → speciation and extinction
+  (signed arrows). `paths.js` gained `drag` on a box (one listener on the SVG; boxes without it unchanged; 8 pages' layout
+  and lesson 19's 47 checks green after it). A species carries G; its fish g ~ N(G, V_A), wing length g + e, e ~ N(0, V_E);
+  its founding chance the line averaged over its fish; speciation 0.1 exp(cs (2f - 1)) x room, extinction 0.05 exp(cl (2f -
+  1)); a new species' G is the g of one fish that dispersed (a V_A unit, biased by founding).
+  V_E: under a straight line it does nothing (the founders' bias is V_A x slope / f, h2 and S cancelling V_E: 12.0 mm at V_E 0,
+  11.9 at 4), so the line's handles sit 2 mm apart and a steep line is a threshold, where V_E blurs which fish found.
+  Targets (16 clades, 8 Gos measured; average wing length at 200 million years):
+      D1 V_A free (start 8, steep, arrows 0): 0 8.0; .25 10.7-11.2; .5 11.7-12.0; 1 12.5-13.3. Bar 12.2+
+      D2 V_E free (start 8, V_A .25, steep): 0 10.7-11.2; 2 9.7-10.4; 4 9.4-10.0. Bar 10.2 or under
+      D3 the start free (V_A .25, steep), change within .6 mm: 8 +2.7 to +3.2; 11 +.5 to +.9; 12-14 -.4 to +.6; 6 -.3 to +1.5
+      D4 the line free (start 10, V_A 1, V_E 1, founding → speciation +.7): flat 9.6-10.9; falling 4.6-6.2; rising 14.0-15.3. Bar 7-
+      D5 the arrows free (line .4 → .6, V_A 1): none 11.4-12.5; speciation -.7 with extinction +.7 8.8-9.7; extinction +1.4
+         8.5-11.1; speciation -1.4 8.9-10.5. Bar 9.8 or under. (The steep line left nothing to sort: no arrow under 10.9.)
+  Checks: a founder's bias .147 / .145 mm against V_A x slope / f = .150; V_A 0 changes nothing; a flat line, no drift.
 
 - **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
   common ancestor of two tips").** A random tree of 8-12 species, lineages joined two at a time with the forks evenly spaced
@@ -285,6 +294,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 | 18 | C: click to split (16), black tree + loci, chips, pairs, your runs; C1-C4 measured. D: species engine, diagram, tree, shares; D1-D5 measured | done 2026-10-27 |
 | 19 | scoring v3 (21 bits), R panels A-D, `check_lesson20_numbers.js` (30 + narrow) | done 2026-10-27; the four R panels run (B and C shortened, as the check does) |
 | 20 | JM's voice A-E; JM's review of pass 3 | todo |
+| 22 | D wing length: V_A, V_E, a dragged distribution and a dragged founding line, arrows to speciation and extinction; five targets; `paths.js` box drag; v5, scaffold 27 | done 2026-10-28 |
 | 21 | D one trait, dispersal, worded as speciation and extinction (JM, 2026-10-28: "Why such informal terminology? Why \"loss\" instead of extinction?"); E reading a tree (six questions); checks 30 + narrow, R panels A-E run | done 2026-10-28 |
 
 ## Measured, item 10 (2026-10-26, the page's engine, 60 Gos of 16 pedigrees a cell; mean ± sd across Gos [range])
@@ -316,6 +326,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 - 2026-10-27 (JM's review of pass 2, verbatim above): four stages. A keeps the pedigree, adds mutations, the split's timing, mutation rate, size and generations, and the distribution of when copies meet against the split; reads and pattern targets. B incompatibilities (19 C) and a mate-preference allele (19 D) that avoids unfit hybrids, built on A, run longer; fitness for hybrids by loci and landscapes for hybrids and not. C the student splits populations by clicking, no cap of six; the populations' tree in black over the full time range, each locus's tree thin in colour, matching / predating / mismatching; targets on amounts of matching. D splitting and loss as functions of traits in a causal diagram, no genetics (Simpson's corals); species selection, never named.
 - 2026-10-28 (JM): don't change lesson 19; look at it and 15. 20 D a single trait that influences both speciation and extinction (trade-offs from 21 on). A Part E: a random phylogeny, click the nearest relative of a random tip and the common ancestor of two tips.
 - 2026-10-28 (JM): D's trait is dispersal ability: high dispersers lower extinction and lower speciation, low dispersers the reverse.
+- 2026-10-28 (JM): D rebuilt on the diagram: a wing-length distribution (V_A + V_E boxes) shifted by drag, a dragged line wing length → P(founding a new population), arrows to speciation and extinction; a new species changes by a V_A unit; wing size as dispersal. Replaces the high / low dispersal D.
 
 ## Do not
 
