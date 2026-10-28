@@ -176,8 +176,8 @@ read spreads far too narrow).
    its choosy allele (B3-B4) moves to 21 B, which opens from 20 B's endpoint. 20 B then needs two new targets or none.
 2. D gets an inert arrow, wing length → a bird's own survival, drawn and held at 0 (LESSON_STYLE §11: a hook left visible but
    inert). 22 D turns it on: the trait's effect on birds within a species against its effect on species within a clade.
-3. A's "when two copies meet" is 22's relatedness. One hover line in A could carry the word forward; or nothing, and 22 B says
-   "as in Lesson 20 A".
+3. A's "when two copies meet" is 22's relatedness, and 11 and 15 are its ancestors (kinship; the snake game's pedigree). One
+   hover line in A could say "as in Lessons 11 and 15"; 22 B then says "as in Lesson 20 A".
 4. Real data for D (closed box): AVONET (data/clean/avonet_birds.csv, 11,009 species, unused so far): hand-wing index, the
    birds' dispersal, against range size, the wing → range arrow measured in real birds.
 

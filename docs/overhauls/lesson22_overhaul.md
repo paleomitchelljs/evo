@@ -54,6 +54,32 @@ Build notes: engine new (a spatial population with a helping locus); 20 A's pedi
 13's Price terms (`priceTerms`, kept split, WORK_ORDER); the archived 26 (two levels: between and within) as a source; scaffold
 s12 (Hamilton's rule) as the guess-and-check drill alongside.
 
+## What 11-20 already did (read 2026-10-28)
+
+    11     kinship down a pedigree (rises under drift) against 1 - Ho/He (WORK_ORDER: never fuse the two F's); SNPs shared by kin
+    13     the Price equation built: cov(w, z) and E(wΔz) from the run, then each split by arrows on a diagram (priceTerms)
+    14 C-D additive genetic variation (polygenic); frequency dependence (a trait's fitness set by its own frequency)
+    15 A-B coalescence on a pedigree (the snake game): each locus one parent; MRCA is not the first mutant
+    15 C-D the Price equation down the levels: organism ← cell ← gene (the race; jumping genes, cells with a preference)
+    16 C   the Price split each generation in copy-or-mate (cmPrice)
+    17 D   four populations, migration arrows dragged, F per population
+    18 Q4  bighorn sheep, hunting: the Price terms on a real record (data/clean/bighorn_*: horn lengths, a pedigree)
+    20 A   when two copies meet, by kind of pair (a pedigree's relatedness in all but name); 20 D species and clades
+
+So 22's pieces are mostly there; what is new is behaviour as a cause on someone else's fitness, and relatedness as the
+covariance that makes it pay. The synthesis: 15 went down the levels (cells, genes inside the organism's transmission term);
+22 goes up (kin, then species, 20 D), the same two Price terms at every level. Revised against that:
+
+    A  as planned, the diagram built on 13's arrows and 20 D's box plots; dispersal on the grid is 17's migration.
+    B  relatedness from 11's kinship (pedigree) and 20 A's pairs meeting, measured between helper and helped; Hamilton's line
+       found on 13's terms: Δp's selection term splits into the bird's own (-c x its variance) and from others (b x the
+       covariance with the birds it helps), both drawn as 13 draws its terms.
+    C  as planned; 14 D's frequency dependence is the comparison (non-helpers do best when rare among helpers).
+    D  up the levels: 15 C/D's nested picture turned outward (bird → kin group → species), the archived 21's species and 20
+       D's clades as the top level; the bighorn pedigree (18) as real data for relatedness, if the kinship there is worth a
+       panel (no helping data on file: data/clean has no cooperative-breeding record; the scrub-jay files carry years and
+       cohorts only).
+
 ## Open for JM
 
 1. Space: a grid of nests (birds help their neighbours) or groups (birds help their group-mates; relatedness from how groups

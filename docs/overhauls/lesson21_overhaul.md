@@ -37,6 +37,33 @@ rebuilt in 21, 19 untouched), each a step 19 took in passing, now the whole stag
        body size; Drosophila reinforcement (prezygotic isolation stronger between species that meet: Coyne & Orr) as a picture
        only if a dataset can be sourced (none in data/clean; the archived 23's D was a TODO).
 
+### What 14-20 already did (read 2026-10-28, at JM's request: "inspect lessons 15-18 as well to see what we've used before")
+
+    14 B   linkage: meiosis passes on a haploid set, recombination scrambles it (Grants' finches)
+    16 B   a sequence's ancestry: each SNP one parent, a chunk many; recombination makes the blocks
+    16 C   copy or mate: recombination breaks up a good genome; the Price split per generation (cmPrice)
+    16 D   an inversion: copies itself when rare (no recombination in heterozygotes), recombines when common; its frequency
+    17 A-B migrant fragments, shorter each generation, crossovers and generations setting their size; pulsed floods (B)
+    17 C   selection at one gene keeps the populations apart there, lets the rest flow, or is swamped (mouse coat colour)
+    19 B   F_ST high at and around a selected gene, how wide set by crossing over; floods erase it; two genes side by side
+    19 C   new alleles from the two ponds incompatible by chance; hybrid survival falls (the snowball, run on, never counted)
+    19 D   reinforcement, two-allele: throat gene + preference gene + Bmp6, dragged on the chromosome; an inversion over all three
+    20 B   one-allele choosy preference after contact; hybrid fitness landscape and loci grid; the snowball again (B1-B2)
+
+So every piece JM named has been on a page once; 21's job is to put them together as one process and make the part each
+skipped the whole stage. Revised against that:
+
+    A  the snowball, counted: the one new thing is the shape (incompatible pairs against time apart bend up; new alleles that
+       differ do not). A drawn round on that curve; short, and only if 20 B stops before it (Open 1).
+    B  the race: 17 C's fragments and 19 B's F_ST peaks around a gene under divergent selection, now with floods every
+       generation: how wide the island of differentiation grows depends on selection against crossing over; genes near the
+       first one hitch a ride (divergence hitchhiking). New: the island grows or shrinks over time, and a second gene
+       dropped inside it holds better than one outside (16 B's blocks, 17 C's fragments, 19 B's peaks at once).
+    C  reinforcement, the three ways in one stage: one-allele (20 B), two-allele (19 D), magic trait (the food gene is the
+       cue). New: all three on one set of controls, scored on the same F_ST, so the difference is recombination's alone.
+    D  inversions win the race: 16 D's inversion (rare copies itself) placed over 19 D's three genes, now arising by mutation
+       in one pond and spreading because it holds the good combination together. New: the inversion's own rise, not a toggle.
+
 Build notes: 19's engine (`pdWorld`, `pdStep`, floods, kinds, preference, inversion) is the base; 20 B's one-allele choosy rule
 and its fitness landscape / loci grid carry over. Extract-at-the-third-caller (WORK_ORDER): 19, 20 B and 21 make three callers of
 the two-pond engine; extracting it to app/assets/ is worth doing at 21's build, with 19's checks run before and after.
