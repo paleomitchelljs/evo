@@ -172,11 +172,11 @@ function inner(CANVAS_IDS) {
   {
     const open30 = (k, extra) => { const r = E_ROUNDS[k], base = Object.assign({ m: 10, va: 1, ve: 0, p0: 0.5, p1: 0.5, q0: 0.5, q1: 0.5, cs: 0, cl: 0 }, r.hold, r.open, extra); let h = 0;
       for (let i = 0; i < 30; i++) { const q = goD(base, 61000 + 104729 * i + k), j = judge(r, sumAt(q, q.G), q); if (j.ok) h++; } return h; };
-    const e2o = open30(1, {}), e2b = open30(1, { ve: 0.5 }), e5o = open30(4, {}), e5b = open30(4, { cs: -0.7, cl: -0.7 }), e2g = open30(1, { ve: 4 }), e5g = open30(4, { cs: 0, cl: -0.7 });
-    check("E openings by chance, 30 Gos: E2 V_E 0 " + e2o + ", V_E .5 " + e2b + " (at most 2 of 30); E5 arrows 0 " + e5o + ", both -.7 " + e5b + " (at most 1); the intended settings E2 V_E 4 " + e2g + ", E5 extinction -.7 " + e5g + " (at least 28)",
+    const e2o = open30(1, {}), e2b = open30(1, { ve: 0.5 }), e5o = open30(4, {}), e5b = open30(4, { q0: 0.45, q1: 0.55, p0: 0.45, p1: 0.55 }), e2g = open30(1, { ve: 4 }), e5g = open30(4, { q0: 0.2, q1: 0.8 });
+    check("E openings by chance, 30 Gos: E2 V_E 0 " + e2o + ", V_E .5 " + e2b + " (at most 2 of 30); E5 flat lines " + e5o + ", both nearly flat " + e5b + " (at most 1); the intended settings E2 V_E 4 " + e2g + ", E5 range .2 -> .8 " + e5g + " (at least 28)",
           e2o <= 2 && e2b <= 2 && e5o <= 1 && e5b <= 1 && e2g >= 28 && e5g >= 28);
   }
-  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6, 1, 1); TD(2, { m: 6 }, 6); TD(3, { q0: 0.3, q1: 0.7 }, 6); TD(4, { cs: 0, cl: -0.7 }, 6);
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6, 1, 1); TD(2, { m: 6 }, 6); TD(3, { q0: 0.3, q1: 0.7 }, 6); TD(4, { q0: 0.2, q1: 0.8 }, 6);
 
   /* ================= E ================= */
   {
@@ -223,7 +223,7 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !DX.results[k]; tries++) { $("D_go").click(); const q = DX.run, w = q.w;
         while (w.t < D_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endD(); } }
     const openE = Gates.E.open;
-    runStage(SE, [{ va: 1 }, { ve: 4 }, { m: 14 }, { q0: 0, q1: 1 }, { cs: 0, cl: -1.4 }]);
+    runStage(SE, [{ va: 1 }, { ve: 4 }, { m: 14 }, { q0: 0, q1: 1 }, { q0: 0, q1: 1 }]);
     const D = Object.keys(BIT).length; let nb = 0; for (let i = 0; i < D; i++) if (Score.isAnswered("scaffold", i)) nb++;
     check("flow: B's two done opens C (" + openC + "), C's six (a wrong pick records 0 " + missC + ", another tree and the right one solve it " + hitC + ") open D (" + openD + "), D's four by clicks open E (" + openE + "), E's five end the lesson (" + $("done-banner").classList.contains("shown") + "); all " + D + " bits written (" + nb + ")",
           openC && openD && openE && missC && hitC && Gates.E.done && $("done-banner").classList.contains("shown") && D === 25 && nb === D);

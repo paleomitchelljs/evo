@@ -5,6 +5,14 @@
 **Status** · review changes of 2026-10-28 (evening) applied: see "Review changes" below; stages are now A pedigree, B ponds, C reading a tree, D splitting, E wing length; 25 bits (v6). Before that: pass 3 built, D rebuilt (wing length) and E added; review fixes of 2026-10-28 applied (target bars, B's tag F_ST, V_A units, C's runs axis); checks green (`check_lesson20_numbers.js` 31 + the five R panels; `check_lessons.py`; `check_layout.js`, 22 pages); JM to review; voice owed for A-E; LOCKS `x`
 **Last touched** · 2026-10-28
 
+## E5 rebuilt, 2026-10-28 (JM: "Lines free instead of arrows")
+
+- E5: both lines (gene flow, range size) free and flat to begin; arrows into speciation and extinction held at -0.7
+- the dark arrows from wing length into each line now carry the line's slope per cm ("+0.20 per cm"), updated as it is dragged
+- bar 11.5 (was 10.0); sweep in the comment above `E_ROUNDS`; checks updated (E target 5, openings by chance, flow); 30 checks pass
+- not looked at in a browser: where the slope labels sit on the arrows
+- reading used: "arrow value derived from the line's shape" = the wing-length arrows, not the gene flow → speciation arrows
+
 ## Review changes, 2026-10-28 evening (JM agreed with all six points of the review, and the first two minor ones)
 
 **Stage letters changed.** A one split as a pedigree; B two ponds, then contact; **C reading a tree (was E)**; **D the student
