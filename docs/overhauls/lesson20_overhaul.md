@@ -141,14 +141,18 @@ read spreads far too narrow).
   1)); a new species' G is the g of one fish that dispersed (a V_A unit, biased by founding).
   V_E: under a straight line it does nothing (the founders' bias is V_A x slope / f, h2 and S cancelling V_E: 12.0 mm at V_E 0,
   11.9 at 4), so the line's handles sit 2 mm apart and a steep line is a threshold, where V_E blurs which fish found.
-  Targets (16 clades, 8 Gos measured; average wing length at 200 million years):
-      D1 V_A free (start 8, steep, arrows 0): 0 8.0; .25 10.7-11.2; .5 11.7-12.0; 1 12.5-13.3. Bar 12.2+
-      D2 V_E free (start 8, V_A .25, steep): 0 10.7-11.2; 2 9.7-10.4; 4 9.4-10.0. Bar 10.2 or under
-      D3 the start free (V_A .25, steep), change within .6 mm: 8 +2.7 to +3.2; 11 +.5 to +.9; 12-14 -.4 to +.6; 6 -.3 to +1.5
-      D4 the line free (start 10, V_A 1, V_E 1, founding → speciation +.7): flat 9.6-10.9; falling 4.6-6.2; rising 14.0-15.3. Bar 7-
-      D5 the arrows free (line .4 → .6, V_A 1): none 11.4-12.5; speciation -.7 with extinction +.7 8.8-9.7; extinction +1.4
-         8.5-11.1; speciation -1.4 8.9-10.5. Bar 9.8 or under. (The steep line left nothing to sort: no arrow under 10.9.)
-  Checks: a founder's bias .147 / .145 mm against V_A x slope / f = .150; V_A 0 changes nothing; a flat line, no drift.
+  Then (2026-10-28, JM, revising "wing size as dispersal": "Larger wings = lower extinction/speciation due to larger Ne resulting
+  from higher gene flow"): the middle box is gene flow (the chance a fish disperses to another of its species' populations), its
+  arrows held negative in D1-D4; a new species starts from a population cut off from the rest, so from a fish that stayed
+  (chance 1 - f), and leans toward short wings.
+  Targets (16 clades, 6 Gos measured; average wing length at 200 million years):
+      D1 V_A free (start 10, steep): 0 10.0; .25 7.7-8.8; .5 6.7-8.1; 1 6.4-7.0. Bar 8.2 or under
+      D2 V_E free (start 12, V_A .25, steep): 0 9.1-10.0; 2 9.7-10.4; 4 10.8-11.0. Bar 10.6 or more
+      D3 the start free (V_A .25, steep), change within 1 mm (opens 12: -2.9 to -2.0): 6 -.9 to +.7; 14 -.8 to +.3
+      D4 the line free (start 10, V_A 1, V_E 1): flat 8.8-10.6; .2 → .8 6.2-7.2; 0 → 1 6.1-7.5. Bar 7.5 or under
+      D5 the arrows free (start 10, V_A 1, line .4 → .6): none 7.4-8.4; both -.7 7.2-9.0; speciation -.7, extinction -1.4 9.7-11.0;
+         extinction -1.4 10.6-11.6; speciation +.7, extinction -.7 10.9-12.0. Bar 10.3 or more
+  Checks: a founder's bias -.148 / -.145 mm against -V_A x slope / (1 - f) = -.150; V_A 0 changes nothing; a flat line, no drift.
 
 - **E (2026-10-28, JM: "a random phylogeny is generated and students must click the nearest relative of a random tip, and the
   common ancestor of two tips").** A random tree of 8-12 species, lineages joined two at a time with the forks evenly spaced
@@ -327,6 +331,7 @@ Scratchpad `split_ped2.js` (B's rules; F founder fish at generation 0, rows of 2
 - 2026-10-28 (JM): don't change lesson 19; look at it and 15. 20 D a single trait that influences both speciation and extinction (trade-offs from 21 on). A Part E: a random phylogeny, click the nearest relative of a random tip and the common ancestor of two tips.
 - 2026-10-28 (JM): D's trait is dispersal ability: high dispersers lower extinction and lower speciation, low dispersers the reverse.
 - 2026-10-28 (JM): D rebuilt on the diagram: a wing-length distribution (V_A + V_E boxes) shifted by drag, a dragged line wing length → P(founding a new population), arrows to speciation and extinction; a new species changes by a V_A unit; wing size as dispersal. Replaces the high / low dispersal D.
+- 2026-10-28 (JM): larger wings lower extinction and speciation, through larger Ne from higher gene flow (the middle box is gene flow, its arrows negative).
 
 ## Do not
 

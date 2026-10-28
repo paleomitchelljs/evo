@@ -6,7 +6,7 @@
  *   A  one pond splits in two, as a pedigree, mutations drawn; when every pair of copies meets against the split.
  *   B  two ponds apart, then floods; incompatible new alleles; a choosy allele.
  *   C  the student splits populations by clicking; each locus's tree over the populations' tree.
- *   D  wing length (VA, VE) -> founding new populations (a dragged line) -> speciation and extinction (2026-10-28, JM).
+ *   D  wing length (VA, VE) -> gene flow (a dragged line) -> speciation and extinction (2026-10-28, JM).
  *   E  reading a tree: a ringed species' nearest relative, two species' common ancestor (2026-10-28).
  * What has to hold:
  *
@@ -22,7 +22,7 @@
  *      flood and near one in ten after it; each target's intended setting hits, its opening misses.
  *   C. No split without a click; never more than 16 living; with no crossing over every locus has the same tree; two
  *      populations' lineages meet only before they parted; each target's intended clicks hit most trees, the opening few.
- *   D. A founder's genetic bias agrees with the breeder's equation (VA x slope / f); VA 0 changes nothing; a flat line no drift; each target's intended
+ *   D. A founder's genetic bias agrees with the breeder's equation (-VA x slope / (1 - f)); VA 0 changes nothing; a flat line no drift; each target's intended
  *      setting hits, its opening misses.
  *   E. On many random trees, each question's key is what it asks for (the tips whose fork with the ringed one is youngest; the
  *      fork holding both ringed tips and no younger one), and the dealt traps hold.
@@ -149,15 +149,15 @@ function inner(CANVAS_IDS) {
 
   /* ================= D ================= */
   {
-    /* a founder's genetic bias against the breeder's equation for one fish: E[g | founds] - G = VA x slope / f(G) where the line
-       is straight over the species' fish (the line .2 to .8 between 9 and 11 mm, slope .3 a mm; G 10, f .5): .15 mm at VA .25,
+    /* a founder's genetic bias against the breeder's equation for one fish that stays: E[g | stays] - G = -VA x slope / (1 - f(G)) where the line
+       is straight over the species' fish (the line .2 to .8 between 9 and 11 mm, slope .3 a mm; G 10, f .5): -.15 mm at VA .25,
        whatever VE (here VE 0 and .25: wider, more fish fall where the line is held at 0 or 1, and the line is no longer straight over them). 40,000 founders each: the mean's spread about .003 */
     const pr = [];
     for (const ve of [0, 0.25]) { const P = { va: 0.25, ve, p0: 0.2, p1: 0.8 }, rng = mulberry32(17 + ve); let s0 = 0; for (let i = 0; i < 40000; i++) s0 += dFounder(P, 10, rng) - 10; pr.push(s0 / 40000); }
     const P1 = { m: 10, va: 0, ve: 1, p0: 0.1, p1: 0.9, cs: 1.4, cl: -1.4 }, w1 = dcWorld(P1, 3); for (let t = 0; t < D_G; t++) dcStep(w1);
     let flat = 0; for (let r = 0; r < 200; r++) { const w = dcWorld({ m: 10, va: 1, ve: 1, p0: 0.5, p1: 0.5, cs: 1.4, cl: 1.4 }, 31 + 13 * r); for (let t = 0; t < D_G; t++) dcStep(w); flat += D_stat(w).mean - 10; }
-    check("D engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " mm (VE 0 / .25) against VA x slope / f = .150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " mm)",
-          pr.every(v => Math.abs(v - 0.15) < 0.015) && w1.sp.every(x => x.G === 10) && Math.abs(flat / 200) < 0.15);
+    check("D engine: a founder's genetic bias " + pr.map(v => v.toFixed(3)).join(" / ") + " mm (VE 0 / .25) against -VA x slope / (1 - f) = -.150; VA 0, every species keeps the start (" + w1.sp.every(x => x.G === 10) + "); a flat line, strong arrows, no drift up or down over 200 clades (" + (flat / 200).toFixed(2) + " mm)",
+          pr.every(v => Math.abs(v + 0.15) < 0.015) && w1.sp.every(x => x.G === 10) && Math.abs(flat / 200) < 0.15);
   }
   const goD = (set, seed) => { const q = SD.cfg.start(set, seed); Object.assign(q, { set, t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q); return q; };
   const TD = (k, good, n, slack) => {
@@ -166,8 +166,8 @@ function inner(CANVAS_IDS) {
     const g = run(Object.assign({}, base, good)), o = run(base);
     check("D target " + (k + 1) + ": " + JSON.stringify(good).replace(/"/g, "") + " " + g.h + "/" + n + " (" + g.v.join(", ") + "); the opening " + o.h + "/" + n + " (" + o.v.join(", ") + ")", g.h >= n - (slack || 1) && o.h === 0);
   };
-  /* measured (8 Gos, mm): 12.5-13.3 vs 8.0; 9.4-10.0 vs 10.7-11.2; change -.4 to +.5 vs +2.7 to +3.2; 5.3-6.2 vs 9.6-10.9; 8.8-9.7 vs 11.4-12.5 */
-  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 13 }, 6); TD(3, { p0: 0.8, p1: 0.2 }, 6); TD(4, { cs: -0.7, cl: 0.7 }, 6);
+  /* measured (6 Gos, mm): 6.4-7.0 vs 10.0; 10.8-11.0 vs 9.1-10.0; change -.4 to +.6 vs -2.9 to -2.0; 6.2-7.2 vs 8.8-10.6; 10.9-12.0 vs 7.4-8.4 */
+  TD(0, { va: 1 }, 6); TD(1, { ve: 4 }, 6); TD(2, { m: 6 }, 6); TD(3, { p0: 0.2, p1: 0.8 }, 6); TD(4, { cs: 0.7, cl: -0.7 }, 6);
 
   /* ================= E ================= */
   {
@@ -209,7 +209,7 @@ function inner(CANVAS_IDS) {
       for (let tries = 0; tries < 5 && !CX.results[k]; tries++) { $("C_go").click(); const q = CX.run, w = q.w;
         while (w.t < C_G) { for (const pid of plans[k][1](w.t + 1, w)) if (!w.pending.includes(pid)) w.pending.push(pid); ctStep(w); } endC(); } }
     const openD = Gates.D.open;
-    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 13 }, { p0: 0.8, p1: 0.2 }, { cs: -0.7, cl: 0.7 }]);
+    runStage(SD, [{ va: 1 }, { ve: 4 }, { m: 6 }, { p0: 0.2, p1: 0.8 }, { cs: 0.7, cl: -0.7 }]);
     const openE = Gates.E.open;
     /* E: a wrong pick records 0 and shows the answer; another tree, the right one; then the rest */
     gotoItemE(0); EX.pick = EX.q.ring[0]; syncE(); $("E_lockin").click(); const missE = Score.getBit("scaffold", BIT.E1) === 0 && !EX.results[0] && EX.answered;
