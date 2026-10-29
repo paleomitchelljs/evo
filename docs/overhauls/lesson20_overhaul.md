@@ -250,6 +250,10 @@ read spreads far too narrow).
 
 ## Foreshadowing 21 and 22 (proposed 2026-10-28, not built)
 
+> **Superseded in part, 2026-10-28 (JM's second ruling):** 21 is now speciation by sexual selection (magic traits, learned
+> song), 22 kin selection and gene-level competition, and the species-level breakdown goes to the hierarchical Price lesson
+> (hierarchical_price_plan.md). Item 1 is done (d154f60). Item 2's arrow now leads to that lesson, not 22 D. Item 3 stands.
+
 21 is now speciation mechanics (lesson21_overhaul.md, pass 2 plan), 22 the Price equation through kin selection
 (lesson22_overhaul.md). What 20 could change to lead into them:
 
