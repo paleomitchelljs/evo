@@ -4,7 +4,8 @@
 **Checks** · `node scripts/check_lesson21_numbers.js` (the first draft's) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · RE-PLANNED 2026-10-28 (JM's second ruling that day): speciation by sexual selection. The speciation-mechanics plan
 of earlier that day is parked below; the first draft's species selection is parked for the hierarchical Price lesson
-(`hierarchical_price_plan.md`). Nothing built since the first draft; LOCKS `x`
+(`hierarchical_price_plan.md`). JM ruled on Open 1-3 the same day: the best mating rule depends on the bird; birds; two
+islands. Nothing built since the first draft; LOCKS `x`
 **Last touched** · 2026-10-28
 
 ## JM, 2026-10-28, second ruling (verbatim)
@@ -42,14 +43,16 @@ a cue and a preference that are learned, not inherited.
 
 ## Plan (proposed 2026-10-28, not built; a sketch, each stage measured before it is built)
 
-    Setting: birds, for the song (8 C's birds; 20's birds). A finch-like island with two seed sizes (14 B's finches; 19 B's
-    food pool, snails and plankton turned into small and large seeds). On file: data/clean/finch_individuals (beak depth,
-    2,215 banded birds).
+    Setting (JM, 2026-10-28: birds, two islands): two finch-like islands, one mostly small seeds, one mostly large (14 B's
+    finches; 19 B's food pool, snails and plankton turned into seeds), birds crossing between them (19's floods, 20 B's
+    contact). Birds for the song (8 C's birds; 20's birds). On file: data/clean/finch_individuals (beak depth, 2,215
+    banded birds).
     A  who to mate with. Beak depth under divergent selection. Each bird mates by a rule: take anyone, prefer a partner like
-       yourself, or hold out for one cue. The best rule differs by bird: a deep-beaked bird's best partner is deep-beaked; a
-       bird of the rare kind pays more to be choosy (fewer partners to choose from). A who-mated-whom network over the island
-       (the picture 22 reuses for who-helps-whom) and the beak distribution splitting or not. Targets on outcomes: two kinds
-       hold; choosiness spreads in one kind and not the other.
+       yourself, or hold out for one cue. The best rule differs by bird (JM's reading, 2026-10-28): a deep-beaked bird's best
+       partner is deep-beaked; a bird of the rare kind on its island (a newcomer) pays more to be choosy (fewer partners to
+       choose from). A who-mated-whom network across the two islands (the picture 22 reuses for who-helps-whom) and each
+       island's beak distribution, two kinds held apart or merged. Targets on outcomes: two kinds hold; choosiness spreads in
+       one kind and not the other.
     B  magic traits. The same split with the cue as the beak itself (one gene does both; recombination has nothing to break)
        against a separate plumage gene on the chromosome (19 D: crossing over scrambles cue from beak; an inversion holds
        them). One set of controls, one measure, recombination the only difference. The parked "reinforcement three ways"
@@ -78,19 +81,19 @@ a cue and a preference that are learned, not inherited.
 
 - Sexual selection on its own can weaken divergence once populations exchange migrants rather than strengthen it
   (Servedio & Bürger 2014, PNAS; check before citing). 19 D found the same (fusion when the cue is not matched to the food).
-  Build so both outcomes happen; do not tune the engine until sexual selection alone splits a population.
+  Build so both outcomes happen; do not tune the engine until sexual selection alone splits a population. (JM, 2026-10-28:
+  "That's fine.")
 - Choosiness: 20 B's finding (above). Find settings where two kinds hold before scoring anything on it.
 - Learned song can speed divergence (Lachlan & Servedio 2004, Evolution); learning from neighbours should erase it. Measure
   both at page sizes.
 
 ## Open for JM
 
-1. "different behavioral strategies are optimal for different individuals." Read here as: the best mating rule depends on the
-   bird (its own beak; how common its kind is). Other readings: alternative male tactics (14 D's lizards; sneakers and
-   territory holders), which hold several kinds inside one species more often than they split it; or learning strategies
-   (copy the father or the neighbours). Which?
-2. Birds (song; finches) or 19's sticklebacks (body size is a known magic trait: big mates with big)? Recommendation: birds.
-3. One island (the split happens inside one population) or two with migration (19's floods, 20 B's contact)?
+1. ~~"different behavioral strategies are optimal for different individuals": which reading?~~ Answered 2026-10-28: the best
+   mating rule depends on the bird (its own beak; how common its kind is). Not alternative male tactics, not learning
+   strategies.
+2. ~~Birds or 19's sticklebacks?~~ Answered 2026-10-28: birds.
+3. ~~One island or two with migration?~~ Answered 2026-10-28: two islands.
 4. The parked speciation mechanics (below): leave parked, or bring one piece back (the inversion's rise fits B)?
 
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
@@ -233,7 +236,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's second ruling (2026-10-28) and this plan; the earlier plan and the first draft parked here | done |
-| 2 | JM rules on Open 1-4 | todo |
+| 2 | JM rules on Open 1-4 | 1-3 done 2026-10-28; 4 todo |
 | 3 | archive the first draft as `app/archive/lesson21_species_2026-10-20.html` (runnable) + a README note naming its checks at the archiving commit | todo |
 | 4 | engine prototype: beak, mating rules, song learning; the Measure first list | todo |
 
@@ -241,6 +244,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 
 - 2026-10-20: 21 = comparative methods and species selection; a trait good for individuals that lowers speciation (wider ranges, populations split less), linked explicitly to 19; implicit, discovered; within-species rise vs global fall; plotted as a function of the individual effect and the effect on speciation; Price equation, broken down Carl Simpson's way. (Superseded for 21 on 2026-10-28; it stands for the hierarchical Price lesson's species level.)
 - 2026-10-28 (second ruling): 21 = speciation, in particular by sexual selection, where different behavioural strategies are optimal for different individuals; magic traits; non-genetic inheritance (bird song); built to flow into 22 (kin selection, gene-level competition); the target lesson is the hierarchical Price lesson (23-25).
+- 2026-10-28 (on the plan): "Yes to the bird reading" (the best mating rule depends on the bird); sexual selection alone may fail to split, and the page shows both outcomes ("That's fine"); "Birds, two islands".
 
 ## Do not
 

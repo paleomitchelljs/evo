@@ -103,7 +103,9 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
    form)? A grid gives kin clustering from short dispersal without any rule about recognising kin; groups make the Price split
    between and within groups cleaner. Recommendation: grid for A-C, groups appear in D as the bridge to species. (Second
    ruling: a learned call as the kin cue, from 21 C, is a third way, and avoids the kin-competition problem below: help goes
-   to kin by recognition, not by living close.)
+   to kin by recognition, not by living close.) (JM, 2026-10-28, for the hierarchical lesson: kin as the gene's view, which
+   fits the grid: 22 B's split of cov(w, z) into own cost and benefit from others is the gene's-view split. Not yet ruled
+   here.)
 2. D: a greenbeard, a driving allele, a transposon: all three, or one? If 22 runs long it splits (kin selection; gene-level
    competition), which is one of the splits that decides whether the hierarchical Price lesson is 23, 24 or 25.
 3. Name Hamilton's rule on the page after students find it (the solved banner), or never?

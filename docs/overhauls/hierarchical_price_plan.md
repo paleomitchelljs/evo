@@ -2,7 +2,8 @@
 
 **File** · not yet built; slot set when 21 and 22 are (each may split). Rename this file `lessonNN_overhaul.md` then.
 **Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED 2026-10-28 (JM's second ruling that day), not started. 21 and 22 are built toward it
+**Status** · PLANNED 2026-10-28 (JM's second ruling that day), not started. For now a design lodestar: 21 and 22 are built
+toward it; its technical questions wait for its own build (JM, 2026-10-28)
 **Last touched** · 2026-10-28
 
 ## JM, 2026-10-28, second ruling (verbatim, the target-lesson part; the whole message is in lesson21_overhaul.md)
@@ -27,7 +28,8 @@ between species within a clade."
 
     gene      15 C the race (play as a gamete); 15 D a jumping gene in a pedigree of cells; 16 D an inversion copying itself
               when rare; 22 D (planned) a greenbeard, a driving allele, a transposon at the bird's cost
-    kin       22 A-C (planned) helping, relatedness off the pedigree (11, 15, 20 A), Hamilton's rule found
+    kin       22 A-C (planned) helping, relatedness off the pedigree (11, 15, 20 A), Hamilton's rule found. Sits inside the
+              gene level as the gene's view (inclusive fitness), not a level of its own (JM, 2026-10-28)
     cell      15 D (cells that fail to divide when a copy lands in a gene); archived lesson15_with_D_2026-10-09 (the
               hierarchical Price card: one allele's change split among snakes and among the copies inside each snake)
     organism  13 (the Price equation built: cov(w, z), E(wΔz), priceTerms); 16 C (cmPrice each generation); 18 Q4 (bighorn,
@@ -93,7 +95,10 @@ outcomes; "evolving to extinction" = selection inside species driving the specie
   "at the splits" term), so a three-level version needs that term kept apart from species sorting, and the three Price terms
   named apart (WORK_ORDER: never fused).
 
-## Measure first
+## Measure first (deferred to the build)
+
+JM, 2026-10-28: "We can cross those technical bridges and conceptual issues when we get there; for now I want it more as a
+design lodestar for these lessons." Kept so they are not rediscovered the hard way:
 
 - Time scales: cells divide many times a generation; species form over thousands. One engine spanning all four levels may be
   too slow for a page. Likely each level keeps its own engine (15 D's cells, 13's organisms, 21's species-level engine) with
@@ -106,8 +111,9 @@ outcomes; "evolving to extinction" = selection inside species driving the specie
 
 ## Open for JM
 
-1. Which levels: gene, cell, organism, species. Kin as a level of its own (between kin groups), or as the gene's view of the
-   organism level (inclusive fitness)?
+1. ~~Kin as a level of its own, or the gene's view?~~ Answered 2026-10-28: the gene's view. Levels: gene (with kin and
+   transposons), cell, organism, species. The two splits are the same change partitioned two ways, so nothing is lost; and
+   22's grid neighbourhoods overlap, so they are not nested units that could form a level anyway.
 2. One trait carried through every level, or a ladder of adjacent pairs and then the whole stack?
 3. The species level: 21's first draft (dispersal), 20 E's wing length with an individual-level arrow turned on, or the diet
    specialisation idea above?
@@ -119,13 +125,15 @@ outcomes; "evolving to extinction" = selection inside species driving the specie
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's second ruling (2026-10-28); this plan; the species level and the three-level idea moved here from 22 | done |
-| 2 | JM rules on Open 1-4 | todo |
+| 2 | JM rules on Open 1-4 | 1 done 2026-10-28; 2-4 wait for the build |
 | 3 | slot fixed (23, 24 or 25) once 21 and 22 are; file renamed | todo |
 
 ## Rulings
 
 - 2026-10-28 (second ruling): the target lesson is a hierarchical Price equation lesson, cellular, organismal and species
   levels, perhaps the genetic level with kin and transposons; 21 and 22 build toward it; it lands at 23-25.
+- 2026-10-28: a design lodestar for 21 and 22 for now; technical and conceptual issues settled at its build. Kin as the gene's
+  view.
 
 ## Do not
 
