@@ -1,12 +1,12 @@
 # Lesson 21 — speciation by sexual selection: who to mate with, magic traits, learned song (planned); first draft: species selection (parked for the hierarchical Price lesson)
 
-**File** · `app/lessons/lesson21.html` — still the first draft of 2026-10-20 (species selection); archive it before the rebuild (item 3)
-**Checks** · `node scripts/check_lesson21_numbers.js` (the first draft's) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · RE-PLANNED 2026-10-28 (JM's second ruling that day): speciation by sexual selection. The speciation-mechanics plan
-of earlier that day is parked below; the first draft's species selection is parked for the hierarchical Price lesson
-(`hierarchical_price_plan.md`). JM ruled on Open 1-3 the same day: the best mating rule depends on the bird; birds; two
-islands. Nothing built since the first draft; LOCKS `x`
-**Last touched** · 2026-10-28
+**File** · `app/lessons/lesson21.html` — draft 2 (2026-10-29), speciation by sexual selection, v2, 10 bits. The first draft
+(species selection) is `app/archive/lesson21_species_2026-10-20.html`
+**Checks** · `node scripts/check_lesson21_numbers.js` (23 + both widths + four R panels, ~20 s) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · DRAFT 2 BUILT 2026-10-29, for JM to play with: A who to mate with, B magic traits, C a learned song, D three drawn
+rounds (see "Draft 2 as built"). D is not the planned one immigrant: measured, his line never lasts (Open, draft 2). Intros
+are draft bullets for JM's dictation. LOCKS `x`
+**Last touched** · 2026-10-29
 
 ## JM, 2026-10-28, second ruling (verbatim)
 
@@ -95,6 +95,78 @@ a cue and a preference that are learned, not inherited.
 2. ~~Birds or 19's sticklebacks?~~ Answered 2026-10-28: birds.
 3. ~~One island or two with migration?~~ Answered 2026-10-28: two islands.
 4. The parked speciation mechanics (below): leave parked, or bring one piece back (the inversion's rise fits B)?
+
+## Draft 2 as built (2026-10-29)
+
+JM, 2026-10-29: "Let's please make a draft of lesson 21 and its parts, and I can play with it and we can assess"
+
+    engine     bw*: two islands of 100 finches, female or male. Two chromosomes of 40 loci, kept as the loci that matter: beak
+               gene at 20 (small / large), plumage gene where B puts it, choosy gene at 30 (A), ten marker loci (island of
+               origin). Song and preferred song carried, not in the genes. Start apart: island 0 small seeds, small beaks, pale,
+               fast trills; island 1 the opposite. A generation: Binomial(N, m) birds swap islands; each female meets up to 4
+               males, a choosy one turns a male down with chance c x how much they differ (beak or plumage by alleles 0 / .5 / 1;
+               song 0 / 1); turned down 4 times, she does not breed; young from mated pairs, a gamete switching at each gap with
+               chance R / 39; the young hear the father's song or a random island male's (1 in 50 misheard); a son sings it, or
+               with chance lim the song his beak suits; survival 1 - S((1 - q) b + q(1 - b)) - v 4b(1 - b), S .4.
+    A          choosy gene (1 in 10 at the start), cue the beak. Who mated whom (females top, males bottom, sorted by beak, mate
+               lines dashed red when beaks differ, ✗ unmated, ▾ newcomer); DAG (choosiness onto beak -> mating, paths.js);
+               young per female (born here / newcomers x choosy / take any, last 20 gens, 16 runs); survival by beak, ◐ dragged
+               for the valley; migration slider. 200 gens.
+               A1 newcomers' choosy bar .15+ under their take-any bar, c free (opens 0), m .1 v .2 held.
+               A2 choosy allele .3+ over both islands at 200, valley free (opens 0), m .1 c 1 held.
+    B          every female choosy (.9), m .1, v 0. Chromosome strip, ◆ plumage dragged; cue toggle (beak / plumage); crossovers.
+               200 gens. Bar F_ST at the beak gene .5+.
+               B1 ◆ free (opens locus 40), R 1, plumage cue. B2 ◆ beside the beak gene, R free (opens 4). B3 ◆ at 40, R 4 held, cue
+               free (opens plumage). B1's card has one sentence (the drag has no cue: REVISIONS row 22).
+    C          every female choosy by song (.9 held; free once done), m .1, v 0. DAG: song heard -> his song / her preference; beak
+               -> his song (lim, the arrow); choosiness onto his song -> mating. Learning toggle (father / island's males). 200
+               gens. Bar F_ST at the beak gene .45+.
+               C1 learned from fathers, lim free (opens 0). C2 lim 1, learning free (opens the island's males).
+    D          three drawn rounds on F_ST at the beak gene, 100 gens, a dot every 10: random mating; plumage beside the beak gene
+               (R 1, c .9); song from the island's males, lim 1, c .9. Cloud = the 16 runs' middle 90% at each dot, .02 slack;
+               bit = half the dots inside on the first run; counts in the notes (D_in1-3). No practice switch (a drawing is one
+               shot a round); Clear drawing.
+    scoring    v2, scaffold 10: A1 A2 B1 B2 B3 C1 C2 D1 D2 D3, first scored try each.
+
+## Measured (draft 2; scratchpad eng21.js = the page's engine, then the page in the check)
+
+    random mating, m .1, v 0: F_ST at the beak gene .22-.28, falls from 1 to ~.33 in 5 gens. m .05 .46-.54; m .2 .09-.11; v .2 m .2:
+      one beak takes both islands (F_ST 0).
+    A1 (m .1 v .2, last 20 gens): newcomers choosy minus take-any: c 0 -.00 to +.09, .5 -.09 to .00, .75 -.13 to -.06, 1 -.46 to
+      -.27. Born here: c 1 +.03 to +.05 (small: the benefit is diluted by how rarely a resident meets a newcomer); below .75 ~0.
+      Page: c 1 -.36 / -.39, c 0 +.04 / +.06, c .5 -.06 / -.07.
+    A2 (m .1 c 1): choosy allele at 200: v 0 .00-.16, .1 .13-.25, .2 .22-.35, .3 .42-.58, .4 .41-.62 (m .05 .02-.35 whatever v).
+    B (c .9, m .1, v 0, 200): plumage at 18-21 .55-.62; 22 .44-.53; 23 .36-.46; 26 .26-.31; 40 .21-.27. Beside the beak gene: R .5
+      .58-.62, 1 .57-.62, 2 .49-.54, 4 .37-.48 (.56 at 100: the cue still fading, hence 200 gens). Beak as cue .64-.67, R 4 too.
+      c 1 with no hybrids: plumage anywhere = beak (nothing to recombine); the cue needs c < 1 to matter.
+    C (c .9, m .1, v 0, 200): fathers, lim 0 .23-.29, .25 .38-.51, .5 .52-.55, .75 .57-.66, 1 .60-.64. Island's males: lim 0
+      .22-.25, .5 .23-.27, 1 .26-.34. Fathers, lim 1: c 0 .23-.25, .5 .28-.34, .75 .43-.47. A song with no tie to the beak
+      holds nothing apart: the songs become cultural groups that cross the islands.
+    D (100 gens): averages at 10-100 .20-.27 (random), .56-.69 (plumage beside), .28-.44 (song from neighbours, lim 1); band about
+      ±.1. No flat line among .25, .3, .45, .6 scores on all three.
+    Dead end, the planned D (one immigrant, Daphne Major's "Big Bird"): one large-beaked male with a slow trill, paired with a
+      resident on island 0, no more migration; his line (birds with a quarter or more of his genes) alive at 40 gens in 0 of
+      16 runs at every setting tried (learning father / island, c 0-1, looks 4-50, seeds 0-.5 large, with and without
+      seeds shared so a rare beak eats more). A flock of 10-20 the same: its beak alleles leak in through hybrids while its
+      song dies (song 1 ~.01 with fathers' learning, c .9). Best flock case, beak shaping the song (lim 1), fathers,
+      c .9, 12 looks, half large seeds, seeds shared: two kinds side by side (F = 1 - Ho/He at the beak gene > .5, large
+      beaks 10%+) in 7 of 16, F .32-.35. A family of two or three young is a branching process with nothing to grow on.
+
+## Open for JM (draft 2)
+
+1. D: three drawn rounds stand in for the one immigrant. Keep them; or build the immigrant with what he needs (a line that
+   grows: several breeding seasons per bird, kin that settle together, or seeds no one else eats), which is a new engine
+   piece; or drop D.
+2. A1's numbers: newcomers' cost of choosiness is large (−.3 to −.45), the resident's gain small (+.03 to +.05) and not
+   judged. A2 (the allele spreads) is where the gain shows. Fine, or make the resident's gain bigger (more migration
+   fuses the islands; a deeper valley helps a little)?
+3. Choosiness costs only a female who turns down 4 males; a male turned down simply mates less. Keep the 4 looks?
+4. Each target needs choosiness near 1 to show (A1 c 1; .75 misses). The slider steps 0 .25 .5 .75 1 leave one step that
+   works. Steps 0 .5 .75 .9 1 instead?
+5. Citations on the page to check: Podos 2001 (beak size and trill rate) in C's diagram tip. Not on the page: Grant & Grant
+   2009, Lamichhaney et al. 2018 (Big Bird), Servedio & Bürger 2014, Lachlan & Servedio 2004, Sharp et al. 2005.
+6. Real data: none yet. data/clean/finch_individuals (beak depth, 2,215 birds) could carry a closed box of real beak
+   distributions in A.
 
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
 
@@ -237,8 +309,10 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 |---|------|--------|
 | 1 | JM's second ruling (2026-10-28) and this plan; the earlier plan and the first draft parked here | done |
 | 2 | JM rules on Open 1-4 | 1-3 done 2026-10-28; 4 todo |
-| 3 | archive the first draft as `app/archive/lesson21_species_2026-10-20.html` (runnable) + a README note naming its checks at the archiving commit | todo |
-| 4 | engine prototype: beak, mating rules, song learning; the Measure first list | todo |
+| 3 | archive the first draft as `app/archive/lesson21_species_2026-10-20.html` (runnable) + a README note naming its checks at the archiving commit | done 2026-10-29 |
+| 4 | engine prototype: beak, mating rules, song learning; the Measure first list | done 2026-10-29 (Measured, draft 2) |
+| 5 | draft 2: A-D, v2, 10 bits; `check_lesson21_numbers.js` rewritten (23 + widths + R) | done 2026-10-29 |
+| 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | todo |
 
 ## Rulings
 
