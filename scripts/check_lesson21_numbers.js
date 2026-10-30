@@ -2,28 +2,29 @@
 /*
  * check_lesson21_numbers.js -- the checks for app/lessons/lesson21.html.
  *
- * Lesson 21, draft 2 (2026-10-29, JM's ruling of 2026-10-28): speciation by
- * sexual selection. Two islands of finches (small seeds, large seeds), a
- * beak gene, female choice. A a choosy gene (it costs newcomers, it spreads
- * when birds between the beaks do badly); B every female choosy, by a
- * plumage gene placed on the chromosome or by the beak itself (magic); C a
- * learned song, shaped by the beak; D three drawn rounds. (The first draft,
- * species selection, is app/archive/lesson21_species_2026-10-20.html; its
- * checks are this file at a887904.) What has to hold:
+ * Lesson 21, draft 3 (2026-10-29, JM's review of draft 2): speciation by
+ * sexual selection on his three-gene DAG, genes -> beak -> seeds ->
+ * reproduction <- mating <- colour / preference <- genes. Two islands of
+ * finches; seeds by island and preference strength, each a fitness
+ * surface. A seeds and preference strength; B the beak as the cue (one
+ * arrow, beak -> mating); C a learned preference (her genes, her father's
+ * colour, the island's males); D three drawn rounds. (Draft 2's checks are
+ * this file at b46e463; the first draft's at a887904.) What has to hold:
  *
- *   Engine. With no migration the islands never mix (F_ST at the beak gene
- *      stays 1); a double heterozygote's gametes part the beak and plumage
- *      genes as often as (1 - (1 - 2R/39)^d) / 2 says; a son of a father
- *      with no beak say sings his father's song 98% of the time (1 in 50
- *      misheard); a choosy female with c 1 among only unlike males never
- *      breeds; young per female averages 1 over an island.
+ *   Engine. With no migration the islands never mix (F_ST 1 at all three
+ *      genes); the genes sort independently; a female who likes pale among
+ *      dark males goes unmated as (1 - e^-s)^4 says; survivors' beaks from
+ *      one-of-each parents on soft seeds as 1:2:1 times the survival rule
+ *      says; a preference learned from the father follows the father, from
+ *      the island the island's males.
  *   Rounds. Each target hit by its intended setting (and a neighbour of
  *      it), missed by its opening. The drawn rounds: the runs' own average
  *      inside its cloud, a flat line at 1 not, and no one flat line inside
  *      on all three.
- *   Flow. A miss records 0 and the round stays; Next after a hit; B round
- *      1's sentence; D holds Go until a drawing, one drag sets all ten
- *      dots, Clear takes them away; ten bits written; the lesson ends.
+ *   Flow. A miss records 0 and the round stays; a click on the seeds sets
+ *      them; Next after a hit; A round 1's sentence; D holds Go until a
+ *      drawing, one drag sets all ten dots, Clear takes them away; ten bits
+ *      written; the lesson ends.
  *   Layout. Hover marks with words; every canvas fits (1500 and 1000
  *      wide); each stage's R code last and closed; the four R panels run
  *      (shortened to 3 generations).
@@ -39,76 +40,65 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8797;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const CANVAS_IDS = ["A_board", "A_time", "A_pay", "A_tpic", "A_fit", "B_board", "B_genes", "B_time", "B_tpic", "C_board", "C_time", "C_tpic", "D_time", "D_board"];
+const CANVAS_IDS = ["A_time", "A_surf", "A_tpic", "A_seeds", "B_time", "B_surf", "B_tpic", "B_seeds", "C_time", "C_surf", "C_tpic", "C_seeds", "D_time", "D_surf"];
 
 const INNER = `
 const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
 for (const k in Gates) { Gates[k].open = true; document.getElementById("stage" + k).classList.remove("stage-locked"); }
-const grow = (P, seed, n) => { const w = bwWorld(Object.assign({ N: BW_N, m: 0.1, v: 0, R: 1, c: 0, cue: "beak", chGene: false, learn: 0, lim: 0 }, P), seed); for (let t = 0; t < n; t++) bwStep(w); return w; };
+const grow = (P, seed, n) => { const w = bwWorld(Object.assign({ N: BW_N, m: 0.1, q: [0, 1], s: 0, w: 0, learn: 0 }, P), seed); for (let t = 0; t < n; t++) bwStep(w); return w; };
 
 /* ================= the engine ================= */
 {
-  const w = grow({ m: 0 }, 11, 50), s = bwStat(w);
-  check("engine: with no migration the islands never mix (F_ST at the beak gene " + s.fb.toFixed(3) + " at 50; the rest of the genome " + s.fm.toFixed(3) + ")", s.fb === 1 && s.fm === 1);
-  /* a double heterozygote: beak 0/1, plumage 0/1 in phase; how often a gamete is recombinant */
+  const w = grow({ m: 0, s: 2 }, 11, 50), s = bwStat(w);
+  check("engine: with no migration the islands never mix (F_ST at the beak, colour and preference genes " + [s.fb, s.fc, s.fp].map(v => v.toFixed(3)).join(", ") + " at 50)", s.fb === 1 && s.fc === 1 && s.fp === 1);
+  /* a bird with one of each allele at all three genes, in phase (0 0 0 from one parent, 1 1 1 from the other) */
+  const rng = mulberry32(5), b = { g: Int8Array.from([0, 0, 0, 1, 1, 1]) }, n = 40000; let bc = 0, cp = 0, b1 = 0;
+  for (let i = 0; i < n; i++) { const o = bwGamete(rng, b); if (o[0] !== o[1]) bc++; if (o[1] !== o[2]) cp++; b1 += o[0]; }
+  check("engine: the genes sort independently (beak and colour parted " + (bc / n).toFixed(3) + ", colour and preference " + (cp / n).toFixed(3) + ", the large-beak allele passed on " + (b1 / n).toFixed(3) + "; each 1/2)",
+        [bc, cp, b1].every(x => Math.abs(x / n - 0.5) < 0.01));
+  /* the chance she takes him: on the orange island every female likes pale; make every male dark */
   const out = [];
-  for (const [d, R] of [[1, 1], [6, 1], [20, 4]]) {
-    const w2 = bwWorld({ N: 4, m: 0, v: 0, R, c: 0, cue: "plum", chGene: false, plumAt: BEAK_AT + d, learn: 0, lim: 0 }, 3);
-    const b = w2.isl[0][0]; b.g[0][S_BEAK] = 0; b.g[0][S_PLUM] = 0; b.g[1][S_BEAK] = 1; b.g[1][S_PLUM] = 1;
-    let rec = 0; const n = 40000; for (let i = 0; i < n; i++) { const g = bwGamete(w2, b); if (g[S_BEAK] !== g[S_PLUM]) rec++; }
-    const want = (1 - Math.pow(1 - 2 * R / (L - 1), d)) / 2; out.push([d, R, rec / n, want]);
-  }
-  check("engine: beak and plumage parted as (1 - (1 - 2R/39)^d) / 2 says (" + out.map(([d, R, got, want]) => d + " apart, R " + R + ": " + got.toFixed(3) + " vs " + want.toFixed(3)).join("; ") + ")",
-        out.every(([, , got, want]) => Math.abs(got - want) < 0.008));
-  /* songs: learned from the father, 1 in 50 misheard; with the beak's whole say, a homozygote sings its beak's song */
-  const w3 = bwWorld({ N: 100, m: 0, v: 0, R: 1, c: 0, cue: "song", chGene: false, learn: 0, lim: 0 }, 5);
-  const fatherSong = new Map(); for (const b of w3.isl[0]) b.song = b.id % 2;   /* scramble the songs so a son's father is told by his song */
-  for (const b of w3.isl[0]) fatherSong.set(b.id, b.song);
-  bwStep(w3); let same = 0, n3 = 0; for (const [f, m] of w3.pairs[0]) {}
-  /* re-run one generation keeping each young bird's father */
-  const w4 = bwWorld({ N: 100, m: 0, v: 0, R: 1, c: 0, cue: "song", chGene: false, learn: 0, lim: 0 }, 7); for (const b of w4.isl[0]) b.song = b.id % 2;
-  const songOf = new Map(w4.isl[0].map(b => [b.id, b.song])); const rng0 = w4.rng; let pairsSeen = 0;
-  const dads = []; const origPush = Array.prototype.push;
-  bwStep(w4);
-  /* every young bird's pref is what it heard; a mate pair's young: compare the pref of all young to their fathers' songs via the pairs */
-  const byMom = new Map(w4.pairs[0].map(([f, m]) => [f.id, m.song]));
-  check("engine: a choosy female with c 1 among only unlike males never breeds", (() => { const w5 = bwWorld({ N: 100, m: 0, v: 0, R: 1, c: 1, cue: "beak", chGene: false, learn: 0, lim: 0 }, 9);
-    for (const b of w5.isl[0]) if (b.sex === 1) { b.g[0][S_BEAK] = 1; b.g[1][S_BEAK] = 1; } bwStep(w5); return w5.pairs[0].length === 0 || w5.unm[0].length === w5.adults[0].filter(b => b.sex === 0).length; })());
-  /* young per female averages 1 over an island (the pay sums, weighted) */
-  const w6 = grow({ m: 0.1, c: 1, chGene: true, v: 0.2 }, 13, 30), p6 = w6.pay, tot = p6[0] + p6[2] + p6[4] + p6[6], nn = p6[1] + p6[3] + p6[5] + p6[7];
-  check("engine: young per female averages " + (tot / nn).toFixed(3) + " over both islands (1 by construction)", Math.abs(tot / nn - 1) < 1e-9);
-  /* a son's song: with no beak say, his father's 98% of the time */
-  const w7 = bwWorld({ N: 400, m: 0, v: 0, R: 1, c: 0, cue: "song", chGene: false, learn: 0, lim: 0 }, 21);
-  for (const b of w7.isl[0]) b.song = b.id % 2;
-  const P7 = w7.P; let hit = 0, tot7 = 0;
-  for (let i = 0; i < 4000; i++) { const m = w7.isl[0][i % 400]; let heard = m.song; if (w7.rng() < BW_ERR) heard ^= 1; const sung = bwSing(P7, w7.rng, heard, 0); tot7++; if (sung === m.song) hit++; }
-  check("engine: with no beak say a son sings his father's song " + (100 * hit / tot7).toFixed(1) + "% of the time (98% set)", Math.abs(hit / tot7 - 0.98) < 0.01);
-  let beakSays = 0; for (let i = 0; i < 2000; i++) { if (bwSing({ lim: 1 }, w7.rng, 0, 2) === 1 && bwSing({ lim: 1 }, w7.rng, 1, 0) === 0) beakSays++; }
-  check("engine: with the beak's whole say a large beak sings the slow trill and a small one the fast, whatever it heard (" + beakSays + " of 2000)", beakSays === 2000);
+  for (const s0 of [1, 3, 6]) { let un = 0; const R = 40; for (let r = 0; r < R; r++) { const w2 = bwWorld({ N: 200, m: 0, q: [0, 0], s: s0, w: 0, learn: 0 }, 100 + r);
+      for (const x of w2.isl[0]) if (x.sex === 1) { x.g[1] = 1; x.g[4] = 1; } bwStep(w2); un += w2.unm[0]; }
+    out.push([s0, un / R, Math.pow(1 - Math.exp(-s0), 4)]); }
+  check("engine: a female who likes pale among dark males goes unmated as (1 - e^-s)^4 says (" + out.map(([s0, got, want]) => "s " + s0 + ": " + got.toFixed(3) + " vs " + want.toFixed(3)).join("; ") + ")",
+        out.every(([, got, want]) => Math.abs(got - want) < 0.02));
+  /* survival: parents all one-of-each at the beak gene on soft seeds; the young that live, 1:2:1 times the chance to live */
+  const live = [0, 1, 2].map(z => bwLive(0, z)), raw = [0.25, 0.5, 0.25].map((x, z) => x * live[z]), tot = raw.reduce((a, c) => a + c, 0), want = raw.map(x => x / tot), got = [0, 0, 0]; let nb = 0;
+  for (let r = 0; r < 30; r++) { const w3 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 0 }, 300 + r);
+    for (const x of w3.isl[0]) { x.g[0] = 0; x.g[3] = 1; } bwStep(w3); for (const x of w3.isl[0]) { got[zB(x)]++; nb++; } }
+  check("engine: on soft seeds the chance to live is " + live.map(v => v.toFixed(2)).join(", ") + " for ○ ◐ ●; young of one-of-each parents that live " + got.map(x => (x / nb).toFixed(3)).join(", ") + " vs " + want.map(x => x.toFixed(3)).join(", "),
+        Math.abs(live[1] - 0.61) < 1e-9 && Math.abs(live[2] - 0.4) < 1e-9 && got.every((x, z) => Math.abs(x / nb - want[z]) < 0.015));
+  /* a learned preference: every orange-island female likes pale; half the males dark; strength 6, so the fathers are pale */
+  const pl = L => { let s5 = 0, n5 = 0; for (let r = 0; r < 20; r++) { const w5 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 6, w: 0, learn: L }, 500 + r); let h = 0;
+      for (const x of w5.isl[0]) if (x.sex === 1 && (h++ % 2)) { x.g[1] = 1; x.g[4] = 1; } bwStep(w5); for (const x of w5.isl[0]) { s5 += x.pl; n5++; } } return s5 / n5; };
+  const plF = pl(1), plI = pl(2);
+  check("engine: learned from the father the young like what the (pale) fathers are (liking for dark " + plF.toFixed(3) + "); from the island, what its males are, half dark (" + plI.toFixed(3) + ")",
+        plF < 0.05 && plI > 0.35 && plI < 0.65);
 }
 
 /* ================= the rounds ================= */
 const STG = { A: SA, B: SB, C: SC, D: SD };
-const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error("no " + k + " = " + o[k]); const el = document.getElementById(S.K + "_" + k); el.value = i + (+el.min || 0); } syncVals(S); };
+const setC = (S, o) => { for (const k in o) { const c = S.cfg.ctl.find(c => c.key === k), i = c.vals.indexOf(o[k]); if (i < 0) throw new Error("no " + k + " = " + o[k]); const el = document.getElementById(S.K + "_" + k); el.value = i + (+el.min || 0); } };
 const play = (K, r, o) => { const S = STG[K]; S.round = r; S.done = false; S.waiting = false; S.run = null; const pr = document.getElementById(K + "_practice"); if (pr) pr.checked = true;
   openRound(S); for (const c of S.cfg.ctl) document.getElementById(K + "_" + c.key).dataset.held = ""; setC(S, o); goStage(S); finishNow(S); return S.last; };
 const T = (K, r, good, badOnes) => { const S = STG[K], R = S.cfg.rounds[r];
-  const res = (o, want) => { const q = play(K, r, o), j = judge(R, sumAt(q, q.G), q); return [o, j.ok === want, j.vals.join("/")]; };
+  const res = (o, want) => { const q = play(K, r, o), j = judge(R, sumAt(q, q.G)); return [o, j.ok === want, j.vals.join("/")]; };
   const g = good.map(o => res(o, true)), b = badOnes.map(o => res(o, false));
   check(K + (r + 1) + ": hit by " + g.map(x => JSON.stringify(x[0]).replace(/"/g, "") + " (" + x[2] + ")").join(", ") + "; missed by " + b.map(x => JSON.stringify(x[0]).replace(/"/g, "") + " (" + x[2] + ")").join(", "),
         g.every(x => x[1]) && b.every(x => x[1])); };
-T("A", 0, [{ c: 1 }], [{ c: 0 }, { c: 0.5 }]);
-T("A", 1, [{ v: 0.4 }, { v: 0.3 }], [{ v: 0 }, { v: 0.1 }]);
-T("B", 0, [{ at: 20 }, { at: 18 }], [{ at: 39 }, { at: 29 }]);
-T("B", 1, [{ R: 1 }, { R: 0.5 }], [{ R: 4 }]);
-T("B", 2, [{ cue: 0 }], [{ cue: 1 }]);
-T("C", 0, [{ lim: 1 }, { lim: 0.5 }], [{ lim: 0 }]);
-T("C", 1, [{ learn: 0 }], [{ learn: 1 }]);
+T("A", 0, [{ q0: 0, q1: 1 }, { q0: 0.25, q1: 0.75 }], [{ q0: 0, q1: 0 }, { q0: 0, q1: 0.5 }]);
+T("A", 1, [{ s: 4 }, { s: 6 }], [{ s: 3 }, { s: 0 }]);
+T("A", 2, [{ q0: 0, q1: 0 }, { q0: 1, q1: 1 }], [{ q0: 0, q1: 1 }]);
+T("B", 0, [{ w: 1 }], [{ w: 0 }, { w: 0.25 }]);
+T("B", 1, [{ s: 2 }, { s: 3 }], [{ s: 1 }]);
+T("C", 0, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
+T("C", 1, [{ learn: 0 }, { learn: 1 }], [{ learn: 2 }]);
 {
   /* the drawn rounds: the 16 runs' own average inside its cloud; a flat line at 1 ("they stay apart") outside; no flat line inside on all three */
-  const flats = [0.25, 0.3, 0.45, 0.6], perRound = [];
+  const flats = [0, 0.25, 0.5, 0.75], perRound = [];
   for (let r = 0; r < 3; r++) {
     /* the engine straight, not Go: a scored run here would spend the round's one bit */
     SD.round = r; const q = SD.cfg.start({}, 4242 + 97 * r); Object.assign(q, { t: 0, hist: [] }); snap(q); while (q.t < q.G) stepOnce(q);
@@ -127,15 +117,20 @@ T("C", 1, [{ learn: 0 }], [{ learn: 1 }]);
   for (const S of [SA, SB, SC, SD]) { S.round = 0; S.done = false; S.waiting = false; S.results = []; S.last = null; S.pred = null; const pr = document.getElementById(S.K + "_practice"); if (pr) pr.checked = false; openRound(S); }
   Gates.A.done = Gates.B.done = Gates.C.done = Gates.D.done = false; paintAll();
   const go = S => { document.getElementById(S.K + "_go").click(); finishNow(S); }, next = S => document.getElementById(S.K + "_next").click();
-  const held1 = document.getElementById("A_m").disabled;
+  const held1 = document.getElementById("A_s").disabled, sentence = /Click the seeds/.test(document.getElementById("A_ttext").innerHTML);
   go(SA); const miss = Score.getBit("scaffold", BIT.A1) === 0 && !SA.waiting && SA.round === 0;
-  setC(SA, { c: 1 }); go(SA); const hit = SA.waiting; next(SA);
-  setC(SA, { v: 0.4 }); go(SA); const doneA = Gates.A.done;
-  check("flow: A holds migration (" + held1 + "); a miss records 0 and the round stays (" + miss + "); a hit opens Next (" + hit + "); two hits finish A (" + doneA + ")", held1 && miss && hit && doneA);
-  const sentence = /Drag ◆/.test(document.getElementById("B_ttext").innerHTML);
-  setC(SB, { at: 20 }); go(SB); next(SB); setC(SB, { R: 1 }); go(SB); next(SB); setC(SB, { cue: 0 }); go(SB);
-  check("flow: B round 1 says where to drag (" + sentence + "); three hits finish B (" + Gates.B.done + ")", sentence && Gates.B.done);
-  setC(SC, { lim: 1 }); go(SC); next(SC); setC(SC, { learn: 0 }); go(SC);
+  /* the blue island's fourth seed: all four hard */
+  const sc = document.getElementById("A_seeds"), sr = sc.getBoundingClientRect(), sk = sr.width / SDP.W;
+  sc.dispatchEvent(new PointerEvent("pointerdown", { clientX: sr.left + seedX(1, 3) * sk, clientY: sr.top + SDP.y * sk, pointerId: 1, bubbles: true }));
+  const clicked = readSet(SA).q1 === 1;
+  go(SA); const hit = SA.waiting; next(SA);
+  setC(SA, { s: 4 }); go(SA); next(SA);
+  setC(SA, { q0: 0, q1: 0 }); go(SA); const doneA = Gates.A.done;
+  check("flow: A round 1 holds preference strength (" + held1 + ") and says to click the seeds (" + sentence + "); a miss records 0 and the round stays (" + miss + "); a click sets the seeds (" + clicked + "); a hit opens Next (" + hit + "); three hits finish A (" + doneA + ")",
+        held1 && sentence && miss && clicked && hit && doneA);
+  setC(SB, { w: 1 }); go(SB); next(SB); setC(SB, { s: 2 }); go(SB);
+  check("flow: two hits finish B (" + Gates.B.done + ")", Gates.B.done);
+  setC(SC, { learn: 1 }); go(SC); next(SC); setC(SC, { learn: 0 }); go(SC);
   check("flow: two hits finish C (" + Gates.C.done + ")", Gates.C.done);
   /* D: Go held until a drawing; one drag sets every dot; Clear; drag again; Go; three rounds end the lesson */
   paintAll();
@@ -145,13 +140,13 @@ T("C", 1, [{ learn: 0 }], [{ learn: 1 }]);
   const drag = v => { cv.dispatchEvent(new PointerEvent("pointerdown", at(1, v))); cv.dispatchEvent(new PointerEvent("pointermove", at(50, v))); cv.dispatchEvent(new PointerEvent("pointermove", at(100, v))); cv.dispatchEvent(new PointerEvent("pointerup", at(100, v))); };
   drag(0.25); const full = predFull(SD), free = !document.getElementById("D_go").disabled;
   document.getElementById("D_clear").click(); const cleared = !SD.pred && document.getElementById("D_go").disabled;
-  drag(0.25); go(SD); next(SD); drag(0.6); go(SD); next(SD); drag(0.3); go(SD);
+  drag(0.5); go(SD); next(SD); drag(0.77); go(SD); next(SD); drag(0); go(SD);
   const notes = [1, 2, 3].map(i => Score.getNote ? Score.getNote("D_in" + i) : null);
-  check("flow: D holds Go for a drawing (" + goHeld + "); one drag sets all " + D_KNOTS.length + " dots (" + full + ") and frees Go (" + free + "); Clear takes it away (" + cleared + "); drawn at .25, .6, .3, scored " + notes.join(", "),
+  check("flow: D holds Go for a drawing (" + goHeld + "); one drag sets all " + D_KNOTS.length + " dots (" + full + ") and frees Go (" + free + "); Clear takes it away (" + cleared + "); drawn at .5, .77, 0, scored " + notes.join(", "),
         goHeld && full && free && cleared && notes.every(x => /^\\d+of10$/.test(x || "")) && notes.every(x => +x.split("of")[0] >= 5));
   let n = 0; for (let i = 0; i < 10; i++) if (Score.isAnswered("scaffold", i)) n++;
   const bits = Object.keys(BIT).map(k => Score.getBit("scaffold", BIT[k])).join("");
-  check("all 10 declared bits written (" + n + "; bits " + bits + "); the lesson ends", n === 10 && bits.startsWith("01") && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
+  check("all 10 declared bits written (" + n + "; bits " + bits + "); the lesson ends", n === 10 && bits.startsWith("0") && Gates.D.done && document.getElementById("done-banner").classList.contains("shown"));
 }
 {
   const infos = [...document.querySelectorAll(".info")], tipOf = e => e.dataset.tip ? document.getElementById(e.dataset.tip) : e.querySelector(".tip");

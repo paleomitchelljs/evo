@@ -1,11 +1,10 @@
-# Lesson 21 — speciation by sexual selection: who to mate with, magic traits, learned song (planned); first draft: species selection (parked for the hierarchical Price lesson)
+# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the beak as the cue, a learned preference; first draft: species selection (parked for the hierarchical Price lesson)
 
-**File** · `app/lessons/lesson21.html` — draft 2 (2026-10-29), speciation by sexual selection, v2, 10 bits. The first draft
-(species selection) is `app/archive/lesson21_species_2026-10-20.html`
-**Checks** · `node scripts/check_lesson21_numbers.js` (23 + both widths + four R panels, ~20 s) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 2 BUILT 2026-10-29, for JM to play with: A who to mate with, B magic traits, C a learned song, D three drawn
-rounds (see "Draft 2 as built"). D is not the planned one immigrant: measured, his line never lasts (Open, draft 2). Intros
-are draft bullets for JM's dictation. LOCKS `x`
+**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG, v3, 10 bits. Draft 2 is the file at
+b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
+**Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"). Intros are draft bullets for JM's dictation.
+LOCKS `x`
 **Last touched** · 2026-10-29
 
 ## JM, 2026-10-28, second ruling (verbatim)
@@ -67,6 +66,10 @@ a cue and a preference that are learned, not inherited.
        lineage record on file).
 
 ## Flow into 22
+
+(2026-10-29, draft 3: the who-mated-whom network and the song are gone. What carries over is the over-time chart, the
+fitness surfaces, the three-gene DAG, the beak-as-cue arrow (B) and the father/island learning (C). The list below is the
+10-28 plan.)
 
 - A's who-mated-whom network becomes 22's who-helps-whom.
 - A's "prefer a partner like yourself" becomes 22's greenbeard: one gene for a tag, its recognition, and the help.
@@ -167,6 +170,80 @@ JM, 2026-10-29: "Let's please make a draft of lesson 21 and its parts, and I can
    2009, Lamichhaney et al. 2018 (Big Bird), Servedio & Bürger 2014, Lachlan & Servedio 2004, Sharp et al. 2005.
 6. Real data: none yet. data/clean/finch_individuals (beak depth, 2,215 birds) could carry a closed box of real beak
    distributions in A.
+
+## JM on draft 2, 2026-10-29 (verbatim)
+
+> I think we should adjust lesson 21. A simplified but realistic DAG genes -> beak -> seeds -> reproduction <- mating <-
+> color / preference <- genes. So we have a three gene system: one controlling beak size, one controlling bird color, one
+> controling bird preference. The "who mated whom" panel can be cut--we can show the drop-down chart as the animation core.
+> We can also drop the young-per-female. A hard/soft seeds by island setting to create a fitness surface, and a
+> preference-strength setting to also create a fitness surface would be good.
+
+Readings (2026-10-29):
+- The DAG and the three genes run through every stage: the engine is replaced, and the two panels are cut from every stage.
+- "Fitness surface" is lesson 19's word. Seeds give survival by beak, one line an island. Preference strength gives the chance
+  she takes him, by his colour (across) and her preference (up).
+- Hard/soft seeds by island: one setting an island, the share of hard seeds (lesson 19 D's one-gene food share), set by
+  clicking seeds in the Target card (lesson 19 B's columns).
+- Not in the message: magic traits and the learned song, both from his ruling of 10-28. Kept, each as one change to the same
+  DAG:
+  - B: one arrow added, beak → mating (she judges his beak against hers).
+  - C: where her preference comes from (her genes / her father's colour / the island's males' colours). This is sexual
+    imprinting, not song; Grant & Grant 1997 is to check.
+  - Either can be cut.
+
+## Draft 3 (2026-10-29)
+
+    engine     two islands of 100 finches; 1 in 10 swap each generation. Three genes, two alleles each, additive, on separate
+               chromosomes: beak (small / large), colour (pale / dark), preference (likes pale / likes dark). Start apart:
+               island 1 small, pale, likes pale; island 2 large, dark, likes dark.
+               Seeds: an island's hard share q (0, ¼, ½, ¾, 1). Food = (1 - q) soft-eff + q hard-eff, with soft-eff 1, .35, 0
+               and hard-eff 0, .35, 1 for ○ ◐ ●. Survival = 1 - .6 (1 - food / best food on the island). A mixed island
+               has a valley at ◐.
+               Mating: a female meets up to 4 males and takes one with chance exp(-β d²), β the preference strength (0 1 2 3
+               4 6), d = |his colour - her preference| (0, ½, 1). Turned down 4 times, she does not breed.
+               B: d = (1 - w)|colour - preference| + w|his beak - her beak|, w the beak's say.
+               C: preference = her genes, her father's colour, or a random island male's colour (1 in 50 misremembered).
+               Young from mated pairs until 100 live. 100 generations, 16 runs.
+    panels     every stage: the over-time chart with its menu (the animation core, top left); fitness surfaces (survival by
+               beak, a line an island, dots = run 1's birds; mating grid, his colour × her preference, shade = chance she
+               takes him, dots = run 1's pairs this generation; B adds his beak × her beak); the DAG (paths.js, preference
+               strength on preference → mating); Target card with the seeds; To finish; R last and closed.
+    A          A1 seeds free (open both soft), β 0 held: beak F_ST ≥ .25. A2 seeds apart held, β free (opens 3): colour F_ST
+               ≥ .5. A3 β 6 held, seeds free (open apart): colour F_ST ≤ .1 (one kind takes both islands).
+    B          seeds apart. B1 β 2 held, the beak's say w free (opens 0): beak F_ST ≥ .72. B2 w 1 held, β free (opens
+               1): the same.
+    C          seeds apart. C1 β 3 held, source free (opens her genes): colour F_ST ≥ .5. C2 β 4 held, source free (opens
+               the island's males): the same.
+    D          three drawn rounds, F_ST at the beak gene, 100 gens, a dot every 10: seeds apart β 2; seeds apart β 2 with the
+               beak as the cue (w 1); both islands soft, β 6.
+    scoring    v3, scaffold 10: A1 A2 A3 B1 B2 C1 C2 D1 D2 D3.
+
+Measured (scratchpad eng3.js, the page's engine; 16 runs at 100 gens, five seed sets, mean F_ST):
+
+    random mating, F_ST at the beak gene by seeds: (0,1) .50, (0,¾) .39-.43, (¼,¾) .31-.35; seeds favouring the same beak
+      ((0,0), (0,¼), (0,½), (½,1), (½,½)) 0: the same beak takes both islands.
+    seeds apart, colour F_ST by β: 0-2 .00-.03; 3 .16-.43 (all gone by 200); 4 .79-.90; 5+ .90. Linear acceptance (1 - s d) was
+      tried first: nothing held below s .98, because birds between the colours were taken by everyone. Gaussian acceptance
+      makes the mating surface's own valley (a grey male is turned down by both pale- and dark-likers).
+    β 6, colour F_ST by seeds: apart (0,1) .89-.94, (0,¾) .85-.92, (¼,¾) .80-.88; the same beak favoured 0, in under 10
+      generations when one kind's beak loses on both islands; mixed (½,½) one kind wins both islands by chance (by ~70).
+    B, β 2, beak F_ST by w: 0 .47-.53, .5 .59-.66, .75 .66-.73, 1 .76-.77 (colour mixes: its gene no longer matters).
+      w 1 by β: 0 .50, 1 .58-.67, 2 .76-.77, 3 .86-.89.
+    C, colour F_ST: β 3 genes .16-.43, father .58-.77, island's males 0; β 4 genes .79-.90, father .85-.91, island's males 0.
+      Learned from the island, a newcomer's daughters like the local colour: her colour genes join the island in one
+      generation.
+    linkage (tried, not on the page): β 3, colour gene beside the beak gene (r 0) .76 vs unlinked .27; all three genes
+      together (r 0) β 2 .77. The beak-as-cue arrow does what r 0 does with one arrow.
+
+Open for JM (draft 3):
+1. B and C carry his 10-28 asks (magic traits, non-genetic inheritance) on the new DAG. Keep, change, or cut?
+2. Preference strength steps 0 1 2 3 4 6: the colours hold at 4 and fall at 2; 3 is the edge (slow loss). The mating
+   grid shows what each step means.
+3. A3 is a target to make the islands the same: strong preferences, but seeds that favour one beak on both islands.
+   Fine as a target?
+4. Draft 2's Open 1 (the one immigrant), 3 (4 looks), 5 (citations: now Grant & Grant 1997 too) and 6 (real data) still
+   stand; 2 and 4 went with the panels and sliders they were about.
 
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
 
@@ -312,13 +389,16 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 3 | archive the first draft as `app/archive/lesson21_species_2026-10-20.html` (runnable) + a README note naming its checks at the archiving commit | done 2026-10-29 |
 | 4 | engine prototype: beak, mating rules, song learning; the Measure first list | done 2026-10-29 (Measured, draft 2) |
 | 5 | draft 2: A-D, v2, 10 bits; `check_lesson21_numbers.js` rewritten (23 + widths + R) | done 2026-10-29 |
-| 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | todo |
+| 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | done 2026-10-29: his review, the three-gene DAG |
+| 7 | draft 3: engine prototype (eng3.js), the bars measured; the page rebuilt, v3, 10 bits; check script rewritten | done 2026-10-29 |
+| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo |
 
 ## Rulings
 
 - 2026-10-20: 21 = comparative methods and species selection; a trait good for individuals that lowers speciation (wider ranges, populations split less), linked explicitly to 19; implicit, discovered; within-species rise vs global fall; plotted as a function of the individual effect and the effect on speciation; Price equation, broken down Carl Simpson's way. (Superseded for 21 on 2026-10-28; it stands for the hierarchical Price lesson's species level.)
 - 2026-10-28 (second ruling): 21 = speciation, in particular by sexual selection, where different behavioural strategies are optimal for different individuals; magic traits; non-genetic inheritance (bird song); built to flow into 22 (kin selection, gene-level competition); the target lesson is the hierarchical Price lesson (23-25).
 - 2026-10-28 (on the plan): "Yes to the bird reading" (the best mating rule depends on the bird); sexual selection alone may fail to split, and the page shows both outcomes ("That's fine"); "Birds, two islands".
+- 2026-10-29 (on draft 2): the DAG genes → beak → seeds → reproduction ← mating ← colour / preference ← genes; three genes (beak, colour, preference); who mated whom and young per female cut; the over-time chart with its menu is the animation core; seeds by island and preference strength each make a fitness surface.
 
 ## Do not
 

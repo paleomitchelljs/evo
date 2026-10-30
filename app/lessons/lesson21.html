@@ -34,6 +34,7 @@
   @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
   .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
   canvas { display:block; }
+  canvas[hidden] { display:none; }
 
   .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
   .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
@@ -73,11 +74,6 @@
   /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
   .ok { color:var(--good); font-weight:600; }
   .off { color:var(--bad); font-weight:600; }
-  .tbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 7px; font-size:13px; }
-  .tbar label { display:flex; align-items:center; gap:8px; }
-  .tbar input[type=range] { width:150px; accent-color:var(--accent2); }
-  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:48px; display:inline-block; }
-  .tbar.held { color:var(--muted); }
   .tcard .ttext { font-size:14px; margin:0 0 8px; }
   .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
   .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
@@ -86,13 +82,12 @@
   .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
   .watchbar label { display:flex; align-items:center; gap:8px; }
   .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
-  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:2px 0 8px; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
   .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
   .toggles.held { color:var(--muted); }
-  .toggles.stack { flex-direction:column; align-items:flex-start; gap:4px; }
   table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
   table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
-  #A_fit, #B_genes, #D_time { touch-action:none; }
+  #A_seeds, #B_seeds, #C_seeds, #D_time { touch-action:none; }
 
   /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
      glows in its own colour */
@@ -127,7 +122,7 @@
   <a href="#stageD" id="tocD" class="locked">D</a>
 </nav>
 
-<!-- ========== STAGE A — who to mate with: the best rule depends on the bird (JM, 2026-10-28) ========== -->
+<!-- ========== STAGE A — seeds and preference strength, each a fitness surface (JM, 2026-10-29) ========== -->
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
@@ -136,9 +131,9 @@
     <!-- DRAFT (2026-10-29): goal, then controls, in the voice slot as lesson 20's drafts had them, a basis for JM's dictation -->
     <div class="voice">
       <ul>
-        <li>Two islands of finches, one with small seeds and one with large, and birds that fly between them. See which females gain by being choosy about a partner's beak, and which lose by it.</li>
-        <li><b>How choosy</b>, the arrow on the diagram, sets how often a choosy female turns down a male whose beak differs from hers.</li>
-        <li>Drag ◐ on <b>Survival by beak</b> to set how well a bird with one small-beak and one large-beak allele does. <b>Migration</b> sets how many birds swap islands each generation.</li>
+        <li>Two islands of finches, long apart, now with birds crossing between them. Three genes: one for beak size, one for colour, one for the colour a female likes. See what keeps the two islands' birds apart: their seeds, the females' preferences, or both.</li>
+        <li>Click the seeds in the Target card to set how many of each island's seeds are hard. Small beaks crack soft seeds, large beaks hard ones.</li>
+        <li><b>Preference strength</b>, the arrow on the diagram, sets how much a female favours a male of the colour she likes.</li>
       </ul>
     </div>
   </div>
@@ -146,37 +141,35 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="A_boardH">Who mated whom</span><span class="tip"><span>Run 1 of the 16 that <b>Go</b> plays, this generation's breeders. Each island: females along the top, males along the bottom, sorted by beak.</span><span>○ small beak (two small-beak alleles), ◐ one of each, ● large beak.</span><span>A line joins a female to the male she mated with: solid when their beaks match, dashed red when they differ. ✗ under a female: she turned down every male she met and did not breed.</span><span>A ring round a female: she carries the choosy allele. ▾ a newcomer, arrived from the other island this generation.</span></span></span></h3>
-        <canvas id="A_board" width="760" height="236"></canvas>
-      </div>
-      <div class="panel">
         <div class="watchbar"><label><select id="A_meas">
-          <option value="chAll">choosy allele, both islands</option>
-          <option value="ch">choosy allele on each island</option>
           <option value="fb">F_ST at the beak gene</option>
+          <option value="fc">F_ST at the colour gene</option>
+          <option value="fp">F_ST at the preference gene</option>
           <option value="p">large-beak allele on each island</option>
+          <option value="c">dark-colour allele on each island</option>
+          <option value="r">liking for dark on each island</option>
           <option value="het">◐ birds on each island</option>
-          <option value="fm">F_ST, the rest of the genome</option>
-        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>F<sub>ST</sub> at the beak gene, as in Lesson 19: 1, the islands carry different beak alleles; 0, the same mix on both.</span><span>The rest of the genome: ten loci along the chromosome that do nothing, marked by the island their chromosome started on.</span></span></span></label></div>
-        <canvas id="A_time" width="760" height="250"></canvas>
+          <option value="unm">females that did not breed, each island</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>F<sub>ST</sub> at a gene, as in Lesson 19: 1, the islands carry different alleles; 0, the same mix on both.</span><span>Liking for dark: the island's birds' preferences averaged, 0 all like pale, 100% all like dark.</span><span>Females that did not breed: turned down by all 4 males they met.</span></span></span></label></div>
+        <canvas id="A_time" width="760" height="300"></canvas>
       </div>
       <div class="panel">
-        <h3><span class="info" tabindex="0">Young per female<span class="tip"><span>The run's last 20 generations, all 16 runs. Young that lived, per female, against her island's average (1).</span><span>Born here: females that hatched on the island they breed on. Newcomers: females that arrived from the other island this generation.</span><span>Filled bars: females with the choosy allele. Open bars: females that take any male.</span></span></span></h3>
-        <canvas id="A_pay" width="760" height="180"></canvas>
+        <h3><span class="info" tabindex="0"><span id="A_surfH">Fitness surfaces</span><span class="tip"><span>Left, from the seeds: across, the beak gene (○ two small-beak alleles, ◐ one of each, ● two large); up, a young bird's chance to live to breed on each island. A small beak eats soft seeds, a large beak hard ones, ◐ either, poorly.</span><span>Right, from the preference strength: across, his colour (pale, grey, dark); up, the colour she likes. Darker: the likelier she takes him when they meet.</span><span>Circles: run 1's birds (left) and this generation's pairs (right), the bigger the more of them.</span></span></span></h3>
+        <canvas id="A_surf" width="760" height="214"></canvas>
       </div>
     </div>
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0">Beak, choosiness, mating<span class="tip"><span>The beak gene: a small-beak and a large-beak allele. Small beaks do best on small seeds, large on large.</span><span>The choosy gene: a female with one or two choosy alleles turns a male down, with the chance on the arrow, when his beak differs from hers (half that when they differ by one allele). She meets up to 4 males; if she turns all 4 down she does not breed.</span><span>Grey arrows: fixed.</span></span></span></h3>
+        <h3><span class="info" tabindex="0">Genes, traits, reproduction<span class="tip"><span>Three genes, each with two alleles, on different chromosomes: beak (small, large), colour (pale, dark), preference (likes pale, likes dark). A bird with one allele of each is in between.</span><span>Seeds: each island's, set in the Target card. A beak suited to them lives more.</span><span>Mating: a female meets up to 4 males and takes each with the chance the mating surface shows; turned down all 4, she does not breed this year.</span><span>Preference strength, the arrow: how much less likely she is to take a male the further his colour is from the one she likes. Grey arrows: fixed.</span></span></span></h3>
         <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
       </div>
       <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>100 birds an island. The islands start apart: small beaks on the small-seed island, large on the large-seed island. 1 in 10 alleles at the choosy gene is choosy on both. <b>Go</b> plays 200 generations, 16 times.</span><span>The picture: what a hit looks like, the red line or box on what is judged.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>100 birds an island, 1 in 10 swapping islands each generation. The islands start apart: the orange island's birds small-beaked, pale and liking pale; the blue island's large-beaked, dark and liking dark. <b>Go</b> plays 100 generations, 16 times.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 runs' average, should end.</span><span>Under it, each island's four seeds: click one to set how many are hard; the 0 clears them.</span></span></span> <span class="pips" id="A_pips"></span></h3>
         <p class="ttext" id="A_ttext"></p>
         <canvas id="A_tpic" width="460" height="120"></canvas>
         <div class="controls" id="A_controls">
-          <div hidden><input type="range" id="A_c" min="0" max="4" step="1" value="0"><input type="range" id="A_v" min="0" max="4" step="1" value="0"></div>
-          <div class="tbar" id="A_mRow"><label><span class="info" tabindex="0">migration<span class="tip"><span>Each generation, this share of birds swap islands before breeding.</span></span></span> <input type="range" id="A_m" min="0" max="4" step="1" value="2"></label><b id="A_mV"></b></div>
+          <div hidden><input type="range" id="A_q0" min="0" max="4" step="1" value="0"><input type="range" id="A_q1" min="0" max="4" step="1" value="4"><input type="range" id="A_s" min="0" max="5" step="1" value="0"></div>
+          <canvas id="A_seeds" width="460" height="78"></canvas>
           <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
           <div class="buttons">
             <button id="A_go" class="accent">Go</button>
@@ -186,13 +179,9 @@
         <div class="verdict" id="A_verdict"></div>
       </div>
       <div class="panel">
-        <h3><span class="info" tabindex="0">Survival by beak<span class="tip"><span>Across: the beak gene, ○ small, ◐ one of each, ● large. Up: a young bird's chance to live to breed on each island.</span><span>Drag ◐ up or down: how well a bird between the two beaks does, the same on both islands. The faint line: halfway between the two beaks. Below it, a bird in between falls between two seeds.</span></span></span></h3>
-        <canvas id="A_fit" width="460" height="190"></canvas>
-      </div>
-      <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="rounds">Hit the two targets. <span class="hint" id="A_rounds_now">0 of 2</span></li>
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="A_rounds_now">0 of 3</span></li>
         </ul>
         <div class="solved-banner" id="solvedA">Stage B is open.</div>
       </div>
@@ -207,7 +196,7 @@
   </div>
 </section>
 
-<!-- ========== STAGE B — magic traits: the cue is the beak itself, or a plumage gene crossing over can part from it ========== -->
+<!-- ========== STAGE B — the beak as the cue: one arrow added, beak -> mating ========== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Finish Stage A to unlock this section.</div>
@@ -216,9 +205,8 @@
     <!-- DRAFT (2026-10-29): goal, then controls; a basis for JM's dictation -->
     <div class="voice">
       <ul>
-        <li>Every female is choosy now. Keep the two islands' beaks apart when a female judges a male by his plumage, a separate gene, and when she judges him by his beak itself.</li>
-        <li>Drag ◆, the plumage gene, along the chromosome. <b>Crossovers per chromosome</b> sets how often the two genes are split when an egg or sperm is made.</li>
-        <li>Choose what a female judges a male by: his beak or his plumage.</li>
+        <li>Now a female can judge a male by his beak against hers, as well as by his colour. Keep the two islands' beaks apart with a weak preference.</li>
+        <li><b>The beak's say</b>, the new arrow, sets how much his beak counts in her choice in place of his colour. <b>Preference strength</b> is the arrow from Stage A.</li>
       </ul>
     </div>
   </div>
@@ -226,34 +214,33 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="B_boardH">Who mated whom</span><span class="tip"><span>As in Stage A: females along the top, males along the bottom, sorted by beak; a line joins a female to her mate, dashed red when their beaks differ.</span><span>The square under or over each bird: its plumage, pale (two pale alleles), grey (one of each) or dark. The small-seed island's birds start pale, the large-seed island's dark.</span></span></span></h3>
-        <canvas id="B_board" width="760" height="236"></canvas>
-      </div>
-      <div class="panel">
-        <h3><span class="info" tabindex="0">The chromosome<span class="tip"><span>40 loci. The beak gene sits at locus 20 and stays there.</span><span>Drag ◆, the plumage gene, to any other locus. The farther apart the two, the more often a crossover falls between them when an egg or sperm is made.</span></span></span></h3>
-        <canvas id="B_genes" width="760" height="96"></canvas>
-        <div class="toggles" id="B_cueRow"><span>a female judges a male by</span><label><input type="radio" name="B_cueR" id="B_cueB" value="0"> his beak</label><label><input type="radio" name="B_cueR" id="B_cueP" value="1" checked> his plumage ◆</label></div>
-      </div>
-      <div class="panel">
         <div class="watchbar"><label><select id="B_meas">
           <option value="fb">F_ST at the beak gene</option>
+          <option value="fc">F_ST at the colour gene</option>
           <option value="p">large-beak allele on each island</option>
-          <option value="plum">dark-plumage allele on each island</option>
-          <option value="pc">plumage–beak correlation</option>
+          <option value="c">dark-colour allele on each island</option>
           <option value="het">◐ birds on each island</option>
-          <option value="fm">F_ST, the rest of the genome</option>
-        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Plumage–beak correlation, over every bird on both islands: 1, dark plumage only on large beaks and pale only on small; 0, plumage says nothing about beak.</span></span></span></label></div>
-        <canvas id="B_time" width="760" height="250"></canvas>
+          <option value="unm">females that did not breed, each island</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>F<sub>ST</sub> at a gene: 1, the islands carry different alleles; 0, the same mix on both.</span></span></span></label></div>
+        <canvas id="B_time" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_surfH">Fitness surfaces</span><span class="tip"><span>Left, from the seeds, as in Stage A.</span><span>Middle, his colour against the colour she likes, when their beaks match. Right, his beak against hers, when his colour is the one she likes. Darker: the likelier she takes him when they meet.</span><span>The beak's say moves her choice from the middle surface to the right one. Circles: run 1's birds (left) and this generation's pairs, the bigger the more of them.</span></span></span></h3>
+        <canvas id="B_surf" width="760" height="214"></canvas>
       </div>
     </div>
     <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, traits, reproduction<span class="tip"><span>Stage A's three genes, seeds and mating.</span><span>The beak's say, the new arrow: how far his beak is from hers counts for this share of how far he is from what she wants; his colour against her preference counts for the rest.</span><span>Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
       <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>100 birds an island, 1 in 10 swapping islands each generation. A bird between the two beaks does halfway between them. Every female turns a male down with chance 0.9 when the trait she judges differs from hers, and meets up to 4. <b>Go</b> plays 200 generations, 16 times.</span><span>The picture: F<sub>ST</sub> at the beak gene in runs that hit. The red box: where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>As in Stage A: 100 birds an island, 1 in 10 swapping each generation, the islands start apart. <b>Go</b> plays 100 generations, 16 times.</span><span>The picture: F<sub>ST</sub> at the beak gene in runs that hit. The red box: where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="B_pips"></span></h3>
         <p class="ttext" id="B_ttext"></p>
         <canvas id="B_tpic" width="460" height="120"></canvas>
         <div class="controls" id="B_controls">
-          <div hidden><input type="range" id="B_at" min="0" max="39" step="1" value="39"><input type="range" id="B_cue" min="0" max="1" step="1" value="1"></div>
-          <div class="tbar" id="B_RRow"><label>crossovers per chromosome <input type="range" id="B_R" min="0" max="3" step="1" value="1"></label><b id="B_RV"></b></div>
+          <div hidden><input type="range" id="B_q0" min="0" max="4" step="1" value="0"><input type="range" id="B_q1" min="0" max="4" step="1" value="4"><input type="range" id="B_s" min="0" max="5" step="1" value="2"><input type="range" id="B_w" min="0" max="4" step="1" value="0"></div>
+          <canvas id="B_seeds" width="460" height="78"></canvas>
           <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
           <div class="buttons">
             <button id="B_go" class="accent">Go</button>
@@ -265,7 +252,7 @@
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="B_rounds_now">0 of 3</span></li>
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="B_rounds_now">0 of 2</span></li>
         </ul>
         <div class="solved-banner" id="solvedB">Stage C is open.</div>
       </div>
@@ -280,18 +267,17 @@
   </div>
 </section>
 
-<!-- ========== STAGE C — a learned song: no gene for it, and the beak shapes it ========== -->
+<!-- ========== STAGE C — a learned preference: from her genes, her father's colour, or the island's males ========== -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Finish Stage B to unlock this section.</div>
 
   <div class="panel stage-intro">
-    <!-- DRAFT (2026-10-29): goal, then controls; a basis for JM's dictation. Lesson 8 C is where the song was learned first -->
+    <!-- DRAFT (2026-10-29): goal, then controls; a basis for JM's dictation. Lesson 8 C is where a bird learned from its father first -->
     <div class="voice">
       <ul>
-        <li>No gene for song this time: a young bird learns the song it hears. Females choose by song. Keep the islands' beaks apart with a cue nothing in the genes carries.</li>
-        <li><b>How much the beak shapes the song</b>, the arrow on the diagram, sets how often a bird sings the song its beak suits instead of the one it learned.</li>
-        <li>Choose who the young learn from: their father, or the males of the island they hatch on.</li>
+        <li>A female's preference need not come from her genes: she can learn it from her father's colour, or from the colours of the males on the island where she hatched. Keep the two islands' colours apart.</li>
+        <li>Choose where a female's preference comes from, under the diagram. <b>Preference strength</b> is held for each target.</li>
       </ul>
     </div>
   </div>
@@ -299,32 +285,33 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="C_boardH">Who mated whom</span><span class="tip"><span>As in Stage A: females along the top, males along the bottom, sorted by beak; a line joins a female to her mate, dashed red when their beaks differ.</span><span>The square over each male: the song he sings, pale a fast trill, dark a slow one. Under each female: the song she prefers.</span><span>The small-seed island starts singing fast trills, the large-seed island slow ones.</span></span></span></h3>
-        <canvas id="C_board" width="760" height="236"></canvas>
+        <div class="watchbar"><label><select id="C_meas">
+          <option value="fc">F_ST at the colour gene</option>
+          <option value="fb">F_ST at the beak gene</option>
+          <option value="c">dark-colour allele on each island</option>
+          <option value="r">liking for dark on each island</option>
+          <option value="unm">females that did not breed, each island</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Liking for dark: the island's birds' preferences averaged, learned or inherited, 0 all like pale, 100% all like dark.</span></span></span></label></div>
+        <canvas id="C_time" width="760" height="300"></canvas>
       </div>
       <div class="panel">
-        <div class="watchbar"><label><select id="C_meas">
-          <option value="fb">F_ST at the beak gene</option>
-          <option value="song">slow trills on each island</option>
-          <option value="sb">song–beak correlation</option>
-          <option value="p">large-beak allele on each island</option>
-          <option value="het">◐ birds on each island</option>
-        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Slow trills: the share of males singing the slow trill.</span><span>Song–beak correlation, over every male on both islands: 1, slow trills only from large beaks; 0, song says nothing about beak.</span></span></span></label></div>
-        <canvas id="C_time" width="760" height="250"></canvas>
+        <h3><span class="info" tabindex="0"><span id="C_surfH">Fitness surfaces</span><span class="tip"><span>As in Stage A: survival by beak from the seeds; the chance she takes him by his colour and the colour she likes.</span></span></span></h3>
+        <canvas id="C_surf" width="760" height="214"></canvas>
       </div>
     </div>
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0">Beak, song, mating<span class="tip"><span>A young bird hears a song: its father's, or a male's picked at random on its island. A son sings it; a daughter prefers it. Now and then a bird hears it wrong (1 in 50).</span><span>The beak shapes the song: with the chance on its arrow, a male sings the song his beak suits instead (a small beak a fast trill, a large beak a slow one, a bird in between either). Large beaks open and close slowly (Podos 2001).</span><span>How choosy: the chance a female turns down a male whose song differs from the one she prefers. Grey arrows: fixed.</span></span></span></h3>
+        <h3><span class="info" tabindex="0">Genes, traits, reproduction<span class="tip"><span>Stage A's genes, seeds and mating.</span><span>Where her preference comes from: her preference gene (as in Stage A); her father's colour, learned as a chick; or the colour of a male picked at random on the island where she hatched. A learned preference is misremembered 1 time in 50.</span><span>Grey arrows: fixed.</span></span></span></h3>
         <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
-        <div class="toggles" id="C_learnRow"><span>the young learn the song of</span><label><input type="radio" name="C_learnR" id="C_learnF" value="0" checked> their father</label><label><input type="radio" name="C_learnR" id="C_learnN" value="1"> the island's males</label></div>
+        <div class="toggles" id="C_learnRow"><span>her preference comes from</span><label><input type="radio" name="C_learnR" id="C_learn0" value="0" checked> her genes</label><label><input type="radio" name="C_learnR" id="C_learn1" value="1"> her father's colour</label><label><input type="radio" name="C_learnR" id="C_learn2" value="2"> the island's males</label></div>
       </div>
       <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>100 birds an island, 1 in 10 swapping islands each generation. A bird between the two beaks does halfway between them. <b>Go</b> plays 200 generations, 16 times.</span><span>The picture: F<sub>ST</sub> at the beak gene in runs that hit. The red box: where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>As in Stage A: 100 birds an island, 1 in 10 swapping each generation, the islands start apart. <b>Go</b> plays 100 generations, 16 times.</span><span>The picture: F<sub>ST</sub> at the colour gene in runs that hit. The red box: where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="C_pips"></span></h3>
         <p class="ttext" id="C_ttext"></p>
         <canvas id="C_tpic" width="460" height="120"></canvas>
         <div class="controls" id="C_controls">
-          <div hidden><input type="range" id="C_lim" min="0" max="4" step="1" value="0"><input type="range" id="C_c" min="0" max="4" step="1" value="3"><input type="range" id="C_learn" min="0" max="1" step="1" value="0"></div>
+          <div hidden><input type="range" id="C_q0" min="0" max="4" step="1" value="0"><input type="range" id="C_q1" min="0" max="4" step="1" value="4"><input type="range" id="C_s" min="0" max="5" step="1" value="3"><input type="range" id="C_learn" min="0" max="2" step="1" value="0"></div>
+          <canvas id="C_seeds" width="460" height="78"></canvas>
           <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
           <div class="buttons">
             <button id="C_go" class="accent">Go</button>
@@ -357,11 +344,10 @@
   <div class="lock-banner">Finish Stage C to unlock this section.</div>
 
   <div class="panel stage-intro">
-    <!-- DRAFT (2026-10-29): goal, then controls; a basis for JM's dictation. Planned as one immigrant (Daphne Major's Big Bird);
-         that needs what this engine lacks, see docs/overhauls/lesson21_overhaul.md -->
+    <!-- DRAFT (2026-10-29): goal, then controls; a basis for JM's dictation -->
     <div class="voice">
       <ul>
-        <li>Three set-ups from Stages A to C. Before each run, draw what you expect F<sub>ST</sub> at the beak gene to do once the islands meet.</li>
+        <li>Three set-ups from Stages A to C. Before each run, draw what you expect F<sub>ST</sub> at the beak gene to do once birds cross between the islands.</li>
         <li>Drag across the plot to set a dot every 10 generations, then <b>Go</b>. Each run counts how many of your dots fall inside the 16 runs' cloud.</li>
       </ul>
     </div>
@@ -371,17 +357,17 @@
     <div class="col">
       <div class="panel">
         <h3><span class="info" tabindex="0">F<sub>ST</sub> at the beak gene, over time<span class="tip"><span>Drag across the plot to draw: every dot you pass takes the height you passed it at. Generation 0 is fixed: the islands start apart.</span><span>After <b>Go</b>: the 16 runs, each thin, their average thick; the shaded cloud, the middle 90% of the 16 at each generation. A dot inside: filled. Outside: ✗.</span></span></span></h3>
-        <canvas id="D_time" width="760" height="270"></canvas>
+        <canvas id="D_time" width="760" height="300"></canvas>
         <div class="buttons"><button id="D_clear" class="ghost">Clear drawing</button></div>
       </div>
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="D_boardH">Who mated whom</span><span class="tip"><span>Run 1, as in Stages A to C. The square over a male: his plumage or his song, by what the set-up's females judge.</span></span></span></h3>
-        <canvas id="D_board" width="760" height="236"></canvas>
+        <h3><span class="info" tabindex="0"><span id="D_surfH">Fitness surfaces</span><span class="tip"><span>The set-up's, as in Stages A to C: survival by beak from its seeds; the chance she takes him (and, when she judges his beak, his beak against hers).</span></span></span></h3>
+        <canvas id="D_surf" width="760" height="214"></canvas>
       </div>
     </div>
     <div class="col">
       <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Draw<span class="tip"><span>100 birds an island, 1 in 10 swapping islands each generation; a bird between the two beaks does halfway between them. <b>Go</b> plays 100 generations, 16 times.</span><span>Each set-up is scored once: on your first run with a full drawing.</span></span></span> <span class="pips" id="D_pips"></span></h3>
+        <h3><span class="info" tabindex="0">Draw<span class="tip"><span>100 birds an island, 1 in 10 swapping islands each generation; the islands start apart. <b>Go</b> plays 100 generations, 16 times.</span><span>Each set-up is scored once: on your first run with a full drawing.</span></span></span> <span class="pips" id="D_pips"></span></h3>
         <p class="ttext" id="D_ttext"></p>
         <table class="setup" id="D_setup"></table>
         <div class="controls" id="D_controls">
@@ -424,38 +410,36 @@
 <script src="../assets/paths.js"></script>
 <script>
 /* =====================================================================
-   LESSON 21 — speciation by sexual selection. Draft 2 (2026-10-29), from
-   JM's ruling of 2026-10-28: "21 should focus on speciation, but in
-   particular sexual selection ... where different behavioral strategies are
-   optimal for different individuals ... magic traits and also non-genetic
-   inheritance (eg bird song)", read as: the best mating rule depends on the
-   bird; birds; two islands. Plan, measurements and open points:
-   docs/overhauls/lesson21_overhaul.md. The first draft (species selection)
-   is app/archive/lesson21_species_2026-10-20.html.
+   LESSON 21 — speciation by sexual selection. Draft 3 (2026-10-29), from
+   JM's review of draft 2: "A simplified but realistic DAG genes -> beak ->
+   seeds -> reproduction <- mating <- color / preference <- genes. So we
+   have a three gene system: one controlling beak size, one controlling
+   bird color, one controling bird preference. The "who mated whom" panel
+   can be cut--we can show the drop-down chart as the animation core. We
+   can also drop the young-per-female. A hard/soft seeds by island setting
+   to create a fitness surface, and a preference-strength setting to also
+   create a fitness surface would be good." Plan, measurements and open
+   points: docs/overhauls/lesson21_overhaul.md. Draft 2 is this file at
+   b46e463; the first draft (species selection) is
+   app/archive/lesson21_species_2026-10-20.html.
 
-   A  who to mate with: a choosy gene; choosy females turn down males whose
-      beak differs from theirs. Choosiness costs newcomers (few males like
-      them, so they often do not breed) and pays a little for birds born
-      on the island (fewer young between two beaks); the choosy allele
-      spreads when a bird between the beaks does badly.
-   B  magic traits: every female choosy; she judges a male by a plumage
-      gene the student places on the chromosome, or by his beak itself.
-      Crossing over parts plumage from beak, so a plumage cue far from the
-      beak gene holds nothing apart; the beak itself cannot be parted.
-   C  a learned song: no gene for song. Sons sing what they heard, daughters
-      prefer it; heard from the father or from the island's males. The beak
-      shapes the song (a magic trait by way of learning): with the beak's
-      say, songs learned from fathers hold the islands apart; learned from
-      neighbours, much less.
+   A  seeds and preference strength, each a fitness surface. Seeds that
+      favour different beaks hold the beaks apart, not the colours; a
+      strong preference holds the colours apart; with seeds that favour one
+      beak on both islands, one kind takes both, preferences or not.
+   B  the beak as the cue (JM, 2026-10-28: "magic traits"): one arrow
+      added, beak -> mating. With it a weak preference holds the beaks
+      apart.
+   C  a learned preference (JM, 2026-10-28: "non-genetic inheritance"):
+      from her genes, her father's colour, or the island's males' colours.
+      Learned from the father it holds at a strength the genes cannot;
+      learned from the island, never.
    D  draw what you expect: F_ST at the beak gene over time for three
-      set-ups (random mating; plumage beside the beak gene; song learned
-      from neighbours with the beak shaping it); the 16 runs' cloud; a dot
-      inside counts.
+      set-ups; the 16 runs' cloud; a dot inside counts.
    ===================================================================== */
 const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
 const $ = id => document.getElementById(id);
 const f2 = v => v == null ? "–" : v.toFixed(2);
-const pc = v => v == null ? "–" : Math.round(100 * v) + "%";
 function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
   ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
 function polyline(ctx, pts, col, lw, alpha, dash) {
@@ -503,7 +487,7 @@ function codeInto(id, lines) {
   document.getElementById(id).innerHTML = lines.map(([k, s]) => {
     const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
     return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
-      esc(body).replace(/\b(mean|sum|rbinom|runif|replicate|c|rep|sapply|lapply|length|cumsum|sample|ifelse|abs|list|Filter|max|min|any|round|cor)\(/g, '<span class="fn">$1</span>(') +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|replicate|c|rep|sapply|lapply|length|sample|abs|list|Filter|max|exp|matrix|rbind|function)\(/g, '<span class="fn">$1</span>(') +
       (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
   }).join("");
 }
@@ -511,11 +495,11 @@ function codeInto(id, lines) {
 /* ====== gates ========================================================
    A stage opens the next by being worked through; a miss never shuts a
    door. One bit per target (JM, 2026-09-30): the first scored try at each,
-   retried until hit (A1-A2, B1-B3, C1-C2); a drawn round's bit is half its
+   retried until hit (A1-A3, B1-B2, C1-C2); a drawn round's bit is half its
    dots or more inside the cloud, on its first scored run (D1-D3). */
 const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
 const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
-const BIT = { A1: 0, A2: 1, B1: 2, B2: 3, B3: 4, C1: 5, C2: 6, D1: 7, D2: 8, D3: 9 };
+const BIT = { A1: 0, A2: 1, A3: 2, B1: 3, B2: 4, C1: 5, C2: 6, D1: 7, D2: 8, D3: 9 };
 function record(pos, ok) {
   if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return;
   Score.recordCheckpoint(pos, ok);
@@ -547,159 +531,109 @@ function finishStage(stage) {
 }
 
 /* =====================================================================
-   THE ENGINE (all four stages): two islands of finches.
+   THE ENGINE (all four stages): two islands of finches, three genes
+   (JM, 2026-10-29: "one controlling beak size, one controlling bird
+   color, one controling bird preference").
 
    An island holds N = 100 birds, each female or male (a coin at hatching).
-   A bird: two chromosomes of 40 loci, kept as the loci that matter (bwSlot):
-   the beak gene at locus 20 (0 a small-beak allele, 1 large), the plumage
-   gene (B; 0 pale, 1 dark) where the student puts it, the choosy gene at
-   locus 30 (A; 1 choosy), and ten loci that do nothing (0 / 1, the island
-   their chromosome started on: "the rest of the genome"). Each bird also
-   carries a song (0 a fast trill, 1 a slow one; males sing it) and the
-   song it prefers (females).
-   The islands start apart: island 0 (small seeds) all small-beak, pale,
-   fast trills; island 1 (large seeds) all large-beak, dark, slow trills.
+   A bird: two alleles at each of three genes on different chromosomes,
+   kept as g = [beak, colour, preference] from one parent then the other:
+   beak 0 small / 1 large, colour 0 pale / 1 dark, preference 0 likes pale
+   / 1 likes dark, each trait the alleles' average (0, 1/2, 1). pl: a
+   learned preference (C). The islands start apart: island 0 (orange) all
+   small, pale, liking pale; island 1 (blue) all large, dark, liking dark.
 
    A generation, in this order:
-   1  migration: Binomial(N, m) birds swap islands (lesson 17's swap); a bird
-      that moved is a newcomer this generation.
-   2  on each island, each female meets up to K = 4 males at random. A
-      choosy female (every female in B-D; in A, one with a choosy allele)
-      turns a male down with chance c x how much they differ: the beak (A,
-      and B's magic cue) or plumage (B) by alleles, 0, 1/2 or 1; the song
-      (C, D) against the one she prefers, 0 or 1. Turned down 4 times, she
-      does not breed this generation.
-   3  young: a mated female at random, her mate the father; one gamete
-      from each (a chromosome at random, switching at each gap with
-      chance R / 39, so loci d apart are parted with chance
-      (1 - (1 - 2R/39)^d) / 2); the young bird hears a song, its father's
-      or a random male's of the island (a mistake 1 in 50); a son sings it,
-      or with chance lim the song his beak suits (small a fast trill, large
-      a slow one, between either at random); a daughter prefers it. It
-      lives with its chance to survive, on island k with large-seed share
-      q_k (0, 1): 1 - S ((1 - q) b + q (1 - b)) - v 4 b (1 - b), b its
-      large-beak alleles over two, S = 0.4, v the valley; young are made
-      until N have lived.
+   1  migration: Binomial(N, 0.1) birds swap islands (lesson 17's swap).
+   2  on each island, each female meets up to 4 males at random and takes
+      one with chance exp(-s d^2), s the preference strength, d how far he
+      is from what she wants: (1 - w) |his colour - her preference| + w
+      |his beak - her beak|, w the beak's say (0 but in B). Turned down 4
+      times, she does not breed this generation.
+   3  young: a mated pair at random; one allele from each parent at each
+      gene, from either of its two (the genes sort independently). Her
+      preference, when learned (C): her father's colour, or a random male's
+      of the island (1 in 50 a value at random). The young bird lives with
+      its chance on its island's seeds, q the hard seeds' share: food
+      (1 - q) a + q b, a = 1, 0.35, 0 and b = 0, 0.35, 1 for a small, an
+      in-between (◐) and a large beak; the chance 1 - 0.6 (1 - food /
+      the best beak's food there). Young are made until N have lived.
    F_ST at a gene: from its two islands' allele frequencies, (H_T - H_S) /
    H_T, H the chance two alleles differ (lesson 19's, one locus).
 
-   MEASURED (scratchpad engine, the same code, 2026-10-29; 16 runs, F_ST at
-   the beak gene at the end, 2-4 sets):
-     random mating, m .1, v 0: .22-.28 at 200 (F_ST from 1 to about .33
-       in 5 generations, .24 by 10); m .05 .46-.54; m .2 .09-.11; v .2 m .2
-       one beak takes both islands (F_ST 0).
-     A  choosy gene 1 in 10 at the start; m .1, v .2, the run's last 20
-        generations: newcomers, choosy minus take-any, c 0 -.00 to +.09,
-        .25 -.02 to +.02, .5 -.09 to .00, .75 -.13 to -.06, 1 -.46 to
-        -.27; born here, choosy minus take-any, c 1 +.03 to +.05, .75
-        +.01 to +.03, below ~0. m .1, c 1, the choosy allele at 200 (both
-        islands): v 0 .00-.16, .1 .13-.25, .2 .22-.35, .3 .42-.58, .4
-        .41-.62. (m .05: .02-.35 whatever v.)
-     B  c .9, m .1, v 0, at 200 (at 100 the plumage cue has not finished
-        fading: R 4 beside the beak gene still .56, so B and C run 200): plumage at locus 18-21 with
-        R 1 .55-.62, 17 .47-.62, 16 .39-.49, 22 .44-.53, 23 .36-.46, 24
-        .32-.41, 26 .26-.31, 30 .22-.26, 40 .21-.27; beside the beak
-        gene, R .5 .58-.62, 1 .57-.62, 2 .49-.54, 4 .37-.48; the beak as
-        the cue .64-.67, R 4 .65-.66.
-     C  c .9, m .1, v 0, at 200: learned from fathers, lim 0 .23-.29, .25
-        .38-.51, .5 .52-.55, .75 .57-.66, 1 .60-.64; from neighbours, lim 0
-        .22-.25, .5 .23-.27, 1 .26-.34. Fathers, lim 1: c 0 .23-.25, .5
-        .28-.34, .75 .43-.47.
-     D  at 10, 20, ..., 100 the 16 runs average .20-.27 (random), .56-.67
-        (plumage beside the beak), .28-.44 (song from neighbours, lim 1),
-        their middle 90% about .1 wide either side.
+   MEASURED (scratchpad eng3.js, the same engine, 2026-10-29; 16 runs, 100
+   generations, the runs' average, five sets of seeds):
+     random mating, F_ST at the beak gene: seeds (0, 1) .50; (0, 3/4)
+       .39-.43; (1/4, 3/4) .31-.35; seeds favouring one beak on both
+       islands 0. The colour gene mixes (.00-.03).
+     seeds apart, F_ST at the colour gene by preference strength: 0-2
+       .00-.03; 3 .16-.43 (gone by 200); 4 .79-.90; 6 .89-.94. Strength 6,
+       seeds favouring one beak on both: 0 (in under 10 generations when
+       one kind's beak loses on both; mixed seeds, one kind wins both by
+       chance, by ~70).
+     B  seeds apart, strength 2, F_ST at the beak gene by the beak's say:
+        0 .47-.53, .5 .59-.66, .75 .66-.73, 1 .76-.77; the beak's say 1,
+        by strength: 1 .58-.67, 2 .76-.77, 3 .86-.89.
+     C  seeds apart, F_ST at the colour gene: strength 3, genes .16-.43,
+        father .58-.77, island's males 0; strength 4, genes .79-.90,
+        father .85-.91, island's males 0.
    ===================================================================== */
-const L = 40, NMARK = 10, S_BEAK = NMARK, S_PLUM = NMARK + 1, S_CH = NMARK + 2, NS = NMARK + 3, BEAK_AT = 19, CH_AT = 29;
-const BW_N = 100, BW_S = 0.4, BW_K = 4, BW_ERR = 0.02, RUNS = 16, CH0 = 0.1;
-const MARK_AT = Array.from({ length: NMARK }, (_, i) => Math.round(i * (L - 1) / (NMARK - 1)));
+const BW_N = 100, BW_M = 0.1, BW_SC = 0.6, BW_E = 0.35, BW_K = 4, BW_ERR = 0.02, RUNS = 16, G21 = 100;
+const SOFT_EFF = [1, BW_E, 0], HARD_EFF = [0, BW_E, 1];
 function bwBinom(n, p, rng) { let k = 0; for (let i = 0; i < n; i++) if (rng() < p) k++; return k; }
 function bwShuffle(n, rng) { const a = Array.from({ length: n }, (_, i) => i); for (let i = n - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-/* P: { N, m, v, R, c, cue "beak" | "plum" | "song", chGene, plumAt (locus index), learn 0 father | 1 the island's males, lim } */
+const zB = b => b.g[0] + b.g[3], zC = b => b.g[1] + b.g[4], zP = b => b.g[2] + b.g[5];
+const prefOf = (P, b) => P.learn ? b.pl : zP(b) / 2;
+/* the food a beak (0, 1, 2 large alleles) gets on seeds with hard share q, and its chance to live */
+function bwFood(q, z) { return (1 - q) * SOFT_EFF[z] + q * HARD_EFF[z]; }
+function bwLive(q, z) { const top = Math.max(bwFood(q, 0), bwFood(q, 1), bwFood(q, 2)); return 1 - BW_SC * (1 - bwFood(q, z) / top); }
+/* the chance she takes a male d from what she wants, at preference strength s */
+const bwTake = (s, d) => Math.exp(-s * d * d);
+/* P: { N, m, q [hard share, island 0 and island 1], s, w, learn 0 her genes | 1 her father's colour | 2 an island male's colour } */
 function bwWorld(P, seed) {
-  const rng = mulberry32(seed), pos = new Float64Array(NS);
-  for (let i = 0; i < NMARK; i++) pos[i] = MARK_AT[i];
-  pos[S_BEAK] = BEAK_AT; pos[S_PLUM] = P.plumAt == null ? BEAK_AT + 1 : P.plumAt; pos[S_CH] = CH_AT;
-  const order = Array.from({ length: NS }, (_, i) => i).sort((a, b) => pos[a] - pos[b] || a - b);
-  const x = P.R / (L - 1), rgap = order.map((s, i) => i ? (1 - Math.pow(1 - 2 * x, pos[s] - pos[order[i - 1]])) / 2 : 0);
-  const w = { rng, P, order, rgap, t: 0, nextId: 1 };
-  w.isl = [0, 1].map(k => Array.from({ length: P.N }, () => {
-    const g = [new Int8Array(NS), new Int8Array(NS)];
-    for (const c of g) { for (let i = 0; i < NMARK; i++) c[i] = k; c[S_BEAK] = k; c[S_PLUM] = k; c[S_CH] = P.chGene && rng() < CH0 ? 1 : 0; }
-    return { g, sex: rng() < 0.5 ? 0 : 1, song: k, pref: k, newc: false, id: w.nextId++ };
-  }));
-  w.adults = w.isl; w.pairs = [[], []]; w.unm = [[], []]; w.pay = new Float64Array(8);
+  const rng = mulberry32(seed), w = { rng, P, t: 0, unm: [0, 0], cc: new Int32Array(9), bb: new Int32Array(9) };
+  w.isl = [0, 1].map(k => Array.from({ length: P.N }, () => ({ g: Int8Array.from([k, k, k, k, k, k]), sex: rng() < 0.5 ? 0 : 1, pl: k })));
   return w;
 }
-function bwGamete(w, b) {
-  const rng = w.rng, o = new Int8Array(NS); let k = rng() < 0.5 ? 0 : 1;
-  for (let i = 0; i < w.order.length; i++) { if (i && rng() < w.rgap[i]) k ^= 1; const s = w.order[i]; o[s] = b.g[k][s]; }
-  return o;
-}
-const zB = b => b.g[0][S_BEAK] + b.g[1][S_BEAK];
-const zP = b => b.g[0][S_PLUM] + b.g[1][S_PLUM];
-const isCh = (P, b) => !P.chGene || b.g[0][S_CH] + b.g[1][S_CH] > 0;
-/* a young bird's chance to survive on island k: large seeds 0 on island 0, 1 on island 1 */
-function bwLive(P, z, k) { const b = z / 2; return Math.max(0, 1 - BW_S * (k === 0 ? b : 1 - b) - P.v * 4 * b * (1 - b)); }
-/* the song a male sings: the one he heard, or with chance lim the one his beak suits */
-function bwSing(P, rng, heard, z) { if (P.lim && rng() < P.lim) return z === 0 ? 0 : z === 2 ? 1 : (rng() < 0.5 ? 0 : 1); return heard; }
-function bwDiffer(P, f, m) {
-  if (P.cue === "beak") return Math.abs(zB(f) - zB(m)) / 2;
-  if (P.cue === "plum") return Math.abs(zP(f) - zP(m)) / 2;
-  return f.pref === m.song ? 0 : 1;
-}
+function bwGamete(rng, b) { const o = new Int8Array(3); for (let i = 0; i < 3; i++) o[i] = b.g[(rng() < 0.5 ? 0 : 3) + i]; return o; }
 function bwStep(w) {
   const P = w.P, rng = w.rng; w.t++;
-  for (const I of w.isl) for (const b of I) b.newc = false;
   if (P.m > 0) { const n = bwBinom(P.N, P.m, rng), ia = bwShuffle(P.N, rng), ib = bwShuffle(P.N, rng);
-    for (let q = 0; q < n; q++) { const a = w.isl[0][ia[q]], b = w.isl[1][ib[q]]; w.isl[0][ia[q]] = b; w.isl[1][ib[q]] = a; a.newc = true; b.newc = true; } }
-  const pay = new Float64Array(8);   /* [born here: choosy sum, n; take-any sum, n; newcomers: the same], young per female over the island's average */
-  w.adults = w.isl; w.pairs = [[], []]; w.unm = [[], []];
+    for (let i = 0; i < n; i++) { const a = w.isl[0][ia[i]]; w.isl[0][ia[i]] = w.isl[1][ib[i]]; w.isl[1][ib[i]] = a; } }
+  w.cc.fill(0); w.bb.fill(0);   /* this generation's pairs, both islands: his colour x her preference, his beak x hers */
   w.isl = w.isl.map((I, k) => {
-    const F = I.filter(b => b.sex === 0), M = I.filter(b => b.sex === 1), mated = [], kids = new Map();
-    if (M.length && F.length) for (const f of F) {
-      let got = null; const c = isCh(P, f) ? P.c : 0;
-      for (let t = 0; t < BW_K; t++) { const m = M[Math.floor(rng() * M.length)]; if (!(c && rng() < c * bwDiffer(P, f, m))) { got = m; break; } }
-      if (got) mated.push([f, got]); else w.unm[k].push(f);
+    const F = [], M = []; for (const b of I) (b.sex ? M : F).push(b);
+    const pairs = []; let un = 0;
+    for (const f of F) {
+      let got = null; const pf = prefOf(P, f);
+      if (M.length) for (let t = 0; t < BW_K; t++) { const m = M[Math.floor(rng() * M.length)];
+        const d = (1 - P.w) * Math.abs(zC(m) / 2 - pf) + P.w * Math.abs(zB(m) - zB(f)) / 2;
+        if (rng() < bwTake(P.s, d)) { got = m; break; } }
+      if (got) { pairs.push([f, got]); w.cc[zC(got) + 3 * Math.round(2 * pf)]++; w.bb[zB(got) + 3 * zB(f)]++; } else un++;
     }
-    w.pairs[k] = mated;
-    const pairs = mated.length ? mated : (M.length && F.length ? F.map(f => [f, M[Math.floor(rng() * M.length)]]) : []);   /* never reached at the settings on the page */
+    w.unm[k] = F.length ? un / F.length : 0;
     const young = []; let tries = 0;
-    while (young.length < P.N && tries < 60 * P.N && pairs.length) {
+    while (young.length < P.N && tries < 80 * P.N && pairs.length) {
       tries++;
-      const [f, m] = pairs[Math.floor(rng() * pairs.length)];
-      const g = [bwGamete(w, f), bwGamete(w, m)], z = g[0][S_BEAK] + g[1][S_BEAK];
-      if (rng() >= bwLive(P, z, k)) continue;
-      const tutor = P.learn ? M[Math.floor(rng() * M.length)] : m;
-      let heard = tutor.song; if (rng() < BW_ERR) heard ^= 1;
-      const sex = rng() < 0.5 ? 0 : 1;
-      young.push({ g, sex, pref: heard, song: sex === 1 ? bwSing(P, rng, heard, z) : heard, newc: false, id: w.nextId++ });
-      kids.set(f.id, (kids.get(f.id) || 0) + 1);
+      const [f, m] = pairs[Math.floor(rng() * pairs.length)], g = new Int8Array(6);
+      g.set(bwGamete(rng, f), 0); g.set(bwGamete(rng, m), 3);
+      if (rng() >= bwLive(P.q[k], g[0] + g[3])) continue;
+      const b = { g, sex: rng() < 0.5 ? 0 : 1, pl: 0 };
+      if (P.learn) { const tutor = P.learn === 1 ? m : M[Math.floor(rng() * M.length)]; b.pl = rng() < BW_ERR ? [0, 0.5, 1][Math.floor(rng() * 3)] : zC(tutor) / 2; }
+      young.push(b);
     }
     while (young.length < P.N) young.push(I[Math.floor(rng() * I.length)]);   /* never reached at the settings on the page */
-    const mean = young.length / Math.max(1, F.length);
-    for (const f of F) { const i = (f.newc ? 4 : 0) + (isCh(P, f) ? 0 : 2); pay[i] += (kids.get(f.id) || 0) / mean; pay[i + 1]++; }
     return young;
   });
-  w.pay = pay;
 }
 function bwFst(p0, p1) { const pb = (p0 + p1) / 2, ht = 2 * pb * (1 - pb), hs = p0 * (1 - p0) + p1 * (1 - p1); return ht > 1e-9 ? (ht - hs) / ht : 0; }
-const bwFreq = (I, s) => { let n = 0; for (const b of I) n += b.g[0][s] + b.g[1][s]; return n / (2 * I.length); };
-function bwCor(pairs) {
-  let n = 0, sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
-  for (const [x, y] of pairs) { n++; sx += x; sy += y; sxx += x * x; syy += y * y; sxy += x * y; }
-  if (!n) return 0; const vx = sxx / n - (sx / n) ** 2, vy = syy / n - (sy / n) ** 2;
-  return vx > 1e-9 && vy > 1e-9 ? (sxy / n - sx * sy / n / n) / Math.sqrt(vx * vy) : 0;
-}
 /* everything a stage's menus read, for one run at one generation */
 function bwStat(w) {
-  const I = w.isl, p = I.map(J => bwFreq(J, S_BEAK)), ch = I.map(J => bwFreq(J, S_CH)), plum = I.map(J => bwFreq(J, S_PLUM));
-  const mk = I.map(J => { let n = 0; for (const b of J) for (let i = 0; i < NMARK; i++) n += b.g[0][i] + b.g[1][i]; return n / (2 * NMARK * J.length); });
-  const het = I.map(J => J.filter(b => zB(b) === 1).length / J.length);
-  const males = I.map(J => J.filter(b => b.sex === 1));
-  const song = males.map(M => M.length ? M.filter(b => b.song === 1).length / M.length : null);
-  const all = I[0].concat(I[1]);
-  return { fb: bwFst(p[0], p[1]), p, ch, chAll: (ch[0] + ch[1]) / 2, plum, het, song, fm: bwFst(mk[0], mk[1]),
-    pc: bwCor(all.map(b => [zP(b), zB(b)])), sb: bwCor(males[0].concat(males[1]).map(b => [b.song, zB(b)])), pay: Array.from(w.pay) };
+  const P = w.P, I = w.isl, fr = (J, fn) => { let n = 0; for (const b of J) n += fn(b); return n / (2 * J.length); };
+  const p = I.map(J => fr(J, zB)), c = I.map(J => fr(J, zC)), pg = I.map(J => fr(J, zP));
+  const r = I.map(J => { let n = 0; for (const b of J) n += prefOf(P, b); return n / J.length; });
+  const het = I.map(J => { let n = 0; for (const b of J) if (zB(b) === 1) n++; return n / J.length; });
+  return { fb: bwFst(p[0], p[1]), fc: bwFst(c[0], c[1]), fp: bwFst(pg[0], pg[1]), p, c, r, het, unm: w.unm.slice() };
 }
 function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
 /* the run's snapshot at generation t (the last one before, if none at t), each number averaged over the runs; an array (one an
@@ -714,17 +648,9 @@ function sumAt(q, t) {
   }
   return out;
 }
-/* young per female over the run's last 20 generations, every run pooled: born here choosy / take-any, newcomers choosy / take-any */
-function payOf(q) {
-  const s = new Float64Array(8);
-  for (const h of q.hist) if (h.t > q.G - 20 && h.t <= q.G) for (const r of h.runs) for (let i = 0; i < 8; i++) s[i] += r.pay[i];
-  const cell = i => s[i + 1] ? s[i] / s[i + 1] : null, cells = [cell(0), cell(2), cell(4), cell(6)];
-  return { cells, n: [s[1], s[3], s[5], s[7]], resGap: cells[0] != null && cells[1] != null ? cells[0] - cells[1] : null,
-           newGap: cells[2] != null && cells[3] != null ? cells[2] - cells[3] : null };
-}
 
 /* ====== drawing shared by the stages ====== */
-const POPCOL = [ORANGE, BLUE], ISLE = ["small-seed island", "large-seed island"];
+const POPCOL = [ORANGE, BLUE], ISLE = ["orange island", "blue island"];
 /* a beak genotype: ○ small, ◐ one of each, ● large (by fill, not hue: colourblind students, JM 2026-10-20) */
 function beakDot(ctx, x, y, r, z, col) {
   ctx.lineWidth = 1; ctx.strokeStyle = col || INK; ctx.fillStyle = "#fff";
@@ -733,53 +659,13 @@ function beakDot(ctx, x, y, r, z, col) {
   else if (z === 1) { ctx.fillStyle = col || INK; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.arc(x, y, r, -Math.PI / 2, Math.PI / 2, true); ctx.closePath(); ctx.fill(); }
   ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.stroke();
 }
-/* a trait square: 0 pale, 1 grey, 2 dark (plumage alleles, or a song x 2) */
+/* a colour square: 0 pale, 1 grey, 2 dark (a lightness ramp) */
 const SQ = ["#f1eee6", "#a29d8f", "#3b3934"];
-function traitSq(ctx, x, y, v) { ctx.fillStyle = SQ[v]; ctx.fillRect(x - 3, y - 3, 6, 6); ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.6; ctx.strokeRect(x - 2.7, y - 2.7, 5.4, 5.4); }
-/* who mated whom: run 1's breeders this generation, females along the top and males along the bottom of each island, sorted by
-   beak (then by the mark), a line from each female to her mate; mark: "ch" (a ring on a choosy female), "plum" or "song" (a square) */
-const BD = { W: 760, H: 236, popW: 372, fy: 62, my: 176 };
-function drawBoard(cvId, w, mark) {
-  const cv = $(cvId); if (!cv) return;
-  const { ctx } = frameCanvas(cv, BD.W, BD.H), P = w.P;
-  const mv = (b, fem) => mark === "plum" ? zP(b) : mark === "song" ? 2 * (fem ? b.pref : b.song) : 0;
-  [0, 1].forEach(k => {
-    const x0 = k * (BD.popW + 16), A = w.adults[k], F = A.filter(b => b.sex === 0), M = A.filter(b => b.sex === 1);
-    cardText(ctx, ISLE[k], x0, 10, { size: 12, bold: true, col: POPCOL[k] });
-    cardText(ctx, "females", x0 + BD.popW, 10, { size: 10.5, col: MUTED, align: "right" });
-    cardText(ctx, "males", x0 + BD.popW, BD.H - 10, { size: 10.5, col: MUTED, align: "right" });
-    const key = (b, fem) => zB(b) * 8 + mv(b, fem) * 2 + (b.newc ? 1 : 0);
-    const sF = F.slice().sort((a, b) => key(a, true) - key(b, true)), sM = M.slice().sort((a, b) => key(a, false) - key(b, false));
-    /* every other bird a little up and the next a little down, so neighbours do not touch */
-    const xs = (i, n) => x0 + 6 + (i + 0.5) * (BD.popW - 12) / Math.max(n, 1), xF = new Map(), xM = new Map(), yF = new Map(), yM = new Map();
-    sF.forEach((b, i) => { xF.set(b.id, xs(i, sF.length)); yF.set(b.id, BD.fy + (i % 2 ? 4 : -4)); });
-    sM.forEach((b, i) => { xM.set(b.id, xs(i, sM.length)); yM.set(b.id, BD.my + (i % 2 ? 4 : -4)); });
-    for (const [f, m] of w.pairs[k]) {
-      const like = zB(f) === zB(m);
-      polyline(ctx, [[xF.get(f.id), yF.get(f.id) + 5], [xM.get(m.id), yM.get(m.id) - 5]], like ? INK : HOT, like ? 0.8 : 1.3, like ? 0.22 : 0.85, like ? null : [3, 2]);
-    }
-    const r = Math.max(2.4, Math.min(3.8, (BD.popW - 12) / Math.max(sF.length, sM.length, 1) * 0.62));
-    const unm = new Set(w.unm[k].map(b => b.id));
-    const sq = mark === "plum" || mark === "song";
-    sF.forEach(b => { const x = xF.get(b.id), y = yF.get(b.id);
-      beakDot(ctx, x, y, r, zB(b));
-      if (mark === "ch" && isCh(P, b) && P.chGene) { ctx.strokeStyle = INK; ctx.lineWidth = 0.9; ctx.beginPath(); ctx.arc(x, y, r + 2.2, 0, 6.2832); ctx.stroke(); }
-      if (sq) traitSq(ctx, x, BD.fy - 16, mv(b, true));
-      if (b.newc) cardText(ctx, "▾", x, BD.fy - (sq ? 26 : 16), { size: 9, col: MUTED, align: "center" });
-      if (unm.has(b.id)) cardText(ctx, "✗", x, BD.fy + 16, { size: 9, col: HOT, align: "center" });
-    });
-    sM.forEach(b => { const x = xM.get(b.id), y = yM.get(b.id);
-      beakDot(ctx, x, y, r, zB(b));
-      if (sq) traitSq(ctx, x, BD.my + 16, mv(b, false));
-      if (b.newc) cardText(ctx, "▴", x, BD.my + (sq ? 26 : 16), { size: 9, col: MUTED, align: "center" });
-    });
-  });
-  ctx.restore();
-}
+function traitSq(ctx, x, y, v, h) { h = h || 6; ctx.fillStyle = SQ[v]; ctx.fillRect(x - h / 2, y - h / 2, h, h); ctx.strokeStyle = "#8a877c"; ctx.lineWidth = 0.7; ctx.strokeRect(x - h / 2 + 0.3, y - h / 2 + 0.3, h - 0.6, h - 0.6); }
 
-/* the plot over time: the runs thin, their average thick, a line an island (the large-seed island's dashed) or one line; a
-   target's window at the end as a red box (or a line, below or above); q null: the empty frame (JM, 2026-10-23: blank before Go) */
-const TM = { W: 760, H: 250, px: 50, py: 14 };
+/* the plot over time: the runs thin, their average thick, a line an island (the blue island's dashed) or one line; a target's
+   window at the end as a red box; q null: the empty frame (JM, 2026-10-23: blank before Go) */
+const TM = { W: 760, H: 300, px: 50, py: 14 };
 function labRoom(ctx, M) {
   ctx.font = "600 11px -apple-system, sans-serif"; let w = 0;
   for (const k in M) if ((M[k].n || 1) > 1) for (const nm of ISLE) w = Math.max(w, ctx.measureText(nm).width);
@@ -790,20 +676,17 @@ function drawTime(cvId, q, meas, M, rule, G) {
   const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
   const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas];
   T.pw = T.W - T.px - labRoom(ctx, M);
-  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, winMid = [], lastY = [];
+  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, lastY = [];
   const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - (Math.max(ymin, Math.min(v, ymax)) - ymin) / (ymax - ymin) * T.ph;
   cv._tf = { xs, ys, T, G };
   ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
-  if (ymin < 0) { ctx.strokeStyle = "#e2e0d9"; ctx.beginPath(); ctx.moveTo(T.px, ys(0)); ctx.lineTo(T.px + T.pw, ys(0)); ctx.stroke(); }
   for (let k = 0; k <= 4; k++) { const v = ymin + (ymax - ymin) * k / 4; cardText(ctx, m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2)), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
-  const step = G > 100 ? 25 : 10;
-  for (let t = 0; t <= G; t += step) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  for (let t = 0; t <= G; t += 10) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
   cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
   if (rule) for (const u of rule.rules) if (u.meas === meas && (u.lo != null || u.hi != null)) {
     const lo = u.lo == null ? ymin : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7;
     ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
     ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
-    winMid[0] = (lo + hi) / 2;
   }
   if (q) {
     const dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
@@ -835,7 +718,6 @@ function drawSketch(cvId, pic, M) {
   const cv = $(cvId); if (!cv) return;
   cv.hidden = !pic; if (!pic) return;
   const { ctx } = frameCanvas(cv, SKc.W, SKc.H);
-  if (pic.kind === "pay") { drawPayInto(ctx, { cells: [1.04, 1.0, 0.36, 0.76] }, { x0: 30, y0: 6, w: 410, h: 100, sketch: true }); ctx.restore(); return; }
   const m = M[pic.meas], ymin = m.ymin || 0, ymax = m.ymax, G = pic.G;
   const xs = t => SKc.px + t / G * SKc.pw, ys = v => SKc.py + SKc.ph - (Math.max(ymin, Math.min(ymax, v)) - ymin) / (ymax - ymin) * SKc.ph;
   ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SKc.px, SKc.py); ctx.lineTo(SKc.px, SKc.py + SKc.ph); ctx.lineTo(SKc.px + SKc.pw, SKc.py + SKc.ph); ctx.stroke();
@@ -853,42 +735,96 @@ function drawSketch(cvId, pic, M) {
     ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(xs(G) - 7, ys(hi), 14, ys(lo) - ys(hi)); }
   ctx.restore();
 }
-/* young per female: two groups (born here, newcomers), choosy filled and take-any open, against the island average (1); A1's
-   line: the newcomers' choosy bar must end at or below it (0.15 under their take-any bar) */
-const PAYMAX = 1.4, PAY_GAP = 0.15;
-function drawPayInto(ctx, pay, o) {
-  const ys = v => o.y0 + o.h - Math.min(v, PAYMAX) / PAYMAX * o.h, gw = o.w / 2, bw = Math.min(46, gw / 4);
-  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(o.x0, o.y0); ctx.lineTo(o.x0, o.y0 + o.h); ctx.lineTo(o.x0 + o.w, o.y0 + o.h); ctx.stroke();
-  if (!o.sketch) { for (const v of [0, 0.5, 1]) cardText(ctx, String(v), o.x0 - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
-  ctx.setLineDash([3, 3]); ctx.strokeStyle = "#bdb8aa"; ctx.beginPath(); ctx.moveTo(o.x0, ys(1)); ctx.lineTo(o.x0 + o.w, ys(1)); ctx.stroke(); ctx.setLineDash([]);
-  ["born here", "newcomers"].forEach((nm, g) => {
-    const cx = o.x0 + gw * (g + 0.5);
-    if (!o.sketch) cardText(ctx, nm, cx, o.y0 + o.h + 14, { size: 11, col: MUTED, align: "center", bold: true });
-    [0, 1].forEach(j => {
-      const v = pay && pay.cells ? pay.cells[2 * g + j] : null, x = cx + (j ? 6 : -6 - bw);
-      if (v == null) return;
-      ctx.lineWidth = 1.4; ctx.strokeStyle = INK;
-      if (j === 0) { ctx.fillStyle = INK; ctx.fillRect(x, ys(v), bw, ys(0) - ys(v)); } else { ctx.fillStyle = "#fff"; ctx.fillRect(x, ys(v), bw, ys(0) - ys(v)); ctx.strokeRect(x, ys(v), bw, ys(0) - ys(v)); }
-      if (!o.sketch) { cardText(ctx, v.toFixed(2), x + bw / 2, ys(v) - 8, { size: 10.5, mono: true, align: "center" });
-        cardText(ctx, j ? "take any" : "choosy", x + bw / 2, o.y0 + o.h + 28, { size: 10.5, col: MUTED, align: "center" }); }
-    });
-  });
-  /* the line A1 judges against: 0.15 under the newcomers' take-any bar, over their choosy bar */
-  if ((o.rule || o.sketch) && pay && pay.cells && pay.cells[3] != null) {
-    const any = pay.cells[3], y = ys(any - PAY_GAP), x = o.x0 + gw * 1.5 - 6 - bw - 6;
-    ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + bw + 12, y); ctx.stroke();
-    ctx.fillStyle = "rgba(178,58,72,0.08)"; ctx.fillRect(x, y, bw + 12, ys(0) - y);
+
+/* the fitness surfaces (JM, 2026-10-29: "A hard/soft seeds by island setting to create a fitness surface, and a
+   preference-strength setting to also create a fitness surface"; "fitness surface" is lesson 19's panel).
+   Left: survival by beak, a line an island from its seeds (the blue island's dashed); circles, run 1's birds by beak, area by
+   share. Right: the chance she takes him when they meet, his colour across and the colour she likes up, darker likelier (one
+   hue, a lightness ramp); circles, this generation's pairs over both islands. o.beak (B): a second grid, his beak against
+   hers. */
+const SF = { W: 760, H: 214, x0: 56, pw: 236, y0: 34, ph: 124 };
+function drawGridInto(ctx, gx, gy, cell, title, take, counts, across, up) {
+  cardText(ctx, title, gx + 1.5 * cell, gy - 16, { size: 11.5, bold: true, col: MUTED, align: "center" });
+  let tot = 0; if (counts) for (const v of counts) tot += v;
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+    const a = take(i, j), x = gx + i * cell, y = gy + (2 - j) * cell;
+    ctx.fillStyle = "rgba(29,29,27," + (0.05 + 0.8 * a).toFixed(3) + ")"; ctx.fillRect(x, y, cell - 2, cell - 2);
+    const n = counts ? counts[i + 3 * j] : 0;
+    if (tot && n) { ctx.fillStyle = "#fff"; ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x + cell / 2 - 1, y + cell / 2 - 1, 2 + 0.36 * cell * Math.sqrt(n / tot), 0, 6.2832); ctx.fill(); ctx.stroke(); }
   }
+  for (let i = 0; i < 3; i++) { across.sym(ctx, gx + i * cell + cell / 2 - 1, gy + 3 * cell + 9, i); up.sym(ctx, gx - 12, gy + (2 - i) * cell + cell / 2 - 1, i); }
+  cardText(ctx, across.lab, gx + 1.5 * cell, gy + 3 * cell + 26, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(gx - 30, gy + 1.5 * cell); ctx.rotate(-Math.PI / 2); cardText(ctx, up.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
 }
-function drawPay(cvId, q, rule) {
+const SYM_COL = (ctx, x, y, i) => traitSq(ctx, x, y, i, 10), SYM_BEAK = (ctx, x, y, i) => beakDot(ctx, x, y, 5, i);
+function drawSurf(cvId, w, set, o) {
   const cv = $(cvId); if (!cv) return;
-  const { ctx } = frameCanvas(cv, 760, 180);
-  drawPayInto(ctx, q ? payOf(q) : null, { x0: 60, y0: 10, w: 640, h: 128, rule: !!rule });
+  const { ctx } = frameCanvas(cv, SF.W, SF.H), q = [set.q0, set.q1], ww = o.beak ? set.w : 0;
+  const xs = z => SF.x0 + 22 + z / 2 * (SF.pw - 44), ys = v => SF.y0 + SF.ph - v * SF.ph;
+  /* survival by beak */
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SF.x0, SF.y0); ctx.lineTo(SF.x0, SF.y0 + SF.ph); ctx.lineTo(SF.x0 + SF.pw, SF.y0 + SF.ph); ctx.stroke();
+  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), SF.x0 - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  ctx.save(); ctx.translate(14, SF.y0 + SF.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "chance to survive", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  for (let z = 0; z < 3; z++) beakDot(ctx, xs(z), SF.y0 + SF.ph + 13, 5, z);
+  cardText(ctx, "beak", SF.x0 + SF.pw / 2, SF.y0 + SF.ph + 31, { size: 11, col: MUTED, align: "center" });
+  [0, 1].forEach(k => {
+    const pts = [0, 1, 2].map(z => [xs(z), ys(bwLive(q[k], z))]);
+    polyline(ctx, pts, POPCOL[k], 2.4, 1, k ? [6, 4] : null);
+    if (w) { const I = w.isl[k], n = [0, 0, 0]; for (const b of I) n[zB(b)]++;
+      pts.forEach((p, z) => { if (!n[z]) return; ctx.fillStyle = "#fff"; ctx.strokeStyle = POPCOL[k]; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p[0] + (k ? 4 : -4), p[1], 2.5 + 8 * Math.sqrt(n[z] / I.length), 0, 6.2832); ctx.fill(); ctx.stroke(); }); }
+  });
+  ISLE.forEach((nm, k) => { const x = SF.x0 + 6 + 122 * k, y = 10; polyline(ctx, [[x, y], [x + 20, y]], POPCOL[k], 2.2, 1, k ? [6, 4] : null); cardText(ctx, nm, x + 25, y, { size: 11, col: POPCOL[k], bold: true }); });
+  /* the chance she takes him */
+  const cell = 36, colG = { sym: SYM_COL, lab: "his colour" }, prefG = { sym: SYM_COL, lab: "she likes" };
+  const g1 = o.beak ? 398 : 470;
+  drawGridInto(ctx, g1, SF.y0, cell, "chance she takes him", (i, j) => bwTake(set.s, (1 - ww) * Math.abs(i - j) / 2), w ? w.cc : null, colG, prefG);
+  if (o.beak) drawGridInto(ctx, 610, SF.y0, cell, "his beak against hers", (i, j) => bwTake(set.s, ww * Math.abs(i - j) / 2), w ? w.bb : null, { sym: SYM_BEAK, lab: "his beak" }, { sym: SYM_BEAK, lab: "her beak" });
   ctx.restore();
 }
 
+/* each island's seeds (JM, 2026-10-29: "A hard/soft seeds by island setting"): four seeds an island, lesson 19 B's columns laid
+   on their side; click a seed to make it and those before it hard, the 0 clears them. Hard seeds dark and large, soft pale and
+   small (lightness and size, not hue) */
+const SDP = { W: 460, H: 78, y: 40, gap: 34 };
+const seedX = (k, i) => (k ? 268 : 48) + i * SDP.gap + SDP.gap / 2;
+function seedIcon(ctx, x, y, hard) {
+  ctx.lineWidth = 1; ctx.strokeStyle = INK;
+  if (hard) { ctx.fillStyle = "#4a3d2c"; ctx.beginPath(); ctx.ellipse(x, y, 10, 7.5, -0.35, 0, 6.2832); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = "#a89a80"; ctx.beginPath(); ctx.moveTo(x - 6, y + 2); ctx.quadraticCurveTo(x, y - 3, x + 6, y - 2); ctx.stroke(); }
+  else { ctx.fillStyle = "#f3ecd9"; ctx.beginPath(); ctx.ellipse(x, y, 6.5, 4.6, -0.35, 0, 6.2832); ctx.fill(); ctx.stroke(); }
+}
+function drawSeeds(S) {
+  const cv = $(S.K + "_seeds"); if (!cv) return;
+  const { ctx } = frameCanvas(cv, SDP.W, SDP.H), set = readSet(S);
+  [0, 1].forEach(k => {
+    const n = Math.round(4 * set["q" + k]), free = seedFree(S, k), x0 = seedX(k, 0) - SDP.gap / 2;
+    ctx.fillStyle = ["rgba(232,115,12,0.07)", "rgba(47,107,143,0.07)"][k]; ctx.fillRect(x0 - 30, 0, 4 * SDP.gap + 36, SDP.H);
+    cardText(ctx, ISLE[k], x0 + 2 * SDP.gap, 11, { size: 11.5, bold: true, col: POPCOL[k], align: "center" });
+    ctx.globalAlpha = free ? 1 : 0.45;
+    for (let i = 0; i < 4; i++) seedIcon(ctx, seedX(k, i), SDP.y, i < n);
+    cardText(ctx, "0", x0 - 14, SDP.y, { size: 11, mono: true, col: MUTED, align: "center" });
+    cardText(ctx, n + " hard, " + (4 - n) + " soft", x0 + 2 * SDP.gap, SDP.H - 11, { size: 11, col: MUTED, align: "center" });
+    ctx.globalAlpha = 1;
+  });
+  ctx.restore();
+}
+const seedFree = (S, k) => canDrag(S, "q" + k)();
+function wireSeeds(S) {
+  const cv = $(S.K + "_seeds"); if (!cv) return;
+  const hit = p => { if (p.y < SDP.y - 16 || p.y > SDP.y + 16) return null;
+    for (const k of [0, 1]) { if (Math.abs(p.x - (seedX(k, 0) - SDP.gap / 2 - 14)) < 11) return { k, n: 0 };
+      for (let i = 0; i < 4; i++) if (Math.abs(p.x - seedX(k, i)) < SDP.gap / 2) return { k, i }; }
+    return null; };
+  cv.addEventListener("pointerdown", e => {
+    const h = hit(framePt(cv, e, SDP.W)); if (!h || !seedFree(S, h.k)) return;
+    const el = $(S.K + "_q" + h.k), now = +el.value, n = h.n === 0 ? 0 : (now === h.i + 1 ? h.i : h.i + 1);
+    e.preventDefault(); if (now === n) return; el.value = n; el.dispatchEvent(new Event("input")); bump(S.K);
+  });
+  cv.addEventListener("pointermove", e => { const h = hit(framePt(cv, e, SDP.W)); cv.style.cursor = h && seedFree(S, h.k) ? "pointer" : "default"; });
+}
+
 /* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-C; D's drawn rounds ride on it ======
-   cfg: ctl [{key, vals, fmt, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S, q), val(S, q)}], text} | {kind "draw", hold}],
+   cfg: ctl [{key, vals, fmt, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text} | {kind "draw", hold}],
    start(set, seed) -> { P, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
 const ST = {};
 function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0, pred: null }; return ST[K]; }
@@ -896,16 +832,15 @@ const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
 const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
 const ctlIdx = el => +el.value - (+el.min || 0);
 function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
-function syncVals(S) { for (const c of S.cfg.ctl) { const v = $(S.K + "_" + c.key + "V"); if (v) v.textContent = (c.fmt || String)(c.vals[ctlIdx($(S.K + "_" + c.key))]); } }
 function openRound(S) {
   const r = ruleOf(S);
   for (const c of S.cfg.ctl) {
-    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null, row = $(S.K + "_" + c.key + "Row");
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
     if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
     if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
-    el.dataset.held = held ? "1" : ""; if (row) row.classList.toggle("held", held);
+    el.dataset.held = held ? "1" : "";
   }
-  syncVals(S); S.preview = null;
+  S.preview = null;
   if (S.cfg.afterOpen) S.cfg.afterOpen();
 }
 function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => bwStat(w)) }); }
@@ -936,7 +871,7 @@ function frameStage(S, ts) {
 }
 /* the instructor's and the checks' way to finish a run at once */
 function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
-function judge(r, S, q) { const each = r.rules.map(u => u.ok(S, q)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S, q)) }; }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
 /* the drawn rounds: the middle 90% of the 16 runs at each dot's generation; a dot inside (0.02 of slack) counts */
 function bandAt(q, t, meas) { const h = q.hist.find(x => x.t === t) || q.hist[q.hist.length - 1], v = h.runs.map(s => s[meas]); return { lo: quantile(v, 0.05), hi: quantile(v, 0.95) }; }
 function insideOf(q, pred, knots, meas) { const each = knots.map((t, i) => { const y = pred.ys[i], b = bandAt(q, t, meas); return { t, y, ok: y != null && y >= b.lo - 0.02 && y <= b.hi + 0.02 }; }); return { each, k: each.filter(e => e.ok).length, n: each.length }; }
@@ -951,7 +886,7 @@ function endStage(S) {
     $(S.K + "_verdict").innerHTML = "<b>" + q.inside.k + " of " + q.inside.n + "</b> of your dots inside the cloud";
     if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
   } else if (q.r) {
-    q.j = judge(q.r, sumAt(q, q.G), q);
+    q.j = judge(q.r, sumAt(q, q.G));
     if (!q.practice) {
       const pos = BIT[S.K + (q.round + 1)];
       if (firstTry(pos)) record(pos, q.j.ok);
@@ -969,7 +904,7 @@ function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; l
 function syncStage(S) {
   const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
   $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
-  /* no words in a card (JM, 2026-10-22), but for a drag with no cue of its own (REVISIONS row 22): B round 1's ◆, D's drawing */
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds, D's drawing */
   if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
   for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
   if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
@@ -990,16 +925,16 @@ function wireStage(S) {
   if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
   for (const c of S.cfg.ctl) {
     $(K + "_" + c.key).addEventListener("input", () => {
-      syncVals(S); S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
       if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
     });
     $(K + "_" + c.key).addEventListener("change", () => bump(K));
   }
   openRound(S);
 }
-/* before the first Go, the board shows the start the current settings make (run 1) */
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
 function previewRun(S) {
-  const set = readSet(S), key = JSON.stringify(set);
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
   if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l21" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
   return S.preview;
 }
@@ -1010,268 +945,144 @@ const worlds = (P, seed) => Array.from({ length: RUNS }, (_, i) => bwWorld(P, se
 /* the menus' lines, shared */
 const MEAS = {
   fb: { lab: "F_ST at the beak gene", ymax: 1, vals: s => [s.fb] },
+  fc: { lab: "F_ST at the colour gene", ymax: 1, vals: s => [s.fc] },
+  fp: { lab: "F_ST at the preference gene", ymax: 1, vals: s => [s.fp] },
   p: { lab: "large-beak allele", ymax: 1, pct: true, n: 2, vals: s => s.p },
-  ch: { lab: "choosy allele", ymax: 1, pct: true, n: 2, vals: s => s.ch },
-  chAll: { lab: "choosy allele", ymax: 1, pct: true, vals: s => [s.chAll] },
+  c: { lab: "dark-colour allele", ymax: 1, pct: true, n: 2, vals: s => s.c },
+  r: { lab: "liking for dark", ymax: 1, pct: true, n: 2, vals: s => s.r },
   het: { lab: "◐ birds", ymax: 1, pct: true, n: 2, vals: s => s.het },
-  fm: { lab: "F_ST, the rest of the genome", ymax: 1, vals: s => [s.fm] },
-  plum: { lab: "dark-plumage allele", ymax: 1, pct: true, n: 2, vals: s => s.plum },
-  pc: { lab: "plumage–beak correlation", ymin: -1, ymax: 1, vals: s => [s.pc] },
-  song: { lab: "slow trills", ymax: 1, pct: true, n: 2, vals: s => s.song },
-  sb: { lab: "song–beak correlation", ymin: -1, ymax: 1, vals: s => [s.sb] },
+  unm: { lab: "females that did not breed", ymax: 1, pct: true, n: 2, vals: s => s.unm },
 };
 const pick = keys => { const o = {}; for (const k of keys) o[k] = MEAS[k]; return o; };
-
-/* =====================================================================
-   STAGE A — who to mate with (JM, 2026-10-28: "different behavioral
-   strategies are optimal for different individuals"; read, and agreed:
-   the best rule depends on the bird). A choosy gene, 1 in 10 alleles at
-   the start on both islands; a choosy female judges a male by his beak.
-   Round 1: choosiness costs a newcomer (few males are like her; turned
-   down four times she does not breed): the newcomers' choosy bar 0.15 or
-   more under their take-any bar, how choosy free (opens 0; .75 misses,
-   1 hits). Round 2: the choosy allele spreads to 3 in 10 or more over
-   both islands by 200, the valley free (opens 0: .00-.16; .3 and .4 hit;
-   .2 now and then).
-   ===================================================================== */
-const A_CV = [0, 0.25, 0.5, 0.75, 1], A_VV = [0, 0.1, 0.2, 0.3, 0.4], A_MV = [0.02, 0.05, 0.1, 0.15, 0.2], A_G = 200;
-const A_ROUNDS = [
-  { hold: { m: 0.1, v: 0.2 }, open: { c: 0 }, pic: { kind: "pay" },
-    rules: [{ meas: "pay", ok: (S, q) => { const g = payOf(q).newGap; return g != null && g <= -PAY_GAP; }, val: (S, q) => f2(payOf(q).newGap) }] },
-  { hold: { m: 0.1, c: 1 }, open: { v: 0 }, pic: { meas: "chAll", G: A_G, lines: [{ f: t => 0.1 + 0.36 * (1 - Math.exp(-t / 70)), jit: 0.1 }], boxes: [{ lo: 0.3, hi: 1 }] },
-    rules: [{ meas: "chAll", lo: 0.3, hi: 1, ok: S => S.chAll >= 0.3, val: S => f2(S.chAll) }] },
-];
-const MEAS_A = pick(["chAll", "ch", "fb", "p", "het", "fm"]);
-let A_PATHS = null;
-const SA = mkStage("A", {
-  ctl: [{ key: "c", vals: A_CV, hidden: true }, { key: "v", vals: A_VV, hidden: true }, { key: "m", vals: A_MV }],
-  rounds: A_ROUNDS, ms: 18,
-  start: (set, seed) => { const P = { N: BW_N, m: set.m, v: set.v, R: 1, c: set.c, cue: "beak", chGene: true, learn: 0, lim: 0 };
-    return { P, G: A_G, every: 1, runs: worlds(P, seed) }; },
-  afterOpen: () => { holdArrows(A_PATHS, "A", ["c"]); if (!SA.done) { const pic = ruleOf(SA).pic; if (pic.meas) $("A_meas").value = pic.meas; } },
-  onInput: () => { if (A_PATHS) A_PATHS.sync(); },
-  paint: () => A_paint(),
-});
-function A_mountPaths() {
-  const fc = v => String(A_CV[Math.round(v)]);
-  A_PATHS = Paths.init({
-    mount: "#A_paths", width: 460, height: 300,
+const Q_V = [0, 0.25, 0.5, 0.75, 1], S_V = [0, 1, 2, 3, 4, 6], W_V = [0, 0.25, 0.5, 0.75, 1], L_V = [0, 1, 2];
+const SEEDS = [{ key: "q0", vals: Q_V, hidden: true, line: "q" }, { key: "q1", vals: Q_V, hidden: true, line: "q" }];
+const APART = { q0: 0, q1: 1 };
+/* the diagram (JM, 2026-10-29: "genes -> beak -> seeds -> reproduction <- mating <- color / preference <- genes"); o.beak adds
+   B's arrow, beak -> mating */
+function mountPaths(K, o) {
+  const fs = v => String(S_V[Math.round(v)]), fw = v => String(W_V[Math.round(v)]);
+  const arrows = [
+    { id: "x1", from: "bg", to: "bk", readonly: true, dark: true, label: "" },
+    { id: "x2", from: "bk", to: "sd", readonly: true, dark: true, label: "" },
+    { id: "x3", from: "cg", to: "co", readonly: true, dark: true, label: "" },
+    { id: "x4", from: "pg", to: "pf", readonly: true, dark: true, label: "" },
+    { id: "x5", from: "co", to: "mt", readonly: true, dark: true, label: "" },
+    { id: "s", from: "pf", to: "mt", input: K + "_s", label: "preference strength", fmt: fs },
+    { id: "x6", from: "sd", to: "rp", readonly: true, dark: true, label: "" },
+    { id: "x7", from: "mt", to: "rp", readonly: true, dark: true, label: "" },
+  ];
+  if (o.beak) arrows.push({ id: "w", from: "bk", to: "mt", input: K + "_w", label: "the beak's say", fmt: fw });
+  return Paths.init({
+    mount: "#" + K + "_paths", width: 460, height: 304,
     boxes: [
-      { id: "bg", label: "beak gene", x: 85, y: 28, w: 110, h: 32 },
-      { id: "cg", label: "choosy gene", x: 340, y: 28, w: 120, h: 32 },
-      { id: "bk", label: "beak", x: 85, y: 110, w: 90, h: 32 },
-      { id: "ch", label: "choosiness", x: 340, y: 110, w: 120, h: 32 },
-      { id: "sv", label: "survival", x: 85, y: 196, w: 100, h: 32 },
-      { id: "mt", label: "mating", x: 340, y: 196, w: 100, h: 32 },
-      { id: "yg", label: "young", x: 212, y: 272, w: 110, h: 34, kind: "outcome" },
+      { id: "bg", label: "beak gene", x: 72, y: 28, w: 108, h: 32 },
+      { id: "cg", label: "colour gene", x: 218, y: 28, w: 116, h: 32 },
+      { id: "pg", label: "preference gene", x: 372, y: 28, w: o.wide ? 170 : 140, h: 32 },
+      { id: "bk", label: "beak", x: 72, y: 112, w: 84, h: 32 },
+      { id: "co", label: "colour", x: 218, y: 112, w: 90, h: 32 },
+      { id: "pf", label: "preference", x: 372, y: 112, w: 120, h: 32 },
+      { id: "sd", label: "seeds", x: 72, y: 196, w: 90, h: 32 },
+      { id: "mt", label: "mating", x: 318, y: 196, w: 100, h: 32 },
+      { id: "rp", label: "reproduction", x: 196, y: 270, w: 140, h: 34, kind: "outcome" },
     ],
-    arrows: [
-      { id: "x1", from: "bg", to: "bk", readonly: true, dark: true, label: "" },
-      { id: "x2", from: "bk", to: "sv", readonly: true, dark: true, label: "" },
-      { id: "x3", from: "cg", to: "ch", readonly: true, dark: true, label: "" },
-      { id: "pm", from: "bk", to: "mt", readonly: true, ghost: true, label: "his beak against hers" },
-      { id: "c", from: "ch", onto: "pm", ontoAt: 0.55, input: "A_c", label: "how choosy", fmt: fc },
-      { id: "x4", from: "sv", to: "yg", readonly: true, dark: true, label: "" },
-      { id: "x5", from: "mt", to: "yg", readonly: true, dark: true, label: "" },
-    ],
-    valuesOnSelect: true, lockColours: true,
+    arrows, valuesOnSelect: true, lockColours: true,
   });
 }
-/* survival by beak: ○ ◐ ● across, the chance to survive up, a line an island (the large-seed island's dashed); ◐ dragged up or
-   down sets the valley */
-const AFt = { W: 460, H: 190, px: 50, py: 22, pw: 360, ph: 120 };
-const A_fitXY = v => ({ x: AFt.px + 0.5 * AFt.pw, y: AFt.py + AFt.ph - (1 - BW_S / 2 - v) * AFt.ph });
-function A_drawFit() {
-  const cv = $("A_fit"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, AFt.W, AFt.H), set = readSet(SA), xs = z => AFt.px + z * AFt.pw, ys = v => AFt.py + AFt.ph - v * AFt.ph;
-  const held = $("A_v").dataset.held === "1";
-  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(AFt.px, AFt.py); ctx.lineTo(AFt.px, AFt.py + AFt.ph); ctx.lineTo(AFt.px + AFt.pw, AFt.py + AFt.ph); ctx.stroke();
-  for (const v of [0, 0.5, 1]) cardText(ctx, String(v), AFt.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
-  ctx.save(); ctx.translate(12, AFt.py + AFt.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "chance to survive", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
-  [[0, "small"], [1, "one of each"], [2, "large"]].forEach(([z, nm]) => { beakDot(ctx, xs(z / 2), AFt.py + AFt.ph + 13, 5, z); cardText(ctx, nm, xs(z / 2), AFt.py + AFt.ph + 30, { size: 11, col: MUTED, align: "center" }); });
-  [0, 1].forEach(k => {
-    const pts = [0, 1, 2].map(z => [xs(z / 2), ys(bwLive({ v: set.v }, z, k))]);
-    polyline(ctx, [pts[0], pts[2]], POPCOL[k], 1, 0.35, [2, 3]);
-    polyline(ctx, pts, POPCOL[k], 2.4, 1, k ? [6, 4] : null);
-    [pts[0], pts[2]].forEach(p => { ctx.fillStyle = "#fff"; ctx.strokeStyle = POPCOL[k]; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p[0], p[1], 4, 0, 6.2832); ctx.fill(); ctx.stroke(); });
-  });
-  const hp = A_fitXY(set.v);
-  ctx.globalAlpha = held ? 0.45 : 1; ctx.fillStyle = "#fff"; ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(hp.x, hp.y, 9, 0, 6.2832); ctx.fill(); ctx.stroke();
-  beakDot(ctx, hp.x, hp.y, 5, 1);
-  if (!held) cardText(ctx, "↕", hp.x + 16, hp.y, { size: 13, col: MUTED });
-  ctx.globalAlpha = 1;
-  ISLE.forEach((nm, k) => { const x = AFt.px + 170 * k + 20, y = 7; polyline(ctx, [[x, y], [x + 22, y]], POPCOL[k], 2.2, 1, k ? [6, 4] : null); cardText(ctx, nm, x + 27, y, { size: 11, col: POPCOL[k], bold: true }); });
-  ctx.restore();
+function stagePaint(S, o) {
+  const K = S.K, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
+  drawTime(K + "_time", q, $(K + "_meas").value, S.cfg.meas, r, G21);
+  $(K + "_surfH").textContent = "Fitness surfaces · run 1 · generation " + (q ? q.t : 0);
+  drawSurf(K + "_surf", w, Object.assign({ w: 0 }, readSet(S)), o || {});
+  drawSketch(K + "_tpic", r ? r.pic : null, S.cfg.meas);
+  drawSeeds(S);
+  syncStage(S); S.cfg.code();
 }
-function A_wireFit() {
-  const cv = $("A_fit"); let drag = false;
-  const can = canDrag(SA, "v");
-  const setAt = e => { const p = framePt(cv, e, AFt.W), surv = (AFt.py + AFt.ph - p.y) / AFt.ph, v = 1 - BW_S / 2 - surv;
-    let best = 0; A_VV.forEach((x, i) => { if (Math.abs(x - v) < Math.abs(A_VV[best] - v)) best = i; });
-    const el = $("A_v"); if (+el.value === best) return; el.value = best; el.dispatchEvent(new Event("input")); };
-  const onHandle = e => { const p = framePt(cv, e, AFt.W), hp = A_fitXY(readSet(SA).v); return Math.abs(p.x - hp.x) < 30 && p.y > AFt.py - 6 && p.y < AFt.py + AFt.ph + 6; };
-  cv.addEventListener("pointerdown", e => { if (!can() || !onHandle(e)) return; drag = true; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} setAt(e); });
-  cv.addEventListener("pointermove", e => { if (!drag) { cv.style.cursor = can() && onHandle(e) ? "ns-resize" : "default"; return; } setAt(e); });
-  const up = () => { if (drag) bump("A"); drag = false; };
-  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
-}
-function A_paint() {
-  const S = SA, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
-  drawBoard("A_board", w, "ch");
-  $("A_boardH").textContent = "Who mated whom · run 1 · generation " + (q ? q.t : 0);
-  drawTime("A_time", q, $("A_meas").value, MEAS_A, r, A_G);
-  drawPay("A_pay", q && q.t >= A_G ? q : null, r && r.pic.kind === "pay");
-  A_drawFit();
-  drawSketch("A_tpic", r ? r.pic : null, MEAS_A);
-  syncStage(S); A_code();
-}
+const startWith = extra => (set, seed) => { const P = Object.assign({ N: BW_N, m: BW_M, q: [set.q0, set.q1], s: set.s, w: 0, learn: 0 }, extra(set));
+  return { P, G: G21, every: 1, runs: worlds(P, seed) }; };
+const atLeast = (meas, lo) => ({ meas, lo, hi: 1, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: 0, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const hold = (S, keys) => () => holdArrows(S === SA ? A_PATHS : S === SB ? B_PATHS : C_PATHS, S.K, keys);
 
 /* =====================================================================
-   STAGE B — magic traits (JM, 2026-10-28: "magic traits"; the parked plan's
-   "reinforcement three ways ... recombination as a race"). Every female
-   choosy (0.9); she judges a male by his plumage, a gene the student
-   places, or by his beak itself. m .1, v 0: a bird between the beaks does
-   halfway, so nothing but mating holds the islands apart. Each round: F_ST
-   at the beak gene at 200, the 16 runs' average, 0.5 or more. 1: plumage,
-   R 1, ◆ free (opens at locus 40: .21-.27; beside the beak gene .55-.62).
-   2: plumage beside the beak gene, R free (opens 4: .37-.48; 2 .49-.54; 1
-   .57-.62). 3: ◆ at 40 and R 4 held, the cue free (opens plumage .19-.25;
-   the beak .65).
+   STAGE A — seeds and preference strength. Round 1: seeds free (open both
+   islands all soft), random mating held: F_ST at the beak gene .25 or more
+   at 100 (seeds favouring different beaks .31-.50; the same beak 0).
+   Round 2: seeds apart held, preference strength free (opens 3, the edge,
+   .16-.43): F_ST at the colour gene .5 or more (4 .79-.90). Round 3:
+   preference strength 6 held, seeds free (open apart, .89-.94): F_ST at
+   the colour gene .1 or less (seeds favouring one beak on both islands, 0:
+   that beak's kind takes both, preferences and all).
    ===================================================================== */
-const B_RV = [0.5, 1, 2, 4], B_LOCI = Array.from({ length: L }, (_, i) => i), B_G = 200, B_C = 0.9, B_BAR = 0.5;
-const B_PIC = { meas: "fb", G: B_G, lines: [{ f: t => 0.6 + 0.4 * Math.exp(-t / 12), jit: 0.1 }], boxes: [{ lo: B_BAR, hi: 1 }] };
-const B_RULE = { meas: "fb", lo: B_BAR, hi: 1, ok: S => S.fb >= B_BAR, val: S => f2(S.fb) };
-const B_ROUNDS = [
-  { hold: { cue: 1, R: 1 }, open: { at: 39 }, pic: B_PIC, rules: [B_RULE], text: "Drag ◆, the plumage gene, along the chromosome." },
-  { hold: { cue: 1, at: 20 }, open: { R: 4 }, pic: B_PIC, rules: [B_RULE] },
-  { hold: { at: 39, R: 4 }, open: { cue: 1 }, pic: B_PIC, rules: [B_RULE] },
+const A_ROUNDS = [
+  { hold: { s: 0 }, open: { q0: 0, q1: 0 }, rules: [atLeast("fb", 0.25)], text: "Click the seeds below to set how many of each island's are hard.",
+    pic: { meas: "fb", G: G21, lines: [{ f: t => 0.46 + 0.54 * Math.exp(-t / 3), jit: 0.1 }], boxes: [{ lo: 0.25, hi: 1 }] } },
+  { hold: APART, open: { s: 3 }, rules: [atLeast("fc", 0.5)],
+    pic: { meas: "fc", G: G21, lines: [{ f: t => 0.84 + 0.16 * Math.exp(-t / 5), jit: 0.1 }], boxes: [{ lo: 0.5, hi: 1 }] } },
+  { hold: { s: 6 }, open: APART, rules: [atMost("fc", 0.1)],
+    pic: { meas: "fc", G: G21, lines: [{ f: t => Math.exp(-t / 4), jit: 0.06 }], boxes: [{ lo: 0, hi: 0.1 }] } },
 ];
-const MEAS_B = pick(["fb", "p", "plum", "pc", "het", "fm"]);
-const SB = mkStage("B", {
-  ctl: [{ key: "at", vals: B_LOCI, hidden: true }, { key: "cue", vals: [0, 1], hidden: true }, { key: "R", vals: B_RV }],
-  rounds: B_ROUNDS, ms: 30,
-  start: (set, seed) => { const P = { N: BW_N, m: 0.1, v: 0, R: set.R, c: B_C, cue: set.cue ? "plum" : "beak", chGene: false, plumAt: set.at, learn: 0, lim: 0 };
-    return { P, G: B_G, every: 1, runs: worlds(P, seed) }; },
-  afterOpen: () => { B_syncToggles(); if (!SB.done) $("B_meas").value = "fb"; },
-  onInput: () => B_syncToggles(),
-  afterSync: busy => B_syncToggles(busy),
-  paint: () => B_paint(),
+let A_PATHS = null, B_PATHS = null, C_PATHS = null;
+const SA = mkStage("A", {
+  ctl: SEEDS.concat([{ key: "s", vals: S_V, hidden: true }]),
+  rounds: A_ROUNDS, ms: 30, meas: pick(["fb", "fc", "fp", "p", "c", "r", "het", "unm"]),
+  start: startWith(() => ({})),
+  afterOpen: () => { hold(SA, ["s"])(); if (!SA.done) $("A_meas").value = ruleOf(SA).pic.meas; },
+  onInput: () => { if (A_PATHS) A_PATHS.sync(); },
+  paint: () => stagePaint(SA), code: () => A_code(),
 });
-function B_syncToggles(busy) {
-  const el = $("B_cue"), lock = !!busy || SB.waiting || !!SB.run || el.dataset.held === "1";
-  $("B_cueB").checked = el.value === "0"; $("B_cueP").checked = el.value === "1";
-  $("B_cueB").disabled = $("B_cueP").disabled = lock; $("B_cueRow").classList.toggle("held", el.dataset.held === "1");
-}
-/* the chromosome: 40 loci; the beak gene (○●) fixed at locus 20; ◆ the plumage gene, dragged to any other locus */
-const BG = { W: 760, H: 96, px: 30, pw: 700, y: 46, h: 16 };
-const B_x = i => BG.px + (i + 0.5) * BG.pw / L;
-function B_drawGenes() {
-  const cv = $("B_genes"); if (!cv) return;
-  const { ctx } = frameCanvas(cv, BG.W, BG.H), set = readSet(SB), bw = BG.pw / L, held = $("B_at").dataset.held === "1";
-  for (let i = 0; i < L; i++) { ctx.fillStyle = i === BEAK_AT ? "#3b3934" : "#ebe8df"; ctx.fillRect(BG.px + i * bw + 0.5, BG.y, bw - 1, BG.h); }
-  for (const i of [0, 9, 19, 29, 39]) cardText(ctx, String(i + 1), B_x(i), BG.y + BG.h + 12, { size: 10, col: MUTED, align: "center" });
-  cardText(ctx, "beak", B_x(BEAK_AT), BG.y - 10, { size: 11, col: MUTED, align: "center", bold: true });
-  const x = B_x(set.at), dim = set.cue === 0;
-  ctx.globalAlpha = dim ? 0.35 : held ? 0.55 : 1;
-  ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(BG.px + set.at * bw + 0.5, BG.y - 1, bw - 1, BG.h + 2);
-  cardText(ctx, "◆", x, BG.y - 12, { size: 17, col: HOT, align: "center" });
-  if (!held && !dim) cardText(ctx, "↔", x + 13, BG.y - 12, { size: 12, col: MUTED });
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-function B_wireGenes() {
-  const cv = $("B_genes"); let drag = false;
-  const can = () => canDrag(SB, "at")() && $("B_cue").value === "1";
-  const setAt = e => { const p = framePt(cv, e, BG.W); let i = Math.max(0, Math.min(L - 1, Math.floor((p.x - BG.px) / (BG.pw / L))));
-    if (i === BEAK_AT) i = +$("B_at").value < BEAK_AT ? BEAK_AT - 1 : BEAK_AT + 1;
-    const el = $("B_at"); if (+el.value === i) return; el.value = i; el.dispatchEvent(new Event("input")); };
-  cv.addEventListener("pointerdown", e => { if (!can()) return; drag = true; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} setAt(e); });
-  cv.addEventListener("pointermove", e => { if (!drag) { cv.style.cursor = can() ? "ew-resize" : "default"; return; } setAt(e); });
-  const up = () => { if (drag) bump("B"); drag = false; };
-  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
-}
-function B_paint() {
-  const S = SB, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
-  drawBoard("B_board", w, "plum");
-  $("B_boardH").textContent = "Who mated whom · run 1 · generation " + (q ? q.t : 0);
-  B_drawGenes();
-  drawTime("B_time", q, $("B_meas").value, MEAS_B, r, B_G);
-  drawSketch("B_tpic", r ? r.pic : null, MEAS_B);
-  syncStage(S); B_code();
-}
 
 /* =====================================================================
-   STAGE C — a learned song (JM, 2026-10-28: "non-genetic inheritance (eg
-   bird song)"; lesson 8 C's egg swap showed the song learned). No gene for
-   song: a young bird hears its father's song or a random male's of its
-   island; a son sings it, or with chance lim the song his beak suits; a
-   daughter prefers it. Females turn down a male of another song with
-   chance 0.9 (held in the rounds; the arrow is free once the stage is
-   done). Each round: F_ST at the beak gene at 200 of 0.45 or more. 1:
-   learned from fathers, the beak's say free (opens 0: .23-.29; .25
-   .38-.51, .5 and up .52-.66). 2: the beak's say 1, who they learn from
-   free (opens the island's males: .26-.34; fathers .60-.64).
+   STAGE B — the beak as the cue (JM, 2026-10-28: "magic traits"): one arrow
+   added, beak -> mating, the beak's say. Seeds apart held. Round 1:
+   preference strength 2 held (A's colours mixed at 2), the beak's say free
+   (opens 0, .47-.53): F_ST at the beak gene .72 or more at 100 (1
+   .76-.79; .75 .66-.73 the edge). Round 2: the beak's say 1 held,
+   preference strength free (opens 1, .58-.67): the same (2 .76-.79).
    ===================================================================== */
-const C_LIMV = [0, 0.25, 0.5, 0.75, 1], C_CV = [0, 0.5, 0.75, 0.9, 1], C_G = 200, C_BAR = 0.45;
-const C_PIC = { meas: "fb", G: C_G, lines: [{ f: t => 0.58 + 0.42 * Math.exp(-t / 12), jit: 0.1 }], boxes: [{ lo: C_BAR, hi: 1 }] };
-const C_RULE = { meas: "fb", lo: C_BAR, hi: 1, ok: S => S.fb >= C_BAR, val: S => f2(S.fb) };
-const C_ROUNDS = [
-  { hold: { learn: 0, c: 0.9 }, open: { lim: 0 }, pic: C_PIC, rules: [C_RULE] },
-  { hold: { lim: 1, c: 0.9 }, open: { learn: 1 }, pic: C_PIC, rules: [C_RULE] },
+const B_PIC = { meas: "fb", G: G21, lines: [{ f: t => 0.78 + 0.22 * Math.exp(-t / 4), jit: 0.08 }], boxes: [{ lo: 0.72, hi: 1 }] };
+const B_ROUNDS = [
+  { hold: Object.assign({ s: 2 }, APART), open: { w: 0 }, pic: B_PIC, rules: [atLeast("fb", 0.72)] },
+  { hold: Object.assign({ w: 1 }, APART), open: { s: 1 }, pic: B_PIC, rules: [atLeast("fb", 0.72)] },
 ];
-const MEAS_C = pick(["fb", "song", "sb", "p", "het"]);
-let C_PATHS = null;
+const SB = mkStage("B", {
+  ctl: SEEDS.concat([{ key: "s", vals: S_V, hidden: true }, { key: "w", vals: W_V, hidden: true }]),
+  rounds: B_ROUNDS, ms: 30, meas: pick(["fb", "fc", "p", "c", "het", "unm"]),
+  start: startWith(set => ({ w: set.w })),
+  afterOpen: () => { hold(SB, ["s", "w"])(); if (!SB.done) $("B_meas").value = "fb"; },
+  onInput: () => { if (B_PATHS) B_PATHS.sync(); },
+  paint: () => stagePaint(SB, { beak: true }), code: () => B_code(),
+});
+
+/* =====================================================================
+   STAGE C — a learned preference (JM, 2026-10-28: "non-genetic inheritance
+   (eg bird song)"; lesson 8 C's egg swap had the song learned from the
+   father): her preference from her genes, her father's colour, or a
+   random male's of the island. Seeds apart held. Round 1: preference
+   strength 3 held, the source free (opens her genes, .16-.43): F_ST at
+   the colour gene .5 or more at 100 (her father .58-.77; the island's
+   males 0). Round 2: strength 4 held, the source free (opens the island's
+   males, 0): the same (genes .79-.90, father .85-.91).
+   ===================================================================== */
+const C_PIC = { meas: "fc", G: G21, lines: [{ f: t => 0.72 + 0.28 * Math.exp(-t / 8), jit: 0.1 }], boxes: [{ lo: 0.5, hi: 1 }] };
+const C_ROUNDS = [
+  { hold: Object.assign({ s: 3 }, APART), open: { learn: 0 }, pic: C_PIC, rules: [atLeast("fc", 0.5)] },
+  { hold: Object.assign({ s: 4 }, APART), open: { learn: 2 }, pic: C_PIC, rules: [atLeast("fc", 0.5)] },
+];
+const C_SRC = ["preference gene", "her father's colour", "the island's males' colours"];
 const SC = mkStage("C", {
-  ctl: [{ key: "lim", vals: C_LIMV, hidden: true }, { key: "c", vals: C_CV, hidden: true }, { key: "learn", vals: [0, 1], hidden: true }],
-  rounds: C_ROUNDS, ms: 30,
-  start: (set, seed) => { const P = { N: BW_N, m: 0.1, v: 0, R: 1, c: set.c, cue: "song", chGene: false, learn: set.learn, lim: set.lim };
-    return { P, G: C_G, every: 1, runs: worlds(P, seed) }; },
-  afterOpen: () => { holdArrows(C_PATHS, "C", ["lim", "c"]); C_syncToggles(); if (!SC.done) $("C_meas").value = "fb"; },
+  ctl: SEEDS.concat([{ key: "s", vals: S_V, hidden: true }, { key: "learn", vals: L_V, hidden: true }]),
+  rounds: C_ROUNDS, ms: 30, meas: pick(["fc", "fb", "c", "r", "unm"]),
+  start: startWith(set => ({ learn: set.learn })),
+  afterOpen: () => { hold(SC, ["s"])(); C_syncToggles(); if (!SC.done) $("C_meas").value = "fc"; },
   onInput: () => { if (C_PATHS) C_PATHS.sync(); C_syncToggles(); },
   afterSync: busy => C_syncToggles(busy),
-  paint: () => C_paint(),
+  paint: () => stagePaint(SC), code: () => C_code(),
 });
 function C_syncToggles(busy) {
   const el = $("C_learn"), lock = !!busy || SC.waiting || !!SC.run || el.dataset.held === "1";
-  $("C_learnF").checked = el.value === "0"; $("C_learnN").checked = el.value === "1";
-  $("C_learnF").disabled = $("C_learnN").disabled = lock; $("C_learnRow").classList.toggle("held", el.dataset.held === "1");
-  if (C_PATHS) C_PATHS.setBox("hr", { label: el.value === "1" ? "song heard: the island's males'" : "song heard: the father's" });
-}
-function C_mountPaths() {
-  const fl = v => String(C_LIMV[Math.round(v)]), fc = v => String(C_CV[Math.round(v)]);
-  C_PATHS = Paths.init({
-    mount: "#C_paths", width: 460, height: 320,
-    boxes: [
-      { id: "bg", label: "beak gene", x: 72, y: 28, w: 104, h: 32 },
-      { id: "hr", label: "song heard: the father's", x: 310, y: 28, w: 230, h: 32 },
-      { id: "bk", label: "beak", x: 72, y: 112, w: 84, h: 32 },
-      { id: "sg", label: "his song", x: 235, y: 112, w: 100, h: 32 },
-      { id: "pf", label: "her preference", x: 385, y: 112, w: 130, h: 32 },
-      { id: "sv", label: "survival", x: 72, y: 206, w: 100, h: 32 },
-      { id: "mt", label: "mating", x: 330, y: 206, w: 100, h: 32 },
-      { id: "yg", label: "young", x: 200, y: 288, w: 110, h: 34, kind: "outcome" },
-    ],
-    arrows: [
-      { id: "x1", from: "bg", to: "bk", readonly: true, dark: true, label: "" },
-      { id: "x2", from: "bk", to: "sv", readonly: true, dark: true, label: "" },
-      { id: "x3", from: "hr", to: "sg", readonly: true, dark: true, label: "" },
-      { id: "x4", from: "hr", to: "pf", readonly: true, dark: true, label: "" },
-      { id: "lim", from: "bk", to: "sg", input: "C_lim", label: "how much the beak shapes the song", fmt: fl },
-      { id: "sm", from: "sg", to: "mt", readonly: true, ghost: true, label: "his song against her preference" },
-      { id: "c", from: "pf", onto: "sm", ontoAt: 0.6, input: "C_c", label: "how choosy", fmt: fc },
-      { id: "x5", from: "sv", to: "yg", readonly: true, dark: true, label: "" },
-      { id: "x6", from: "mt", to: "yg", readonly: true, dark: true, label: "" },
-    ],
-    valuesOnSelect: true, lockColours: true,
-  });
-}
-function C_paint() {
-  const S = SC, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
-  drawBoard("C_board", w, "song");
-  $("C_boardH").textContent = "Who mated whom · run 1 · generation " + (q ? q.t : 0);
-  drawTime("C_time", q, $("C_meas").value, MEAS_C, r, C_G);
-  drawSketch("C_tpic", r ? r.pic : null, MEAS_C);
-  syncStage(S); C_code();
+  for (const i of L_V) { $("C_learn" + i).checked = el.value === String(i); $("C_learn" + i).disabled = lock; }
+  $("C_learnRow").classList.toggle("held", el.dataset.held === "1");
+  if (C_PATHS) C_PATHS.setBox("pg", { label: C_SRC[+el.value] });
 }
 
 /* =====================================================================
@@ -1279,39 +1090,38 @@ function C_paint() {
    graph to produce what they think the controls will do, then hit go, then
    a series of simulations run & how often the student drawn prediction
    falls inside the cloud is recorded & shown"). Three set-ups from A-C,
-   held: random mating; a plumage cue beside the beak gene (B, R 1); a song
-   learned from the island's males with the beak's say 1 (C). The student
-   drags a dot every 10 generations onto F_ST at the beak gene; Go plays
-   100 generations, 16 times; the cloud is the 16 runs' middle 90% at each
-   dot; a dot within it (0.02 of slack) is inside. One bit a round, half the
-   dots or more inside, on its first run; the counts in the notes (D_in1-3).
-   Planned as one immigrant (Daphne Major's "Big Bird"): measured, his line
-   never lasted 40 generations (see the overhaul doc).
+   held: seeds apart, preference strength 2 (A: the seeds alone, ~.5);
+   the same with the beak as the cue (B, ~.77); both islands all soft,
+   strength 6 (A round 3: one kind takes both, 0 within ~10 generations).
+   The student drags a dot every 10 generations onto F_ST at the beak gene;
+   Go plays 100 generations, 16 times; the cloud is the 16 runs' middle 90%
+   at each dot; a dot within it (0.02 of slack) is inside. One bit a round,
+   half the dots or more inside, on its first run; the counts in the notes
+   (D_in1-3).
    ===================================================================== */
-const D_G = 100, D_KNOTS = Array.from({ length: 10 }, (_, i) => 10 * (i + 1));
+const D_KNOTS = Array.from({ length: 10 }, (_, i) => 10 * (i + 1));
 const D_SETUPS = [
-  { name: "random mating", P: { cue: "beak", c: 0, R: 1, learn: 0, lim: 0 },
-    rows: [["a female judges a male by", "nothing: she takes the first she meets"]] },
-  { name: "plumage beside the beak gene", P: { cue: "plum", c: 0.9, R: 1, plumAt: 20, learn: 0, lim: 0 },
-    rows: [["a female judges a male by", "his plumage ◆"], ["how choosy", "0.9"], ["plumage gene", "locus 21, beside the beak gene"], ["crossovers per chromosome", "1"]] },
-  { name: "a song learned from the island's males", P: { cue: "song", c: 0.9, R: 1, learn: 1, lim: 1 },
-    rows: [["a female judges a male by", "his song"], ["how choosy", "0.9"], ["the young learn the song of", "the island's males"], ["how much the beak shapes the song", "1"]] },
+  { name: "seeds apart, preference strength 2", P: { q: [0, 1], s: 2, w: 0, learn: 0 },
+    rows: [["orange island's seeds", "4 soft"], ["blue island's seeds", "4 hard"], ["preference strength", "2"], ["she judges", "his colour"]] },
+  { name: "seeds apart, preference strength 2, the beak as the cue", P: { q: [0, 1], s: 2, w: 1, learn: 0 },
+    rows: [["orange island's seeds", "4 soft"], ["blue island's seeds", "4 hard"], ["preference strength", "2"], ["she judges", "his beak against hers"]] },
+  { name: "both islands soft, preference strength 6", P: { q: [0, 0], s: 6, w: 0, learn: 0 },
+    rows: [["orange island's seeds", "4 soft"], ["blue island's seeds", "4 soft"], ["preference strength", "6"], ["she judges", "his colour"]] },
 ];
 const SD = mkStage("D", {
-  ctl: [], knots: D_KNOTS, drawMeas: "fb",
+  ctl: [], knots: D_KNOTS, drawMeas: "fb", meas: { fb: MEAS.fb },
   rounds: D_SETUPS.map(s => ({ kind: "draw", hold: {}, setup: s, rules: [],
     text: "Drag across the plot at left to draw what you expect F<sub>ST</sub> at the beak gene to do; then Go." })),
   ms: 30,
-  start: (set, seed) => { const P = Object.assign({ N: BW_N, m: 0.1, v: 0, chGene: false }, ruleOf(SD).setup.P);
-    return { P, G: D_G, every: 1, runs: worlds(P, seed) }; },
+  start: (set, seed) => { const P = Object.assign({ N: BW_N, m: BW_M }, ruleOf(SD).setup.P);
+    return { P, G: G21, every: 1, runs: worlds(P, seed) }; },
   paint: () => D_paint(),
 });
-const MEAS_D = { fb: MEAS.fb };
 function D_drawTime() {
   const S = SD, q = shownRun(S), r = ruleOf(S), cv = $("D_time");
   const qq = q && q.round === S.round ? q : null;
   /* the empty frame (it leaves its scales on the canvas); the cloud, the runs and the drawing go on it, the cloud first */
-  drawTime("D_time", null, "fb", MEAS_D, null, D_G);
+  drawTime("D_time", null, "fb", S.cfg.meas, null, G21);
   const tf = cv._tf; if (!tf) return;
   const c2 = cv.getContext("2d"), k = (+cv.dataset.drawW) / TM.W; c2.save(); c2.scale(k, k);
   if (qq && qq.t >= 1) {   /* the cloud under the lines */
@@ -1336,23 +1146,23 @@ function D_drawTime() {
 function D_wireDraw() {
   const cv = $("D_time"); let last = null, drawing = false;
   const can = () => Gates.D.open && !SD.run && !SD.waiting && !SD.done && ruleOf(SD).kind === "draw";
-  const at = e => { const tf = cv._tf, p = framePt(cv, e, TM.W); return { t: (p.x - tf.T.px) / tf.T.pw * D_G, v: Math.max(0, Math.min(1, (tf.T.py + tf.T.ph - p.y) / tf.T.ph)) }; };
+  const at = e => { const tf = cv._tf, p = framePt(cv, e, TM.W); return { t: (p.x - tf.T.px) / tf.T.pw * G21, v: Math.max(0, Math.min(1, (tf.T.py + tf.T.ph - p.y) / tf.T.ph)) }; };
   const mark = pt => { if (!SD.pred) SD.pred = { ys: D_KNOTS.map(() => null) };
     const lo = last ? Math.min(last.t, pt.t) : pt.t, hi = last ? Math.max(last.t, pt.t) : pt.t;
     D_KNOTS.forEach((t, i) => { if (Math.abs(t - pt.t) <= 5 || (t >= lo && t <= hi)) SD.pred.ys[i] = last && Math.abs(pt.t - last.t) > 1e-9 && t >= lo && t <= hi ? last.v + (pt.v - last.v) * (t - last.t) / (pt.t - last.t) : pt.v; });
     last = pt; };
-  cv.addEventListener("pointerdown", e => { if (!can() || !cv._tf) return; const pt = at(e); if (pt.t < -5 || pt.t > D_G + 5) return; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} drawing = true; SD.last = null; last = null; mark(pt); D_paint(); });
+  cv.addEventListener("pointerdown", e => { if (!can() || !cv._tf) return; const pt = at(e); if (pt.t < -5 || pt.t > G21 + 5) return; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (err) {} drawing = true; SD.last = null; last = null; mark(pt); D_paint(); });
   cv.addEventListener("pointermove", e => { if (!drawing) { cv.style.cursor = can() ? "crosshair" : "default"; return; } mark(at(e)); D_paint(); });
   const up = () => { if (!drawing) return; drawing = false; last = null; bump("D"); D_paint(); };
   cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
   $("D_clear").addEventListener("click", () => { if (SD.run || SD.waiting) return; SD.pred = null; D_paint(); });
 }
 function D_paint() {
-  const S = SD, q = shownRun(S), r = ruleOf(S);
+  const S = SD, q = shownRun(S), r = ruleOf(S), P = r.setup.P;
   D_drawTime();
-  const w = q ? q.runs[0] : previewRun(S).w, mark = r.setup.P.cue === "plum" ? "plum" : r.setup.P.cue === "song" ? "song" : null;
-  drawBoard("D_board", w, mark);
-  $("D_boardH").textContent = "Who mated whom · run 1 · generation " + (q ? q.t : 0);
+  const w = q && q.round === S.round ? q.runs[0] : previewRun(S).w;
+  $("D_surfH").textContent = "Fitness surfaces · run 1 · generation " + (q && q.round === S.round ? q.t : 0);
+  drawSurf("D_surf", w, { q0: P.q[0], q1: P.q[1], s: P.s, w: P.w }, { beak: P.w > 0 });
   $("D_setup").innerHTML = S.done ? "" : r.setup.rows.map(([a, b]) => "<tr><td>" + a + "</td><td>" + b + "</td></tr>").join("");
   $("D_clear").disabled = !!S.run || S.waiting || S.done || !S.pred;
   syncStage(S); D_code();
@@ -1362,59 +1172,51 @@ function D_paint() {
 function rModel(head, s) {
   const lines = [
     ["", "# Lesson 21, Stage " + head],
-    ["", "N <- 100; L <- 40; S <- 0.4; looks <- 4; beak <- 20; G <- " + s.G + "      # birds an island; loci; the wrong beak's cost; males a female meets"],
-    ["m", "m <- " + s.m + "; v <- " + s.v + "; R <- " + s.R + "                            # migration; the valley; crossovers per chromosome"],
+    ["", "N <- 100; m <- 0.1; looks <- 4; G <- 100; S <- 0.6; e <- 0.35   # birds an island; migration; males a female meets; the wrong seeds' cost; ◐'s share of either seed"],
+    ["q", "q <- c(" + s.q[0] + ", " + s.q[1] + ")                                  # hard seeds' share: orange island, blue island"],
+    ["s", "s <- " + s.s + "                                           # preference strength"],
   ];
-  if (s.cue === "plum") lines.push(["at", "plum <- " + (s.at + 1) + "                                      # the plumage gene's locus"]);
-  if (s.chGene) lines.push(["", "chz <- 30                                     # the choosy gene's locus"]);
-  lines.push(["c", "choosy <- " + s.c + "                                 # the chance she turns down a male who differs"]);
-  if (s.cue === "song") lines.push(["learn", "learn <- \"" + (s.learn ? "island" : "father") + "\"; lim <- " + s.lim + "; err <- 0.02     # who the young learn from; the beak's say; mishearing"]);
+  if (s.beak) lines.push(["w", "w <- " + s.w + "                                           # the beak's say in mating"]);
+  if (s.learn) lines.push(["learn", "learn <- \"" + s.learn + "\"                              # where her preference comes from: \"genes\", \"father\", \"island\""]);
   lines.push(
-    ["", "chrom <- function(k) { x <- rep(k, L)" + (s.chGene ? "; x[chz] <- runif(1) < 0.1" : "") + "; x }   # every locus starts as the island's (0 small, 1 large)"],
-    ["", "bird <- function(k) list(g = list(chrom(k), chrom(k)), sex = sample(0:1, 1), song = k, pref = k, new = FALSE)"],
-    ["", "pop <- lapply(0:1, function(k) replicate(N, bird(k), simplify = FALSE))"],
-    ["", "z <- function(b, at) b$g[[1]][at] + b$g[[2]][at]"],
-    ["v", "live <- function(zz, k) { b <- zz / 2; max(0, 1 - S * (if (k == 1) b else 1 - b) - v * 4 * b * (1 - b)) }"],
-    ["R", "gamete <- function(b) { cut <- runif(L - 1) < R / (L - 1); side <- (sample(0:1, 1) + cumsum(c(0, cut))) %% 2; ifelse(side == 0, b$g[[1]], b$g[[2]]) }"],
-  );
-  const differ = s.cue === "plum" ? "abs(z(f, plum) - z(mm, plum)) / 2" : s.cue === "song" ? "as.numeric(f$pref != mm$song)" : "abs(z(f, beak) - z(mm, beak)) / 2";
-  lines.push(
-    ["c", "differ <- function(f, mm) " + differ + (s.chGene ? " * (z(f, chz) > 0)" : "")],
+    ["", "bird <- function(k) list(g = matrix(k, 2, 3), sex = sample(0:1, 1), pl = k)   # alleles: a row a parent; columns beak, colour, preference"],
+    ["", "pop <- lapply(0:1, function(k) replicate(N, bird(k), simplify = FALSE))       # the islands start apart"],
+    ["", "z <- function(b, i) sum(b$g[, i])                                             # 0, 1 or 2 large / dark / likes-dark alleles"],
+    [s.learn ? "learn" : "", "pref <- function(b) " + (s.learn ? "if (learn == \"genes\") z(b, 3) / 2 else b$pl" : "z(b, 3) / 2")],
+    ["q", "food <- function(zz, qq) (1 - qq) * c(1, e, 0)[zz + 1] + qq * c(0, e, 1)[zz + 1]"],
+    ["q", "live <- function(zz, qq) 1 - S * (1 - food(zz, qq) / max(sapply(0:2, food, qq = qq)))"],
+    ["s", "take <- function(f, mm) { d <- " + (s.beak ? "(1 - w) * abs(z(mm, 2) / 2 - pref(f)) + w * abs(z(mm, 1) - z(f, 1)) / 2" : "abs(z(mm, 2) / 2 - pref(f))") + "; exp(-s * d^2) }"],
+    ["", "gamete <- function(b) sapply(1:3, function(i) b$g[sample(2, 1), i])          # each gene from either parent's allele"],
     ["", "for (t in 1:G) {"],
-    ["m", "  n <- rbinom(1, N, m); x <- sample(N, n); y <- sample(N, n); tmp <- pop[[1]][x]; pop[[1]][x] <- pop[[2]][y]; pop[[2]][y] <- tmp"],
+    ["", "  n <- rbinom(1, N, m); x <- sample(N, n); y <- sample(N, n); tmp <- pop[[1]][x]; pop[[1]][x] <- pop[[2]][y]; pop[[2]][y] <- tmp"],
     ["", "  pop <- lapply(1:2, function(k) { P <- pop[[k]]; F <- Filter(function(b) b$sex == 0, P); M <- Filter(function(b) b$sex == 1, P); pairs <- list()"],
-    ["c", "    for (f in F) for (i in 1:looks) { mm <- M[[sample(length(M), 1)]]; if (runif(1) >= choosy * differ(f, mm)) { pairs[[length(pairs) + 1]] <- list(f, mm); break } }"],
+    ["s", "    for (f in F) for (i in 1:looks) { mm <- M[[sample(length(M), 1)]]; if (runif(1) < take(f, mm)) { pairs[[length(pairs) + 1]] <- list(f, mm); break } }"],
     ["", "    young <- list()"],
-    ["", "    while (length(young) < N) { pr <- pairs[[sample(length(pairs), 1)]]; y <- list(g = list(gamete(pr[[1]]), gamete(pr[[2]])), sex = sample(0:1, 1))"],
+    ["", "    while (length(young) < N) { pr <- pairs[[sample(length(pairs), 1)]]; y <- list(g = rbind(gamete(pr[[1]]), gamete(pr[[2]])), sex = sample(0:1, 1), pl = 0)"],
   );
-  if (s.cue === "song") lines.push(
-    ["learn", "      tutor <- if (learn == \"father\") pr[[2]] else M[[sample(length(M), 1)]]; heard <- tutor$song; if (runif(1) < err) heard <- 1 - heard"],
-    ["lim", "      zz <- z(y, beak); y$pref <- heard; y$song <- if (runif(1) < lim) (if (zz == 1) sample(0:1, 1) else zz / 2) else heard"],
-  );
+  if (s.learn) lines.push(["learn", "      tutor <- if (learn == \"father\") pr[[2]] else M[[sample(length(M), 1)]]; y$pl <- if (runif(1) < 0.02) sample(c(0, 0.5, 1), 1) else z(tutor, 2) / 2"]);
   lines.push(
-    ["v", "      if (runif(1) < live(z(y, beak), k)) young[[length(young) + 1]] <- y }"],
+    ["q", "      if (runif(1) < live(z(y, 1), q[k])) young[[length(young) + 1]] <- y }"],
     ["", "    young })"],
     ["", "}"],
-    ["", "p <- sapply(pop, function(P) mean(sapply(P, z, at = beak)) / 2); pb <- mean(p)       # the large-beak allele, each island"],
+    ["", "fst <- function(i) { p <- sapply(pop, function(P) mean(sapply(P, z, i = i)) / 2); pb <- mean(p); ht <- 2 * pb * (1 - pb); if (ht == 0) 0 else (ht - mean(2 * p * (1 - p))) / ht }"],
+    ["", "c(beak = fst(1), colour = fst(2), preference = fst(3))                          # F_ST at each gene"],
   );
-  if (s.chGene) lines.push(["", "print(sapply(pop, function(P) mean(sapply(P, z, at = chz)) / 2))                  # the choosy allele, each island"]);
-  lines.push(["", "(2 * pb * (1 - pb) - mean(2 * p * (1 - p))) / (2 * pb * (1 - pb))                  # F_ST at the beak gene"]);
   return lines;
 }
-function A_code() { const s = readSet(SA); codeInto("codeA", rModel("A -- two islands; a choosy allele turns down males whose beak differs", { G: A_G, m: s.m, v: s.v, R: 1, c: s.c, cue: "beak", chGene: true })); }
-function B_code() { const s = readSet(SB); codeInto("codeB", rModel("B -- every female choosy, by plumage or by the beak itself", { G: B_G, m: 0.1, v: 0, R: s.R, c: B_C, cue: s.cue ? "plum" : "beak", at: s.at })); }
-function C_code() { const s = readSet(SC); codeInto("codeC", rModel("C -- no gene for song: learned, and shaped by the beak", { G: C_G, m: 0.1, v: 0, R: 1, c: s.c, cue: "song", learn: s.learn, lim: s.lim })); }
-function D_code() { const P = ruleOf(SD).setup.P; codeInto("codeD", rModel("D -- " + ruleOf(SD).setup.name, { G: D_G, m: 0.1, v: 0, R: P.R, c: P.c, cue: P.cue, at: P.plumAt, learn: P.learn, lim: P.lim })); }
+function A_code() { const s = readSet(SA); codeInto("codeA", rModel("A -- seeds and preference strength", { q: [s.q0, s.q1], s: s.s })); }
+function B_code() { const s = readSet(SB); codeInto("codeB", rModel("B -- the beak as the cue", { q: [s.q0, s.q1], s: s.s, w: s.w, beak: true })); }
+function C_code() { const s = readSet(SC); codeInto("codeC", rModel("C -- a learned preference", { q: [s.q0, s.q1], s: s.s, learn: ["genes", "father", "island"][s.learn] })); }
+function D_code() { const u = ruleOf(SD).setup; codeInto("codeD", rModel("D -- " + u.name, { q: u.P.q, s: u.P.s, w: u.P.w, beak: u.P.w > 0 })); }
 
-function paintAll() { A_paint(); B_paint(); C_paint(); D_paint(); }
+function paintAll() { SA.cfg.paint(); SB.cfg.paint(); SC.cfg.paint(); D_paint(); }
 function wire() {
-  A_mountPaths(); C_mountPaths();
+  A_PATHS = mountPaths("A", {}); B_PATHS = mountPaths("B", { beak: true }); C_PATHS = mountPaths("C", { wide: true });
   for (const S of [SA, SB, SC, SD]) wireStage(S);
-  A_wireFit(); B_wireGenes(); D_wireDraw();
-  const setTo = (id, v, K) => { const el = $(id); el.value = v; el.dispatchEvent(new Event("input")); bump(K); };
-  $("B_cueB").addEventListener("change", () => setTo("B_cue", 0, "B")); $("B_cueP").addEventListener("change", () => setTo("B_cue", 1, "B"));
-  $("C_learnF").addEventListener("change", () => setTo("C_learn", 0, "C")); $("C_learnN").addEventListener("change", () => setTo("C_learn", 1, "C"));
-  $("A_meas").addEventListener("change", A_paint); $("B_meas").addEventListener("change", B_paint); $("C_meas").addEventListener("change", C_paint);
+  for (const S of [SA, SB, SC]) wireSeeds(S);
+  D_wireDraw();
+  for (const i of L_V) $("C_learn" + i).addEventListener("change", () => { const el = $("C_learn"); el.value = i; el.dispatchEvent(new Event("input")); bump("C"); });
+  for (const K of ["A", "B", "C"]) $(K + "_meas").addEventListener("change", () => ST[K].cfg.paint());
   for (const K of ["A", "B", "C", "D"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson21_stage" + K + ".R", RTEXT["code" + K]));
   let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
   /* instructor bypass / study mode: every stage open. Study mode leaves the targets to be done (JM, 2026-10-08); the
@@ -1435,9 +1237,9 @@ paintAll();
 
 Score.init({
   moduleId: "lesson21",
-  version: 2,      /* 1: first draft (2026-10-20): species selection, two targets and one drawn round (3). 2: draft 2
-                      (2026-10-29, JM's ruling of 2026-10-28): speciation by sexual selection; A two targets, B three, C
-                      two, D three drawn rounds (10) */
+  version: 3,      /* 1: first draft (2026-10-20): species selection, two targets and one drawn round (3). 2: draft 2
+                      (2026-10-29): A two targets, B three, C two, D three drawn rounds (10). 3: draft 3 (2026-10-29, JM's
+                      three-gene DAG): A three targets, B two, C two, D three drawn rounds (10) */
   scaffold: 10,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",

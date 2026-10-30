@@ -46,6 +46,9 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        From 21 (second ruling): the birds are 21's; the who-helps-whom network is 21 A's who-mated-whom network; a learned call
        (21 C's song) as a kin cue: helpers help birds that call like them (long-tailed tits, Sharp et al. 2005, Nature).
        Learned from the parents the cue tracks kin; learned from the neighbours it does not.
+       2026-10-29, 21 draft 3 (JM): 21 dropped the who-mated-whom panel and the song. Its over-time chart (with a menu), the
+       fitness surfaces and the three-gene DAG are what 22 inherits. 21 C now has a preference learned from the father or
+       from the island's males, so the kin cue here is a learned preference, not a song.
     B  relatedness, measured. The pedigree (20 A's engine and view) under the grid: click a bird and a neighbour, see where
        their copies meet; the plot of average relatedness between helper and helped (the chance their copies at the helping
        locus meet within so many generations, or the regression of a neighbour's allele on the helper's). Targets on the
