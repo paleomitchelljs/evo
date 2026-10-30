@@ -3,9 +3,9 @@
 **File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG, v3, 10 bits. Draft 2 is the file at
 b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"). Intros are draft bullets for JM's dictation.
-LOCKS `x`
-**Last touched** · 2026-10-29
+**Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"); C rebuilt 2026-10-30 without the beak's
+limit on the song. Intros are draft bullets for JM's dictation. LOCKS `x`
+**Last touched** · 2026-10-30
 
 ## JM, 2026-10-28, second ruling (verbatim)
 
@@ -255,15 +255,43 @@ the cue she judges):
                recombines: the song-beak link decays only through the mothers' beak genes.
     D          unchanged (no song set-up). The 10-28 learned-colour C is gone; its numbers stay above.
 
+JM on the song, 2026-10-30 (verbatim): "Beaks don't have a strong effect on song, though. I'd rather the broader lesson than
+trying to shoehorn in a magic trait angle. I like the idea of a magic trait, but if we're "only" illustrating non-genetic
+inheritance reinforcing barriers and the role a non-recombining trait has for species differentiation combined with a
+recombining ecological trait...that seems fine."
+
+C rebuilt 2026-10-30 (magic traits stay in B, the beak as the cue):
+    C          beak -> song (lim) cut, with its "how well he sings it" grid. Two toggles under the diagram:
+               - his song from his genes (a song gene in the colour gene's place: recombines; ◐ sings in between) or his
+                 father's song (learned, 1 in 50 misheard: never recombines);
+               - her preference from her genes / her father's song / the island's songs.
+               Surfaces: survival by beak; his song × she likes (2 columns, or 3 from a song gene). Seeds apart, β 2 held.
+               C1 his father's song held, her preference free (opens the island's songs): beak F_ST ≥ .68.
+               C2 her father's song held, his song free (opens his genes): the same.
+    measured   (eng5.js, six sets of 16, β 2, seeds apart; beak F_ST at 100, song F_ST in brackets)
+                               her genes            her father's song     the island's songs
+               his genes       .45-.54 [.00-.01]    .45-.51 [.00-.03]     .46-.55 [.00]
+               his father's    .48-.58 [.07-.19]    .71-.75 [.70-.80]     .47-.54 [.01-.03]
+               Neither alone holds. Both together: the song and the liking for it pass from the father as one block that
+               never recombines, while the beak recombines and is held by the seeds (paternal imprinting: Verzijden et al.
+               2005, Evolution, to check).
+               β 3: his father's / her genes .73-.80 and his genes / her father's .76-.84 hold too; β 2 held, where only the
+               pair holds. β 1: nothing holds (.45-.55).
+               Seeds favouring one beak on both islands (both soft, β 2-3): beak 0, a father's song .00-.01, a song gene
+               .03-.09. The song goes with the kind that wins, so there is no "songs apart, beaks the same" round.
+
 Open for JM (draft 3):
 1. ~~B and C carry his 10-28 asks on the new DAG. Keep, change, or cut?~~ Answered 2026-10-29: song as a sort of magic trait,
-   built as C. B (beak as the cue) kept. Should one D round be a song set-up?
+   built as C. B (beak as the cue) kept. 2026-10-30: C's magic trait cut (beak -> song). Should one D round be a song set-up?
+   (Father's song + her father's song, β 2, ends ~.73, close to B's .77 round.)
 2. Preference strength steps 0 1 2 3 4 6: the colours hold at 4 and fall at 2; 3 is the edge (slow loss). The mating
    grid shows what each step means.
 3. A3 is a target to make the islands the same: strong preferences, but seeds that favour one beak on both islands.
    Fine as a target?
 4. Draft 2's Open 1 (the one immigrant), 3 (4 looks), 5 (citations: now Grant & Grant 1997 too) and 6 (real data) still
-   stand; 2 and 4 went with the panels and sliders they were about.
+   stand; 2 and 4 went with the panels and sliders they were about. Podos 2001 is off the page (2026-10-30).
+5. B's empirical anchor for the beak as the cue: Ratcliffe & Grant 1983 (Anim Behav; finches told species apart by
+   morphology, mounted specimens), to check. Name it in B's diagram tip?
 
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
 
@@ -411,7 +439,8 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 5 | draft 2: A-D, v2, 10 bits; `check_lesson21_numbers.js` rewritten (23 + widths + R) | done 2026-10-29 |
 | 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | done 2026-10-29: his review, the three-gene DAG |
 | 7 | draft 3: engine prototype (eng3.js), the bars measured; the page rebuilt, v3, 10 bits; check script rewritten | done 2026-10-29 |
-| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo (his C ruling done 2026-10-29: song) |
+| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo (his C rulings done: song 2026-10-29; no beak -> song 2026-10-30) |
+| 9 | C without the beak's limit: his song from his genes or his father; eng5.js measured; page, check script | done 2026-10-30 |
 
 ## Rulings
 
@@ -420,6 +449,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 - 2026-10-28 (on the plan): "Yes to the bird reading" (the best mating rule depends on the bird); sexual selection alone may fail to split, and the page shows both outcomes ("That's fine"); "Birds, two islands".
 - 2026-10-29 (on draft 2): the DAG genes → beak → seeds → reproduction ← mating ← colour / preference ← genes; three genes (beak, colour, preference); who mated whom and young per female cut; the over-time chart with its menu is the animation core; seeds by island and preference strength each make a fitness surface.
 - 2026-10-29 (on draft 3): song as a sort of magic trait (a bad song costs fitness and discriminates between groups); the DAG's genes -> colour becomes parent song -> offspring song.
+- 2026-10-30 (on C): beaks have no strong effect on song; no magic-trait angle in C. C shows non-genetic inheritance reinforcing barriers, and a non-recombining trait (the song) with a recombining ecological trait (the beak).
 
 ## Do not
 

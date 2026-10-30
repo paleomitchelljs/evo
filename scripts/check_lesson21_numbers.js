@@ -7,17 +7,18 @@
  * reproduction <- mating <- colour / preference <- genes. Two islands of
  * finches; seeds by island and preference strength, each a fitness
  * surface. A seeds and preference strength; B the beak as the cue (one
- * arrow, beak -> mating); C a learned song (a son sings his father's; a
- * song his beak does not suit sung badly; her preference from her genes,
- * her father's song or the island's songs); D three drawn rounds. (Draft 2's checks are
+ * arrow, beak -> mating); C a learned song (his song from a song gene or
+ * his father's; her preference from her genes, her father's song or the
+ * island's songs; 2026-10-30, the beak's limit on the song cut); D three
+ * drawn rounds. (Draft 2's checks are
  * this file at b46e463; the first draft's at a887904.) What has to hold:
  *
  *   Engine. With no migration the islands never mix (F_ST 1 at all three
  *      genes); the genes sort independently; a female who likes pale among
  *      dark males goes unmated as (1 - e^-s)^4 says; survivors' beaks from
  *      one-of-each parents on soft seeds as 1:2:1 times the survival rule
- *      says; a son sings his father's song 98% of the time, and with the
- *      beak's whole limit a small beak singing the slow trill never mates;
+ *      says; a son sings his father's song 98% of the time; a daughter
+ *      learns the song her father sings, his father's or his song gene's;
  *      a preference learned from the father follows the father, from the
  *      island the island's males.
  *   Rounds. Each target hit by its intended setting (and a neighbour of
@@ -78,13 +79,13 @@ const grow = (P, seed, n) => { const w = bwWorld(Object.assign({ N: BW_N, m: 0.1
   const pl = L => { let s5 = 0, n5 = 0; for (let r = 0; r < 20; r++) { const w5 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 6, w: 0, learn: L }, 500 + r); let h = 0;
       for (const x of w5.isl[0]) if (x.sex === 1 && (h++ % 2)) { x.g[1] = 1; x.g[4] = 1; } bwStep(w5); for (const x of w5.isl[0]) { s5 += x.pl; n5++; } } return s5 / n5; };
   const plF = pl(1), plI = pl(2);
-  /* the song (C): learned from the father, 1 in 50 misheard; a song the beak does not suit sung badly */
-  let sl = 0, ns = 0; for (let r = 0; r < 10; r++) { const w6 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 0, song: true, lim: 0 }, 600 + r);
-    for (const x of w6.isl[0]) if (x.sex === 1) x.sg = 1; bwStep(w6); for (const x of w6.isl[0]) { sl += x.sg; ns++; } }
-  let bad = 0, all = 0; for (let r = 0; r < 10; r++) { const w7 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 0, song: true, lim: 1 }, 700 + r); let h = 0;
-    for (const x of w7.isl[0]) if (x.sex === 1) { x.sg = 1; if (h++ % 2) { x.g[0] = 1; x.g[3] = 1; } } bwStep(w7); for (let i = 0; i < 2; i++) bad += w7.bb[i]; for (const v of w7.bb) all += v; }
-  check("engine: a young bird sings its father's song " + (100 * sl / ns).toFixed(1) + "% of the time (98% set); with the beak's whole limit, small beaks singing the slow trill father " + bad + " of " + all + " broods",
-        Math.abs(sl / ns - 0.98) < 0.01 && bad === 0 && all > 500);
+  /* the song (C): learned from the father, 1 in 50 misheard; every orange-island male's father sang the slow trill, his song gene
+     fast. A daughter who learns her father's song likes slow if he sings his father's, fast if he sings his genes' */
+  const sung = sing => { let sl = 0, lk = 0, ns = 0; for (let r = 0; r < 10; r++) { const w6 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 1, song: true, sing }, 600 + r);
+      for (const x of w6.isl[0]) if (x.sex === 1) x.sg = 1; bwStep(w6); for (const x of w6.isl[0]) { sl += x.sg; lk += x.pl; ns++; } } return [sl / ns, lk / ns]; };
+  const [sgF, lkF] = sung(1), [, lkG] = sung(0);
+  check("engine: a young bird sings its father's song " + (100 * sgF).toFixed(1) + "% of the time (98% set); a daughter likes what her father sings: his father's slow trill (" + lkF.toFixed(3) + "), or his song gene's fast one (" + lkG.toFixed(3) + ")",
+        Math.abs(sgF - 0.98) < 0.01 && lkF > 0.95 && lkG < 0.05);
   check("engine: learned from the father the young like what the (pale) fathers are (liking for dark " + plF.toFixed(3) + "); from the island, what its males are, half dark (" + plI.toFixed(3) + ")",
         plF < 0.05 && plI > 0.35 && plI < 0.65);
 }
@@ -104,8 +105,8 @@ T("A", 1, [{ s: 4 }, { s: 6 }], [{ s: 3 }, { s: 0 }]);
 T("A", 2, [{ q0: 0, q1: 0 }, { q0: 1, q1: 1 }], [{ q0: 0, q1: 1 }]);
 T("B", 0, [{ w: 1 }], [{ w: 0 }, { w: 0.25 }]);
 T("B", 1, [{ s: 2 }, { s: 3 }], [{ s: 1 }]);
-T("C", 0, [{ lim: 1 }], [{ lim: 0 }, { lim: 0.25 }]);
-T("C", 1, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
+T("C", 0, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
+T("C", 1, [{ sing: 1 }], [{ sing: 0 }]);
 {
   /* the drawn rounds: the 16 runs' own average inside its cloud; a flat line at 1 ("they stay apart") outside; no flat line inside on all three */
   const flats = [0, 0.25, 0.5, 0.75], perRound = [];
@@ -140,7 +141,11 @@ T("C", 1, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
         held1 && sentence && miss && clicked && hit && doneA);
   setC(SB, { w: 1 }); go(SB); next(SB); setC(SB, { s: 2 }); go(SB);
   check("flow: two hits finish B (" + Gates.B.done + ")", Gates.B.done);
-  setC(SC, { lim: 1 }); go(SC); next(SC); setC(SC, { learn: 1 }); go(SC);
+  const c1 = document.getElementById("C_sing1").disabled && !document.getElementById("C_learn0").disabled;
+  document.getElementById("C_learn1").click(); const toggled = readSet(SC).learn === 1;
+  go(SC); next(SC); const c2 = document.getElementById("C_learn1").disabled && !document.getElementById("C_sing0").disabled && readSet(SC).sing === 0;
+  setC(SC, { sing: 1 }); go(SC);
+  check("flow: C round 1 holds his song, frees hers (" + c1 + "); a click on her father's song sets it (" + toggled + "); round 2 holds hers and opens his genes (" + c2 + ")", c1 && toggled && c2);
   check("flow: two hits finish C (" + Gates.C.done + ")", Gates.C.done);
   /* D: Go held until a drawing; one drag sets every dot; Clear; drag again; Go; three rounds end the lesson */
   paintAll();
@@ -172,6 +177,7 @@ for (const S of [SA, SB, SC, SD]) S.cfg.paint();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
 say("RAN " + ran);
 for (const K of ["A", "B", "C", "D"]) say("R" + K + " " + RTEXT["code" + K].replace(/\\n/g, "\\\\n"));
+say("RE " + rModel("C -- a learned song", { q: [0, 1], s: 2, song: true, sing: "genes", learn: "father" }).map(l => l[1]).join("\\\\n"));
 L_.join(" ;; ");
 `;
 const INNER_NARROW = `
@@ -207,16 +213,16 @@ setTimeout(() => {
   if (!m) { console.error("no result -- is Chrome at " + CHROME + " ?"); cleanup(); process.exit(2); }
   const text = dec(m[1]), lines = text.split(" ;; ");
   let bad = !/ALL BARS PASS/.test(text);
-  for (const line of lines) if (!/^R[ABCD] /.test(line)) console.log(line);
+  for (const line of lines) if (!/^R[ABCDE] /.test(line)) console.log(line);
   const reported = lines.filter(l => /^(ok|FAIL)\s/.test(l)).length, ranLine = /^RAN (\d+)$/.exec((lines.find(l => /^RAN \d+$/.test(l)) || ""));
   if (!ranLine || +ranLine[1] !== reported) { console.log("FAIL harness  " + (ranLine ? ranLine[1] : "?") + " checks ran, " + reported + " came back"); bad = true; }
   const narrow = m2 ? dec(m2[1]) : "FAIL narrow frame gave nothing"; console.log(narrow); if (!/^ok/.test(narrow)) bad = true;
   const probeR = spawnSync("Rscript", ["--version"], { encoding: "utf8" });
   if (probeR.error) console.log("skip R panels  (no Rscript)");
-  else for (const K of ["A", "B", "C", "D"]) {
+  else for (const K of ["A", "B", "C", "D", "E"]) {
     const src = (lines.find(l => l.startsWith("R" + K + " ")) || "").slice(3).replace(/\\n/g, "\n"), fixed = src.replace(/G <- \d+/, "G <- 3");
     const o = spawnSync("Rscript", ["-e", fixed + "\ncat('\\nOK\\n')"], { encoding: "utf8", timeout: 240000 }), ok = /OK/.test(o.stdout || "");
-    console.log((ok ? "ok   " : "FAIL ") + "the R panel of stage " + K + " runs (3 generations)" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
+    console.log((ok ? "ok   " : "FAIL ") + "the R panel of stage " + (K === "E" ? "C (his song from his genes)" : K) + " runs (3 generations)" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
     if (!ok) bad = true;
   }
   cleanup(); process.exit(bad ? 1 : 0);

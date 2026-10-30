@@ -50,6 +50,8 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        surfaces and the three-gene DAG are what 22 inherits. 21 C is a learned song again: a son sings his father's song,
        and her preference comes from her genes, her father's song or the island's songs. The learned call as a kin cue
        still follows from it.
+       2026-10-30: 21 C cut the beak's limit on the song and added his song from his genes or his father. Only father's
+       song with her father's song holds: the song tracks the father's line whole, which is what a kin cue needs.
     B  relatedness, measured. The pedigree (20 A's engine and view) under the grid: click a bird and a neighbour, see where
        their copies meet; the plot of average relatedness between helper and helped (the chance their copies at the helping
        locus meet within so many generations, or the regression of a neighbour's allele on the helper's). Targets on the
