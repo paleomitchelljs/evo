@@ -7,16 +7,19 @@
  * reproduction <- mating <- colour / preference <- genes. Two islands of
  * finches; seeds by island and preference strength, each a fitness
  * surface. A seeds and preference strength; B the beak as the cue (one
- * arrow, beak -> mating); C a learned preference (her genes, her father's
- * colour, the island's males); D three drawn rounds. (Draft 2's checks are
+ * arrow, beak -> mating); C a learned song (a son sings his father's; a
+ * song his beak does not suit sung badly; her preference from her genes,
+ * her father's song or the island's songs); D three drawn rounds. (Draft 2's checks are
  * this file at b46e463; the first draft's at a887904.) What has to hold:
  *
  *   Engine. With no migration the islands never mix (F_ST 1 at all three
  *      genes); the genes sort independently; a female who likes pale among
  *      dark males goes unmated as (1 - e^-s)^4 says; survivors' beaks from
  *      one-of-each parents on soft seeds as 1:2:1 times the survival rule
- *      says; a preference learned from the father follows the father, from
- *      the island the island's males.
+ *      says; a son sings his father's song 98% of the time, and with the
+ *      beak's whole limit a small beak singing the slow trill never mates;
+ *      a preference learned from the father follows the father, from the
+ *      island the island's males.
  *   Rounds. Each target hit by its intended setting (and a neighbour of
  *      it), missed by its opening. The drawn rounds: the runs' own average
  *      inside its cloud, a flat line at 1 not, and no one flat line inside
@@ -75,6 +78,13 @@ const grow = (P, seed, n) => { const w = bwWorld(Object.assign({ N: BW_N, m: 0.1
   const pl = L => { let s5 = 0, n5 = 0; for (let r = 0; r < 20; r++) { const w5 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 6, w: 0, learn: L }, 500 + r); let h = 0;
       for (const x of w5.isl[0]) if (x.sex === 1 && (h++ % 2)) { x.g[1] = 1; x.g[4] = 1; } bwStep(w5); for (const x of w5.isl[0]) { s5 += x.pl; n5++; } } return s5 / n5; };
   const plF = pl(1), plI = pl(2);
+  /* the song (C): learned from the father, 1 in 50 misheard; a song the beak does not suit sung badly */
+  let sl = 0, ns = 0; for (let r = 0; r < 10; r++) { const w6 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 0, song: true, lim: 0 }, 600 + r);
+    for (const x of w6.isl[0]) if (x.sex === 1) x.sg = 1; bwStep(w6); for (const x of w6.isl[0]) { sl += x.sg; ns++; } }
+  let bad = 0, all = 0; for (let r = 0; r < 10; r++) { const w7 = bwWorld({ N: 200, m: 0, q: [0, 0], s: 0, w: 0, learn: 0, song: true, lim: 1 }, 700 + r); let h = 0;
+    for (const x of w7.isl[0]) if (x.sex === 1) { x.sg = 1; if (h++ % 2) { x.g[0] = 1; x.g[3] = 1; } } bwStep(w7); for (let i = 0; i < 2; i++) bad += w7.bb[i]; for (const v of w7.bb) all += v; }
+  check("engine: a young bird sings its father's song " + (100 * sl / ns).toFixed(1) + "% of the time (98% set); with the beak's whole limit, small beaks singing the slow trill father " + bad + " of " + all + " broods",
+        Math.abs(sl / ns - 0.98) < 0.01 && bad === 0 && all > 500);
   check("engine: learned from the father the young like what the (pale) fathers are (liking for dark " + plF.toFixed(3) + "); from the island, what its males are, half dark (" + plI.toFixed(3) + ")",
         plF < 0.05 && plI > 0.35 && plI < 0.65);
 }
@@ -94,8 +104,8 @@ T("A", 1, [{ s: 4 }, { s: 6 }], [{ s: 3 }, { s: 0 }]);
 T("A", 2, [{ q0: 0, q1: 0 }, { q0: 1, q1: 1 }], [{ q0: 0, q1: 1 }]);
 T("B", 0, [{ w: 1 }], [{ w: 0 }, { w: 0.25 }]);
 T("B", 1, [{ s: 2 }, { s: 3 }], [{ s: 1 }]);
-T("C", 0, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
-T("C", 1, [{ learn: 0 }, { learn: 1 }], [{ learn: 2 }]);
+T("C", 0, [{ lim: 1 }], [{ lim: 0 }, { lim: 0.25 }]);
+T("C", 1, [{ learn: 1 }], [{ learn: 0 }, { learn: 2 }]);
 {
   /* the drawn rounds: the 16 runs' own average inside its cloud; a flat line at 1 ("they stay apart") outside; no flat line inside on all three */
   const flats = [0, 0.25, 0.5, 0.75], perRound = [];
@@ -130,7 +140,7 @@ T("C", 1, [{ learn: 0 }, { learn: 1 }], [{ learn: 2 }]);
         held1 && sentence && miss && clicked && hit && doneA);
   setC(SB, { w: 1 }); go(SB); next(SB); setC(SB, { s: 2 }); go(SB);
   check("flow: two hits finish B (" + Gates.B.done + ")", Gates.B.done);
-  setC(SC, { learn: 1 }); go(SC); next(SC); setC(SC, { learn: 0 }); go(SC);
+  setC(SC, { lim: 1 }); go(SC); next(SC); setC(SC, { learn: 1 }); go(SC);
   check("flow: two hits finish C (" + Gates.C.done + ")", Gates.C.done);
   /* D: Go held until a drawing; one drag sets every dot; Clear; drag again; Go; three rounds end the lesson */
   paintAll();

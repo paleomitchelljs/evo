@@ -1,4 +1,4 @@
-# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the beak as the cue, a learned preference; first draft: species selection (parked for the hierarchical Price lesson)
+# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the beak as the cue, a learned song; first draft: species selection (parked for the hierarchical Price lesson)
 
 **File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG, v3, 10 bits. Draft 2 is the file at
 b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
@@ -67,9 +67,9 @@ a cue and a preference that are learned, not inherited.
 
 ## Flow into 22
 
-(2026-10-29, draft 3: the who-mated-whom network and the song are gone. What carries over is the over-time chart, the
-fitness surfaces, the three-gene DAG, the beak-as-cue arrow (B) and the father/island learning (C). The list below is the
-10-28 plan.)
+(2026-10-29, draft 3: the who-mated-whom network is gone. What carries over is the over-time chart, the fitness surfaces,
+the three-gene DAG, the beak-as-cue arrow (B) and C's learned song: a son sings his father's song, and her preference comes
+from her genes, her father's song or the island's songs. The list below is the 10-28 plan.)
 
 - A's who-mated-whom network becomes 22's who-helps-whom.
 - A's "prefer a partner like yourself" becomes 22's greenbeard: one gene for a tag, its recognition, and the help.
@@ -189,7 +189,7 @@ Readings (2026-10-29):
   DAG:
   - B: one arrow added, beak → mating (she judges his beak against hers).
   - C: where her preference comes from (her genes / her father's colour / the island's males' colours). This is sexual
-    imprinting, not song; Grant & Grant 1997 is to check.
+    imprinting, not song; Grant & Grant 1997 is to check. Replaced the same day by the song, at JM's word (below).
   - Either can be cut.
 
 ## Draft 3 (2026-10-29)
@@ -236,8 +236,28 @@ Measured (scratchpad eng3.js, the page's engine; 16 runs at 100 gens, five seed 
     linkage (tried, not on the page): β 3, colour gene beside the beak gene (r 0) .76 vs unlinked .27; all three genes
       together (r 0) β 2 .77. The beak-as-cue arrow does what r 0 does with one arrow.
 
+JM on draft 3, 2026-10-29 (verbatim): "Introducing song as a sort of magic trait--where having a bad song directly effects
+fitness & discriminates between groups--is a fine thing to build for since the parts are all bird centered. It's just a shift
+from a genes -> color panel to a parent song -> offspring song panel in a DAG."
+
+C rebuilt the same day (read: a bad song = a song the beak does not suit, sung badly, so taken less; the song discriminates as
+the cue she judges):
+    C          no colour gene: father's song -> song (sons learn it, 1 in 50 misheard); she judges his song (fast / slow trill)
+               against her preference; she takes him with exp(-β d²) times how well he sings, 1 - lim |beak - song| (beak ->
+               song, the new arrow, "how much the beak limits the song"; Podos 2001, to check). Preference source toggle kept:
+               her genes / her father's song / the island's songs. Surfaces: his song × she likes; his song × his beak (how
+               well he sings it). Seeds apart, β 2 held.
+               C1 her genes held, lim free (opens 0): beak F_ST ≥ .68. C2 lim 0 held, source free (opens the island's songs):
+               the same.
+    measured   (eng4.js, four sets; page in brackets) genes: lim 0 .52-.58 [.54], .25 [.64], .5 .67-.72, 1 .75-.79 [.79].
+               lim 0: father's song .73-.75 [.73], island's songs .49-.53 [.53] (songs mix, .01-.03). No preference (β 0), lim
+               1: .56-.62 (the song tracks the beak, .55-.69, but nothing chooses by it). A song passed father to son never
+               recombines: the song-beak link decays only through the mothers' beak genes.
+    D          unchanged (no song set-up). The 10-28 learned-colour C is gone; its numbers stay above.
+
 Open for JM (draft 3):
-1. B and C carry his 10-28 asks (magic traits, non-genetic inheritance) on the new DAG. Keep, change, or cut?
+1. ~~B and C carry his 10-28 asks on the new DAG. Keep, change, or cut?~~ Answered 2026-10-29: song as a sort of magic trait,
+   built as C. B (beak as the cue) kept. Should one D round be a song set-up?
 2. Preference strength steps 0 1 2 3 4 6: the colours hold at 4 and fall at 2; 3 is the edge (slow loss). The mating
    grid shows what each step means.
 3. A3 is a target to make the islands the same: strong preferences, but seeds that favour one beak on both islands.
@@ -391,7 +411,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 5 | draft 2: A-D, v2, 10 bits; `check_lesson21_numbers.js` rewritten (23 + widths + R) | done 2026-10-29 |
 | 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | done 2026-10-29: his review, the three-gene DAG |
 | 7 | draft 3: engine prototype (eng3.js), the bars measured; the page rebuilt, v3, 10 bits; check script rewritten | done 2026-10-29 |
-| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo |
+| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo (his C ruling done 2026-10-29: song) |
 
 ## Rulings
 
@@ -399,6 +419,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 - 2026-10-28 (second ruling): 21 = speciation, in particular by sexual selection, where different behavioural strategies are optimal for different individuals; magic traits; non-genetic inheritance (bird song); built to flow into 22 (kin selection, gene-level competition); the target lesson is the hierarchical Price lesson (23-25).
 - 2026-10-28 (on the plan): "Yes to the bird reading" (the best mating rule depends on the bird); sexual selection alone may fail to split, and the page shows both outcomes ("That's fine"); "Birds, two islands".
 - 2026-10-29 (on draft 2): the DAG genes → beak → seeds → reproduction ← mating ← colour / preference ← genes; three genes (beak, colour, preference); who mated whom and young per female cut; the over-time chart with its menu is the animation core; seeds by island and preference strength each make a fitness surface.
+- 2026-10-29 (on draft 3): song as a sort of magic trait (a bad song costs fitness and discriminates between groups); the DAG's genes -> colour becomes parent song -> offspring song.
 
 ## Do not
 
