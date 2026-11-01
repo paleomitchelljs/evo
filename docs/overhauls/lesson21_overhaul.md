@@ -1,11 +1,11 @@
-# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the beak as the cue, a learned song; first draft: species selection (parked for the hierarchical Price lesson)
+# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the cost of brightness and the colour gene's place, a learned song; first draft: species selection (parked for the hierarchical Price lesson)
 
-**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG, v3, 10 bits. Draft 2 is the file at
+**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG; B and C rebuilt 2026-11-01, v4, 12 bits. Draft 2 is the file at
 b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"); C rebuilt 2026-10-30 without the beak's
-limit on the song. Intros are draft bullets for JM's dictation. LOCKS `x`
-**Last touched** · 2026-10-30
+limit on the song; B and C rebuilt 2026-11-01 (see "JM, 2026-11-01"). Intros are draft bullets for JM's dictation. LOCKS `x`
+**Last touched** · 2026-11-01
 
 ## JM, 2026-10-28, second ruling (verbatim)
 
@@ -69,7 +69,9 @@ a cue and a preference that are learned, not inherited.
 
 (2026-10-29, draft 3: the who-mated-whom network is gone. What carries over is the over-time chart, the fitness surfaces,
 the three-gene DAG, the beak-as-cue arrow (B) and C's learned song: a son sings his father's song, and her preference comes
-from her genes, her father's song or the island's songs. The list below is the 10-28 plan.)
+from her genes, her father's song or the island's songs. 2026-11-01: the beak-as-cue arrow is gone; B carries the colour gene
+dragged along the beak gene's chromosome and an inversion (the tag-and-help race in 22); C's song passes from the father to
+son and daughter by two arrows, and the island's songs are gone. The list below is the 10-28 plan.)
 
 - A's who-mated-whom network becomes 22's who-helps-whom.
 - A's "prefer a partner like yourself" becomes 22's greenbeard: one gene for a tag, its recognition, and the help.
@@ -293,6 +295,84 @@ Open for JM (draft 3):
 5. B's empirical anchor for the beak as the cue: Ratcliffe & Grant 1983 (Anim Behav; finches told species apart by
    morphology, mounted specimens), to check. Name it in B's diagram tip?
 
+## JM, 2026-11-01 (verbatim, three messages)
+
+> For lesson 21–I don't like the part B where females are choosing based on beak shape. Also for part C, I think there
+> should be an arrow from father's song to preference, as in birds a female's song is often driven by their parents rather
+> than by other birds in general.
+>
+> I think having an increased death rate with brighter colors makes more sense for illuminating a trade off for part B
+
+> Also "chance she takes him" is creepy wording—could it just be "mating probability"
+
+> We can also use the loci positioning tool from prior lessons to have the color locus and beak shape locus at variable to
+> approximate the trade off, with an inversion toggle to potentially lock them together
+
+Readings:
+- "brighter colors": the colour gene runs dull → bright on every stage (was pale → dark), bright in the page's red (a
+  lightness ramp too: colourblind students). The colour shows in males, and only males pay the cost.
+- "at variable": at variable distances. "to approximate the trade off": read as the colour gene linked to the beak gene, so
+  a costly colour can ride on a favoured beak (or drag it down). Built in B beside the cost, not instead of it.
+- "an arrow from father's song to preference": C's diagram gets a father's-song box with two arrows out, to his song and to
+  her preference; each arrow is the control (on or off), the radio rows are gone. "rather than by other birds in general":
+  the island's songs are cut as a source.
+- "mating probability": every "chance she takes him" on screen and in the code comments.
+
+Built (2026-11-01, v4, 12 bits; scratchpad eng6.js the engine, then the page in the check):
+
+    engine     a gamete takes the colour allele from the beak allele's chromosome unless a crossover parts them: 1/2 on
+               separate chromosomes (A, C, D), r = (1 - (1 - 2/39)^d) / 2 at d loci apart on B's 40-locus chromosome (beak
+               gene at 20: .026 beside, .32 at 40), none in a bird with one inverted and one standard chromosome (the
+               inversion on every chromosome that starts on the blue island). A male lives with his beak's chance times
+               1 - c x colour (0, 1/2, 1), c the cost of brightness. C: sg and pl set at hatching: the father's song (1 in 50
+               wrong) when the arrow is on, else the bird's own song or preference gene. B's beak-as-cue (w) is gone.
+    B          seeds apart. Diagram: A's plus the cost of brightness, colour -> reproduction (red, signed, lesson 19's cost
+               idiom). Surfaces: survival by beak; a male's survival by colour (new, the cost); mating probability. The
+               chromosome (lesson 19 D's strip, draft 2's drag): the colour gene ■ dragged, an inversion box with its bracket.
+               B1 strength 4, colour gene at 40, cost free (opens 0): F_ST at the colour gene ≤ .1.
+               B2 strength 3, cost .25, colour gene free (opens 40): F_ST at the colour gene ≥ .4; one sentence (a drag).
+               B3 the same, colour gene at 40 held, inversion free (opens off): the same.
+               B4 strength 3, inversion on, cost free (opens .25): F_ST at the beak gene ≤ .1.
+    C          diagram: beak gene, song gene, father's song, preference gene; father's song -> song and father's song ->
+               preference, each on or off; the song gene's and preference gene's arrows pale, on when the father's is off.
+               Seeds apart, strength 2. Judged on F_ST of the song (≥ .45), not the beak (see Measured).
+               C1 sons' arrow held on, daughters' free (opens off). C2 daughters' held on, sons' free (opens off).
+    D          D2 is now B3's set-up (strength 3, cost .25, colour gene at 40 with the inversion; ends ~.73-.80). D1, D3 as were.
+    scoring    v4, scaffold 12: A1 A2 A3 B1 B2 B3 B4 C1 C2 D1 D2 D3.
+    also       a newly freed arrow glowed only after the next redraw (paths.js synced before Next target re-enabled its
+               input; A2's strength arrow had it too): syncStage re-syncs the diagram when the set of enabled inputs changes.
+
+Measured (eng6.js; 16 runs at 100 generations, the runs' average, three to eight seed sets; the page's runs in brackets):
+
+    B, strength x cost, colour gene unlinked / at 40 / beside / inversion, F_ST at the colour gene:
+      s 3: c 0 .28-.36 / .22-.38 / .59-.76 / .75-.82; c .25 .15-.16 / .08-.28 / .50-.62 / .68-.78; c .5 0 / 0 / .07-.23 / .32-.47
+      s 4: c 0-.25 .78-.91 everywhere; c .5 .55-.71 / .62-.77 / .80-.87 / .87-.90; c .75 0 / 0 / .10-.11 / .10-.25; c 1 0
+      s 6: holds to c .75 (.84-.93); c 1 0
+    B1 (s 4, at 40) by cost: 0 .83-.89 [.87], .25 .82-.86, .5 .69-.79 [.68], .75 .00-.01 [.00], 1 0 [.00].
+    B2 (s 3, c .25) by the colour gene's distance from the beak gene: 1 .49-.71 [.57 at 21, .66 at 19], 2 .38-.62, 3
+      .31-.49, 4 .29-.59, 6 .30-.42, 9 .28-.31, 14-20 .07-.33 [.16 at 40, .15 at 1]. Bar .4: beside always, two away 7 of 8.
+    B3 inversion, colour gene at 40: .68-.82 [.74]; off [.14].
+    B4 (s 3, inversion) F_ST at the beak gene by cost: 0 .75-.82, .25 .68-.78 [.78], .5 .23-.47 [.49], .75 .00-.01 [.00], 1 0;
+      no inversion at .75 .46-.55 [.50]. Locked together, purging the bright colour purges the large beak: the small beak
+      takes both islands.
+    C, F_ST at the beak gene by the chance a son / a daughter learns (0 .25 .5 .75 1 each): both 1 .70-.75; any other pair
+      .45-.60. Learning short of always breaks the block, so the arrows are on or off. On the page both on gave .62 at
+      C1's seed against .57 with daughters off: too thin for a bar, so C is judged on F_ST of the song: both on .61-.78
+      [.61, .71], sons only .07-.23 [.06], daughters only .00-.05 [.02]. The beak, both on [.73, .74], one off [.49, .52].
+
+Open for JM (2026-11-01):
+1. Magic traits have now left the lesson (B's beak-as-cue cut today; C's beak -> song cut 2026-10-30), though his 10-28
+   ruling asked for them. The inversion locking the colour gene to the beak gene is the nearest thing. A cost of brightness
+   that differs by island (predators on one island only) would make the colour a magic trait in Servedio et al.'s sense
+   (divergent natural selection on a mating cue): one more setting a stage. Add it, or leave magic traits out?
+2. "to approximate the trade off" read as linkage carrying the cost (above). If he meant something else, B2-B4 change.
+3. B has four targets (12 bits in all). B4 (the inversion takes the large beak down with the bright colour) is the one to
+   cut if that is too many; it is also the one that shows an inversion is not only protective.
+4. C is judged on the songs, not the beaks (Measured). The beak shows in the menu. Fine?
+5. The island's songs were cut from C on "rather than by other birds in general". Back as a third arrow if he wants the
+   contrast (it measured .47-.54 at the beak, like her genes).
+6. Draft 3's open items 2-5 stand (strength steps; A3; the immigrant, 4 looks, citations, real data). D has no song round.
+
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
 
 > **2026-10-28, from lesson 20's review (JM agreed):** 20 B no longer has the choosy allele or the tag. 21 B inherits both. The
@@ -441,6 +521,8 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 7 | draft 3: engine prototype (eng3.js), the bars measured; the page rebuilt, v3, 10 bits; check script rewritten | done 2026-10-29 |
 | 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo (his C rulings done: song 2026-10-29; no beak -> song 2026-10-30) |
 | 9 | C without the beak's limit: his song from his genes or his father; eng5.js measured; page, check script | done 2026-10-30 |
+| 10 | JM 2026-11-01: B = cost of brightness + colour gene on the beak's chromosome + inversion (beak-as-cue cut); C = two arrows from the father's song (island's songs cut); "mating probability"; dull/bright; eng6.js measured; page v4 (12 bits); check script (27 + widths + R) | done 2026-11-01 |
+| 11 | JM rules on Open for JM (2026-11-01) | todo |
 
 ## Rulings
 
@@ -450,6 +532,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 - 2026-10-29 (on draft 2): the DAG genes → beak → seeds → reproduction ← mating ← colour / preference ← genes; three genes (beak, colour, preference); who mated whom and young per female cut; the over-time chart with its menu is the animation core; seeds by island and preference strength each make a fitness surface.
 - 2026-10-29 (on draft 3): song as a sort of magic trait (a bad song costs fitness and discriminates between groups); the DAG's genes -> colour becomes parent song -> offspring song.
 - 2026-10-30 (on C): beaks have no strong effect on song; no magic-trait angle in C. C shows non-genetic inheritance reinforcing barriers, and a non-recombining trait (the song) with a recombining ecological trait (the beak).
+- 2026-11-01: no female choice by beak shape in B; B shows a trade-off: brighter males die more; the loci-positioning tool puts the colour gene at a variable distance from the beak gene, with an inversion toggle to lock them together. C: an arrow from the father's song to her preference (a female's preference comes from her parents rather than other birds). On screen, "mating probability", never "chance she takes him".
 
 ## Do not
 

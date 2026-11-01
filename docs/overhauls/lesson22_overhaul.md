@@ -52,6 +52,11 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        still follows from it.
        2026-10-30: 21 C cut the beak's limit on the song and added his song from his genes or his father. Only father's
        song with her father's song holds: the song tracks the father's line whole, which is what a kin cue needs.
+       2026-11-01: 21 C is two arrows from the father's song (to the son's song, to the daughter's preference), each on or
+       off; the island's songs are gone as a source (JM: "a female's song is often driven by their parents rather than by
+       other birds in general"). 21 B is now the cost of brightness with the colour gene dragged along the beak gene's
+       chromosome and an inversion between them: the tag-and-help race below has its picture there (linkage and an
+       inversion holding a cue to the trait), not in a magic trait.
     B  relatedness, measured. The pedigree (20 A's engine and view) under the grid: click a bird and a neighbour, see where
        their copies meet; the plot of average relatedness between helper and helped (the chance their copies at the helping
        locus meet within so many generations, or the regression of a neighbour's allele on the helper's). Targets on the
@@ -133,7 +138,8 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
 - **D one level up** (moved to hierarchical_price_plan.md with the species level): inherits 20 D's founder's bias at
   speciation: name three terms (between species, within, at the splits), not two.
 - **A greenbeard holds only while the tag and the help stay together.** Recombination between them, or a mutation giving the
-  tag without the help, breaks it: the same race as 21 B's magic trait against a separate cue. One gene for both (magic)
+  tag without the help, breaks it: the same race as 21 B's colour gene against the beak gene (2026-11-01: dragged along one
+  chromosome, an inversion between them; draft 3's magic trait, the beak as the cue, was cut). One gene for both (magic)
   cannot be broken by crossing over, only by mutation.
 
 ## Idea for 22 or a later 23 (JM, 2026-10-28) — MOVED
