@@ -8,10 +8,11 @@
  * finches; seeds by island and preference strength, each a fitness
  * surface. A seeds and preference strength; B (2026-11-01) the cost of
  * brightness, the colour gene dragged along the beak gene's chromosome,
- * an inversion between them; C a learned song (two arrows from the
- * father's song, to his son's song and his daughter's preference, each on
- * or off); D three drawn rounds. (Draft 2's checks are this file at
- * b46e463; the first draft's at a887904.) What has to hold:
+ * an inversion between them; C (2026-11-02) A's three genes and a learned
+ * song beside them (a son sings his father's song, a daughter likes it),
+ * each with its own preference strength; D three drawn rounds. (Draft 2's
+ * checks are this file at b46e463; the first draft's at a887904.) What
+ * has to hold:
  *
  *   Engine. With no migration the islands never mix (F_ST 1 at all three
  *      genes); genes on separate chromosomes sort independently; on one
@@ -21,17 +22,20 @@
  *      goes unmated as (1 - e^-s)^4 says; survivors' beaks from one-of-each
  *      parents on soft seeds as 1:2:1 times the survival rule says; their
  *      sons' colours as 1:2:1 times the cost of brightness; a son sings
- *      his father's song 98% of the time when sons learn, his song gene's
- *      when not; a daughter likes her father's song when daughters learn,
- *      her preference gene's when not.
+ *      his father's song 98% of the time, a daughter likes it 98%; a
+ *      female who likes the fast trill among slow singers goes unmated as
+ *      (1 - e^-s_song)^4 says, and among bright slow singers as
+ *      (1 - e^-(s + s_song))^4 (the two multiplied).
  *   Rounds. Each target hit by its intended setting (and a neighbour of
  *      it), missed by its opening. The drawn rounds: the runs' own average
  *      inside its cloud, a flat line at 1 not, and no one flat line inside
  *      on all three.
  *   Flow. A miss records 0 and the round stays; a click on the seeds sets
  *      them; Next after a hit; A round 1's sentence; B's drag of the colour
- *      gene and its inversion box; C's arrows held and free, the genes'
- *      arrows following; D holds Go until a drawing, one drag sets all ten
+ *      gene and its inversion box; colour -> mating dashed at strength 0
+ *      and following it after; C's two strengths held and free, each
+ *      trait's arrow following its own; D holds Go until a drawing, one
+ *      drag sets all ten
  *      dots, Clear takes them away; twelve bits written; the lesson ends.
  *   Layout. Hover marks with words; every canvas fits (1500 and 1000
  *      wide); each stage's R code last and closed; the four R panels run
@@ -55,7 +59,7 @@ const L_=[], say=s=>L_.push(s);
 let bad=0, ran=0;
 const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")+name+(detail?"  -- "+detail:"")); };
 for (const k in Gates) { Gates[k].open = true; document.getElementById("stage" + k).classList.remove("stage-locked"); }
-const BASE = { N: BW_N, m: 0.1, q: [0, 1], s: 0, c: 0, at: null, inv: 0, song: false, sing: 0, learn: 0 }, mk = P => Object.assign({}, BASE, P);
+const BASE = { N: BW_N, m: 0.1, q: [0, 1], s: 0, c: 0, at: null, inv: 0, song: false, ss: 0 }, mk = P => Object.assign({}, BASE, P);
 const grow = (P, seed, n) => { const w = bwWorld(mk(P), seed); for (let t = 0; t < n; t++) bwStep(w); return w; };
 
 /* ================= the engine ================= */
@@ -93,12 +97,18 @@ const grow = (P, seed, n) => { const w = bwWorld(mk(P), seed); for (let t = 0; t
   const sm = gm.reduce((a, c) => a + c, 0), sf = gf.reduce((a, c) => a + c, 0);
   check("engine: at cost of brightness " + c0 + " sons' colours (dull, in between, bright) " + gm.map(x => (x / sm).toFixed(3)).join(", ") + " vs " + wantM.map(x => x.toFixed(3)).join(", ") + "; daughters' " + gf.map(x => (x / sf).toFixed(3)).join(", ") + " vs .25, .5, .25",
         gm.every((x, z) => Math.abs(x / sm - wantM[z]) < 0.015) && gf.every((x, z) => Math.abs(x / sf - [0.25, 0.5, 0.25][z]) < 0.015));
-  /* the song (C): every orange-island male sings the slow trill though his genes say fast; the young, with each arrow on or off */
-  const sung = (sing, learn) => { let sl = 0, lk = 0, ns = 0, nd = 0; for (let r = 0; r < 10; r++) { const w6 = bwWorld(mk({ N: 200, m: 0, q: [0, 0], song: true, sing, learn }), 600 + r);
-      for (const x of w6.isl[0]) if (x.sex === 1) x.sg = 1; bwStep(w6); for (const x of w6.isl[0]) { if (x.sex) { sl += x.sg; ns++; } else { lk += x.pl; nd++; } } } return [sl / ns, lk / nd]; };
-  const [sOn, lOn] = sung(1, 1), [sOff, lOff] = sung(0, 0);
-  check("engine: arrows on, a son sings his father's slow trill " + (100 * sOn).toFixed(1) + "% (98% set) and a daughter likes it " + (100 * lOn).toFixed(1) + "%; off, they follow their genes (" + sOff.toFixed(3) + ", " + lOff.toFixed(3) + ")",
-        Math.abs(sOn - 0.98) < 0.01 && Math.abs(lOn - 0.98) < 0.01 && sOff === 0 && lOff === 0);
+  /* the song (C): every orange-island male sings the slow trill; his young sing it and like it, 1 in 50 wrong */
+  { let sl = 0, lk = 0, ns = 0, nd = 0; for (let r = 0; r < 10; r++) { const w6 = bwWorld(mk({ N: 200, m: 0, q: [0, 0], song: true }), 600 + r);
+      for (const x of w6.isl[0]) if (x.sex === 1) x.sg = 1; bwStep(w6); for (const x of w6.isl[0]) { if (x.sex) { sl += x.sg; ns++; } else { lk += x.pl; nd++; } } }
+    check("engine: a son sings his father's slow trill " + (100 * sl / ns).toFixed(1) + "% and a daughter likes it " + (100 * lk / nd).toFixed(1) + "% (98% set); no gene is read",
+          Math.abs(sl / ns - 0.98) < 0.01 && Math.abs(lk / nd - 0.98) < 0.01); }
+  /* the song's mating probability, and the two multiplied: orange-island females like dull and fast; every male slow, or slow
+     and bright */
+  const unm = (P, bright) => { let un = 0; const R = 40; for (let r = 0; r < R; r++) { const w7 = bwWorld(mk(Object.assign({ N: 200, m: 0, q: [0, 0], song: true }, P)), 700 + r);
+      for (const x of w7.isl[0]) if (x.sex === 1) { x.sg = 1; if (bright) { x.g[1] = 1; x.g[4] = 1; } } bwStep(w7); un += w7.unm[0]; } return un / R; };
+  const su = [[{ ss: 1 }, 1], [{ ss: 3 }, 3], [{ s: 1, ss: 1 }, 2, true]].map(([P, k, br]) => [P, unm(P, br), Math.pow(1 - Math.exp(-k), 4)]);
+  check("engine: a female who likes the fast trill among slow singers goes unmated as (1 - e^-s_song)^4, among bright slow singers as (1 - e^-(s + s_song))^4 (" + su.map(([P, got, want]) => JSON.stringify(P).replace(/"/g, "") + ": " + got.toFixed(3) + " vs " + want.toFixed(3)).join("; ") + ")",
+        su.every(([, got, want]) => Math.abs(got - want) < 0.02));
 }
 
 /* ================= the rounds ================= */
@@ -118,8 +128,8 @@ T("B", 0, [{ c: 0.75 }, { c: 1 }], [{ c: 0 }, { c: 0.5 }]);
 T("B", 1, [{ at: 20 }, { at: 18 }], [{ at: 39 }, { at: 0 }]);
 T("B", 2, [{ inv: 1 }], [{ inv: 0 }]);
 T("B", 3, [{ c: 0.75 }, { c: 1 }], [{ c: 0.25 }, { c: 0.5 }, { c: 0.75, inv: 0 }]);
-T("C", 0, [{ learn: 1 }], [{ learn: 0 }]);
-T("C", 1, [{ sing: 1 }], [{ sing: 0 }]);
+T("C", 0, [{ ss: 1 }, { ss: 2 }], [{ ss: 0 }]);
+T("C", 1, [{ s: 2 }, { s: 3 }], [{ s: 1 }, { s: 0 }]);
 {
   /* the drawn rounds: the 16 runs' own average inside its cloud; a flat line at 1 ("they stay apart") outside; no flat line inside on all three */
   const flats = [0, 0.25, 0.5, 0.75], perRound = [];
@@ -141,18 +151,21 @@ T("C", 1, [{ sing: 1 }], [{ sing: 0 }]);
   for (const S of [SA, SB, SC, SD]) { S.round = 0; S.done = false; S.waiting = false; S.results = []; S.last = null; S.pred = null; const pr = document.getElementById(S.K + "_practice"); if (pr) pr.checked = false; openRound(S); }
   Gates.A.done = Gates.B.done = Gates.C.done = Gates.D.done = false; paintAll();
   const go = S => { document.getElementById(S.K + "_go").click(); finishNow(S); }, next = S => document.getElementById(S.K + "_next").click();
+  const cls = (K, id) => (document.querySelector("#" + K + '_paths [data-of="' + id + '"]') || { classList: { contains: () => false } }).classList;
   const held1 = document.getElementById("A_s").disabled, sentence = /Click the seeds/.test(document.getElementById("A_ttext").innerHTML);
+  const zero1 = cls("A", "cm").contains("zero") && cls("A", "s").contains("zero") && !document.querySelector('#A_paths [data-of="x5"]');
   go(SA); const miss = Score.getBit("scaffold", BIT.A1) === 0 && !SA.waiting && SA.round === 0;
   /* the blue island's fourth seed: all four hard */
   const sc = document.getElementById("A_seeds"), sr = sc.getBoundingClientRect(), sk = sr.width / SDP.W;
   sc.dispatchEvent(new PointerEvent("pointerdown", { clientX: sr.left + seedX(1, 3) * sk, clientY: sr.top + SDP.y * sk, pointerId: 1, bubbles: true }));
   const clicked = readSet(SA).q1 === 1;
   go(SA); const hit = SA.waiting; next(SA);
+  const follow2 = !cls("A", "cm").contains("zero") && cls("A", "cm").contains("locked") && cls("A", "s").contains("settable");
   setC(SA, { s: 4 }); go(SA); next(SA);
   setC(SA, { q0: 0, q1: 0 }); go(SA); const doneA = Gates.A.done;
   check("flow: A round 1 holds preference strength (" + held1 + ") and says to click the seeds (" + sentence + "); a miss records 0 and the round stays (" + miss + "); a click sets the seeds (" + clicked + "); a hit opens Next (" + hit + "); three hits finish A (" + doneA + ")",
         held1 && sentence && miss && clicked && hit && doneA);
-  const cls = (K, id) => (document.querySelector("#" + K + '_paths [data-of="' + id + '"]') || { classList: { contains: () => false } }).classList;
+  check("flow: A's diagram: no preference -> mating arrow; at strength 0 colour -> mating and the preference's arrow onto it are dashed (" + zero1 + "); round 2 frees the preference's arrow and colour -> mating follows, pale (" + follow2 + ")", zero1 && follow2);
   const b1 = cls("B", "c").contains("settable") && document.getElementById("B_invBox").disabled;
   setC(SB, { c: 0.75 }); go(SB); next(SB);
   /* round 2: drag the colour gene to locus 21, beside the beak gene */
@@ -166,12 +179,12 @@ T("C", 1, [{ sing: 1 }], [{ sing: 0 }]);
   go(SB); next(SB); setC(SB, { c: 0.75 }); go(SB);
   check("flow: B round 1 frees the cost and holds the inversion (" + b1 + "); round 2 holds the cost (" + b2 + "), a drag puts the colour gene at locus 21 (" + dragged + ") and hits (" + hit2 + "); round 3 opens the box with the gene at 40 (" + b3 + "), a click ticks it (" + ticked + "); four hits finish B (" + Gates.B.done + ")",
         b1 && b2 && dragged && hit2 && b3 && ticked && Gates.B.done);
-  const c1 = cls("C", "sing").contains("locked") && cls("C", "learn").contains("settable") && cls("C", "learnG").contains("locked") && !cls("C", "learnG").contains("zero");
-  const lg = document.getElementById("C_learn"); lg.value = 1; lg.dispatchEvent(new Event("input"));
-  const follows = readSet(SC).learn === 1 && document.getElementById("C_learnG").value === "0" && cls("C", "learnG").contains("zero");
-  go(SC); next(SC); const c2 = cls("C", "learn").contains("locked") && cls("C", "sing").contains("settable") && readSet(SC).sing === 0 && document.getElementById("C_singG").value === "1";
-  setC(SC, { sing: 1 }); go(SC);
-  check("flow: C round 1 holds the sons' arrow on and frees the daughters' (" + c1 + "); turned on, the preference gene's arrow goes off (" + follows + "); round 2 holds the daughters' and opens the sons' off, the song gene's on (" + c2 + ")", c1 && follows && c2);
+  const c1 = cls("C", "s").contains("locked") && cls("C", "ss").contains("settable") && cls("C", "sm").contains("zero") && !cls("C", "cm").contains("zero") && readSet(SC).s === 2 && readSet(SC).ss === 0;
+  const sv = document.getElementById("C_ss"); sv.value = 1; sv.dispatchEvent(new Event("input"));
+  const follows = readSet(SC).ss === 1 && !cls("C", "sm").contains("zero") && cls("C", "sm").contains("locked");
+  go(SC); const hitC = SC.waiting; next(SC); const c2 = cls("C", "ss").contains("locked") && cls("C", "s").contains("settable") && readSet(SC).s === 1 && readSet(SC).ss === 1;
+  setC(SC, { s: 2 }); go(SC);
+  check("flow: C round 1 holds the preference strength at 2 and frees the song's, song -> mating dashed at 0 (" + c1 + "); set to 1, it follows (" + follows + ") and hits (" + hitC + "); round 2 holds the song's at 1 and opens the preference strength at 1 (" + c2 + ")", c1 && follows && hitC && c2);
   check("flow: two hits finish C (" + Gates.C.done + ")", Gates.C.done);
   /* D: Go held until a drawing; one drag sets every dot; Clear; drag again; Go; three rounds end the lesson */
   paintAll();
@@ -203,7 +216,7 @@ for (const S of [SA, SB, SC, SD]) S.cfg.paint();
 say(bad ? ("FAILED " + bad) : "ALL BARS PASS");
 say("RAN " + ran);
 for (const K of ["A", "B", "C", "D"]) say("R" + K + " " + RTEXT["code" + K].replace(/\\n/g, "\\\\n"));
-say("RE " + rModel("C -- a learned song", { q: [0, 1], s: 2, song: true, sons: false, daughters: true }).map(l => l[1]).join("\\\\n"));
+say("RE " + rModel("C -- a learned song beside the colour", { q: [0, 1], s: 0, song: true, ss: 2 }).map(l => l[1]).join("\\\\n"));
 L_.join(" ;; ");
 `;
 const INNER_NARROW = `
@@ -248,7 +261,7 @@ setTimeout(() => {
   else for (const K of ["A", "B", "C", "D", "E"]) {
     const src = (lines.find(l => l.startsWith("R" + K + " ")) || "").slice(3).replace(/\\n/g, "\n"), fixed = src.replace(/G <- \d+/, "G <- 3");
     const o = spawnSync("Rscript", ["-e", fixed + "\ncat('\\nOK\\n')"], { encoding: "utf8", timeout: 240000 }), ok = /OK/.test(o.stdout || "");
-    console.log((ok ? "ok   " : "FAIL ") + "the R panel of stage " + (K === "E" ? "C (sons from their genes, daughters from their father)" : K) + " runs (3 generations)" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
+    console.log((ok ? "ok   " : "FAIL ") + "the R panel of stage " + (K === "E" ? "C (no colour preference, song preference 2)" : K) + " runs (3 generations)" + (ok ? "  -- " + (o.stdout || "").trim().split("\n").slice(-3, -1).join(" ").replace(/\s+/g, " ") : "  -- " + (o.stderr || "").slice(0, 300)));
     if (!ok) bad = true;
   }
   cleanup(); process.exit(bad ? 1 : 0);

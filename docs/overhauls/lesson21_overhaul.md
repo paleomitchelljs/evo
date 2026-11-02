@@ -1,11 +1,12 @@
 # Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the cost of brightness and the colour gene's place, a learned song; first draft: species selection (parked for the hierarchical Price lesson)
 
-**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG; B and C rebuilt 2026-11-01, v4, 12 bits. Draft 2 is the file at
+**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG; B and C rebuilt 2026-11-01; C rebuilt again and the preference drawn onto colour → mating 2026-11-02, v5, 12 bits. Draft 2 is the file at
 b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"); C rebuilt 2026-10-30 without the beak's
-limit on the song; B and C rebuilt 2026-11-01 (see "JM, 2026-11-01"). Intros are draft bullets for JM's dictation. LOCKS `x`
-**Last touched** · 2026-11-01
+limit on the song; B and C rebuilt 2026-11-01 (see "JM, 2026-11-01"); C rebuilt 2026-11-02 (see "JM, 2026-11-02"). Intros are
+draft bullets for JM's dictation. LOCKS `x`
+**Last touched** · 2026-11-02
 
 ## JM, 2026-10-28, second ruling (verbatim)
 
@@ -373,6 +374,88 @@ Open for JM (2026-11-01):
    contrast (it measured .47-.54 at the beak, like her genes).
 6. Draft 3's open items 2-5 stand (strength steps; A3; the immigrant, 4 looks, citations, real data). D has no song round.
 
+## JM, 2026-11-02 (verbatim)
+
+> For lesson 21, part A, the "mating probability" box should have "male color" and "female preference" instead of his
+> color & she likes.
+>
+> For A and B, I'm not sold on the arrows leading to mating. The color -> mating arrow should be zero if there's no
+> preference. So it should be linked to preference in a way the current setup doesn't convey, rather it conveys a fixed
+> effect of color on mating.
+>
+> Part C is also tricky, as it isn't clear what the genes are doing. I'd rather something like keeping color & preference
+> for color but adding the non-genetic song factor and seeing how it interacts
+
+Readings:
+- "male color" / "female preference": the grid's two axis labels, spelled "colour" as the rest of the page. The grid is
+  shared by A, B and D, so all three change; C's grids take the same two words ("male song" for its song grid).
+- "linked to preference": preference → mating is gone. The preference arrow lands on colour → mating (`onto`, lesson 14 A's
+  idiom and draft 2 A's choosiness arrow) and carries the preference strength. Colour → mating is pale and drawn as thick
+  as the strength: dashed (zero) at strength 0. That is what the engine does: exp(-s d²) is 1 for every male at s 0.
+- "keeping color & preference for color but adding the non-genetic song factor": C keeps A's three genes as they are. The
+  song has no gene: a son sings his father's song and a daughter likes her father's song (11-01's two arrows, now fixed:
+  with no song gene there is nothing for "off" to fall back on). She judges both: mating probability = exp(-s d_colour²)
+  × exp(-s_song d_song²). The song preference strength is the new arrow (song preference onto song → mating).
+- "seeing how it interacts": the rounds pair a weak genetic barrier with a weak cultural one (Measured, below).
+
+Plan / status:
+
+| # | What | Status |
+|---|------|--------|
+| 1 | the mating grid's labels: male colour, female preference (A, B, D; C's two grids); B's cost panel "male colour" too | done |
+| 2 | A and B diagrams: preference onto colour → mating, the strength on it; colour → mating follows the strength | done |
+| 3 | C engine: colour + preference genes as A; learned song and song preference beside them; two strengths | done |
+| 4 | C page: diagram, two grids (colour, song), menus, rounds, draft intro, R panel; v5 (C's targets change) | done |
+| 5 | check script: C's engine checks, rounds, flow, R panel; A/B diagram classes | done (29 + both widths + 5 R) |
+
+Built (2026-11-02, v5, 12 bits):
+
+    A, B       preference → mating cut. The preference's arrow lands 40% along colour → mating (ontoAt .4, so the two
+               heads do not pile up at full width) and carries the strength; colour → mating is bound to the same input,
+               read-only: pale, as thick as the strength, dashed at 0. Mating moved down and right so both arrows run
+               ~90-100 px edge to edge (a full-width arrow on less is mostly head). Reproduction lower; diagram 460 x 328.
+    C          diagram (490 x 346): beak gene → beak → seeds → reproduction; colour gene → colour → mating with the
+               preference onto it (A's); father's song → song and → song preference, both grey (fixed: no gene to fall
+               back on); song → mating with the song preference onto it, its own strength. Surfaces: survival by beak;
+               "mating probability: colour" (3 x 3); "× song" (2 x 2, cells as tall as the colour grid's). Menu adds F_ST
+               at the colour gene, bright allele, liking for bright.
+               C1 preference strength 2 held, song preference strength free (opens 0): F_ST at the colour gene ≥ .15.
+               C2 song preference strength 1 held, preference strength free (opens 1): F_ST of the song ≥ .35.
+    measured   thirty sets of 16 (eng7.js): C1 ss 0 .00-.03, ss 1 .25-.56 (median .42), ss 2 .78-.88; C2 s 1 .08-.31,
+               s 2 .43-.74 (median .58), s 3 .66-.83. Page (the check's seed): C1 ss 1 .43, ss 2 .87, ss 0 .00; C2 s 2
+               .55, s 3 .81, s 1 .20, s 0 .25. The C1 bar was .2 until a page run at ss 1 ended at .27.
+
+Open for JM (2026-11-02):
+1. C1 and C2 end on the same pair of settings (preference strength 2, song preference strength 1), reached from either
+   side: the song holds the colour genes, then the colour preference holds the songs. If that reads as one target twice,
+   C2 could instead hold no colour preference (0) and ask for the songs apart (song preference strength 2 does it,
+   .64-.73) while the colour genes mix (.05-.10): the song alone holds itself, not the genes.
+2. The father's-song arrows are fixed now. With no song gene, "off" had nothing to fall back on except the island's
+   songs, which were cut 2026-11-01. Say if you want a switch back (learned from the father or from the island).
+3. A song with no song preference drifts to 50:50 from the 1-in-50 copying errors alone (an error is the other island's
+   song), whatever the colour preference does (song F_ST .13-.23 at colour strength 4-6). So "a colour barrier holds the
+   songs" only shows with some song preference. Fewer errors (1 in 200) would let a colour barrier hold the songs by
+   itself; unmeasured.
+4. "male colour", not "male color": the page spells colour the British way throughout.
+
+Measured (scratchpad eng7.js, the engine for the new C; 16 runs at 100 generations, seeds apart):
+
+    colour strength x song strength (0 1 2 3 4 6 each), three sets; F_ST at the colour gene / of the song / at the beak:
+      s 0:  ss 0 .01-.02 / .04-.12 / .49-.51   ss 1 .02-.03 / .13-.20   ss 2 .05-.10 / .64-.73   ss 6 .36-.53 / .77-.82
+      s 1:  ss 0 .01-.02 / .06-.08             ss 1 .01-.02 / .14-.31   ss 2 .33-.45 / .71-.79   ss 3 .61-.78
+      s 2:  ss 0 .00-.02 / .05-.08             ss 1 .32-.40 / .51-.68   ss 2 .77-.85 / .79-.86
+      s 3:  ss 0 .08-.31 / .05-.12             ss 1 .78-.87 / .68-.76
+      s 4:  ss 0 .84-.85 / .13-.21             ss 1 .91-.93 / .79-.82
+    The two barriers add up to more than either: colour 2 alone loses the colours, song 1 alone loses the songs; together
+    both hold. A song held apart with no song preference (ss 0) is lost to the 1-in-50 copying errors whatever the colour
+    preference does (.13-.23 at s 4-6): an error is the other island's song, so errors alone pull both islands to 50:50.
+    A strong song alone holds the songs (.64+ from ss 2) but the colour gene only slowly (.36-.53 at ss 6).
+    eight sets:
+      C1 (s 2 held; song strength free; F_ST at the colour gene): ss 0 .00-.02, 1 .35-.58, 2 .80-.87, 3 .88-.91
+      C2 (ss 1 held; colour strength free; F_ST of the song): s 0 .04-.17, 1 .10-.24, 2 .47-.71, 3 .72-.80, 4 .73-.81
+    Bars: C1 colour F_ST ≥ .15 (opens ss 0; one step, ss 1, lands; .2 at first, see Built). C2 song F_ST ≥ .35 (opens s 1, A's lost colours; one
+    step, s 2, lands). Both end at the same pair (s 2, ss 1), reached from the two sides.
+
 ## Parked 2026-10-28: speciation mechanics (the plan of earlier that day; superseded by the second ruling, kept as a source)
 
 > **2026-10-28, from lesson 20's review (JM agreed):** 20 B no longer has the choosy allele or the tag. 21 B inherits both. The
@@ -523,6 +606,8 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 9 | C without the beak's limit: his song from his genes or his father; eng5.js measured; page, check script | done 2026-10-30 |
 | 10 | JM 2026-11-01: B = cost of brightness + colour gene on the beak's chromosome + inversion (beak-as-cue cut); C = two arrows from the father's song (island's songs cut); "mating probability"; dull/bright; eng6.js measured; page v4 (12 bits); check script (27 + widths + R) | done 2026-11-01 |
 | 11 | JM rules on Open for JM (2026-11-01) | todo |
+| 12 | JM 2026-11-02: grid labels; preference onto colour → mating (A, B); C = A's genes + a learned song (see "JM, 2026-11-02") | done 2026-11-02 |
+| 13 | JM rules on Open for JM (2026-11-02) | todo |
 
 ## Rulings
 
@@ -532,6 +617,8 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 - 2026-10-29 (on draft 2): the DAG genes → beak → seeds → reproduction ← mating ← colour / preference ← genes; three genes (beak, colour, preference); who mated whom and young per female cut; the over-time chart with its menu is the animation core; seeds by island and preference strength each make a fitness surface.
 - 2026-10-29 (on draft 3): song as a sort of magic trait (a bad song costs fitness and discriminates between groups); the DAG's genes -> colour becomes parent song -> offspring song.
 - 2026-10-30 (on C): beaks have no strong effect on song; no magic-trait angle in C. C shows non-genetic inheritance reinforcing barriers, and a non-recombining trait (the song) with a recombining ecological trait (the beak).
+- 2026-11-02: the mating grid reads "male colour" and "female preference"; colour → mating is zero without a preference, so
+  the preference is drawn onto that arrow (A, B); C keeps A's colour and preference genes and adds the learned song beside them.
 - 2026-11-01: no female choice by beak shape in B; B shows a trade-off: brighter males die more; the loci-positioning tool puts the colour gene at a variable distance from the beak gene, with an inversion toggle to lock them together. C: an arrow from the father's song to her preference (a female's preference comes from her parents rather than other birds). On screen, "mating probability", never "chance she takes him".
 
 ## Do not

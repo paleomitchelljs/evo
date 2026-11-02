@@ -57,6 +57,10 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        other birds in general"). 21 B is now the cost of brightness with the colour gene dragged along the beak gene's
        chromosome and an inversion between them: the tag-and-help race below has its picture there (linkage and an
        inversion holding a cue to the trait), not in a magic trait.
+       2026-11-02: 21 C keeps A's colour and preference genes and adds the song beside them, with no gene and no
+       switches: a son sings his father's song, a daughter likes it. Two strengths (colour, song); a weak one of each holds
+       what neither holds alone. The song still passes down the father's line whole, so the kin-cue reading stands. The
+       preference is now drawn onto colour -> mating (zero at strength 0) in every stage, an arrow onto an arrow 22 can reuse.
     B  relatedness, measured. The pedigree (20 A's engine and view) under the grid: click a bird and a neighbour, see where
        their copies meet; the plot of average relatedness between helper and helped (the chance their copies at the helping
        locus meet within so many generations, or the regression of a neighbour's allele on the helper's). Targets on the
