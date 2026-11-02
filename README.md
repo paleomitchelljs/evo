@@ -35,6 +35,7 @@ app/assets/hover.js, .css     hover text (an .info mark shows its hidden .tip) a
 instructor/                   verify_code.html + aggregate.html (decode student codes)
 scripts/decode_codes.py       the same decoding at the command line, in batch
 data/clean/*.csv              real datasets used in the "real data" stages
+editor/                       the lesson editor: rewrite a page's words in place, flag what needs doing (local only)
 ```
 
 ## Start here
@@ -76,6 +77,32 @@ Any static server works (the "real data" stages fetch `data/clean/*.csv`):
 python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
+
+## The editor
+
+To rewrite a lesson's words where they sit, or to flag a box, plot, slider or
+target card for a Claude session to deal with:
+
+```
+python3 editor/server.py      # then open http://127.0.0.1:8770/  (or double-click editor/launch.command)
+```
+
+- **Edit text** (Alt+E): click words and type; Enter saves them straight into the
+  page's `.html`. Click an ⓘ mark to rewrite its hover text, a line at a time.
+  Every edit is logged, and each can be undone from the page's Edits tab. Words
+  the page's script writes (verdicts, readouts, live counts) cannot be rewritten
+  here: flag them.
+- **Flag** (Alt+F): click anything and say what needs doing. A flag keeps where
+  it points (stage, box, selector, line), the stage's slider settings and a
+  picture of any plot in it.
+- **Use** (Alt+U or Esc): the page as a student has it.
+- Flags and the edit log live in `notes/flags/<page>.json`, pictures in
+  `notes/flags/img/` (gitignored, as `notes/` is). `python3 editor/server.py --flags`
+  prints the open ones. Pages open in study mode, every stage open, unless that
+  box in the Flags drawer is unticked. Nothing is committed.
+
+`python3 scripts/test_editor.py` runs it against every page on a throwaway copy
+(about a minute and a half).
 
 ## Releasing lessons over the term
 
