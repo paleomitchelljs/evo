@@ -1,8 +1,8 @@
 # Lesson 23 — species selection and hierarchical selection (was `hierarchical_price_plan.md`, the 2026-10-28 target lesson)
 
-**File** · `app/lessons/lesson23.html` (not yet built; `app/archive/lesson23.html` is an unrelated old draft on incompatibilities)
+**File** · `app/lessons/lesson23.html` — draft 1 (2026-11-07, v1, 5 bits, LOCKS `x`; `app/archive/lesson23.html` is an unrelated old draft on incompatibilities)
 **Checks** · `node scripts/check_lesson23_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED. Slot fixed 2026-11-07 (JM: "23: species selection / hierarchical selection"); file renamed. Before that
+**Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 1-4 unanswered, taken on the recommendations below). PLANNED before. Slot fixed 2026-11-07 (JM: "23: species selection / hierarchical selection"); file renamed. Before that
 it was the target lesson, gene, cell, organism and species at once (2026-10-28, below). Nothing built
 **Last touched** · 2026-11-07
 
@@ -67,6 +67,67 @@ three-level idea (gene → organism → species, diet, evolving to extinction; v
 Real data: the fossil horses (`data/clean/horse_*`: body size, hypsodonty, a tree) for between and within (the first draft's
 Open 3); untried.
 
+## JM, 2026-11-07 (verbatim)
+
+> Great, let's please draft leson 23 and onward.
+
+Taken as: build 23 on the recommendations (A choosiness then B dispersal; C extinction tied to the trait if it measures
+cleanly; self-fertilization and the three-level idea left for later), then evo-devo, mesoevolution, the capstone.
+
+## Draft 1 prototype (2026-11-07; scratchpad l23/eng.js, engC.js; 16 clades x 1000 generations, start .5)
+
+    engine     the first draft's species-level engine (200 birds a species, binomial breeding, mutation .0005 each way; a
+               barrier cuts a 10-bird piece off; apart 40 generations it is a new species; Price three ways every 50
+               generations, between / inside / at the splits, species counted once each). Two traits:
+               choosiness (A): a choosy allele costs its bird (k: young 1 - k); a piece's colour drifts (sd .05 a generation,
+               the species' .05 x sqrt(10/200)); each generation the piece meets its species with chance .05 and rejoins with
+               chance exp(-S a gap^2), a the two's mean choosy share, S the preference strength: 21 A's mating rule.
+               dispersal (B, C): the first draft's (advantage s; dispersers cross with chance d x mean share).
+    pace       pieces cut off with chance .3 x room, up to 60 species (the first draft: .1, 40). Needed for C (with .1 / 40,
+               losses that matter left 2-6 species and seed sets disagreed by .1-.2); A and B keep their pattern at it.
+    A (k .005) S 0 .28, 10 .49, 30 .53, 100 .64 (between +.14 to +.40, inside -.19 to -.43). S 30: k 0 .71, .005 .53, .02 .30.
+    B (d .05)  s 0 .23, .002 .30, .005 .36, .01 .48, .02 .56 (inside +.13 to +.87, between -.29 to -.48).
+               s .005: between d .02 -.29, .05 -.37, .1 -.32, .2 -.08, .5 -.07 (pieces rejoin: few species form).
+    C          a species lost with chance E0 x (1 - its share of dispersers) (a broad range: Lec 31). s .005, d .05, three seed
+               sets: E0 .002 between -.16 to -.18; .005 -.01 to -.10; .01 +.13 to +.21; .02 +.34 to +.36 (at pace .3 / 60;
+               .02 with .1 / 40). A partial protection (half) barely moved it (-.07 to -.24 at .01): left out.
+    not used   protection at the first draft's pace (noisy, 2-6 species); E0 .012-.016 without the faster pace.
+
+Rounds planned (bars to confirm over 20 seed sets on the page's engine):
+    A1 cost .005 held, strength free (opens 0): the clade's choosy share .4 or more.
+    A2 strength 30 held, cost free (0, .005, .02; opens .005): .4 or less.
+    B1 how far .05 held, advantage free (0, .002, .005, .02; opens .02, rises): the clade's share .42 or less.
+    B2 advantage .005 held, how far free (.02, .05, .1, .5; opens .5): between species -.2 or less.
+    C1 advantage .005, how far .05 held; losses free (1 in 500, 1 in 100, 1 in 50; opens 1 in 500): between +.05 or more.
+
+## Draft 1 as built (2026-11-07)
+
+    page       lesson 22's machinery (head, helpers, stage machine, plot over time, Target card, split panel), stitched by
+               scratchpad l23/gen.py; the archived first draft's tree. Each stage: the clade (clade 1's tree, shaded by its
+               share, x a loss), over time (the clade's share; species living; between species, added up), the change taken
+               apart (between species, inside species, at the splits, all of it), the diagram, Target, R last and closed.
+    clades     32 a Go (16 left the bars overlapping: A1's opening .21-.45 against strength 10's .42-.61 over 20 seed sets);
+               0.45 s a Go.
+    diagrams   A: choosiness gene -> a bird's young (cost of choosiness, red); choosiness gene onto colour gap -> the piece
+               rejoins (preference strength); rejoins -> a new species (fixed). B: dispersal gene -> a bird's young
+               (advantage); dispersal gene -> a cut-off piece rejoins (how far dispersers go); rejoins -> a new species. C: B's,
+               plus dispersal gene -> its range (fixed) -> the species lost (losses, red). The link to splitting is drawn only
+               through the piece rejoining; what it does to the clade, students find.
+    bars       20 seed sets of 32 clades (scratchpad l23/spread32.js):
+               A1 cost .005, strength free 0 / 30 / 100 (opens 0, .24-.44): choosy share >= .5 (30 .56-.68). Strength 10 cut
+                  (.46-.60 against a bar it would need at .45).
+               A2 strength 30, cost free 0 / .005 / .02 (opens .005, .56-.68): <= .45 (.02 .23-.32; between still +.19 to +.41).
+               B1 how far .05, advantage free 0 / .002 / .005 / .02 (opens .02, .60-.69): dispersers' share <= .45 (.005
+                  .27-.37), inside positive.
+               B2 advantage .005, how far free .02 / .05 / .5 (opens .5, between -.14 to -.03): between <= -.2 (.05 -.46 to
+                  -.33). How far .1 cut (-.37 to -.18 crossed the bar).
+               C1 losses free 1 in 500 / 100 / 50 (opens 1 in 500, between -.26 to -.16): between >= 0 (1 in 100 +.11 to +.22).
+    checks     `check_lesson23_numbers.js`: 18 checks + both widths + 3 R panels (R_G=150 runs them longer): binomial draws;
+               rejoining (.0185 against 1/20 x e^-1; .050; .497); losses (.151 against .15); the three parts exact (3e-16) and
+               equal to the share's change; hits and misses; A2 and B1's levels pulling apart; the flow through 5 bits.
+    left out   C as a lever on how much dispersers protect (half protection barely moved it); a drawn round (the first draft's
+               B3, REVISIONS row 15); sister clades and the fossil horses; self-fertilization; the three-level idea.
+
 ## Open for JM (2026-11-07)
 
 1. A (choosiness → splitting, from 21) as the opener? It is the lecture's own example and carries 21 forward; B is already
@@ -82,9 +143,10 @@ Open 3); untried.
 | # | What | Status |
 |---|------|--------|
 | 1 | slot fixed (23); renamed from `hierarchical_price_plan.md`; cell level and the stack moved to the capstone | done 2026-11-07 |
-| 2 | JM rules on Open 1-4 (2026-11-07) | todo |
-| 3 | engine: the first draft's species-level engine (`app/archive/lesson21_species_2026-10-20.html`) + a choosiness trait for A | todo |
-| 4 | page, check script | todo |
+| 2 | JM rules on Open 1-4 (2026-11-07) | taken on the recommendations for draft 1 (JM: "draft leson 23 and onward") |
+| 3 | engine: the first draft's species-level engine (`app/archive/lesson21_species_2026-10-20.html`) + a choosiness trait for A | done 2026-11-07 (prototype) |
+| 4 | page, check script | done 2026-11-07 (draft 1, v1, 5 bits) |
+| 5 | JM plays draft 1; Open 1-4; his voice for A-C; whether C stays one target | todo |
 
 ## Rulings (2026-11-07)
 

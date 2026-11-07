@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 23</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  /* the voice slot: a draft list (goal, then controls) until JM dictates the intro, as lesson 20's drafts did */
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  canvas[hidden] { display:none; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .tcard canvas { margin:2px 0 6px; }
+  .tcard .ttext:empty { display:none; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
+  .toggles.pair > span:first-child { flex:0 0 172px; }
+  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
+  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
+  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
+
+  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
+  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 23</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+</nav>
+
+<!-- ========== STAGE A — choosiness: a cost to the bird, and species that split (JM, 2026-11-07: "23: species selection / hierarchical selection"; Lec 29: "Lineages that speciate fast become more numerous on the planet—even if individuals within them aren't more fit") ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>A clade of species, 200 birds each. Now and then a barrier cuts a small piece, 10 birds, off a species. A piece that stays apart 40 generations is a new species; one that meets its species, and whose birds mate across, rejoins it. See how a choosiness allele fares inside each species, and across the clade.</li>
+        <li>A choosy female mates less often with a male whose colour is unlike the one she likes, as in lesson 21; a piece's colour drifts away from its species' while it is apart. <b>Cost of choosiness</b>, the red arrow: a choosy bird leaves fewer young. <b>Preference strength</b>, the arrow onto the colour gap: how much a choosy female avoids a male of the other colour.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_treeH">The clade</span><span class="tip"><span>Clade 1 of the 16 that <b>Go</b> plays. Each line a species, from the generation it split off its parent (the short grey stroke); its shade, its share of the choosy allele: light few, dark many (one hue). ×: a species lost.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="A_tree" width="760" height="320"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="A_meas">
+          <option value="z">choosy alleles, the clade's share</option>
+          <option value="n">species living</option>
+          <option value="sel">between species, added up</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 clades, each thin; their average thick.</span><span>Choosy alleles, the clade's share: the share of choosy alleles in each living species, averaged over the species (each counted once). Species living: how many. Between species, added up: the first part of the change below, alone.</span></span></span></label></div>
+        <canvas id="A_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the clade's share, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Every 50 generations the change in the clade's share of the choosy allele (each living species counted once) is taken apart, as lesson 13 took a change apart, with species in place of birds; added up since generation 0 and averaged over the 16 clades.</span><span>Between species: how a species' share goes with the living species it leaves 50 generations on (itself counted): species that split more and are lost less count more. Inside species: each species' own change, birds breeding generation by generation. At the splits: a new species' share against its parent's on the day they split.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="A_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, birds, species<span class="tip"><span>Choosiness gene: a choosy and a take-any allele. Cost of choosiness, the red arrow: how many fewer young a choosy bird leaves, as a share (two choosy alleles; one, about half).</span><span>Colour gap: how far a cut-off piece's colour has drifted from its species'. Each generation the piece meets its species with chance 1 in 20; the birds mate across, and the piece rejoins, less often the bigger the gap, the more of them choosy, and the stronger the preference: preference strength, the arrow onto colour gap → rejoins (dashed at 0: a choosy female takes any male).</span><span>A piece apart 40 generations is a new species. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>One species of 200 birds at the start, half its alleles choosy. <b>Go</b> plays 1,000 generations, 16 clades.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 clades' average, should end.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <canvas id="A_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="A_controls">
+          <div hidden><input type="range" id="A_k" min="-2" max="0" step="1" value="-1"><input type="range" id="A_S" min="0" max="3" step="1" value="0"></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="A_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — dispersal: good for the bird, and fewer species (lesson 21's first draft, 2026-10-20; JM: "Have traits that are advantageous at the individual level, but decrease the likelihood of speciation") ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>The same clade. The trait now is dispersal: a disperser leaves more young, and dispersers cross barriers, so a cut-off piece can meet its species and rejoin it. See the disperser allele inside each species, and across the clade.</li>
+        <li><b>Advantage</b>, the arrow to a bird's young: how many more young a disperser leaves. <b>How far dispersers go</b>, the arrow to a piece rejoining.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_treeH">The clade</span><span class="tip"><span>Clade 1 of the 16 that <b>Go</b> plays. Each line a species, from the generation it split off its parent (the short grey stroke); its shade, its share of the disperser allele: light few, dark many (one hue). ×: a species lost.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="B_tree" width="760" height="320"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="B_meas">
+          <option value="z">dispersers, the clade's share</option>
+          <option value="n">species living</option>
+          <option value="sel">between species, added up</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 clades, each thin; their average thick.</span><span>Dispersers, the clade's share: the share of disperser alleles in each living species, averaged over the species (each counted once). Species living: how many. Between species, added up: the first part of the change below, alone.</span></span></span></label></div>
+        <canvas id="B_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the clade's share, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Every 50 generations the change in the clade's share of the disperser allele (each living species counted once) is taken apart, as lesson 13 took a change apart, with species in place of birds; added up since generation 0 and averaged over the 16 clades.</span><span>Between species: how a species' share goes with the living species it leaves 50 generations on (itself counted): species that split more and are lost less count more. Inside species: each species' own change, birds breeding generation by generation. At the splits: a new species' share against its parent's on the day they split.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="B_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, birds, species<span class="tip"><span>Dispersal gene: a disperser and a stay-home allele. Advantage, the arrow to a bird's young: how many more young a disperser leaves, as a share.</span><span>How far dispersers go, the arrow to the piece rejoining: each generation dispersers cross a barrier, and a cut-off piece rejoins its species, with that chance times the two's average share of dispersers.</span><span>A piece apart 40 generations is a new species. Every species is lost with the same small chance, 1 in 500 a generation. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>One species of 200 birds at the start, half its alleles dispersers. <b>Go</b> plays 1,000 generations, 16 clades.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 clades' average, should end.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <canvas id="B_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_s" min="0" max="3" step="1" value="3"><input type="range" id="B_d" min="0" max="3" step="1" value="1"></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="B_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE C — splitting against loss: dispersal widens a species' range (Lec 31: "High migration: broad range, low extinction, low speciation"; "Low migration: narrow, high extinction, high speciation") ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>B's clade, with losses that depend on the species: a species whose birds stay home has a narrow range and is lost more often; a species of dispersers has a broad range and is lost less. See which wins across the clade, fewer splits or fewer losses.</li>
+        <li><b>Losses</b>, the red arrow from a species' range: how often a species with no dispersers is lost each generation.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="C_treeH">The clade</span><span class="tip"><span>Clade 1 of the 16 that <b>Go</b> plays. Each line a species, from the generation it split off its parent (the short grey stroke); its shade, its share of the disperser allele: light few, dark many (one hue). ×: a species lost.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="C_tree" width="760" height="320"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="C_meas">
+          <option value="z">dispersers, the clade's share</option>
+          <option value="n">species living</option>
+          <option value="sel">between species, added up</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 clades, each thin; their average thick.</span><span>Dispersers, the clade's share: the share of disperser alleles in each living species, averaged over the species (each counted once). Species living: how many. Between species, added up: the first part of the change below, alone.</span></span></span></label></div>
+        <canvas id="C_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the clade's share, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Every 50 generations the change in the clade's share of the disperser allele (each living species counted once) is taken apart, as lesson 13 took a change apart, with species in place of birds; added up since generation 0 and averaged over the 16 clades.</span><span>Between species: how a species' share goes with the living species it leaves 50 generations on (itself counted): species that split more and are lost less count more. Inside species: each species' own change, birds breeding generation by generation. At the splits: a new species' share against its parent's on the day they split.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="C_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, birds, species<span class="tip"><span>B's diagram, advantage and how far dispersers go held.</span><span>Its range: a species' share of dispersers. Losses, the red arrow: each generation a species is lost with chance (losses) × (its share of birds that stay home): a species of stay-at-homes at the full rate, a species of dispersers never. The clade's last species is never lost. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>One species of 200 birds at the start, half its alleles dispersers. <b>Go</b> plays 1,000 generations, 16 clades.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 clades' average, should end.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <canvas id="C_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="C_controls">
+          <div hidden><input type="range" id="C_s" min="0" max="3" step="1" value="2"><input type="range" id="C_d" min="0" max="3" step="1" value="1"><input type="range" id="C_e" min="-3" max="-1" step="1" value="-1"></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent">Go</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="rounds">Hit the target. <span class="hint" id="C_rounds_now">0 of 1</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">That is the whole lesson.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 23. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 23 — species selection and hierarchical selection. Draft 1
+   (2026-11-07). JM, 2026-11-07: "23: species selection / hierarchical
+   selection"; "Great, let's please draft leson 23 and onward". Built on
+   lesson 21's first draft (2026-10-20: "Have traits that are
+   advantageous at the individual level, but decrease the likelihood of
+   speciation ... explicitly tie into the price equation ... breaking
+   down kind of Carl Simpson-esque manner"). Plan, measurements and open
+   points: docs/overhauls/lesson23_overhaul.md.
+
+   A  choosiness: it costs every choosy bird, so it falls inside every
+      species; choosy species keep cut-off pieces apart, split more, and
+      the clade's share can rise (Lec 29). Which wins: cost against
+      preference strength.
+   B  dispersal: it helps every disperser, so it rises inside every
+      species; dispersers rejoin cut-off pieces, their species split
+      less, and the clade's share can fall.
+   C  splitting against loss: a species of dispersers has a broad range
+      and is lost less (Lec 31); when losses are common, that wins and
+      the between-species part turns positive.
+   The change in the clade's share, taken apart three ways (between
+   species, inside species, at the splits), adds up exactly.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+
+/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: null };
+const BIT = { A1: 0, A2: 1, B1: 2, B2: 3, C1: 4 };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
+
+/* =====================================================================
+   THE ENGINE: a clade of species (lesson 21's first draft, 2026-10-20,
+   archived as app/archive/lesson21_species_2026-10-20.html; Carl
+   Simpson's species selection by the Price equation).
+
+   A species: 200 birds; p, the share of its alleles that are the trait
+   allele (A choosy, B and C a disperser). Each generation, in order:
+   1  breeding inside the species: p' from 200 draws at
+      q = p (1 + s) / (1 + s p), then mutation .0005 each way; s the
+      allele's effect on its bird's young (A: minus the cost of
+      choosiness; B, C: plus the advantage to a disperser).
+   2  a piece: a barrier cuts 10 birds off (chance .3 x room, room =
+      1 - living species / 60); it breeds the same way on its own, and
+      A: its colour drifts (sd .05 a generation; the species' own by
+      .05 x sqrt(10 / 200)); each generation it meets its species with
+      chance .05 and rejoins with chance exp(-S a gap^2): a the two's
+      mean choosy share, gap their colour difference, S the preference
+      strength (lesson 21 A's mating rule: a choosy female mates a male
+      unlike the colour she likes less often).
+      B, C: dispersers cross with chance d x (p + the piece's p) / 2 and
+      it rejoins (lesson 21's first draft).
+      Apart 40 generations, the piece is a new species with its own p
+      (and colour).
+   3  the species is lost with chance E0 x (1 - prot x p): A, B E0 .002,
+      prot 0 (every species alike); C prot 1 (a species of dispersers
+      has a broad range: Lec 31), E0 free. The clade's last species
+      never is (we follow a clade that lasts).
+   The clade's share: the mean of p over living species, each counted
+   once. Every 50 generations its change is taken apart (Price's
+   equation with species as the units, Simpson's way):
+     change = cov(w, z) / mean(w)                 between species
+            + mean of each living species' change inside species
+            + mean of its change at the splits    (a new species' share
+                                                   against its parent's)
+   exact (the check: 1e-12).
+   ===================================================================== */
+const N_SP = 200, PIECE = 10, TAU = 40, CUT = 0.3, CAP = 60, MU = 0.0005, DT = 50, MEET = 0.05, SIG = 0.05, G23 = 1000, CLADES = 32;
+/* binomial: geometric waiting times (exact; about n p steps) */
+function clBinom(n, p, rng) {
+  if (p <= 0) return 0; if (p >= 1) return n;
+  if (p > 0.5) return n - clBinom(n, 1 - p, rng);
+  const lq = Math.log(1 - p); let k = 0, x = 0;
+  for (;;) { x += Math.floor(Math.log(1 - rng()) / lq) + 1; if (x > n) return k; k++; }
+}
+function clBreed(p, n, s, rng) { let q = p * (1 + s) / (1 + s * p); q = q * (1 - MU) + (1 - q) * MU; return clBinom(n, q, rng) / n; }
+/* P: { mode "choose" | "disp", s, S (A), d (B, C), E0, prot, p0 } */
+function clWorld(P, seed) {
+  const c = { P, rng: mulberry32(seed), t: 0, sp: [], nextId: 0, nLiving: 1, cum: { sel: 0, inside: 0, splits: 0, total: 0 } };
+  c.sp.push({ id: c.nextId++, parent: -1, born: 0, died: null, p: P.p0, col: 0, piece: null, A: 0, J: 0, h: [[0, P.p0]], pb: P.p0, ppar: null });
+  c.snap = clSnapshot(c);
+  return c;
+}
+const clLiving = c => c.sp.filter(s => s.died == null);
+function clStep(c) {
+  const P = c.P, rng = c.rng; c.t++;
+  const L = clLiving(c), room = Math.max(0, 1 - L.length / CAP), born = [], sigSp = SIG * Math.sqrt(PIECE / N_SP);
+  for (const s of L) {
+    const z0 = s.p; s.p = clBreed(s.p, N_SP, P.s, rng); s.A += s.p - z0;
+    if (P.mode === "choose") s.col += sigSp * gauss(rng);
+    if (s.piece) {
+      const pc = s.piece; pc.p = clBreed(pc.p, PIECE, P.s, rng); pc.age++;
+      let back = false;
+      if (P.mode === "choose") { pc.col += SIG * gauss(rng); if (rng() < MEET) { const a = (s.p + pc.p) / 2, g = pc.col - s.col; back = rng() < Math.exp(-P.S * a * g * g); } }
+      else back = rng() < Math.min(1, P.d * (s.p + pc.p) / 2);
+      if (back) s.piece = null;
+      else if (pc.age >= TAU) { born.push({ id: c.nextId++, parent: s.id, born: c.t, died: null, p: pc.p, col: pc.col, piece: null, A: s.A, J: s.J + (pc.p - s.p), h: [[c.t, pc.p]], pb: pc.p, ppar: s.p }); s.piece = null; }
+    } else if (rng() < CUT * room) s.piece = { p: clBinom(PIECE, s.p, rng) / PIECE, col: s.col, age: 0 };
+    if (rng() < P.E0 * (1 - P.prot * s.p) && c.nLiving > 1) { s.died = c.t; s.piece = null; c.nLiving--; }
+    if (s.died == null && c.t % 10 === 0) s.h.push([c.t, s.p]);
+  }
+  for (const b of born) { c.sp.push(b); c.nLiving++; }
+  if (c.t % DT === 0) clPrice(c);
+}
+function clSnapshot(c) { const L = clLiving(c); for (const s of L) { s.A = 0; s.J = 0; } return L.map(s => ({ id: s.id, z: s.p })); }
+/* one interval taken apart, added to the running sums */
+function clPrice(c) {
+  const snap = c.snap, L1 = clLiving(c), by = new Map(c.sp.map(s => [s.id, s])), ids = new Set(snap.map(r => r.id));
+  const home = s => { while (s && !ids.has(s.id)) s = by.get(s.parent); return s ? s.id : null; };
+  const owned = new Map(); for (const s of L1) { const h = home(s); owned.set(h, (owned.get(h) || 0) + 1); }
+  const n = snap.length, wv = snap.map(r => owned.get(r.id) || 0), wbar = wv.reduce((a, b) => a + b, 0) / n, zbar = snap.reduce((a, r) => a + r.z, 0) / n;
+  const cov = snap.reduce((a, r, i) => a + (wv[i] - wbar) * (r.z - zbar), 0) / n;
+  const m = f => L1.reduce((a, s) => a + f(s), 0) / L1.length;
+  c.last = { sel: cov / wbar, inside: m(s => s.A), splits: m(s => s.J), total: m(s => s.p) - zbar };
+  for (const k in c.cum) c.cum[k] += c.last[k];
+  c.snap = clSnapshot(c);
+}
+function clStat(c) { const L = clLiving(c); return { z: L.reduce((a, s) => a + s.p, 0) / L.length, n: L.length, sel: c.cum.sel, inside: c.cum.inside, splits: c.cum.splits, total: c.cum.total }; }
+const CLADE = { step: clStep, stat: clStat };
+
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R.map(p => p[key]).find(v => v != null);
+    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
+  }
+  return out;
+}
+
+/* ====== drawing ====== */
+const POPCOL = [ORANGE, BLUE], ISLE = [];   /* lesson 21's plot over time draws one line here, never an island's */
+/* the plot over time: the runs thin, their average thick, a line an island (the blue island's dashed) or one line; a target's
+   window at the end as a red box; q null: the empty frame (JM, 2026-10-23: blank before Go) */
+const TM = { W: 760, H: 300, px: 50, py: 14 };
+function labRoom(ctx, M) {
+  ctx.font = "600 11px -apple-system, sans-serif"; let w = 0;
+  for (const k in M) if ((M[k].n || 1) > 1) for (const nm of ISLE) w = Math.max(w, ctx.measureText(nm).width);
+  return w ? Math.ceil(w) + 22 : 12;
+}
+const tickLab = (m, v) => m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2));
+function drawTime(cvId, q, meas, M, rule, G) {
+  const cv = $(cvId); if (!cv) return;
+  const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas];
+  T.pw = T.W - T.px - labRoom(ctx, M);
+  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, lastY = [];
+  const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - (Math.max(ymin, Math.min(v, ymax)) - ymin) / (ymax - ymin) * T.ph;
+  cv._tf = { xs, ys, T, G };
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) { const v = ymin + (ymax - ymin) * k / 4; cardText(ctx, tickLab(m, v), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (let t = 0; t <= G; t += G > 500 ? 100 : G > 200 ? 50 : G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (rule) for (const u of rule.rules) if (u.meas === meas && (u.lo != null || u.hi != null)) {
+    const lo = u.lo == null ? ymin : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7;
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+  }
+  if (q) {
+    const dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
+    for (let i = 0; i < q.runs.length; i++) for (let k = 0; k < nPer; k++) {
+      const pts = []; for (const s of q.hist) { const v = m.vals(s.runs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
+      polyline(ctx, pts, nPer > 1 ? POPCOL[k] : INK, 1, 0.13);
+    }
+    for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.runs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, nPer > 1 ? POPCOL[k] : INK, 2.6, 1, dash(k));
+      if (avg.length) lastY[k] = avg[avg.length - 1][1];
+    }
+  }
+  if (nPer > 1) {
+    const want = ISLE.map((_, k) => lastY[k] != null ? lastY[k] : T.py + 6 + 13 * k);
+    const ord = [0, 1].sort((a, b) => want[a] - want[b]), y = [];
+    ord.forEach((k, i) => { y[k] = Math.max(i ? y[ord[i - 1]] + 13 : T.py + 4, want[k]); });
+    for (let i = ord.length - 1; i >= 0; i--) y[ord[i]] = Math.min(y[ord[i]], i === ord.length - 1 ? T.py + T.ph - 4 : y[ord[i + 1]] - 13);
+    ISLE.forEach((nm, k) => cardText(ctx, nm, xs(G) + 15, y[k], { size: 11, col: POPCOL[k], bold: true }));
+  }
+  ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+/* a target card's picture: an example chart of a hit, unlabeled, in the plot over time's style (lesson 19's): pic { meas, G,
+   lines [{ f(t), jit }], boxes [{ lo, hi }] } */
+const SKc = { W: 460, H: 120, px: 8, py: 8, pw: 424, ph: 100 };
+function bwHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
+function drawSketch(cvId, pic, M) {
+  const cv = $(cvId); if (!cv) return;
+  cv.hidden = !pic; if (!pic) return;
+  const { ctx } = frameCanvas(cv, SKc.W, SKc.H);
+  const m = M[pic.meas], ymin = m.ymin || 0, ymax = m.ymax, G = pic.G;
+  const xs = t => SKc.px + t / G * SKc.pw, ys = v => SKc.py + SKc.ph - (Math.max(ymin, Math.min(ymax, v)) - ymin) / (ymax - ymin) * SKc.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SKc.px, SKc.py); ctx.lineTo(SKc.px, SKc.py + SKc.ph); ctx.lineTo(SKc.px + SKc.pw, SKc.py + SKc.ph); ctx.stroke();
+  const step = G / 100;
+  pic.lines.forEach((ln, li) => {
+    for (let r = 0; r < 16; r++) {
+      const off = (bwHash(r, 13 + li, 7) - 0.5) * 2 * ln.jit, pts = [];
+      for (let t = 0; t <= G + 1e-9; t += step) pts.push([xs(t), ys(ln.f(t) + off * Math.min(1, 4 * t / G) + (bwHash(r, Math.round(t / step), 11 + li) - 0.5) * 0.4 * ln.jit * Math.min(1, 4 * t / G))]);
+      polyline(ctx, pts, INK, 1, 0.16);
+    }
+    const avg = []; for (let t = 0; t <= G + 1e-9; t += step / 2) avg.push([xs(t), ys(ln.f(t))]);
+    polyline(ctx, avg, INK, 2.6, 1);
+  });
+  for (const bx of pic.boxes) { const lo = bx.lo == null ? ymin : bx.lo, hi = bx.hi == null ? ymax : bx.hi;
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(xs(G) - 7, ys(hi), 14, ys(lo) - ys(hi)); }
+  ctx.restore();
+}
+
+
+const CS = { W: 760, H: 230, px: 56, py: 26, pw: 540, ph: 170 };
+function drawSplit(cvId, q, series, G) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CS.W, CS.H);
+  let ym = 0.05; const pts = series.map(() => []);
+  if (q) for (const h of q.hist) series.forEach((se, i) => { const v = meanOf(h.runs.map(se.v)); if (v == null) return; pts[i].push([h.t, v]); ym = Math.max(ym, Math.abs(v)); });
+  ym = Math.ceil(ym * 10 + 1e-9) / 10;
+  const xs = t => CS.px + t / G * CS.pw, y0 = CS.py + CS.ph / 2, ys = v => y0 - v / ym * (CS.ph / 2);
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CS.px, CS.py); ctx.lineTo(CS.px, CS.py + CS.ph); ctx.moveTo(CS.px, y0); ctx.lineTo(CS.px + CS.pw, y0); ctx.stroke();
+  for (const v of [-ym, -ym / 2, 0, ym / 2, ym]) cardText(ctx, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) * 100) + "%", CS.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= G; t += G > 500 ? 100 : G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), CS.py + CS.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", CS.px + CS.pw / 2, CS.H - 6, { size: 11, col: MUTED, align: "center" });
+  const ends = [];
+  series.forEach((se, i) => { if (!pts[i].length) return; polyline(ctx, pts[i].map(([t, v]) => [xs(t), ys(v)]), se.col, se.lw || 2, 1, se.dash); ends.push({ y: ys(pts[i][pts[i].length - 1][1]), se }); });
+  const lab = ends.length ? ends : series.map((se, i) => ({ y: CS.py + 10 + 16 * i, se }));
+  lab.sort((a, b) => a.y - b.y); for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 13);
+  for (const l of lab) { polyline(ctx, [[CS.px + CS.pw + 6, l.y], [CS.px + CS.pw + 16, l.y]], l.se.col, 2, 1, l.se.dash); cardText(ctx, l.se.lab, CS.px + CS.pw + 20, l.y, { size: 10.5, col: l.se.col, bold: !!l.se.lw }); }
+  ctx.restore();
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-C ======
+   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
+   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : "";
+  }
+  S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
+function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const r = S.done ? null : ruleOf(S);
+  const set = readSet(S), seed = pageSeed("l23" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G));
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
+const PATHS = {};
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
+  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
+  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
+  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
+  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l23" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
+const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
+const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+
+/* the clade: clade 1's species, one line each from the generation it split off, shaded by its share (one hue, a lightness ramp:
+   colourblind students, JM 2026-10-20); x a species lost (the archived first draft's tree) */
+const TRW = { W: 760, H: 320, px: 14, pw: 680, py: 10, ph: 280 };
+const shade = v => { const a = [230, 226, 214], b = [47, 107, 143], t = Math.max(0, Math.min(1, v)); return "rgb(" + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",") + ")"; };
+function drawTree(cvId, c, G) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, TRW.W, TRW.H), xs = t => TRW.px + t / G * TRW.pw;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(TRW.px, TRW.py + TRW.ph + 6); ctx.lineTo(TRW.px + TRW.pw, TRW.py + TRW.ph + 6); ctx.stroke();
+  for (let t = 0; t <= G; t += 200) cardText(ctx, String(t), xs(t), TRW.py + TRW.ph + 16, { size: 10.5, col: MUTED, align: "center" });
+  for (let i = 0; i < 40; i++) { ctx.fillStyle = shade(i / 39); ctx.fillRect(TRW.px + TRW.pw + 24, TRW.py + 40 + (39 - i) * 4, 14, 4); }
+  cardText(ctx, "many", TRW.px + TRW.pw + 31, TRW.py + 30, { size: 10, col: MUTED, align: "center" }); cardText(ctx, "few", TRW.px + TRW.pw + 31, TRW.py + 210, { size: 10, col: MUTED, align: "center" });
+  const kids = new Map(); for (const s of c.sp) if (s.parent >= 0) { if (!kids.has(s.parent)) kids.set(s.parent, []); kids.get(s.parent).push(s); }
+  const order = []; const walk = s => { order.push(s); (kids.get(s.id) || []).slice().sort((a, b) => b.born - a.born).forEach(walk); }; walk(c.sp[0]);
+  const rowH = Math.min(14, TRW.ph / Math.max(1, order.length)), y = new Map(order.map((s, i) => [s.id, TRW.py + rowH * (i + 0.5)]));
+  ctx.lineWidth = 1; ctx.strokeStyle = "#bdb8aa";
+  for (const s of order) if (s.parent >= 0) { ctx.beginPath(); ctx.moveTo(xs(s.born), y.get(s.parent)); ctx.lineTo(xs(s.born), y.get(s.id)); ctx.stroke(); }
+  const lw = Math.max(1.2, Math.min(4, rowH * 0.7));
+  for (const s of order) {
+    const yy = y.get(s.id), end = s.died == null ? c.t : s.died, pts = s.h.concat([[end, s.died == null ? s.p : s.h[s.h.length - 1][1]]]);
+    for (let i = 0; i + 1 < pts.length; i++) { if (pts[i][0] >= end) break; ctx.strokeStyle = shade(pts[i][1]); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(xs(pts[i][0]), yy); ctx.lineTo(xs(Math.max(pts[i][0] + 0.5, Math.min(end, pts[i + 1][0]))), yy); ctx.stroke(); }
+    if (s.died != null) { ctx.strokeStyle = MUTED; ctx.lineWidth = 1; const x = xs(s.died); ctx.beginPath(); ctx.moveTo(x - 2.5, yy - 2.5); ctx.lineTo(x + 2.5, yy + 2.5); ctx.moveTo(x - 2.5, yy + 2.5); ctx.lineTo(x + 2.5, yy - 2.5); ctx.stroke(); }
+  }
+  ctx.restore();
+}
+const SPLIT3 = [
+  { lab: "between species", col: HOT, dash: null, v: s => s.sel },
+  { lab: "inside species", col: BLUE, dash: null, v: s => s.inside },
+  { lab: "at the splits", col: MUTED, dash: [2, 3], v: s => s.splits },
+  { lab: "the change, all of it", col: INK, dash: null, lw: 2.8, v: s => s.sel + s.inside + s.splits },
+];
+
+/* ====== the controls ====== */
+const S_V = [0, 30, 100];                  /* preference strength (A): 0 a choosy female takes any male */
+const K_V = [0.02, 0.005, 0];              /* cost of choosiness (red arrow: input -2 .. 0) */
+const SV = [0, 0.002, 0.005, 0.02];        /* advantage to a disperser */
+const DV = [0.02, 0.05, 0.5];              /* how far dispersers go: crossing chance for a species of dispersers */
+const EV = [0.02, 0.01, 0.002];            /* losses (C, red arrow: input -3 .. -1): a species of stay-at-homes, a generation */
+const ELAB = { 0.02: "1 in 50", 0.01: "1 in 100", 0.002: "1 in 500" };
+const negV = (vals, n) => v => { const c = vals[Math.round(v) + n]; return c ? "−" + c : "0"; };
+const MEAS_A = {
+  z: { lab: "choosy alleles, clade's share", ymax: 1, pct: true, vals: s => [s.z] },
+  n: { lab: "species living", ymax: 60, vals: s => [s.n] },
+  sel: { lab: "between species, added up", ymin: -1, ymax: 1, pct: true, vals: s => [s.sel] },
+};
+const MEAS_B = Object.assign({}, MEAS_A, { z: { lab: "dispersers, clade's share", ymax: 1, pct: true, vals: s => [s.z] } });
+const pic = (meas, f, lo, hi, jit) => ({ meas, G: G23, lines: [{ f, jit: jit || 0.04 }], boxes: [{ lo, hi }] });
+const fixedArrow = (id, from, to) => ({ id, from, to, readonly: true, dark: true, label: "" });
+/* the diagrams: the gene acts on its bird (the bird level) and on whether a cut-off piece rejoins (the species level); a piece
+   apart 40 generations is a new species. The link from the gene to splitting is drawn only through the piece rejoining: what it
+   does to the clade, students find (the first draft's ruling, kept) */
+function mountChoose() {
+  const boxes = [
+    { id: "cg", label: "choosiness gene", x: 104, y: 30, w: 132, h: 32 },
+    { id: "yg", label: "a bird's young", x: 104, y: 282, w: 120, h: 34, kind: "outcome" },
+    { id: "gp", label: "colour gap: a cut-off piece and its species", x: 330, y: 120, w: 250, h: 40 },
+    { id: "rj", label: "the piece rejoins its species", x: 330, y: 214, w: 210, h: 32 },
+    { id: "ns", label: "a new species", x: 330, y: 300, w: 130, h: 32, kind: "outcome" },
+  ];
+  const arrows = [fixedArrow("x1", "gp", "rj"), fixedArrow("x2", "rj", "ns"),
+    { id: "k", from: "cg", to: "yg", input: "A_k", signed: true, label: "cost of choosiness", fmt: negV(K_V, 2) },
+    { id: "S", from: "cg", onto: "x1", input: "A_S", label: "preference strength", fmt: v => String(S_V[Math.round(v)]) }];
+  return Paths.init({ mount: "#A_paths", width: 470, height: 330, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountDisp(K, loss) {
+  const boxes = [
+    { id: "dg", label: "dispersal gene", x: 104, y: 30, w: 124, h: 32 },
+    { id: "yg", label: "a bird's young", x: 104, y: 282, w: 120, h: 34, kind: "outcome" },
+    { id: "rj", label: "a cut-off piece rejoins its species", x: 300, y: 170, w: 230, h: 32 },
+    { id: "ns", label: "a new species", x: 300, y: 282, w: 130, h: 32, kind: "outcome" },
+  ];
+  const arrows = [fixedArrow("x1", "rj", "ns"),
+    { id: "s", from: "dg", to: "yg", input: K + "_s", label: "advantage", fmt: v => "+" + SV[Math.round(v)] },
+    { id: "d", from: "dg", to: "rj", input: K + "_d", label: "how far dispersers go", fmt: v => String(DV[Math.round(v)]) }];
+  if (loss) {
+    boxes.push({ id: "rg", label: "its range", x: 470, y: 100, w: 100, h: 32 }, { id: "ls", label: "the species lost", x: 470, y: 282, w: 130, h: 32, kind: "outcome" });
+    arrows.push(fixedArrow("x2", "dg", "rg"), { id: "e", from: "rg", to: "ls", input: "C_e", signed: true, label: "losses", fmt: v => ELAB[EV[Math.round(v) + 3]] });
+  }
+  return Paths.init({ mount: "#" + K + "_paths", width: loss ? 560 : 470, height: 330, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+const clStart = (mode, extra) => (set, seed) => {
+  const P = Object.assign({ mode, s: 0, S: 0, d: 0, E0: 0.002, prot: 0, p0: 0.5 }, extra(set));
+  return { P, eng: CLADE, G: G23, every: 10, runs: Array.from({ length: CLADES }, (_, i) => clWorld(P, seed + 1 + 7919 * i)) };
+};
+function cPaint(S) {
+  const K = S.K, q = shownRun(S), c = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
+  drawTree(K + "_tree", c, G23);
+  $(K + "_treeH").textContent = "The clade · clade 1 · generation " + (q ? q.t : 0) + " · " + clLiving(c).length + " species";
+  drawTime(K + "_time", q, $(K + "_meas").value, S.cfg.meas, r, G23);
+  drawSplit(K + "_split", q, SPLIT3, G23);
+  drawSketch(K + "_tpic", r ? r.pic : null, S.cfg.meas);
+  syncStage(S); S.cfg.code();
+}
+/* =====================================================================
+   STAGE A — choosiness. Bars over 20 seed sets of 32 clades (scratchpad
+   l23/spread32.js; the plan's "Draft 1 as built"):
+   A1: cost .005 held, strength free (opens 0, .24-.44): the clade's
+   choosy share .5 or more at 1000 (30 .56-.68, 100 higher).
+   A2: strength 30 held, cost free (opens .005, .56-.68): .45 or less
+   (.02 .23-.32). Between species stays positive (+.19 to +.41): the
+   cost wins inside species.
+   ===================================================================== */
+const SA = mkStage("A", {
+  ctl: [{ key: "k", vals: K_V, hidden: true }, { key: "S", vals: S_V, hidden: true }],
+  rounds: [
+    { hold: { k: 0.005 }, open: { S: 0 }, rules: [atLeast("z", 0.5)], pic: pic("z", t => 0.5 + 0.11 * t / 1000, 0.5, 1) },
+    { hold: { S: 30 }, open: { k: 0.005 }, rules: [atMost("z", 0.45)], pic: pic("z", t => 0.5 - 0.2 * (1 - Math.exp(-t / 400)), 0, 0.45) },
+  ],
+  ms: 3, meas: MEAS_A,
+  start: clStart("choose", set => ({ s: -set.k, S: set.S })),
+  afterOpen: () => { hold(SA, ["k", "S"])(); if (!SA.done) $("A_meas").value = ruleOf(SA).pic.meas; },
+  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
+  paint: () => cPaint(SA), code: () => clCode("A", SA),
+});
+/* =====================================================================
+   STAGE B — dispersal (lesson 21's first draft).
+   B1: how far .05 held, advantage free (opens .02, .60-.69): the
+   clade's share of dispersers .45 or less (.005 .27-.37), though it
+   rises inside every species.
+   B2: advantage .005 held, how far free (opens .5, between -.14 to
+   -.03: pieces nearly always rejoin, few species form): between
+   species -.2 or less (.05 -.46 to -.33; .1 left out, -.37 to -.18).
+   ===================================================================== */
+const SB = mkStage("B", {
+  ctl: [{ key: "s", vals: SV, hidden: true }, { key: "d", vals: DV, hidden: true }],
+  rounds: [
+    { hold: { d: 0.05 }, open: { s: 0.02 }, rules: [atMost("z", 0.45)], pic: pic("z", t => 0.5 - 0.19 * (1 - Math.exp(-t / 300)), 0, 0.45) },
+    { hold: { s: 0.005 }, open: { d: 0.5 }, rules: [atMost("sel", -0.2)], pic: pic("sel", t => -0.39 * (1 - Math.exp(-t / 350)), -1, -0.2, 0.05) },
+  ],
+  ms: 3, meas: MEAS_B,
+  start: clStart("disp", set => ({ s: set.s, d: set.d })),
+  afterOpen: () => { hold(SB, ["s", "d"])(); if (!SB.done) $("B_meas").value = ruleOf(SB).pic.meas; },
+  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
+  paint: () => cPaint(SB), code: () => clCode("B", SB),
+});
+/* =====================================================================
+   STAGE C — splitting against loss (Lec 31). Advantage .005, how far .05
+   held; a species lost with chance E0 x (its share of stay-at-homes).
+   C1: losses free (opens 1 in 500, between -.26 to -.16): between
+   species 0 or more (1 in 100 +.11 to +.22; 1 in 50 +.22 to +.43).
+   ===================================================================== */
+const SC = mkStage("C", {
+  ctl: [{ key: "s", vals: SV, hidden: true }, { key: "d", vals: DV, hidden: true }, { key: "e", vals: EV, hidden: true }],
+  rounds: [
+    { hold: { s: 0.005, d: 0.05 }, open: { e: 0.002 }, rules: [atLeast("sel", 0)], pic: pic("sel", t => 0.17 * (1 - Math.exp(-t / 300)), 0, 1, 0.05) },
+  ],
+  ms: 3, meas: MEAS_B,
+  start: clStart("disp", set => ({ s: set.s, d: set.d, E0: set.e, prot: 1 })),
+  afterOpen: () => { hold(SC, ["s", "d", "e"])(); if (!SC.done) $("C_meas").value = ruleOf(SC).pic.meas; },
+  onInput: () => { if (PATHS.C) PATHS.C.sync(); },
+  paint: () => cPaint(SC), code: () => clCode("C", SC),
+});
+
+/* ====== the R panels: the same model, one stage's settings ====== */
+function clCode(K, S) {
+  const s = readSet(S), A = K === "A", L = [
+    ["", "# Lesson 23, Stage " + K + " -- a clade of species"],
+    ["", "N <- 200; piece <- 10; tau <- 40; cut <- 0.3; cap <- 60; mu <- 0.0005; G <- 1000   # birds a species; a cut-off piece; generations apart to be a species"],
+  ];
+  if (A) L.push(["k", "s <- " + (-s.k) + "                                    # a choosy allele's effect on its bird's young: minus the cost of choosiness"],
+                ["S", "S <- " + s.S + "; meet <- 0.05; sig <- 0.05               # preference strength; a piece meets its species; its colour drifts"]);
+  else L.push(["s", "s <- " + s.s + "                                    # advantage to a disperser"],
+              ["d", "d <- " + s.d + "                                     # how far dispersers go: a piece rejoins with d x its share of dispersers"]);
+  L.push([K === "C" ? "e" : "", "E0 <- " + (K === "C" ? s.e : 0.002) + "; prot <- " + (K === "C" ? 1 : 0) + "                       # a species lost with chance E0 x (1 - prot x its share)"],
+    ["", "breed <- function(p, n) { q <- p * (1 + s) / (1 + s * p); q <- q * (1 - mu) + (1 - q) * mu; rbinom(1, n, q) / n }"],
+    ["", "sp <- list(list(p = 0.5, col = 0, alive = TRUE, piece = NULL))"],
+    ["", "for (t in 1:G) {"],
+    ["", "  alive <- which(sapply(sp, function(x) x$alive)); room <- max(0, 1 - length(alive) / cap)"],
+    ["", "  for (i in alive) { x <- sp[[i]]; x$p <- breed(x$p, N)" + (A ? "; x$col <- x$col + rnorm(1, 0, sig * sqrt(piece / N))" : "")],
+    ["", "    if (!is.null(x$piece)) { x$piece$p <- breed(x$piece$p, piece); x$piece$age <- x$piece$age + 1"]);
+  if (A) L.push(["", "      x$piece$col <- x$piece$col + rnorm(1, 0, sig)"],
+                ["S", "      back <- runif(1) < meet && runif(1) < exp(-S * (x$p + x$piece$p) / 2 * (x$piece$col - x$col)^2)   # met, and mated across"]);
+  else L.push(["d", "      back <- runif(1) < d * (x$p + x$piece$p) / 2                          # dispersers crossed"]);
+  L.push(["", "      if (back) x$piece <- NULL"],
+    ["", "      else if (x$piece$age >= tau) { sp[[length(sp) + 1]] <- list(p = x$piece$p, col = x$piece$col, alive = TRUE, piece = NULL); x$piece <- NULL }"],
+    ["", "    } else if (runif(1) < cut * room) x$piece <- list(p = rbinom(1, piece, x$p) / piece, col = x$col, age = 0)"],
+    [K === "C" ? "e" : "", "    if (runif(1) < E0 * (1 - prot * x$p) && sum(sapply(sp, function(y) y$alive)) > 1) { x$alive <- FALSE; x$piece <- NULL }"],
+    ["", "    sp[[i]] <- x }"],
+    ["", "}"],
+    ["", "p_now <- sapply(Filter(function(x) x$alive, sp), function(x) x$p)"],
+    ["", "c(species = length(p_now), clade_share = round(mean(p_now), 2))"]);
+  codeInto("code" + K, L);
+}
+
+const STAGES = [SA, SB, SC];
+function paintAll() { for (const S of STAGES) S.cfg.paint(); }
+function wire() {
+  PATHS.A = mountChoose(); PATHS.B = mountDisp("B", false); PATHS.C = mountDisp("C", true);
+  for (const S of STAGES) wireStage(S);
+  for (const K of ["A", "B", "C"]) { $(K + "_meas").addEventListener("change", () => ST[K].cfg.paint()); $(K + "_dl").addEventListener("click", () => downloadText("lesson23_stage" + K + ".R", RTEXT["code" + K])); }
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  /* instructor bypass / study mode (JM, 2026-10-08): every stage open; only the bypass fills the targets */
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l23reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson23",
+  version: 1,      /* 1: draft 1 (2026-11-07): A two targets, B two, C one (5) */
+  scaffold: 5,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l23reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>
