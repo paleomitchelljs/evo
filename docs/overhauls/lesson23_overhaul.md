@@ -1,10 +1,98 @@
-# The hierarchical Price lesson — gene, cell, organism, species (the target lesson; slot 23, 24 or 25)
+# Lesson 23 — species selection and hierarchical selection (was `hierarchical_price_plan.md`, the 2026-10-28 target lesson)
 
-**File** · not yet built; slot set when 21 and 22 are (each may split). Rename this file `lessonNN_overhaul.md` then.
-**Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED 2026-10-28 (JM's second ruling that day), not started. For now a design lodestar: 21 and 22 are built
-toward it; its technical questions wait for its own build (JM, 2026-10-28)
-**Last touched** · 2026-10-28
+**File** · `app/lessons/lesson23.html` (not yet built; `app/archive/lesson23.html` is an unrelated old draft on incompatibilities)
+**Checks** · `node scripts/check_lesson23_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · PLANNED. Slot fixed 2026-11-07 (JM: "23: species selection / hierarchical selection"); file renamed. Before that
+it was the target lesson, gene, cell, organism and species at once (2026-10-28, below). Nothing built
+**Last touched** · 2026-11-07
+
+## JM, 2026-11-07 (verbatim, the 23 part and the capstone; the whole message is in lesson21_overhaul.md)
+
+> 23: species selection / hierarchical selection
+>
+> 2X: Michod style origins of individuality extending the hierarchical framework to show how cooperation evolves by shifting
+> the weight of cov(w,z) to different levels. This is the full capstone, and perhaps it should come after Evo-devo…I'm not sure
+
+## What moved (2026-11-07)
+
+    gene      stays 22's (kin as the gene's view; greenbeard, drive, transposon)
+    organism  23, the lower of its two levels
+    species   23, the upper level
+    cell      to the capstone (individuality_plan.md): cells into an individual is Michod's transition
+    the stack all four levels in one picture: to the capstone, as its last stage ("the full capstone")
+
+So 23 builds the hierarchical framework at two levels (the multilevel Price equation, between and within), with species as
+the units above organisms; the capstone extends it ("extending the hierarchical framework") to the shift itself. JM's
+three-level idea (gene → organism → species, diet, evolving to extinction; verbatim below) stays here as an optional last stage.
+
+## What the lesson is (2026-11-07)
+
+- A trait's change across a clade, split from the run into between species and within species (Simpson's way), the
+  at-the-splits term named apart; traits that act on splitting and extinction rather than on the bird.
+- Worth protecting: a trait favoured in every species can fall across the clade, and the reverse; which wins is read off the
+  terms, never stated. Students find the link from the trait to splitting (the parked first draft's rule, below).
+
+## The lecture behind it (docs/2026_lecture_detail.tex, Lec 29 and 31; verbatim)
+
+- 202_lec29_01: "Speciation traits become more common among species over time. This is selection not on the individual but on
+  the whole species—on the act of speciating. It can be opposite of selection at the individual level. Lineages that speciate
+  fast become more numerous on the planet—even if individuals within them aren't more fit."
+- "Speciation traits are heritable across species": "Strong sexual selection: easy reinforcement"; "Microhabitat preference
+  (host-plant choice)"; "Geographic location (daughters inherit ancestral range)"; "Lock-and-key genitalia, floral morphology";
+  "Parental care system".
+- 202_lec29_02, platypus and fairy-wren: "Same start, same capacity. Time passes—the platypus stays one species; the fairy wrens
+  have speciated maybe twice. ... But the lineage made more species." Five-step argument: "Selection has shifted up a level".
+- "Self-fertilization: good for individual, bad for species".
+- 202_lec29_03: "The unit of selection depends on the scope." 202_lec29_05: "There's no privileged level."
+- Lec 31, the speciation–extinction trade-off: "High migration: broad range, low extinction, low speciation"; "Low migration:
+  narrow, high extinction, high speciation"; "Species-level traits, not individual-level".
+
+## Shape (a sketch, 2026-11-07; nothing measured)
+
+    A  from 21: species whose birds choose strongly split more (Lec 29's fairy-wren and platypus). A species-level engine, each
+       species carrying a choosiness (21 A summarised per species: its splitting chance set by it). The trait's share among
+       species rises though no bird in any species is better off; with species as units the change sits in the between-species
+       term. Targets on the clade's end.
+       The link must not be asserted: a species-level rule "choosiness sets the splitting chance" states what B's students find.
+       Read it off 21 A instead (a cut-off piece holds apart with the chance 21 A's engine measures at that strength), the lower
+       level summarised per unit above it (the 10-28 time-scale note, below). Measure first.
+    B  good for the bird, bad for splitting: the parked first draft of 21 (dispersers win inside every species and rejoin
+       cut-off pieces, so their species split less; Price three ways, exact to 1e-12; below). Inside rises, between falls.
+       Targets as the first draft's T1-T3.
+    C  splitting against extinction (Lec 31's trade-off; the first draft's Open 1 asked for extinction tied to the trait):
+       dispersal widens ranges (fewer losses) and lowers splitting; the clade's end depends on which wins.
+    D  optional: JM's three levels (gene → organism → species; herbivore / omnivore / carnivore; evolving to extinction),
+       if it stays tractable.
+
+Real data: the fossil horses (`data/clean/horse_*`: body size, hypsodonty, a tree) for between and within (the first draft's
+Open 3); untried.
+
+## Open for JM (2026-11-07)
+
+1. A (choosiness → splitting, from 21) as the opener? It is the lecture's own example and carries 21 forward; B is already
+   built and measured as the first draft. Recommendation: A then B.
+2. C: extinction tied to the trait. The first draft found an explicit "dispersers protect the species" lever barely moved
+   species selection (speciation swamped it), and a range-based model reversed the effect. Worth a stage, or a menu option?
+3. Self-fertilization (Lec 29: "good for individual, bad for species") as a second trait beside dispersal?
+4. Carried from 2026-10-28 (below): Open 2 (one trait or a ladder; now moot at two levels), 3 (which species level: now A-C),
+   4 (the fossil horses; the at-the-splits term apart or folded).
+
+## Items (2026-11-07)
+
+| # | What | Status |
+|---|------|--------|
+| 1 | slot fixed (23); renamed from `hierarchical_price_plan.md`; cell level and the stack moved to the capstone | done 2026-11-07 |
+| 2 | JM rules on Open 1-4 (2026-11-07) | todo |
+| 3 | engine: the first draft's species-level engine (`app/archive/lesson21_species_2026-10-20.html`) + a choosiness trait for A | todo |
+| 4 | page, check script | todo |
+
+## Rulings (2026-11-07)
+
+- 23 = species selection and hierarchical selection. The capstone (Michod) extends the framework; the cell level is its.
+
+# Before 2026-11-07: the target lesson (gene, cell, organism, species), planned 2026-10-28
+
+Kept as written then; its level table now reads per "What moved" above.
 
 ## JM, 2026-10-28, second ruling (verbatim, the target-lesson part; the whole message is in lesson21_overhaul.md)
 
@@ -120,22 +208,22 @@ design lodestar for these lessons." Kept so they are not rediscovered the hard w
 4. 21's first-draft questions, carried here: extinction tied to the trait or flat; the fossil horses (data/clean/horse_*) as
    real data for the species level; "at the splits" kept apart or folded into "inside species".
 
-## Items
+## Items (2026-10-28)
 
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's second ruling (2026-10-28); this plan; the species level and the three-level idea moved here from 22 | done |
 | 2 | JM rules on Open 1-4 | 1 done 2026-10-28; 2-4 wait for the build |
-| 3 | slot fixed (23, 24 or 25) once 21 and 22 are; file renamed | todo |
+| 3 | slot fixed (23, 24 or 25) once 21 and 22 are; file renamed | done 2026-11-07 (23) |
 
-## Rulings
+## Rulings (2026-10-28)
 
 - 2026-10-28 (second ruling): the target lesson is a hierarchical Price equation lesson, cellular, organismal and species
   levels, perhaps the genetic level with kin and transposons; 21 and 22 build toward it; it lands at 23-25.
 - 2026-10-28: a design lodestar for 21 and 22 for now; technical and conceptual issues settled at its build. Kin as the gene's
   view.
 
-## Do not
+## Do not (both plans)
 
 - Fuse the Price terms into one leftover (WORK_ORDER), at any level.
 - State on screen that dispersal lowers splitting (21's first draft: students find it).

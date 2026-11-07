@@ -3,8 +3,10 @@
 **File** · `app/lessons/lesson22.html` (not yet built; the archived lesson22.html is an unrelated old draft on codon ratios)
 **Checks** · `node scripts/check_lesson22_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · PLANNED (2026-10-28), not started. Revised the same day (JM's second ruling): the species level moves to the
-hierarchical Price lesson (`hierarchical_price_plan.md`); D is now gene-level competition; 22 opens from 21's birds
-**Last touched** · 2026-10-28
+hierarchical Price lesson (now `lesson23_overhaul.md`); D is now gene-level competition; 22 opens from 21's birds. 2026-11-07
+(JM's arc re-cut): 22 = "kin selection / genic level selection", the same substance; 21 is now sexual selection itself (its
+learned song parked); 23 is species / hierarchical selection; the cell level goes to the individuality capstone
+**Last touched** · 2026-11-07
 
 ## JM, 2026-10-28 (verbatim)
 
@@ -21,6 +23,36 @@ hierarchical Price lesson (`hierarchical_price_plan.md`); D is now gene-level co
 > also genetic level with Kin and transposons included). That's the target lesson. [...] This lesson [21] should build such
 > that it flows easily into 22, on kin selection and genetic-level competition in general. Depending on if we end up splitting
 > either of those two, the big hierarchical Price lesson would end up as one of 23-25
+
+## JM, 2026-11-07 (verbatim, the 22 part; the whole message is in lesson21_overhaul.md)
+
+> 22: kin selection / genic level selection
+
+Nothing in 22's plan changes in substance. What changes around it:
+- 21 is sexual selection itself (lesson21_overhaul.md). Its C, a preference rising because choosy mothers have bright sons, is
+  an allele gaining through copies in other birds without kin: 22 A can open from it (the same covariance, now with kin).
+- 21's learned song (draft 3's C) is parked, so the learned call as a kin cue (A, below) takes its song from lesson 8 C (eggs
+  swapped; a son sings the song of the father who raised him), not from 21.
+- 23 holds the species level (lesson23_overhaul.md). The cell level (clonal cells, r ≈ 1) and the whole stack are the
+  capstone's (individuality_plan.md). 22 D's gene-level competition (drive, transposon) is still the gene level the capstone
+  stacks.
+
+## The lecture behind it (docs/2026_lecture_detail.tex, Lec 30-32; verbatim)
+
+- Hamilton's rule: "C = cost in lost own-offspring"; "B = benefit in recipient's extra offspring"; "r = relatedness
+  (regression of recipient genotype on helper's)"; offspring as units because they are the "Only common currency that sums in
+  Price equation". 202_lec30_04: "That scaling—relatedness × benefit > cost—is Hamilton's rule. It's a derivative of the Price
+  equation."
+- 202_lec30_03: "Your neurons cooperate because they're nearly genetically identical." (The capstone's, not 22's.)
+- Haplodiploidy: "Sister r=0.75 > daughter r=0.5 → help mom > make daughters"; "Multi-mate queens weaken cooperation".
+- Lec 31: "Transmission term alone can drive cooperation (asymmetric mutation; Pachter Cor. 2)". Bears on C: mutation that
+  breaks the helping gene is asymmetric mutation the other way, a transmission term against helping (E(wΔz) < 0). C's terms
+  should show it.
+- Lec 31: "Selfish elements: short-term copy count (transposons)" against "Regulatory elements: long-term persistence + cheap
+  variation". D's transposon.
+- 202_lec32_05: "the circuit can't detect kinship—it detects proximity. In small inbred groups, nearby = kin." Bears on Open 1:
+  the grid (birds help neighbours) is the lecture's mechanism; a learned call is the alternative.
+- 202_lec32_04 (Price): "You're not helping your brother—you're helping your genes inside your brother."
 
 So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same day: "where we ultimately break down further
 ... between species within a clade") goes to the hierarchical Price lesson; 22 D becomes genes competing inside the bird.
@@ -61,6 +93,8 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        switches: a son sings his father's song, a daughter likes it. Two strengths (colour, song); a weak one of each holds
        what neither holds alone. The song still passes down the father's line whole, so the kin-cue reading stands. The
        preference is now drawn onto colour -> mating (zero at strength 0) in every stage, an arrow onto an arrow 22 can reuse.
+       2026-11-07: 21 re-cut as sexual selection itself; its song is parked (above). The finches, the DAG with the preference
+       onto colour -> mating, and the over-time chart stay; C's preference riding on sons is 22 A's covariance without kin.
     B  relatedness, measured. The pedigree (20 A's engine and view) under the grid: click a bird and a neighbour, see where
        their copies meet; the plot of average relatedness between helper and helped (the chance their copies at the helping
        locus meet within so many generations, or the regression of a neighbour's allele on the helper's). Targets on the
@@ -71,7 +105,7 @@ So the species-level breakdown that was to be 22 D (JM on 20 D, earlier the same
        frequency, average relatedness among interacting birds, and the helping network over time. Targets: helping holds
        (short dispersal, cheap help); helping collapses (long dispersal); a population that cycles (non-helpers invade, the
        network thins, groups of helpers re-form where kin cluster), if the engine produces it (measure first).
-    D  genes that compete inside the bird (second ruling; the species level that was here is in hierarchical_price_plan.md).
+    D  genes that compete inside the bird (second ruling; the species level that was here is in lesson23_overhaul.md).
        (i) A greenbeard: the helping allele also makes a tag and helps birds with the tag, kin or not (21 A's "prefer a partner
        like yourself", turned to helping); a falsebeard (the tag without the help) breaks it, as C's mutation breaks the
        helper. (ii) An allele that raises its own share at the bird's cost: a driving allele in the gamete race (15 C) or a
@@ -139,7 +173,7 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
   residual as its own bar (WORK_ORDER: terms never fused into a leftover; the same logic says a leftover is never hidden).
 - **r for the rule is the regression** of the helped bird's allele on the helper's, relative to the population; 20 A's "copies
   meet within k generations" is the intuition bridge, not the number used.
-- **D one level up** (moved to hierarchical_price_plan.md with the species level): inherits 20 D's founder's bias at
+- **D one level up** (moved to lesson23_overhaul.md with the species level): inherits 20 D's founder's bias at
   speciation: name three terms (between species, within, at the splits), not two.
 - **A greenbeard holds only while the tag and the help stay together.** Recombination between them, or a mutation giving the
   tag without the help, breaks it: the same race as 21 B's colour gene against the beak gene (2026-11-01: dragged along one
@@ -149,7 +183,7 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
 ## Idea for 22 or a later 23 (JM, 2026-10-28) — MOVED
 
 JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolving to extinction) is now in
-`hierarchical_price_plan.md`, verbatim, as a candidate for that lesson's species level.
+`lesson23_overhaul.md`, verbatim, as a candidate for that lesson's species level.
 
 ## Items
 
@@ -159,6 +193,7 @@ JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolvi
 | 2 | JM rules on Open 1-3 | todo |
 | 3 | engine prototype: spatial helping, dispersal; measured r against dispersal; Hamilton's line from runs | todo |
 | 4 | JM's second ruling (2026-10-28): species level out to the hierarchical Price lesson; D gene-level competition; A from 21's birds | done (plan) |
+| 5 | JM's arc re-cut (2026-11-07): substance unchanged; links to 21 (song parked, kin cue from 8 C), 23 and the capstone; lecture quotes | done 2026-11-07 |
 
 ## Rulings
 
@@ -167,6 +202,7 @@ JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolvi
   seen in behaviour networks, average relatedness and allele frequencies.
 - 2026-10-28 (second ruling): 22 = kin selection and genetic-level competition in general; 21 flows into it; the hierarchical
   Price lesson (cell, organism, species; perhaps gene with kin and transposons) is the target, at 23-25.
+- 2026-11-07: 22 = kin selection / genic-level selection; 23 species / hierarchical selection; the capstone (Michod) after.
 
 ## Do not
 

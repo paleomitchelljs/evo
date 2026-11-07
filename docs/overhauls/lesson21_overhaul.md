@@ -1,12 +1,198 @@
-# Lesson 21 — speciation by sexual selection: three genes (beak, colour, preference), seeds and preference strength, the cost of brightness and the colour gene's place, a learned song; first draft: species selection (parked for the hierarchical Price lesson)
+# Lesson 21 — sexual selection and its consequences (re-cut 2026-11-07); before that, speciation by sexual selection (draft 3, built to 2026-11-02) and species selection (first draft, parked)
 
-**File** · `app/lessons/lesson21.html` — draft 3 (2026-10-29), JM's three-gene DAG; B and C rebuilt 2026-11-01; C rebuilt again and the preference drawn onto colour → mating 2026-11-02, v5, 12 bits. Draft 2 is the file at
-b46e463. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
+**File** · `app/lessons/lesson21.html` — still draft 3 (v5, 12 bits, 2026-11-02: speciation by sexual selection) until it is
+rebuilt on the 2026-11-07 plan below. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 3 BUILT 2026-10-29 on JM's review of draft 2 (see "Draft 3"); C rebuilt 2026-10-30 without the beak's
-limit on the song; B and C rebuilt 2026-11-01 (see "JM, 2026-11-01"); C rebuilt 2026-11-02 (see "JM, 2026-11-02"). Intros are
-draft bullets for JM's dictation. LOCKS `x`
-**Last touched** · 2026-11-02
+**Status** · RE-PLANNED 2026-11-07 (JM): sexual selection itself, with one starting stage on speciation. Plan below, nothing
+built or measured. Draft 3's record is kept below as history (and a source: its engine, DAG and grid carry over). LOCKS `x`
+**Last touched** · 2026-11-07
+
+## JM, 2026-11-07 (verbatim, the whole message; each later plan quotes its own part)
+
+> We have a draft of lesson 21, and various plans for later lessons. I'd like to change those.
+>
+> 21: purely illustrating sexual selection & its consequences, with a single starting activity showing how divergence in
+> sexually selected traits may make speciation easier
+>
+> 22: kin selection / genic level selection
+>
+> 23: species selection / hierarchical selection
+>
+> 2X: Michod style origins of individuality extending the hierarchical framework to show how cooperation evolves by shifting
+> the weight of cov(w,z) to different levels. This is the full capstone, and perhaps it should come after Evo-devo…I'm not sure
+>
+> 2Y: evo-devo where we give a simplified gene network for a vertebrate limb and have students run through simple simulations
+> using standard models to show how diffusion and growth drive differential gene expression and produce self-limiting limb
+> sizes and recapitulate known skeletal patterns. I'm envisioning a setup simulation that shows students the basics of how
+> gene regulatory networks work (toy first, maybe even an interactive showing gene regulation without a numerical model, just
+> manipulation….then a model for somitogenesis via clocks?), then they run sims showing how limb location gets specified, then
+> they grow a limb to a particular size, and finally they create different patterns of skeletons to make different types of
+> tetrapod limbs
+>
+> 2Z: simulation combining species selection & EvoDevo to illustrate "mesoevolution" in the sense that some traits are more
+> likely to involve repeatedly & within certain groups. Maybe also illustrating deep homology
+
+Reading: "more likely to involve repeatedly" = more likely to evolve repeatedly.
+
+## The arc from 21 (2026-11-07)
+
+    21  sexual selection and its consequences; one speciation stage          this file
+    22  kin selection, gene-level selection                                  lesson22_overhaul.md
+    23  species selection, hierarchical selection                            lesson23_overhaul.md (was hierarchical_price_plan.md)
+    2X  origins of individuality (Michod), the capstone                      individuality_plan.md
+    2Y  evo-devo: networks, a somite clock, limb position, size, skeleton    evodevo_plan.md (papers: docs/refs/README.md)
+    2Z  mesoevolution: species selection on development; deep homology      mesoevolution_plan.md
+
+The order of 2X, 2Y and 2Z is open (JM: "perhaps it should come after Evo-devo…I'm not sure"). The recommendation (2X at 24,
+then 2Y, then 2Z) and the case against it are in individuality_plan.md. Each unslotted plan is renamed lessonNN_overhaul.md once
+its slot is fixed.
+
+What changed from the 2026-10-28 arc: 21 is no longer speciation by sexual selection (magic traits and the learned song are no
+longer asked of it); 23 is the species level and the two-level framework, no longer the four-level target lesson; the cell level
+and the whole stack go to the capstone; evo-devo and mesoevolution are new (evo-devo was a sandbox brief in session notes,
+2026-09-22, never a plan in the repo).
+
+## What the lesson is (2026-11-07)
+
+- A trait that costs survival spreads because it wins mates; a preference that does its carrier no good spreads because it
+  travels with the trait; a costly signal can carry good genes; and the trait's success can cost the population.
+- Worth protecting: the survival part and the mating part of the trait's change, measured off the run and shown apart (13's
+  split by arrows). JM's lecture: "Whatever you say, you have to support." (461_lec04_06)
+
+## The lecture behind it (docs/2026_lecture_detail.tex, Lec 27-29; verbatim, quote ids as there)
+
+- Cost of choosiness: "Halves mating opportunities minimum"; "Only evolves if offspring quality compensates".
+- Honest signals, 202_lec28_02 (birds of paradise): "The cost of the signal IS the signal."
+- 202_lec28_04 (peacock): "Females prefer the extravagant males because those are the ones that didn't die."
+- 202_lec28_03 (fiddler crabs, Jimmy and Frank): "Dishonest signaling can happen, but it never lasts." Bullets: "Frequency-dependent
+  cycles"; "Stable on average, oscillating over time".
+- "Intersexual: one sex chooses (birds of paradise)"; "Intrasexual: same sex fights (fiddler crabs)"; "Peacocks: both at once".
+- 202_lec28_05 (ducks): "An arms race driven by asymmetrical investment." Bullet: "Selection acts in opposite directions on two
+  sexes of same species".
+- 461_lec04_06: "Sexual selection gets thrown around as 'this could be responsible.' ... Don't fall for it. Whatever you say, you
+  have to support."
+- Lec 27, mechanism 3: "Divergent trait IS the mate-choice criterion"; "Hybrid signal is bad → low fitness IS the pre-zygotic
+  barrier". 202_lec27_05: "you don't want to be the purple bird."
+- Lec 29, the hand-off to 23. "Speciation traits are heritable across species: Strong sexual selection: easy reinforcement".
+  202_lec29_02 (platypus and fairy-wren): "Were the new species better off as individuals? No—smaller populations, less
+  efficient selection. But the lineage made more species."
+
+## Plan (proposed 2026-11-07; a sketch, nothing measured)
+
+Setting: draft 3's finches, its DAG, its mating grid ("male colour" across, "female preference" up), the preference drawn onto
+colour → mating, the over-time chart with its menu. A runs on two islands; B onward on one island with no migration, so nothing
+after A can be read as speciation.
+
+    A  the one speciation stage. Draft 3's A as built (two islands, seeds set by island, colour and preference genes, strength
+       on colour → mating), re-aimed at the beak gene: the colour preference holding the beaks apart, because a newcomer of the
+       other colour seldom breeds. Rounds (to measure): random mating with seeds apart, the beak split partial; strength free,
+       the beak split holds; seeds that favour one beak on both islands, strength high, the colours merge all the same (draft
+       3's A3, the preference cannot hold what the seeds erase).
+    B  the cost and the pay. One island. Colour as the sum of several loci (14 C's polygenic trait), so the average can settle
+       anywhere between dull and bright. Two arrows from colour: → survival (the cost of brightness, males only, draft 3 B's red
+       arrow) and → mating (the preference onto it). Surfaces: survival by colour, the mating grid. The average settles past
+       survival's peak, how far set by the preference strength. Each generation's change split from the run into the survival
+       term (negative) and the mating term (positive), adding up exactly; at the end they cancel (13's bars). Targets on where
+       the average ends: past the survival peak; on it (strength 0); dull (a cost too high to pay).
+    C  the preference travels with the trait. A preference gene with no arrow to its carrier's survival, or a small cost of
+       choosiness (fewer looks: draft 2's 4 looks). It rises because choosy mothers have bright sons, so the two genes come to
+       sit together in the same birds (run 1's dots line up on the grid). Its change is a covariance with fitness that runs
+       through the colour gene: 13's arrows, direct (zero, or the cost) and through her sons (positive). Targets: the
+       preference rises with no use to the female; a cost of choosiness stops it (the lecture's "Only evolves if offspring
+       quality compensates"); both climbing together, if the engine gives that at page sizes (measure first).
+    D  honest signals. Colour shows condition: each bird carries 16's harmful mutations, and a bird with fewer can be brighter
+       (a condition arrow onto colour). Choosy mothers' young carry fewer harmful mutations. Targets: the preference spreads in
+       spite of its cost; the population's average survival ends higher with choice than without, at the same mutation rate.
+       Lecture: birds of paradise, the peacock.
+    E  the trait against the population (Open 2 picks one):
+       (i)   conflict (ducks): a male allele that raises his matings and lowers his mates' survival spreads while the
+             population's average survival falls; a female resistance allele follows;
+       (ii)  bluffers (fiddler crabs): a cheap large claw wins by display until fighters are common; the two cycle (14 D's
+             frequency dependence with two kinds, not three);
+       (iii) the bighorn record (Real data, below).
+       Each ends on the point 23 opens with: good for the bird that carries it, bad for the group it lives in.
+
+Real data: `data/clean/bighorn_*` (Pelletier et al. 2022). Rams' horns are a weapon (intrasexual selection); "males average 51.9 cm
+and females 21.3 cm" (data/SOURCES.md: the dimorphism); horn length against offspring, sires +0.14 on 69; hunting removes the
+large-horned rams, an arrow against the mating one. A closed box under B or E. Lessons 7 E, 10 B and 18 Q4 use the file
+already; the horns as a sexually selected trait are new.
+
+Carried from draft 3 (reuse, not rebuild): the engine's finches, two islands of 100, seeds by island; mating probability
+exp(-s d²); the preference arrow onto colour → mating (paths.js, ontoAt .4) and colour → mating as thick as the strength; the
+cost of brightness on males; the survival-by-colour surface; the over-time chart; the check script's structure.
+
+Parked 2026-11-07 (speciation, not sexual selection): B's colour gene dragged along the beak gene's chromosome with the
+inversion; C's learned song beside colour; D's three drawn rounds on F_ST. All in git at 2368016 and recorded below.
+
+## Flow into 22 and 23
+
+- 22: C's preference rising through sons is an allele gaining through copies in other birds, 22's logic without kin. One gene
+  for the colour and the liking for it would be a greenbeard's shape (a tag and its recognition in one gene).
+- 23: A at the species level. Lineages whose birds choose strongly split more (Lec 29's platypus and fairy-wren); 23 opens there.
+  E's "good for the bird, bad for the group" is the within-against-between split 23 names.
+- 22's learned call as a kin cue was to come from 21 C's song, now parked. Lesson 8 C (eggs swapped; a son sings the song of
+  the father who raised him) is still its source.
+
+## Measure first (2026-11-07)
+
+- A: F_ST at the beak gene at 100 generations against strength 0-6, seeds apart, the colour gene unlinked. Not in any draft-3
+  table (draft 3 measured the colour gene's F_ST against strength, and the beak's only with the beak as the cue or with linkage).
+  One step the right way must land (targets teach).
+- B: a polygenic colour (how many loci; 14 C's engine) under the two arrows; the end average against strength and cost; the
+  survival and mating terms adding exactly each generation (13's priceTerms, never fused: WORK_ORDER).
+- C: at 100 birds, does a preference gene with no direct effect rise above drift? The association it rides on is weak; drift
+  may swamp it at page sizes (Lande 1981; Kirkpatrick 1982; to check). A cost of choosiness should stop it (Kirkpatrick 1985;
+  Pomiankowski 1987; to check); a mutation bias on colour toward dull keeps it (Pomiankowski, Iwasa & Nee 1991; to check).
+- D: does condition at 16's mutation rates make choice pay at page sizes (Rowe & Houle 1996, to check), and does the survival
+  difference show above the noise of 16 runs?
+- E: (i) a conflict allele and a resistance allele at page sizes, escalating or cycling; (ii) a two-kind bluffing cycle.
+
+## Open for JM (2026-11-07)
+
+1. Five stages is a lot. If one goes, merge C into D: C runs the preference against its cost and ends where D starts ("Only
+   evolves if offspring quality compensates").
+2. E: conflict (ducks), bluffers (fiddler crabs), or the bighorn record?
+3. A's trait: colour, as built and reviewed, or the learned song (Lec 27's mechanism 3; the warblers)? Recommendation: colour.
+   The song beside colour was the C you found "tricky" (2026-11-02).
+4. Young against number of mates, males and females (the slope steeper in males: Bateman's gradient, Arnold & Duvall 1994, to
+   check), as a panel in B: it is a regression slope, the course's tool. In or out?
+5. Draft 3's open items close with this re-cut (they were about B-D, now parked), except A's: the strength steps 0 1 2 3 4 6;
+   A3 as a target that makes the islands the same.
+
+## Items (2026-11-07)
+
+| # | What | Status |
+|---|------|--------|
+| 1 | JM's re-cut (2026-11-07); this plan; the arc 21-2Z written (22 updated, the target plan renamed 23, three new plans, docs/refs summarised) | done 2026-11-07 |
+| 2 | JM rules on Open 1-5 (2026-11-07) | todo |
+| 3 | archive draft 3 whole and runnable as `app/archive/lesson21_speciation_d3_2026-11-02.html` + README note naming its checks at 2368016 | todo (first edit of the rebuild) |
+| 4 | Measure first: A's beak F_ST by strength; B's polygenic colour and its two terms; C's preference gene; D's condition; E | todo |
+| 5 | page: A re-aimed, B-E; v6 (slots change); `check_lesson21_numbers.js` rewritten | todo |
+
+## Rulings (live; the full dated list is at the end of the history)
+
+- 2026-11-07: 21 = "purely illustrating sexual selection & its consequences, with a single starting activity showing how
+  divergence in sexually selected traits may make speciation easier". 22 kin / genic-level selection; 23 species /
+  hierarchical selection; 2X Michod's origins of individuality, "the full capstone"; 2Y evo-devo; 2Z mesoevolution.
+- Still standing from draft 3, because the new plan reuses what they rule on: the DAG genes → beak → seeds → reproduction ←
+  mating ← colour / preference ← genes (10-29); the over-time chart with its menu as the animation core (10-29); seeds by island
+  and preference strength each make a fitness surface (10-29); brighter males die more (11-01); "mating probability", never
+  "chance she takes him" (11-01); the grid reads "male colour" and "female preference" (11-02); colour → mating is zero without
+  a preference, the preference drawn onto that arrow (11-02).
+- Superseded for 21 on 2026-11-07: the 10-28 second ruling's 21 part (speciation by sexual selection; magic traits; non-genetic
+  inheritance), the song rulings (10-29, 10-30), and 11-01's linkage tool, inversion and father's-song arrows (parked with B-D).
+
+## Do not (live)
+
+- Put B-E on two islands: they would read as speciation again.
+- Name on screen what the runs show: runaway, handicap, good genes, Bateman, sexy sons (the no-vocabulary rule; lesson 9).
+- Say why a preference spread before the run shows it (JM: "Whatever you say, you have to support").
+- Fuse the survival and mating terms into one leftover (WORK_ORDER).
+
+# History: speciation by sexual selection, 2026-10-28 to 2026-11-02 (draft 3, superseded 2026-11-07)
+
+Everything below is the record of the plan JM replaced on 2026-11-07. Its open items are closed by the re-cut; its engine
+and measurements are sources for the new A and for B-E's finches.
 
 ## JM, 2026-10-28, second ruling (verbatim)
 
@@ -21,7 +207,7 @@ draft bullets for JM's dictation. LOCKS `x`
 > Depending on if we end up splitting either of those two, the big hierarchical Price lesson would end up as one of 23-25
 
 The arc: 21 sexual selection and speciation → 22 kin selection and gene-level competition (`lesson22_overhaul.md`) → the
-hierarchical Price lesson, 23, 24 or 25 as 21 and 22 split or not (`hierarchical_price_plan.md`). 21 and 22 build toward it.
+hierarchical Price lesson, 23, 24 or 25 as 21 and 22 split or not (`lesson23_overhaul.md`). 21 and 22 build toward it.
 
 ## What 8-20 already did (read 2026-10-28)
 
@@ -591,26 +777,27 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
 | 3 | check script (`check_lesson21_numbers.js`, 14 + R) | done |
 | 4 | JM's review; voice | dropped (2026-10-28: 21 re-planned; the draft is parked) |
 
-## Items
+## Items (draft 3, to 2026-11-02)
 
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's second ruling (2026-10-28) and this plan; the earlier plan and the first draft parked here | done |
-| 2 | JM rules on Open 1-4 | 1-3 done 2026-10-28; 4 todo |
+| 2 | JM rules on Open 1-4 | 1-3 done 2026-10-28; 4 closed 2026-11-07 |
 | 3 | archive the first draft as `app/archive/lesson21_species_2026-10-20.html` (runnable) + a README note naming its checks at the archiving commit | done 2026-10-29 |
 | 4 | engine prototype: beak, mating rules, song learning; the Measure first list | done 2026-10-29 (Measured, draft 2) |
 | 5 | draft 2: A-D, v2, 10 bits; `check_lesson21_numbers.js` rewritten (23 + widths + R) | done 2026-10-29 |
 | 6 | JM plays with draft 2; Open for JM (draft 2); his voice for A-D | done 2026-10-29: his review, the three-gene DAG |
 | 7 | draft 3: engine prototype (eng3.js), the bars measured; the page rebuilt, v3, 10 bits; check script rewritten | done 2026-10-29 |
-| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | todo (his C rulings done: song 2026-10-29; no beak -> song 2026-10-30) |
+| 8 | JM plays with draft 3; Open for JM (draft 3); his voice for A-D | closed 2026-11-07 (A's open items carry to the new plan) (his C rulings done: song 2026-10-29; no beak -> song 2026-10-30) |
 | 9 | C without the beak's limit: his song from his genes or his father; eng5.js measured; page, check script | done 2026-10-30 |
 | 10 | JM 2026-11-01: B = cost of brightness + colour gene on the beak's chromosome + inversion (beak-as-cue cut); C = two arrows from the father's song (island's songs cut); "mating probability"; dull/bright; eng6.js measured; page v4 (12 bits); check script (27 + widths + R) | done 2026-11-01 |
-| 11 | JM rules on Open for JM (2026-11-01) | todo |
+| 11 | JM rules on Open for JM (2026-11-01) | closed 2026-11-07 by the re-cut |
 | 12 | JM 2026-11-02: grid labels; preference onto colour → mating (A, B); C = A's genes + a learned song (see "JM, 2026-11-02") | done 2026-11-02 |
-| 13 | JM rules on Open for JM (2026-11-02) | todo |
+| 13 | JM rules on Open for JM (2026-11-02) | closed 2026-11-07 by the re-cut (B-D parked) |
 
-## Rulings
+## Rulings (all, dated; the latest wins)
 
+- 2026-11-07: see "Rulings (live)" above: 21 = sexual selection and its consequences, one starting stage on speciation.
 - 2026-10-20: 21 = comparative methods and species selection; a trait good for individuals that lowers speciation (wider ranges, populations split less), linked explicitly to 19; implicit, discovered; within-species rise vs global fall; plotted as a function of the individual effect and the effect on speciation; Price equation, broken down Carl Simpson's way. (Superseded for 21 on 2026-10-28; it stands for the hierarchical Price lesson's species level.)
 - 2026-10-28 (second ruling): 21 = speciation, in particular by sexual selection, where different behavioural strategies are optimal for different individuals; magic traits; non-genetic inheritance (bird song); built to flow into 22 (kin selection, gene-level competition); the target lesson is the hierarchical Price lesson (23-25).
 - 2026-10-28 (on the plan): "Yes to the bird reading" (the best mating rule depends on the bird); sexual selection alone may fail to split, and the page shows both outcomes ("That's fine"); "Birds, two islands".
@@ -621,7 +808,7 @@ One stage, three rounds. Go plays 16 clades of 1000 generations (species-level e
   the preference is drawn onto that arrow (A, B); C keeps A's colour and preference genes and adds the learned song beside them.
 - 2026-11-01: no female choice by beak shape in B; B shows a trade-off: brighter males die more; the loci-positioning tool puts the colour gene at a variable distance from the beak gene, with an inversion toggle to lock them together. C: an arrow from the father's song to her preference (a female's preference comes from her parents rather than other birds). On screen, "mating probability", never "chance she takes him".
 
-## Do not
+## Do not (draft 3 and the first draft)
 
 - Tune 21's engine until sexual selection alone splits a population (Measure first, the first bullet).
 - Fuse the Price terms into one "leftover" (WORK_ORDER): the three parts stay named apart; that they add to the clade's change is the equation, checked to 1e-12. (First draft; carries to the hierarchical Price lesson.)
