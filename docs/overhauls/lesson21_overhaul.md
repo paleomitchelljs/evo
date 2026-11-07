@@ -3,8 +3,8 @@
 **File** · `app/lessons/lesson21.html` — still draft 3 (v5, 12 bits, 2026-11-02: speciation by sexual selection) until it is
 rebuilt on the 2026-11-07 plan below. The first draft (species selection) is `app/archive/lesson21_species_2026-10-20.html`
 **Checks** · `node scripts/check_lesson21_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · RE-PLANNED 2026-11-07 (JM): sexual selection itself, with one starting stage on speciation. Plan below, nothing
-built or measured. Draft 3's record is kept below as history (and a source: its engine, DAG and grid carry over). LOCKS `x`
+**Status** · DRAFT 4 BUILT 2026-11-07 (JM: "please start drafting these"): sexual selection itself, with one starting stage on
+speciation; measured and built ("Draft 4"). Intros are draft bullets for JM's dictation. Draft 3's record is kept below as history (and a source: its engine, DAG and grid carry over). LOCKS `x`
 **Last touched** · 2026-11-07
 
 ## JM, 2026-11-07 (verbatim, the whole message; each later plan quotes its own part)
@@ -43,9 +43,12 @@ Reading: "more likely to involve repeatedly" = more likely to evolve repeatedly.
     2Y  evo-devo: networks, a somite clock, limb position, size, skeleton    evodevo_plan.md (papers: docs/refs/README.md)
     2Z  mesoevolution: species selection on development; deep homology      mesoevolution_plan.md
 
-The order of 2X, 2Y and 2Z is open (JM: "perhaps it should come after Evo-devo…I'm not sure"). The recommendation (2X at 24,
-then 2Y, then 2Z) and the case against it are in individuality_plan.md. Each unslotted plan is renamed lessonNN_overhaul.md once
-its slot is fixed.
+Order after 23, ruled 2026-11-07: evo-devo (2Y), then mesoevolution (2Z), then Michod last (2X). JM:
+
+> Let's put Michod last. My lecture order won't be identical this year. Then please start drafting these
+
+So 24 is evo-devo (24-25 if it splits), mesoevolution follows, the capstone is last. Each unslotted plan is renamed
+lessonNN_overhaul.md once the evo-devo split is decided and the numbers follow.
 
 What changed from the 2026-10-28 arc: 21 is no longer speciation by sexual selection (magic traits and the learned song are no
 longer asked of it); 23 is the species level and the two-level framework, no longer the four-level target lesson; the cell level
@@ -159,15 +162,71 @@ inversion; C's learned song beside colour; D's three drawn rounds on F_ST. All i
 5. Draft 3's open items close with this re-cut (they were about B-D, now parked), except A's: the strength steps 0 1 2 3 4 6;
    A3 as a target that makes the islands the same.
 
+## Draft 4 (2026-11-07): what is being built, and the numbers behind it
+
+JM, 2026-11-07: "Let's put Michod last. My lecture order won't be identical this year. Then please start drafting these"
+
+Prototype: scratchpad l21/engA.js (draft 3's engine pulled from the page) and l21/eng1.js (one island). 16 runs at 100
+generations, the runs' average; the spread is over 4-6 seed sets.
+
+    A  draft 3's engine and A as built. A2 re-aimed at the beak gene: seeds apart, F_ST at the beak gene by preference strength
+       0 .48-.56, 1 .47-.52, 2 .47-.51, 3 .54-.60, 4 .86-.90, 6 .91-.94 (colour gene .02 / .02 / .01 / .17-.25 / .82-.89 /
+       .91-.94). Seeds (0, ¾): .38-.40 at 0-3, .81-.82 at 4. The beak split holds once the colours do.
+       A2: seeds apart held, strength free (opens 3, as draft 3's A2 did): beak F_ST ≥ .7. A1, A3 as built.
+    B-E one island, 500 birds (drift swamped C at 200: the preference's end over six seed sets overlapped between strength 0
+       and 4). Colour from two genes (a bird's colour 0, ¼, ½, ¾, 1; at eight genes the preference's rise in C was smaller).
+       Mutation .002 an allele a generation. Mating (changed from A's rule; why below): a female keeps meeting males until
+       one becomes her mate, a meeting ending in mating with A's probability exp(-s a d²) (a her choosiness, d = 1 - his
+       colour), so she always mates; a cost of choosiness is its own arrow (a choosy female breeds with 1 - cp x a).
+       A's rule (4 looks, then unmated) puts a hidden cost on choosiness among dull males: with it the preference gene
+       died (0.00 in every run at 4 looks) or fell (strength 6, colour starting rare: .11-.27). A pick-among-4 rule with
+       weights exp(s a z) sent the colour to one end (strength 2: .96 at cost .5, .19 at cost 1).
+    B  every female likes bright. Bright alleles at 100 by cost x strength: cost .5: 0 .02, 1 .62-.65, 2 .82-.83, 3 .90-.92,
+       4 .94-.95; cost .75: 0 .02, 1 .39-.41, 2 .58-.59, 3 .68-.70; cost 1: 1 .22-.24, 2 .47-.49, 4 .53-.54, 6 .60-.61.
+       B1 cost .5 held, strength free (opens 0): ≥ .4. B2 strength 2 held, cost free (opens .5): ≤ .7.
+       The change split each generation, exactly: who mates (females, males), what the young keep, who lives.
+    C  a preference gene (likes bright, start 30%), strength 6, cost of brightness .25. The liking-bright allele at 100 by
+       cost of choosiness: 0 .41-.51, .05 .17-.31, .1 .05-.08, .2 .00-.01. Its change summed over 100 generations: in males'
+       matings +.17 to +.23 at every cost (it sits in bright males), in females' about 0 at cost 0, through survival -.02 to
+       -.05 (bright males die more). C1 opens .1: ≥ .33 (was .35; see Built). C2 opens 0: ≤ .15. Cost steps 0, .1, .2.
+    D  C's world, cost of choosiness .1; harmful mutations (16's: .5 new a young, each 5% off survival, start ~10 a bird);
+       his colour dulled by them, 0.95^(g h). Liking-bright allele by g: 0 .04-.06, 1 .19-.29, 2 .46-.52, 4 .67-.85; harmful
+       mutations a bird 9.3-9.7 → 7.1-7.6 → 4.7-5.0 → 2.4-2.8; young that live .57 → .62 → .70 → .79. By the mutation rate at
+       g 2: 0 .06-.08, .25 .15-.24, .5 .44-.54, 1 .61-.76. D1 g free (opens 0): ≥ .15. D2 g 2 held, rate free (opens .25): ≥ .35.
+    E  colour shows in females too (every female likes bright, strength 2, cost .5): daughters that live 1.00 → .71, bright
+       alleles .81 → .57. A gene that switches colour off in females (start 10%) by cost: 0 .08-.13, .25 .96-.97, .5+ .94-1.00.
+       E1 toggle free (opens off): daughters that live ≤ .9. E2 the off gene present, cost free (opens 0): off gene ≥ .5.
+       The ducks' conflict did not fit: with one brood a season, harming his mate harms his own young.
+    scoring v6, scaffold 11: A1 A2 A3 B1 B2 C1 C2 D1 D2 E1 E2.
+
+Built (2026-11-07, v6, 11 bits; `check_lesson21_numbers.js` rewritten, 32 checks + both widths + 5 R panels):
+
+    page       A as draft 3 (its engine stripped of linkage, inversion, cost and song; the random draws unchanged), A2 on
+               the beak gene. B-E share one template: over time (menu), the change taken apart (B; C and D with a menu for
+               which quantity, the mating part by sex), fitness surfaces (survival by colour, or in D by harmful mutations
+               and the colour she sees; the mating grid, one row "likes bright" in B and E, three in C and D), the diagram
+               (paths.js; arrows ids = the controls), the Target card, R last and closed. E's two switches are boxes under
+               its diagram (draft 3 B's inversion box); the off gene's box and the females' cost arrow appear only when on.
+    seeds      the page's one-island engine over 30 seed sets of 16 runs (scratchpad l21/pageOne.js), at the bars:
+               C1 cost 0 .36-.55 (median .44) against .33, opening .1 .03-.10; C2 .1 .03-.10 against .15; D1 dulling 0
+               .03-.10, 1 .19-.31 against .15; D2 rate .25 .12-.28 against .35. C1's bar went from .35 to .33 on this
+               (the minimum was .36), still above the allele's start of .30, so a hit is a rise.
+    D layout   the diagram widened to 540 so harmful mutations -> colour, D1's control, is long enough to see.
+
+Open with the draft (2026-11-07): E's pick (Open 2) made as conflict between the sexes over colour, Lec 28's "Selection acts in
+opposite directions on two sexes of same species"; A2 opens at strength 3, not 0 (the one-step rule cannot be met from 0:
+1 and 2 leave the beak split as the seeds alone leave it); B-E's mating rule differs from A's (above); no Bateman panel (Open 4).
+
 ## Items (2026-11-07)
 
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's re-cut (2026-11-07); this plan; the arc 21-2Z written (22 updated, the target plan renamed 23, three new plans, docs/refs summarised) | done 2026-11-07 |
 | 2 | JM rules on Open 1-5 (2026-11-07) | todo |
-| 3 | archive draft 3 whole and runnable as `app/archive/lesson21_speciation_d3_2026-11-02.html` + README note naming its checks at 2368016 | todo (first edit of the rebuild) |
-| 4 | Measure first: A's beak F_ST by strength; B's polygenic colour and its two terms; C's preference gene; D's condition; E | todo |
-| 5 | page: A re-aimed, B-E; v6 (slots change); `check_lesson21_numbers.js` rewritten | todo |
+| 3 | archive draft 3 whole and runnable as `app/archive/lesson21_speciation_d3_2026-11-02.html` + README note naming its checks at 2368016 | done 2026-11-07 |
+| 4 | Measure first: A's beak F_ST by strength; B's polygenic colour and its two terms; C's preference gene; D's condition; E | done 2026-11-07 (Draft 4, above) |
+| 5 | page: A re-aimed, B-E; v6 (slots change); `check_lesson21_numbers.js` rewritten | done 2026-11-07 |
+| 6 | JM plays with draft 4; Open 1-5 (2026-11-07) and the draft's open points; his voice for A-E | todo |
 
 ## Rulings (live; the full dated list is at the end of the history)
 

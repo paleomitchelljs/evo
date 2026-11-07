@@ -37,6 +37,24 @@ Nothing in 22's plan changes in substance. What changes around it:
   capstone's (individuality_plan.md). 22 D's gene-level competition (drive, transposon) is still the gene level the capstone
   stacks.
 
+## JM, 2026-11-07, later (verbatim): relatedness is a condition, not the cause
+
+> Also to connect to Michod, let's make sure the kin selection activity doesnt imply organisms cooperate **because** theyre
+> related, rather being closely related creates the conditions that allow the shift of cov(w,z) sufficiently to create
+> cooperation
+
+What it changes:
+- Relatedness never appears on screen as the reason a bird helps. It is a condition the student sets (dispersal, how groups form)
+  and measures; what decides the helping allele's fate is the covariance between helping and fitness, read off the run.
+- Every stage shows the Price split, not a relatedness readout alone: cov(w, z) for the helping allele, with its two parts (the
+  bird's own cost; the help it gets from the birds around it), and E(wΔz). Relatedness is the knob that moves the second part;
+  the bars show the move.
+- B's Hamilton's-line round reads as "where the covariance changes sign", r on the x axis as the condition, not "r b > c, so they
+  help". The same r can give no helping when b is small (the condition is not enough by itself).
+- The capstone (individuality_plan.md) runs the same picture a level up: clonal groups (r near 1) set the condition; the shift
+  of cov(w, z) from inside groups to between them is what makes the group an individual.
+- Words: no "because they are related", "kin help kin", "to help their relatives" on screen or in the intros' drafts.
+
 ## The lecture behind it (docs/2026_lecture_detail.tex, Lec 30-32; verbatim)
 
 - Hamilton's rule: "C = cost in lost own-offspring"; "B = benefit in recipient's extra offspring"; "r = relatedness
@@ -202,9 +220,12 @@ JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolvi
   seen in behaviour networks, average relatedness and allele frequencies.
 - 2026-10-28 (second ruling): 22 = kin selection and genetic-level competition in general; 21 flows into it; the hierarchical
   Price lesson (cell, organism, species; perhaps gene with kin and transposons) is the target, at 23-25.
-- 2026-11-07: 22 = kin selection / genic-level selection; 23 species / hierarchical selection; the capstone (Michod) after.
+- 2026-11-07: 22 = kin selection / genic-level selection; 23 species / hierarchical selection; the capstone (Michod) last.
+- 2026-11-07, later: the kin activity must not imply organisms cooperate because they are related; close relatedness creates the
+  conditions that let cov(w, z) shift far enough for cooperation (to connect to Michod).
 
 ## Do not
 
+- Imply birds help because they are related (JM, 2026-11-07, above): relatedness sets the conditions; the covariance decides.
 - State Hamilton's rule, or that relatives share alleles, before the runs show it.
 - Fuse the Price terms (WORK_ORDER).

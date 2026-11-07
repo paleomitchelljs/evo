@@ -1,4 +1,4 @@
-# Mesoevolution: species selection on development, deep homology ("2Z"; after 23 and evo-devo)
+# Mesoevolution: species selection on development, deep homology ("2Z"; after evo-devo, before the Michod capstone: JM 2026-11-07)
 
 **File** · not yet built. Rename this file `lessonNN_overhaul.md` once its slot is fixed
 **Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`

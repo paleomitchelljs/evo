@@ -1,4 +1,4 @@
-# Evo-devo: a gene network builds a limb ("2Y"; slot after 23, order with the capstone open)
+# Evo-devo: a gene network builds a limb ("2Y"; slot 24, or 24-25 if it splits: JM 2026-11-07, Michod last)
 
 **File** · not yet built. Rename this file `lessonNN_overhaul.md` once its slot is fixed. May split into two lessons (Open 1)
 **Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`

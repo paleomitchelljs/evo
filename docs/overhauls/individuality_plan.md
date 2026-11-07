@@ -1,6 +1,6 @@
-# The origins of individuality (Michod) — the capstone ("2X"; slot 24, or after evo-devo)
+# The origins of individuality (Michod) — the capstone ("2X"; LAST, after evo-devo and mesoevolution: JM 2026-11-07)
 
-**File** · not yet built. Rename this file `lessonNN_overhaul.md` once its slot is fixed (Open 1)
+**File** · not yet built. Rename this file `lessonNN_overhaul.md` once its number is fixed (26, or 27 if evo-devo splits)
 **Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · PLANNED 2026-11-07 (JM). A sketch; nothing measured
 **Last touched** · 2026-11-07
@@ -14,6 +14,16 @@ Readings: "the hierarchical framework" = 23's two-level Price equation (between 
 cov(w,z) to different levels" = the share of a trait's change carried by the covariance among groups against the covariance
 among cells inside them; an individual is a group whose inside share has gone to about zero. "the full capstone" = it also
 holds the whole stack (gene, cell, organism, species), moved here from the 10-28 target lesson (lesson23_overhaul.md).
+
+## JM, 2026-11-07, on 22's kin stage, "to connect to Michod" (verbatim)
+
+> Also to connect to Michod, let's make sure the kin selection activity doesnt imply organisms cooperate **because** theyre
+> related, rather being closely related creates the conditions that allow the shift of cov(w,z) sufficiently to create
+> cooperation
+
+So the two lessons tell one story: relatedness (22: dispersal; here: one-cell propagules) is the condition, the shift of the
+weight of cov(w, z) is the mechanism. A's target on single-cell starts is judged on the inside term going to about zero, not
+on relatedness reaching 1.
 
 ## The lecture behind it (docs/2026_lecture_detail.tex, Lec 30-31; verbatim)
 
@@ -76,7 +86,15 @@ Sources (archived, sources only per CLAUDE.md): `app/archive/lesson26.html` (spl
 individual); `lesson15_with_D_2026-10-09.html` (the hierarchical Price card: one allele's change among snakes and among copies
 inside each).
 
-## Where it goes (Open 1) — recommendation
+## Where it goes — RULED 2026-11-07: last
+
+> Let's put Michod last. My lecture order won't be identical this year. Then please start drafting these
+
+The recommendation below (slot 24) was declined; kept for the record. What follows from "last": the evo-devo lesson plants the
+picture (cells that stop dividing when the network says, cells that die between the digits) and this lesson points back to it;
+mesoevolution's species selection on development is the step before the whole stack (D).
+
+The recommendation as written (declined):
 
 Recommend slot 24, then evo-devo (25), then mesoevolution (26):
 1. The lecture runs that way: Lec 30 Hamilton's rule, then Lec 31 Michod's covariance, then Hox and the limb circuit.
@@ -101,7 +119,7 @@ comes first, evo-devo's growth stage points back to it; if second, the limb plan
 
 ## Open for JM
 
-1. The slot: 24 (recommended) or after evo-devo?
+1. ~~The slot: 24 (recommended) or after evo-devo?~~ Ruled 2026-11-07: last.
 2. The system: volvocine algae (recommended: Michod's own, and a real gradient of sizes), a body of cells (cancer), or a colony
    of workers?
 3. D (the whole stack) in this lesson, or left implied by 23 and A-C?
@@ -111,17 +129,19 @@ comes first, evo-devo's growth stage points back to it; if second, the limb plan
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's brief (2026-11-07); this plan; the cell level and the stack moved here from lesson 23's plan | done 2026-11-07 |
-| 2 | JM rules on Open 1-3 | todo |
-| 3 | slot fixed; file renamed | todo |
+| 2 | JM rules on Open 1-3 | 1 done 2026-11-07 (last); 2-3 todo |
+| 3 | slot fixed (last; number after the evo-devo split); file renamed | todo |
 | 4 | engine prototype; Measure first | todo |
 
 ## Rulings
 
+- 2026-11-07: the capstone comes last, after evo-devo and mesoevolution (JM: "Let's put Michod last.").
 - 2026-11-07: the capstone is Michod-style origins of individuality, extending the hierarchical framework, cooperation evolving
   by shifting the weight of cov(w, z) between levels.
 
 ## Do not
 
 - Fuse the two levels' terms into one leftover (WORK_ORDER).
-- State that relatedness, a germ line or a convex trade-off makes an individual; students find each from the bars.
+- State that relatedness, a germ line or a convex trade-off makes an individual; students find each from the bars. Relatedness
+  is a condition (JM, 2026-11-07), never the reason cells cooperate.
 - Name the volvocine genera on screen outside a closed box (the no-vocabulary rule).
