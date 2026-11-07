@@ -1,8 +1,8 @@
-# The origins of individuality (Michod) — the capstone ("2X"; LAST, after evo-devo and mesoevolution: JM 2026-11-07)
+# Lesson 26 — the origins of individuality (Michod), the capstone ("2X"; LAST: JM 2026-11-07; was `individuality_plan.md`)
 
-**File** · not yet built. Rename this file `lessonNN_overhaul.md` once its number is fixed (26, or 27 if evo-devo splits)
-**Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED 2026-11-07 (JM). A sketch; nothing measured
+**File** · `app/lessons/lesson26.html` — draft 1 (2026-11-07, v1, 6 bits, LOCKS `x`)
+**Checks** · `node scripts/check_lesson26_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 2-3 taken: volvocine-style colonies, no species names on screen; D, the whole stack, left for later)
 **Last touched** · 2026-11-07
 
 ## JM, 2026-11-07 (verbatim, the 2X part; the whole message is in lesson21_overhaul.md)
@@ -117,6 +117,33 @@ comes first, evo-devo's growth stage points back to it; if second, the limb plan
 - The weighting (cells counted by group size, or groups once): the same question 23 has (lesson23_overhaul.md, 10-28 notes);
   any difference shown as its own bar.
 
+## Draft 1 as built (2026-11-07)
+
+    A, C       100 colonies, each from k cells grown to 64 by single divisions; a cheater divides 3x as often (s 2); a
+               cooperator's daughter turns cheater 1 in 200; a colony makes propagules ~ 1 + B x its cooperators' share; k cells
+               drawn without replacement from the grown colony, or with a germ line from its founding cells (which do not
+               divide; each copied with the same 1 in 200). Cells interchangeable: a colony is two counts (scratchpad l26/col.js
+               cell by cell agrees). Price two levels each generation: between colonies, inside colonies (what propagules are
+               drawn from against the start), the propagule draw; exact (7e-18). 150 generations, 8 runs a Go.
+               First tries: colony output = cooperators' share alone made between-colony selection swamp everything (cheaters
+               .03-.15 at any k); B .2 with s 2 gives the propagule effect.
+    bars       (20 seed sets of 8 runs): A1 B .2, k free 1 / 16 (opens 16, .82-1.00): cheaters .55 or less (1: .32-.44; .46 at
+               one check seed, so .55 not .48). k 2 (.40-.67) and 4 (.50-.83) left off the arrow (one step must land).
+               A2 k 16, B free .2 / .5 / 1 (opens .2): .55 or less (.5 .27-.38).
+               C1 k 16, B .2, germ line free (opens none): cheaters .45 or less AND their gain inside colonies (mean of the last
+               50 generations) .005 or less (germ .28-.40 and exactly 0). A colony full of cheaters also has no inside gain,
+               so the share is part of the target.
+               C2 policing free 0 / .5 / .8 (opens .5: .12-.29 but inside .02): .8 (.001-.004, inside 0).
+    B          two kinds of colony (64 cells): generalists at the best b on v = (1 - b)^g; specialists a share q germ (b 1, v 0),
+               the rest body (v 1, b 0); W = V x B; 100 colonies, 1 in 100 offspring the other kind; 100 generations, 8 runs.
+               g 2 (bowed in): W 0.25 (q .5) / 0.19 (q .25) / 0.09 (q .1) against generalists 0.15; g 1 a tie at q .5; g .5
+               generalists 0.385. Specialist share at 100: g 2 q .5 .98, q .25 .96, q .1 .01; g 1 .47; g .5 .02. B1 q .5, curve
+               free (opens straight): .8 or more; B2 bowed in, q free (opens .1): .8 or more. A specialist colony's cells are
+               worth 0 each (v b = 0): all of its W is -cov(v, b), drawn as bars.
+    checks     `check_lesson26_numbers.js`: 16 checks + both widths + three R panels.
+    left out   D, the whole stack (gene, cell, organism, species in one picture); group size in B (Michod et al.'s convexity
+               rising with size); real volvocine data; dN/dS as a level-alignment diagnostic.
+
 ## Open for JM
 
 1. ~~The slot: 24 (recommended) or after evo-devo?~~ Ruled 2026-11-07: last.
@@ -130,8 +157,10 @@ comes first, evo-devo's growth stage points back to it; if second, the limb plan
 |---|------|--------|
 | 1 | JM's brief (2026-11-07); this plan; the cell level and the stack moved here from lesson 23's plan | done 2026-11-07 |
 | 2 | JM rules on Open 1-3 | 1 done 2026-11-07 (last); 2-3 todo |
-| 3 | slot fixed (last; number after the evo-devo split); file renamed | todo |
-| 4 | engine prototype; Measure first | todo |
+| 3 | slot fixed (last; number after the evo-devo split); file renamed | done 2026-11-07 (26) |
+| 4 | engine prototype; Measure first | done 2026-11-07 |
+| 5 | draft 1: page, check script | done 2026-11-07 (v1, 6 bits) |
+| 6 | JM plays draft 1; Open 2-3; D (the stack); his voice | todo |
 
 ## Rulings
 

@@ -18,7 +18,7 @@ it was the target lesson, gene, cell, organism and species at once (2026-10-28, 
     gene      stays 22's (kin as the gene's view; greenbeard, drive, transposon)
     organism  23, the lower of its two levels
     species   23, the upper level
-    cell      to the capstone (individuality_plan.md): cells into an individual is Michod's transition
+    cell      to the capstone (lesson26_overhaul.md): cells into an individual is Michod's transition
     the stack all four levels in one picture: to the capstone, as its last stage ("the full capstone")
 
 So 23 builds the hierarchical framework at two levels (the multilevel Price equation, between and within), with species as

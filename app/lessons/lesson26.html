@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 26</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  /* the voice slot: a draft list (goal, then controls) until JM dictates the intro, as lesson 20's drafts did */
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  canvas[hidden] { display:none; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .tcard canvas { margin:2px 0 6px; }
+  .tcard .ttext:empty { display:none; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
+  .toggles.pair > span:first-child { flex:0 0 172px; }
+  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
+  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
+  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
+
+  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
+  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 26</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+</nav>
+
+<!-- ========== STAGE A — cells that stay together (Lec 30: "Cancer is default; cooperation is inherited"; Michod & Roze 2001) ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Colonies of cells. Each grows from a few cells to 64; a cell can mutate into a cheater, which divides three times as fast and gives the colony nothing. Each grown colony makes new colonies, more of them the more cooperators it has. See where the cheaters end up.</li>
+        <li><b>Cells a new colony starts from</b>: one cell, or a fragment of 16. <b>What a cooperator gives the colony</b>: how many more new colonies it helps make.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_colsH">Eight colonies</span><span class="tip"><span>Eight grown colonies of run 1, 64 cells each: dark a cheater, pale a cooperator.</span></span></span></h3>
+        <canvas id="A_cols" width="760" height="150"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="A_meas">
+          <option value="z">cheater cells</option>
+          <option value="out">propagules a colony makes</option>
+          <option value="ins">cheaters' gain inside colonies</option>
+          <option value="bet">cheaters' change between colonies</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 8 runs, each thin; their average thick. Cheater cells: their share of the cells in new colonies. Propagules a colony makes: on average, relative to a colony of cheaters (1). The cheaters' gain inside colonies and their change between colonies: this generation's two parts of their change, below.</span></span></span></label></div>
+        <canvas id="A_time" width="760" height="260"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change, added up since generation 0 and averaged over the 8 runs, taken apart as lesson 23 took a clade's apart, with colonies in place of species and cells in place of birds.</span><span>Between colonies: colonies that leave more new colonies, against their share of cheaters. Inside colonies: how the cheaters' share grew while each colony grew (what its new colonies are drawn from). The propagule draw: the rest. In stage B, which colonies leave more, and the 1 in 100 that are the other kind.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="A_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, cells, colonies<span class="tip"><span>A cell's gene: cooperator or cheater. Cheaters divide faster (grey arrow); what a colony's cells became is what its new colonies are drawn from. What a cooperator gives the colony: a colony makes new colonies in proportion to 1 + that × its share of cooperators. Cells a new colony starts from: drawn from the grown colony. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>100 colonies, every cell a cooperator at the start. <b>Go</b> plays 150 generations, 8 times.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 8 runs' average, should end.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <canvas id="A_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="A_controls">
+          <div hidden><input type="range" id="A_k" min="1" max="2" step="1" value="2"><input type="range" id="A_B" min="1" max="3" step="1" value="1"></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="A_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — who does the work (Michod 2006, the group covariance effect: "W = VB = w̄ − Cov(v,b)"; Lec 31: "Kinship necessary, not sufficient"; "Convex trade-off v(b) also required for germ–soma split") ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Every cell does two jobs for its colony: keeping it alive (v) and making its offspring (b), traded off along a curve. A colony's fitness is its cells' average v times their average b. Two kinds of colony compete: generalists, every cell doing some of both, and specialists, some cells only germ and the rest only body. See which wins, and what each cell is worth on its own.</li>
+        <li><b>The trade-off</b>, bowed in, straight or bowed out. <b>Germ share</b>: the share of a specialist colony's cells that are germ.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The trade-off and the two colonies<span class="tip"><span>Left: the trade-off between v and b; the dot, where every generalist cell sits (the best point for a generalist colony); the squares, a specialist colony's germ and body cells.</span><span>Right: each colony's average v, average b, its fitness V × B, its cells' own fitness (v × b, averaged), and the difference, −cov(v, b).</span></span></span></h3>
+        <canvas id="B_curve" width="760" height="260"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Specialist colonies over time<span class="tip"><span>The share of the 100 colonies that are specialists; the 8 runs thin, their average thick.</span></span></span></h3>
+        <canvas id="B_time" width="760" height="260"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change, added up since generation 0 and averaged over the 8 runs, taken apart as lesson 23 took a clade's apart, with colonies in place of species and cells in place of birds.</span><span>Between colonies: colonies that leave more new colonies, against their share of cheaters. Inside colonies: how the cheaters' share grew while each colony grew (what its new colonies are drawn from). The propagule draw: the rest. In stage B, which colonies leave more, and the 1 in 100 that are the other kind.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="B_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Trade-off, cells, colony<span class="tip"><span>The trade-off sets each cell's v and b; the germ share, how a specialist colony divides its cells. A colony's fitness: V × B. 100 colonies, drawn each generation by fitness; 1 in 100 offspring colonies is the other kind. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>Half the colonies specialists at the start. <b>Go</b> plays 100 generations, 8 times.</span><span>The picture: what a hit looks like; the red box, where the thick line should end.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <canvas id="B_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_g" min="1" max="3" step="1" value="2"><input type="range" id="B_q" min="1" max="3" step="1" value="1"></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="B_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE C — the individual (Lec 30: "'Individual' means indivisible"; "Cooperation = suppression of next level down") ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Stage A's colonies, starting from fragments of 16 cells, cooperators giving little. Two more ways a colony can deal with its cheaters. See what happens to the cheaters' gain inside colonies.</li>
+        <li><b>A germ line set aside</b>: new colonies come only from the cells a colony started with, which do not divide, so a cheater made in its body never passes on. <b>Policing</b>: a share of new cheater cells killed as they appear.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="C_colsH">Eight colonies</span><span class="tip"><span>Eight grown colonies of run 1, 64 cells each: dark a cheater.</span></span></span></h3>
+        <canvas id="C_cols" width="760" height="150"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="C_meas">
+          <option value="z">cheater cells</option>
+          <option value="out">propagules a colony makes</option>
+          <option value="ins">cheaters' gain inside colonies</option>
+          <option value="bet">cheaters' change between colonies</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 8 runs, each thin; their average thick. Cheater cells: their share of the cells in new colonies. Propagules a colony makes: on average, relative to a colony of cheaters (1). The cheaters' gain inside colonies and their change between colonies: this generation's two parts of their change, below.</span></span></span></label></div>
+        <canvas id="C_time" width="760" height="260"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change, added up since generation 0 and averaged over the 8 runs, taken apart as lesson 23 took a clade's apart, with colonies in place of species and cells in place of birds.</span><span>Between colonies: colonies that leave more new colonies, against their share of cheaters. Inside colonies: how the cheaters' share grew while each colony grew (what its new colonies are drawn from). The propagule draw: the rest. In stage B, which colonies leave more, and the 1 in 100 that are the other kind.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="C_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, cells, colonies<span class="tip"><span>Stage A's diagram, held at 16 cells and a small gift. A germ line set aside cuts the path from a colony's divisions to its new colonies; policing acts on the cheaters' divisions. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>As stage A. <b>Go</b> plays 150 generations, 8 times. Both targets also need the cheaters' gain inside colonies, averaged over the last 50 generations, at .005 or less a generation.</span><span>The picture: what a hit looks like; the red box, where the thick line should end.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <canvas id="C_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="C_controls">
+          <div hidden><input type="range" id="C_k" min="1" max="2" step="1" value="2"><input type="range" id="C_B" min="1" max="3" step="1" value="1"><input type="range" id="C_g" min="-1" max="0" step="1" value="0"><input type="range" id="C_p" min="-2" max="0" step="1" value="-1"></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent">Go</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="C_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">That is the whole lesson.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 22. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 26 — the origins of individuality (Michod): the capstone.
+   Draft 1 (2026-11-07). JM, 2026-11-07: "Michod style origins of
+   individuality extending the hierarchical framework to show how
+   cooperation evolves by shifting the weight of cov(w,z) to different
+   levels"; "make sure the kin selection activity doesnt imply organisms
+   cooperate **because** theyre related, rather being closely related
+   creates the conditions that allow the shift of cov(w,z) sufficiently
+   to create cooperation"; "Let's put Michod last"; "Great, let's please
+   draft leson 23 and onward". Plan, measurements, open points:
+   docs/overhauls/lesson26_overhaul.md.
+
+   A  cells that stay together: cheater cells win inside colonies,
+      colonies with fewer cheaters leave more; one-cell starts (or a
+      bigger benefit) tip it.
+   B  who does the work: on a bowed-in trade-off a colony of germ and
+      body cells beats one of generalists, though each of its cells has
+      no fitness of its own: the colony's is -cov(v, b).
+   C  the individual: a germ line set aside, or policing, takes the
+      cheaters' gain inside colonies to zero.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+
+/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: null };
+const BIT = { A1: 0, A2: 1, B1: 2, B2: 3, C1: 4, C2: 5 };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
+
+/* =====================================================================
+   STAGES A and C's ENGINE: cells that stay together (Michod & Roze
+   2001; Michod 1999). 100 colonies. A colony starts from k cells (its
+   propagule) and grows to 64 by divisions, one at a time: the cell that
+   divides is a cheater with chance n1 (1 + s) / (n0 + n1 (1 + s)) (s 2:
+   a cheater divides three times as often). A cooperator's daughter is a
+   cheater with chance 1/200 (mutation). Policing (C): a new cheater cell
+   is killed with chance pol. The grown colony makes propagules in
+   proportion to 1 + B x its cooperators' share (B: what cooperators do
+   for the colony); 100 propagules a generation, each k cells drawn
+   without replacement from the grown colony, or, with a germ line set
+   aside (C), from the cells it started with (they do not divide, so a
+   cheater made in the body never reaches a propagule; each copied with
+   the same 1/200 chance of turning cheater).
+   Cells are interchangeable, so a colony is two counts.
+   The change in the cheaters' share each generation, taken apart (the
+   two-level Price equation, as lesson 23 took a clade's apart):
+     between colonies: sum_j (w_j z_j) - z-bar, w_j a colony's share of
+       the new propagules, z_j its share at the start;
+     inside colonies: sum_j w_j (z'_j - z_j), z'_j the share of what its
+       propagules are drawn from (the grown colony, or its germ line);
+     the propagule draw: the rest.
+   MEASURED (this engine, 20 seed sets of 8 runs, 150 generations, B .2,
+   s 2; scratchpad l26/col.js cell by cell agrees): cheaters at the end,
+   from one cell .32-.44 (.46 at one check seed, so A's bar is .55), 2 .40-.67, 4 .50-.83, 16 .80-1.00; 16 with B .5
+   .27-.38, B 1 .15-.22; 16 with a germ line .23-.38 (inside, the last 50
+   generations, exactly 0); policing .5 .13-.30 (inside .02 a
+   generation), .8 .002-.005 (inside 0).
+   ===================================================================== */
+const CM = 100, CN = 64, CSP = 2, CMU = 0.005, CG = 150;
+function hyper(n0, n1, k, rng) { let a = n0, b = n1, x = 0; for (let i = 0; i < k; i++) { if (rng() < b / (a + b)) { x++; b--; } else a--; } return x; }   /* cheaters among k drawn */
+function coWorld(P, seed) { const rng = mulberry32(seed), cols = []; for (let j = 0; j < CM; j++) cols.push([P.k, 0]); return { P, rng, t: 0, cols, cum: { bet: 0, ins: 0, draw: 0 }, last: null, out: 1 }; }
+function coStep(w) {
+  const P = w.P, r = w.rng, z0 = [], zs = [], W = [], grown = [];
+  for (const [a0, a1] of w.cols) {
+    let n0 = a0, n1 = a1;
+    while (n0 + n1 < CN) {
+      if (r() < n1 * (1 + CSP) / (n0 + n1 * (1 + CSP))) { if (P.pol && r() < P.pol) continue; n1++; }
+      else { if (r() < CMU) { if (P.pol && r() < P.pol) continue; n1++; } else n0++; }
+    }
+    grown.push([n0, n1]); z0.push(a1 / (a0 + a1)); W.push(1 + P.B * n0 / (n0 + n1));
+  }
+  const tot = W.reduce((a, b) => a + b, 0), kids = new Array(CM).fill(0), next = [];
+  for (let n = 0; n < CM; n++) {
+    let u = r() * tot, j = 0; for (; j < CM; j++) { u -= W[j]; if (u <= 0) break; } j = Math.min(j, CM - 1); kids[j]++;
+    if (P.germ) { const [a0, a1] = w.cols[j]; let c = 0; for (let i = 0; i < P.k; i++) { const ch = i < a1; c += ch || r() < CMU ? 1 : 0; } next.push([P.k - c, c]); }
+    else { const [g0, g1] = grown[j], c = hyper(g0, g1, P.k, r); next.push([P.k - c, c]); }
+  }
+  w.cols.forEach(([a0, a1], j) => zs.push(P.germ ? z0[j] : grown[j][1] / CN));
+  const zb = z0.reduce((a, b) => a + b, 0) / CM, wt = kids.map(x => x / CM);
+  const bet = wt.reduce((a, x, j) => a + x * z0[j], 0) - zb, ins = wt.reduce((a, x, j) => a + x * (zs[j] - z0[j]), 0);
+  const zn = next.reduce((a, [b0, b1]) => a + b1 / (b0 + b1), 0) / CM;
+  w.last = { bet, ins, draw: zn - zb - bet - ins, before: zb, after: zn };
+  w.cum.bet += bet; w.cum.ins += ins; w.cum.draw += w.last.draw;
+  w.out = tot / CM; w.grown = grown; w.cols = next; w.t++; (w.insH = w.insH || []).push(w.last.ins);
+}
+function coStat(w) { const z = w.cols.reduce((a, [b0, b1]) => a + b1 / (b0 + b1), 0) / CM;
+  const h = w.insH || [], tail = h.slice(-50), ins50 = tail.length ? tail.reduce((a, b) => a + b, 0) / tail.length : null;
+  return { z, out: w.t ? w.out : null, ins: w.last ? w.last.ins : null, bet: w.last ? w.last.bet : null, ins50, cum: Object.assign({}, w.cum) }; }
+const COL = { step: coStep, stat: coStat };
+
+/* =====================================================================
+   STAGE B's ENGINE: who does the work (Michod 2006, the group covariance
+   effect; Michod, Viossat, Solari, Hurand & Nedelcu 2006). A cell has a
+   viability v (what it gives the colony's survival) and a fecundity b
+   (what it gives its offspring), on a trade-off v = (1 - b)^g: g 2 bowed
+   in (a cell doing both does neither well), 1 straight, .5 bowed out (a
+   cell can do much of both). A
+   colony's fitness W = V x B, V and B its cells' averages; a cell's own
+   fitness v b. Two kinds of colony, 64 cells each: generalists, every
+   cell at the b that makes V x B biggest on the curve; specialists, a
+   share q of cells germ (b 1, v 0), the rest body (v 1, b 0). 100
+   colonies, each generation drawn by W; a colony's offspring are the
+   other kind with chance 1/100.
+   W = mean(v b) - cov(v, b) (Michod): a specialist colony's cells have
+   v b = 0 each, so all of W is -cov(v, b).
+   ===================================================================== */
+const DV_M = 100, DV_N = 64, DV_MU = 0.01, DV_G = 100;
+function dvCells(kind, P) {
+  const v = [], b = [];
+  if (kind === "spec") { const nq = Math.round(P.q * DV_N); for (let i = 0; i < DV_N; i++) { const g = i < nq; v.push(g ? 0 : 1); b.push(g ? 1 : 0); } }
+  else { const bs = 1 / (1 + P.g), vs = Math.pow(1 - bs, P.g); for (let i = 0; i < DV_N; i++) { v.push(vs); b.push(bs); } }
+  const V = v.reduce((a, x) => a + x, 0) / DV_N, B = b.reduce((a, x) => a + x, 0) / DV_N, wc = v.reduce((a, x, i) => a + x * b[i], 0) / DV_N;
+  return { V, B, W: V * B, wc, cov: wc - V * B };
+}
+function dvWorld(P, seed) { const sp = dvCells("spec", P), ge = dvCells("gen", P); return { P, rng: mulberry32(seed), t: 0, n: CM / 2, sp, ge, cum: { sel: 0, mut: 0 } }; }
+function dvStep(w) {
+  const r = w.rng, z = w.n / DV_M, Wb = z * w.sp.W + (1 - z) * w.ge.W, ps = z * w.sp.W / Wb; let n = 0;
+  for (let i = 0; i < DV_M; i++) { let s = r() < ps; if (r() < DV_MU) s = !s; if (s) n++; }
+  const sel = ps - z, z1 = n / DV_M; w.cum.sel += sel; w.cum.mut += z1 - z - sel; w.n = n; w.t++;
+}
+function dvStat(w) { return { z: w.n / DV_M, cum: Object.assign({}, w.cum) }; }
+const DOL = { step: dvStep, stat: dvStat };
+
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R.map(p => p[key]).find(v => v != null);
+    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
+  }
+  return out;
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-E ======
+   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
+   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : "";
+  }
+  S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
+function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const r = S.done ? null : ruleOf(S);
+  const set = readSet(S), seed = pageSeed("l26" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G));
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
+const PATHS = {};
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
+  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
+  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
+  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
+  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l26" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
+const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
+const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+
+const TM = { W: 760, H: 300, px: 50, py: 14 };
+function labRoom(ctx, M) {
+  ctx.font = "600 11px -apple-system, sans-serif"; let w = 0;
+  for (const k in M) if ((M[k].n || 1) > 1) for (const nm of ISLE) w = Math.max(w, ctx.measureText(nm).width);
+  return w ? Math.ceil(w) + 22 : 12;
+}
+const tickLab = (m, v) => m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2));
+function drawTime(cvId, q, meas, M, rule, G) {
+  const cv = $(cvId); if (!cv) return;
+  const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas];
+  T.pw = T.W - T.px - labRoom(ctx, M);
+  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, lastY = [];
+  const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - (Math.max(ymin, Math.min(v, ymax)) - ymin) / (ymax - ymin) * T.ph;
+  cv._tf = { xs, ys, T, G };
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) { const v = ymin + (ymax - ymin) * k / 4; cardText(ctx, tickLab(m, v), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (let t = 0; t <= G; t += G > 200 ? 50 : G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (rule) for (const u of rule.rules) if (u.meas === meas && (u.lo != null || u.hi != null)) {
+    const lo = u.lo == null ? ymin : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7;
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+  }
+  if (q) {
+    const dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
+    for (let i = 0; i < q.runs.length; i++) for (let k = 0; k < nPer; k++) {
+      const pts = []; for (const s of q.hist) { const v = m.vals(s.runs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
+      polyline(ctx, pts, nPer > 1 ? POPCOL[k] : INK, 1, 0.13);
+    }
+    for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.runs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, nPer > 1 ? POPCOL[k] : INK, 2.6, 1, dash(k));
+      if (avg.length) lastY[k] = avg[avg.length - 1][1];
+    }
+  }
+  if (nPer > 1) {
+    const want = ISLE.map((_, k) => lastY[k] != null ? lastY[k] : T.py + 6 + 13 * k);
+    const ord = [0, 1].sort((a, b) => want[a] - want[b]), y = [];
+    ord.forEach((k, i) => { y[k] = Math.max(i ? y[ord[i - 1]] + 13 : T.py + 4, want[k]); });
+    for (let i = ord.length - 1; i >= 0; i--) y[ord[i]] = Math.min(y[ord[i]], i === ord.length - 1 ? T.py + T.ph - 4 : y[ord[i + 1]] - 13);
+    ISLE.forEach((nm, k) => cardText(ctx, nm, xs(G) + 15, y[k], { size: 11, col: POPCOL[k], bold: true }));
+  }
+  ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+/* a target card's picture: an example chart of a hit, unlabeled, in the plot over time's style (lesson 19's): pic { meas, G,
+   lines [{ f(t), jit }], boxes [{ lo, hi }] } */
+const SKc = { W: 460, H: 120, px: 8, py: 8, pw: 424, ph: 100 };
+function bwHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
+function drawSketch(cvId, pic, M) {
+  const cv = $(cvId); if (!cv) return;
+  cv.hidden = !pic; if (!pic) return;
+  const { ctx } = frameCanvas(cv, SKc.W, SKc.H);
+  const m = M[pic.meas], ymin = m.ymin || 0, ymax = m.ymax, G = pic.G;
+  const xs = t => SKc.px + t / G * SKc.pw, ys = v => SKc.py + SKc.ph - (Math.max(ymin, Math.min(ymax, v)) - ymin) / (ymax - ymin) * SKc.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SKc.px, SKc.py); ctx.lineTo(SKc.px, SKc.py + SKc.ph); ctx.lineTo(SKc.px + SKc.pw, SKc.py + SKc.ph); ctx.stroke();
+  const step = G / 100;
+  pic.lines.forEach((ln, li) => {
+    for (let r = 0; r < 16; r++) {
+      const off = (bwHash(r, 13 + li, 7) - 0.5) * 2 * ln.jit, pts = [];
+      for (let t = 0; t <= G + 1e-9; t += step) pts.push([xs(t), ys(ln.f(t) + off * Math.min(1, 4 * t / G) + (bwHash(r, Math.round(t / step), 11 + li) - 0.5) * 0.4 * ln.jit * Math.min(1, 4 * t / G))]);
+      polyline(ctx, pts, INK, 1, 0.16);
+    }
+    const avg = []; for (let t = 0; t <= G + 1e-9; t += step / 2) avg.push([xs(t), ys(ln.f(t))]);
+    polyline(ctx, avg, INK, 2.6, 1);
+  });
+  for (const bx of pic.boxes) { const lo = bx.lo == null ? ymin : bx.lo, hi = bx.hi == null ? ymax : bx.hi;
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(xs(G) - 7, ys(hi), 14, ys(lo) - ys(hi)); }
+  ctx.restore();
+}
+
+
+const CS = { W: 760, H: 230, px: 56, py: 26, pw: 540, ph: 170 };
+function drawSplit(cvId, q, series, G) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CS.W, CS.H);
+  let ym = 0.05; const pts = series.map(() => []);
+  if (q) for (const h of q.hist) series.forEach((se, i) => { const v = meanOf(h.runs.map(se.v)); if (v == null) return; pts[i].push([h.t, v]); ym = Math.max(ym, Math.abs(v)); });
+  ym = Math.ceil(ym * 10 + 1e-9) / 10;
+  const xs = t => CS.px + t / G * CS.pw, y0 = CS.py + CS.ph / 2, ys = v => y0 - v / ym * (CS.ph / 2);
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CS.px, CS.py); ctx.lineTo(CS.px, CS.py + CS.ph); ctx.moveTo(CS.px, y0); ctx.lineTo(CS.px + CS.pw, y0); ctx.stroke();
+  for (const v of [-ym, -ym / 2, 0, ym / 2, ym]) cardText(ctx, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) * 100) + "%", CS.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= G; t += G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), CS.py + CS.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", CS.px + CS.pw / 2, CS.H - 6, { size: 11, col: MUTED, align: "center" });
+  const ends = [];
+  series.forEach((se, i) => { if (!pts[i].length) return; polyline(ctx, pts[i].map(([t, v]) => [xs(t), ys(v)]), se.col, se.lw || 2, 1, se.dash); ends.push({ y: ys(pts[i][pts[i].length - 1][1]), se }); });
+  const lab = ends.length ? ends : series.map((se, i) => ({ y: CS.py + 10 + 16 * i, se }));
+  lab.sort((a, b) => a.y - b.y); for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 13);
+  for (const l of lab) { polyline(ctx, [[CS.px + CS.pw + 6, l.y], [CS.px + CS.pw + 16, l.y]], l.se.col, 2, 1, l.se.dash); cardText(ctx, l.se.lab, CS.px + CS.pw + 20, l.y, { size: 10.5, col: l.se.col, bold: !!l.se.lw }); }
+  ctx.restore();
+}
+
+/* ====== drawing ====== */
+const POPCOL = [ORANGE, BLUE], ISLE = [];
+/* A, C: eight colonies of run 1 as grown, 64 cells each (dark a cheater) */
+function drawColonies(cvId, w) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, 150), c = 8, gap = 88;
+  const cols = w.grown || w.cols.map(([a0, a1]) => [a0, a1]);
+  for (let j = 0; j < 8; j++) { const [n0, n1] = cols[j], tot = n0 + n1, x0 = 20 + j * gap;
+    for (let i = 0; i < CN; i++) { const x = x0 + (i % 8) * c, y = 20 + Math.floor(i / 8) * c; ctx.fillStyle = i >= tot ? "#f6f4ee" : i < n1 ? INK : "#dcd7c8"; ctx.fillRect(x, y, c - 1, c - 1); }
+    cardText(ctx, n1 + " of " + tot, x0 + 32, 98, { size: 10.5, col: MUTED, align: "center" }); }
+  cardText(ctx, "dark: a cheater cell", 20, 132, { size: 10.5, col: MUTED });
+  ctx.restore();
+}
+const SPLIT_C = [
+  { lab: "between colonies", col: BLUE, dash: null, v: s => s.cum.bet },
+  { lab: "inside colonies", col: HOT, dash: null, v: s => s.cum.ins },
+  { lab: "the propagule draw", col: MUTED, dash: [2, 3], v: s => s.cum.draw },
+  { lab: "the change, all of it", col: INK, dash: null, lw: 2.8, v: s => s.cum.bet + s.cum.ins + s.cum.draw },
+];
+const SPLIT_B = [
+  { lab: "which colonies leave more", col: BLUE, dash: null, v: s => s.cum.sel },
+  { lab: "the other kind's offspring", col: MUTED, dash: [2, 3], v: s => s.cum.mut },
+  { lab: "the change, all of it", col: INK, dash: null, lw: 2.8, v: s => s.cum.sel + s.cum.mut },
+];
+/* B: the trade-off curve, the generalist's point, the specialists' two corners; the two colonies' numbers as bars */
+function drawCurve(cvId, P) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, 260), x0 = 60, y0 = 230, L = 190, xs = b => x0 + b * L, ys = v => y0 - v * L;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, y0 - L - 6); ctx.lineTo(x0, y0); ctx.lineTo(x0 + L + 6, y0); ctx.stroke();
+  const pts = []; for (let i = 0; i <= 50; i++) { const b = i / 50; pts.push([xs(b), ys(Math.pow(1 - b, P.g))]); } polyline(ctx, pts, INK, 2.2, 1);
+  const bs = 1 / (1 + P.g); ctx.fillStyle = BLUE; ctx.beginPath(); ctx.arc(xs(bs), ys(Math.pow(1 - bs, P.g)), 5, 0, 2 * Math.PI); ctx.fill();
+  ctx.fillStyle = HOT; for (const [b, v] of [[0, 1], [1, 0]]) { ctx.fillRect(xs(b) - 5, ys(v) - 5, 10, 10); }
+  cardText(ctx, "b: what a cell gives the colony's offspring", x0 + L / 2, 252, { size: 10.5, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(22, y0 - L / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "v: what it gives the colony's survival", 0, 0, { size: 10.5, col: MUTED, align: "center" }); ctx.restore();
+  cardText(ctx, "● every cell of a generalist colony", x0 + 6, 16, { size: 10.5, col: BLUE }); cardText(ctx, "■ a specialist colony's germ and body cells", x0 + 6, 32, { size: 10.5, col: HOT });
+  const sp = dvCells("spec", P), ge = dvCells("gen", P), bx = 330, rows = [["V (survival, averaged)", "V"], ["B (offspring, averaged)", "B"], ["the colony: V × B", "W"], ["its cells, v × b averaged", "wc"], ["V × B minus that: −cov(v, b)", "ncov"]];
+  const val = (o, k) => k === "ncov" ? -o.cov : o[k];
+  cardText(ctx, "specialists", bx + 250, 16, { size: 11, bold: true, col: HOT, align: "center" }); cardText(ctx, "generalists", bx + 350, 16, { size: 11, bold: true, col: BLUE, align: "center" });
+  rows.forEach(([lab, k], i) => { const y = 44 + i * 40; cardText(ctx, lab, bx, y + 8, { size: 11, col: INK });
+    [[sp, HOT, 210], [ge, BLUE, 310]].forEach(([o, col, x]) => { const v = val(o, k); ctx.fillStyle = col; ctx.globalAlpha = 0.85; ctx.fillRect(bx + x, y, Math.max(1, v * 160), 16); ctx.globalAlpha = 1; cardText(ctx, v.toFixed(2), bx + x + Math.max(1, v * 160) + 4, y + 8, { size: 10.5, col: INK }); }); });
+  ctx.restore();
+}
+/* ====== controls, diagrams, stages ====== */
+const K_V = [1, 16], BEN_V = [0.2, 0.5, 1], GERM_V = [1, 0], POL_V = [0.8, 0.5, 0],   /* germ and policing: red arrows, input -1..0 and -2..0 */ CURVE_V = [0.5, 1, 2], Q_V = [0.1, 0.25, 0.5];
+const CURVE_LAB = { 0.5: "bowed out", 1: "straight", 2: "bowed in" };
+const fixedArrow = (id, from, to) => ({ id, from, to, readonly: true, dark: true, label: "" });
+const pic = (meas, f, lo, hi, jit, G) => ({ meas, G, lines: [{ f, jit: jit || 0.04 }], boxes: [{ lo, hi }] });
+function mountCol(K, more) {
+  const boxes = [{ id: "gn", label: "a cell's gene", x: 100, y: 40, w: 120, h: 32 }, { id: "dv", label: "its divisions", x: 100, y: 200, w: 120, h: 32 },
+    { id: "st", label: "cells a new colony starts from", x: 350, y: 40, w: 210, h: 32 }, { id: "pr", label: "the colony's propagules", x: 350, y: 290, w: 180, h: 34, kind: "outcome" }];
+  const arrows = [fixedArrow("x1", "gn", "dv"), fixedArrow("x2", "dv", "pr"),
+    { id: "B", from: "gn", to: "pr", input: K + "_B", signed: true, label: "what a cooperator gives the colony", fmt: v => "+" + BEN_V[Math.round(v) - 1] },
+    { id: "k", from: "st", to: "pr", input: K + "_k", signed: true, label: "cells a new colony starts from", fmt: v => K_V[Math.round(v) - 1] === 1 ? "one cell" : "16 cells" }];
+  if (more) { boxes.push({ id: "gl", label: "a germ line set aside", x: 100, y: 300, w: 170, h: 32 }, { id: "po", label: "policing", x: 330, y: 160, w: 90, h: 32 });
+    arrows.push({ id: "g", from: "gl", onto: "x2", ontoAt: 0.5, input: "C_g", signed: true, label: "a germ line", fmt: v => GERM_V[Math.round(v) + 1] ? "set aside" : "none" },
+                { id: "p", from: "po", onto: "x1", ontoAt: 0.5, input: "C_p", signed: true, label: "policing", fmt: v => "kills " + POL_V[Math.round(v) + 2] + " of new cheater cells" }); }
+  return Paths.init({ mount: "#" + K + "_paths", width: 470, height: 340, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountDol() {
+  const boxes = [{ id: "tr", label: "the trade-off", x: 100, y: 40, w: 130, h: 32 }, { id: "ce", label: "a cell's v and b", x: 100, y: 190, w: 130, h: 32 },
+    { id: "gs", label: "germ cells in a specialist colony", x: 340, y: 40, w: 220, h: 32 }, { id: "wf", label: "the colony's fitness, V × B", x: 340, y: 270, w: 200, h: 34, kind: "outcome" }];
+  return Paths.init({ mount: "#B_paths", width: 470, height: 320, boxes, arrows: [fixedArrow("x1", "ce", "wf"),
+    { id: "g", from: "tr", to: "ce", input: "B_g", signed: true, label: "the trade-off", fmt: v => CURVE_LAB[CURVE_V[Math.round(v) - 1]] },
+    { id: "q", from: "gs", to: "wf", input: "B_q", signed: true, label: "germ share", fmt: v => String(Q_V[Math.round(v) - 1]) }], valuesOnSelect: true, lockColours: true });
+}
+const MEAS_C = {
+  z: { lab: "cheater cells", ymax: 1, pct: true, vals: s => [s.z] },
+  out: { lab: "propagules a colony makes", ymin: 1, ymax: 2, vals: s => [s.out] },
+  ins: { lab: "cheaters' gain inside colonies", ymin: -0.05, ymax: 0.15, vals: s => [s.ins] },
+  bet: { lab: "cheaters' change between colonies", ymin: -0.15, ymax: 0.05, vals: s => [s.bet] },
+};
+const colStart = extra => (set, seed) => { const P = Object.assign({ k: set.k, B: set.B, germ: 0, pol: 0 }, extra(set)); return { P, eng: COL, G: CG, every: 3, runs: Array.from({ length: 8 }, (_, i) => coWorld(P, seed + 1 + 7919 * i)) }; };
+function colPaint(S) {
+  const K = S.K, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
+  drawColonies(K + "_cols", w); $(K + "_colsH").textContent = "Eight colonies of run 1 · generation " + w.t;
+  drawTime(K + "_time", q, $(K + "_meas").value, MEAS_C, r, CG);
+  drawSplit(K + "_split", q, SPLIT_C, CG);
+  drawSketch(K + "_tpic", r ? r.pic : null, MEAS_C);
+  syncStage(S); S.cfg.code();
+}
+/* ---------- A ---------- */
+const SA = mkStage("A", {
+  ctl: [{ key: "k", vals: K_V, hidden: true }, { key: "B", vals: BEN_V, hidden: true }],
+  rounds: [
+    { hold: { B: 0.2 }, open: { k: 16 }, rules: [atMost("z", 0.55)], pic: pic("z", t => 0.37 * (1 - Math.exp(-t / 25)), 0, 0.55, 0.04, CG) },
+    { hold: { k: 16 }, open: { B: 0.2 }, rules: [atMost("z", 0.55)], pic: pic("z", t => 0.32 * (1 - Math.exp(-t / 25)), 0, 0.55, 0.04, CG) },
+  ],
+  ms: 20, meas: MEAS_C,
+  start: colStart(() => ({})),
+  afterOpen: () => { hold(SA, ["k", "B"])(); if (!SA.done) $("A_meas").value = "z"; },
+  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
+  paint: () => colPaint(SA), code: () => colCode("A", SA),
+});
+/* ---------- B ---------- */
+const MEAS_B = { z: { lab: "specialist colonies", ymax: 1, pct: true, vals: s => [s.z] } };
+const SB = mkStage("B", {
+  ctl: [{ key: "g", vals: CURVE_V, hidden: true }, { key: "q", vals: Q_V, hidden: true }],
+  rounds: [
+    { hold: { q: 0.5 }, open: { g: 1 }, rules: [atLeast("z", 0.8)], pic: pic("z", t => 0.5 + 0.47 * (1 - Math.exp(-t / 12)), 0.8, 1, 0.03, DV_G) },
+    { hold: { g: 2 }, open: { q: 0.1 }, rules: [atLeast("z", 0.8)], pic: pic("z", t => 0.5 + 0.46 * (1 - Math.exp(-t / 15)), 0.8, 1, 0.03, DV_G) },
+  ],
+  ms: 25, meas: MEAS_B,
+  start: (set, seed) => { const P = { g: set.g, q: set.q }; return { P, eng: DOL, G: DV_G, every: 1, runs: Array.from({ length: 8 }, (_, i) => dvWorld(P, seed + 1 + 7919 * i)) }; },
+  afterOpen: () => hold(SB, ["g", "q"])(),
+  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
+  paint: () => { const S = SB, q = shownRun(S), r = S.done ? null : ruleOf(S), set = readSet(S);
+    drawCurve("B_curve", { g: set.g, q: set.q }); drawTime("B_time", q, "z", MEAS_B, r, DV_G); drawSplit("B_split", q, SPLIT_B, DV_G); drawSketch("B_tpic", r ? r.pic : null, MEAS_B);
+    syncStage(S); B_code(); },
+});
+/* ---------- C ---------- */
+const lowIns = { meas: "ins50", lo: null, hi: null, ok: S => S.ins50 != null && S.ins50 <= 0.005, val: S => f2(S.ins50) };
+const SC = mkStage("C", {
+  ctl: [{ key: "k", vals: K_V, hidden: true }, { key: "B", vals: BEN_V, hidden: true }, { key: "g", vals: GERM_V, hidden: true }, { key: "p", vals: POL_V, hidden: true }],
+  rounds: [
+    { hold: { k: 16, B: 0.2, p: 0 }, open: { g: 0 }, rules: [atMost("z", 0.45), lowIns], pic: pic("z", t => 0.33 * (1 - Math.exp(-t / 25)), 0, 0.45, 0.04, CG) },
+    { hold: { k: 16, B: 0.2, g: 0 }, open: { p: 0.5 }, rules: [atMost("z", 0.45), lowIns], pic: pic("z", t => 0.01, 0, 0.45, 0.01, CG) },
+  ],
+  ms: 20, meas: MEAS_C,
+  start: colStart(set => ({ germ: set.g, pol: set.p })),
+  afterOpen: () => { hold(SC, ["k", "B", "g", "p"])(); if (!SC.done) $("C_meas").value = "ins"; },
+  onInput: () => { if (PATHS.C) PATHS.C.sync(); },
+  paint: () => colPaint(SC), code: () => colCode("C", SC),
+});
+/* ====== the R panels ====== */
+function colCode(K, S) { const s = readSet(S), C = K === "C";
+  codeInto("code" + K, [
+    ["", "# Lesson 26, Stage " + K + " -- colonies of cells, cheaters inside them"],
+    ["k", "k <- " + s.k + "                                   # cells a new colony starts from"],
+    ["B", "B <- " + s.B + "                                   # what cooperators give the colony: propagules ~ 1 + B x cooperators' share"],
+    [C ? "g" : "", "germ <- " + (C ? s.g : 0) + "; pol <- " + (C ? s.p : 0) + "                       # a germ line set aside; policing"],
+    ["", "M <- 100; N <- 64; s <- 2; mu <- 0.005; G <- 150"],
+    ["", "cols <- matrix(c(k, 0), M, 2, byrow = TRUE)                     # each colony: cooperators, cheaters"],
+    ["", "for (t in 1:G) {"],
+    ["", "  grown <- t(apply(cols, 1, function(c) { n0 <- c[1]; n1 <- c[2]"],
+    ["", "    while (n0 + n1 < N) {"],
+    ["p", "      if (runif(1) < n1 * (1 + s) / (n0 + n1 * (1 + s))) { if (runif(1) >= pol) n1 <- n1 + 1 }"],
+    ["", "      else if (runif(1) < mu) { if (runif(1) >= pol) n1 <- n1 + 1 } else n0 <- n0 + 1 }"],
+    ["", "    c(n0, n1) }))"],
+    ["B", "  W <- 1 + B * grown[, 1] / N; par <- sample(M, M, replace = TRUE, prob = W)"],
+    ["g", "  cols <- t(sapply(par, function(j) { if (germ == 1) { x <- cols[j, 2] + rbinom(1, cols[j, 1], mu) }"],
+    ["", "    else x <- rhyper(1, grown[j, 2], grown[j, 1], k); c(k - x, x) }))"],
+    ["", "}"],
+    ["", "c(cheaters = mean(cols[, 2] / k))"],
+  ]); }
+function B_code() { const s = readSet(SB);
+  codeInto("codeB", [
+    ["", "# Lesson 26, Stage B -- who does the work (Michod 2006: W = V B = mean(v b) - cov(v, b))"],
+    ["g", "g <- " + s.g + "                                   # the trade-off: v = (1 - b)^g"],
+    ["q", "q <- " + s.q + "                                   # germ cells in a specialist colony"],
+    ["", "N <- 64; nq <- round(q * N)"],
+    ["", "spec <- list(v = c(rep(0, nq), rep(1, N - nq)), b = c(rep(1, nq), rep(0, N - nq)))"],
+    ["", "bs <- 1 / (1 + g); gen <- list(v = rep((1 - bs)^g, N), b = rep(bs, N))"],
+    ["", "fit <- function(x) c(V = mean(x$v), B = mean(x$b), W = mean(x$v) * mean(x$b), cells = mean(x$v * x$b))"],
+    ["", "Ws <- fit(spec)['W']; Wg <- fit(gen)['W']; print(rbind(specialists = fit(spec), generalists = fit(gen)))"],
+    ["", "n <- 50; G <- 100"],
+    ["", "for (t in 1:G) { p <- n / 100 * Ws / (n / 100 * Ws + (1 - n / 100) * Wg); kids <- runif(100) < p; flip <- runif(100) < 0.01; n <- sum(xor(kids, flip)) }"],
+    ["", "c(specialist_colonies = n / 100)"],
+  ]); }
+
+const STAGES = [SA, SB, SC];
+function paintAll() { for (const S of STAGES) S.cfg.paint(); }
+function wire() {
+  PATHS.A = mountCol("A", false); PATHS.B = mountDol(); PATHS.C = mountCol("C", true);
+  for (const S of STAGES) wireStage(S);
+  for (const K of ["A", "C"]) $(K + "_meas").addEventListener("change", () => ST[K].cfg.paint());
+  for (const K of ["A", "B", "C"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson26_stage" + K + ".R", RTEXT["code" + K]));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l26reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson26",
+  version: 1,      /* 1: draft 1 (2026-11-07): A two targets, B two, C two (6) */
+  scaffold: 6,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l26reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>

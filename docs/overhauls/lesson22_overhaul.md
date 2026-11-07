@@ -34,7 +34,7 @@ Nothing in 22's plan changes in substance. What changes around it:
 - 21's learned song (draft 3's C) is parked, so the learned call as a kin cue (A, below) takes its song from lesson 8 C (eggs
   swapped; a son sings the song of the father who raised him), not from 21.
 - 23 holds the species level (lesson23_overhaul.md). The cell level (clonal cells, r ≈ 1) and the whole stack are the
-  capstone's (individuality_plan.md). 22 D's gene-level competition (drive, transposon) is still the gene level the capstone
+  capstone's (lesson26_overhaul.md). 22 D's gene-level competition (drive, transposon) is still the gene level the capstone
   stacks.
 
 ## JM, 2026-11-07, later (verbatim): relatedness is a condition, not the cause
@@ -51,7 +51,7 @@ What it changes:
   the bars show the move.
 - B's Hamilton's-line round reads as "where the covariance changes sign", r on the x axis as the condition, not "r b > c, so they
   help". The same r can give no helping when b is small (the condition is not enough by itself).
-- The capstone (individuality_plan.md) runs the same picture a level up: clonal groups (r near 1) set the condition; the shift
+- The capstone (lesson26_overhaul.md) runs the same picture a level up: clonal groups (r near 1) set the condition; the shift
   of cov(w, z) from inside groups to between them is what makes the group an individual.
 - Words: no "because they are related", "kin help kin", "to help their relatives" on screen or in the intros' drafts.
 

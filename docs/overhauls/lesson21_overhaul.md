@@ -39,7 +39,7 @@ Reading: "more likely to involve repeatedly" = more likely to evolve repeatedly.
     21  sexual selection and its consequences; one speciation stage          this file
     22  kin selection, gene-level selection                                  lesson22_overhaul.md
     23  species selection, hierarchical selection                            lesson23_overhaul.md (was hierarchical_price_plan.md)
-    2X  origins of individuality (Michod), the capstone                      individuality_plan.md
+    2X  origins of individuality (Michod), the capstone                      lesson26_overhaul.md
     2Y  evo-devo: networks, a somite clock, limb position, size, skeleton    lesson24_overhaul.md (papers: docs/refs/README.md)
     2Z  mesoevolution: species selection on development; deep homology      lesson25_overhaul.md
 
