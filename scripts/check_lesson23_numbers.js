@@ -99,6 +99,8 @@ T("C", 0, [{ e: 0.01 }, { e: 0.02 }], [{ e: 0.002 }]);
 {
   const infos = [...document.querySelectorAll(".info")], tipOf = e => e.dataset.tip ? document.getElementById(e.dataset.tip) : e.querySelector(".tip");
   const empty = infos.filter(e => !tipOf(e) || !tipOf(e).textContent.trim()).length;
+  { const off = []; for (const S of STAGES) for (const c of S.cfg.ctl) { const el = document.getElementById(S.K + "_" + c.key); if (+el.max - +el.min + 1 !== c.vals.length) off.push(S.K + "_" + c.key + " " + (+el.max - +el.min + 1) + "/" + c.vals.length); }
+    check("every control's positions match its values (" + off.length + " off)", off.length === 0, off.join(", ")); }
   check("hover text: " + infos.length + " marks, " + empty + " empty", infos.length >= 12 && empty === 0);
   FIT_EPOCH++; paintAll();
   const over = []; for (const id of ${JSON.stringify(CANVAS_IDS)}) { const cv = document.getElementById(id), host = cv.parentElement; if (+cv.dataset.drawW > host.clientWidth + 1) over.push(id + " " + cv.dataset.drawW + ">" + host.clientWidth); }

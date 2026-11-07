@@ -44,7 +44,7 @@ editor/                       the lesson editor: rewrite a page's words in place
 - [`docs/LESSON_STYLE.md`](docs/LESSON_STYLE.md) — how these lessons are actually built, read off lessons 1–10. Suggestions, not rules.
 - [`docs/WORK_ORDER.md`](docs/WORK_ORDER.md) — standing warnings and pinned constants. Traps and numbers, no design rules.
 - [`docs/overhauls/`](docs/overhauls/) — one prep document per lesson, written before the first edit. Lessons planned but not yet
-  slotted keep a name until they are (`individuality_plan.md`, `mesoevolution_plan.md`; evo-devo is now `lesson24_overhaul.md`); the arc from 21 on
+  slotted keep a name until they are (`individuality_plan.md`; evo-devo and mesoevolution are now `lesson24_overhaul.md` and `lesson25_overhaul.md`); the arc from 21 on
   is at the top of `lesson21_overhaul.md`.
 - [`docs/refs/README.md`](docs/refs/README.md) — summaries of papers JM adds for a lesson's design; the PDFs beside it are gitignored.
 

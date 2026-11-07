@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 25</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  /* the voice slot: a draft list (goal, then controls) until JM dictates the intro, as lesson 20's drafts did */
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  canvas[hidden] { display:none; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .tcard canvas { margin:2px 0 6px; }
+  .tcard .ttext:empty { display:none; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
+  .toggles.pair > span:first-child { flex:0 0 172px; }
+  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
+  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
+  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
+
+  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
+  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 25</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+</nav>
+
+<!-- ========== STAGE A — the map: settings to limbs (JM, 2026-11-07: "some traits are more likely to involve repeatedly & within certain groups"; Lec 29: "Theoretical morphospace vast; realized morphospace patchy") ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Lesson 24's limb network, with two of its settings free: how wide the hand-plate is, and how strongly the cartilage pair works there. Each cell of the map is one pair of settings; it stays blank until you grow a limb there. See which limbs the settings make.</li>
+        <li>Click a cell to choose its settings (or set the two arrows), then <b>Go</b> grows the limb; its digits fill the cell.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The map<span class="tip"><span>Rows: hand-plate width (cells across). Columns: hand-plate strength. A grown cell shows the digits its limb made, shaded (light few, dark many). The red outline: the cell chosen.</span><span>Each cell grows the same limb every time for you; the forearm is held at 3, the upper arm at 1.</span></span></span></h3>
+        <canvas id="A_map" width="760" height="290"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_limbH">The limb</span><span class="tip"><span>The limb grown at the chosen cell, body at the left, tip at the right; dark where cartilage forms.</span></span></span></h3>
+        <canvas id="A_limb" width="760" height="260"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Settings and the limb<span class="tip"><span>Two settings of lesson 24's network, each an arrow; the network, unchanged, makes the limb. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span><b>Go</b> grows one limb, 60 rows, at the chosen cell.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <canvas id="A_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="A_controls">
+          <div hidden><input type="range" id="A_w" min="1" max="9" step="1" value="5"><input type="range" id="A_a" min="1" max="12" step="1" value="7"></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="A_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — clades on the map: the same selection, different groups; two kinds of gap (lesson 23's species, lesson 24's limbs; Lec 29: "Developmental constraint: regulatory networks can't build all shapes"; "Ecological constraint: buildable but selected against") ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Clades of species. Each species carries the hand-plate strength, which drifts a little every step; its width is its clade's. Its digits are whatever the map makes at its settings. Species split and are lost; some digits can make a species split more.</li>
+        <li><b>Hand-plate width</b>, narrow or broad, and <b>which digits split more</b>, the arrows on the diagram.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_treeH">Clade 1</span><span class="tip"><span>Clade 1 of the 16 that <b>Go</b> plays: each line a species from the step it split off, shaded by its digits (key at the right), its shade changing where its digits change. ×: a species lost.</span></span></span></h3>
+        <canvas id="B_tree" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The map at the clade's width<span class="tip"><span>The digits each strength makes at this width (stage A's map, one row: measured by growing 8 limbs at each), and a dot for each living species of clade 1 at its strength.</span></span></span></h3>
+        <canvas id="B_row" width="760" height="130"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="B_meas">
+          <option value="s3">three-digit species</option>
+          <option value="s4">four-digit species</option>
+          <option value="e4">clades with a four-digit species so far</option>
+          <option value="s6">species with six or more digits</option>
+          <option value="n">species living</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 clades, each thin; their average thick. Shares are of the clade's living species; clades with a four-digit species so far: the share of the 16 clades in which one has appeared.</span></span></span></label></div>
+        <canvas id="B_time" width="760" height="280"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Strength, width, digits<span class="tip"><span>A species' strength drifts (a normal step, sd .06 on a log scale, each step); with its clade's width it sets the digits, through the map. Each step a species splits with chance .03 (fewer as the clade nears 40 species), six times that if its digits are the ones favoured; it is lost with chance .015. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>One species at strength 6 (five digits). <b>Go</b> plays 300 steps, 16 clades.</span><span>The picture: what a hit looks like; the red box, where the thick line should end.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <canvas id="B_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_w" min="1" max="2" step="1" value="1"><input type="range" id="B_f" min="0" max="3" step="1" value="0"></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="B_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">That is the whole lesson.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 22. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 25 — mesoevolution: species selection on what development
+   builds. Draft 1 (2026-11-07). JM, 2026-11-07: "simulation combining
+   species selection & EvoDevo to illustrate "mesoevolution" in the sense
+   that some traits are more likely to involve repeatedly & within
+   certain groups. Maybe also illustrating deep homology"; "Great, let's
+   please draft leson 23 and onward". Plan, measurements, open points:
+   docs/overhauls/lesson25_overhaul.md.
+
+   A  the map: lesson 24's skeleton network at settings of hand-plate
+      width and strength, grown cell by cell; a few digit counts from
+      most settings, four from almost none.
+   B  clades on the map: species carry the strength, read their digits
+      off the map, split more when their digits are favoured. Three
+      digits arise again and again; four never in narrow hands, whatever
+      selection does; six or more arise in every clade and are held off
+      only by selection.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+
+/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: null };
+const BIT = { A1: 0, A2: 1, B1: 2, B2: 3, B3: 4 };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
+
+/* =====================================================================
+   STAGE A's ENGINE: lesson 24's skeleton (stage E), forearm strength 3,
+   the hand-plate's width and strength set by the cell clicked on the
+   map. One limb a Go, seeded by the cell. The same model, unchanged:
+   Schnakenberg a .47, b 2, d 113, row by row, upper arm 8 cells wide.
+   ===================================================================== */
+const TU = { a: 0.47, b: 2, d: 113, rows: 60, T: 20, noise: 0.02 };
+TU.us = TU.a + TU.b; TU.vs = TU.b / (TU.us * TU.us);
+const MAP_W = [14, 16, 18, 20, 22, 24, 26, 28, 30], MAP_A = [2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 14];
+const tuRegion = k => k < 15 ? 0 : k < 30 ? 1 : 2;
+function tuSettle(u, v, al) {
+  const n = u.length, Dv = TU.d, dt = Math.min(0.9 / (4 * Dv), 0.05 / al), steps = Math.ceil(TU.T / dt), lu = new Float64Array(n), lv = new Float64Array(n);
+  for (let s = 0; s < steps; s++) {
+    for (let i = 0; i < n; i++) { const l = i ? i - 1 : 1, r = i < n - 1 ? i + 1 : n - 2; lu[i] = u[l] + u[r] - 2 * u[i]; lv[i] = v[l] + v[r] - 2 * v[i]; }
+    for (let i = 0; i < n; i++) { const uuv = u[i] * u[i] * v[i]; u[i] += dt * (al * (TU.a - u[i] + uuv) + lu[i]); v[i] += dt * (al * (TU.b - uuv) + Dv * lv[i]); if (u[i] < 0) u[i] = 0; if (v[i] < 0) v[i] = 0; }
+  }
+}
+function tuStretch(a, n) { const m = a.length, o = new Float64Array(n); for (let i = 0; i < n; i++) { const x = (i + 0.5) / n * m - 0.5, j = Math.max(0, Math.min(m - 1, Math.floor(x))), j2 = Math.min(m - 1, j + 1), f = Math.max(0, Math.min(1, x - j)); o[i] = a[j] * (1 - f) + a[j2] * f; } return o; }
+function tuCount(u) { let k = 0, inn = false; for (const x of u) { if (x > TU.us && !inn) { k++; inn = true; } else if (x <= TU.us) inn = false; } return k; }
+function tuWorld(P, seed) { return { P, rng: mulberry32(seed), t: 0, u: null, v: null, rows: [] }; }
+function tuStep(w) {
+  const P = w.P, r = w.rng, reg = tuRegion(w.t), W = [8, 12, P.W][reg], al = [1, 3, P.a3][reg];
+  if (!w.u) { w.u = new Float64Array(W).map(() => TU.us * (1 + 0.1 * (r() - 0.5))); w.v = new Float64Array(W).map(() => TU.vs * (1 + 0.1 * (r() - 0.5))); }
+  else { w.u = tuStretch(w.u, W); w.v = tuStretch(w.v, W); for (let i = 0; i < W; i++) { w.u[i] *= 1 + TU.noise * (r() - 0.5); w.v[i] *= 1 + TU.noise * (r() - 0.5); } }
+  tuSettle(w.u, w.v, al);
+  w.rows.push({ W, u: Array.from(w.u), n: tuCount(w.u) }); w.t++;
+}
+function tuStat(w) { const di = w.rows.length === TU.rows ? w.rows[TU.rows - 1].n : null; return { di, d4: di === 4 ? 1 : 0, d2: di === 2 ? 1 : 0 }; }
+const SKEL = { step: tuStep, stat: tuStat };
+
+/* =====================================================================
+   STAGE B's ENGINE: clades on the map (lesson 23's species, lesson 24's
+   limbs). A species carries the hand-plate's strength (on a log scale;
+   each step it moves by a normal step, sd .06, inside 2-14); its width
+   is its clade's (narrow 22 or broad 26). Its digits: the map's at the
+   nearest strength, read from DIGITS (below). Each step a species splits
+   with chance .03 x room (room = 1 - species / 40), times 6 if its
+   digits are the ones favoured; it is lost with chance .015 (never the
+   clade's last). 300 steps, 16 clades, from strength 6 (five digits).
+   DIGITS: the modal digit count of 8 limbs of stage A's model at each
+   strength, measured offline (scratchpad l25/table.js; the check grows
+   them again on the page and compares).
+   MEASURED (scratchpad l25/clade.js, 20 seed sets of 16 clades):
+     narrow, nothing favoured: three digits .24-.51 of species at the
+       end; three or fewer favoured: .62-.80; four favoured: four digits
+       in 0 of 16 clades (the map has none at 22); broad: 11-16 of 16.
+     broad, nothing favoured: six or more .42-.69; five or fewer
+       favoured: .13-.26 (six or more still arise in every clade).
+   ===================================================================== */
+const DIGITS = { 22: [3, 3, 3, 3, 3, 5, 5, 5, 6, 7, 8, 8], 26: [3, 3, 3, 4, 5, 5, 6, 6, 7, 9, 9, 9] };
+const LA = MAP_A.map(Math.log), CB = { steps: 300, sd: 0.06, b0: 0.03, e0: 0.015, cap: 40, mult: 6 };
+const FAV = [d => false, d => d <= 3, d => d === 4, d => d <= 5];
+function digitsAt(x, W) { let j = 0, b = 1e9; for (let i = 0; i < LA.length; i++) { const d = Math.abs(LA[i] - x); if (d < b) { b = d; j = i; } } return DIGITS[W][j]; }
+function cbWorld(P, seed) { const x = Math.log(6); return { P, rng: mulberry32(seed), t: 0, sp: [{ id: 0, parent: -1, born: 0, died: null, x, d: digitsAt(x, P.W), h: [[0, digitsAt(x, P.W)]] }], next: 1, came: {}, ever: {} }; }
+function cbStep(w) {
+  const P = w.P, r = w.rng, L = w.sp.filter(s => s.died == null), room = Math.max(0, 1 - L.length / CB.cap), fav = FAV[P.fav], born = [];
+  let live = L.length; w.t++;
+  for (const s of L) {
+    s.x = Math.max(LA[0], Math.min(LA[LA.length - 1], s.x + CB.sd * gauss(r)));
+    const d = digitsAt(s.x, P.W); if (d !== s.d) { w.came[d] = (w.came[d] || 0) + 1; s.d = d; s.h.push([w.t, d]); }
+    w.ever[d] = 1;
+    if (r() < CB.b0 * (fav(s.d) ? CB.mult : 1) * room) born.push({ id: w.next++, parent: s.id, born: w.t, died: null, x: s.x, d: s.d, h: [[w.t, s.d]] });
+    if (r() < CB.e0 && live > 1) { s.died = w.t; live--; }
+  }
+  w.sp.push(...born);
+}
+function cbStat(w) { const L = w.sp.filter(s => s.died == null), sh = f => L.filter(s => f(s.d)).length / L.length;
+  return { n: L.length, s3: sh(d => d === 3), s4: sh(d => d === 4), s6: sh(d => d >= 6), e4: w.ever[4] ? 1 : 0, c3: w.came[3] || 0 }; }
+const CLADE = { step: cbStep, stat: cbStat };
+
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R.map(p => p[key]).find(v => v != null);
+    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
+  }
+  return out;
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-E ======
+   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
+   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : "";
+  }
+  S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
+function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const r = S.done ? null : ruleOf(S);
+  const set = readSet(S), seed = pageSeed("l25" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G));
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
+const PATHS = {};
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
+  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
+  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
+  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
+  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l25" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
+const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
+const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+
+const TM = { W: 760, H: 300, px: 50, py: 14 };
+function labRoom(ctx, M) {
+  ctx.font = "600 11px -apple-system, sans-serif"; let w = 0;
+  for (const k in M) if ((M[k].n || 1) > 1) for (const nm of ISLE) w = Math.max(w, ctx.measureText(nm).width);
+  return w ? Math.ceil(w) + 22 : 12;
+}
+const tickLab = (m, v) => m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2));
+function drawTime(cvId, q, meas, M, rule, G) {
+  const cv = $(cvId); if (!cv) return;
+  const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas];
+  T.pw = T.W - T.px - labRoom(ctx, M);
+  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, lastY = [];
+  const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - (Math.max(ymin, Math.min(v, ymax)) - ymin) / (ymax - ymin) * T.ph;
+  cv._tf = { xs, ys, T, G };
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) { const v = ymin + (ymax - ymin) * k / 4; cardText(ctx, tickLab(m, v), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (let t = 0; t <= G; t += G > 200 ? 50 : G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (rule) for (const u of rule.rules) if (u.meas === meas && (u.lo != null || u.hi != null)) {
+    const lo = u.lo == null ? ymin : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7;
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+  }
+  if (q) {
+    const dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
+    for (let i = 0; i < q.runs.length; i++) for (let k = 0; k < nPer; k++) {
+      const pts = []; for (const s of q.hist) { const v = m.vals(s.runs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
+      polyline(ctx, pts, nPer > 1 ? POPCOL[k] : INK, 1, 0.13);
+    }
+    for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.runs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, nPer > 1 ? POPCOL[k] : INK, 2.6, 1, dash(k));
+      if (avg.length) lastY[k] = avg[avg.length - 1][1];
+    }
+  }
+  if (nPer > 1) {
+    const want = ISLE.map((_, k) => lastY[k] != null ? lastY[k] : T.py + 6 + 13 * k);
+    const ord = [0, 1].sort((a, b) => want[a] - want[b]), y = [];
+    ord.forEach((k, i) => { y[k] = Math.max(i ? y[ord[i - 1]] + 13 : T.py + 4, want[k]); });
+    for (let i = ord.length - 1; i >= 0; i--) y[ord[i]] = Math.min(y[ord[i]], i === ord.length - 1 ? T.py + T.ph - 4 : y[ord[i + 1]] - 13);
+    ISLE.forEach((nm, k) => cardText(ctx, nm, xs(G) + 15, y[k], { size: 11, col: POPCOL[k], bold: true }));
+  }
+  ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+/* a target card's picture: an example chart of a hit, unlabeled, in the plot over time's style (lesson 19's): pic { meas, G,
+   lines [{ f(t), jit }], boxes [{ lo, hi }] } */
+const SKc = { W: 460, H: 120, px: 8, py: 8, pw: 424, ph: 100 };
+function bwHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
+function drawSketch(cvId, pic, M) {
+  const cv = $(cvId); if (!cv) return;
+  cv.hidden = !pic; if (!pic) return;
+  const { ctx } = frameCanvas(cv, SKc.W, SKc.H);
+  const m = M[pic.meas], ymin = m.ymin || 0, ymax = m.ymax, G = pic.G;
+  const xs = t => SKc.px + t / G * SKc.pw, ys = v => SKc.py + SKc.ph - (Math.max(ymin, Math.min(ymax, v)) - ymin) / (ymax - ymin) * SKc.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SKc.px, SKc.py); ctx.lineTo(SKc.px, SKc.py + SKc.ph); ctx.lineTo(SKc.px + SKc.pw, SKc.py + SKc.ph); ctx.stroke();
+  const step = G / 100;
+  pic.lines.forEach((ln, li) => {
+    for (let r = 0; r < 16; r++) {
+      const off = (bwHash(r, 13 + li, 7) - 0.5) * 2 * ln.jit, pts = [];
+      for (let t = 0; t <= G + 1e-9; t += step) pts.push([xs(t), ys(ln.f(t) + off * Math.min(1, 4 * t / G) + (bwHash(r, Math.round(t / step), 11 + li) - 0.5) * 0.4 * ln.jit * Math.min(1, 4 * t / G))]);
+      polyline(ctx, pts, INK, 1, 0.16);
+    }
+    const avg = []; for (let t = 0; t <= G + 1e-9; t += step / 2) avg.push([xs(t), ys(ln.f(t))]);
+    polyline(ctx, avg, INK, 2.6, 1);
+  });
+  for (const bx of pic.boxes) { const lo = bx.lo == null ? ymin : bx.lo, hi = bx.hi == null ? ymax : bx.hi;
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(xs(G) - 7, ys(hi), 14, ys(lo) - ys(hi)); }
+  ctx.restore();
+}
+
+
+/* ====== drawing ====== */
+const POPCOL = [ORANGE, BLUE], ISLE = [];
+const ramp = v => { const a = [230, 226, 214], b = [47, 107, 143], t = Math.max(0, Math.min(1, v)); return "rgb(" + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",") + ")"; };
+const dShade = d => ramp((d - 2) / 8);
+/* A: the map, blank until a cell is grown; the cell chosen outlined */
+const MP = { x0: 120, y0: 20, cw: 48, ch: 24 };
+function drawMap25(cvId, seen, sel) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, 290);
+  MAP_W.forEach((W, r) => { cardText(ctx, String(W), MP.x0 - 10, MP.y0 + r * MP.ch + MP.ch / 2, { size: 11, col: MUTED, align: "right" });
+    MAP_A.forEach((a, c) => { const x = MP.x0 + c * MP.cw, y = MP.y0 + r * MP.ch, d = seen[W + "," + a];
+      ctx.fillStyle = d == null ? "#f3f1ea" : dShade(d); ctx.fillRect(x + 1, y + 1, MP.cw - 2, MP.ch - 2);
+      if (d != null) cardText(ctx, String(d), x + MP.cw / 2, y + MP.ch / 2, { size: 12, bold: true, col: d >= 6 ? "#fff" : INK, align: "center" });
+      if (sel && sel.W === W && sel.a === a) { ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.strokeRect(x + 1, y + 1, MP.cw - 2, MP.ch - 2); } }); });
+  MAP_A.forEach((a, c) => cardText(ctx, String(a), MP.x0 + c * MP.cw + MP.cw / 2, MP.y0 + 9 * MP.ch + 12, { size: 11, col: MUTED, align: "center" }));
+  cardText(ctx, "hand-plate strength", MP.x0 + 6 * MP.cw, 284, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(40, MP.y0 + 4.5 * MP.ch); ctx.rotate(-Math.PI / 2); cardText(ctx, "hand-plate width", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+function drawLimb25(cvId, w, H) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, H || 300), cw = 11, ch = 8, x0 = 30, mid = (H || 300) / 2 - 10;
+  for (let k = 0; k < TU.rows; k++) { const row = w.rows[k], W0 = row ? row.W : [8, 12, w.P.W][tuRegion(k)];
+    for (let i = 0; i < W0; i++) { ctx.fillStyle = !row ? "#f3f1ea" : row.u[i] > TU.us ? INK : "#ebe7db"; ctx.fillRect(x0 + k * cw, mid + (i - W0 / 2) * ch, cw - 0.5, ch - 0.5); } }
+  ctx.restore();
+}
+/* B: clade 1's tree, each species shaded by its digits (light few, dark many), a tick where its digits change; x a loss */
+function drawTree25(cvId, c) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 300, px = 14, pw = 680, py = 10, ph = 260, { ctx } = frameCanvas(cv, W, H), xs = t => px + t / CB.steps * pw;
+  for (let t = 0; t <= CB.steps; t += 50) cardText(ctx, String(t), xs(t), py + ph + 14, { size: 10.5, col: MUTED, align: "center" });
+  for (let d = 2; d <= 10; d++) { ctx.fillStyle = dShade(d); ctx.fillRect(px + pw + 24, py + 30 + (10 - d) * 18, 14, 16); cardText(ctx, String(d), px + pw + 46, py + 38 + (10 - d) * 18, { size: 10, col: MUTED }); }
+  cardText(ctx, "digits", px + pw + 31, py + 14, { size: 10, col: MUTED, align: "center" });
+  const kids = new Map(); for (const s of c.sp) if (s.parent >= 0) { if (!kids.has(s.parent)) kids.set(s.parent, []); kids.get(s.parent).push(s); }
+  const order = []; const walk = s => { order.push(s); (kids.get(s.id) || []).slice().sort((a, b) => b.born - a.born).forEach(walk); }; walk(c.sp[0]);
+  const rowH = Math.min(14, ph / Math.max(1, order.length)), y = new Map(order.map((s, i) => [s.id, py + rowH * (i + 0.5)])), lw = Math.max(1.2, Math.min(4, rowH * 0.7));
+  ctx.strokeStyle = "#bdb8aa"; ctx.lineWidth = 1;
+  for (const s of order) if (s.parent >= 0) { ctx.beginPath(); ctx.moveTo(xs(s.born), y.get(s.parent)); ctx.lineTo(xs(s.born), y.get(s.id)); ctx.stroke(); }
+  for (const s of order) { const end = s.died == null ? c.t : s.died, yy = y.get(s.id);
+    for (let i = 0; i < s.h.length; i++) { const t0 = s.h[i][0], t1 = i + 1 < s.h.length ? s.h[i + 1][0] : end; if (t0 >= end) break;
+      ctx.strokeStyle = dShade(s.h[i][1]); ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(xs(t0), yy); ctx.lineTo(xs(Math.max(t0 + 0.5, Math.min(t1, end))), yy); ctx.stroke(); }
+    if (s.died != null) { ctx.strokeStyle = MUTED; ctx.lineWidth = 1; const x = xs(s.died); ctx.beginPath(); ctx.moveTo(x - 2.5, yy - 2.5); ctx.lineTo(x + 2.5, yy + 2.5); ctx.moveTo(x - 2.5, yy + 2.5); ctx.lineTo(x + 2.5, yy - 2.5); ctx.stroke(); } }
+  ctx.restore();
+}
+/* B: the map at the clade's width (the digits each strength makes) and where clade 1's living species sit on it */
+function drawRow25(cvId, c, Wd) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, 760, 130), x0 = 120, cw = 48, y0 = 60;
+  MAP_A.forEach((a, i) => { const d = DIGITS[Wd][i]; ctx.fillStyle = dShade(d); ctx.fillRect(x0 + i * cw + 1, y0, cw - 2, 28); cardText(ctx, String(d), x0 + i * cw + cw / 2, y0 + 14, { size: 12, bold: true, col: d >= 6 ? "#fff" : INK, align: "center" });
+    cardText(ctx, String(a), x0 + i * cw + cw / 2, y0 + 42, { size: 10.5, col: MUTED, align: "center" }); });
+  cardText(ctx, "width " + Wd, x0 - 12, y0 + 14, { size: 11, col: MUTED, align: "right" });
+  const L = c.sp.filter(s => s.died == null), xpos = x => { const f = (x - LA[0]) / (LA[LA.length - 1] - LA[0]); return x0 + cw / 2 + f * (MAP_A.length - 1) * cw; };
+  const cnt = {}; for (const s of L) { const k = Math.round(xpos(s.x) / 6); const n = cnt[k] = (cnt[k] || 0) + 1; ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(xpos(s.x), y0 - 6 - (n - 1) * 6, 2.6, 0, 2 * Math.PI); ctx.fill(); }
+  cardText(ctx, "hand-plate strength (a dot a living species of clade 1)", x0 + 6 * cw, 124, { size: 11, col: MUTED, align: "center" });
+  ctx.restore();
+}
+/* ====== controls, diagrams, stages ====== */
+const FAV_LAB = ["none favoured", "three or fewer", "four", "five or fewer"], WD_V = [22, 26];
+const fixedArrow = (id, from, to) => ({ id, from, to, readonly: true, dark: true, label: "" });
+const pic = (meas, f, lo, hi, jit, G) => ({ meas, G, lines: [{ f, jit: jit || 0.04 }], boxes: [{ lo, hi }] });
+function mountA() {
+  const boxes = [{ id: "wd", label: "hand-plate width", x: 100, y: 50, w: 140, h: 32 }, { id: "st", label: "hand-plate strength", x: 100, y: 200, w: 150, h: 32 },
+    { id: "nt", label: "lesson 24's network", x: 330, y: 125, w: 150, h: 32 }, { id: "dg", label: "digits", x: 330, y: 250, w: 90, h: 34, kind: "outcome" }];
+  return Paths.init({ mount: "#A_paths", width: 450, height: 290, boxes, arrows: [fixedArrow("x1", "nt", "dg"),
+    { id: "w", from: "wd", to: "nt", input: "A_w", signed: true, label: "hand-plate width", fmt: v => String(MAP_W[Math.round(v) - 1]) },
+    { id: "a", from: "st", to: "nt", input: "A_a", signed: true, label: "hand-plate strength", fmt: v => String(MAP_A[Math.round(v) - 1]) }], valuesOnSelect: true, lockColours: true });
+}
+function mountB() {
+  const boxes = [{ id: "st", label: "strength (it drifts)", x: 100, y: 50, w: 150, h: 32 }, { id: "wd", label: "hand-plate width", x: 100, y: 180, w: 140, h: 32 },
+    { id: "dg", label: "a species' digits", x: 330, y: 115, w: 140, h: 32 }, { id: "sp", label: "splitting", x: 330, y: 260, w: 100, h: 34, kind: "outcome" }];
+  return Paths.init({ mount: "#B_paths", width: 450, height: 300, boxes, arrows: [fixedArrow("x1", "st", "dg"),
+    { id: "w", from: "wd", to: "dg", input: "B_w", signed: true, label: "hand-plate width", fmt: v => WD_V[Math.round(v) - 1] === 22 ? "narrow (22)" : "broad (26)" },
+    { id: "f", from: "dg", to: "sp", input: "B_f", label: "which digits split more", fmt: v => FAV_LAB[Math.round(v)] }], valuesOnSelect: true, lockColours: true });
+}
+/* ---------- A ---------- */
+const SEEN = {};
+const cellSeed = set => pageSeed("l25cell", 1, 999999) + 31 * (MAP_W.indexOf(set.w) * 12 + MAP_A.indexOf(set.a));
+const SA = mkStage("A", {
+  ctl: [{ key: "w", vals: MAP_W, hidden: true }, { key: "a", vals: MAP_A, hidden: true }],
+  rounds: [
+    { open: { w: 22, a: 6 }, rules: [atLeast("d4", 1)], want: 4 },
+    { open: { w: 22, a: 6 }, rules: [atLeast("d2", 1)], want: 2 },
+  ],
+  ms: 30,
+  start: set => { const P = { W: set.w, a3: set.a }; return { P, eng: SKEL, G: TU.rows, every: 6, runs: [tuWorld(P, cellSeed(set))] }; },
+  afterOpen: () => hold(SA, ["w", "a"])(),
+  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
+  paint: () => { const S = SA, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S), set = readSet(S);
+    if (q && q.t === q.G) SEEN[q.P.W + "," + q.P.a3] = tuStat(w).di;
+    drawMap25("A_map", SEEN, { W: set.w, a: set.a }); drawLimb25("A_limb", w, 260);
+    $("A_limbH").textContent = "The limb · width " + w.P.W + ", strength " + w.P.a3 + (w.rows.length === TU.rows ? " · " + tuStat(w).di + " digits" : "");
+    A_pic(r); syncStage(S); A_code(); },
+});
+function A_pic(r) { const cv = $("A_tpic"); cv.hidden = !r; if (!r) return; const { ctx } = frameCanvas(cv, 460, 120);
+  for (let j = 0; j < r.want; j++) { const y = 60 + (j - (r.want - 1) / 2) * 16; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(150, 60 + (y - 60) * 0.3); ctx.lineTo(320, y); ctx.stroke(); }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(140, 6, 190, 108); ctx.restore(); }
+function wireMap() {
+  $("A_map").addEventListener("click", e => {
+    const S = SA; if (!Gates.A.open || S.run || S.waiting) return;
+    const p = framePt($("A_map"), e, 760), c = Math.floor((p.x - MP.x0) / MP.cw), r = Math.floor((p.y - MP.y0) / MP.ch);
+    if (c < 0 || c >= MAP_A.length || r < 0 || r >= MAP_W.length) return;
+    $("A_w").value = r + 1; $("A_a").value = c + 1; $("A_w").dispatchEvent(new Event("input")); $("A_a").dispatchEvent(new Event("input")); bump("A");
+  });
+}
+/* ---------- B ---------- */
+const MEAS_B = {
+  s3: { lab: "three-digit species", ymax: 1, pct: true, vals: s => [s.s3] },
+  s4: { lab: "four-digit species", ymax: 1, pct: true, vals: s => [s.s4] },
+  e4: { lab: "clades with four digits so far", ymax: 1, pct: true, vals: s => [s.e4] },
+  s6: { lab: "species with six or more", ymax: 1, pct: true, vals: s => [s.s6] },
+  n: { lab: "species living", ymax: 40, vals: s => [s.n] },
+};
+const SB = mkStage("B", {
+  ctl: [{ key: "w", vals: WD_V, hidden: true }, { key: "f", vals: [0, 1, 2, 3], hidden: true }],
+  rounds: [
+    { hold: { w: 22 }, open: { f: 0 }, rules: [atLeast("s3", 0.57)], pic: pic("s3", t => 0.7 * (1 - Math.exp(-t / 60)), 0.57, 1, 0.04, CB.steps) },
+    { hold: { f: 2 }, open: { w: 22 }, rules: [atLeast("e4", 0.6)], pic: pic("e4", t => 0.94 * (1 - Math.exp(-t / 50)), 0.6, 1, 0.03, CB.steps) },
+    { hold: { w: 26 }, open: { f: 3 }, rules: [atLeast("s6", 0.33)], pic: pic("s6", t => 0.52 * (1 - Math.exp(-t / 70)), 0.33, 1, 0.04, CB.steps) },
+  ],
+  ms: 12, G: CB.steps, meas: MEAS_B,
+  start: (set, seed) => { const P = { W: set.w, fav: set.f }; return { P, eng: CLADE, G: CB.steps, every: 3, runs: Array.from({ length: 16 }, (_, i) => cbWorld(P, seed + 1 + 7919 * i)) }; },
+  afterOpen: () => { hold(SB, ["w", "f"])(); if (!SB.done) $("B_meas").value = ruleOf(SB).pic.meas; },
+  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
+  paint: () => { const S = SB, q = shownRun(S), c = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
+    drawTree25("B_tree", c); $("B_treeH").textContent = "Clade 1 · step " + c.t + " · " + c.sp.filter(s => s.died == null).length + " species";
+    drawRow25("B_row", c, c.P.W);
+    drawTime("B_time", q, $("B_meas").value, MEAS_B, r, CB.steps);
+    drawSketch("B_tpic", r ? r.pic : null, MEAS_B);
+    syncStage(S); B_code(); },
+});
+/* ====== the R panels ====== */
+function A_code() { const s = readSet(SA);
+  codeInto("codeA", [
+    ["", "# Lesson 25, Stage A -- lesson 24's skeleton at one cell of the map (Schnakenberg: a 0.47, b 2, d 113)"],
+    ["w", "W3 <- " + s.w + "                                   # hand-plate width"],
+    ["a", "al <- c(1, 3, " + s.a + ")                             # strength: upper arm, forearm, hand-plate"],
+    ["", "W <- c(8, 12, W3); a <- 0.47; b <- 2; d <- 113; us <- a + b; vs <- b / us^2; rows <- 60"],
+    ["", "settle <- function(u, v, al, T = 20) { n <- length(u); dt <- min(0.9 / (4 * d), 0.05 / al)"],
+    ["", "  lap <- function(z) c(z[2], z[-n]) + c(z[-1], z[n - 1]) - 2 * z"],
+    ["", "  for (s in 1:ceiling(T / dt)) { uuv <- u^2 * v; u2 <- u + dt * (al * (a - u + uuv) + lap(u)); v <- pmax(0, v + dt * (al * (b - uuv) + d * lap(v))); u <- pmax(0, u2) }"],
+    ["", "  list(u = u, v = v) }"],
+    ["", "reg <- function(k) if (k <= 15) 1 else if (k <= 30) 2 else 3"],
+    ["", "u <- us * (1 + 0.1 * (runif(W[1]) - 0.5)); v <- vs * (1 + 0.1 * (runif(W[1]) - 0.5))"],
+    ["", "for (k in 1:rows) { r <- reg(k); n <- W[r]"],
+    ["", "  if (length(u) != n) { u <- approx(seq(0, 1, length.out = length(u)), u, seq(0, 1, length.out = n))$y; v <- approx(seq(0, 1, length.out = length(v)), v, seq(0, 1, length.out = n))$y }"],
+    ["", "  u <- u * (1 + 0.02 * (runif(n) - 0.5)); v <- v * (1 + 0.02 * (runif(n) - 0.5)); z <- settle(u, v, al[r]); u <- z$u; v <- z$v }"],
+    ["", "c(digits = sum(diff(c(0, u > us)) == 1))"],
+  ]); }
+function B_code() { const s = readSet(SB);
+  codeInto("codeB", [
+    ["", "# Lesson 25, Stage B -- clades on the map: species carry the hand-plate strength; their digits are the map's"],
+    ["w", "W <- " + s.w + "                                   # the clade's hand-plate width"],
+    ["f", "fav <- function(d) " + ["FALSE", "d <= 3", "d == 4", "d <= 5"][s.f] + "                  # which digits split more (x6)"],
+    ["", "A <- c(2, 2.5, 3, 3.5, 4, 5, 6, 7, 8, 10, 12, 14)"],
+    ["", "DIG <- list('22' = c(3, 3, 3, 3, 3, 5, 5, 5, 6, 7, 8, 8), '26' = c(3, 3, 3, 4, 5, 5, 6, 6, 7, 9, 9, 9))   # stage A's model, 8 limbs a cell"],
+    ["", "digits <- function(x) DIG[[as.character(W)]][which.min(abs(log(A) - x))]"],
+    ["", "x <- log(6); G <- 300                                    # one species at strength 6: five digits"],
+    ["", "for (t in 1:G) {"],
+    ["", "  x <- pmin(log(14), pmax(log(2), x + rnorm(length(x), 0, 0.06)))      # the strength drifts"],
+    ["", "  d <- sapply(x, digits); room <- max(0, 1 - length(x) / 40)"],
+    ["f", "  kids <- x[runif(length(x)) < 0.03 * ifelse(fav(d), 6, 1) * room]      # splits"],
+    ["", "  keep <- runif(length(x)) >= 0.015; if (!any(keep)) keep[1] <- TRUE   # losses, never the last"],
+    ["", "  x <- c(x[keep], kids)"],
+    ["", "}"],
+    ["", "table(sapply(x, digits))"],
+  ]); }
+
+const STAGES = [SA, SB];
+function paintAll() { for (const S of STAGES) S.cfg.paint(); }
+function wire() {
+  PATHS.A = mountA(); PATHS.B = mountB();
+  for (const S of STAGES) wireStage(S);
+  wireMap();
+  $("B_meas").addEventListener("change", () => SB.cfg.paint());
+  for (const K of ["A", "B"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson25_stage" + K + ".R", RTEXT["code" + K]));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l25reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson25",
+  version: 1,      /* 1: draft 1 (2026-11-07): A two targets, B three (5) */
+  scaffold: 5,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l25reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>

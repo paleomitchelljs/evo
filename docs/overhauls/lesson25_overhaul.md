@@ -1,8 +1,8 @@
-# Mesoevolution: species selection on development, deep homology ("2Z"; after evo-devo, before the Michod capstone: JM 2026-11-07)
+# Lesson 25 — mesoevolution: species selection on development ("2Z"; slot 25 since 2026-11-07, was `mesoevolution_plan.md`)
 
-**File** · not yet built. Rename this file `lessonNN_overhaul.md` once its slot is fixed
-**Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED 2026-11-07 (JM). A sketch; nothing measured. Needs 23's species-level engine and the evo-devo lesson's
+**File** · `app/lessons/lesson25.html` — draft 1 (2026-11-07, v1, 5 bits, LOCKS `x`)
+**Checks** · `node scripts/check_lesson25_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
+**Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 1-3 taken on the recommendations: limbs, deep homology left for later, both readings through the map). Needs 23's species-level engine and the evo-devo lesson's
 limb network (lesson24_overhaul.md)
 **Last touched** · 2026-11-07
 
@@ -66,6 +66,53 @@ source).
   engine mutate settings and read limbs from the table.
 - The table is the lesson's map (A), so building it is also building A.
 
+## Prototype (2026-11-07; scratchpad l25/)
+
+    the map    lesson 24's skeleton model (forearm strength 3), 8 limbs a cell, hand-plate width 14-30 x strength 2-14 (table.js,
+               table.json; the modal digit count, * where not 8 of 8):
+                 W \ a3  2  2.5  3  3.5  4  5  6  7  8  10  12  14
+                 14      2  2    2  2    2  3  3  3  3  4   5   5
+                 18      2  2    3  3    3  3  3  5* 5  5*  6   6
+                 22      3  3    3  3    3  5  5  5* 6* 7*  8*  8*
+                 26      3  3    3  4    5  5* 6  6  7* 9*  9   9*
+                 30      3  3    5  5    6* 6  6* 7* 8* 10* 10  10*
+               Four digits in a handful of cells, never at width 22 (counts jump 3 -> 5); 3 and 5 from many.
+    clades     (clade.js) species carry the strength (log, mutating sd .06 a step) at their clade's width; digits read from the
+               table; split .03 x room (cap 40), lost .015; 300 steps, 16 clades, from strength 6 (five digits):
+                 width 22: neutral 3 digits .40 of species at the end (a species came to have 3 digits 24 times a clade), 4
+                   digits never (0 of 16 clades), 6+ .31; three or fewer split x3: .71 (62 times); four favoured x3: no change
+                   (none to favour); 6+ lost x4: .16.
+                 width 26: 4 digits in 15 of 16 clades (neutral .06; favoured .13); 6+ .52, lost x4 .11.
+               The two gaps: four digits at width 22 never appear whatever selection does (the map has none); six or more
+               appear in every clade and are removed when selected against.
+
+## Draft 1 plan (2026-11-07)
+
+    A  the map: a grid of settings (hand-plate width x strength), blank at the start; click a cell to grow a limb there (lesson
+       24's model, live); its digits fill the cell. A1 grow a four-digit limb; A2 grow a two-digit limb.
+    B  clades on the map: the hand-plate's width (narrow 22 / broad 26) and selection (three or fewer split more; four favoured;
+       six or more lost faster). B1 three-digit species .6 or more (favour three or fewer); B2 four digits in 12+ of 16 clades
+       (four favoured; the width the lever); B3 six or more .3 or more (their losses held, then off).
+
+## Draft 1 as built (2026-11-07)
+
+    A          the map (width 14-30 x strength 2-14), blank until grown; a click picks a cell (or the two arrows), Go grows
+               one limb there with lesson 24's model (seeded by the cell, so a cell gives the same limb every time for a
+               student); its digits fill the cell. A1 four digits (cells 26/3.5, 24/4, 28/3 make it 8 of 8; opens 22/6, five);
+               A2 two digits (narrow, weak: 14/2).
+    B          16 clades, 300 steps; strength drifts (sd .06, log); digits read from DIGITS (widths 22 and 26: the table's
+               modes, embedded; the check regrows all 24 on the page and they match). Over 20 seed sets of 16 clades:
+               B1 width 22, three or fewer favoured (x6 splitting) (opens none, .24-.51): three-digit species .57 or more
+                  (.62-.80).
+               B2 four favoured, width free (opens narrow: four digits in 0 of 16 clades every set): clades with four .6 or
+                  more (broad .69-1.00).
+               B3 width 26, favoured free (opens five or fewer, six or more .13-.26 though they arise in every clade): .33
+                  or more (none favoured .42-.69).
+               Selection against six or more through losses (x4, x8) overlapped (.10-.63): done through splitting instead.
+    checks     `check_lesson25_numbers.js`: 14 checks + both widths + two R panels.
+    left out   deep homology (Open 2); real data (squamate limb loss; horse toes); the time-scale reading of
+               "mesoevolution" beyond the map.
+
 ## Open for JM
 
 1. Limbs again (reusing evo-devo's network; recommended for continuity), or teeth (molar proportions predicted by an
@@ -80,8 +127,10 @@ source).
 |---|------|--------|
 | 1 | JM's brief (2026-11-07); this plan | done 2026-11-07 |
 | 2 | JM rules on Open 1-3 | todo |
-| 3 | after the evo-devo engine: the settings → limb table; then 23's species engine on it | todo |
-| 4 | slot fixed; file renamed | todo |
+| 3 | after the evo-devo engine: the settings → limb table; then 23's species engine on it | done 2026-11-07 |
+| 4 | slot fixed; file renamed | done 2026-11-07 (25) |
+| 5 | draft 1: page, check script | done 2026-11-07 (v1, 5 bits) |
+| 6 | JM plays draft 1; Open 1-3; his voice | todo |
 
 ## Rulings
 
