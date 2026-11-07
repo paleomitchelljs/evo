@@ -229,6 +229,19 @@ Proposed (not yet measured): a new stage E after D's drive, or in B's place (to 
        measure): the cue lets helping spread where proximity alone fails (farther dispersal); helping still spreads with a
        sloppy cue (e .2: better, not good); the recognition allele rises and stops short of fixation, sloshing.
 
+E prototype (2026-11-07, scratchpad l22/engE.js; b 1.5, c .1 per full helping spread over the neighbours helped; 8 runs,
+100 generations; a call learned from the father, wrong with chance e = a random bird's within 2 nests):
+    helping allele, proximity (help every neighbour) against the call (help only neighbours that call alike):
+      d 1 .84 / .91; d 2 .57 / .64; d 3 .37 / .46; d 4 .19 / .38; d 8 .15 / .45. The call directs help where proximity fails.
+    but by generation 100 every bird sings the same call (neighbours calling alike 1.00 at every d with the call, against
+      .09-.18 with proximity): the helpers' call spreads with the helping, and the cue stops telling kin from non-kin.
+      Crozier's paradox (Crozier 1986; Rousset & Roze 2007; to check): a recognition cue that works makes itself common.
+      Copying errors (e 0-.5) barely change it.
+    a recognition gene (help by call) from .1 with a cost .02 fell to .05-.06.
+    Readings for the slosh: (i) the cue erodes as it works, so recognition cannot stay good (needs new calls arising, e.g.
+    1 in 50 young invent one, to keep it in balance; unmeasured); (ii) a recognition-precision trait that rises to "better"
+    and wanders (unmeasured). Neighbours with copies of one founding helping allele: d 1 .41-.50, d 8 .19-.21 at 100.
+
 ## Draft 1 prototype (2026-11-07, after "Yes please go ahead with the grid"; scratchpad l22/eng.js)
 
     grid       32 x 32 nests on a torus, one diploid bird a nest; a helping gene (2 alleles, additive: helping h 0, 1/2, 1).
