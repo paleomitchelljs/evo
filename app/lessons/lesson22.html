@@ -1,0 +1,1151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 22</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  /* the voice slot: a draft list (goal, then controls) until JM dictates the intro, as lesson 20's drafts did */
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  canvas[hidden] { display:none; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .tcard canvas { margin:2px 0 6px; }
+  .tcard .ttext:empty { display:none; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
+  .toggles.pair > span:first-child { flex:0 0 172px; }
+  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
+  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
+  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
+
+  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
+  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 22</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+</nav>
+
+<!-- ========== STAGE A — help that reaches the neighbours: benefit, cost, and how close young settle (JM, 2026-10-28: "simple diagrams showing traits influencing behavior and behavior influencing others"; 2026-11-07: the grid) ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>An island of nests, one bird to a nest. A bird with the helping allele helps its four neighbours raise more young, and raises fewer itself. Young settle near where they hatched. See when helping spreads.</li>
+        <li><b>Benefit</b>, the blue arrow from the neighbours' helping; <b>cost</b>, the red arrow from helping; <b>how close young settle</b>, the arrow between a bird's helping gene and its neighbours'.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="A_mapH">The island</span><span class="tip"><span>The island: 32 x 32 nests (the edges wrap round). Each square a nest; its shade, the bird's helping alleles: pale none, middle one, dark two; blank, a nest no young bird took this generation.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="A_map" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="A_meas">
+          <option value="p">helping allele</option>
+          <option value="kin">neighbours that share a parent</option>
+          <option value="ibd">neighbours with copies of one founding helping allele</option>
+          <option value="r">relatedness at the helping gene</option>
+          <option value="dens">nests filled</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Helping allele: its share of the helping gene's alleles. Neighbours that share a parent: of the pairs of next-door birds, the share with a mother or father in common. Relatedness at the helping gene: how much a bird's neighbours' helping alleles go with its own, as a regression slope (lesson 13); blank when every bird is the same. Nests filled: the share of nests a young bird took.</span><span>Neighbours with copies of one founding helping allele: every copy of the helping gene at the start (two a bird) is labelled, and its copies keep the label, as lessons 15, 16 and 20 traced copies back to where they meet. The share of next-door pairs carrying copies of one starting copy: what helping pays on is a copy of the same allele next door, not a family tie as such.</span></span></span></label></div>
+        <canvas id="A_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the helping allele, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change in the helping allele, added up since generation 0, taken apart as lesson 13 and lesson 21 took a change apart, averaged over the 16 runs.</span><span>From its own helping: how a bird's own helping alleles go with the young it leaves (its cost). From its neighbours' helping: how its helping alleles go with its neighbours' helping, times what that helping does for its young. Together, who leaves more young. What the young keep: the young against their parents (meiosis's coin, and in C the broken copies).</span><span>They add up exactly to the black line, the change in the helping allele since generation 0.</span></span></span></label></div>
+        <canvas id="A_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, helping, young<span class="tip"><span>Helping gene: two alleles, a helper and a non-helper; a bird with one helps half as much.</span><span>Cost, the red arrow from helping: how many fewer young a full helper has (of about 2). Benefit, the blue arrow from the neighbours' helping: how many more young a bird has when all four of its neighbours are full helpers (a quarter for each).</span><span>How close young settle, the arrow between a bird's helping gene and its neighbours': the young take a nest within that many nests of where they hatched, so the closer they settle, the more a bird's neighbours share its parents, and its alleles. It sets who the neighbours are, not what helping does.</span><span>Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>1,024 nests; at the start every nest full, half the helping alleles helpers (in C, all). Each bird's young take nests near where they hatched; a young bird whose nest is taken looks for an empty one around it; young with none left die. <b>Go</b> plays 100 generations (in C, 150), 16 times.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <canvas id="A_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="A_controls">
+          <div hidden><input type="range" id="A_b" min="0" max="6" step="1" value="2"><input type="range" id="A_c" min="-3" max="0" step="1" value="-1"><input type="range" id="A_d" min="0" max="4" step="1" value="4"></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="A_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — relatedness as a condition, the change as a covariance (JM, 2026-11-07: "being closely related creates the conditions that allow the shift of cov(w,z) sufficiently to create cooperation") ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>The same island. Here, read how close young settle as what it does: it sets how often neighbours share a parent, and so how much a bird's helping alleles go with its neighbours'. Then find where helping neither spreads nor dies, its two parts cancelling.</li>
+        <li>The same three arrows.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_mapH">The island</span><span class="tip"><span>The island: 32 x 32 nests (the edges wrap round). Each square a nest; its shade, the bird's helping alleles: pale none, middle one, dark two; blank, a nest no young bird took this generation.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="B_map" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="B_meas">
+          <option value="p">helping allele</option>
+          <option value="kin">neighbours that share a parent</option>
+          <option value="ibd">neighbours with copies of one founding helping allele</option>
+          <option value="r">relatedness at the helping gene</option>
+          <option value="dens">nests filled</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Helping allele: its share of the helping gene's alleles. Neighbours that share a parent: of the pairs of next-door birds, the share with a mother or father in common. Relatedness at the helping gene: how much a bird's neighbours' helping alleles go with its own, as a regression slope (lesson 13); blank when every bird is the same. Nests filled: the share of nests a young bird took.</span><span>Neighbours with copies of one founding helping allele: every copy of the helping gene at the start (two a bird) is labelled, and its copies keep the label, as lessons 15, 16 and 20 traced copies back to where they meet. The share of next-door pairs carrying copies of one starting copy: what helping pays on is a copy of the same allele next door, not a family tie as such.</span></span></span></label></div>
+        <canvas id="B_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the helping allele, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change in the helping allele, added up since generation 0, taken apart as lesson 13 and lesson 21 took a change apart, averaged over the 16 runs.</span><span>From its own helping: how a bird's own helping alleles go with the young it leaves (its cost). From its neighbours' helping: how its helping alleles go with its neighbours' helping, times what that helping does for its young. Together, who leaves more young. What the young keep: the young against their parents (meiosis's coin, and in C the broken copies).</span><span>They add up exactly to the black line, the change in the helping allele since generation 0.</span></span></span></label></div>
+        <canvas id="B_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, helping, young<span class="tip"><span>Helping gene: two alleles, a helper and a non-helper; a bird with one helps half as much.</span><span>Cost, the red arrow from helping: how many fewer young a full helper has (of about 2). Benefit, the blue arrow from the neighbours' helping: how many more young a bird has when all four of its neighbours are full helpers (a quarter for each).</span><span>How close young settle, the arrow between a bird's helping gene and its neighbours': the young take a nest within that many nests of where they hatched, so the closer they settle, the more a bird's neighbours share its parents, and its alleles. It sets who the neighbours are, not what helping does.</span><span>Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>1,024 nests; at the start every nest full, half the helping alleles helpers (in C, all). Each bird's young take nests near where they hatched; a young bird whose nest is taken looks for an empty one around it; young with none left die. <b>Go</b> plays 100 generations (in C, 150), 16 times.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <canvas id="B_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_b" min="0" max="6" step="1" value="3"><input type="range" id="B_c" min="-3" max="0" step="1" value="-1"><input type="range" id="B_d" min="0" max="4" step="1" value="3"></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="B_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE C — helping at the start, and a mutation that breaks it (JM, 2026-10-28: "a population where helpfulness is at fixation, and every mutation 'breaks' the helpfulness gene") ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>Every bird starts a helper. Each generation, 1 in 100 helping alleles passed on comes out broken: the young bird carries a non-helper there instead. Broken alleles are never mended. See when helping holds against the breaks, and when the breaks win.</li>
+        <li>The same three arrows; the breaks are fixed.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="C_mapH">The island</span><span class="tip"><span>The island: 32 x 32 nests (the edges wrap round). Each square a nest; its shade, the bird's helping alleles: pale none, middle one, dark two; blank, a nest no young bird took this generation.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="C_map" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="C_meas">
+          <option value="p">helping allele</option>
+          <option value="ibd">neighbours with copies of one founding helping allele</option>
+          <option value="r">relatedness at the helping gene</option>
+          <option value="kin">neighbours that share a parent</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Helping allele: its share of the helping gene's alleles. Neighbours that share a parent: of the pairs of next-door birds, the share with a mother or father in common. Relatedness at the helping gene: how much a bird's neighbours' helping alleles go with its own, as a regression slope (lesson 13); blank when every bird is the same. Nests filled: the share of nests a young bird took.</span><span>Neighbours with copies of one founding helping allele: every copy of the helping gene at the start (two a bird) is labelled, and its copies keep the label, as lessons 15, 16 and 20 traced copies back to where they meet. The share of next-door pairs carrying copies of one starting copy: what helping pays on is a copy of the same allele next door, not a family tie as such.</span></span></span></label></div>
+        <canvas id="C_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the helping allele, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change in the helping allele, added up since generation 0, taken apart as lesson 13 and lesson 21 took a change apart, averaged over the 16 runs.</span><span>From its own helping: how a bird's own helping alleles go with the young it leaves (its cost). From its neighbours' helping: how its helping alleles go with its neighbours' helping, times what that helping does for its young. Together, who leaves more young. What the young keep: the young against their parents (meiosis's coin, and in C the broken copies).</span><span>They add up exactly to the black line, the change in the helping allele since generation 0.</span></span></span></label></div>
+        <canvas id="C_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, helping, young<span class="tip"><span>Helping gene: two alleles, a helper and a non-helper; a bird with one helps half as much.</span><span>Cost, the red arrow from helping: how many fewer young a full helper has (of about 2). Benefit, the blue arrow from the neighbours' helping: how many more young a bird has when all four of its neighbours are full helpers (a quarter for each).</span><span>How close young settle, the arrow between a bird's helping gene and its neighbours': the young take a nest within that many nests of where they hatched, so the closer they settle, the more a bird's neighbours share its parents, and its alleles. It sets who the neighbours are, not what helping does.</span><span>Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>1,024 nests; at the start every nest full, half the helping alleles helpers (in C, all). Each bird's young take nests near where they hatched; a young bird whose nest is taken looks for an empty one around it; young with none left die. <b>Go</b> plays 100 generations (in C, 150), 16 times.</span><span>The picture: what a hit looks like; the red box, where the thick line, the 16 runs' average, should end.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <canvas id="C_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="C_controls">
+          <div hidden><input type="range" id="C_b" min="0" max="6" step="1" value="5"><input type="range" id="C_c" min="-3" max="0" step="1" value="-1"><input type="range" id="C_d" min="0" max="4" step="1" value="2"></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent">Go</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="C_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE D — a gene that cheats in meiosis: it spreads at its carriers' cost (JM, 2026-10-28: "genetic-level competition in general"; Lec 29: "At the genomic level—transposons jump around making more copies") ========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Finish Stage C to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>No helping now. A new gene: in a bird with one driving allele and one fair one, the driver goes into more than half of the bird's eggs and sperm. Birds carrying it raise fewer young. See when it spreads, and what it does to the island.</li>
+        <li><b>Drive</b>, the blue arrow: the driver's share of a carrier's eggs and sperm. <b>Cost</b>, the red arrow.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="D_mapH">The island</span><span class="tip"><span>The island: 32 x 32 nests (the edges wrap round). Each square a nest; its shade, the bird's driving alleles: pale none, middle one, dark two; blank, a nest no young bird took.</span><span>Run 1, at the generation the plots have reached.</span></span></span></h3>
+        <canvas id="D_map" width="760" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label><select id="D_meas">
+          <option value="dr">driving allele</option>
+          <option value="dens">nests filled</option>
+          <option value="wbar">young a bird leaves</option>
+        </select> <span class="info" tabindex="0">over time<span class="tip"><span>The 16 runs, each thin; their average thick.</span><span>Driving allele: its share at the driving gene. Nests filled: the share of nests a young bird took. Young a bird leaves: those that took a nest, half to each parent.</span></span></span></label></div>
+        <canvas id="D_time" width="760" height="280"></canvas>
+      </div>
+      <div class="panel">
+        <div class="watchbar"><label>The change in the driving allele, taken apart <span class="info" tabindex="0">since generation 0<span class="tip"><span>Each generation's change in the driving allele, added up since generation 0, averaged over the 16 runs.</span><span>Who leaves more young: the young's parents against the birds there were. What the young keep: the young against their parents, where the driver's unfair share shows.</span><span>They add up exactly to the black line.</span></span></span></label></div>
+        <canvas id="D_split" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, helping, young<span class="tip"><span>Driving gene: a driver and a fair allele. In a bird with one of each, the driver goes into a share of its eggs and sperm set by the drive (half is fair).</span><span>Cost, the red arrow: how many fewer young a bird with two drivers has (half as many fewer with one).</span><span>No helping in this stage. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="D_pathwrap"><div id="D_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>1,024 nests, every one full at the start; 1 in 20 alleles at the driving gene is the driver. <b>Go</b> plays 100 generations, 16 times.</span><span>The picture: what a hit looks like; the red box, where the thick line should end.</span></span></span> <span class="pips" id="D_pips"></span></h3>
+        <p class="ttext" id="D_ttext"></p>
+        <canvas id="D_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="D_controls">
+          <div hidden><input type="range" id="D_q" min="0" max="3" step="1" value="0"><input type="range" id="D_k" min="-4" max="0" step="1" value="-3"></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice</label></div>
+          <div class="buttons">
+            <button id="D_go" class="accent">Go</button>
+            <button id="D_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="D_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedD">That is the whole lesson.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="D_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeD"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 22. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 22 — kin selection and gene-level selection, on a grid of
+   nests. Draft 1 (2026-11-07). JM, 2026-10-28: "illustrate kin selection
+   & altruism mechanistically rather than stating it ... simple diagrams
+   showing traits influencing behavior and behavior influencing others.
+   If the "others" tend to be related, and the cost isn't too great, that
+   allele will increase in frequency. We can then give a population where
+   helpfulness is at fixation, and every mutation "breaks" the
+   helpfulness gene"; 2026-11-07: "22: kin selection / genic level
+   selection"; "make sure the kin selection activity doesnt imply
+   organisms cooperate **because** theyre related, rather being closely
+   related creates the conditions that allow the shift of cov(w,z)
+   sufficiently to create cooperation"; "Yes please go ahead with the
+   grid". Plan, measurements and open points:
+   docs/overhauls/lesson22_overhaul.md.
+
+   A  help that reaches the neighbours: benefit, cost, how close young
+      settle. Helping spreads when young settle close and the benefit is
+      big enough for the cost.
+   B  relatedness as a condition: how close young settle sets how often
+      neighbours share a parent; the change in the helping allele, taken
+      apart (its own cost, its neighbours' helping, what the young keep),
+      decides; where the parts cancel, more benefit is needed the farther
+      young settle.
+   C  helping at the start, a mutation that breaks it: it holds where
+      neighbours are kin and the benefit is big enough.
+   D  a driving gene: it spreads by its unfair share of eggs and sperm
+      (what the young keep) while its carriers leave fewer young (who
+      leaves more), and can take the island down.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+
+/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: "D", D: null };
+const BIT = { A1: 0, A2: 1, A3: 2, B1: 3, B2: 4, B3: 5, C1: 6, C2: 7, D1: 8, D2: 9 };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
+
+/* =====================================================================
+   THE ENGINE: a grid of nests (JM, 2026-11-07: the grid).
+
+   32 x 32 nests on a torus, at most one bird a nest. A bird carries two
+   alleles at a helping gene (1 helper, 0 not: its helping h = 0, 1/2, 1)
+   and two at a driving gene (D: 1 driver, 0 fair). Each bird both lays
+   eggs and fathers young (lesson 16's hermaphrodites).
+
+   A generation, in this order:
+   1  each bird's young: Poisson(2 f), f = (1 - c h + b x (its four
+      neighbours' h, summed) / 4) x (1 - k x its driving alleles / 2),
+      c the cost, b the benefit (a quarter to each neighbour), k the
+      driver's cost. An empty nest's h is 0.
+   2  each young bird's father: a bird from the 8 nests around its
+      mother, by f. Its alleles: one from each parent at each gene; in a
+      parent with one driver and one fair allele, the driver goes into a
+      share q of the eggs and sperm (D's drive; 1/2 fair). In C, each
+      helping allele passed on comes out broken (a non-helper) with chance
+      1/100; none is mended.
+   3  the young, in a random order, each look for a nest: a random one
+      within d nests of the mother (d the "how close young settle" arrow:
+      within 1, 2, 3, 4 or 8), or if it is taken, the nearest empty one in
+      rings around it (out to 4 nests); none left, it dies. Old birds die;
+      a nest no young bird took stays empty.
+   Competition for nests is island-wide (a young bird pushed out moves
+   on), while young still settle near home. Measured first (lesson 22's
+   review note, Taylor 1992): with every nest refilled from mothers
+   within d (competition for nests local), helping died at nearly every
+   setting, d 1 no better than d 2 -- the help a bird gives its kin is
+   taken back by its kin's young competing with its own.
+
+   The change in an allele each generation, taken apart exactly (Price):
+     z-bar' - z-bar = cov(w, z) / w-bar + E(w dz) / w-bar
+   z a bird's alleles (0, 1/2, 1), w its young that took a nest (half to
+   each parent), z-bar' the young's mean. For the helping allele,
+   cov(w, z) splits by least squares on a bird's own z and its
+   neighbours' (zN, their four z summed / 4):
+     cov(w, z) = b_own var(z) + b_nbr cov(z, zN)
+   with no leftover (the residuals are uncorrelated with z: Queller
+   1992). Relatedness at the helping gene, r = cov(z, zN) / var(z): the
+   change is var(z) (b_own + r b_nbr) / w-bar. Relatedness is the
+   condition; the covariance decides (JM, 2026-11-07).
+
+   MEASURED (scratchpad l22/eng.js, the same model; 8 runs x 2 seed sets,
+   100 generations, cost .1, start .5; the helping allele at 100):
+     d 1: b .25 .03-.04, .5 .13-.16, 1 .63-.64, 1.5 .84-.85, 2 .91-.94,
+          3 .95-.97 (relatedness at the helping gene .09-.10)
+     d 2: .02, .05-.06, .28-.32, .51-.54, .68-.75, .86 (.05)
+     d 3: .01-.02, .03-.05, .12-.18, .28-.34, .46-.55, .69-.76 (.03)
+     d 4: .01, .02-.04, .09-.10, .19-.24, .39-.41, .56-.65 (.02)
+     d 8: .01-.02, .02-.03, .06-.10, .13-.16, .22-.29, .51 (.00)
+     neighbours that share a parent (no helping): d 1 .15, 2 .08, 3 .05,
+     4 .04, 8 .01. Cost at d 1, b 1: .1 .59-.62, .2 .03, .3 .00.
+     C (all helpers at the start, 1 in 100 broken): b 2: d 1 .66-.67,
+     2 .49-.50, 3 .33-.36, 4 .26-.30, 8 .27-.29; d 1: b .5 .14-.16,
+     1 .39-.44, 1.5 .56-.57, 2 .66-.67, 3 .70-.72.
+     D (driver from .05; driver at 100, nests filled): q .6: k .2 1.00,
+     .4+ 0; q .7: k .4 1.00, .5 .76-.78, .6 0; q .9: k .4 1.00 (1.00),
+     .5 1.00 (.68), .6 extinct.
+   ===================================================================== */
+const GL = 32, GN = GL * GL, GR = 2, RUNS = 16, G22 = 100, G_C = 150, MU_C = 0.01, DR0 = 0.05;
+function gPois(l, rng) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= rng(); } while (p > L); return k - 1; }
+const NB4 = Array.from({ length: GN }, (_, i) => { const x = i % GL, y = (i / GL) | 0; return [((x + 1) % GL) + y * GL, ((x + GL - 1) % GL) + y * GL, x + ((y + 1) % GL) * GL, x + ((y + GL - 1) % GL) * GL]; });
+const wrap = (x, y) => ((x % GL + GL) % GL) + ((y % GL + GL) % GL) * GL;
+/* P: { b, c, d, mu, p0, q, k, dr0 } */
+function gWorld(P, seed) {
+  const rng = mulberry32(seed), w = { rng, P, t: 0, g: new Int8Array(2 * GN), lab: new Int32Array(2 * GN), dr: new Int8Array(2 * GN), occ: new Uint8Array(GN), mo: new Int32Array(GN).fill(-1), fa: new Int32Array(GN).fill(-1),
+    cumH: [0, 0, 0], cumD: [0, 0], wbar: null, last: null };
+  for (let i = 0; i < GN; i++) { w.occ[i] = 1; for (let a = 0; a < 2; a++) { w.lab[2 * i + a] = 2 * i + a; w.g[2 * i + a] = rng() < P.p0 ? 1 : 0; w.dr[2 * i + a] = rng() < (P.dr0 || 0) ? 1 : 0; } }
+  return w;
+}
+function gStep(w) {
+  const P = w.P, rng = w.rng, h = new Float64Array(GN), f = new Float64Array(GN);
+  for (let i = 0; i < GN; i++) h[i] = w.occ[i] ? (w.g[2 * i] + w.g[2 * i + 1]) / 2 : 0;
+  for (let i = 0; i < GN; i++) { if (!w.occ[i]) continue; const nb = NB4[i]; const s = h[nb[0]] + h[nb[1]] + h[nb[2]] + h[nb[3]];
+    f[i] = Math.max(0, (1 - P.c * h[i] + P.b * s / 4) * (1 - (P.k || 0) * (w.dr[2 * i] + w.dr[2 * i + 1]) / 2)); }
+  const young = []; for (let i = 0; i < GN; i++) { if (!w.occ[i]) continue; const n = gPois(GR * f[i], rng); for (let e = 0; e < n; e++) young.push(i); }
+  for (let i = young.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)), t = young[i]; young[i] = young[j]; young[j] = t; }
+  const g2 = new Int8Array(2 * GN), lab2 = new Int32Array(2 * GN), dr2 = new Int8Array(2 * GN), occ2 = new Uint8Array(GN), mo2 = new Int32Array(GN).fill(-1), fa2 = new Int32Array(GN).fill(-1), kids = new Float64Array(GN);
+  const father = m => { const x = m % GL, y = (m / GL) | 0; let t = 0; const c = [];
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { if (!dx && !dy) continue; const j = wrap(x + dx, y + dy); if (w.occ[j] && f[j] > 0) { c.push(j); t += f[j]; } }
+    if (!c.length) return m; let u = rng() * t; for (const j of c) { u -= f[j]; if (u <= 0) return j; } return c[c.length - 1]; };
+  const q = P.q || 0.5;
+  const drG = i => { const a = w.dr[2 * i], b = w.dr[2 * i + 1]; return a === b ? a : (rng() < q ? 1 : 0); };
+  let filled = 0;
+  for (const m of young) {
+    if (filled >= GN) break;
+    const x0m = m % GL, y0m = (m / GL) | 0, x0 = wrap(x0m + Math.floor(rng() * (2 * P.d + 1)) - P.d, y0m + Math.floor(rng() * (2 * P.d + 1)) - P.d);
+    let x = -1;
+    if (!occ2[x0]) x = x0;
+    else { const xx = x0 % GL, yy = (x0 / GL) | 0;
+      for (let rad = 1; rad <= 4 && x < 0; rad++) { const ring = [];
+        for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { if (Math.max(Math.abs(dx), Math.abs(dy)) !== rad) continue; const j = wrap(xx + dx, yy + dy); if (!occ2[j]) ring.push(j); }
+        if (ring.length) x = ring[Math.floor(rng() * ring.length)]; } }
+    if (x < 0) continue;
+    const fa = father(m);
+    const km = rng() < 0.5 ? 0 : 1, kf = rng() < 0.5 ? 0 : 1;   /* each copy keeps the label of the founding copy it descends from */
+    g2[2 * x] = w.g[2 * m + km]; lab2[2 * x] = w.lab[2 * m + km]; g2[2 * x + 1] = w.g[2 * fa + kf]; lab2[2 * x + 1] = w.lab[2 * fa + kf];
+    if (P.mu) for (let a = 0; a < 2; a++) if (g2[2 * x + a] && rng() < P.mu) g2[2 * x + a] = 0;
+    dr2[2 * x] = drG(m); dr2[2 * x + 1] = drG(fa);
+    occ2[x] = 1; mo2[x] = m; fa2[x] = fa; kids[m] += 0.5; kids[fa] += 0.5; filled++;
+  }
+  /* the change taken apart, over the birds there were */
+  let n = 0, zb = 0, zn = 0, wb = 0, db = 0; const Z = [], N = [], W = [], Dz = [];
+  for (let i = 0; i < GN; i++) { if (!w.occ[i]) continue; const nb = NB4[i]; const zN = (h[nb[0]] + h[nb[1]] + h[nb[2]] + h[nb[3]]) / 4, dz = (w.dr[2 * i] + w.dr[2 * i + 1]) / 2;
+    Z.push(h[i]); N.push(zN); W.push(kids[i]); Dz.push(dz); n++; zb += h[i]; zn += zN; wb += kids[i]; db += dz; }
+  let ny = 0, zy = 0, dy = 0; for (let x = 0; x < GN; x++) if (occ2[x]) { ny++; zy += (g2[2 * x] + g2[2 * x + 1]) / 2; dy += (dr2[2 * x] + dr2[2 * x + 1]) / 2; }
+  if (n && ny) {
+    zb /= n; zn /= n; wb /= n; db /= n; zy /= ny; dy /= ny;
+    let vz = 0, vn = 0, czn = 0, czw = 0, cnw = 0, cdw = 0;
+    for (let i = 0; i < n; i++) { const a = Z[i] - zb, b = N[i] - zn, c = W[i] - wb; vz += a * a; vn += b * b; czn += a * b; czw += a * c; cnw += b * c; cdw += (Dz[i] - db) * c; }
+    vz /= n; vn /= n; czn /= n; czw /= n; cnw /= n; cdw /= n;
+    const det = vz * vn - czn * czn;
+    let own, nbr;
+    if (vz < 1e-12) { own = 0; nbr = 0; }
+    else if (det < 1e-12 * vz * Math.max(vn, 1e-12)) { own = czw / wb; nbr = 0; }
+    else { const b1 = (czw * vn - cnw * czn) / det, b2 = (cnw * vz - czw * czn) / det; own = b1 * vz / wb; nbr = b2 * czn / wb; }
+    const zw = zb + czw / wb, keep = zy - zw, dw = db + cdw / wb;
+    const parts = [own, nbr, keep]; for (let i = 0; i < 3; i++) w.cumH[i] += parts[i];
+    w.cumD[0] += cdw / wb; w.cumD[1] += dy - dw;
+    w.last = { own, nbr, keep, before: zb, after: zy, cov: czw / wb, dcov: cdw / wb, dkeep: dy - dw, dbefore: db, dafter: dy };
+    w.r = vz > 1e-9 ? czn / vz : null; w.wbar = wb;
+  } else { w.r = null; w.wbar = n ? 0 : null; w.last = null; }
+  w.g = g2; w.lab = lab2; w.dr = dr2; w.occ = occ2; w.mo = mo2; w.fa = fa2; w.t++;
+}
+/* everything the menus read, for one run at one generation */
+function gStat(w) {
+  let o = 0, a = 0, d = 0, pr = 0, sh = 0, pa = 0, ib = 0;
+  for (let i = 0; i < GN; i++) { if (!w.occ[i]) continue; o++; a += w.g[2 * i] + w.g[2 * i + 1]; d += w.dr[2 * i] + w.dr[2 * i + 1];
+    for (const j of NB4[i]) { if (j < i || !w.occ[j]) continue; pa++; const A0 = w.lab[2 * i], A1 = w.lab[2 * i + 1], B0 = w.lab[2 * j], B1 = w.lab[2 * j + 1]; if (A0 === B0 || A0 === B1 || A1 === B0 || A1 === B1) ib++; }
+    if (w.mo[i] < 0) continue; for (const j of NB4[i]) { if (j < i || !w.occ[j] || w.mo[j] < 0) continue; pr++; if (w.mo[i] === w.mo[j] || w.mo[i] === w.fa[j] || w.fa[i] === w.mo[j] || w.fa[i] === w.fa[j]) sh++; } }
+  return { p: o ? a / (2 * o) : 0, dr: o ? d / (2 * o) : 0, dens: o / GN, kin: w.t && pr ? sh / pr : null, ibd: pa ? ib / pa : null, r: w.t ? w.r : null, wbar: w.t ? w.wbar : null,
+    sh: w.cumH.slice(), sd: w.cumD.slice() };
+}
+const GRID = { step: gStep, stat: gStat };
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R.map(p => p[key]).find(v => v != null);
+    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
+  }
+  return out;
+}
+
+/* ====== drawing ====== */
+const POPCOL = [ORANGE, BLUE], ISLE = [];   /* lesson 21's plot over time draws one line here, never an island's */
+/* the plot over time: the runs thin, their average thick, a line an island (the blue island's dashed) or one line; a target's
+   window at the end as a red box; q null: the empty frame (JM, 2026-10-23: blank before Go) */
+const TM = { W: 760, H: 300, px: 50, py: 14 };
+function labRoom(ctx, M) {
+  ctx.font = "600 11px -apple-system, sans-serif"; let w = 0;
+  for (const k in M) if ((M[k].n || 1) > 1) for (const nm of ISLE) w = Math.max(w, ctx.measureText(nm).width);
+  return w ? Math.ceil(w) + 22 : 12;
+}
+const tickLab = (m, v) => m.pct ? Math.round(100 * v) + "%" : String(+v.toFixed(2));
+function drawTime(cvId, q, meas, M, rule, G) {
+  const cv = $(cvId); if (!cv) return;
+  const H = +cv.dataset.cssH || cv.height, T = Object.assign({}, TM, { H, ph: H - 58 });
+  const { ctx } = frameCanvas(cv, T.W, T.H), m = M[meas];
+  T.pw = T.W - T.px - labRoom(ctx, M);
+  const ymin = m.ymin || 0, ymax = m.ymax, nPer = m.n || 1, lastY = [];
+  const xs = t => T.px + t / G * T.pw, ys = v => T.py + T.ph - (Math.max(ymin, Math.min(v, ymax)) - ymin) / (ymax - ymin) * T.ph;
+  cv._tf = { xs, ys, T, G };
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(T.px, T.py); ctx.lineTo(T.px, T.py + T.ph); ctx.lineTo(T.px + T.pw, T.py + T.ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) { const v = ymin + (ymax - ymin) * k / 4; cardText(ctx, tickLab(m, v), T.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (let t = 0; t <= G; t += 10) cardText(ctx, String(t), xs(t), T.py + T.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", T.px + T.pw / 2, T.H - 8, { size: 11, col: MUTED, align: "center" });
+  if (rule) for (const u of rule.rules) if (u.meas === meas && (u.lo != null || u.hi != null)) {
+    const lo = u.lo == null ? ymin : u.lo, hi = u.hi == null ? ymax : Math.min(u.hi, ymax), x0 = xs(G) - 7;
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi));
+  }
+  if (q) {
+    const dash = k => nPer > 1 && k === 1 ? [5, 3] : null;
+    for (let i = 0; i < q.runs.length; i++) for (let k = 0; k < nPer; k++) {
+      const pts = []; for (const s of q.hist) { const v = m.vals(s.runs[i])[k]; if (v != null) pts.push([xs(s.t), ys(v)]); }
+      polyline(ctx, pts, nPer > 1 ? POPCOL[k] : INK, 1, 0.13);
+    }
+    for (let k = 0; k < nPer; k++) {
+      const avg = []; for (const s of q.hist) { const v = meanOf(s.runs.map(p => m.vals(p)[k])); if (v != null) avg.push([xs(s.t), ys(v)]); }
+      polyline(ctx, avg, nPer > 1 ? POPCOL[k] : INK, 2.6, 1, dash(k));
+      if (avg.length) lastY[k] = avg[avg.length - 1][1];
+    }
+  }
+  if (nPer > 1) {
+    const want = ISLE.map((_, k) => lastY[k] != null ? lastY[k] : T.py + 6 + 13 * k);
+    const ord = [0, 1].sort((a, b) => want[a] - want[b]), y = [];
+    ord.forEach((k, i) => { y[k] = Math.max(i ? y[ord[i - 1]] + 13 : T.py + 4, want[k]); });
+    for (let i = ord.length - 1; i >= 0; i--) y[ord[i]] = Math.min(y[ord[i]], i === ord.length - 1 ? T.py + T.ph - 4 : y[ord[i + 1]] - 13);
+    ISLE.forEach((nm, k) => cardText(ctx, nm, xs(G) + 15, y[k], { size: 11, col: POPCOL[k], bold: true }));
+  }
+  ctx.save(); ctx.translate(13, T.py + T.ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, m.lab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+/* a target card's picture: an example chart of a hit, unlabeled, in the plot over time's style (lesson 19's): pic { meas, G,
+   lines [{ f(t), jit }], boxes [{ lo, hi }] } */
+const SKc = { W: 460, H: 120, px: 8, py: 8, pw: 424, ph: 100 };
+function bwHash(a, b, salt) { let h = Math.imul(a ^ 0x9e3779b9, 0x85ebca6b) ^ Math.imul(b + salt, 0xc2b2ae35); h ^= h >>> 16; h = Math.imul(h, 0x7feb352d); h ^= h >>> 15; return (h >>> 0) / 4294967296; }
+function drawSketch(cvId, pic, M) {
+  const cv = $(cvId); if (!cv) return;
+  cv.hidden = !pic; if (!pic) return;
+  const { ctx } = frameCanvas(cv, SKc.W, SKc.H);
+  const m = M[pic.meas], ymin = m.ymin || 0, ymax = m.ymax, G = pic.G;
+  const xs = t => SKc.px + t / G * SKc.pw, ys = v => SKc.py + SKc.ph - (Math.max(ymin, Math.min(ymax, v)) - ymin) / (ymax - ymin) * SKc.ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(SKc.px, SKc.py); ctx.lineTo(SKc.px, SKc.py + SKc.ph); ctx.lineTo(SKc.px + SKc.pw, SKc.py + SKc.ph); ctx.stroke();
+  const step = G / 100;
+  pic.lines.forEach((ln, li) => {
+    for (let r = 0; r < 16; r++) {
+      const off = (bwHash(r, 13 + li, 7) - 0.5) * 2 * ln.jit, pts = [];
+      for (let t = 0; t <= G + 1e-9; t += step) pts.push([xs(t), ys(ln.f(t) + off * Math.min(1, 4 * t / G) + (bwHash(r, Math.round(t / step), 11 + li) - 0.5) * 0.4 * ln.jit * Math.min(1, 4 * t / G))]);
+      polyline(ctx, pts, INK, 1, 0.16);
+    }
+    const avg = []; for (let t = 0; t <= G + 1e-9; t += step / 2) avg.push([xs(t), ys(ln.f(t))]);
+    polyline(ctx, avg, INK, 2.6, 1);
+  });
+  for (const bx of pic.boxes) { const lo = bx.lo == null ? ymin : bx.lo, hi = bx.hi == null ? ymax : bx.hi;
+    ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(xs(G) - 7, ys(hi), 14, ys(lo) - ys(hi)); }
+  ctx.restore();
+}
+
+
+/* the island: one square a nest, its shade the bird's alleles at the gene the stage is about (one hue, a lightness ramp:
+   colourblind students, JM 2026-10-20); blank, an empty nest */
+const MAPC = { W: 760, H: 300, x0: 16, y0: 12, cell: 8.6 };
+const RAMP_H = ["#e6e2d6", "#8fb0c6", "#2f6b8f"], RAMP_D = ["#e6e2d6", "#d49297", "#b23a48"];
+function drawMap(cvId, w, drive) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, MAPC.W, MAPC.H), c = MAPC.cell, ramp = drive ? RAMP_D : RAMP_H, A = drive ? w.dr : w.g;
+  ctx.fillStyle = "#faf9f5"; ctx.fillRect(MAPC.x0 - 1, MAPC.y0 - 1, GL * c + 2, GL * c + 2);
+  const cnt = [0, 0, 0, 0];
+  for (let i = 0; i < GN; i++) { const x = MAPC.x0 + (i % GL) * c, y = MAPC.y0 + ((i / GL) | 0) * c;
+    if (!w.occ[i]) { cnt[3]++; continue; } const z = A[2 * i] + A[2 * i + 1]; cnt[z]++; ctx.fillStyle = ramp[z]; ctx.fillRect(x + 0.4, y + 0.4, c - 0.8, c - 0.8); }
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.strokeRect(MAPC.x0 - 1, MAPC.y0 - 1, GL * c + 2, GL * c + 2);
+  const lx = MAPC.x0 + GL * c + 30, labs = drive ? ["no driving allele", "one", "two"] : ["no helping allele", "one", "two"];
+  cardText(ctx, drive ? "the bird's driving alleles" : "the bird's helping alleles", lx, 30, { size: 12, bold: true, col: MUTED });
+  [0, 1, 2].forEach(z => { const y = 58 + 26 * z; ctx.fillStyle = ramp[z]; ctx.fillRect(lx, y - 8, 16, 16); ctx.strokeStyle = "#cfccc2"; ctx.strokeRect(lx, y - 8, 16, 16);
+    cardText(ctx, labs[z] + "  ·  " + cnt[z] + " birds", lx + 26, y, { size: 12, col: INK }); });
+  { const y = 58 + 26 * 3; ctx.strokeStyle = "#cfccc2"; ctx.strokeRect(lx, y - 8, 16, 16); cardText(ctx, "empty nest  ·  " + cnt[3], lx + 26, y, { size: 12, col: INK }); }
+  ctx.restore();
+}
+/* the change taken apart (lesson 21's split): each part's running sum averaged over the 16 runs, and their total */
+const CS = { W: 760, H: 230, px: 56, py: 26, pw: 540, ph: 170 };
+const SPLIT_H = [
+  { lab: "from its own helping", col: HOT, dash: null, v: s => s.sh[0] },
+  { lab: "from its neighbours' helping", col: BLUE, dash: null, v: s => s.sh[1] },
+  { lab: "what the young keep", col: MUTED, dash: [2, 3], v: s => s.sh[2] },
+  { lab: "the change, all of it", col: INK, dash: null, lw: 2.8, v: s => s.sh[0] + s.sh[1] + s.sh[2] },
+];
+const SPLIT_D = [
+  { lab: "who leaves more young", col: HOT, dash: null, v: s => s.sd[0] },
+  { lab: "what the young keep", col: MUTED, dash: [2, 3], v: s => s.sd[1] },
+  { lab: "the change, all of it", col: INK, dash: null, lw: 2.8, v: s => s.sd[0] + s.sd[1] },
+];
+function drawSplit(cvId, q, series, G) {
+  const cv = $(cvId); if (!cv) return;
+  const { ctx } = frameCanvas(cv, CS.W, CS.H);
+  let ym = 0.05; const pts = series.map(() => []);
+  if (q) for (const h of q.hist) series.forEach((se, i) => { const v = meanOf(h.runs.map(se.v)); if (v == null) return; pts[i].push([h.t, v]); ym = Math.max(ym, Math.abs(v)); });
+  ym = Math.ceil(ym * 10 + 1e-9) / 10;
+  const xs = t => CS.px + t / G * CS.pw, y0 = CS.py + CS.ph / 2, ys = v => y0 - v / ym * (CS.ph / 2);
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(CS.px, CS.py); ctx.lineTo(CS.px, CS.py + CS.ph); ctx.moveTo(CS.px, y0); ctx.lineTo(CS.px + CS.pw, y0); ctx.stroke();
+  for (const v of [-ym, -ym / 2, 0, ym / 2, ym]) cardText(ctx, (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) * 100) + "%", CS.px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" });
+  for (let t = 0; t <= G; t += G > 100 ? 25 : 10) cardText(ctx, String(t), xs(t), CS.py + CS.ph + 12, { size: 10.5, col: MUTED, align: "center" });
+  cardText(ctx, "generation", CS.px + CS.pw / 2, CS.H - 6, { size: 11, col: MUTED, align: "center" });
+  const ends = [];
+  series.forEach((se, i) => { if (!pts[i].length) return; polyline(ctx, pts[i].map(([t, v]) => [xs(t), ys(v)]), se.col, se.lw || 2, 1, se.dash); ends.push({ y: ys(pts[i][pts[i].length - 1][1]), se }); });
+  const lab = ends.length ? ends : series.map((se, i) => ({ y: CS.py + 10 + 16 * i, se }));
+  lab.sort((a, b) => a.y - b.y); for (let i = 1; i < lab.length; i++) lab[i].y = Math.max(lab[i].y, lab[i - 1].y + 13);
+  for (const l of lab) { polyline(ctx, [[CS.px + CS.pw + 6, l.y], [CS.px + CS.pw + 16, l.y]], l.se.col, 2, 1, l.se.dash); cardText(ctx, l.se.lab, CS.px + CS.pw + 20, l.y, { size: 10.5, col: l.se.col, bold: !!l.se.lw }); }
+  ctx.restore();
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-E ======
+   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
+   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : "";
+  }
+  S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
+function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const r = S.done ? null : ruleOf(S);
+  const set = readSet(S), seed = pageSeed("l22" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G));
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
+const PATHS = {};
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
+  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
+  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
+  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
+  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l22" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
+const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
+const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+
+/* ====== the controls ====== */
+const B_V = [0, 0.25, 0.5, 1, 1.5, 2, 3];       /* benefit */
+const C_V = [0.3, 0.2, 0.1, 0];                  /* cost (red arrow: input -3 .. 0) */
+const D_V = [8, 4, 3, 2, 1];                     /* how close young settle: within 8 .. 1 nests (the arrow thicker the closer) */
+const Q_V = [0.5, 0.6, 0.7, 0.9];                /* drive: the driver's share of a carrier's eggs and sperm */
+const K_V = [0.6, 0.5, 0.4, 0.2, 0];             /* the driver's cost (red arrow: input -4 .. 0) */
+const negV = (vals, n) => v => { const c = vals[Math.round(v) + n]; return c ? "−" + c : "0"; };
+const MEAS = {
+  p: { lab: "helping allele", ymax: 1, pct: true, vals: s => [s.p] },
+  kin: { lab: "neighbours that share a parent", ymax: 0.25, pct: true, vals: s => [s.kin] },
+  ibd: { lab: "neighbours with copies of one founding helping allele", ymax: 1, pct: true, vals: s => [s.ibd] },
+  r: { lab: "relatedness at the helping gene", ymax: 0.25, vals: s => [s.r] },
+  dens: { lab: "nests filled", ymax: 1, pct: true, vals: s => [s.dens] },
+  dr: { lab: "driving allele", ymax: 1, pct: true, vals: s => [s.dr] },
+  wbar: { lab: "young a bird leaves", ymax: 2, vals: s => [s.wbar] },
+};
+const between = (meas, lo, hi) => ({ meas, lo, hi, ok: S => S[meas] >= lo && S[meas] <= hi, val: S => f2(S[meas]) });
+const pic = (meas, f, lo, hi, jit, G) => ({ meas, G: G || G22, lines: [{ f, jit: jit || 0.04 }], boxes: [{ lo, hi }] });
+const fixedArrow = (id, from, to) => ({ id, from, to, readonly: true, dark: true, label: "" });
+/* the diagram (JM, 2026-10-28: "simple diagrams showing traits influencing behavior and behavior influencing others"). A bird's
+   helping lowers its own young (red); its neighbours' helping raises them (blue); how close young settle links its helping gene
+   to its neighbours' (JM, 2026-11-07: relatedness "creates the conditions"): it sets who the neighbours are, not what helping
+   does. C adds the breaks. D: a driving gene, its share of eggs and sperm, and its cost */
+function mountHelp(K, o) {
+  const boxes = [
+    { id: "hg", label: "helping gene", x: 92, y: 28, w: 112, h: 32 },
+    { id: "ng", label: "neighbours' helping genes", x: 340, y: 28, w: 178, h: 32 },
+    { id: "hp", label: "helping", x: 92, y: 132, w: 92, h: 32 },
+    { id: "nh", label: "neighbours' helping", x: 340, y: 132, w: 150, h: 32 },
+    { id: "yg", label: "its young", x: 215, y: 250, w: 116, h: 34, kind: "outcome" },
+  ];
+  const arrows = [fixedArrow("x1", "hg", "hp"), fixedArrow("x2", "ng", "nh"),
+    { id: "d", from: "hg", to: "ng", input: K + "_d", label: "how close young settle", fmt: v => "within " + D_V[Math.round(v)] + (D_V[Math.round(v)] === 1 ? " nest" : " nests") },
+    { id: "c", from: "hp", to: "yg", input: K + "_c", signed: true, label: "cost", fmt: negV(C_V, 3) },
+    { id: "b", from: "nh", to: "yg", input: K + "_b", label: "benefit", fmt: v => "+" + B_V[Math.round(v)] }];
+  if (o.mut) { boxes.push({ id: "mu", label: "1 in 100 broken", x: 420, y: 250, w: 124, h: 32 }); arrows.push(Object.assign(fixedArrow("x3", "mu", "yg"), { dark: true })); }
+  return Paths.init({ mount: "#" + K + "_paths", width: 470, height: 290, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountDrive() {
+  const boxes = [
+    { id: "dg", label: "driving gene", x: 110, y: 28, w: 116, h: 32 },
+    { id: "es", label: "driver's share of eggs and sperm", x: 110, y: 140, w: 196, h: 40 },
+    { id: "yg", label: "its young", x: 300, y: 250, w: 116, h: 34, kind: "outcome" },
+    { id: "nf", label: "nests filled", x: 300, y: 140, w: 110, h: 32 },
+  ];
+  const arrows = [fixedArrow("x1", "es", "yg"), fixedArrow("x2", "yg", "nf"),
+    { id: "q", from: "dg", to: "es", input: "D_q", label: "drive", fmt: v => String(Q_V[Math.round(v)]) },
+    { id: "k", from: "dg", to: "yg", input: "D_k", signed: true, label: "cost", fmt: negV(K_V, 4) }];
+  return Paths.init({ mount: "#D_paths", width: 470, height: 290, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+const gStart = (extra, G) => (set, seed) => { const P = Object.assign({ b: set.b || 0, c: set.c || 0, d: set.d || 1, mu: 0, p0: 0.5, q: 0.5, k: 0, dr0: 0 }, extra(set));
+  return { P, eng: GRID, G: G || G22, every: 1, runs: Array.from({ length: RUNS }, (_, i) => gWorld(P, seed + 1 + 7919 * i)) }; };
+function gPaint(S, o) {
+  const K = S.K, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = S.done ? null : ruleOf(S);
+  drawMap(K + "_map", w, o.drive);
+  $(K + "_mapH").textContent = "The island · run 1 · generation " + (q ? q.t : 0);
+  const G = S.cfg.G || G22;
+  drawTime(K + "_time", q, $(K + "_meas").value, S.cfg.meas, r, G);
+  drawSplit(K + "_split", q, o.drive ? SPLIT_D : SPLIT_H, G);
+  drawSketch(K + "_tpic", r ? r.pic : null, S.cfg.meas);
+  syncStage(S); S.cfg.code();
+}
+const HELP_CTL = [{ key: "b", vals: B_V, hidden: true }, { key: "c", vals: C_V, hidden: true }, { key: "d", vals: D_V, hidden: true }];
+
+/* =====================================================================
+   STAGE A — help that reaches the neighbours (cost .1 held throughout).
+   A1: within 1 held, benefit free (opens .5, .13-.16): the helping allele
+   .5 or more at 100 (b 1 .63-.64, 1.5 .84-.85).
+   A2: benefit 2 held, how close young settle free (opens 2, .68-.76 over
+   20 seed sets): .63 or less (3 .47-.58 over 20 seed sets, 4 .39-.41).
+   A3: benefit 1 held, how close free (opens 2, .28-.32): .5 or more
+   (1 .63-.64). The same benefit pays when the neighbours are closer kin.
+   ===================================================================== */
+const SA = mkStage("A", {
+  ctl: HELP_CTL,
+  rounds: [
+    { hold: { d: 1, c: 0.1 }, open: { b: 0.5 }, rules: [atLeast("p", 0.5)], pic: pic("p", t => 0.64 - 0.14 * Math.exp(-t / 30), 0.5, 1) },
+    { hold: { b: 2, c: 0.1 }, open: { d: 2 }, rules: [atMost("p", 0.63)], pic: pic("p", t => 0.5 + 0.0 * t, 0, 0.63) },
+    { hold: { b: 1, c: 0.1 }, open: { d: 2 }, rules: [atLeast("p", 0.5)], pic: pic("p", t => 0.64 - 0.14 * Math.exp(-t / 30), 0.5, 1) },
+  ],
+  ms: 30, meas: pick(MEAS, ["p", "kin", "ibd", "r", "dens"]),
+  start: gStart(() => ({})),
+  afterOpen: () => { hold(SA, ["b", "c", "d"])(); if (!SA.done) $("A_meas").value = ruleOf(SA).pic.meas; },
+  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
+  paint: () => gPaint(SA, {}), code: () => H_code("A", SA, "A -- help that reaches the neighbours", 0),
+});
+/* =====================================================================
+   STAGE B — relatedness as a condition (JM, 2026-11-07). Cost .1 held
+   except in round 3.
+   B1: benefit 1 held, how close free (opens 2, neighbours that share a
+   parent .08): .12 or more (1 .15).
+   B2: benefit and how close free (open b 2, within 2: helping .68-.75):
+   the helping allele ends between .40 and .65, its two parts cancelling
+   (b 1.5 at 2 .51-.54; b 2 at 3 .46-.55; b 3 at 4 .56-.65, at 8 .51).
+   B3: within 1 and benefit 1 held, cost free (opens .1, .59-.62): .2 or
+   less (.2 .03).
+   ===================================================================== */
+const SB = mkStage("B", {
+  ctl: HELP_CTL,
+  rounds: [
+    { hold: { b: 1, c: 0.1 }, open: { d: 2 }, rules: [atLeast("kin", 0.12)], pic: pic("kin", t => t ? 0.15 : 0, 0.12, 0.25, 0.01) },
+    { hold: { c: 0.1 }, open: { b: 2, d: 2 }, rules: [between("p", 0.4, 0.65)], pic: pic("p", t => 0.52 - 0.02 * Math.exp(-t / 20), 0.4, 0.65) },
+    { hold: { d: 1, b: 1 }, open: { c: 0.1 }, rules: [atMost("p", 0.2)], pic: pic("p", t => 0.03 + 0.47 * Math.exp(-t / 22), 0, 0.2) },
+  ],
+  ms: 30, meas: pick(MEAS, ["p", "kin", "ibd", "r", "dens"]),
+  start: gStart(() => ({})),
+  afterOpen: () => { hold(SB, ["b", "c", "d"])(); if (!SB.done) $("B_meas").value = ruleOf(SB).pic.meas; },
+  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
+  paint: () => gPaint(SB, {}), code: () => H_code("B", SB, "B -- relatedness as a condition", 0),
+});
+/* =====================================================================
+   STAGE C — every bird a helper at the start; 1 in 100 helping alleles
+   passed on comes out broken (JM, 2026-10-28). Cost .1 held. 150
+   generations: at 100 the helping allele is still falling, and within 2
+   (.42-.53 over 20 seed sets) overlapped within 3 (.34-.42).
+   At 150, over 12 seed sets of 16 runs:
+   C1: benefit 2 held, how close free (opens 3, .19-.26): .31 or more
+   (2 .36-.42, 1 .60-.63).
+   C2: within 1 held, benefit free (opens 1.5, .49-.54): .41 or less (1
+   .25-.33).
+   ===================================================================== */
+const SC = mkStage("C", {
+  ctl: HELP_CTL,
+  rounds: [
+    { hold: { b: 2, c: 0.1 }, open: { d: 3 }, rules: [atLeast("p", 0.31)], pic: pic("p", t => 0.4 + 0.6 * Math.exp(-t / 40), 0.31, 1, 0.04, G_C) },
+    { hold: { d: 1, c: 0.1 }, open: { b: 1.5 }, rules: [atMost("p", 0.41)], pic: pic("p", t => 0.29 + 0.71 * Math.exp(-t / 40), 0, 0.41, 0.04, G_C) },
+  ],
+  ms: 20, G: G_C, meas: pick(MEAS, ["p", "ibd", "r", "kin"]),
+  start: gStart(() => ({ p0: 1, mu: MU_C }), G_C),
+  afterOpen: () => { hold(SC, ["b", "c", "d"])(); if (!SC.done) $("C_meas").value = ruleOf(SC).pic.meas; },
+  onInput: () => { if (PATHS.C) PATHS.C.sync(); },
+  paint: () => gPaint(SC, {}), code: () => H_code("C", SC, "C -- helping at the start, a mutation that breaks it", MU_C),
+});
+/* =====================================================================
+   STAGE D — a driving gene; no helping; the driver from 1 in 20.
+   D1: cost .2 held, drive free (opens .5, fair: lost): the driving
+   allele .5 or more at 100 (.6 1.00).
+   D2: drive .9 held, cost free (opens .4, nests filled 1.00): nests
+   filled .8 or less (.5 .68, .6 extinct).
+   ===================================================================== */
+const SD = mkStage("D", {
+  ctl: [{ key: "q", vals: Q_V, hidden: true }, { key: "k", vals: K_V, hidden: true }],
+  rounds: [
+    { hold: { k: 0.2 }, open: { q: 0.5 }, rules: [atLeast("dr", 0.5)], pic: pic("dr", t => 1 / (1 + Math.exp(-(t - 25) / 5)), 0.5, 1) },
+    { hold: { q: 0.9 }, open: { k: 0.4 }, rules: [atMost("dens", 0.8)], pic: pic("dens", t => 0.68 + 0.32 * Math.exp(-Math.pow(t / 30, 2)), 0, 0.8) },
+  ],
+  ms: 30, meas: pick(MEAS, ["dr", "dens", "wbar"]),
+  start: (set, seed) => { const P = { b: 0, c: 0, d: 1, mu: 0, p0: 0, q: set.q, k: set.k, dr0: DR0 };
+    return { P, eng: GRID, G: G22, every: 1, runs: Array.from({ length: RUNS }, (_, i) => gWorld(P, seed + 1 + 7919 * i)) }; },
+  afterOpen: () => { hold(SD, ["q", "k"])(); if (!SD.done) $("D_meas").value = ruleOf(SD).pic.meas; },
+  onInput: () => { if (PATHS.D) PATHS.D.sync(); },
+  paint: () => gPaint(SD, { drive: true }), code: () => D_code(),
+});
+
+/* ====== the R panels: the same model, one stage's settings ====== */
+function rGrid(head, o) {
+  return [
+    ["", "# Lesson 22, Stage " + head],
+    ["", "L <- 32; n <- L * L; G <- " + (o.G || 100) + "; R <- 2                          # nests a side; nests; generations; young a bird at f = 1"],
+    ["b", "b <- " + o.b + "                                              # benefit: a full helper adds b / 4 to each of its 4 neighbours"],
+    ["c", "cost <- " + o.c + "                                           # cost: a full helper's own f falls by this"],
+    ["d", "d <- " + o.d + "                                              # how close young settle: within d nests of the mother"],
+    ["", "mu <- " + o.mu + "; q <- " + o.q + "; k <- " + o.k + "                  # helping alleles broken; the driver's share of eggs and sperm; its cost"],
+    ["", "g <- matrix(rbinom(2 * n, 1, " + o.p0 + "), n); dr <- matrix(rbinom(2 * n, 1, " + o.dr0 + "), n); occ <- rep(TRUE, n)   # helping and driving alleles; nests taken"],
+    ["", "xy <- function(i) c((i - 1) %% L, (i - 1) %/% L); id <- function(x, y) (x %% L) + (y %% L) * L + 1"],
+    ["", "nb <- t(sapply(1:n, function(i) { p <- xy(i); c(id(p[1] + 1, p[2]), id(p[1] - 1, p[2]), id(p[1], p[2] + 1), id(p[1], p[2] - 1)) }))"],
+    ["", "for (t in 1:G) {"],
+    ["", "  h <- ifelse(occ, rowMeans(g), 0)                             # helping: 0, 1/2, 1; an empty nest none"],
+    ["c", "  f <- pmax(0, (1 - cost * h + b * rowSums(matrix(h[nb], n)) / 4) * (1 - k * rowMeans(dr)))   # young a bird expects, / R"],
+    ["", "  f[!occ] <- 0; kids <- rpois(n, R * f); mom <- rep(1:n, kids); mom <- mom[sample.int(length(mom))]   # every young bird, in a random order"],
+    ["", "  g2 <- matrix(0L, n, 2); dr2 <- matrix(0L, n, 2); occ2 <- rep(FALSE, n)"],
+    ["", "  for (m in mom) { if (all(occ2)) break"],
+    ["d", "    p <- xy(m); x <- id(p[1] + sample(-d:d, 1), p[2] + sample(-d:d, 1))                 # a nest near its mother"],
+    ["", "    if (occ2[x]) { q2 <- xy(x); x <- NA; for (rad in 1:4) { ring <- unique(c(sapply(-rad:rad, function(a) c(id(q2[1] + a, q2[2] - rad), id(q2[1] + a, q2[2] + rad), id(q2[1] - rad, q2[2] + a), id(q2[1] + rad, q2[2] + a)))))"],
+    ["", "      ring <- ring[!occ2[ring]]; if (length(ring)) { x <- ring[sample(length(ring), 1)]; break } }; if (is.na(x)) next }"],
+    ["", "    around <- setdiff(unique(c(sapply(-1:1, function(a) sapply(-1:1, function(e) id(p[1] + a, p[2] + e))))), m); around <- around[occ[around] & f[around] > 0]"],
+    ["", "    fa <- if (length(around)) around[sample(length(around), 1, prob = f[around])] else m    # its father, from the nests around, by f"],
+    ["", "    g2[x, ] <- c(g[m, sample(2, 1)], g[fa, sample(2, 1)])"],
+    ["", "    g2[x, ] <- ifelse(g2[x, ] == 1 & runif(2) < mu, 0L, g2[x, ])                              # broken helping alleles"],
+    ["", "    drv <- function(i) if (dr[i, 1] == dr[i, 2]) dr[i, 1] else as.integer(runif(1) < q)        # the driver's unfair share"],
+    ["", "    dr2[x, ] <- c(drv(m), drv(fa)); occ2[x] <- TRUE"],
+    ["", "  }"],
+    ["", "  g <- g2; dr <- dr2; occ <- occ2"],
+    ["", "}"],
+    ["", "c(helping = mean(g[occ, ]), driving = mean(dr[occ, ]), nests_filled = mean(occ))"],
+  ];
+}
+function H_code(K, S, head, mu) { const s = readSet(S); codeInto("code" + K, rGrid(head, { b: s.b, c: s.c, d: s.d, mu, q: 0.5, k: 0, p0: mu ? 1 : 0.5, dr0: 0, G: S.cfg.G || G22 })); }
+function D_code() { const s = readSet(SD); codeInto("codeD", rGrid("D -- a driving gene", { b: 0, c: 0, d: 1, mu: 0, q: s.q, k: s.k, p0: 0, dr0: DR0 })); }
+
+const STAGES = [SA, SB, SC, SD];
+function paintAll() { for (const S of STAGES) S.cfg.paint(); }
+function wire() {
+  PATHS.A = mountHelp("A", {}); PATHS.B = mountHelp("B", {}); PATHS.C = mountHelp("C", { mut: true }); PATHS.D = mountDrive();
+  for (const S of STAGES) wireStage(S);
+  for (const K of ["A", "B", "C", "D"]) { $(K + "_meas").addEventListener("change", () => ST[K].cfg.paint()); $(K + "_dl").addEventListener("click", () => downloadText("lesson22_stage" + K + ".R", RTEXT["code" + K])); }
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  /* instructor bypass / study mode (JM, 2026-10-08): every stage open; only the bypass fills the targets */
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l22reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson22",
+  version: 1,      /* 1: draft 1 (2026-11-07): A three targets, B three, C two, D two (10) */
+  scaffold: 10,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l22reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>

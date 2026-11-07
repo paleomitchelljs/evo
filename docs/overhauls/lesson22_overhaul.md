@@ -1,12 +1,12 @@
 # Lesson 22 — kin selection and gene-level competition: the Price equation, mechanically
 
-**File** · `app/lessons/lesson22.html` (not yet built; the archived lesson22.html is an unrelated old draft on codon ratios)
+**File** · `app/lessons/lesson22.html` — draft 1 (2026-11-07, v1, 10 bits; LOCKS `x`). The archived `app/archive/lesson22.html` is an unrelated old draft on codon ratios
 **Checks** · `node scripts/check_lesson22_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · PLANNED (2026-10-28), not started. Revised the same day (JM's second ruling): the species level moves to the
+**Status** · DRAFT 1 BUILT 2026-11-07 (the grid). Before that: PLANNED (2026-10-28). Revised the same day (JM's second ruling): the species level moves to the
 hierarchical Price lesson (now `lesson23_overhaul.md`); D is now gene-level competition; 22 opens from 21's birds. 2026-11-07
 (JM's arc re-cut): 22 = "kin selection / genic level selection", the same substance; 21 is now sexual selection itself (its
 learned song parked); 23 is species / hierarchical selection; the cell level goes to the individuality capstone
-**Last touched** · 2026-11-07
+**Last touched** · 2026-11-07 (grid ruled; prototype started)
 
 ## JM, 2026-10-28 (verbatim)
 
@@ -166,7 +166,7 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
 
 ## Open for JM
 
-1. Space: a grid of nests (birds help their neighbours) or groups (birds help their group-mates; relatedness from how groups
+1. ~~Space: a grid of nests or groups?~~ Answered 2026-11-07: "Yes please go ahead with the grid". Original question: a grid of nests (birds help their neighbours) or groups (birds help their group-mates; relatedness from how groups
    form)? A grid gives kin clustering from short dispersal without any rule about recognising kin; groups make the Price split
    between and within groups cleaner. Recommendation: grid for A-C, groups appear in D as the bridge to species. (Second
    ruling: a learned call as the kin cue, from 21 C, is a third way, and avoids the kin-competition problem below: help goes
@@ -203,13 +203,123 @@ hierarchical Price lesson's; 22 goes up to kin and back down to genes competing 
 JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolving to extinction) is now in
 `lesson23_overhaul.md`, verbatim, as a candidate for that lesson's species level.
 
+## JM, 2026-11-07, on draft 1 being built (verbatim)
+
+> Let's also for 22 to make the link to the old coalescence activities explicit—that it need not be relatedness per se but a
+> specific allele being shared. If we can tie it together with the idea of proxies (how do organisms recognize relatedness to
+> reciprocate) and include the resulting "slosh" from the fact that evolution needs to make things "better" rather than "good"
+> (meaning relatedness recognition need not and likely can't evolve to be perfect) that's even better
+
+Readings:
+- "the old coalescence activities": lesson 15 A-B (the snake game's pedigree; each locus from one parent; MRCA), 16 B (a
+  sequence's ancestry), 20 A (when two copies meet). The link: what helping needs is that the bird helped carries a copy of
+  the same helping allele by descent, not that it is "a relative". Shown by giving every copy of the helping allele the label
+  of the founding copy it descends from, and measuring neighbours carrying copies of one ancestral allele.
+- "proxies": what a bird can actually use to direct help: being next door (A-D's rule; Lec 32: "the circuit can't detect
+  kinship—it detects proximity"), a call learned from its father (lesson 8 C; long-tailed tits, Sharp et al. 2005), or a tag
+  (a greenbeard, Open 2). Each a proxy for sharing the allele, none exact.
+- "slosh": a recognition rule evolves only while a better one leaves more copies; it stops short of perfect (the cue is
+  copied wrong; perfecting it costs; the last gains are too small for selection to see at page sizes) and wanders.
+
+Proposed (not yet measured): a new stage E after D's drive, or in B's place (to decide when measured).
+    E  who to help: a cue. Every helping allele copy labelled by its founding copy (menu: neighbours carrying copies of one
+       ancestral helping allele; map: click a nest, its allele's copies by descent light up). Each young learns its father's
+       call, wrong with chance e (a random nearby bird's instead). A recognition gene: "help any neighbour" (proximity) or
+       "help a neighbour that calls like me", the latter with a small cost; help costs per neighbour helped. Targets (to
+       measure): the cue lets helping spread where proximity alone fails (farther dispersal); helping still spreads with a
+       sloppy cue (e .2: better, not good); the recognition allele rises and stops short of fixation, sloshing.
+
+## Draft 1 prototype (2026-11-07, after "Yes please go ahead with the grid"; scratchpad l22/eng.js)
+
+    grid       32 x 32 nests on a torus, one diploid bird a nest; a helping gene (2 alleles, additive: helping h 0, 1/2, 1).
+               A bird's young: Poisson(2 f), f = 1 - c h + b (sum of its 4 neighbours' h) / 4; each young's father a bird from
+               the 8 nests around its mother, by f ("each bird both lays and fathers young", lesson 16's hermaphrodites).
+    Taylor     measured first, as the review note asked. Every nest refilled each generation from mothers within d (local
+               competition): helping dies at nearly every setting (b/c 20: .07-.21 at any d; d 1 no better than d 2) -- the
+               cancellation. Nests left empty when no young arrive: dispersal matters (b 2: d 1 .46, d 16 .11) but helping
+               still falls from .5. Built on: young, in a random order, each take a random nest within d of the mother, or
+               if taken the nearest empty one in rings around it (to radius 4); the rest die. Competition for nests is then
+               island-wide while young still settle near home; helping spreads when benefit x relatedness beats the cost.
+    A numbers  c .1, 100 generations, start .5, 8 runs x 2 seed sets, helping allele at 100 (relatedness to the 4
+               neighbours at the helping gene, generations 1-20):
+                 d 1: b .25 .03-.04, .5 .13-.16, 1 .63-.64, 1.5 .84-.85, 2 .91-.94, 3 .95-.97   (r .09-.10)
+                 d 2: .02, .05-.06, .28-.32, .51-.54, .68-.75, .86                           (r .05)
+                 d 3: .01-.02, .03-.05, .12-.18, .28-.34, .46-.55, .69-.76                   (r .03)
+                 d 4: .01, .02-.04, .09-.10, .19-.24, .39-.41, .56-.65                       (r .02)
+                 d 8: .01-.02, .02-.03, .06-.10, .13-.16, .22-.29, .51                       (r .00)
+    C numbers  helping fixed at the start, each helping allele broken with chance mu a generation (none restored), 100
+               generations: mu .01: d 1 b .5 .15-.16, 1 .40-.41, 2 .63-.66; d 2 .08-.10, .22-.24, .46-.50; d 4 .05,
+               .12-.14, .29-.34; d 8 .05-.06, .09-.13, .24-.27. mu .005: d 1 b 2 .79, d 8 b 2 .52.
+    split      the change in the helping allele each generation, exactly: cov(w, z) / w-bar + E(w dz) / w-bar (Price), and
+               cov(w, z) = b_own var(z) + b_nbr cov(z, z_nbr), the partial regression of young on a bird's own helping and
+               its neighbours' (least squares, so no leftover: Queller 1992). Relatedness r = cov(z, z_nbr) / var(z): the
+               change is var(z) (b_own + r b_nbr) / w-bar. Relatedness is the condition; the covariance decides (JM).
+
+    kinship    neighbours that share a parent (b 0, c 0; 30 generations): d 1 .15, 2 .08, 3 .05, 4 .04, 8 .01.
+    cost       d 1, b 1: c .1 .59-.62, .2 .03, .3 .00.
+    D numbers  a driving gene (no helping): a carrier's young x (1 - k x its driving alleles / 2); in a carrier with one, the
+               driver goes into a share q of its eggs and sperm. Driver from .05, 100 generations, driver (nests filled):
+               q .6: k .2 1.00, .4+ 0; q .7: k .4 1.00, .5 .76-.78, .6 0; q .9: k .4 1.00 (1.00), .5 1.00 (.68), .6 extinct.
+               Its change: who leaves more young negative, what the young keep positive (q .7 k .2: -.39 / +1.35 summed).
+               A suppressor gene (fair meiosis restored) barely moves once the driver is fixed (.05 -> .11 in 200): not used.
+
+Draft 1 rounds (10 bits), cost of helping .1 unless held otherwise:
+
+    A  the grid; benefit, cost, how far young settle.
+       A1 d 1 held, benefit free (opens .5, .13-.16): helping >= .5 (b 1 .63-.64).
+       A2 b 2 held, dispersal free (opens 2, .68-.75): helping <= .63 (d 3 .46-.55, 4 .39-.41; bar from .6, see seeds).
+       A3 b 1 held, dispersal free (opens 2, .28-.32): helping >= .5 (d 1 .63-.64).
+    B  relatedness as the condition (JM, 2026-11-07): kinship measured, the split read.
+       B1 dispersal free (opens 2, .08): neighbours that share a parent >= .12 (d 1 .15).
+       B2 benefit and dispersal free (open b 2, d 2, .68-.75): helping ends .40-.65, its two parts cancelling (b 1.5 d 2
+          .51-.54; d 3 b 2 .46-.55; d 4 b 3 .56-.65; d 8 b 3 .51): the line, more benefit the farther young settle.
+       B3 d 1, b 1 held, cost free (opens .1, .59-.62): helping <= .2 (c .2 .03).
+    C  helping fixed at the start; each helping allele broken with chance .01 a generation.
+       C1 (150 generations) b 2 held, dispersal free (opens 3): helping >= .31 (see seeds).
+       C2 (150 generations) d 1 held, benefit free (opens 1.5): helping <= .41 (see seeds).
+    D  a gene that cheats in meiosis (no helping): driver from 5%.
+       D1 cost .2 held, drive free (steps .5 .6 .7 .9; opens .5): driver >= .5 (q .6 1.00).
+       D2 drive .9 held, cost free (steps 0 .2 .4 .5 .6; opens .4, nests filled 1.00): nests filled <= .8 (k .5 .68, .6 0).
+
+## Draft 1 as built (2026-11-07)
+
+    page       one template for A-D: the island (32 x 32 nests, run 1, shade = the bird's helping or driving alleles, blank =
+               empty), over time (menu: helping allele, neighbours that share a parent, relatedness at the helping gene,
+               nests filled; D: driving allele, nests filled, young a bird leaves), the change taken apart (since generation 0:
+               from its own helping, from its neighbours' helping, what the young keep; D: who leaves more young, what the young
+               keep), the diagram (paths.js), the Target card, R last and closed. Shared helpers and the stage machinery are
+               lesson 21's, copied verbatim.
+    diagram    helping gene -> helping -> its young (cost, red); neighbours' helping genes -> neighbours' helping -> its young
+               (benefit, blue); helping gene -> neighbours' helping genes, "how close young settle" (thicker the closer). The
+               last is the condition (JM, 2026-11-07): it sets who the neighbours are, not what helping does. Reading it as an
+               arrow from a bird's gene to its neighbours' genes is an interpretive arrow (JM 2026-10-01 allows them where the
+               engine does what is drawn); flag for JM. C adds "1 in 100 broken" -> its young. D: driving gene -> its share of
+               eggs and sperm (drive) -> its young; driving gene -> its young (cost); its young -> nests filled.
+    checks     `check_lesson22_numbers.js`: 24 checks + both widths + 4 R panels. Engine: young = 2 f (a lone helper at cost .5
+               1.02, a non-helper 2.04, a helper among four at b 1 c .2 3.60); Mendel and drive (.50, .90); kinship falls with
+               distance (.149, .084, .035, .009); the split exact (1e-17), own + neighbours' = cov(w, z) / w-bar.
+    seeds      the page's engine over 20 seed sets of 16 runs (scratchpad l22/pageSpread.js): A1 b 1 .60-.67 (bar .5); A2 d 3
+               .47-.58, opening d 2 .68-.76 (bar moved .6 -> .63); A3 opening .24-.33; B1 d 1 .145-.155, opening .081-.086 (.12);
+               B2 b 1.5 d 2 .51-.60, d 3 b 2 .47-.58, opening .68-.76 (window .40-.65); C at 100 generations overlapped (d 2
+               .42-.53 against d 3 .34-.42), so C runs 150: over 12 sets C1 d 2 .36-.42, opening d 3 .19-.26 (bar .31), d 1
+               .60-.63; C2 b 1 .25-.33, opening b 1.5 .49-.54 (bar .41).
+    coalescence (JM, 2026-11-07, above) every copy of the helping allele carries the label of the founding copy it
+               descends from; menu: neighbours with copies of one founding helping allele (A-C). The labels draw no random
+               numbers, so the measurements stand.
+               At the check's seed (before the bar moves): A1 b 1 .69; A2 d 3 .57; A3 d 1 .65; B1 .15; B2 b 1.5 d 2 .50, d 3 b 2 .52, b 3 d 8 .57
+               (opening .73); B3 c .2 .03; C1 d 2 .50 (opening d 3 .38); C2 b 1 .41 (opening .54); D1 q .6 .99; D2 k .5 .70.
+               B2 at the line: from its own helping -.54, from its neighbours' +.59 (summed over 100 generations).
+
 ## Items
 
 | # | What | Status |
 |---|------|--------|
 | 1 | JM's brief (2026-10-28) and this plan | done |
-| 2 | JM rules on Open 1-3 | todo |
-| 3 | engine prototype: spatial helping, dispersal; measured r against dispersal; Hamilton's line from runs | todo |
+| 2 | JM rules on Open 1-3 | 1 done 2026-11-07 (the grid); 2-3 todo |
+| 3 | engine prototype: spatial helping, dispersal; measured r against dispersal; Hamilton's line from runs | done 2026-11-07 |
+| 6 | draft 1: A-D page, v1, 10 bits; check script | done 2026-11-07 (bars over 20 seed sets: see below) |
+| 7 | JM plays with draft 1; Open 2-3; the interpretive dispersal arrow; his voice for A-D | todo |
+| 8 | JM 2026-11-07: coalescence link (allele shared by descent), proxies, the slosh: measure E; build | todo |
 | 4 | JM's second ruling (2026-10-28): species level out to the hierarchical Price lesson; D gene-level competition; A from 21's birds | done (plan) |
 | 5 | JM's arc re-cut (2026-11-07): substance unchanged; links to 21 (song parked, kin cue from 8 C), 23 and the capstone; lecture quotes | done 2026-11-07 |
 
@@ -221,6 +331,9 @@ JM's three-level 20 D idea (gene, organism, species; diet specialisation; evolvi
 - 2026-10-28 (second ruling): 22 = kin selection and genetic-level competition in general; 21 flows into it; the hierarchical
   Price lesson (cell, organism, species; perhaps gene with kin and transposons) is the target, at 23-25.
 - 2026-11-07: 22 = kin selection / genic-level selection; 23 species / hierarchical selection; the capstone (Michod) last.
+- 2026-11-07, later: make the link to coalescence explicit (a specific allele shared, not relatedness per se); proxies for
+  recognising kin; the slosh: recognition evolves to better, not perfect.
+- 2026-11-07, later: the grid (JM: "Yes please go ahead with the grid"), for A-C at least.
 - 2026-11-07, later: the kin activity must not imply organisms cooperate because they are related; close relatedness creates the
   conditions that let cov(w, z) shift far enough for cooperation (to connect to Michod).
 
