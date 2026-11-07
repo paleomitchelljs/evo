@@ -3,7 +3,7 @@
 **File** · not yet built. Rename this file `lessonNN_overhaul.md` once its slot is fixed
 **Checks** · `node scripts/check_lessonNN_numbers.js` (to write) · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · PLANNED 2026-11-07 (JM). A sketch; nothing measured. Needs 23's species-level engine and the evo-devo lesson's
-limb network (evodevo_plan.md)
+limb network (lesson24_overhaul.md)
 **Last touched** · 2026-11-07
 
 ## JM, 2026-11-07 (verbatim, the 2Z part; the whole message is in lesson21_overhaul.md)

@@ -1,7 +1,7 @@
 # docs/refs: limb-development modelling papers
 
 The PDFs in this folder are gitignored (copyright). This summary is tracked. JM added them 2026-11-07 for the evo-devo lesson
-(`docs/overhauls/evodevo_plan.md`); the 2012 review came from his link the same day
+(`docs/overhauls/lesson24_overhaul.md`); the 2012 review came from his link the same day
 (https://academicweb.nd.edu/~yzhang10/Limb-Mathematical_Biosciences_2012.pdf). Quotes are verbatim; "Reading" marks mine.
 
 | File | Paper |

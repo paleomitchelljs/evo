@@ -1,0 +1,1232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<title>BIO 202 — Lesson 24</title>
+<link rel="stylesheet" href="../assets/score.css">
+<link rel="stylesheet" href="../assets/hover.css">
+<link rel="stylesheet" href="../assets/paths.css">
+<style>
+  :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.45 -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif; background:var(--bg); color:var(--ink); }
+  header { padding:16px 24px; border-bottom:1px solid var(--rule); background:var(--panel); }
+  header h1 { margin:0 0 4px; font-size:18px; }
+  nav.toc { position:sticky; top:0; z-index:5; background:var(--stage-bar); border-bottom:1px solid var(--rule); padding:8px 24px; font-size:13px; }
+  nav.toc a { color:var(--muted); text-decoration:none; margin-right:14px; }
+  nav.toc a.locked { color:#b8b8b4; text-decoration:line-through; }
+  section.stage { padding:28px 24px 40px; border-bottom:1px solid var(--rule); max-width:1300px; margin:0 auto; position:relative; }
+  section.stage h2.stage-h { margin:0 0 4px; font-size:20px; }
+  section.stage.stage-locked { opacity:0.38; filter:grayscale(0.4); }
+  section.stage.stage-locked .lock-banner { display:block; }
+  section.stage.stage-locked .stage-body { pointer-events:none; }
+  .lock-banner { display:none; margin:0 0 16px; padding:10px 14px; background:var(--lock-bg); border:1px dashed var(--lock-rule); border-radius:4px; font-size:13px; color:var(--lock-ink); text-align:center; }
+  .panel { background:var(--panel); border:1px solid var(--rule); border-radius:6px; padding:14px 16px; }
+  .panel h3 { margin:0 0 10px; font-size:13px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stage-intro { margin-bottom:16px; }
+  /* the voice slot: a draft list (goal, then controls) until JM dictates the intro, as lesson 20's drafts did */
+  .voice { margin:0; padding:0 0 0 13px; border-left:3px solid var(--accent); font-size:14.5px; line-height:1.5; }
+  .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
+  .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
+  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  canvas { display:block; }
+  canvas[hidden] { display:none; }
+
+  .controls .buttons, .buttons { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .controls button, .buttons button { background:#333; color:#fff; border:0; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:13px; }
+  .controls button:disabled, .buttons button:disabled { background:#bbb; cursor:not-allowed; }
+  .controls button.ghost, .buttons button.ghost { background:transparent; color:#333; border:1px solid var(--rule); }
+  .controls button.ghost:disabled, .buttons button.ghost:disabled { color:#aaa; background:transparent; }
+  .controls button.accent, .buttons button.accent { background:var(--accent); }
+  .controls button.accent:disabled, .buttons button.accent:disabled { background:#bbb; }
+  .practice-row { display:flex; align-items:center; gap:8px; margin:9px 0 7px; font-size:13px; color:var(--muted); }
+  .practice-row input { width:14px; height:14px; margin:0; accent-color:var(--accent2); flex:0 0 auto; }
+  .practice-row label { cursor:pointer; }
+  button.code-dl { background:transparent; color:#333; border:1px solid var(--rule); border-radius:4px;
+                   padding:5px 10px; margin:0 0 10px; font-size:13px; cursor:pointer; }
+  button.code-dl:hover { background:#f4f2ec; }
+  pre.code { background:var(--code-bg); color:var(--code-ink); padding:12px 14px; border-radius:4px;
+             font:12px/1.55 ui-monospace,Menlo,monospace; overflow-x:auto; margin:0; max-height:380px; }
+  pre.code .line { display:block; padding:0 6px; border-radius:2px; }
+  pre.code .line.hi { background:var(--code-hi); }
+  pre.code .fn { color:#82aaff; } pre.code .com { color:#676f8a; font-style:italic; }
+
+  ul.tasks { list-style:none; margin:0; padding:0; font-size:13.5px; }
+  ul.tasks li { padding:6px 0 6px 26px; position:relative; border-bottom:1px solid #f2f0e8; }
+  ul.tasks li:last-child { border-bottom:0; }
+  ul.tasks li::before { content:"○"; position:absolute; left:4px; top:5px; color:#bdb8a4; font-size:14px; }
+  ul.tasks li.done { color:#2e4410; }
+  ul.tasks li.done::before { content:"●"; color:#6f8a4a; }
+  ul.tasks li .hint { display:block; color:var(--muted); font-size:12.5px; font-weight:400; }
+  ul.tasks li.done .hint { color:#54703a; }
+  .solved-banner { margin-top:10px; padding:8px 12px; background:#e4efd4; border-left:3px solid #6f8a4a; border-radius:0 4px 4px 0; font-size:12.5px; color:#2e4410; display:none; }
+  .solved-banner.shown { display:block; }
+  .done-banner { display:none; max-width:1300px; margin:26px auto 0; padding:18px 22px;
+                 background:#e4efd4; border:1px solid #6f8a4a; border-left:6px solid #6f8a4a; border-radius:6px; }
+  .done-banner.shown { display:block; animation:pop .4s ease-out; }
+  .done-banner h2 { margin:0 0 3px; font-size:22px; color:#2e4410; }
+  .done-banner p { margin:0; font-size:13.5px; color:#3f5a1d; }
+  @keyframes pop { from { transform:scale(0.97); opacity:0; } to { transform:none; opacity:1; } }
+  /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
+  .ok { color:var(--good); font-weight:600; }
+  .off { color:var(--bad); font-weight:600; }
+  .tcard .ttext { font-size:14px; margin:0 0 8px; }
+  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
+  .tcard canvas { margin:2px 0 6px; }
+  .tcard .ttext:empty { display:none; }
+  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
+  .watchbar label { display:flex; align-items:center; gap:8px; }
+  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
+  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
+  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .toggles.held { color:var(--muted); }
+  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
+  .toggles.pair > span:first-child { flex:0 0 172px; }
+  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
+  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
+  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
+
+  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
+     glows in its own colour */
+  .pathwrap .paths-arrow { stroke:#2f6b8f; }
+  .pathwrap .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
+  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
+  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
+  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
+  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
+  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
+  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
+  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
+  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
+  #paths-head-down path { fill:#b23a48; }
+  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
+    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
+  .pathwrap .paths-note { display:none; }
+  .pathwrap .paths-step circle { stroke:#1d1d1b; }
+  .pathwrap .paths-step text { fill:#1d1d1b; }
+  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
+  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
+  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Lesson 24</h1>
+</header>
+<div id="score-name" style="max-width:1300px; margin:16px auto 0; padding:0 24px;"></div>
+
+<nav class="toc" id="toc">
+  <a href="#stageA" id="tocA">A</a>
+  <a href="#stageB" id="tocB" class="locked">B</a>
+  <a href="#stageC" id="tocC" class="locked">C</a>
+  <a href="#stageD" id="tocD" class="locked">D</a>
+  <a href="#stageE" id="tocE" class="locked">E</a>
+</nav>
+
+<!-- ========== STAGE A — switches, no numbers (JM, 2026-11-07: "a setup simulation that shows students the basics of how gene regulatory networks work (toy first, maybe even an interactive showing gene regulation without a numerical model, just manipulation") ========== -->
+<section class="stage stage-locked" id="stageA">
+  <h2 class="stage-h">A</h2>
+  <div class="lock-banner">Locked — confirm your name above to begin.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>A row of 12 cells. Signal L is on in the left 8, signal R in the right 8. Genes X and Y each switch on or off in every cell, step by step. Wire the arrows so gene Y ends on in the cells the target shows.</li>
+        <li>Each arrow, set on the diagram: <b>turns it on</b> (blue), <b>turns it off</b> (red), or none (dashed). A gene is on in a cell when something on there turns it on, and nothing on there turns it off.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The cells, step by step<span class="tip"><span>One grid each for signal L, signal R, gene X and gene Y: the 12 cells left to right, one row a step from the top. Dark on, pale off.</span><span>Every cell updates at once from the step before. A gene that never settles flickers.</span></span></span></h3>
+        <canvas id="A_cells" width="760" height="230"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Signals and genes<span class="tip"><span>Signal L: on in cells 1-8 (in the last target, only for steps 0-2). Signal R: on in cells 5-12.</span><span>An arrow from one box to a gene: turns it on, turns it off, or nothing. The two arrows between X and Y run each way.</span></span></span></h3>
+        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>All off at the start. <b>Go</b> plays 10 steps.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="A_pips"></span></h3>
+        <p class="ttext" id="A_ttext"></p>
+        <canvas id="A_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="A_controls">
+          <div hidden><input type="range" id="A_LX" min="-1" max="1" step="1" value="0"><input type="range" id="A_RX" min="-1" max="1" step="1" value="0"><input type="range" id="A_LY" min="-1" max="1" step="1" value="0"><input type="range" id="A_RY" min="-1" max="1" step="1" value="0"><input type="range" id="A_XY" min="-1" max="1" step="1" value="0"><input type="range" id="A_YX" min="-1" max="1" step="1" value="0"></div>
+          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
+          <div class="buttons">
+            <button id="A_go" class="accent">Go</button>
+            <button id="A_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="A_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksA">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="A_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedA">Stage B is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="A_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeA"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE B — a clock and a growing body (Lewis 2003; Cooke & Zeeman 1976) ========== -->
+<section class="stage stage-locked" id="stageB">
+  <h2 class="stage-h">B</h2>
+  <div class="lock-banner">Finish Stage A to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>A gene whose protein shuts it off again after a delay. As the body grows at its tail, each new cell keeps whatever the gene was doing when the cell left the tail. Runs of cells that left while the gene was on become blocks.</li>
+        <li><b>Delay</b>, the red arrow from the protein back to the gene. <b>Growth</b>: how many cells the tail adds a minute.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The clock gene over time<span class="tip"><span>How much of the clock gene&#39;s message there is in the tail, minute by minute.</span></span></span></h3>
+        <canvas id="B_clock" width="760" height="200"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="B_bodyH">The body</span><span class="tip"><span>One column a cell, from the head at the left: dark where the cell left the tail while the clock gene was on. A block: a run of dark cells.</span></span></span></h3>
+        <canvas id="B_body" width="760" height="90"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Gene, protein, body<span class="tip"><span>The clock gene makes its protein; the protein shuts the gene off, after the delay. The tail adds cells at the growth rate; each keeps the clock&#39;s state from the moment it left. The tail grows for 500 minutes in the first target, 1,500 in the second. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>The clock and the tail start at minute 0; cells are added from minute 100.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="B_pips"></span></h3>
+        <p class="ttext" id="B_ttext"></p>
+        <canvas id="B_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="B_controls">
+          <div hidden><input type="range" id="B_T" min="-4" max="-1" step="1" value="-4"><input type="range" id="B_v" min="1" max="2" step="1" value="2"></div>
+          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
+          <div class="buttons">
+            <button id="B_go" class="accent">Go</button>
+            <button id="B_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="B_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksB">
+          <li data-task="rounds">Hit the two targets. <span class="hint" id="B_rounds_now">0 of 2</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedB">Stage C is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="B_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeB"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE C — where a limb goes (the lecture: "Implant a bead soaked in FGF8 and FGF10 into the flank ... You get an extra limb ... Above some axial level the extra limb is an arm; below it, a leg"; Cohn et al. 1995; Cohn & Tickle 1999) ========== -->
+<section class="stage stage-locked" id="stageC">
+  <h2 class="stage-h">C</h2>
+  <div class="lock-banner">Finish Stage B to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>B's blocks, 24 from head to tail. Hox genes come on one after another, in their order on the chromosome, as the blocks form, so each block carries a count of them: its code. A limb grows where FGF meets a block whose code allows it; whether it is an arm or a leg depends on the code there.</li>
+        <li><b>When they start</b>, the arrow from the Hox genes: earlier or later than usual. Click a chest block on the body to put an FGF bead there; click it again to take it away.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The body<span class="tip"><span>24 blocks, head at the left; each shaded and numbered by how many Hox genes are on in it (light few, dark many).</span><span>A forelimb grows where the code turns from neck to chest, a hindlimb where it turns from chest to lumbar. A bead in a chest block makes a limb there: an arm where 5 or 6 Hox genes are on, a leg where 7 are. The red ring: the bead.</span></span></span></h3>
+        <canvas id="C_body" width="760" height="200"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Genes, code, limb<span class="tip"><span>Hox genes switch on one every 2 blocks, in chromosome order. When they start moves every block&#39;s code. FGF and the code together make a bud; the code makes it an arm or a leg. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>No bead at the start. <b>Go</b> reads the body.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="C_pips"></span></h3>
+        <p class="ttext" id="C_ttext"></p>
+        <canvas id="C_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="C_controls">
+          <div hidden><input type="range" id="C_sh" min="1" max="3" step="1" value="2"><input type="range" id="C_bd" min="0" max="24" step="1" value="0"></div>
+          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
+          <div class="buttons">
+            <button id="C_go" class="accent">Go</button>
+            <button id="C_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="C_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksC">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="C_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="C_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeC"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE D — a bud that grows and stops itself (the lecture: "Shh → Gremlin on → BMP off → FGF on → grow"; "Limb outgrows Shh diffusion range → circuit collapses → terminate"; "There is no homunculus measuring the limb"; Dillon & Othmer 1999) ========== -->
+<section class="stage stage-locked" id="stageD">
+  <h2 class="stage-h">D</h2>
+  <div class="lock-banner">Finish Stage C to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>A limb bud, body to tip. A ridge at the tip makes FGF, which makes the bud grow and keeps the ZPA, near the body, making Shh. Shh switches on Gremlin, Gremlin blocks BMP, and BMP at the tip would shut the ridge down. Nothing sets the bud's size: see where it stops.</li>
+        <li><b>Shh's reach</b>, <b>Gremlin blocks BMP</b>, <b>FGF → growth</b>, and <b>the ridge removed</b> (a scalpel), the arrows on the diagram.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="D_budH">The bud</span><span class="tip"><span>The bud from the body (left) to the tip, its length to scale. Four lanes, each shaded by how much of that signal is there (light none, dark the most): FGF, Shh, Gremlin, BMP. The thick bar at the tip: the ridge while it works.</span><span>Shh spreads from the ZPA by its reach. Gremlin is made where Shh is high enough, but not by cells descended from the ZPA, and that region widens as the bud grows. When BMP at the tip passes half, the ridge stops for good.</span></span></span></h3>
+        <canvas id="D_bud" width="760" height="220"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Length over time<span class="tip"><span>The bud&#39;s length, hour by hour.</span></span></span></h3>
+        <canvas id="D_time" width="760" height="220"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The limb&#39;s loop<span class="tip"><span>FGF from the ridge keeps the ZPA making Shh; Shh switches on Gremlin (its reach: how far Shh spreads from the ZPA); Gremlin blocks BMP; BMP shuts the ridge; FGF makes the bud grow. The scalpel removes the ridge at an hour. Grey arrows: fixed. The loop has no end point: it is a circle.</span></span></span></h3>
+        <div class="pathwrap" id="D_pathwrap"><div id="D_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span>A bud 0.75 mm long at the start. <b>Go</b> plays 40 hours.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="D_pips"></span></h3>
+        <p class="ttext" id="D_ttext"></p>
+        <canvas id="D_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="D_controls">
+          <div hidden><input type="range" id="D_s" min="1" max="3" step="1" value="1"><input type="range" id="D_w" min="-3" max="-1" step="1" value="-2"><input type="range" id="D_g" min="1" max="2" step="1" value="1"><input type="range" id="D_c" min="-2" max="0" step="1" value="0"></div>
+          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice</label></div>
+          <div class="buttons">
+            <button id="D_go" class="accent">Go</button>
+            <button id="D_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="D_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksD">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="D_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedD">Stage E is open.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="D_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeD"></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== STAGE E — the skeleton (Ben Tahar et al. 2026: one reaction-diffusion pair, its strength rising from body to tip, gives one element, then two, then the digits) ========== -->
+<section class="stage stage-locked" id="stageE">
+  <h2 class="stage-h">E</h2>
+  <div class="lock-banner">Finish Stage D to unlock this section.</div>
+
+  <div class="panel stage-intro">
+    <!-- DRAFT (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <div class="voice">
+      <ul>
+        <li>The grown limb lays down cartilage row by row, from the body to the tip. In each row a pair of signals, one that makes cartilage and one it uses up, settles into a pattern across the limb's width; each new row starts from the row behind it. How strongly the pair works depends on where the row is: the upper arm, the forearm or the hand-plate.</li>
+        <li><b>Forearm strength</b> and <b>hand-plate strength</b>, the arrows onto the pair.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="stage-body grid">
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0"><span id="E_limbH">Limb 1</span><span class="tip"><span>One of the 16 limbs, body at the left, tip at the right, each column a row of cells across the limb: dark where cartilage forms. The hand-plate is wider than the arm.</span></span></span></h3>
+        <canvas id="E_limb" width="760" height="250"></canvas>
+      </div>
+      <div class="panel">
+        <h3><span class="info" tabindex="0">The 16 limbs<span class="tip"><span>A dot a limb: how many elements across the upper arm, the forearm, and the hand-plate&#39;s last row (its digits).</span></span></span></h3>
+        <canvas id="E_tally" width="760" height="180"></canvas>
+      </div>
+    </div>
+    <div class="col">
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Positions and the pair<span class="tip"><span>Cartilage (Sox9) is made from what it uses up, and uses it up; the second spreads fast, the first slowly. Each region&#39;s code (Meis, Hoxa11, Hoxa13: D&#39;s limb, read along it) sets how strongly the pair works there: the upper arm at 1, the others the arrows. Stronger: a shorter repeat, more elements across. Grey arrows: fixed.</span></span></span></h3>
+        <div class="pathwrap" id="E_pathwrap"><div id="E_paths"></div></div>
+      </div>
+      <div class="panel tcard">
+        <h3><span class="info" tabindex="0">Target<span class="tip"><span><b>Go</b> grows 16 limbs, 60 rows each, from the same settings.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="E_pips"></span></h3>
+        <p class="ttext" id="E_ttext"></p>
+        <canvas id="E_tpic" width="460" height="120"></canvas>
+        <div class="controls" id="E_controls">
+          <div hidden><input type="range" id="E_a2" min="1" max="2" step="1" value="1"><input type="range" id="E_a3" min="1" max="3" step="1" value="1"></div>
+          <div class="practice-row"><input type="checkbox" id="E_practice" /><label for="E_practice">practice</label></div>
+          <div class="buttons">
+            <button id="E_go" class="accent">Go</button>
+            <button id="E_next" class="ghost" hidden>Next target</button>
+          </div>
+        </div>
+        <div class="verdict" id="E_verdict"></div>
+      </div>
+      <div class="panel">
+        <h3>To finish</h3>
+        <ul class="tasks" id="tasksE">
+          <li data-task="rounds">Hit the three targets. <span class="hint" id="E_rounds_now">0 of 3</span></li>
+        </ul>
+        <div class="solved-banner" id="solvedE">That is the whole lesson.</div>
+      </div>
+    </div>
+  </div>
+  <div class="stage-body tail">
+    <details class="panel rcode">
+      <summary>R code</summary>
+      <button id="E_dl" class="code-dl">Download .R</button>
+<pre class="code" id="codeE"></pre>
+    </details>
+  </div>
+</section>
+
+<div class="done-banner" id="done-banner">
+  <h2>Good job!</h2>
+  <p>That is all of Lesson 24. Your completion code is below — copy it and hand it in.</p>
+</div>
+<div id="score-final" style="max-width:1300px; margin:0 auto; padding:0 24px 40px;"></div>
+
+<script src="../assets/quiz.js"></script>
+<script src="../assets/sim.js"></script>
+<script src="../assets/pips.js"></script>
+<script src="../assets/score.js"></script>
+<script src="../assets/hover.js"></script>
+<script src="../assets/paths.js"></script>
+<script>
+/* =====================================================================
+   LESSON 24 — evo-devo: a gene network builds a limb. Draft 1
+   (2026-11-07). JM, 2026-11-07: "evo-devo where we give a simplified
+   gene network for a vertebrate limb and have students run through
+   simple simulations using standard models to show how diffusion and
+   growth drive differential gene expression and produce self-limiting
+   limb sizes and recapitulate known skeletal patterns ... a setup
+   simulation that shows students the basics of how gene regulatory
+   networks work (toy first ...) then a model for somitogenesis via
+   clocks ... then they run sims showing how limb location gets
+   specified, then they grow a limb to a particular size, and finally
+   they create different patterns of skeletons"; "Great, let's please
+   draft leson 23 and onward". Plan, measurements, open points:
+   docs/overhauls/lesson24_overhaul.md; the papers: docs/refs/README.md.
+
+   A  switches in a row of cells, no numbers.
+   B  a clock gene with a delay; the body's blocks.
+   C  where a limb goes: Hox order in time, a code, an FGF bead.
+   D  a bud that grows and stops itself: the Shh-Gremlin-BMP-FGF loop.
+   E  the skeleton: one reaction-diffusion pair, stronger toward the tip.
+   ===================================================================== */
+const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
+const $ = id => document.getElementById(id);
+const f2 = v => v == null ? "–" : v.toFixed(2);
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+  ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
+function polyline(ctx, pts, col, lw, alpha, dash) {
+  if (!pts.length) return;
+  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  if (dash) ctx.setLineDash(dash);
+  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
+}
+
+/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+let FIT_EPOCH = 0;
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1;
+  if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
+  const declW = +canvas.dataset.cssW;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
+  else {
+    const host = canvas.parentElement; let room = 0;
+    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
+    else cssW = declW;
+  }
+  const cssH = h == null ? +canvas.dataset.cssH : h;
+  canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
+  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, W: cssW, H: cssH };
+}
+function frameCanvas(cv, fw, fh) {
+  let { ctx, W } = setupCanvas(cv, null);
+  const k = W / fw, want = Math.round(fh * k);
+  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
+  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  return { ctx, k };
+}
+function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
+
+const RTEXT = {};
+function codeInto(id, lines) {
+  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  document.getElementById(id).innerHTML = lines.map(([k, s]) => {
+    const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
+    return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
+      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
+  }).join("");
+}
+
+
+/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false }, E: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: "D", D: "E", E: null };
+const BIT = { A1: 0, A2: 1, A3: 2, B1: 3, B2: 4, C1: 5, C2: 6, C3: 7, D1: 8, D2: 9, D3: 10, E1: 11, E2: 12, E3: 13 };
+function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
+const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
+function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
+function tick(stage, task, on, hint) {
+  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
+  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
+}
+function unlockNext(stage) {
+  const nx = NEXT_STAGE[stage];
+  if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
+  $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
+  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+}
+function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
+
+/* =====================================================================
+   STAGE A's ENGINE: switches, no numbers (JM, 2026-11-07: "maybe even an
+   interactive showing gene regulation without a numerical model, just
+   manipulation"). A row of 12 cells. Signal L is on in cells 1-8,
+   signal R in 5-12 (in the pulse target, L only for the first 3 steps).
+   Genes X and Y, each arrow off, turns on or turns off. A gene is on in
+   a cell when something on there turns it on and nothing on there turns
+   it off. Every cell updates at once, step by step, from all off.
+   ===================================================================== */
+const NC = 12, A_STEPS = 10;
+const sigL = (i, t, pulse) => i < 8 && (!pulse || t < 3) ? 1 : 0, sigR = i => i >= 4 ? 1 : 0;
+function swWorld(P) { return { P, t: 0, X: new Uint8Array(NC), Y: new Uint8Array(NC), hist: [{ X: new Uint8Array(NC), Y: new Uint8Array(NC), L: Uint8Array.from({ length: NC }, (_, i) => sigL(i, 0, P.pulse)) }] }; }
+function swGate(ins) { let on = false, off = false; for (const [w, s] of ins) { if (!s) continue; if (w > 0) on = true; if (w < 0) off = true; } return on && !off ? 1 : 0; }
+function swStep(w) {
+  const P = w.P, X = new Uint8Array(NC), Y = new Uint8Array(NC);
+  for (let i = 0; i < NC; i++) { const L = sigL(i, w.t, P.pulse), R = sigR(i);
+    X[i] = swGate([[P.LX, L], [P.RX, R], [P.YX, w.Y[i]]]); Y[i] = swGate([[P.LY, L], [P.RY, R], [P.XY, w.X[i]]]); }
+  w.X = X; w.Y = Y; w.t++;
+  w.hist.push({ X, Y, L: Uint8Array.from({ length: NC }, (_, i) => sigL(i, w.t, P.pulse)) });
+}
+function swStat(w) { const y = Array.from(w.Y).join(""), T = w.P.target || "";
+  const prev = w.hist.length > 1 ? Array.from(w.hist[w.hist.length - 2].Y).join("") : null;
+  return { hit: y === T && prev === y ? 1 : 0, still: prev === y ? 1 : 0 }; }
+const SWITCH = { step: swStep, stat: swStat };
+
+/* =====================================================================
+   STAGE B's ENGINE: a clock and a growing body (Lewis 2003; Cooke &
+   Zeeman 1976). A gene's protein shuts the gene off after a delay:
+     dm/dt = k / (1 + (p(t - Tm) / p0)^2) - c m,  dp/dt = a m(t - Tp) - b p
+   (k 33, c = b = .23, a 4.5, p0 40, Tp 2.8 minutes; Tm the delay). The
+   tail adds v cells a minute; a new cell leaving the tail freezes the
+   clock's state (on: m above its mean since minute 50); a block is a run of
+   cells frozen while the gene was on. Steps of 10 minutes, Euler .05.
+   MEASURED (scratchpad l24/clock.js): delay 3 / 6 / 12 / 20: period 25
+   / 33 / 49 / 67 minutes; .5 cells a minute for 500: 20 / 15 / 11 / 7.
+   ===================================================================== */
+const CK = { k: 33, c: 0.23, a: 4.5, b: 0.23, p0: 40, Tp: 2.8, dt: 0.05, start: 100, burn: 50 };
+function ckWorld(P) { const n = Math.ceil((P.dur + CK.start) / CK.dt) + 2;
+  return { P, t: 0, i: 0, m: new Float64Array(n), p: new Float64Array(n), cells: [], trace: [[0, 0]], ms: 0, mn: 0 }; }
+function ckStep(w) {
+  const P = w.P, lagM = Math.round(P.Tm / CK.dt), lagP = Math.round(CK.Tp / CK.dt), stop = Math.round((P.dur + CK.start) / CK.dt);
+  for (let s = 0; s < 10 / CK.dt && w.i < stop; s++) {
+    const i = w.i, pd = i >= lagM ? w.p[i - lagM] : 0, md = i >= lagP ? w.m[i - lagP] : 0;
+    w.m[i + 1] = w.m[i] + CK.dt * (CK.k / (1 + (pd / CK.p0) ** 2) - CK.c * w.m[i]);
+    w.p[i + 1] = w.p[i] + CK.dt * (CK.a * md - CK.b * w.p[i]);
+    w.i++;
+    const t = w.i * CK.dt;
+    if (t > CK.burn) { w.ms += w.m[w.i]; w.mn++; }
+    if (t > CK.start) { const want = Math.floor((t - CK.start) * P.v), mean = w.ms / w.mn; while (w.cells.length < want) w.cells.push(w.m[w.i] > mean ? 1 : 0); }
+    if (w.i % 20 === 0) w.trace.push([t, w.m[w.i]]);
+  }
+  w.t++;
+}
+function ckBlocks(cells) { let k = 0; for (let j = 0; j < cells.length; j++) if (cells[j] && (!j || !cells[j - 1])) k++; return k; }
+function ckStat(w) { return { blocks: ckBlocks(w.cells), cells: w.cells.length }; }
+const CLOCK = { step: ckStep, stat: ckStat };
+
+/* =====================================================================
+   STAGE C's ENGINE: where a limb goes, rules on blocks (Cohn et al.
+   1995; Cohn & Tickle 1999). 24 blocks from head to tail; Hox genes
+   come on one every 2 blocks as the blocks form (the order on the
+   chromosome is the order in time): block i carries h = (i + shift) / 2
+   of them (0-10). Neck h 0-4, chest 5-7, lumbar 8-9, tail 10. A
+   forelimb where the neck turns to chest (only if there is a neck); a
+   hindlimb where the chest turns to lumbar. An FGF bead in a chest
+   block makes an extra limb there: an arm where h is 5 or 6, a leg
+   where it is 7.
+   ===================================================================== */
+const NB = 24;
+const hoxOf = (i, shift) => Math.max(0, Math.min(10, Math.floor((i + shift) / 2)));
+const region = h => h <= 4 ? 0 : h <= 7 ? 1 : h <= 9 ? 2 : 3;
+function posLimbs(P) {
+  const h = Array.from({ length: NB }, (_, i) => hoxOf(i, P.shift)), limbs = [];
+  for (let i = 0; i < NB; i++) {
+    if (i > 0 && region(h[i - 1]) === 0 && region(h[i]) === 1) limbs.push({ at: i, kind: "arm" });
+    if (i > 0 && region(h[i - 1]) <= 1 && region(h[i]) === 2) limbs.push({ at: i, kind: "leg" });
+  }
+  if (P.bead >= 0 && region(h[P.bead]) === 1 && !limbs.some(l => l.at === P.bead)) limbs.push({ at: P.bead, kind: h[P.bead] <= 6 ? "arm" : "leg", bead: true });
+  return { h, limbs, arms: limbs.filter(l => l.kind === "arm").length, legs: limbs.filter(l => l.kind === "leg").length };
+}
+function posWorld(P) { return { P, t: 0, res: posLimbs(P) }; }
+const POS = { step: w => { w.t++; }, stat: w => ({ arms: w.res.arms, legs: w.res.legs }) };
+
+/* =====================================================================
+   STAGE D's ENGINE: the bud grows and stops itself (Dillon & Othmer 1999
+   for growth from a tip signal; the termination loop: Zuniga et al.
+   1999, Scherz et al. 2004, Benazet et al. 2009, as JM's lecture puts
+   it: "Shh -> Gremlin on -> BMP off -> FGF on -> grow"; "Limb outgrows
+   Shh diffusion range -> circuit collapses -> terminate").
+   One dimension, body (x 0) to tip (x L); each 0.05 hours the signals
+   settle (diffusion with decay, zero flux at both ends, 81 points):
+     FGF from the tip's ridge (while it works), reach .6;
+     Shh from the ZPA (x < .08), made as FGF / (.02 + FGF) there, reach
+       lamS (Shh's reach);
+     Gremlin made where Shh is above .05 and outside the cells descended
+       from the ZPA (x > .08 + .003 t), reach .1;
+     BMP at the tip 1 / (1 + w Gremlin there); the ridge stops for good
+       when it passes .5 (or when removed);
+     dL/dt = g x FGF at the tip.
+   Lengths shown x 2.5, in mm (a chick bud ~.25 -> 1.75 mm).
+   MEASURED (scratchpad l24/grow.js): from .30, reach .1 / .25 / .4:
+   .53 / .68 / .77 (stops at 9 / 17 / 22 hours); growth .3 / .6: .68 /
+   .68 (17 / 9 hours); w 5 / 20 / 80: .60 / .68 / .80; ridge removed at
+   hour 3 / 1: .39 / .33.
+   ===================================================================== */
+const GN = 81, GD = { L0: 0.3, z0: 0.08, tipW: 0.03, lamF: 0.6, lamG: 0.1, K: 0.02, thS: 0.05, rd: 0.003, thB: 0.5, dt: 0.05, MM: 2.5 };
+function gSteady(L, lam, src) {
+  const h = L / (GN - 1), a = lam * lam / (h * h), A = new Float64Array(GN), B = new Float64Array(GN), C = new Float64Array(GN), D = Float64Array.from(src);
+  for (let i = 0; i < GN; i++) { A[i] = -a; C[i] = -a; B[i] = 1 + 2 * a; } C[0] = -2 * a; A[GN - 1] = -2 * a;
+  for (let i = 1; i < GN; i++) { const m = A[i] / B[i - 1]; B[i] -= m * C[i - 1]; D[i] -= m * D[i - 1]; }
+  const x = new Float64Array(GN); x[GN - 1] = D[GN - 1] / B[GN - 1]; for (let i = GN - 2; i >= 0; i--) x[i] = (D[i] - C[i] * x[i + 1]) / B[i]; return x;
+}
+function bdWorld(P) { const w = { P, t: 0, hrs: 0, L: GD.L0, aer: 1, tEnd: null, trace: [[0, GD.L0 * GD.MM]] }; bdSignals(w); return w; }
+function bdSignals(w) {
+  const P = w.P, L = w.L, h = L / (GN - 1), xs = Array.from({ length: GN }, (_, i) => i * h);
+  const F = gSteady(L, GD.lamF, xs.map(x => w.aer && x > L - GD.tipW ? 1 : 0));
+  let fz = 0; for (let i = 0; i < GN; i++) if (xs[i] < GD.z0) fz = Math.max(fz, F[i]);
+  const S = gSteady(L, P.lamS, xs.map(x => x < GD.z0 ? fz / (GD.K + fz) : 0));
+  const desc = GD.z0 + GD.rd * w.hrs, gs = xs.map((x, i) => S[i] > GD.thS && x > desc ? 1 : 0);
+  const Gr = gSteady(L, GD.lamG, gs);
+  w.F = F; w.S = S; w.Gr = Gr; w.gs = gs; w.desc = desc;
+  w.B = Array.from(Gr, g => 1 / (1 + P.w * g));
+}
+function bdStep(w) {
+  const P = w.P;
+  for (let s = 0; s < 5; s++) {
+    if (w.aer && (w.B[GN - 1] > GD.thB || (P.cut != null && w.hrs >= P.cut))) { w.aer = 0; w.tEnd = w.hrs; }
+    w.L += GD.dt * P.g * w.F[GN - 1]; w.hrs += GD.dt;
+    bdSignals(w);
+  }
+  w.t++; w.trace.push([w.hrs, w.L * GD.MM]);
+}
+function bdStat(w) { return { len: w.L * GD.MM, hours: w.tEnd == null ? w.hrs : w.tEnd, ridge: w.aer, bmp: w.B[GN - 1], grem: w.Gr[GN - 1] }; }
+const BUD = { step: bdStep, stat: bdStat };
+
+/* =====================================================================
+   STAGE E's ENGINE: the skeleton (Ben Tahar et al. 2026: one
+   Schnakenberg pair, a .47, b 2, d 113; alphaR the pattern's strength,
+   rising from body to tip). The limb is built row by row from the body,
+   as rows leave the growing tip: each new row starts from the row
+   behind it (stretched to its width, 2% noise) and settles for 20 time
+   units at its region's strength:
+     du/dt = alphaR (a - u + u^2 v) + u'';  dv/dt = alphaR (b - u^2 v) + 113 v''
+   across the row's width (zero flux at the front and back edges). Cells
+   where u is above its steady value (a + b) make cartilage. Rows 1-15
+   the upper arm (8 cells wide, strength 1), 16-30 the forearm (12,
+   strength set), 31-60 the hand-plate (22, strength set).
+   MEASURED (the page's engine, 20 seed sets of 16 limbs): forearm 3,
+   hand-plate 6: one-two-five in 16 of 16 every set; hand-plate 3: three
+   digits 16/16; 12: seven or eight, 15-16 of 16; forearm 1: one element
+   (0 of 16 one-two-five). At 10 cells wide the upper arm made two
+   elements in 7% of limbs (a check seed gave 10 of 16): narrowed to 8.
+   ===================================================================== */
+const TU = { a: 0.47, b: 2, d: 113, rows: 60, T: 20, noise: 0.02 };
+TU.us = TU.a + TU.b; TU.vs = TU.b / (TU.us * TU.us);
+const tuRegion = k => k < 15 ? 0 : k < 30 ? 1 : 2;
+const tuWidth = r => [8, 12, 22][r];
+function tuSettle(u, v, al) {
+  const n = u.length, Dv = TU.d, dt = Math.min(0.9 / (4 * Dv), 0.05 / al), steps = Math.ceil(TU.T / dt), lu = new Float64Array(n), lv = new Float64Array(n);
+  for (let s = 0; s < steps; s++) {
+    for (let i = 0; i < n; i++) { const l = i ? i - 1 : 1, r = i < n - 1 ? i + 1 : n - 2; lu[i] = u[l] + u[r] - 2 * u[i]; lv[i] = v[l] + v[r] - 2 * v[i]; }
+    for (let i = 0; i < n; i++) { const uuv = u[i] * u[i] * v[i]; u[i] += dt * (al * (TU.a - u[i] + uuv) + lu[i]); v[i] += dt * (al * (TU.b - uuv) + Dv * lv[i]); if (u[i] < 0) u[i] = 0; if (v[i] < 0) v[i] = 0; }
+  }
+}
+function tuStretch(a, n) { const m = a.length, o = new Float64Array(n); for (let i = 0; i < n; i++) { const x = (i + 0.5) / n * m - 0.5, j = Math.max(0, Math.min(m - 1, Math.floor(x))), j2 = Math.min(m - 1, j + 1), f = Math.max(0, Math.min(1, x - j)); o[i] = a[j] * (1 - f) + a[j2] * f; } return o; }
+function tuCount(u) { let k = 0, inn = false; for (const x of u) { if (x > TU.us && !inn) { k++; inn = true; } else if (x <= TU.us) inn = false; } return k; }
+function tuWorld(P, seed) { return { P, rng: mulberry32(seed), t: 0, u: null, v: null, rows: [] }; }
+function tuStep(w) {
+  const P = w.P, r = w.rng, k = w.t, reg = tuRegion(k), W = tuWidth(reg), al = [1, P.a2, P.a3][reg];
+  if (!w.u) { w.u = new Float64Array(W).map(() => TU.us * (1 + 0.1 * (r() - 0.5))); w.v = new Float64Array(W).map(() => TU.vs * (1 + 0.1 * (r() - 0.5))); }
+  else { w.u = tuStretch(w.u, W); w.v = tuStretch(w.v, W); for (let i = 0; i < W; i++) { w.u[i] *= 1 + TU.noise * (r() - 0.5); w.v[i] *= 1 + TU.noise * (r() - 0.5); } }
+  tuSettle(w.u, w.v, al);
+  w.rows.push({ reg, u: Array.from(w.u), n: tuCount(w.u) });
+  w.t++;
+}
+function tuStat(w) {
+  const at = k => w.rows[k] ? w.rows[k].n : null, up = at(12), fo = at(27), di = w.rows.length ? w.rows[w.rows.length - 1].n : null;
+  return { up, fo, di, m125: w.rows.length === TU.rows && up === 1 && fo === 2 && di === 5 ? 1 : 0, d3: w.rows.length === TU.rows && di === 3 ? 1 : 0, d7: w.rows.length === TU.rows && di >= 7 ? 1 : 0 };
+}
+const SKEL = { step: tuStep, stat: tuStat };
+
+function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
+function sumAt(q, t) {
+  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
+  const out = { t: s.t }, R = s.runs;
+  for (const key of Object.keys(R[0])) {
+    const v0 = R.map(p => p[key]).find(v => v != null);
+    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
+    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
+  }
+  return out;
+}
+
+/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-E ======
+   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
+   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
+const ST = {};
+function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
+const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
+const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
+const ctlIdx = el => +el.value - (+el.min || 0);
+function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
+function openRound(S) {
+  const r = ruleOf(S);
+  for (const c of S.cfg.ctl) {
+    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
+    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
+    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
+    el.dataset.held = held ? "1" : "";
+  }
+  S.preview = null;
+  if (S.cfg.afterOpen) S.cfg.afterOpen();
+}
+function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
+function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
+function goStage(S) {
+  if (S.run || S.waiting) return;
+  const r = S.done ? null : ruleOf(S);
+  const set = readSet(S), seed = pageSeed("l24" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
+  const q = S.cfg.start(set, seed);
+  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
+  snap(q);
+  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
+}
+function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
+function frameStage(S, ts) {
+  const q = S.run;
+  if (q) {
+    if (!S.t0) S.t0 = ts;
+    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
+    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
+    S.cfg.paint();
+    if (q.t >= q.G) endStage(S);
+  }
+  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
+}
+/* the instructor's and the checks' way to finish a run at once */
+function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
+function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
+function endStage(S) {
+  const q = S.run; if (!q) return;
+  S.run = null; S.last = q;
+  if (q.r) {
+    q.j = judge(q.r, sumAt(q, q.G));
+    if (!q.practice) {
+      const pos = BIT[S.K + (q.round + 1)];
+      if (firstTry(pos)) record(pos, q.j.ok);
+      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+    }
+    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
+    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+  }
+  if (S.done) finishStage(S.K);
+  S.cfg.paint();
+}
+/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
+function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
+function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
+const PATHS = {};
+function syncStage(S) {
+  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
+  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
+  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
+  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
+  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
+  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
+  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
+  $(K + "_next").hidden = !S.waiting || busy;
+  const n = S.results.filter(Boolean).length;
+  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
+  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
+  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
+  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
+  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
+  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
+  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+}
+function wireStage(S) {
+  const K = S.K;
+  $(K + "_go").addEventListener("click", () => goStage(S));
+  $(K + "_next").addEventListener("click", () => nextRound(S));
+  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
+  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
+  for (const c of S.cfg.ctl) {
+    $(K + "_" + c.key).addEventListener("input", () => {
+      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
+      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
+    });
+    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  }
+  openRound(S);
+}
+/* before the first Go, the surfaces show the start the current settings make (run 1) */
+function previewRun(S) {
+  const set = readSet(S), key = JSON.stringify(set) + S.round;
+  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l24" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
+  return S.preview;
+}
+const shownRun = S => S.run || S.last;
+function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
+const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
+const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
+const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
+const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
+const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+
+/* ====== drawing ====== */
+const ON = "#2f6b8f", OFF = "#e6e2d6", MID = "#8fb0c6";
+const ramp = v => { const a = [230, 226, 214], b = [47, 107, 143], t = Math.max(0, Math.min(1, v)); return "rgb(" + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",") + ")"; };
+/* a line over time: pts [[x, y]], the axes, and a target window at the end (red box) */
+function plotSeries(cvId, series, o) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = o.H || 220, px = 56, py = 14, pw = W - px - 30, ph = H - py - 44, { ctx } = frameCanvas(cv, W, H);
+  const xs = x => px + x / o.xmax * pw, ys = y => py + ph - Math.max(0, Math.min(1, (y - (o.ymin || 0)) / (o.ymax - (o.ymin || 0)))) * ph;
+  ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px, py + ph); ctx.lineTo(px + pw, py + ph); ctx.stroke();
+  for (let k = 0; k <= 4; k++) { const v = (o.ymin || 0) + (o.ymax - (o.ymin || 0)) * k / 4; cardText(ctx, String(+v.toFixed(2)), px - 6, ys(v), { size: 10.5, col: MUTED, align: "right" }); }
+  for (let k = 0; k <= 5; k++) { const v = o.xmax * k / 5; cardText(ctx, String(Math.round(v)), xs(v), py + ph + 12, { size: 10.5, col: MUTED, align: "center" }); }
+  cardText(ctx, o.xlab, px + pw / 2, H - 8, { size: 11, col: MUTED, align: "center" });
+  ctx.save(); ctx.translate(13, py + ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, o.ylab, 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  if (o.box) { const lo = o.box.lo == null ? (o.ymin || 0) : o.box.lo, hi = o.box.hi == null ? o.ymax : o.box.hi, x0 = xs(o.xmax) - 7;
+    ctx.fillStyle = "rgba(29,29,27,0.08)"; ctx.fillRect(x0, ys(hi), 14, ys(lo) - ys(hi)); ctx.strokeStyle = HOT; ctx.lineWidth = 1.6; ctx.strokeRect(x0, ys(hi), 14, ys(lo) - ys(hi)); }
+  for (const s of series) polyline(ctx, s.pts.map(([x, y]) => [xs(x), ys(y)]), s.col || INK, s.lw || 2.2, s.alpha == null ? 1 : s.alpha, s.dash);
+  ctx.restore();
+}
+/* A: the row of cells, step by step: one grid each for signal L, signal R, gene X, gene Y (dark on, pale off) */
+function drawSwitch(cvId, w) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 230, { ctx } = frameCanvas(cv, W, H), c = 12, gx = 190, x0 = 20, y0 = 30;
+  const names = ["signal L", "signal R", "gene X", "gene Y"], get = (h, k, i) => k === 0 ? h.L[i] : k === 1 ? sigR(i) : k === 2 ? h.X[i] : h.Y[i];
+  names.forEach((nm, k) => {
+    const ox = x0 + k * gx; cardText(ctx, nm, ox + NC * c / 2, 14, { size: 12, bold: true, col: INK, align: "center" });
+    for (let s = 0; s <= A_STEPS; s++) { const h = w.hist[s]; if (!h) continue;
+      for (let i = 0; i < NC; i++) { ctx.fillStyle = get(h, k, i) ? ON : OFF; ctx.fillRect(ox + i * c + 0.5, y0 + s * (c + 3) + 0.5, c - 1, c + 2); } }
+  });
+  for (let s = 0; s <= A_STEPS; s += 5) cardText(ctx, String(s), x0 + 3 * gx + NC * c + 10, y0 + s * (c + 3) + 7, { size: 10, col: MUTED });
+  cardText(ctx, "cells 1-12, left to right; one row a step, from step 0 at the top", 20, H - 8, { size: 10.5, col: MUTED });
+  ctx.restore();
+}
+/* A's card: the row Y should end in (wordless) */
+function drawRowPic(cvId, pat) {
+  const cv = $(cvId); if (!cv) return; cv.hidden = !pat; if (!pat) return;
+  const { ctx } = frameCanvas(cv, 460, 120), c = 26, x0 = (460 - NC * c) / 2;
+  for (let i = 0; i < NC; i++) { ctx.fillStyle = pat[i] === "1" ? ON : OFF; ctx.fillRect(x0 + i * c + 1, 40, c - 2, c + 6); }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(x0 - 4, 36, NC * c + 8, c + 14);
+  ctx.restore();
+}
+/* B: the body, one cell a column, dark where frozen while the gene was on; the clock over time */
+function drawBody(cvId, cells, o) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = o && o.H || 90, { ctx } = frameCanvas(cv, W, H), n = Math.max(cells.length, (o && o.n) || 1), cw = Math.min(6, (W - 40) / Math.max(n, 1));
+  ctx.fillStyle = "#faf9f5"; ctx.fillRect(18, 20, (W - 40), 40);
+  for (let j = 0; j < cells.length; j++) { ctx.fillStyle = cells[j] ? ON : OFF; ctx.fillRect(20 + j * cw, 22, Math.max(1, cw - (cw > 2 ? 0.4 : 0)), 36); }
+  if (o && o.box) { ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(16, 16, 20 + n * cw, 48); }
+  cardText(ctx, "head", 20, 72, { size: 10.5, col: MUTED }); cardText(ctx, "tail →", 20 + Math.max(cells.length, 8) * cw, 72, { size: 10.5, col: MUTED, align: "right" });
+  ctx.restore();
+}
+/* C: 24 blocks head to tail, shaded by how many Hox genes are on (a lightness ramp), limbs below, the bead a ring */
+const REG_NAME = ["neck", "chest", "lumbar", "tail"];
+function drawTrunk(cvId, res, bead, o) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 200, { ctx } = frameCanvas(cv, W, H), bw = 28, x0 = 44, y0 = 40;
+  for (let i = 0; i < NB; i++) { ctx.fillStyle = ramp(res.h[i] / 10); ctx.fillRect(x0 + i * bw + 1, y0, bw - 2, 34); cardText(ctx, String(res.h[i]), x0 + i * bw + bw / 2, y0 + 17, { size: 11, col: res.h[i] > 6 ? "#fff" : INK, align: "center" }); }
+  let i0 = 0; for (let i = 1; i <= NB; i++) if (i === NB || region(res.h[i]) !== region(res.h[i0])) { cardText(ctx, REG_NAME[region(res.h[i0])], x0 + (i0 + i) / 2 * bw, y0 - 12, { size: 11, col: MUTED, align: "center" }); if (i < NB) { ctx.strokeStyle = INK; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x0 + i * bw, y0 - 4); ctx.lineTo(x0 + i * bw, y0 + 38); ctx.stroke(); } i0 = i; }
+  for (const l of res.limbs) { const x = x0 + l.at * bw + bw / 2; ctx.strokeStyle = INK; ctx.lineWidth = l.kind === "arm" ? 5 : 7; ctx.beginPath(); ctx.moveTo(x, y0 + 36); ctx.lineTo(x + (l.kind === "arm" ? -6 : 6), y0 + 96); ctx.stroke();
+    cardText(ctx, l.kind, x, y0 + 112, { size: 12, bold: true, col: INK, align: "center" }); }
+  if (bead >= 0) { ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x0 + bead * bw + bw / 2, y0 + 50, 6, 0, 2 * Math.PI); ctx.stroke(); }
+  cardText(ctx, "head", x0, H - 10, { size: 10.5, col: MUTED }); cardText(ctx, "tail", x0 + NB * bw, H - 10, { size: 10.5, col: MUTED, align: "right" });
+  if (o && o.box) { ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(x0 - 4, y0 - 26, NB * bw + 8, 150); }
+  ctx.restore();
+}
+/* D: the bud now, body at the left; four lanes, each shaded by its level (one hue, lightness) */
+function drawBud(cvId, w) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 220, { ctx } = frameCanvas(cv, W, H), x0 = 90, scale = 600, lanes = [["FGF", w.F, 1], ["Shh", w.S, null], ["Gremlin", w.Gr, null], ["BMP", w.B, 1]];
+  const len = w.L * GD.MM, pxL = len / GD.MM * scale;
+  lanes.forEach(([nm, arr, mx], k) => { const y = 24 + k * 40, top = mx || Math.max(1e-9, ...arr);
+    cardText(ctx, nm, x0 - 12, y + 14, { size: 12, bold: true, col: INK, align: "right" });
+    for (let i = 0; i < GN - 1; i++) { ctx.fillStyle = ramp(arr[i] / top); ctx.fillRect(x0 + i / (GN - 1) * pxL, y, pxL / (GN - 1) + 0.6, 28); }
+    ctx.strokeStyle = "#cfccc2"; ctx.lineWidth = 1; ctx.strokeRect(x0, y, pxL, 28); });
+  ctx.strokeStyle = w.aer ? INK : "#cfccc2"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x0 + pxL + 3, 20); ctx.lineTo(x0 + pxL + 3, 24 + 4 * 40 - 8); ctx.stroke();
+  cardText(ctx, w.aer ? "ridge" : "ridge gone", x0 + pxL + 10, 30, { size: 11, col: w.aer ? INK : MUTED });
+  cardText(ctx, "body", x0, H - 10, { size: 10.5, col: MUTED }); cardText(ctx, len.toFixed(2) + " mm", x0 + pxL, H - 10, { size: 11, bold: true, col: INK, align: "right" });
+  ctx.restore();
+}
+/* E: one limb's skeleton, body at the left, tip at the right: a column of cells a row, dark where cartilage forms */
+function drawLimb(cvId, w) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 250, { ctx } = frameCanvas(cv, W, H), cw = 11, ch = 9, x0 = 30, mid = 120;
+  for (let k = 0; k < TU.rows; k++) { const W0 = tuWidth(tuRegion(k)), row = w.rows[k];
+    for (let i = 0; i < W0; i++) { const y = mid + (i - W0 / 2) * ch; ctx.fillStyle = !row ? "#f3f1ea" : row.u[i] > TU.us ? INK : "#ebe7db"; ctx.fillRect(x0 + k * cw, y, cw - 0.5, ch - 0.5); } }
+  ["upper arm", "forearm", "hand-plate"].forEach((nm, r) => cardText(ctx, nm, x0 + [7, 22, 45][r] * cw, H - 10, { size: 11, col: MUTED, align: "center" }));
+  ctx.restore();
+}
+/* E: the 16 limbs' counts, a dot a limb, in three columns */
+function drawTally(cvId, q) {
+  const cv = $(cvId); if (!cv) return;
+  const W = 760, H = 180, { ctx } = frameCanvas(cv, W, H), cols = [["upper arm", "up"], ["forearm", "fo"], ["digits", "di"]], px = 70, py = 16, ph = 120;
+  const ys = n => py + ph - n / 10 * ph;
+  for (let n = 0; n <= 10; n += 2) cardText(ctx, String(n), px - 10, ys(n), { size: 10.5, col: MUTED, align: "right" });
+  cols.forEach(([nm, key], c) => { const cx = px + 60 + c * 200; cardText(ctx, nm, cx, H - 12, { size: 11.5, col: INK, align: "center" });
+    if (!q) return; const last = q.hist[q.hist.length - 1], cnt = {};
+    last.runs.forEach(s => { const v = s[key]; if (v == null) return; const k = cnt[v] = (cnt[v] || 0) + 1; ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(cx - 40 + k * 7, ys(v), 3, 0, 2 * Math.PI); ctx.fill(); }); });
+  ctx.save(); ctx.translate(14, py + ph / 2); ctx.rotate(-Math.PI / 2); cardText(ctx, "elements across the limb", 0, 0, { size: 11, col: MUTED, align: "center" }); ctx.restore();
+  ctx.restore();
+}
+/* E's card: a schematic of the limb to make (wordless): elements per region */
+function drawLimbPic(cvId, want) {
+  const cv = $(cvId); if (!cv) return; cv.hidden = !want; if (!want) return;
+  const { ctx } = frameCanvas(cv, 460, 120), segs = [[30, 120, 1], [130, 220, 2], [230, 400, want]];
+  for (const [a, b, n] of segs) for (let j = 0; j < n; j++) { const y = 60 + (j - (n - 1) / 2) * (n > 5 ? 10 : 14); ctx.strokeStyle = INK; ctx.lineWidth = 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(a + 6, n === 1 ? 60 : 60 + (y - 60) * 0.3); ctx.lineTo(b - 6, y); ctx.stroke(); }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(222, 8, 186, 104);
+  ctx.restore();
+}
+/* ====== the controls, diagrams and stages ====== */
+const SIGN_V = [-1, 0, 1], SIGN_LAB = ["turns it off", "none", "turns it on"];
+const TM_V = [20, 12, 6, 3], V_V = [0.2, 0.5];
+const SH_V = [-4, 0, 10], SH_LAB = ["4 blocks late", "on time", "10 blocks early"];
+const BEAD_V = Array.from({ length: NB + 1 }, (_, i) => i - 1);
+const RS_V = [0.1, 0.25, 0.4], GG_V = [0.3, 0.6], WW_V = [80, 20, 5], CUT_V = [1, 3, null], CUT_LAB = ["at hour 1", "at hour 3", "never"];
+const A2_V = [1, 3], A3_V = [3, 6, 12];
+const fixedArrow = (id, from, to) => ({ id, from, to, readonly: true, dark: true, label: "" });
+const rule = (meas, ok, val) => ({ meas, lo: null, hi: null, ok, val: val || (S => f2(S[meas])) });
+function mountA() {
+  const boxes = [{ id: "L", label: "signal L", x: 90, y: 40, w: 100, h: 32 }, { id: "R", label: "signal R", x: 360, y: 40, w: 100, h: 32 },
+    { id: "X", label: "gene X", x: 120, y: 220, w: 92, h: 34 }, { id: "Y", label: "gene Y", x: 330, y: 220, w: 92, h: 34, kind: "outcome" }];
+  const ar = (id, from, to, bend) => ({ id, from, to, input: "A_" + id, signed: true, bend, label: from + " → " + to, fmt: v => SIGN_LAB[Math.round(v) + 1] });
+  return Paths.init({ mount: "#A_paths", width: 450, height: 280, boxes, arrows: [ar("LX", "L", "X"), ar("RX", "R", "X"), ar("LY", "L", "Y"), ar("RY", "R", "Y"), ar("XY", "X", "Y", 22), ar("YX", "Y", "X", 22)], valuesOnSelect: true, lockColours: true });
+}
+function mountB() {
+  const boxes = [{ id: "g", label: "clock gene", x: 100, y: 50, w: 110, h: 32 }, { id: "p", label: "its protein", x: 340, y: 50, w: 110, h: 32 },
+    { id: "t", label: "the tail grows", x: 100, y: 240, w: 124, h: 32 }, { id: "b", label: "the body's blocks", x: 340, y: 240, w: 140, h: 34, kind: "outcome" }];
+  const arrows = [fixedArrow("x1", "g", "p"), fixedArrow("x2", "g", "b"),
+    { id: "T", from: "p", to: "g", input: "B_T", signed: true, bend: 30, label: "delay", fmt: v => "after " + TM_V[Math.round(v) + 4] + " min" },
+    { id: "v", from: "t", to: "b", input: "B_v", label: "growth", fmt: v => V_V[Math.round(v) - 1] + " cells a minute" }];
+  return Paths.init({ mount: "#B_paths", width: 450, height: 290, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountC() {
+  const boxes = [{ id: "hx", label: "Hox genes, in order", x: 110, y: 40, w: 150, h: 32 }, { id: "cd", label: "a block's code", x: 110, y: 160, w: 130, h: 32 },
+    { id: "fg", label: "FGF", x: 350, y: 40, w: 80, h: 32 }, { id: "bd", label: "a limb bud", x: 350, y: 160, w: 110, h: 32 }, { id: "id", label: "arm or leg", x: 350, y: 270, w: 110, h: 34, kind: "outcome" }];
+  const arrows = [fixedArrow("x1", "fg", "bd"), fixedArrow("x2", "cd", "bd"), fixedArrow("x3", "bd", "id"), fixedArrow("x4", "cd", "id"),
+    { id: "sh", from: "hx", to: "cd", input: "C_sh", label: "when they start", fmt: v => SH_LAB[Math.round(v) - 1] }];
+  return Paths.init({ mount: "#C_paths", width: 450, height: 310, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountD() {
+  const boxes = [{ id: "sh", label: "Shh (ZPA)", x: 80, y: 40, w: 104, h: 32 }, { id: "fg", label: "FGF (the ridge)", x: 290, y: 40, w: 130, h: 32 },
+    { id: "gr", label: "Gremlin", x: 80, y: 190, w: 96, h: 32 }, { id: "bm", label: "BMP", x: 290, y: 190, w: 80, h: 32 },
+    { id: "gw", label: "the bud grows", x: 430, y: 300, w: 124, h: 34, kind: "outcome" }, { id: "sc", label: "a scalpel", x: 440, y: 120, w: 96, h: 32 }];
+  const arrows = [{ id: "x1", from: "fg", to: "sh", readonly: true, dark: true, label: "" }, { id: "x2", from: "bm", to: "fg", readonly: true, dark: true, label: "" },
+    { id: "s", from: "sh", to: "gr", input: "D_s", label: "Shh's reach", fmt: v => String(RS_V[Math.round(v) - 1]) },
+    { id: "w", from: "gr", to: "bm", input: "D_w", signed: true, label: "Gremlin blocks BMP", fmt: v => "×" + WW_V[Math.round(v) + 3] },
+    { id: "g", from: "fg", to: "gw", input: "D_g", label: "FGF → growth", fmt: v => String(GG_V[Math.round(v) - 1]) },
+    { id: "c", from: "sc", to: "fg", input: "D_c", signed: true, label: "the ridge removed", fmt: v => CUT_LAB[Math.round(v) + 2] }];
+  return Paths.init({ mount: "#D_paths", width: 500, height: 330, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+function mountE() {
+  const boxes = [{ id: "r1", label: "upper arm (Meis)", x: 92, y: 36, w: 140, h: 32 }, { id: "r2", label: "forearm (Hoxa11)", x: 92, y: 140, w: 140, h: 32 },
+    { id: "r3", label: "hand-plate (Hoxa13)", x: 92, y: 244, w: 150, h: 32 }, { id: "u", label: "cartilage (Sox9)", x: 350, y: 70, w: 130, h: 34, kind: "outcome" },
+    { id: "v", label: "what it uses up", x: 350, y: 240, w: 130, h: 32 }];
+  const arrows = [{ id: "x1", from: "v", to: "u", readonly: true, dark: true, label: "", bend: -26 }, { id: "x2", from: "u", to: "v", readonly: true, dark: true, label: "", bend: -26 },
+    { id: "a1", from: "r1", onto: "x1", ontoAt: 0.3, readonly: true, dark: true, label: "" },
+    { id: "a2", from: "r2", onto: "x1", ontoAt: 0.5, input: "E_a2", label: "forearm strength", fmt: v => String(A2_V[Math.round(v) - 1]) },
+    { id: "a3", from: "r3", onto: "x1", ontoAt: 0.7, input: "E_a3", label: "hand-plate strength", fmt: v => String(A3_V[Math.round(v) - 1]) }];
+  return Paths.init({ mount: "#E_paths", width: 470, height: 290, boxes, arrows, valuesOnSelect: true, lockColours: true });
+}
+const PICK = (S) => S.done ? null : ruleOf(S);
+/* ---------- A ---------- */
+const A_CTL = ["LX", "RX", "LY", "RY", "XY", "YX"].map(k => ({ key: k, vals: SIGN_V, hidden: true }));
+const ZERO6 = { LX: 0, RX: 0, LY: 0, RY: 0, XY: 0, YX: 0 };
+const SA = mkStage("A", {
+  ctl: A_CTL,
+  rounds: [
+    { open: ZERO6, target: "111100000000", rules: [rule("hit", S => S.hit === 1)] },
+    { open: ZERO6, target: "000011110000", rules: [rule("hit", S => S.hit === 1)] },
+    { open: ZERO6, target: "111111110000", pulse: true, rules: [rule("hit", S => S.hit === 1)] },
+  ],
+  ms: 260,
+  start: set => { const r = ruleOf(SA), P = Object.assign({ pulse: !!r.pulse, target: r.target }, set); return { P, eng: SWITCH, G: A_STEPS, every: 1, runs: [swWorld(P)] }; },
+  afterOpen: () => { hold(SA, Object.keys(ZERO6))(); if (PATHS.A) PATHS.A.setBox("L", { label: ruleOf(SA).pulse ? "signal L (steps 0-2)" : "signal L" }); },
+  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
+  paint: () => { const S = SA, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S); drawSwitch("A_cells", w); drawRowPic("A_tpic", r ? r.target : null); syncStage(S); A_code(); },
+});
+/* ---------- B ---------- */
+const SB = mkStage("B", {
+  ctl: [{ key: "T", vals: TM_V, hidden: true }, { key: "v", vals: V_V, hidden: true }],
+  rounds: [
+    { hold: { v: 0.5 }, open: { T: 20 }, dur: 500, rules: [rule("blocks", S => S.blocks >= 10 && S.blocks <= 14)], n: 12 },
+    { hold: { v: 0.2 }, open: { T: 12 }, dur: 1500, rules: [rule("blocks", S => S.blocks >= 35)], n: 40 },
+  ],
+  ms: 25,
+  start: set => { const r = ruleOf(SB), P = { Tm: set.T, v: set.v, dur: r.dur }; return { P, eng: CLOCK, G: Math.ceil((r.dur + CK.start) / 10), every: 1, runs: [ckWorld(P)] }; },
+  afterOpen: () => hold(SB, ["T", "v"])(),
+  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
+  paint: () => { const S = SB, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S), dur = (q ? q.P.dur : ruleOf(S).dur) + CK.start;
+    plotSeries("B_clock", [{ pts: w.trace }], { xmax: dur, ymax: 120, xlab: "minutes", ylab: "clock gene", H: 200 });
+    drawBody("B_body", w.cells, { n: Math.round(ruleOf(S).dur * ((q ? q.P.v : readSet(S).v))) });
+    $("B_bodyH").textContent = "The body · " + ckBlocks(w.cells) + " blocks · " + w.cells.length + " cells";
+    if (r) { const cells = []; const per = Math.round(r.dur * readSet(S).v / r.n); for (let j = 0; j < r.n * per; j++) cells.push(j % per < per / 2 ? 1 : 0); drawBody("B_tpic", cells, { box: true, H: 90 }); } else $("B_tpic").hidden = true;
+    if (r) $("B_tpic").hidden = false;
+    syncStage(S); B_code(); },
+});
+/* ---------- C ---------- */
+const SC = mkStage("C", {
+  ctl: [{ key: "sh", vals: SH_V, hidden: true }, { key: "bd", vals: BEAD_V, hidden: true }],
+  rounds: [
+    { hold: { sh: 0 }, open: { bd: -1 }, rules: [rule("legs", S => S.legs === 2 && S.arms === 1, S => S.arms + " arm, " + S.legs + " legs")], want: { shift: 0, bead: 14 } },
+    { hold: { sh: 0 }, open: { bd: -1 }, rules: [rule("arms", S => S.arms === 2 && S.legs === 1, S => S.arms + " arms, " + S.legs + " leg")], want: { shift: 0, bead: 12 } },
+    { hold: { bd: -1 }, open: { sh: 0 }, rules: [rule("arms", S => S.arms === 0, S => S.arms + " arms")], want: { shift: 10, bead: -1 } },
+  ],
+  ms: 200,
+  start: set => { const P = { shift: set.sh, bead: set.bd }; return { P, eng: POS, G: 1, every: 1, runs: [posWorld(P)] }; },
+  afterOpen: () => hold(SC, ["sh"])(),
+  onInput: () => { if (PATHS.C) PATHS.C.sync(); },
+  paint: () => { const S = SC, set = readSet(S), r = PICK(S); drawTrunk("C_body", posLimbs({ shift: set.sh, bead: set.bd }), set.bd);
+    if (r) { $("C_tpic").hidden = false; const want = posLimbs(r.want); drawTrunkPic("C_tpic", want); } else $("C_tpic").hidden = true;
+    syncStage(S); C_code(); },
+});
+function drawTrunkPic(cvId, res) {
+  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 460, 120), bw = 17, x0 = 26, y0 = 18;
+  for (let i = 0; i < NB; i++) { ctx.fillStyle = ramp(res.h[i] / 10); ctx.fillRect(x0 + i * bw + 1, y0, bw - 2, 24); }
+  for (const l of res.limbs) { const x = x0 + l.at * bw + bw / 2; ctx.strokeStyle = INK; ctx.lineWidth = l.kind === "arm" ? 3.5 : 5; ctx.beginPath(); ctx.moveTo(x, y0 + 26); ctx.lineTo(x + (l.kind === "arm" ? -4 : 4), y0 + 70); ctx.stroke(); }
+  ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.strokeRect(x0 - 4, y0 - 6, NB * bw + 8, 94);
+  ctx.restore();
+}
+/* the bead: click a block on the trunk (only when the bead is free) */
+function wireBead() {
+  $("C_body").addEventListener("click", e => {
+    const S = SC, el = $("C_bd"); if (!Gates.C.open || S.run || S.waiting || el.dataset.held === "1") return;
+    const p = framePt($("C_body"), e, 760), i = Math.floor((p.x - 44) / 28); if (i < 0 || i >= NB || p.y < 30 || p.y > 90) return;
+    const cur = BEAD_V[+el.value - (+el.min || 0)], want = cur === i ? -1 : i; el.value = BEAD_V.indexOf(want) + (+el.min || 0); el.dispatchEvent(new Event("input")); bump("C");
+  });
+}
+/* ---------- D ---------- */
+const SD = mkStage("D", {
+  ctl: [{ key: "s", vals: RS_V, hidden: true }, { key: "w", vals: WW_V, hidden: true }, { key: "g", vals: GG_V, hidden: true }, { key: "c", vals: CUT_V, hidden: true }],
+  rounds: [
+    { hold: { w: 20, g: 0.3, c: null }, open: { s: 0.1 }, rules: [rule("len", S => S.len >= 1.6 && S.len <= 1.8)], box: { lo: 1.6, hi: 1.8 } },
+    { hold: { s: 0.25, w: 20, c: null }, open: { g: 0.3 }, rules: [rule("hours", S => S.hours <= 10)], box: { lo: 1.6, hi: 1.8 }, end: 9 },
+    { hold: { s: 0.25, w: 20, g: 0.3 }, open: { c: null }, rules: [rule("len", S => S.len <= 1.1)], box: { lo: 0, hi: 1.1 } },
+  ],
+  ms: 18,
+  start: set => { const P = { lamS: set.s, w: set.w, g: set.g, cut: set.c }; return { P, eng: BUD, G: 160, every: 1, runs: [bdWorld(P)] }; },
+  afterOpen: () => hold(SD, ["s", "w", "g", "c"])(),
+  onInput: () => { if (PATHS.D) PATHS.D.sync(); },
+  paint: () => { const S = SD, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S);
+    drawBud("D_bud", w); const st = bdStat(w);
+    $("D_budH").textContent = "The bud · " + w.hrs.toFixed(1) + " hours · " + st.len.toFixed(2) + " mm" + (w.tEnd != null ? " · stopped at hour " + w.tEnd.toFixed(1) : "");
+    plotSeries("D_time", [{ pts: w.trace }], { xmax: 40, ymax: 2.5, xlab: "hours", ylab: "bud length (mm)", H: 220, box: r ? r.box : null });
+    if (r) { $("D_tpic").hidden = false; const end = r.end || 25, top = r.box.hi === 1.1 ? 0.95 : 1.7, f = t => 0.75 + (top - 0.75) * Math.min(1, t / end) * (2 - Math.min(1, t / end)), pts = []; for (let t = 0; t <= 40; t += 0.5) pts.push([t, f(t)]);
+      plotSeries("D_tpic", [{ pts }], { xmax: 40, ymax: 2.5, xlab: "", ylab: "", H: 120, box: r.box }); } else $("D_tpic").hidden = true;
+    syncStage(S); D_code(); },
+});
+/* ---------- E ---------- */
+const SE = mkStage("E", {
+  ctl: [{ key: "a2", vals: A2_V, hidden: true }, { key: "a3", vals: A3_V, hidden: true }],
+  rounds: [
+    { open: { a2: 1, a3: 3 }, rules: [rule("m125", S => S.m125 >= 0.75, S => Math.round(16 * S.m125) + " of 16")], want: 5 },
+    { hold: { a2: 3 }, open: { a3: 6 }, rules: [rule("d3", S => S.d3 >= 0.75, S => Math.round(16 * S.d3) + " of 16")], want: 3 },
+    { hold: { a2: 3 }, open: { a3: 6 }, rules: [rule("d7", S => S.d7 >= 0.75, S => Math.round(16 * S.d7) + " of 16")], want: 7 },
+  ],
+  ms: 40,
+  start: (set, seed) => { const P = { a2: set.a2, a3: set.a3 }; return { P, eng: SKEL, G: TU.rows, every: 1, runs: Array.from({ length: 16 }, (_, i) => tuWorld(P, seed + 1 + 7919 * i)) }; },
+  afterOpen: () => hold(SE, ["a2", "a3"])(),
+  onInput: () => { if (PATHS.E) PATHS.E.sync(); },
+  paint: () => { const S = SE, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S);
+    drawLimb("E_limb", w); drawTally("E_tally", q); drawLimbPic("E_tpic", r ? r.want : null);
+    $("E_limbH").textContent = "Limb 1 of 16 · " + w.rows.length + " of " + TU.rows + " rows";
+    syncStage(S); E_code(); },
+});
+/* ====== the R panels: the same models, one stage's settings ====== */
+function A_code() { const s = readSet(SA), r = ruleOf(SA);
+  codeInto("codeA", [
+    ["", "# Lesson 24, Stage A -- switches in a row of 12 cells"],
+    ["", "n <- 12; steps <- 10; pulse <- " + (r.pulse ? "TRUE" : "FALSE") + "                    # signal L only for steps 0-2 when pulse"],
+    ["LX", "w <- c(LX = " + s.LX + ", RX = " + s.RX + ", YX = " + s.YX + ", LY = " + s.LY + ", RY = " + s.RY + ", XY = " + s.XY + ")   # 1 turns on, -1 turns off, 0 none"],
+    ["", "gate <- function(w, s) as.integer(any(w > 0 & s == 1) & !any(w < 0 & s == 1))   # on: something on turns it on, nothing on turns it off"],
+    ["", "X <- rep(0, n); Y <- rep(0, n); R <- as.integer(1:n >= 5)"],
+    ["", "for (t in 0:(steps - 1)) {"],
+    ["", "  L <- as.integer(1:n <= 8 & (!pulse | t < 3))"],
+    ["", "  X2 <- sapply(1:n, function(i) gate(w[c('LX', 'RX', 'YX')], c(L[i], R[i], Y[i])))"],
+    ["", "  Y2 <- sapply(1:n, function(i) gate(w[c('LY', 'RY', 'XY')], c(L[i], R[i], X[i])))"],
+    ["", "  X <- X2; Y <- Y2"],
+    ["", "}"],
+    ["", "paste(Y, collapse = '')"],
+  ]); }
+function B_code() { const s = readSet(SB), r = ruleOf(SB);
+  codeInto("codeB", [
+    ["", "# Lesson 24, Stage B -- a clock gene and a growing body (Lewis 2003)"],
+    ["T", "Tm <- " + s.T + "                                   # the delay before the protein shuts the gene off (minutes)"],
+    ["v", "v <- " + s.v + "; dur <- " + r.dur + "                      # cells added a minute at the tail; minutes the tail grows"],
+    ["", "k <- 33; cc <- 0.23; a <- 4.5; b <- 0.23; p0 <- 40; Tp <- 2.8; dt <- 0.05; start <- 100"],
+    ["", "n <- ceiling((dur + start) / dt); m <- p <- numeric(n + 1); cells <- c(); ms <- 0; mn <- 0; lagM <- round(Tm / dt); lagP <- round(Tp / dt)"],
+    ["", "for (i in 1:n) {"],
+    ["T", "  pd <- if (i > lagM) p[i - lagM] else 0; md <- if (i > lagP) m[i - lagP] else 0"],
+    ["", "  m[i + 1] <- m[i] + dt * (k / (1 + (pd / p0)^2) - cc * m[i]); p[i + 1] <- p[i] + dt * (a * md - b * p[i])"],
+    ["", "  t <- i * dt; if (t > 50) { ms <- ms + m[i + 1]; mn <- mn + 1 }"],
+    ["v", "  if (t > start) while (length(cells) < floor((t - start) * v)) cells <- c(cells, as.integer(m[i + 1] > ms / mn))   # a cell frozen as it leaves the tail"],
+    ["", "}"],
+    ["", "c(blocks = sum(diff(c(0, cells)) == 1), cells = length(cells))"],
+  ]); }
+function C_code() { const s = readSet(SC);
+  codeInto("codeC", [
+    ["", "# Lesson 24, Stage C -- where a limb goes"],
+    ["sh", "shift <- " + s.sh + "                                  # Hox genes start this many blocks early (- late)"],
+    ["bd", "bead <- " + (s.bd < 0 ? "NA" : s.bd + 1) + "                                  # the block with an FGF bead (NA: none)"],
+    ["", "h <- pmax(0, pmin(10, floor((0:23 + shift) / 2)))   # Hox genes on in each of 24 blocks"],
+    ["", "reg <- cut(h, c(-1, 4, 7, 9, 10), labels = c('neck', 'chest', 'lumbar', 'tail'))"],
+    ["", "arm <- which(reg[-1] == 'chest' & reg[-24] == 'neck') + 1; leg <- which(reg[-1] == 'lumbar' & reg[-24] %in% c('neck', 'chest')) + 1"],
+    ["", "if (!is.na(bead) && reg[bead] == 'chest' && !(bead %in% c(arm, leg))) { if (h[bead] <= 6) arm <- c(arm, bead) else leg <- c(leg, bead) }"],
+    ["", "list(arms = arm, legs = leg)"],
+  ]); }
+function D_code() { const s = readSet(SD);
+  codeInto("codeD", [
+    ["", "# Lesson 24, Stage D -- a bud that grows and stops itself (one dimension, body x = 0 to tip x = L)"],
+    ["s", "lamS <- " + s.s + "                                  # Shh's reach"],
+    ["w", "w <- " + s.w + "                                      # how hard Gremlin blocks BMP"],
+    ["g", "g <- " + s.g + "                                     # FGF -> growth"],
+    ["c", "cut <- " + (s.c == null ? "Inf" : s.c) + "                                   # the hour the ridge is removed"],
+    ["", "N <- 81; L <- 0.3; hrs <- 0; dt <- 0.05; aer <- TRUE; G <- 800"],
+    ["", "steady <- function(L, lam, src) { h <- L / (N - 1); a <- lam^2 / h^2; M <- diag(1 + 2 * a, N)"],
+    ["", "  M[cbind(2:N, 1:(N - 1))] <- -a; M[cbind(1:(N - 1), 2:N)] <- -a; M[1, 2] <- -2 * a; M[N, N - 1] <- -2 * a; solve(M, src) }"],
+    ["", "for (step in 1:G) {"],
+    ["", "  x <- seq(0, L, length.out = N)"],
+    ["", "  Fg <- steady(L, 0.6, as.numeric(aer & x > L - 0.03))                      # FGF from the ridge"],
+    ["", "  fz <- max(Fg[x < 0.08]); S <- steady(L, lamS, ifelse(x < 0.08, fz / (0.02 + fz), 0))   # Shh from the ZPA, kept up by FGF"],
+    ["", "  Gr <- steady(L, 0.1, as.numeric(S > 0.05 & x > 0.08 + 0.003 * hrs))       # Gremlin, not in the ZPA's descendants"],
+    ["", "  if (aer && (1 / (1 + w * Gr[N]) > 0.5 || hrs >= cut)) aer <- FALSE         # BMP at the tip shuts the ridge"],
+    ["", "  L <- L + dt * g * Fg[N]; hrs <- hrs + dt"],
+    ["", "}"],
+    ["", "c(length_mm = 2.5 * L)"],
+  ]); }
+function E_code() { const s = readSet(SE);
+  codeInto("codeE", [
+    ["", "# Lesson 24, Stage E -- a skeleton laid down row by row (Schnakenberg: a 0.47, b 2, d 113; Ben Tahar et al. 2026)"],
+    ["a2", "al <- c(1, " + s.a2 + ", " + s.a3 + ")                           # strength: upper arm, forearm, hand-plate"],
+    ["", "W <- c(10, 12, 22); a <- 0.47; b <- 2; d <- 113; us <- a + b; vs <- b / us^2; rows <- 60"],
+    ["", "settle <- function(u, v, al, T = 20) { n <- length(u); dt <- min(0.9 / (4 * d), 0.05 / al)"],
+    ["", "  lap <- function(z) c(z[2], z[-n]) + c(z[-1], z[n - 1]) - 2 * z                 # zero flux at both edges"],
+    ["", "  for (s in 1:ceiling(T / dt)) { uuv <- u^2 * v; u2 <- u + dt * (al * (a - u + uuv) + lap(u)); v <- pmax(0, v + dt * (al * (b - uuv) + d * lap(v))); u <- pmax(0, u2) }"],
+    ["", "  list(u = u, v = v) }"],
+    ["", "reg <- function(k) if (k <= 15) 1 else if (k <= 30) 2 else 3"],
+    ["", "u <- us * (1 + 0.1 * (runif(W[1]) - 0.5)); v <- vs * (1 + 0.1 * (runif(W[1]) - 0.5)); count <- c()"],
+    ["", "for (k in 1:rows) { r <- reg(k); n <- W[r]"],
+    ["", "  if (length(u) != n) { u <- approx(seq(0, 1, length.out = length(u)), u, seq(0, 1, length.out = n))$y; v <- approx(seq(0, 1, length.out = length(v)), v, seq(0, 1, length.out = n))$y }"],
+    ["", "  u <- u * (1 + 0.02 * (runif(n) - 0.5)); v <- v * (1 + 0.02 * (runif(n) - 0.5))"],
+    ["a3", "  z <- settle(u, v, al[r]); u <- z$u; v <- z$v; count[k] <- sum(diff(c(0, u > us)) == 1)   # elements across this row"],
+    ["", "}"],
+    ["", "c(upper_arm = count[13], forearm = count[28], digits = count[rows])"],
+  ]); }
+
+const STAGES = [SA, SB, SC, SD, SE];
+function paintAll() { for (const S of STAGES) S.cfg.paint(); }
+function wire() {
+  PATHS.A = mountA(); PATHS.B = mountB(); PATHS.C = mountC(); PATHS.D = mountD(); PATHS.E = mountE();
+  for (const S of STAGES) wireStage(S);
+  wireBead();
+  for (const K of ["A", "B", "C", "D", "E"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson24_stage" + K + ".R", RTEXT["code" + K]));
+  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
+  const reveal = () => {
+    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
+    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
+    FIT_EPOCH++; paintAll();
+  };
+  document.addEventListener("score:bypass", reveal);
+  window.__l24reveal = reveal;
+}
+
+wire();
+paintAll();
+
+Score.init({
+  moduleId: "lesson24",
+  version: 1,      /* 1: draft 1 (2026-11-07): A three targets, B two, C three, D three, E three (14) */
+  scaffold: 14,
+  mountNamePrompt: "#score-name",
+  mountFinalCode:  "#score-final",
+  onReady: () => {
+    $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
+    if (Score.isStudy && Score.isStudy()) window.__l24reveal();
+    FIT_EPOCH++; paintAll();
+  }
+});
+</script>
+</body>
+</html>
