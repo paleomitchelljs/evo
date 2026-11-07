@@ -1,8 +1,8 @@
 # Lesson 22 — kin selection and gene-level competition: the Price equation, mechanically
 
-**File** · `app/lessons/lesson22.html` — draft 1 (2026-11-07, v1, 10 bits; LOCKS `x`). The archived `app/archive/lesson22.html` is an unrelated old draft on codon ratios
+**File** · `app/lessons/lesson22.html` — draft 2 (2026-11-07, v2, 14 bits; LOCKS `x`): D the cue (four targets), the drive now E. Draft 1 was v1, 10 bits. The archived `app/archive/lesson22.html` is an unrelated old draft on codon ratios
 **Checks** · `node scripts/check_lesson22_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 1 BUILT 2026-11-07 (the grid). Before that: PLANNED (2026-10-28). Revised the same day (JM's second ruling): the species level moves to the
+**Status** · DRAFT 2 BUILT 2026-11-07 (D: help that follows a call; JM's "1 with a dash of 2"). DRAFT 1 BUILT 2026-11-07 (the grid). Before that: PLANNED (2026-10-28). Revised the same day (JM's second ruling): the species level moves to the
 hierarchical Price lesson (now `lesson23_overhaul.md`); D is now gene-level competition; 22 opens from 21's birds. 2026-11-07
 (JM's arc re-cut): 22 = "kin selection / genic level selection", the same substance; 21 is now sexual selection itself (its
 learned song parked); 23 is species / hierarchical selection; the cell level goes to the individuality capstone
@@ -242,6 +242,39 @@ E prototype (2026-11-07, scratchpad l22/engE.js; b 1.5, c .1 per full helping sp
     1 in 50 young invent one, to keep it in balance; unmeasured); (ii) a recognition-precision trait that rises to "better"
     and wanders (unmeasured). Neighbours with copies of one founding helping allele: d 1 .41-.50, d 8 .19-.21 at 100.
 
+## JM, 2026-11-07, on the slosh (verbatim; answering "which slosh: 1 the cue erodes as it works, kept varied by new calls; 2 a recognition-accuracy trait")
+
+> 1 with a dash of 2. Namely nothing should have **perfect** kin recognition. That doesn't exist. Behaviours work via a
+> response to a cue, so altruistic behaviors are in response to some cue—that cue can having varying levels of association
+> with actual relatedness.
+
+Readings:
+- helping is a response to a cue; proximity (A-C's "next door") is one cue, a call another; never "recognises kin".
+- the cue's association with relatedness varies (dispersal, how often young make up their own call) and is measured, never
+  perfect: two errors, help reaching birds that share no parent, and kin missed (calling differently). Both shown.
+- "a dash of 2": whether a helper checks the call evolves (two kinds of helping copy), climbs to "better" and stops short.
+
+E prototype 2 (2026-11-07, scratchpad l22e/eng3.js, eng4.js; b 1.5, c .1, d 4 unless said; 16 runs x 2 seed sets):
+    model      a helper reaches the 24 birds within 2 nests; its help (b h in all) is split among every bird there (not checking)
+               or among those calling like it (checking); with none calling alike, that help is not given and not paid for.
+               Each young copies its father's call, or with chance m makes up a call of its own; at the start every bird its
+               own call. Helping copies come in two kinds (checking or not), the kind travelling with the copy.
+    why reach  with help only to the 4 next door the call barely matters (few next-door birds share a father at d 4;
+               helping near neutral, .4-.5 at 100). Reach 2 lets the cue choose.
+    D1 (100)   not checking .04-.05, checking (m 1/3) .82-.83; help reaching birds that share a parent .03 / .57.
+    D2/D3 (200) checking, m: 0 .01-.03 (one call takes over: birds calling alike .65-.72; help to kin .04), 1/10 .28-.30,
+               1/5 .55-.57, 1/3 .94, 1/2 .86, 4/5 .56-.58 (help to kin .97-.98, but the call almost never matches: few
+               helped). The cue erodes when every young copies; too exact, it rarely fires. Helping thrives on a sloppy cue
+               (help to kin .28-.31 at m 1/3).
+    D4 (300)   every bird a helper, 1 in 10 helping copies checking, a copy turns into the other kind 1 in 200: checking at
+               300: m 0 .50-.51 (wanders: one call, checking changes nothing), 1/10 .68-.69, 1/5 .78-.80, 1/3 .89, 1/2 .88,
+               4/5 .86-.87; help to kin .03 (0), .30-.33 (1/3). At d 1-8 (m 1/3) checking .89 throughout. It climbs and stops
+               short of all (new copies of the other kind keep arising), and help still mostly reaches birds that share no
+               parent.
+    not used   a separate response gene (unlinked; weighted help): helping died before it moved; with every bird helping it
+               rose .03 -> .28 in 300, the same as with no benefit (.24): mutation, not selection. Calls as 8-note strings with
+               a "differs in at most D notes" rule: weaker (help to kin <= .36), monotone in D, no sloppy optimum.
+
 ## Draft 1 prototype (2026-11-07, after "Yes please go ahead with the grid"; scratchpad l22/eng.js)
 
     grid       32 x 32 nests on a torus, one diploid bird a nest; a helping gene (2 alleles, additive: helping h 0, 1/2, 1).
@@ -323,6 +356,39 @@ Draft 1 rounds (10 bits), cost of helping .1 unless held otherwise:
                (opening .73); B3 c .2 .03; C1 d 2 .50 (opening d 3 .38); C2 b 1 .41 (opening .54); D1 q .6 .99; D2 k .5 .70.
                B2 at the line: from its own helping -.54, from its neighbours' +.59 (summed over 100 generations).
 
+## Stage D as built (2026-11-07, draft 2; the drive moved to E)
+
+    model      as prototype 2 (above): a helper reaches the 24 nests within 2; help split among all there (not checking) or
+               among those calling like it (checking; none calling alike: not given, not paid). Young copy the father's call
+               or make up one (m). Helping alleles come in two kinds, the kind travelling with the copy. b 1.5, c .1, within 4
+               held. Engine kWorld/kStep/kStat (CUE), separate from A-C's so their random draws are untouched.
+    controls   checks the call (no / yes), an arrow from "calls like the helper" onto the benefit arrow; young that copy it
+               (1 in 5, 1 in 2, 2 in 3, 4 in 5, all; m .8 .5 1/3 .2 0), an arrow from "its father's call". D4's model (ev) is
+               held by the round: checks the call hidden, a fixed grey arrow in its place.
+    map        shade = helping alleles (D4: those that check); a line between two nests whose birds call differently.
+    menus      helping allele; help that reaches birds sharing a parent with the helper; birds sharing a parent, within reach,
+               that call alike (kin the call misses: the second error); birds within reach that call alike; help that reaches
+               a copy of the helper's own helping allele (A-C's founding labels: the coalescence link); helping alleles that
+               check the call.
+    split      the helping allele: from its own helping, from the help it receives (A-C's neighbours' helping, generalised:
+               in A-C the two are the same), what the young keep. D4: checking: who leaves more young (up), what the young
+               keep (the 1 in 200 turning, down); they balance where checking stops short of all.
+    rounds     (20 seed sets of 16 runs, scratchpad l22e/pageK.js)
+               D1 (100 gens) 2 in 3 copy held; checks free (opens no .04-.07): helping >= .5 (yes .80-.86).
+               D2 (200) checks yes held; copy free (opens all .00-.02, one call takes over): >= .45 (4 in 5 .52-.63).
+               D3 (200) the same, opening 1 in 5 (.46-.63; .97 of the help reaches birds sharing a parent, but the call rarely
+                 matches): >= .7 (1 in 2 .79-.88; .76 at one check seed, so the bar moved from .75).
+               D4 (300) every bird a helper, 1 in 10 checking, 1 in 200 turn; copy free (opens all .47-.52: checking wanders):
+                 checking >= .7 (4 in 5 .76-.81, 2 in 3 .88-.91).
+    two errors help to birds sharing a parent / birds sharing a parent calling alike (200 gens): 1 in 5 copy .97-.99/.01,
+               1 in 2 .79/.07, 2 in 3 .29-.30/.17, 4 in 5 .14/.32, all .04-.05/.67-.78. Never both high; the most helping (2 in 3)
+               where the help mostly reaches birds sharing no parent. Checked in the script.
+    checks     `check_lesson22_numbers.js` 34 checks + both widths + 5 R panels: a checking helper's help all to the one bird
+               calling alike (5.06 young against 5.0), none given or paid with none (2.02); calls from the father (1.00; .506 at
+               m 1/2); turning 1/200 (.0056); both splits exact (1.7e-18); D1-D4 hits and misses; the two errors; D4 short of
+               all with its split's signs; the flow through 14 bits.
+    also       A-C's "copies of one founding helping allele" now counts helping copies only (it counted any shared label).
+
 ## Items
 
 | # | What | Status |
@@ -332,7 +398,8 @@ Draft 1 rounds (10 bits), cost of helping .1 unless held otherwise:
 | 3 | engine prototype: spatial helping, dispersal; measured r against dispersal; Hamilton's line from runs | done 2026-11-07 |
 | 6 | draft 1: A-D page, v1, 10 bits; check script | done 2026-11-07 (bars over 20 seed sets: see below) |
 | 7 | JM plays with draft 1; Open 2-3; the interpretive dispersal arrow; his voice for A-D | todo |
-| 8 | JM 2026-11-07: coalescence link (allele shared by descent), proxies, the slosh: measure E; build | todo |
+| 8 | JM 2026-11-07: coalescence link (allele shared by descent), proxies, the slosh: measure E; build | done 2026-11-07 (draft 2: D the cue, four targets; the drive now E) |
+| 9 | JM plays D; his voice for D; whether D4 (checking evolves) earns its place or folds into a closing question | todo |
 | 4 | JM's second ruling (2026-10-28): species level out to the hierarchical Price lesson; D gene-level competition; A from 21's birds | done (plan) |
 | 5 | JM's arc re-cut (2026-11-07): substance unchanged; links to 21 (song parked, kin cue from 8 C), 23 and the capstone; lecture quotes | done 2026-11-07 |
 
@@ -347,11 +414,13 @@ Draft 1 rounds (10 bits), cost of helping .1 unless held otherwise:
 - 2026-11-07, later: make the link to coalescence explicit (a specific allele shared, not relatedness per se); proxies for
   recognising kin; the slosh: recognition evolves to better, not perfect.
 - 2026-11-07, later: the grid (JM: "Yes please go ahead with the grid"), for A-C at least.
+- 2026-11-07, later: the slosh is "1 with a dash of 2": no perfect kin recognition; helping responds to a cue whose association
+  with relatedness varies.
 - 2026-11-07, later: the kin activity must not imply organisms cooperate because they are related; close relatedness creates the
   conditions that let cov(w, z) shift far enough for cooperation (to connect to Michod).
 
 ## Do not
-
+- Say a bird recognises kin, or show recognition as perfect (JM, 2026-11-07): it responds to a cue.
 - Imply birds help because they are related (JM, 2026-11-07, above): relatedness sets the conditions; the covariance decides.
 - State Hamilton's rule, or that relatives share alleles, before the runs show it.
 - Fuse the Price terms (WORK_ORDER).
