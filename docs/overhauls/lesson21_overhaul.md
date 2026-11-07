@@ -209,7 +209,7 @@ Built (2026-11-07, v6, 11 bits; `check_lesson21_numbers.js` rewritten, 32 checks
                its diagram (draft 3 B's inversion box); the off gene's box and the females' cost arrow appear only when on.
     seeds      the page's one-island engine over 30 seed sets of 16 runs (scratchpad l21/pageOne.js), at the bars:
                C1 cost 0 .36-.55 (median .44) against .33, opening .1 .03-.10; C2 .1 .03-.10 against .15; D1 dulling 0
-               .03-.10, 1 .19-.31 against .15; D2 rate .25 .12-.28 against .35. C1's bar went from .35 to .33 on this
+               .03-.10, 1 .19-.31 against .15; D2 rate .25 .12-.28, .5 .39-.59 against .35. C1's bar went from .35 to .33 on this
                (the minimum was .36), still above the allele's start of .30, so a hit is a rise.
     D layout   the diagram widened to 540 so harmful mutations -> colour, D1's control, is long enough to see.
 
