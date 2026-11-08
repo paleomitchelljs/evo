@@ -2,15 +2,17 @@
 /*
  * check_lesson25_numbers.js -- the checks for app/lessons/lesson25.html.
  *
- * Lesson 25, draft 1 (2026-11-07): mesoevolution. A the map from lesson
- * 24's limb network's settings to digits; B clades on the map. What has
- * to hold:
+ * Lesson 25, draft 2 (2026-11-07): mesoevolution. A the map from two
+ * genes' levels (Gli3, Hox13) to digits, through lesson 24's draft-2 limb
+ * (Sox9 with Bmp and Wnt); B clades on the map. What has to hold:
  *
  *   Engine. The digits table B reads (measured offline) is what stage A's
- *      model makes: 8 limbs at each strength at widths 22 and 26 regrown
- *      on the page, their modes equal to the table; no four at 22.
+ *      model makes: 8 limbs at each Hox13 level at Gli3 x 1.5 and x 1
+ *      regrown on the page, their modes equal to the table; no six at
+ *      x 1.5, six at x 1.
  *   Rounds. Each target hit by its intended setting, missed by its
- *      opening; in B, six or more still arise in every clade when held off.
+ *      opening; in B, six arises in every clade at x 1 even when held off,
+ *      and never at x 1.5 even when favoured (while seven and eight do).
  *   Flow. A by clicks on the map; five bits written; the lesson ends.
  *   Layout. Hover marks; canvases fit; R last and closed; R panels run.
  *
@@ -21,7 +23,7 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8795;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const CANVAS_IDS = ["A_map", "A_limb", "A_tpic", "B_tree", "B_row", "B_time", "B_tpic"];
+const CANVAS_IDS = ["A_map", "A_limb", "A_tpic", "B_tree", "B_row", "B_clades", "B_tpic"];
 
 const INNER = `
 const L_=[], say=s=>L_.push(s);
@@ -32,10 +34,10 @@ for (const k in Gates) { Gates[k].open = true; document.getElementById("stage" +
 {
   const mode = a => { const c = {}; for (const x of a) c[x] = (c[x] || 0) + 1; return +Object.entries(c).sort((x, y) => y[1] - x[1])[0][0]; };
   const got = {}, off = [];
-  for (const W of [22, 26]) { got[W] = MAP_A.map(a3 => { const ds = []; for (let s = 0; s < 8; s++) { const w = tuWorld({ W, a3 }, 500 + s * 7919); for (let r = 0; r < TU.rows; r++) tuStep(w); ds.push(tuStat(w).di); } return mode(ds); });
-    got[W].forEach((d, i) => { if (d !== DIGITS[W][i]) off.push(W + "/" + MAP_A[i] + ": " + d + " vs " + DIGITS[W][i]); }); }
-  check("engine: the digits B reads, regrown (8 limbs a strength): width 22 " + got[22].join(" ") + "; width 26 " + got[26].join(" ") + " (the table: " + DIGITS[22].join(" ") + " / " + DIGITS[26].join(" ") + "); no four at 22, four at 26",
-        off.length === 0 && !DIGITS[22].includes(4) && DIGITS[26].includes(4), off.join(", "));
+  for (const W of [18, 22]) { got[W] = MAP_H.map(hx => { const ds = []; for (let s = 0; s < 8; s++) { const w = sxWorld({ W3: W, hx }, 500 + s * 7919); for (let r = 0; r < SX.rows; r++) sxStep(w); ds.push(sxStat(w).di); } return mode(ds); });
+    got[W].forEach((d, i) => { if (d !== DIGITS[W][i]) off.push(W + "/" + MAP_H[i] + ": " + d + " vs " + DIGITS[W][i]); }); }
+  check("engine: the digits B reads, regrown (8 limbs a level): Gli3 x 1.5 " + got[18].join(" ") + "; x 1 " + got[22].join(" ") + " (the table: " + DIGITS[18].join(" ") + " / " + DIGITS[22].join(" ") + "); no six at x 1.5, six at x 1",
+        off.length === 0 && !DIGITS[18].includes(6) && DIGITS[22].includes(6), off.join(", "));
 }
 /* ================= the rounds ================= */
 const STG = { A: SA, B: SB };
@@ -48,27 +50,29 @@ const T = (K, r, good, badOnes) => { const S = STG[K], R = S.cfg.rounds[r];
   const js = o => JSON.stringify(o, (k, v) => typeof v === "number" ? +v.toFixed(3) : v).replace(/"/g, "");
   check(K + (r + 1) + ": hit by " + g.map(x => js(x[0]) + " (" + x[2] + ")").join(", ") + "; missed by " + b.map(x => js(x[0]) + " (" + x[2] + ")").join(", "),
         g.every(x => x[1]) && b.every(x => x[1])); };
-T("A", 0, [{ w: 26, a: 3.5 }, { w: 24, a: 4 }], [{ w: 22, a: 6 }, { w: 22, a: 4 }]);
-T("A", 1, [{ w: 14, a: 2 }, { w: 18, a: 2.5 }], [{ w: 22, a: 6 }, { w: 22, a: 2 }]);
-T("B", 0, [{ f: 1 }], [{ f: 0 }]);
-T("B", 1, [{ w: 26 }], [{ w: 22 }]);
+T("A", 0, [{ g: 1.75, hx: 0.5 }, { g: 1.25, hx: 0.7 }, { g: 0.25, hx: 1.2 }], [{ g: 1, hx: 1 }, { g: 1.5, hx: 0.7 }, { g: 1.5, hx: 0.85 }]);
+T("A", 1, [{ g: 2, hx: 2.5 }, { g: 2, hx: 3 }], [{ g: 1, hx: 1 }, { g: 1, hx: 3 }]);
+T("B", 0, [{ f: 1 }], [{ f: 0 }, { f: 3 }]);
+T("B", 1, [{ g: 1 }], [{ g: 1.5 }]);
 T("B", 2, [{ f: 0 }], [{ f: 3 }]);
-{ const q = play("B", 2, { f: 3 }), last = q.hist[q.hist.length - 1].runs;
-  const e6 = q.runs.filter(c => c.ever[6] || c.ever[7] || c.ever[8] || c.ever[9]).length;
-  check("B3 with five or fewer favoured: six or more arose in " + e6 + " of 16 clades though they end at " + f2(sumAt(q, q.G).s6), e6 >= 14); }
+{ const q = play("B", 2, { f: 3 });
+  const e6 = q.runs.filter(c => c.ever[6]).length;
+  check("B3 with five or fewer favoured: six arose in " + e6 + " of 16 clades though six or more end at " + f2(sumAt(q, q.G).s6), e6 >= 14); }
+{ const q = play("B", 1, { g: 1.5 }), s7 = q.runs.filter(c => c.ever[7] || c.ever[8]).length;
+  check("B2 at Gli3 x 1.5, six favoured: six arose in " + q.runs.filter(c => c.ever[6]).length + " of 16 clades, seven or eight in " + s7 + " (more digits are made; six is not)", q.runs.every(c => !c.ever[6]) && s7 >= 8); }
 /* ================= the flow ================= */
 {
   for (const S of STAGES) { S.round = 0; S.done = false; S.waiting = false; S.results = []; S.last = null; const pr = document.getElementById(S.K + "_practice"); if (pr) pr.checked = false; openRound(S); }
   for (const k in Gates) Gates[k].done = false; paintAll();
   const go = S => { document.getElementById(S.K + "_go").click(); finishNow(S); }, next = S => document.getElementById(S.K + "_next").click();
-  const clickCell = (W, a) => { const cv = document.getElementById("A_map"), r = cv.getBoundingClientRect(), k = r.width / 760;
-    cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + (MP.x0 + MAP_A.indexOf(a) * MP.cw + MP.cw / 2) * k, clientY: r.top + (MP.y0 + MAP_W.indexOf(W) * MP.ch + MP.ch / 2) * k, bubbles: true })); };
+  const clickCell = (g, hx) => { const cv = document.getElementById("A_map"), r = cv.getBoundingClientRect(), k = r.width / 760;
+    cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + (MP.x0 + MAP_H.indexOf(hx) * MP.cw + MP.cw / 2) * k, clientY: r.top + (MP.y0 + MAP_G.indexOf(g) * MP.ch + MP.ch / 2) * k, bubbles: true })); };
   go(SA); const miss = Score.getBit("scaffold", BIT.A1) === 0 && !SA.waiting;
-  clickCell(26, 3.5); const set = readSet(SA), clicked = set.w === 26 && set.a === 3.5; go(SA); const hit = SA.waiting; next(SA);
-  clickCell(14, 2); go(SA);
-  const filled = SEEN["26,3.5"] === 4 && SEEN["14,2"] === 2;
-  check("flow: a miss records 0 (" + miss + "); a click on the map sets the cell (" + clicked + "); four digits there hits (" + hit + "); the map fills (" + filled + "); two hits finish A (" + Gates.A.done + ")", miss && clicked && hit && filled && Gates.A.done);
-  setC(SB, { f: 1 }); go(SB); next(SB); setC(SB, { w: 26 }); go(SB); next(SB); setC(SB, { f: 0 }); go(SB);
+  clickCell(1.75, 0.5); const set = readSet(SA), clicked = set.g === 1.75 && set.hx === 0.5; go(SA); const hit = SA.waiting; next(SA);
+  clickCell(2, 2.5); go(SA);
+  const filled = SEEN["1.75,0.5"] === 6 && SEEN["2,2.5"] === 2;
+  check("flow: a miss records 0 (" + miss + "); a click on the map sets the cell (" + clicked + "); six digits there hits (" + hit + "); the map fills (" + filled + "); two hits finish A (" + Gates.A.done + ")", miss && clicked && hit && filled && Gates.A.done);
+  setC(SB, { f: 1 }); go(SB); next(SB); setC(SB, { g: 1 }); go(SB); next(SB); setC(SB, { f: 0 }); go(SB);
   check("flow: three hits finish B (" + Gates.B.done + ")", Gates.B.done);
   let n = 0; for (let i = 0; i < 5; i++) if (Score.isAnswered("scaffold", i)) n++;
   const bits = Object.keys(BIT).map(k => Score.getBit("scaffold", BIT[k])).join("");

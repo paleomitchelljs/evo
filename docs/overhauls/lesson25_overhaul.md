@@ -1,10 +1,10 @@
 # Lesson 25 — mesoevolution: species selection on development ("2Z"; slot 25 since 2026-11-07, was `mesoevolution_plan.md`)
 
-**File** · `app/lessons/lesson25.html` — draft 1 (2026-11-07, v1, 5 bits, LOCKS `x`)
+**File** · `app/lessons/lesson25.html` — draft 2 (2026-11-07, v2, 5 bits, LOCKS `x`): rebuilt on lesson 24's draft-2 limb
 **Checks** · `node scripts/check_lesson25_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
 **Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 1-3 taken on the recommendations: limbs, deep homology left for later, both readings through the map). Needs 23's species-level engine and the evo-devo lesson's
 limb network (lesson24_overhaul.md)
-**Last touched** · 2026-11-07
+**Last touched** · 2026-11-07 (draft 2)
 
 ## JM, 2026-11-07 (verbatim, the 2Z part; the whole message is in lesson21_overhaul.md)
 
@@ -113,6 +113,39 @@ source).
     left out   deep homology (Open 2); real data (squamate limb loss; horse toes); the time-scale reading of
                "mesoevolution" beyond the map.
 
+## JM on draft 1, 2026-11-07 (verbatim; the whole note is in lesson24_overhaul.md)
+
+> For 24/25 the developmental runs should be more explicit and specific. ... I don't think we need or want any line plots, though
+> more embryo-shaped visualizations would be ideal. ... Same with the limbs, where instead of embryological terms like hand plate
+> we should use more genetic-developmental terms.
+
+> I also don't want manipulations like a scalpel involved—purely modulating the expression of different genes is what I'm after
+
+## Draft 2 (2026-11-07; scratchpad l25v2/)
+
+    the map    lesson 24's draft-2 limb (Sox9 with Bmp and Wnt, row by row), two genes free: Gli3 (the Hoxa13 region 30 - 8 x
+               Gli3 cells wide: 22 at x 1, lesson 24's) and Hox13 (spacing 1.5 x Hox13). 8 limbs a cell (map.js, table.json):
+                 Gli3 \ Hox13  .4  .5  .6  .7  .85  1  1.2  1.45  1.75  2.1  2.5  3
+                 x 2   (14)      6*  5*  5   4*  4   4   3   3    3    3*   2    2
+                 x 1.5 (18)      8   8   7*  5   5   4*  4   4    3    3    3    2*
+                 x 1.25 (20)    10  10   7*  6   5   5   5   4    4    3    3    3
+                 x 1   (22)     10  10   8*  7   6*  5   5   5*   4    4    3    3
+                 x .5  (26)     12* 10* 10   8   7   6*  5*  5    5    4    4    4
+                 x 0   (30)     14  12* 10* 10*  8   8*  7*  6*   5    5    5    4
+               At Gli3 x 1.5 the count jumps 7 -> 5: no Hox13 level makes six. At x 1 six at .85.
+    clades     (clade.js) as draft 1, species carrying Hox13 (log, sd .06, inside .4-3) from x 1; Gli3 the clade's (x 1.5 or x 1);
+               20 seed sets of 16 clades:
+                 x 1.5, none favoured: three-digit species .18-.35; three or fewer favoured .45-.57; five or fewer .27-.39.
+                 six favoured: a six-digit species in 0 of 16 clades at x 1.5 (seven or eight in all 16), .88-1.00 at x 1.
+                 x 1, none favoured: six or more .28-.58; five or fewer favoured .12-.19 (six arose in every clade).
+    as built   A1 a six-digit limb (opens Gli3 x 1, Hox13 x 1: five); A2 two digits. B1 Gli3 x 1.5, favour free: three-digit
+               species .42 or more; B2 six favoured, Gli3 free from x 1.5: clades where six arose .6 or more; B3 Gli3 x 1,
+               favour free from five or fewer: six or more .24 or more.
+               B's plot over time and its line-sketch cards replaced by the 16 clades now, a bar each (living species by
+               digits, the counted ones at the bottom, ◆ where six has arisen) and wordless bar cards: no line over time.
+               Regions named by their genes (the Hoxa13 region, not the hand-plate); the arrows are Gli3 and Hox13.
+    checks     `check_lesson25_numbers.js`: 15 checks (the table regrown on the page matches) + both widths + two R panels.
+
 ## Open for JM
 
 1. Limbs again (reusing evo-devo's network; recommended for continuity), or teeth (molar proportions predicted by an
@@ -130,7 +163,9 @@ source).
 | 3 | after the evo-devo engine: the settings → limb table; then 23's species engine on it | done 2026-11-07 |
 | 4 | slot fixed; file renamed | done 2026-11-07 (25) |
 | 5 | draft 1: page, check script | done 2026-11-07 (v1, 5 bits) |
-| 6 | JM plays draft 1; Open 1-3; his voice | todo |
+| 6 | JM plays draft 1; Open 1-3; his voice | done 2026-11-07 (his notes above; Open 1-3 not ruled) |
+| 7 | draft 2 on lesson 24's draft-2 limb; no line plots; genes' names | done 2026-11-07 (v2) |
+| 8 | JM plays draft 2; his voice | todo |
 
 ## Rulings
 
