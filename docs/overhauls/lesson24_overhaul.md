@@ -1,9 +1,9 @@
 # Lesson 24 — evo-devo: a gene network builds a limb ("2Y"; slot 24 since 2026-11-07, was `evodevo_plan.md`)
 
-**File** · `app/lessons/lesson24.html` — draft 1 (2026-11-07, v1, 14 bits, LOCKS `x`). One lesson, five stages (Open 1 taken as one; may split A-C / D-E)
+**File** · `app/lessons/lesson24.html` — draft 2 (2026-11-07, v2, LOCKS `x`): JM's draft-1 notes (below) rebuilt it. Draft 1 (v1, 14 bits) in git (674f05a and before)
 **Checks** · `node scripts/check_lesson24_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"). Open 1-4 taken on the recommendations. The papers: `docs/refs/README.md`
-**Last touched** · 2026-11-07
+**Status** · DRAFT 2 2026-11-07 (JM's notes on draft 1: named genes, explicit expression steps, embryo-shaped pictures, no line plots, no scalpel or bead). The papers: `docs/refs/README.md`
+**Last touched** · 2026-11-07 (draft 2)
 
 ## JM, 2026-11-07 (verbatim, the 2Y part; the whole message is in lesson21_overhaul.md)
 
@@ -173,6 +173,104 @@ The clock (Cooke & Zeeman 1976; Lewis 2003; Gomez et al. 2008), limb position (C
                fixed regions here); an axolotl's order of digits; four digits (counts jump 3 -> 5 at this width:
                mesoevolution's constraint); real data.
 
+## JM on draft 1, 2026-11-07 (verbatim)
+
+> For 24/25 the developmental runs should be more explicit and specific. We can and should name things like HES and also put
+> transcription/mRNA decay in there. I don't think we need or want any line plots, though more embryo-shaped visualizations would
+> be ideal. I want them to set values for core genes and modify expression levels and watch what happens. Simplified in the sense
+> that only a core set of genes are shown, but explicit in the steps involved like mRNA decay. Same with the limbs, where instead
+> of embryological terms like hand plate we should use more genetic-developmental terms.
+
+> I also don't want manipulations like a scalpel involved—purely modulating the expression of different genes is what I'm after
+
+Read as:
+- every control is a gene's expression step: transcription rate, mRNA or protein half-life, the delay before new mRNA is ready
+  (Hes7's introns), or where a gene is switched on. No scalpel, no bead, no growth-speed slider.
+- named genes, a core set per stage: Hes7, Fgf8, Mesp2; Hox, Tbx5, Tbx4, Fgf10; Fgf8, Shh, Grem1, Bmp4; Sox9, Bmp, Wnt, Hox13, Gli3.
+- pictures are a cell, an embryo, a bud, a limb skeleton; no line over time anywhere.
+- regions named by their genes: the Meis region, the Hoxa11 region, the Hoxa13 region (not upper arm / forearm / hand-plate).
+
+## Facts checked for draft 2 (web, 2026-11-07)
+
+- Hes7 protein half-life about 22 min; a K14R form at about 30 min damps the clock, segmentation fails after 3-4 cycles (Hirata
+  et al. 2004, Nat Genet 36: 750).
+- Hes7's three introns delay new mRNA by about 19 min; without them the clock stops and every somite fuses (Takashima et al.
+  2011, PNAS). Two of the three removed: a faster clock, more somites and vertebrae in the neck and upper chest (Harima et al.
+  2013, Cell Rep 3: 1).
+- Digits: Bmp promotes Sox9, Wnt represses it, Sox9 represses both (Raspopovic et al. 2014, Science 345: 566; their parameters
+  not found, so the page's are its own, with their signs). Less distal Hox (Hoxa13, Hoxd11-13) gives more, thinner digits:
+  the dose sets the spacing (Sheth et al. 2012, Science 338: 1476).
+- Fgf8 mRNA made only in the tail and decaying in the cells it leaves behind makes the gradient (Dubrulle & Pourquie 2004,
+  Nature 427: 419): from memory, not rechecked.
+
+## Draft 2 plan and measurements (2026-11-07; scratchpad l24v2/)
+
+    A  one cell's Hes7 (hes.js). dm/dt = k / (1 + (p(t - tau) / p0)^2.5) - ln2/hm m; dp/dt = a m(t - 2) - ln2/hp p.
+       k 25 mRNA/min, a 3, p0 200, hm 3 min, hp 22 min, tau 33 (3 introns) / 26.6 (1) / 14 (none).
+       Measured: tau 14 steady; 26.6 period 102 min, swing .27; 33 period 122, swing .56; 40 period 143.
+       hp 11 / 16 / 22 / 26 / 30: swing .92 / .80 / .56 / .34 / .11 (30 damps: Hirata). hm 1.5-12: period 115-151, no damping.
+       Transcription rate: swing up, period unchanged. The period is set by the delay.
+       A1 no feedback (the protein cannot shut its gene): protein = k a hm hp / ln2^2; mRNA half-life free from 3: protein in a
+          window (one step doubles it, two overshoot).
+       A2 feedback; the delay free from none: the cell pulses (swing .2 or more).
+       A3 the delay 3 introns; protein half-life free from 22: stronger pulses (swing .75 or more: 16 or 11).
+       Picture: the cell (nucleus, the gene with its introns, mRNA and protein as dots), a strip of the cell every 20 min.
+    B  the embryo (emb.js): tail cells carry the clock; a cell's Fgf8 mRNA decays after it leaves the tail (half-life hF); its
+       clock slows as Fgf8 falls (rate .4 + .6 Fgf8); at Fgf8 .3 the clock freezes; Mesp2 marks a boundary where frozen cells
+       pass from low Hes7 to high. One cell trajectory read at each cell's own clock time (exact: no coupling).
+       24 h, hF 416: 3 introns 9 somites, 1 intron 11, none 1 then fused; protein 30 min 3 then fused; hF 200 / 416 / 830: Hes7
+       stripes in the tail 1 / 2 / 3.
+       B1 more somites (the delay free from 3 introns: Harima); B2 somites stop after a few (protein half-life free: Hirata);
+       B3 more Hes7 stripes in the tail (Fgf8 mRNA half-life free; a snake's tail: Gomez et al. 2008).
+       Picture: the embryo from above, head to tail, somites in pairs, the tail shaded by the gene chosen (Hes7 mRNA, Hes7 protein,
+       Fgf8 mRNA, Mesp2).
+    C  where a limb goes: rules on 24 somite levels (draft 1's), named: Hox genes come on in order (when they start: the arrow);
+       Tbx5 in the lateral plate where 5-6 Hox genes are on, Tbx4 where 7-9; Fgf10 switched on at the first Tbx5 level and the first
+       lumbar level makes a bud; Fgf10 can be switched on at one flank level (a click: where a gene is on, not a bead).
+       C1 the forelimb further back (Hox later: a longer neck); C2 an extra leg (Fgf10 on in the back of the flank, where Tbx4 is);
+       C3 no forelimb (Hox early: a python's code).
+       Picture: the embryo from the side, somites along the back, lateral plate below (Tbx5 hatched, Tbx4 dotted), buds drawn.
+    D  the bud's loop (bud.js; draft 1's engine, sources scaled by transcription): Shh x .3 / 1 / 3: 1.01 / 1.70 / 2.29 mm;
+       Fgf8 x 1 / 2: 1.70 mm at hour 17 / 1.78 at hour 9.4; Grem1 x 20 / 80: 1.70 / 2.00 (below 20 it plateaus near 1.45, at 1
+       no growth); Bmp4 x 1-5: 1.70-1.46 (x 10 no growth).
+       D1 1.6-1.8 mm (Shh free from .3); D2 the same length by hour 10 (Fgf8 free); D3 1.9 mm or more (Grem1 free
+       from 20). Picture: the bud on the flank, four copies, one a gene (Fgf8, Shh, Grem1, Bmp4); outlines every 5 hours.
+    E  Sox9-Bmp-Wnt, row by row (bsw.js): ds/dt = -s + b - w - s^3; db/dt = -1.59 s - .1 b + h b''; dw/dt = -1.27 s - .5 w +
+       .1 h w''; h set by the region's Hox code: Meis region 10 (8 cells wide), Hoxa11 region 4 (12), Hoxa13 region 1.5 x Hox13
+       (22 - 8 (Gli3 - 1) cells). 16 limbs, 4 ms a limb.
+       Hox13 x .5 / 1 / 2 / 3: digits 10 / 5 / 4 / 3 (16 of 16 at 1-2-5). Gli3 x 1 / .5 / 0 (width 22 / 26 / 30): 5 / 6-7 / 7-8.
+       E1 1-2-5 (Hox13 free from x .5); E2 three digits (Hox13 free from x 1; values .5, 1, 3); E3 seven or more (Gli3 free,
+       normal / off). Picture: the limb's outline with the Sox9 cells dark; the 16 limbs as 16 small skeletons.
+    map    (map.js, for lesson 25) digits by width x Hox13: at width 18 the count jumps 7 -> 5 (six never), at 22 every count
+           3-8 and 10 (nine never); at 26 nine never.
+
+## Draft 2 as built (2026-11-07; v2, 15 bits)
+
+    every control  a gene's expression step: a transcription rate, an mRNA or protein half-life, the delay before new mRNA is
+                   ready (Hes7's introns), where a gene starts or is switched on. An arrow to "broken down" is thicker the faster
+                   the breakdown. No scalpel, no bead, no growth slider; no line over time.
+    A  one cell    the cell (nucleus, the gene drawn with its introns, mRNA strokes, a protein dot per 25) and the cell every 20
+                   minutes. A1 no binding, mRNA half-life free from 3 (10,303): protein 15,000-30,000 (6: 20,606; 12: 41,211;
+                   the closed form k a hm hp / ln2^2 printed beside it in the check). A2 the delay free from none (swing 0):
+                   swing .2 or more (1 intron .34, 3 introns .57). A3 protein half-life free from 22 (.57): .75 or more (16: .80;
+                   11: .92; 30: .26).
+    B  embryo      from above; menu Hes7 mRNA / Hes7 protein / Fgf8 mRNA / Mesp2. 24 hours. B1 the delay free from 3 introns
+                   (9 somites): 11 or more (1 intron: 11; none: 1, then a block). B2 protein half-life free from 22 (9): 5 or
+                   fewer (30: 3, then a block of 159 cells). B3 Fgf8 mRNA half-life free from 400 (2 stripes): 3 or more (800: 3).
+    C  side view   Hox bars over the somites, the flank hatched (Tbx5) or dotted (Tbx4), Fgf10 dark, buds below. C1 Hoxc6 free
+                   from somite 8: the arm at somite 11 or later (12). C2 Fgf10 switched on by a click in the flank: an extra leg
+                   (somites 12-19; 9-11 give an arm; the neck nothing). C3 Hoxc6 free: no arm (from somite 1).
+    D  the bud     four copies, one gene each (Fgf8, Shh, Grem1, Bmp4), and the bud every 5 hours. D1 Shh free from x .3
+                   (1.01 mm): 1.6-1.8 (x 1: 1.70; x 3: 2.29). D2 Fgf8 free: stopped by hour 10, 1.6 mm or more (x 2: 1.78 at
+                   9.4). D3 Grem1 free from x 1: 1.9 or more (x 4: 2.00; x .25: 1.50).
+    E  skeleton    the limb's outline with the Sox9 cells dark; the 16 limbs small, each with its counts. Over 20 seed sets of 16
+                   limbs every case is 16 of 16 or 0 of 16: E1 Hox13 free from x .5 (ten digits): 1-2-5 (x 1); E2 Hox13 free
+                   from x 1: three digits (x 3); E3 Gli3 free: seven or more (not made: 7-8).
+    checks         `check_lesson24_numbers.js`: 30 checks + both widths + five R panels (shortened); run in full, the R
+                   panels give the page's numbers (swing .57, 9 somites, 1.70 mm, 1-2-5).
+    left out       Antennapedia; Lfng and Notch (the cells do not talk: each runs its own Hes7 from minute 0); Tbx5 itself as
+                   a control (Hoxc6 does the work); proximal-distal identity read off D's bud (E's regions fixed).
+
 ## Open for JM
 
 1. One lesson or two (A-C, D-E)?
@@ -192,7 +290,9 @@ The clock (Cooke & Zeeman 1976; Lewis 2003; Gomez et al. 2008), limb position (C
 | 4 | engine prototypes (E's pattern, D's loop, B's clock); Measure first | done 2026-11-07 |
 | 5 | slot fixed; file renamed | done 2026-11-07 (24) |
 | 6 | draft 1: page, check script | done 2026-11-07 (v1, 14 bits) |
-| 7 | JM plays draft 1; Open 1-4; his voice | todo |
+| 7 | JM plays draft 1; Open 1-4; his voice | done 2026-11-07 (his notes above; Open 1-4 not ruled) |
+| 8 | draft 2: named genes, expression steps, embryo-shaped pictures, no line plots, no scalpel or bead | done 2026-11-07 (v2, 15 bits) |
+| 9 | JM plays draft 2; his voice | todo |
 
 ## Rulings
 
@@ -202,6 +302,11 @@ The clock (Cooke & Zeeman 1976; Lewis 2003; Gomez et al. 2008), limb position (C
 - 2026-09-22 (sandbox brief, agreed): termination from the model, not a slider; BMP shuts down FGF; outputs length and duration.
 
 ## Do not
+
+- Put a manipulation on screen (a scalpel, a bead, a graft) or a growth-speed slider: every control is a gene's expression
+  (JM, 2026-11-07).
+- Draw a line over time: cells, embryos, buds and limbs only (JM, 2026-11-07).
+- Name regions by anatomy or embryology (hand-plate, autopod): by the genes on there (JM, 2026-11-07).
 
 - Put a "stop" or "size" slider on the limb: the size is an outcome (JM 2026-10-01: never a slider on a drawn outcome).
 - Call the network a DAG on screen: it has loops.

@@ -2,20 +2,24 @@
 /*
  * check_lesson24_numbers.js -- the checks for app/lessons/lesson24.html.
  *
- * Lesson 24, draft 1 (2026-11-07): evo-devo, a gene network builds a limb.
- * A switches; B a clock and a growing body; C where a limb goes; D a bud
- * that grows and stops itself; E the skeleton. What has to hold:
+ * Lesson 24, draft 2 (2026-11-07): evo-devo with named genes, every
+ * control a gene's expression. A one cell's Hes7; B the embryo (Hes7,
+ * Fgf8 mRNA, Mesp2, somites); C where a limb goes (Hoxc6, Hoxc10, Tbx5,
+ * Tbx4, Fgf10); D a bud that stops itself (Fgf8, Shh, Grem1, Bmp4); E the
+ * skeleton (Sox9, Bmp, Wnt; Hox13, Gli3). What has to hold:
  *
- *   Engine. A's rule (on when something on turns it on, nothing on turns
- *      it off) gives each target from its wiring, and a loop that shuts
- *      itself off flickers; B's blocks follow the delay (the period) and
- *      the growth time; C's rules place the limbs, a bead makes an extra
- *      one, an early start loses the forelimb; D's bud stops by itself,
- *      its length set by Shh's reach and not by growth speed, cut short
- *      by the scalpel; E's 16 limbs give 1-2-5, three digits, seven.
+ *   Engine. A: without binding the protein settles at k a hm hp / ln2^2
+ *      (the closed form beside the measurement); the delay makes the
+ *      pulse and sets its period; a shorter-lived protein swings harder.
+ *      B: one intron more somites than three, none no somites; a
+ *      slower-decaying protein, somites stop; a longer-lived Fgf8 mRNA,
+ *      more Hes7 stripes in the tail. C: the limbs where Hoxc6 and Hoxc10
+ *      start, Fgf10 in the flank makes an arm or a leg by Tbx5 or Tbx4,
+ *      Hoxc6 from the head loses the forelimb. D: the bud stops itself,
+ *      its length set by Shh, not by Fgf8's speed; more Grem1, longer.
  *   Rounds. Each target hit by its intended setting, missed by its
- *      opening.
- *   Flow. 14 bits written; the lesson ends.
+ *      opening (E: over the page's seed).
+ *   Flow. 15 bits written; the lesson ends.
  *   Layout. Hover marks; every canvas fits; R last and closed; the five
  *      R panels run (shortened).
  *
@@ -26,7 +30,7 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8796;
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const CANVAS_IDS = ["A_cells", "A_tpic", "B_clock", "B_body", "B_tpic", "C_body", "C_tpic", "D_bud", "D_time", "D_tpic", "E_limb", "E_tally", "E_tpic"];
+const CANVAS_IDS = ["A_cell", "A_strip", "A_tpic", "B_emb", "B_tpic", "C_emb", "C_tpic", "D_bud", "D_series", "D_tpic", "E_limb", "E_all", "E_tpic"];
 
 const INNER = `
 const L_=[], say=s=>L_.push(s);
@@ -35,30 +39,29 @@ const check=(name, ok, detail)=>{ ran++; if(!ok) bad++; say((ok?"ok   ":"FAIL ")
 for (const k in Gates) { Gates[k].open = true; document.getElementById("stage" + k).classList.remove("stage-locked"); }
 /* ================= the engines ================= */
 {
-  const run = P => { const w = swWorld(Object.assign({ LX: 0, RX: 0, LY: 0, RY: 0, XY: 0, YX: 0 }, P)); for (let t = 0; t < A_STEPS; t++) swStep(w); return w; };
-  const y = w => Array.from(w.Y).join("");
-  const a1 = y(run({ LY: 1, RY: -1 })), a2 = y(run({ LX: 1, RX: -1, LY: 1, XY: -1 })), a3 = y(run({ LX: 1, YX: 1, XY: 1, pulse: true })), a3n = y(run({ LX: 1, XY: 1, pulse: true }));
-  const fl = run({ LX: 1, XY: 1, YX: -1 }), seq = fl.hist.map(h => h.Y[0]).join("");
-  check("A engine: Y on with L, off with R: " + a1 + "; X between (L on, R off), Y on with L, off with X: " + a2 + "; a pulse kept by X and Y turning each other on: " + a3 + " (without the loop " + a3n + "); Y turning X off flickers: " + seq,
-        a1 === "111100000000" && a2 === "000011110000" && a3 === "111111110000" && a3n === "000000000000" && /0110/.test(seq) && /1001/.test(seq));
+  const cell = P => { const w = cellWorld(Object.assign({ fb: 1, tau: 33, hm: 3, hp: 22 }, P)); w.t = HX.T / HX.frame; return CELL.stat(w); };
+  const free = [3, 6, 12].map(hm => [cell({ fb: 0, hm }).prot, HX.k * HX.a * hm * 22 / Math.LN2 / Math.LN2]);
+  const d = TAU_V.map(tau => cell({ tau })), h = [11, 16, 22, 30].map(hp => cell({ hp }).swing);
+  check("A engine: without binding the protein settles at " + free.map(([m, c]) => Math.round(m) + " (k a hm hp / ln2^2 = " + Math.round(c) + ")").join(", ") +
+        "; the delay none / 1 intron / 3 introns: swing " + d.map(x => f2(x.swing)).join(" / ") + ", a peak every " + d.map(x => x.per ? Math.round(x.per) : "-").join(" / ") + " min; protein half-life 11 / 16 / 22 / 30: swing " + h.map(f2).join(" / "),
+        free.every(([m, c]) => Math.abs(m / c - 1) < 0.01) && d[0].swing < 0.05 && d[1].swing >= 0.2 && d[2].swing > d[1].swing && d[1].per < d[2].per && d[2].per > 110 && d[2].per < 135 && h[0] > h[1] && h[1] > h[2] && h[2] > h[3]);
 }
 {
-  const blk = (Tm, v, dur) => { const w = ckWorld({ Tm, v, dur }); for (let t = 0; t < Math.ceil((dur + CK.start) / 10); t++) ckStep(w); return ckStat(w).blocks; };
-  const b = [20, 12, 6].map(T => blk(T, 0.5, 500)), b2 = blk(12, 0.2, 1500), b3 = blk(3, 0.5, 500);
-  check("B engine: blocks in 500 minutes at delay 20 / 12 / 6: " + b.join(" / ") + " (more as the delay shortens: 7 / 11 / 15); 1,500 minutes at .2 a minute, delay 12: " + b2 + " (31); delay 3, the clock damps: " + b3,
-        b[0] < b[1] && b[1] < b[2] && b[0] >= 6 && b[0] <= 8 && b[2] >= 14 && b[2] <= 16 && b2 >= 28 && b2 <= 34 && b3 < b[2]);
+  const emb = P => { const w = emWorld(Object.assign({ tau: 33, hp: 22, hF: 400 }, P)); w.t = EM.T / EM.frame; return emCells(w); };
+  const t = TAU_V.map(tau => emb({ tau })), h30 = emb({ hp: 30 }), f = HF_V.map(hF => emb({ hF }));
+  check("B engine: somites in 24 hours with no introns / 1 / 3: " + t.map(e => e.somites).join(" / ") + " (none: one long block of " + t[0].tail + " cells); protein half-life 30: " + h30.somites + " somites, then a block of " + h30.tail + " cells; Fgf8 mRNA half-life 800 / 400 / 200: Hes7 stripes in the tail " + f.map(e => e.stripes).join(" / "),
+        t[0].somites <= 2 && t[1].somites > t[2].somites && t[2].somites >= 8 && h30.somites <= 5 && h30.tail > 60 && f[0].stripes > f[1].stripes && f[1].stripes >= f[2].stripes);
 }
 {
-  const n = posLimbs({ shift: 0, bead: -1 }), l = posLimbs({ shift: 0, bead: 14 }), a = posLimbs({ shift: 0, bead: 12 }), py = posLimbs({ shift: 10, bead: -1 }), nk = posLimbs({ shift: 0, bead: 3 });
-  const s = r => r.limbs.map(x => x.kind + "@" + (x.at + 1)).join(" ");
-  check("C engine: the body's limbs: " + s(n) + "; a bead in block 15: " + s(l) + "; in block 13: " + s(a) + "; in the neck (block 4): " + s(nk) + " (nothing); Hox 10 blocks early: " + s(py) + " (no forelimb)",
-        n.arms === 1 && n.legs === 1 && l.legs === 2 && a.arms === 2 && nk.arms === 1 && nk.legs === 1 && py.arms === 0 && py.legs === 1);
+  const s = r => r.limbs.map(x => x.kind + "@" + (x.at + 1)).join(" "), n = posLimbs({ c6: 8, fg: -1 }), late = posLimbs({ c6: 12, fg: -1 }), py = posLimbs({ c6: 1, fg: -1 }), leg = posLimbs({ c6: 8, fg: 15 }), arm = posLimbs({ c6: 8, fg: 10 }), nk = posLimbs({ c6: 8, fg: 3 });
+  check("C engine: the limbs: " + s(n) + "; Hoxc6 from somite 12: " + s(late) + "; from somite 1: " + s(py) + " (no forelimb); Fgf10 in the flank at somite 16: " + s(leg) + "; at 11: " + s(arm) + "; at 4 (no Tbx): " + s(nk),
+        n.armAt === 8 && n.legs === 1 && late.armAt === 12 && late.legs === 1 && py.arms === 0 && py.legs === 1 && leg.legs === 2 && leg.arms === 1 && arm.arms === 2 && nk.limbs.length === 2);
 }
 {
-  const len = P => { const w = bdWorld(Object.assign({ lamS: 0.25, w: 20, g: 0.3, cut: null }, P)); for (let t = 0; t < 160; t++) bdStep(w); return bdStat(w); };
-  const r = [0.1, 0.25, 0.4].map(s => len({ lamS: s })), f = len({ g: 0.6 }), c3 = len({ cut: 3 }), w80 = len({ w: 80 });
-  check("D engine: the bud stops by itself; length (mm) by Shh's reach .1 / .25 / .4: " + r.map(x => x.len.toFixed(2)).join(" / ") + " (rising), stopping at hour " + r.map(x => x.hours.toFixed(1)).join(" / ") + "; growth doubled: " + f.len.toFixed(2) + " mm at hour " + f.hours.toFixed(1) + " (the same length, sooner); the ridge removed at hour 3: " + c3.len.toFixed(2) + "; Gremlin blocking BMP harder: " + w80.len.toFixed(2),
-        r[0].len < r[1].len && r[1].len < r[2].len && r.every(x => x.ridge === 0) && Math.abs(f.len - r[1].len) < 0.05 && f.hours < r[1].hours * 0.6 && c3.len < 1.1 && w80.len > r[1].len);
+  const bud = P => { const w = bdWorld(Object.assign({ sh: 1, gr: 20, f: 1 }, P)); for (let t = 0; t < 160; t++) bdStep(w); return bdStat(w); };
+  const r = SH_V.map(sh => bud({ sh })), f2x = bud({ f: 2 }), g = GR_V.map(gr => bud({ gr }));
+  check("D engine: the bud stops by itself; length (mm) by Shh x .3 / 1 / 3: " + r.map(x => x.len.toFixed(2)).join(" / ") + ", stopping at hour " + r.map(x => x.hours.toFixed(1)).join(" / ") + "; Fgf8 x 2: " + f2x.len.toFixed(2) + " mm at hour " + f2x.hours.toFixed(1) + " (the same length, sooner); Grem1 x .25 / 1 / 4: " + g.map(x => x.len.toFixed(2)).join(" / "),
+        r[0].len < r[1].len && r[1].len < r[2].len && r.every(x => x.ridge === 0) && Math.abs(f2x.len - r[1].len) < 0.1 && f2x.hours < r[1].hours * 0.6 && g[0].len < g[1].len && g[1].len < g[2].len);
 }
 /* ================= the rounds ================= */
 const STG = { A: SA, B: SB, C: SC, D: SD, E: SE };
@@ -71,48 +74,49 @@ const T = (K, r, good, badOnes) => { const S = STG[K], R = S.cfg.rounds[r];
   const js = o => JSON.stringify(o, (k, v) => typeof v === "number" ? +v.toFixed(3) : v).replace(/"/g, "");
   check(K + (r + 1) + ": hit by " + g.map(x => js(x[0]) + " (" + x[2] + ")").join(", ") + "; missed by " + b.map(x => js(x[0]) + " (" + x[2] + ")").join(", "),
         g.every(x => x[1]) && b.every(x => x[1])); };
-T("A", 0, [{ LY: 1, RY: -1 }], [{}]);
-T("A", 1, [{ LX: 1, RX: -1, LY: 1, XY: -1 }], [{}, { LY: 1, RY: 1 }]);
-T("A", 2, [{ LX: 1, YX: 1, XY: 1 }], [{}, { LX: 1, XY: 1 }]);
-T("B", 0, [{ T: 12 }], [{ T: 20 }]);
-T("B", 1, [{ T: 6 }], [{ T: 12 }, { T: 3 }]);
-T("C", 0, [{ bd: 14 }], [{ bd: -1 }, { bd: 12 }]);
-T("C", 1, [{ bd: 12 }], [{ bd: -1 }, { bd: 14 }]);
-T("C", 2, [{ sh: 10 }], [{ sh: 0 }, { sh: -4 }]);
-T("D", 0, [{ s: 0.25 }], [{ s: 0.1 }, { s: 0.4 }]);
-T("D", 1, [{ g: 0.6 }], [{ g: 0.3 }]);
-T("D", 2, [{ c: 3 }, { c: 1 }], [{ c: null }]);
-T("E", 0, [{ a2: 3, a3: 6 }], [{ a2: 1, a3: 3 }, { a2: 1, a3: 6 }]);
-T("E", 1, [{ a3: 3 }], [{ a3: 6 }]);
-T("E", 2, [{ a3: 12 }], [{ a3: 6 }]);
-{ const q = play("D", 1, { g: 0.6 }), e = sumAt(q, q.G);
-  check("D2 at growth .6: the bud " + e.len.toFixed(2) + " mm (still 1.6-1.8: the speed changed when, not how long)", e.len >= 1.6 && e.len <= 1.8); }
+T("A", 0, [{ hm: 6 }], [{ hm: 3 }, { hm: 12 }]);
+T("A", 1, [{ tau: 26.6 }, { tau: 33 }], [{ tau: 14 }]);
+T("A", 2, [{ hp: 16 }, { hp: 11 }], [{ hp: 22 }, { hp: 30 }]);
+T("B", 0, [{ tau: 26.6 }], [{ tau: 33 }, { tau: 14 }]);
+T("B", 1, [{ hp: 30 }], [{ hp: 22 }, { hp: 16 }]);
+T("B", 2, [{ hF: 800 }], [{ hF: 400 }, { hF: 200 }]);
+T("C", 0, [{ c6: 12 }], [{ c6: 8 }, { c6: 1 }]);
+T("C", 1, [{ fg: 15 }, { fg: 12 }], [{ fg: -1 }, { fg: 10 }, { fg: 3 }]);
+T("C", 2, [{ c6: 1 }], [{ c6: 8 }, { c6: 12 }]);
+T("D", 0, [{ sh: 1 }], [{ sh: 0.3 }, { sh: 3 }]);
+T("D", 1, [{ f: 2 }], [{ f: 1 }]);
+T("D", 2, [{ gr: 80 }], [{ gr: 20 }, { gr: 5 }]);
+T("E", 0, [{ hx: 1 }], [{ hx: 0.5 }, { hx: 3 }]);
+T("E", 1, [{ hx: 3 }], [{ hx: 1 }]);
+T("E", 2, [{ g: 0 }], [{ g: 1 }]);
+{ const q = play("D", 1, { f: 2 }), e = sumAt(q, q.G);
+  check("D2 at Fgf8 x 2: the bud " + e.len.toFixed(2) + " mm (still 1.6-1.8: the speed changed when, not how long)", e.len >= 1.6 && e.len <= 1.8); }
 /* ================= the flow ================= */
 {
   for (const S of STAGES) { S.round = 0; S.done = false; S.waiting = false; S.results = []; S.last = null; const pr = document.getElementById(S.K + "_practice"); if (pr) pr.checked = false; openRound(S); }
   for (const k in Gates) Gates[k].done = false; paintAll();
   const go = S => { document.getElementById(S.K + "_go").click(); finishNow(S); }, next = S => document.getElementById(S.K + "_next").click();
   const cls = (K, id) => (document.querySelector("#" + K + '_paths [data-of="' + id + '"]') || { classList: { contains: () => false } }).classList;
-  const a1 = cls("A", "LY").contains("settable");
+  const a1 = cls("A", "hm").contains("settable");
   go(SA); const miss = Score.getBit("scaffold", BIT.A1) === 0 && !SA.waiting;
-  setC(SA, { LY: 1, RY: -1 }); go(SA); const hit = SA.waiting; next(SA);
-  setC(SA, { LY: 0, RY: 0, LX: 1, RX: -1 }); setC(SA, { LY: 1, XY: -1 }); go(SA); next(SA);
-  setC(SA, { LX: 0, RX: 0, LY: 0, RY: 0, XY: 0, YX: 0 }); setC(SA, { LX: 1, YX: 1, XY: 1 }); go(SA);
+  setC(SA, { hm: 6 }); go(SA); const hit = SA.waiting; next(SA);
+  setC(SA, { tau: 33 }); go(SA); next(SA); setC(SA, { hp: 16 }); go(SA);
   check("flow: A's arrows settable (" + a1 + "); a miss records 0 (" + miss + "); a hit waits (" + hit + "); three hits finish A (" + Gates.A.done + ")", a1 && miss && hit && Gates.A.done);
-  setC(SB, { T: 12 }); go(SB); next(SB); setC(SB, { T: 6 }); go(SB);
-  check("flow: two hits finish B (" + Gates.B.done + ")", Gates.B.done);
-  /* the bead by a click on block 15 */
-  { const cv = document.getElementById("C_body"), r = cv.getBoundingClientRect(), k = r.width / 760;
-    cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + (44 + 14 * 28 + 14) * k, clientY: r.top + 57 * k, bubbles: true })); }
-  const clicked = readSet(SC).bd === 14; go(SC); next(SC); setC(SC, { bd: 12 }); go(SC); next(SC); setC(SC, { sh: 10 }); go(SC);
-  check("flow: a click on block 15 puts the bead there (" + clicked + "); three hits finish C (" + Gates.C.done + ")", clicked && Gates.C.done);
-  setC(SD, { s: 0.25 }); go(SD); next(SD); setC(SD, { g: 0.6 }); go(SD); next(SD); setC(SD, { c: 3 }); go(SD);
+  setC(SB, { tau: 26.6 }); go(SB); next(SB); setC(SB, { hp: 30 }); go(SB); next(SB); setC(SB, { hF: 800 }); go(SB);
+  check("flow: three hits finish B (" + Gates.B.done + ")", Gates.B.done);
+  setC(SC, { c6: 12 }); go(SC); next(SC);
+  /* Fgf10 by a click on the flank under somite 16 */
+  { const cv = document.getElementById("C_emb"), r = cv.getBoundingClientRect(), k = r.width / 760;
+    cv.dispatchEvent(new MouseEvent("click", { clientX: r.left + (CX.x0 + 15 * CX.bw + CX.bw / 2) * k, clientY: r.top + (CX.fy + 15) * k, bubbles: true })); }
+  const clicked = readSet(SC).fg === 15; go(SC); next(SC); setC(SC, { c6: 1 }); go(SC);
+  check("flow: a click on the flank under somite 16 switches Fgf10 on there (" + clicked + "); three hits finish C (" + Gates.C.done + ")", clicked && Gates.C.done);
+  setC(SD, { sh: 1 }); go(SD); next(SD); setC(SD, { f: 2 }); go(SD); next(SD); setC(SD, { gr: 80 }); go(SD);
   check("flow: three hits finish D (" + Gates.D.done + ")", Gates.D.done);
-  setC(SE, { a2: 3, a3: 6 }); go(SE); next(SE); setC(SE, { a3: 3 }); go(SE); next(SE); setC(SE, { a3: 12 }); go(SE);
+  setC(SE, { hx: 1 }); go(SE); next(SE); setC(SE, { hx: 3 }); go(SE); next(SE); setC(SE, { g: 0 }); go(SE);
   check("flow: three hits finish E (" + Gates.E.done + ")", Gates.E.done);
-  let n = 0; for (let i = 0; i < 14; i++) if (Score.isAnswered("scaffold", i)) n++;
+  let n = 0; for (let i = 0; i < 15; i++) if (Score.isAnswered("scaffold", i)) n++;
   const bits = Object.keys(BIT).map(k => Score.getBit("scaffold", BIT[k])).join("");
-  check("all 14 declared bits written (" + n + "; bits " + bits + "); the lesson ends", n === 14 && bits.startsWith("0") && Gates.E.done && document.getElementById("done-banner").classList.contains("shown"));
+  check("all 15 declared bits written (" + n + "; bits " + bits + "); the lesson ends", n === 15 && bits.startsWith("0") && Gates.E.done && document.getElementById("done-banner").classList.contains("shown"));
 }
 {
   const infos = [...document.querySelectorAll(".info")], tipOf = e => e.dataset.tip ? document.getElementById(e.dataset.tip) : e.querySelector(".tip");
