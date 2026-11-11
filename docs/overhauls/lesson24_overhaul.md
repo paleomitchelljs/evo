@@ -1,9 +1,165 @@
 # Lesson 24 — evo-devo: a gene network builds a limb ("2Y"; slot 24 since 2026-11-07, was `evodevo_plan.md`)
 
-**File** · `app/lessons/lesson24.html` — draft 2 (2026-11-07, v2, LOCKS `x`): JM's draft-1 notes (below) rebuilt it. Draft 1 (v1, 14 bits) in git (674f05a and before)
+**File** · `app/lessons/lesson24.html` — draft 3 (2026-11-09, v3, 11 bits, LOCKS `x`): bodies; the limb moved to 25. Draft 2 (2026-11-07, v2, LOCKS `x`): JM's draft-1 notes (below) rebuilt it. Draft 1 (v1, 14 bits) in git (674f05a and before)
 **Checks** · `node scripts/check_lesson24_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 2 2026-11-07 (JM's notes on draft 1: named genes, explicit expression steps, embryo-shaped pictures, no line plots, no scalpel or bead). The papers: `docs/refs/README.md`
-**Last touched** · 2026-11-07 (draft 2)
+**Status** · DRAFT 3 2026-11-09 (JM's rework note, below). Before it: DRAFT 2 2026-11-07 (JM's notes on draft 1: named genes, explicit expression steps, embryo-shaped pictures, no line plots, no scalpel or bead). The papers: `docs/refs/README.md`
+**Last touched** · 2026-11-10 (draft 3 built)
+
+## DRAFT 3 — JM, 2026-11-09 (verbatim)
+
+> I'd like a thorough reworking of the evo-devo lessons (24, 25).
+>
+> The goal is to give students compelling interactives that let them build a deep intuition for how gene regulatory networks
+> and individual loci interact to form a diverse array of morphologies with small changes.
+>
+> The students have no developmental background, so I'd like to keep the number of loci small c but I want this to empower
+> them to explore how diverse bodies and limb forms (like the differences in horses and ichthyosaurs and bats and humans and
+> skinks of sorts). The oscillating somite clock is also key, but I want them to see the wavefronts and the oscillator
+> and—through part by part manipulation—build an understanding of the system.
+>
+> The current ones feel unengaging and the genetic controls too abstract. I also fear we've continued our drift towards
+> assessing students relative to building understanding in the students
+
+> While loci small, I do want them named clearly, though
+
+### What draft 2 got wrong, against that note
+
+- Every stage a roll: set discrete arrow levels, Go, verdict, "Hit the three targets". Nothing moves while a control moves.
+- About 19 gene names over five stages; the controls are arrows on a diagram at three or four levels.
+- The only task is the target. That is the "assessing" he names.
+
+### Draft 3: what changes (24 and 25 together)
+
+- **Split by subject.** 24 = bodies (the clock, the front, segments, Hox along the body). 25 = limbs (the bud, digits, the
+  animals), ending on the map and clades. Draft 2 had limbs in 24 and only the map in 25.
+- **Four genes in 24: Hes7, Fgf8, Hoxc6, Hoxc10.** Five in 25: Fgf8, Shh, Grem1, Bmp4, Sox9. Each named on its own card.
+  Dropped as names: Mesp2, Tbx5, Tbx4, Fgf10 (24); Gli3, Hox13, Meis, Hoxa11, Hoxa13, Wnt (25).
+- **Live models.** No Go. The cell, the body and the limb run all the time; a slider acts on the running thing. After a run
+  ends, a change regrows it. ↺ regrows.
+- **Parts come on one at a time.** A stepper adds a part; each addition changes what the picture does.
+- **Controls are a named gene's own steps**: introns clicked out of the gene, an mRNA's half-life, a protein's half-life, a
+  level of transcription, the hour a Hox gene comes on (a flag dragged on the body).
+- **Find, not hit.** A short list per stage of things to find; a find ticks itself off the live model; nothing reports a
+  miss. The animal stages: build any three of four (24 C), any four of five (25 C).
+- R panels kept, last and closed.
+
+### Lesson 24, draft 3 (v3, 11 bits: A 3, B 5, C 3)
+
+    A  one cell, Hes7        parts (3): transcription + mRNA decay; translation + protein decay; the protein binds its own
+                             promoter (pulses)
+                             controls: three introns (buttons on the gene; a control, not a part: the real gene has
+                             them), mRNA half-life, protein half-life
+                             picture: the cell (polymerases on the gene, mRNA, protein, promoter bound or free); the last
+                             10 hours as two strips of shade with the peaks marked and the minutes between them
+                             find: A1 pulses that keep going · A2 pulses sooner · A3 pulses stop, the protein still binding
+    B  a row of cells        parts (4): A's cell in every cell; the tail adds cells; Fgf8 made only in the tail, its mRNA
+                             decaying in cells left behind, Hes7 stopping where it runs out (segments); Fgf8 speeds Hes7
+                             (stripes travel from the tail)
+                             controls: Hes7's introns and protein half-life; Fgf8's mRNA half-life
+                             find: B1 four segments · B2 smaller segments · B3 one block · B4 Hes7 stops farther from the
+                             tail · B5 two stripes of Hes7 behind the tail at once
+    C  the whole body        B's body for 64 hours + Hoxc6 and Hoxc10, each on in the tail from an hour (a slider on its
+                             card; no flags dragged on the body in this draft). A cell keeps the code it left the tail
+                             with. Neck in front of Hoxc6, ribs from Hoxc6 to Hoxc10, forelimb where Hoxc6 starts,
+                             hindlimb where Hoxc10 starts; Hoxc6 from the first segment: no forelimb
+                             starts as a mouse (Hoxc6 hour 12, Hoxc10 hour 39: 7 / 13 / 12)
+                             cards: goose, a long lizard, snake; any two of three opens the code
+
+- Engine: every cell carries A's delay equation, stepped live (ring buffers); a new tail cell copies the tail cell. A boundary
+  where stopped cells' Hes7 passes from .8 or less to 1.25 or more of its resting level.
+- **Introns unequal: 2.5 / 2.5 / 14 minutes; delay = 14 + the introns present** (33 all, 28 third only, 14 none). The three
+  experiments come out of the one rule:
+  - introns 1 + 2 out (Harima 2013: delay 5 min shorter, faster tempo, more vertebrae): 106 against 122 minutes, 36 against 32
+    segments
+  - all three out (Takashima 2011: 19 min shorter, no oscillation, fused): steady, one block
+  - protein half-life 22 → 30 (Hirata 2004: segmentation fails after a few somites): 2 to 6 segments, then a block
+- Live: no Go. A stage steps while it is open, on screen, not paused. "fast" = three times. A part toggled restarts the run;
+  a slider acts on the running thing; a finished body regrows on a Hes7 or Fgf8 change; Hox sliders relabel a finished body
+  at once.
+- Finds latch; an unfound find writes nothing.
+- MEASURED (scratchpad l24v3; the check re-derives):
+  - one cell (period / swing), mRNA half-life 3, protein half-life 6 / 11 / 16 / 22 / 28 / 30: all three introns 98/.98,
+    113/.92, 120/.80, 122/.56, 123/.19, 124/.07; third only 88/.96, 100/.88, 105/.71, 106/.35, steady; introns 1 + 2 only
+    68/.91, 76/.70, 77/.24, steady; none 56/.82, 61/.38, steady
+  - mRNA half-life 1.5 / 3 / 6 at the default: 115 / 122 / 134 minutes
+  - levels: with binding mRNA 1 to 20, protein 354 to 1271 (rest 606); without binding 108 and 10,303
+  - 24 hours (40 cells at the start, .1 cell a minute): 14 segments of 12 to 13 cells; one small intron out 15 of 11.3;
+    1 + 2 out 16 of 10.7; third out: a block of 142; half-life 30: a block of 101; half-life 6: 17 of 9.7
+  - Hes7 stops (.1737 × Fgf8 half-life) cells from the tail: 400 → 71, 500 → 88, 800 → 140
+  - stripes between the tail and where Hes7 stops: with "Fgf8 speeds Hes7" two for 633 of 739 minutes; without, never two
+  - 64 hours (10 cells at the start): 32 segments; third intron out + half-life 6 to 14: 57 to 51; none + 6 to 11: 69 to 64;
+    all three + half-life 6: 40
+  - cards on the whole-hour grid of Hox times: goose 216 to 281 settings at every clock; long lizard 187 to 284 (needs a
+    faster clock: none at the default); snake 16 to 29 (third intron out and half-life 14 or less; Hoxc6 at hour 0)
+- Thresholds (windows on the idea; each re-measured on the page by the check):
+  - A1: translation and binding on, 600 minutes since the last change, swing over the last 150 minutes ≥ .35
+  - A2: mean gap between peaks since the last change ≤ 118 minutes (the mouse: 122), swing over 300 minutes ≥ .2
+  - A3: 240 minutes since the last change, swing over 240 minutes < .12. Measured: intron 3 out, 452 minutes after the
+    change; protein half-life 30 / 35 / 40, 1309 / 644 / 518 minutes; half-life 28 and under, never
+  - B1: ≥ 4 somites · B2: mean of the last five somites made since the last change to Hes7 ≤ 11.7 cells (the mouse:
+    12.0-12.2), no credit in a run whose Fgf8 half-life was changed · B3: ≥ 60 cells stopped since the last boundary,
+    Fgf8 on · B4: ≥ 76 cells between the tail and where Hes7 stops (the mouse: 71 at most) · B5: two stripes for 60
+    minutes in all
+  - C, any two of three. Goose: neck ≥ 14, ribbed ≥ 3 and no longer than the neck, both limbs (card: Hoxc6 hour 30,
+    Hoxc10 hour 46 → 16 / 8 / 8). Lizard: ≥ 35 vertebrae, neck 3 to 9, ribbed ≥ 20, both limbs (card: introns 1 and 2
+    out, protein half-life 11, hours 8 and 50 → 6 / 25 / 8). Snake: ≥ 48 vertebrae, no forelimb, ribbed ≥ 40 (card:
+    intron 3 out, protein half-life 11, hours 0 and 56 → 0 / 46 / 6; Hoxc6 has to be on from the start). The mouse
+    (7 / 13 / 12) is none of them; the Hox hours alone reach only the goose
+
+- Engineering (2026-11-10):
+  - the page's clock runs only while something is moving (`wake()`); `?still=1` keeps it stopped and the checks step the
+    models themselves
+  - `scripts/check_layout.js` asks every page for `?preview=1&still=1`; other lessons ignore the flag
+  - a headless Chrome launch costs about a minute on JM's machine: one launch per check; `check_lesson24_numbers.js`
+    runs in about a minute
+  - the fade threshold was .08 and took 1807 minutes at half-life 30; .12 since 2026-11-10
+
+- Looked at, 2026-11-10 (every part-by-part state at 1400 and one state per stage at 1000; a subagent's pass, reviewed):
+  - canvas labels 12.5-13.5 px on the 760 frame (were 10.5-12; under 10 px on screen at 1400)
+  - the clock sits in the corner of the label gutter (it ran into "head")
+  - A draws every molecule it counts at the default settings: 224 mRNA slots, 1360 protein slots (was 110 / 440, with
+    10303 protein printed). Still short at mRNA half-life 6 with protein half-life 40 and no binding (37464 printed)
+  - B's Parts panel under the row, C's Hes7 card under the body: the two columns end within 30-100 px of each other
+  - one column from 1180 px down (other lessons: 1040); between 1180 and 1300 the labels are 10-11 px
+  - a body with no ribbed vertebrae labels its rear stretch "behind", not "behind the ribs"
+  - not seen: hover tips opened, the R panels opened, the done banner, the models moving (still frames only)
+  - B with parts 1-3 has every cell in step, so the row flashes as one; stripes in the tail appear only with part 4
+
+### Sources for draft 3
+
+- Checked by search 2026-11-09/10: Gomez et al. 2008 (*Nature* 454:335: a snake's clock fast against its growth); Matsuda et
+  al. 2020 (*Science*: mouse and human clocks differ by degradation and delays, not by the HES7 sequence, so the page does
+  not say species differ at Hes7); Harima et al. 2013 (*Cell Rep* 3:1: two introns out, delay 5 min shorter, faster, more
+  cervical and thoracic vertebrae); Takashima et al. 2011 (*PNAS* 108:3300: all introns out, 19 min shorter, no oscillation,
+  fused); Hirata et al. 2004 (*Nat Genet* 36:750: half-life 22 → 30 min, segmentation fails after a few somites).
+- From memory, not checked, not in docs/refs: Burke et al. 1995 (Hoxc6 at the neck's end: mouse 7, chick 14, goose 17); Cohn &
+  Tickle 1999 (python); Wellik & Capecchi 2003 (Hox10 and ribs).
+- Stylised: "Fgf8 speeds Hes7" stands for the slowing of the clock toward the front; the delay is 33 minutes where the papers
+  fit 29; an intron's delay is drawn as transcription length (it is splicing and export too); Hoxc6 and Hoxc10 stand for
+  their paralogue groups; Hoxc6 drawn on all the way to the tail; ribs end at Hoxc10 (a snake's Hox10 does not stop ribs:
+  not modelled); a snake is built here by Hes7's kinetics (nothing on the page says snakes differ at Hes7).
+
+### Open for JM (draft 3)
+
+1. The split: bodies in 24, limbs and the map in 25. Recommend as built.
+2. The finds are things found, so most bits end at 1 in a finished code; what tells students apart is the counts and time.
+   Say so if a stage should end on a tested round after the building.
+3. The tail's growth is not a control (not a gene). A snake is a fast clock here, nothing else.
+4. 24 C starts as a mouse; cards goose, long lizard, snake, any two. A frog (few segments) cannot be built: the slowest
+   clock is 136 minutes.
+5. Intros are goal-then-controls lists for dictation, as before. No lecture quote covers the somite clock; C carries the
+   co-linearity quote.
+6. Hox on-times are sliders, not flags dragged on the body. Flags are the better control; not built.
+7. The snake needs Hoxc6 on at hour 0 exactly; at hour .5 it has a forelimb. Widen if that is too fine a setting.
+8. B and C's clocks run past the hours of growth their hover text names (24 → 35.6, 64 → 75.6) while the last cells stop.
+
+### Items (draft 3)
+
+    plan           this section                                                    done 2026-11-10
+    engine         one stepped Hes7 cell; body of cells; Hox by hour               done (scratchpad l24v3)
+    page           app/lessons/lesson24.html rebuilt, v3, 11 bits                  done 2026-11-10
+    check          scripts/check_lesson24_numbers.js rewritten                     done 2026-11-10
+    LOCKS, index   titles                                                          done 2026-11-10
 
 ## JM, 2026-11-07 (verbatim, the 2Y part; the whole message is in lesson21_overhaul.md)
 

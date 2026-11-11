@@ -7,7 +7,6 @@
 <title>BIO 202 — Lesson 24</title>
 <link rel="stylesheet" href="../assets/score.css">
 <link rel="stylesheet" href="../assets/hover.css">
-<link rel="stylesheet" href="../assets/paths.css">
 <style>
   :root { --bg:#fafaf7; --panel:#fff; --ink:#1d1d1b; --muted:#6b6b68; --accent:#b23a48; --accent-soft:#f4d3d7; --accent2:#2f6b8f; --accent2-soft:#d0e1ed; --rule:#e2e0d9; --code-bg:#1e1f22; --code-ink:#e6e6e6; --code-hi:#3b3f48; --stage-bar:#efeee8; --lock-bg:#f0ece0; --lock-ink:#6a5018; --lock-rule:#b4a06a; --good:#4a7a2a; --bad:#a8331a; }
   * { box-sizing:border-box; }
@@ -31,7 +30,7 @@
   .voice p { margin:0 0 8px; } .voice p:last-child { margin-bottom:0; }
   .voice ul { margin:0; padding-left:18px; } .voice li { margin:0 0 4px; }
   .grid { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr); gap:16px; }
-  @media (max-width:1040px) { .grid { grid-template-columns:minmax(0,1fr); } }
+  @media (max-width:1180px) { .grid { grid-template-columns:minmax(0,1fr); } }   /* 1180, not the other lessons' 1040: under it the pictures' labels shrink below 10 px */
   .col { display:flex; flex-direction:column; gap:16px; min-width:0; }
   canvas { display:block; }
   canvas[hidden] { display:none; }
@@ -74,45 +73,36 @@
   /* a hit and a miss read by their symbol (✓ / ✗) and weight as well as colour: colourblind students (JM, 2026-10-20) */
   .ok { color:var(--good); font-weight:600; }
   .off { color:var(--bad); font-weight:600; }
-  .tcard .ttext { font-size:14px; margin:0 0 8px; }
-  .tcard .pips { float:right; font:12px ui-monospace,Menlo,monospace; color:var(--muted); text-transform:none; letter-spacing:0; }
-  .tcard .verdict { margin-top:10px; font-size:13.5px; min-height:20px; }
-  .tcard canvas { margin:2px 0 6px; }
-  .tcard .ttext:empty { display:none; }
-  .watchbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:0 0 6px; font-size:13px; }
-  .watchbar label { display:flex; align-items:center; gap:8px; }
-  .watchbar select { font-size:13px; padding:3px 4px; max-width:100%; }
-  .toggles { display:flex; gap:16px; flex-wrap:wrap; align-items:center; font-size:13px; margin:8px 0 2px; }
-  .toggles label { display:flex; align-items:center; gap:6px; cursor:pointer; }
-  .toggles.held { color:var(--muted); }
-  .toggles.pair { flex-wrap:nowrap; align-items:flex-start; margin:6px 0 0; }
-  .toggles.pair > span:first-child { flex:0 0 172px; }
-  .toggles.pair .opts { display:flex; flex-wrap:wrap; gap:4px 16px; }
-  table.setup { border-collapse:collapse; font-size:13px; margin:0 0 6px; }
-  table.setup td { padding:2px 10px 2px 0; } table.setup td:last-child { font:12.5px ui-monospace,Menlo,monospace; }
 
-  /* the diagrams (lessons 13, 14 and 19's colours, JM 2026-09-30): blue up, red down, pale held, grey fixed; a settable arrow
-     glows in its own colour */
-  .pathwrap .paths-arrow { stroke:#2f6b8f; }
-  .pathwrap .paths-arrow.down { stroke:#b23a48; }
-  .pathwrap .paths-arrow.locked { stroke:#a9c7da; }
-  .pathwrap .paths-arrow.locked.down { stroke:#e8aab0; }
-  .pathwrap .paths-arrow.zero { stroke:#2f6b8f; stroke-dasharray:4 5; opacity:0.6; }
-  .pathwrap .paths-arrow.dark { stroke:#c4c0b4; }
-  .pathwrap .paths-arrow.selected, .pathwrap .paths-hit:focus + .paths-arrow, .pathwrap .paths-hit:focus-visible + .paths-arrow { stroke:#2f6b8f; opacity:1; }
-  .pathwrap .paths-arrow.selected.down, .pathwrap .paths-hit:focus + .paths-arrow.down, .pathwrap .paths-hit:focus-visible + .paths-arrow.down { stroke:#b23a48; }
-  .pathwrap .paths-arrow.settable { filter:drop-shadow(0 0 1.2px rgba(47,107,143,0.95)) drop-shadow(0 0 2.4px rgba(47,107,143,0.45)); }
-  .pathwrap .paths-arrow.settable.down { filter:drop-shadow(0 0 1.2px rgba(178,58,72,0.95)) drop-shadow(0 0 2.4px rgba(178,58,72,0.45)); }
-  .pathwrap .paths-arrow-value.down { fill:#b23a48; }
-  #paths-head-down path { fill:#b23a48; }
-  .pathwrap .paths-arrow.locked:not(.zero), .pathwrap .paths-arrow.dark {
-    filter:drop-shadow(0.7px 0 0 #1d1d1b) drop-shadow(-0.7px 0 0 #1d1d1b) drop-shadow(0 0.7px 0 #1d1d1b) drop-shadow(0 -0.7px 0 #1d1d1b); }
-  .pathwrap .paths-note { display:none; }
-  .pathwrap .paths-step circle { stroke:#1d1d1b; }
-  .pathwrap .paths-step text { fill:#1d1d1b; }
-  .pathwrap .paths-step:hover circle { fill:#e7e4da; }
-  /* a run is thrown, not steered: a playing run, or a hit waiting for Next target, blocks the arrows */
-  .controls.pending .paths-hit, .controls.pending .paths-step, .pathwrap.pending .paths-hit, .pathwrap.pending .paths-step { pointer-events:none; }
+  /* draft 3 (2026-11-10): the models run as they are watched. A model's parts are added one at a time and each can be switched off again */
+  .parts { display:flex; flex-direction:column; gap:7px; font-size:13.5px; }
+  .part { display:flex; align-items:flex-start; gap:8px; cursor:pointer; }
+  .part[hidden] { display:none; }
+  .part input { width:14px; height:14px; margin:3px 0 0; accent-color:var(--accent2); flex:0 0 auto; }
+  .buttons label { display:flex; align-items:center; gap:5px; font-size:13px; cursor:pointer; }
+  .buttons label input { width:14px; height:14px; margin:0; accent-color:var(--accent2); }
+  /* a gene card: the gene's name, the pattern it is drawn with, and its own expression steps as the controls */
+  .gene h3 { text-transform:none; letter-spacing:0; font-size:15px; font-style:italic; color:var(--ink); display:flex; align-items:center; gap:8px; }
+  .sw { display:inline-block; width:22px; height:12px; border:1px solid var(--ink); border-radius:2px; flex:0 0 auto; }
+  .sw-hes { background:var(--accent); }
+  .sw-fgf { background:var(--accent2); }
+  .sw-h6 { background:repeating-linear-gradient(45deg, #fbe3cd 0 3px, #e8730c 3px 5px); }
+  .sw-h10 { background:repeating-linear-gradient(45deg, transparent 0 3px, #1d1d1b 3px 4.2px), repeating-linear-gradient(-45deg, #e4e2da 0 3px, #1d1d1b 3px 4.2px); }
+  .introns { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:0 0 9px; font-size:13px; }
+  .introns > .info { margin-right:4px; }
+  /* an intron present is a solid button; removed, dashed and struck through (shape, not hue) */
+  button.intron { background:#fff; color:var(--ink); border:1px solid var(--ink); border-radius:4px; padding:4px 9px; font-size:12.5px; cursor:pointer; }
+  button.intron.out { border-style:dashed; color:var(--muted); text-decoration:line-through; }
+  .tbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 7px; font-size:13px; }
+  .tbar:last-child { margin-bottom:0; }
+  .tbar[hidden] { display:none; }
+  .tbar label { display:flex; align-items:center; gap:8px; }
+  .tbar input[type=range] { width:150px; accent-color:var(--accent2); }
+  .tbar b { font:12.5px ui-monospace,Menlo,monospace; min-width:48px; display:inline-block; }
+  .tbar.held { color:var(--muted); }
+  /* stage C's animals: each a skeleton this model grew at some setting; ○ until a finished body is like it, then ● */
+  ul.tasks.animals li { padding-top:7px; padding-bottom:7px; }
+  ul.tasks.animals canvas { margin-top:4px; }
 </style>
 </head>
 <body>
@@ -125,21 +115,19 @@
   <a href="#stageA" id="tocA">A</a>
   <a href="#stageB" id="tocB" class="locked">B</a>
   <a href="#stageC" id="tocC" class="locked">C</a>
-  <a href="#stageD" id="tocD" class="locked">D</a>
-  <a href="#stageE" id="tocE" class="locked">E</a>
 </nav>
 
-<!-- ========== STAGE A — one cell's Hes7, step by step (JM, 2026-11-07: "name things like HES and also put transcription/mRNA decay in there"; Hirata et al. 2004; Takashima et al. 2011) ========== -->
+<!-- ========== STAGE A — one cell's Hes7, part by part (JM, 2026-11-07: "name things like HES and also put transcription/mRNA decay in there"; 2026-11-09: "through part by part manipulation"; Hirata et al. 2004; Takashima et al. 2011; Harima et al. 2013) ========== -->
 <section class="stage stage-locked" id="stageA">
   <h2 class="stage-h">A</h2>
   <div class="lock-banner">Locked — confirm your name above to begin.</div>
-
   <div class="panel stage-intro">
-    <!-- DRAFT 2 (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <!-- DRAFT 3 (2026-11-10): goal, then controls, a basis for JM's dictation -->
     <div class="voice">
       <ul>
-        <li>One cell from the tail of a mouse embryo and one of its genes, Hes7. The gene is copied into mRNA; the mRNA is ready only after its introns are cut out; each mRNA is read into Hes7 protein; both are broken down. Hes7 protein can bind its own gene and shut it off.</li>
-        <li><b>Delay</b> (how long until new mRNA is ready), <b>mRNA half-life</b>, <b>protein half-life</b>, and whether <b>the protein shuts its own gene</b>: the arrows on the diagram.</li>
+        <li>One cell from the tail of a mouse embryo, and one of its genes: Hes7. The cell runs as you watch.</li>
+        <li>Its parts go in one at a time: the gene is transcribed and its mRNA broken down; the mRNA is translated and the protein broken down; the protein binds the gene's own promoter and blocks transcription.</li>
+        <li>Yours to set: the gene's three introns (each is transcribed, then cut out, so each adds minutes before an mRNA is finished), the mRNA's half-life, the protein's half-life.</li>
       </ul>
     </div>
   </div>
@@ -147,37 +135,43 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="A_cellH">The cell</span><span class="tip"><span>The nucleus holds the Hes7 gene (its three introns drawn as gaps; an intron removed is gone from the drawing). Each small stroke is a Hes7 mRNA; each dot is 25 molecules of Hes7 protein. When the protein shuts the gene, it is drawn sitting on the gene.</span><span>The title counts both, read off the run.</span></span></span></h3>
-        <canvas id="A_cell" width="760" height="300"></canvas>
-      </div>
-      <div class="panel">
-        <h3><span class="info" tabindex="0">The cell every 20 minutes<span class="tip"><span>The same cell, one small picture every 20 minutes from minute 0 (top left) to minute 700 (bottom right): the nucleus shaded by how much Hes7 protein there is (light little, dark a lot), the strokes its mRNA.</span></span></span></h3>
-        <canvas id="A_strip" width="760" height="150"></canvas>
+        <span class="info corner" tabindex="0"><span class="tip"><span>One cell. The Hes7 gene sits in the nucleus: a promoter, four exons (dark) and three introns (pale). An intron removed is gone from the drawing.</span><span>Each dot moving along the gene is RNA polymerase transcribing it; the line it trails is the RNA made so far. A finished mRNA is a wavy line outside the nucleus. Each red dot is 10 molecules of Hes7 protein.</span><span>Red dots on the promoter: Hes7 protein bound there. The bent arrow fades as transcription is blocked.</span><span>The strip underneath is the last ten hours, darker for more. ▲ marks each peak of the protein.</span></span></span>
+        <canvas id="A_cell" width="760" height="330"></canvas>
+        <canvas id="A_hist" width="760" height="110"></canvas>
+        <div class="buttons">
+          <button type="button" class="ghost" id="A_re">↺ start again</button>
+          <label><input type="checkbox" id="A_fast"> fast</label>
+          <label><input type="checkbox" id="A_pause"> pause</label>
+        </div>
       </div>
     </div>
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0">Gene, mRNA, protein<span class="tip"><span>Transcription makes mRNA at a fixed rate when nothing shuts the gene; the mRNA is ready after the delay; translation makes protein from it (grey arrows: fixed). Each arrow to <i>broken down</i> is a half-life: how long until half the molecules made are gone.</span><span>The red arrow back to the gene: the protein shutting its own gene off (dashed: it cannot bind).</span></span></span></h3>
-        <div class="pathwrap" id="A_pathwrap"><div id="A_paths"></div></div>
-      </div>
-      <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>No mRNA or protein at the start. <b>Go</b> plays 720 minutes.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="A_pips"></span></h3>
-        <p class="ttext" id="A_ttext"></p>
-        <canvas id="A_tpic" width="460" height="120"></canvas>
-        <div class="controls" id="A_controls">
-          <div hidden><input type="range" id="A_tau" min="1" max="3" step="1" value="3"><input type="range" id="A_hm" min="1" max="3" step="1" value="3"><input type="range" id="A_hp" min="1" max="4" step="1" value="2"><input type="range" id="A_fb" min="-1" max="0" step="1" value="-1"></div>
-          <div class="practice-row"><input type="checkbox" id="A_practice" /><label for="A_practice">practice</label></div>
-          <div class="buttons">
-            <button id="A_go" class="accent">Go</button>
-            <button id="A_next" class="ghost" hidden>Next target</button>
-          </div>
+        <h3><span class="info" tabindex="0">Parts<span class="tip"><span>The cell starts with its first part alone. <b>Add the next part</b> puts in the next one; a tick box switches a part off and on again.</span><span>Adding or switching a part starts the cell again, empty.</span></span></span></h3>
+        <div class="parts" id="A_parts">
+          <label class="part"><input type="checkbox" id="A_p1" checked disabled> The Hes7 gene is transcribed; its mRNA is broken down.</label>
+          <label class="part" hidden><input type="checkbox" id="A_p2"> The mRNA is translated into Hes7 protein; the protein is broken down.</label>
+          <label class="part" hidden><input type="checkbox" id="A_p3"> Hes7 protein binds the gene's own promoter and blocks transcription.</label>
         </div>
-        <div class="verdict" id="A_verdict"></div>
+        <div class="buttons"><button type="button" id="A_add">Add the next part</button></div>
+      </div>
+      <div class="panel gene">
+        <h3><span class="sw sw-hes"></span>Hes7</h3>
+        <div class="introns">
+          <span class="info" tabindex="0">introns<span class="tip"><span>Click an intron to remove it from the gene; click again to put it back.</span><span>Polymerase has to transcribe an intron before the mRNA can be finished. Introns 1 and 2 are short (2.5 minutes each); intron 3 is long (14 minutes).</span></span></span>
+          <button type="button" class="intron" id="A_i1" aria-pressed="true">intron 1</button>
+          <button type="button" class="intron" id="A_i2" aria-pressed="true">intron 2</button>
+          <button type="button" class="intron" id="A_i3" aria-pressed="true">intron 3</button>
+        </div>
+        <div class="tbar" id="A_hmRow"><label><span class="info" tabindex="0">mRNA half-life<span class="tip"><span>The time until half of the Hes7 mRNA now in the cell has been broken down.</span></span></span> <input type="range" id="A_hm" min="1.5" max="6" step="0.5" value="3"></label><b id="A_hmV"></b></div>
+        <div class="tbar" id="A_hpRow"><label><span class="info" tabindex="0">protein half-life<span class="tip"><span>The time until half of the Hes7 protein now in the cell has been broken down.</span><span>Held until the mRNA is translated.</span></span></span> <input type="range" id="A_hp" min="6" max="40" step="1" value="22"></label><b id="A_hpV"></b></div>
       </div>
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksA">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="A_rounds_now">0 of 3</span></li>
+          <li data-task="pulse">Hes7 protein that keeps rising and falling, pulse after pulse</li>
+          <li data-task="faster">Pulses that come closer together than the mouse's <span class="hint" id="A_faster_now"></span></li>
+          <li data-task="fade">Pulses that die away</li>
         </ul>
         <div class="solved-banner" id="solvedA">Stage B is open.</div>
       </div>
@@ -192,17 +186,17 @@
   </div>
 </section>
 
-<!-- ========== STAGE B — the embryo: Hes7 in the tail, Fgf8 mRNA decaying behind it, Mesp2 at the boundaries (Cooke &amp; Zeeman 1976; Dubrulle &amp; Pourquie 2004; Harima et al. 2013; Gomez et al. 2008) ========== -->
+<!-- ========== STAGE B — a row of cells: Hes7 in each, the tail adding cells, Fgf8 mRNA decaying behind it (JM, 2026-11-09: "I want them to see the wavefronts and the oscillator"; Cooke &amp; Zeeman 1976; Dubrulle &amp; Pourquie 2004; Gomez et al. 2008) ========== -->
 <section class="stage stage-locked" id="stageB">
   <h2 class="stage-h">B</h2>
   <div class="lock-banner">Finish Stage A to unlock this section.</div>
-
   <div class="panel stage-intro">
-    <!-- DRAFT 2 (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <!-- DRAFT 3 (2026-11-10): goal, then controls, a basis for JM's dictation -->
     <div class="voice">
       <ul>
-        <li>The back half of a mouse embryo, seen from above. The tail keeps adding cells, and every one carries stage A's Hes7 cell. Fgf8 mRNA is made only in the tail: a cell left behind keeps breaking its Fgf8 mRNA down, and its Hes7 slows. When a cell's Fgf8 mRNA falls low enough its Hes7 stops; where Hes7 had been coming back on, Mesp2 switches on and marks a boundary. The cells between two boundaries make a somite.</li>
-        <li><b>Delay</b> and <b>protein half-life</b> of Hes7, and <b>Fgf8 mRNA half-life</b>: the arrows on the diagram. The menu shows one gene at a time.</li>
+        <li>A row of cells along the back of the embryo, head to the left, tail to the right. Every cell runs stage A's Hes7.</li>
+        <li>The parts go in one at a time: the tail adds cells; Fgf8 is transcribed only in the tail, so its mRNA decays in the cells left behind, and Hes7 stops in a cell once its Fgf8 is low; Fgf8 speeds Hes7.</li>
+        <li>Yours to set: Hes7's introns and its protein's half-life; the half-life of Fgf8 mRNA.</li>
       </ul>
     </div>
   </div>
@@ -210,34 +204,49 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="B_embH">The embryo</span><span class="tip"><span>Head at the left, tail at the right, the midline between the two rows. Somites (outlined) on both sides of the midline in front; the cells still in the tail behind, shaded by the gene the menu shows (light none, dark the most). A long block with no boundaries: cells that froze without Mesp2 marking them.</span><span>The title counts the somites made and the Hes7 stripes now in the tail, read off the run.</span></span></span></h3>
-        <div class="watchbar"><label>show <select id="B_show"><option value="m">Hes7 mRNA</option><option value="p">Hes7 protein</option><option value="f">Fgf8 mRNA</option><option value="x">Mesp2</option></select></label></div>
-        <canvas id="B_emb" width="760" height="230"></canvas>
+        <span class="info corner" tabindex="0"><span class="tip"><span>A row of cells, head to the left. Each cell is drawn twice: by its Fgf8 mRNA (blue: pale little, dark a lot) and by its Hes7 protein (red: pale little, dark a lot).</span><span>▼ marks where Hes7 stops. To its left each cell keeps the Hes7 it had when it stopped.</span><span>Somites: a boundary is drawn where the stopped cells go from low Hes7 to high. A dashed block has no boundary closing it yet.</span><span>The row grows for 24 hours.</span></span></span>
+        <canvas id="B_emb" width="760" height="270"></canvas>
+        <div class="buttons">
+          <button type="button" class="ghost" id="B_re">↺ start again</button>
+          <label><input type="checkbox" id="B_fast"> fast</label>
+          <label><input type="checkbox" id="B_pause"> pause</label>
+        </div>
+      </div>
+      <!-- the parts list sits under the row, not over the gene cards: the two columns then end level (QA 2026-11-10) -->
+      <div class="panel">
+        <h3><span class="info" tabindex="0">Parts<span class="tip"><span><b>Add the next part</b> puts in the next one; a tick box switches a part off and on again.</span><span>Adding or switching a part starts the row again.</span></span></span></h3>
+        <div class="parts" id="B_parts">
+          <label class="part"><input type="checkbox" id="B_p1" checked disabled> Hes7 runs in every cell, as in stage A.</label>
+          <label class="part" hidden><input type="checkbox" id="B_p2"> The tail adds cells.</label>
+          <label class="part" hidden><input type="checkbox" id="B_p3"> Fgf8 is transcribed only in the tail; its mRNA decays in the cells left behind. Hes7 stops in a cell once its Fgf8 is low.</label>
+          <label class="part" hidden><input type="checkbox" id="B_p4"> Fgf8 speeds Hes7: the more Fgf8 mRNA a cell has, the faster its Hes7 runs.</label>
+        </div>
+        <div class="buttons"><button type="button" id="B_add">Add the next part</button></div>
       </div>
     </div>
     <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0">Hes7, Fgf8, Mesp2<span class="tip"><span>Hes7 as in stage A, with its own gene shut by its protein (grey: fixed). A cell's Fgf8 mRNA, made in the tail, is broken down at its half-life after the cell leaves; while it lasts the cell's Hes7 keeps going, slower as it falls. Mesp2 comes on where Hes7 was rising as the cell stops. The mRNA half-life of Hes7 is fixed at 3 minutes here.</span></span></span></h3>
-        <div class="pathwrap" id="B_pathwrap"><div id="B_paths"></div></div>
-      </div>
-      <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>The tail grows for 24 hours; Hes7 starts at minute 0 in every cell.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="B_pips"></span></h3>
-        <p class="ttext" id="B_ttext"></p>
-        <canvas id="B_tpic" width="460" height="120"></canvas>
-        <div class="controls" id="B_controls">
-          <div hidden><input type="range" id="B_tau" min="1" max="3" step="1" value="3"><input type="range" id="B_hp" min="1" max="4" step="1" value="2"><input type="range" id="B_hF" min="1" max="3" step="1" value="2"></div>
-          <div class="practice-row"><input type="checkbox" id="B_practice" /><label for="B_practice">practice</label></div>
-          <div class="buttons">
-            <button id="B_go" class="accent">Go</button>
-            <button id="B_next" class="ghost" hidden>Next target</button>
-          </div>
+      <div class="panel gene">
+        <h3><span class="sw sw-hes"></span>Hes7</h3>
+        <div class="introns">
+          <span class="info" tabindex="0">introns<span class="tip"><span>Click an intron to remove it from the gene in every cell; click again to put it back.</span><span>Introns 1 and 2 are short (2.5 minutes each); intron 3 is long (14 minutes).</span></span></span>
+          <button type="button" class="intron" id="B_i1" aria-pressed="true">intron 1</button>
+          <button type="button" class="intron" id="B_i2" aria-pressed="true">intron 2</button>
+          <button type="button" class="intron" id="B_i3" aria-pressed="true">intron 3</button>
         </div>
-        <div class="verdict" id="B_verdict"></div>
+        <div class="tbar" id="B_hpRow"><label><span class="info" tabindex="0">protein half-life<span class="tip"><span>The time until half of a cell's Hes7 protein has been broken down.</span></span></span> <input type="range" id="B_hp" min="6" max="30" step="1" value="22"></label><b id="B_hpV"></b></div>
+      </div>
+      <div class="panel gene">
+        <h3><span class="sw sw-fgf"></span>Fgf8</h3>
+        <div class="tbar" id="B_hFRow"><label><span class="info" tabindex="0">mRNA half-life<span class="tip"><span>The time until half of a cell's Fgf8 mRNA has been broken down. A cell stops making it when it leaves the tail.</span><span>Held until Fgf8 is in the model.</span></span></span> <input type="range" id="B_hF" min="100" max="800" step="50" value="400"></label><b id="B_hFV"></b></div>
       </div>
       <div class="panel">
         <h3>To finish</h3>
         <ul class="tasks" id="tasksB">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="B_rounds_now">0 of 3</span></li>
+          <li data-task="four">Four somites</li>
+          <li data-task="two">Two stripes of Hes7 in the tail at once</li>
+          <li data-task="small">Smaller somites <span class="hint" id="B_small_now"></span></li>
+          <li data-task="zone">A longer stretch of cells with Hes7 still running <span class="hint" id="B_zone_now"></span></li>
+          <li data-task="block">A long stretch with no somite boundary</li>
         </ul>
         <div class="solved-banner" id="solvedB">Stage C is open.</div>
       </div>
@@ -252,17 +261,18 @@
   </div>
 </section>
 
-<!-- ========== STAGE C — where a limb goes: Hoxc6 and Hoxc10 along the body, Tbx5 and Tbx4 in the flank, Fgf10 starts a bud (Burke et al. 1995; Cohn &amp; Tickle 1999; Ohuchi et al. 1998; Min et al. 1998) ========== -->
+<!-- ========== STAGE C — the whole body: stage B's row for 64 hours, Hoxc6 and Hoxc10 switched on in the tail (JM, 2026-11-09: "diverse bodies and limb forms"; Burke et al. 1995; Cohn &amp; Tickle 1999; Wellik &amp; Capecchi 2003; Gomez et al. 2008) ========== -->
 <section class="stage stage-locked" id="stageC">
   <h2 class="stage-h">C</h2>
   <div class="lock-banner">Finish Stage B to unlock this section.</div>
-
   <div class="panel stage-intro">
-    <!-- DRAFT 2 (2026-11-07): goal, then controls, a basis for JM's dictation -->
+    <!-- DRAFT 3 (2026-11-10): one lecture quote (336_lec09_06), then goal and controls, a basis for JM's dictation -->
     <div class="voice">
+      <p>Hox genes sit in clusters on the chromosome, and the order they're arranged matches the order they're expressed along the body axis—anterior genes at one end, posterior at the other. That's co-linearity. It tells you the regulation of these genes is built into how they're packed in DNA.</p>
       <ul>
-        <li>B's embryo from the side, 24 somites from head to tail. Each Hox gene is on from its first somite to the tail. Under the somites, the flank: Tbx5 comes on in the first four somites' worth of the Hoxc6 region, Tbx4 behind it. Fgf10 switched on in the flank starts a limb bud; it is an arm where Tbx5 is on, a leg where Tbx4 is.</li>
-        <li><b>Where Hoxc6 starts</b>, the arrow on the diagram. Click the flank under a somite to switch Fgf10 on there; click again to switch it off.</li>
+        <li>Stage B's row for 64 hours: the whole body. Each somite becomes one vertebra.</li>
+        <li>Hoxc6 and Hoxc10 each switch on in the tail at an hour you set and stay on in every cell made after. A vertebra made with Hoxc6 carries ribs; the ribs end where Hoxc10 begins. The forelimb sits at the first Hoxc6 vertebra, the hindlimb at the first Hoxc10 vertebra.</li>
+        <li>Yours to set: Hes7's introns and its protein's half-life; the hour each Hox gene switches on. The body starts as a mouse.</li>
       </ul>
     </div>
   </div>
@@ -270,35 +280,44 @@
   <div class="stage-body grid">
     <div class="col">
       <div class="panel">
-        <h3><span class="info" tabindex="0">The embryo, from the side<span class="tip"><span>Head at the left. The somites numbered 1-24; above them, a bar for each Hox gene from its first somite. Below them the flank: hatched where Tbx5 is on, dotted where Tbx4 is; a dark mark where Fgf10 is on. Buds hang below the flank: an arm (Tbx5) or a leg (Tbx4).</span><span>Fgf10 comes on by itself where Hoxc6 starts (the forelimb) and where Hoxc10 starts (the hindlimb). A click on the flank switches it on at that somite.</span></span></span></h3>
-        <canvas id="C_emb" width="760" height="250"></canvas>
+        <span class="info corner" tabindex="0"><span class="tip"><span>The whole row, head to the left, growing for 64 hours. The top two rows mark the cells with Hoxc6 on (lines) and with Hoxc10 on (crossed lines); under them, stage B's rows.</span><span>Each somite is drawn by the Hox genes on in its first cell: plain for neither, lines for Hoxc6, crossed lines for Hoxc10.</span><span>The skeleton underneath: one vertebra for each somite, with its ribs and limbs.</span></span></span>
+        <canvas id="C_emb" width="760" height="200"></canvas>
+        <canvas id="C_body" width="760" height="200"></canvas>
+        <div class="buttons">
+          <button type="button" class="ghost" id="C_re">↺ start again</button>
+          <label><input type="checkbox" id="C_fast"> fast</label>
+          <label><input type="checkbox" id="C_pause"> pause</label>
+        </div>
+      </div>
+      <!-- Hes7, which sets the somites, sits under the row; the two Hox cards beside the animals they are matched to. The columns end level (QA 2026-11-10) -->
+      <div class="panel gene">
+        <h3><span class="sw sw-hes"></span>Hes7</h3>
+        <div class="introns">
+          <span class="info" tabindex="0">introns<span class="tip"><span>Click an intron to remove it from the gene in every cell; click again to put it back.</span><span>Introns 1 and 2 are short (2.5 minutes each); intron 3 is long (14 minutes).</span><span>A change made after the body is finished grows it again.</span></span></span>
+          <button type="button" class="intron" id="C_i1" aria-pressed="true">intron 1</button>
+          <button type="button" class="intron" id="C_i2" aria-pressed="true">intron 2</button>
+          <button type="button" class="intron" id="C_i3" aria-pressed="true">intron 3</button>
+        </div>
+        <div class="tbar" id="C_hpRow"><label><span class="info" tabindex="0">protein half-life<span class="tip"><span>The time until half of a cell's Hes7 protein has been broken down.</span></span></span> <input type="range" id="C_hp" min="6" max="30" step="1" value="22"></label><b id="C_hpV"></b></div>
       </div>
     </div>
     <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0">Hox, Tbx, Fgf10, the bud<span class="tip"><span>Hoxc6 and Hoxc10 set the body's code; the code sets where Tbx5 and Tbx4 are on; Tbx5 or Tbx4 with Fgf10 makes a bud, an arm or a leg. Grey arrows: fixed. Hoxc10 starts at somite 20.</span></span></span></h3>
-        <div class="pathwrap" id="C_pathwrap"><div id="C_paths"></div></div>
+      <div class="panel gene">
+        <h3><span class="sw sw-h6"></span>Hoxc6</h3>
+        <div class="tbar" id="C_t6Row"><label><span class="info" tabindex="0">switches on in the tail at<span class="tip"><span>The hour Hoxc6 switches on in the tail. Every cell the tail makes from then on has it on.</span><span>At hour 0 it is on from the head.</span></span></span> <input type="range" id="C_t6" min="0" max="64" step="0.5" value="12"></label><b id="C_t6V"></b></div>
       </div>
-      <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span><b>Go</b> reads the embryo. Fgf10 is off in the flank at the start.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="C_pips"></span></h3>
-        <p class="ttext" id="C_ttext"></p>
-        <canvas id="C_tpic" width="460" height="120"></canvas>
-        <div class="controls" id="C_controls">
-          <div hidden><input type="range" id="C_c6" min="1" max="3" step="1" value="2"><input type="range" id="C_fg" min="0" max="24" step="1" value="0"></div>
-          <div class="practice-row"><input type="checkbox" id="C_practice" /><label for="C_practice">practice</label></div>
-          <div class="buttons">
-            <button id="C_go" class="accent">Go</button>
-            <button id="C_next" class="ghost" hidden>Next target</button>
-          </div>
-        </div>
-        <div class="verdict" id="C_verdict"></div>
+      <div class="panel gene">
+        <h3><span class="sw sw-h10"></span>Hoxc10</h3>
+        <div class="tbar" id="C_t10Row"><label><span class="info" tabindex="0">switches on in the tail at<span class="tip"><span>The hour Hoxc10 switches on in the tail. Every cell the tail makes from then on has it on.</span></span></span> <input type="range" id="C_t10" min="0" max="64" step="0.5" value="39"></label><b id="C_t10V"></b></div>
       </div>
       <div class="panel">
-        <h3>To finish</h3>
-        <ul class="tasks" id="tasksC">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="C_rounds_now">0 of 3</span></li>
+        <h3><span class="info" tabindex="0">To finish: any two<span class="tip"><span>Each skeleton here was grown by this model at some setting of the three genes.</span><span>A finished body like it fills its circle: the same stretches long and short, the same limbs.</span><span>The snake keeps a hindlimb: pythons and boas have a small one.</span></span></span></h3>
+        <ul class="tasks animals" id="tasksC">
+          <li data-task="goose">a goose<canvas id="C_cv0" width="440" height="82"></canvas></li>
+          <li data-task="lizard">a long-bodied lizard<canvas id="C_cv1" width="440" height="82"></canvas></li>
+          <li data-task="snake">a snake<canvas id="C_cv2" width="440" height="82"></canvas></li>
         </ul>
-        <div class="solved-banner" id="solvedC">Stage D is open.</div>
+        <div class="solved-banner" id="solvedC">That is the last stage.</div>
       </div>
     </div>
   </div>
@@ -311,132 +330,6 @@
   </div>
 </section>
 
-<!-- ========== STAGE D — a bud that grows and stops itself: Fgf8 at the tip, Shh behind, Grem1 holding Bmp4 off (the lecture: "Shh → Gremlin on → BMP off → FGF on → grow"; "Limb outgrows Shh diffusion range → circuit collapses → terminate"; Dillon &amp; Othmer 1999) ========== -->
-<section class="stage stage-locked" id="stageD">
-  <h2 class="stage-h">D</h2>
-  <div class="lock-banner">Finish Stage C to unlock this section.</div>
-
-  <div class="panel stage-intro">
-    <!-- DRAFT 2 (2026-11-07): goal, then controls, a basis for JM's dictation -->
-    <div class="voice">
-      <ul>
-        <li>C's forelimb bud. Cells at its tip make Fgf8, which makes the bud grow and keeps cells near the body making Shh. Shh switches Grem1 on, but not in cells descended from the Shh-makers, and there are more of those as the bud grows. Grem1 holds Bmp4 off; Bmp4 at the tip shuts the tip's Fgf8 down for good. Nothing sets the bud's size: see where it stops.</li>
-        <li><b>Shh transcription</b>, <b>Grem1 transcription</b> and <b>Fgf8 transcription</b>: the arrows on the diagram.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="D_budH">The bud</span><span class="tip"><span>Four copies of the same bud on the flank, one gene each: Fgf8, Shh, Grem1, Bmp4 (light none, dark the most), its length to scale. The dark rim at the tip: cells still making Fgf8.</span><span>Shh spreads from cells near the body. Grem1 is made where Shh is high enough, outside the Shh-makers' descendants. When Bmp4 at the tip passes half, the tip stops making Fgf8.</span></span></span></h3>
-        <canvas id="D_bud" width="760" height="300"></canvas>
-      </div>
-      <div class="panel">
-        <h3><span class="info" tabindex="0">The bud every 5 hours<span class="tip"><span>The bud's outline at hours 0, 5, 10 ... 40, side by side, to scale.</span></span></span></h3>
-        <canvas id="D_series" width="760" height="170"></canvas>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0">Fgf8, Shh, Grem1, Bmp4<span class="tip"><span>Fgf8 from the tip keeps Shh made and makes the bud grow; Shh switches Grem1 on; Grem1 holds Bmp4 off; Bmp4 shuts the tip's Fgf8 (grey: fixed). The three settable arrows: how fast each gene is transcribed, relative to normal (×1).</span></span></span></h3>
-        <div class="pathwrap" id="D_pathwrap"><div id="D_paths"></div></div>
-      </div>
-      <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span>A bud 0.75 mm long at the start. <b>Go</b> plays 40 hours.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="D_pips"></span></h3>
-        <p class="ttext" id="D_ttext"></p>
-        <canvas id="D_tpic" width="460" height="120"></canvas>
-        <div class="controls" id="D_controls">
-          <div hidden><input type="range" id="D_sh" min="1" max="3" step="1" value="2"><input type="range" id="D_gr" min="1" max="3" step="1" value="2"><input type="range" id="D_f" min="1" max="2" step="1" value="1"></div>
-          <div class="practice-row"><input type="checkbox" id="D_practice" /><label for="D_practice">practice</label></div>
-          <div class="buttons">
-            <button id="D_go" class="accent">Go</button>
-            <button id="D_next" class="ghost" hidden>Next target</button>
-          </div>
-        </div>
-        <div class="verdict" id="D_verdict"></div>
-      </div>
-      <div class="panel">
-        <h3>To finish</h3>
-        <ul class="tasks" id="tasksD">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="D_rounds_now">0 of 3</span></li>
-        </ul>
-        <div class="solved-banner" id="solvedD">Stage E is open.</div>
-      </div>
-    </div>
-  </div>
-  <div class="stage-body tail">
-    <details class="panel rcode">
-      <summary>R code</summary>
-      <button id="D_dl" class="code-dl">Download .R</button>
-<pre class="code" id="codeD"></pre>
-    </details>
-  </div>
-</section>
-
-<!-- ========== STAGE E — the skeleton: Sox9 with Bmp and Wnt, laid down row by row; Hox13 sets the spacing, Gli3 the width (Raspopovic et al. 2014; Sheth et al. 2012; Hui &amp; Joyner 1993) ========== -->
-<section class="stage stage-locked" id="stageE">
-  <h2 class="stage-h">E</h2>
-  <div class="lock-banner">Finish Stage D to unlock this section.</div>
-
-  <div class="panel stage-intro">
-    <!-- DRAFT 2 (2026-11-07): goal, then controls, a basis for JM's dictation -->
-    <div class="voice">
-      <ul>
-        <li>D's grown bud lays down cartilage row by row, from the body to the tip. Sox9 makes cartilage; Bmp switches Sox9 on, Wnt shuts it off, and Sox9 shuts both of them off; Bmp spreads fast, Wnt slowly, Sox9 stays put. Each row settles across the bud's width, starting from the row behind it. The Hox genes on in a row set how far apart its Sox9 cells land: the Meis region near the body, then the Hoxa11 region, then the Hoxa13 region. Gli3 keeps the Hoxa13 region narrow.</li>
-        <li><b>Hox13</b> (Hoxa13 and Hoxd13, how much of them is made) and <b>Gli3</b> (made or not): the arrows on the diagram.</li>
-      </ul>
-    </div>
-  </div>
-
-  <div class="stage-body grid">
-    <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0"><span id="E_limbH">Limb 1</span><span class="tip"><span>One of the 16 limbs, body at the left, tip at the right, one column of cells a row: dark where Sox9 is high (cartilage). Its three regions named by the gene on there.</span></span></span></h3>
-        <canvas id="E_limb" width="760" height="260"></canvas>
-      </div>
-      <div class="panel">
-        <h3><span class="info" tabindex="0">The 16 limbs<span class="tip"><span>The 16 limbs grown from the same settings, small; under each, its elements across the Meis region, the Hoxa11 region and the last row of the Hoxa13 region (its digits).</span></span></span></h3>
-        <canvas id="E_all" width="760" height="230"></canvas>
-      </div>
-    </div>
-    <div class="col">
-      <div class="panel">
-        <h3><span class="info" tabindex="0">Hox, Gli3, Sox9<span class="tip"><span>Bmp switches Sox9 on, Wnt shuts it off, Sox9 shuts both off (grey: fixed). The Hox code of each region sets how far Bmp and Wnt spread there, so how far apart the Sox9 cells land: Meis farthest, Hoxa11 less, Hoxa13 by the Hox13 arrow. Gli3 shuts down the Hoxa13 region's widening: without it the region is 30 cells wide, not 22.</span></span></span></h3>
-        <div class="pathwrap" id="E_pathwrap"><div id="E_paths"></div></div>
-      </div>
-      <div class="panel tcard">
-        <h3><span class="info" tabindex="0">Target<span class="tip"><span><b>Go</b> grows 16 limbs, 60 rows each, from the same settings.</span><span>The picture: what a hit looks like; the red box marks what has to match.</span></span></span> <span class="pips" id="E_pips"></span></h3>
-        <p class="ttext" id="E_ttext"></p>
-        <canvas id="E_tpic" width="460" height="120"></canvas>
-        <div class="controls" id="E_controls">
-          <div hidden><input type="range" id="E_hx" min="1" max="3" step="1" value="2"><input type="range" id="E_g" min="-1" max="0" step="1" value="-1"></div>
-          <div class="practice-row"><input type="checkbox" id="E_practice" /><label for="E_practice">practice</label></div>
-          <div class="buttons">
-            <button id="E_go" class="accent">Go</button>
-            <button id="E_next" class="ghost" hidden>Next target</button>
-          </div>
-        </div>
-        <div class="verdict" id="E_verdict"></div>
-      </div>
-      <div class="panel">
-        <h3>To finish</h3>
-        <ul class="tasks" id="tasksE">
-          <li data-task="rounds">Hit the three targets. <span class="hint" id="E_rounds_now">0 of 3</span></li>
-        </ul>
-        <div class="solved-banner" id="solvedE">That is the whole lesson.</div>
-      </div>
-    </div>
-  </div>
-  <div class="stage-body tail">
-    <details class="panel rcode">
-      <summary>R code</summary>
-      <button id="E_dl" class="code-dl">Download .R</button>
-<pre class="code" id="codeE"></pre>
-    </details>
-  </div>
-</section>
-
 <div class="done-banner" id="done-banner">
   <h2>Good job!</h2>
   <p>That is all of Lesson 24. Your completion code is below — copy it and hand it in.</p>
@@ -445,927 +338,632 @@
 
 <script src="../assets/quiz.js"></script>
 <script src="../assets/sim.js"></script>
-<script src="../assets/pips.js"></script>
 <script src="../assets/score.js"></script>
 <script src="../assets/hover.js"></script>
-<script src="../assets/paths.js"></script>
 <script>
 /* =====================================================================
-   LESSON 24 — evo-devo: genes build a body and a limb. Draft 2
-   (2026-11-07). JM, 2026-11-07: "evo-devo where we give a simplified
-   gene network for a vertebrate limb and have students run through
-   simple simulations using standard models to show how diffusion and
-   growth drive differential gene expression and produce self-limiting
-   limb sizes and recapitulate known skeletal patterns". On draft 1:
-   "the developmental runs should be more explicit and specific. We can
-   and should name things like HES and also put transcription/mRNA decay
-   in there. I don't think we need or want any line plots, though more
-   embryo-shaped visualizations would be ideal. I want them to set values
-   for core genes and modify expression levels and watch what happens";
-   "instead of embryological terms like hand plate we should use more
-   genetic-developmental terms"; "I also don't want manipulations like a
-   scalpel involved—purely modulating the expression of different genes
-   is what I'm after". Plan, measurements, sources:
-   docs/overhauls/lesson24_overhaul.md.
+   LESSON 24 — evo-devo: a few named genes build a body. Draft 3
+   (2026-11-10). JM, 2026-11-09, on draft 2: "The current ones feel
+   unengaging and the genetic controls too abstract. I also fear we've
+   continued our drift towards assessing students relative to building
+   understanding in the students"; "The goal is to give students
+   compelling interactives that let them build a deep intuition for how
+   gene regulatory networks and individual loci interact to form a
+   diverse array of morphologies with small changes"; "The oscillating
+   somite clock is also key, but I want them to see the wavefronts and
+   the oscillator and—through part by part manipulation—build an
+   understanding of the system"; "While loci small, I do want them named
+   clearly, though". Still standing from 2026-11-07: "We can and should
+   name things like HES and also put transcription/mRNA decay in there.
+   I don't think we need or want any line plots, though more
+   embryo-shaped visualizations would be ideal"; "purely modulating the
+   expression of different genes is what I'm after". Plan, measurements,
+   sources, what is stylised: docs/overhauls/lesson24_overhaul.md.
 
-   A  one cell's Hes7: transcription, the delay, translation, breakdown.
-   B  the embryo: Hes7 in the tail, Fgf8 mRNA decaying, Mesp2, somites.
-   C  where a limb goes: Hoxc6 and Hoxc10, Tbx5 and Tbx4, Fgf10.
-   D  a bud that stops itself: Fgf8, Shh, Grem1, Bmp4.
-   E  the skeleton: Sox9 with Bmp and Wnt; Hox13 and Gli3.
+   What changed from draft 2. No Go and no targets: each model runs as it
+   is watched, and a control acts on the running thing. A model's parts
+   are added one at a time and can be switched off again. Each gene has a
+   card whose controls are that gene's own expression steps. A stage ends
+   on a short list of things to find; the page notices each one off the
+   live model and nothing reports a miss. The limb moved to lesson 25.
+
+   A  one cell's Hes7 (transcription, the introns' minutes, translation,
+      breakdown, the protein on its own promoter).
+   B  a row of cells: Hes7 in each, the tail adding cells, Fgf8 mRNA
+      decaying behind the tail, Hes7 stopping where Fgf8 is low.
+   C  the whole body: B's row for 64 hours, Hoxc6 and Hoxc10 switched on
+      in the tail; each somite a vertebra; three animals to build.
    ===================================================================== */
 const INK = "#1d1d1b", MUTED = "#6b6b68", HOT = "#b23a48", BLUE = "#2f6b8f", RULE = "#e2e0d9", ORANGE = "#e8730c", GREEN = "#6f8a4a";
 const $ = id => document.getElementById(id);
 const f2 = v => v == null ? "–" : v.toFixed(2);
-function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
+function cardText(ctx, t, x, y, o) { o = o || {}; ctx.fillStyle = o.col || INK; ctx.font = (o.bold ? "600 " : "") + (o.italic ? "italic " : "") + (o.size || 15) + "px " + (o.mono ? "ui-monospace, Menlo, monospace" : "-apple-system, sans-serif");
   ctx.textAlign = o.align || "left"; ctx.textBaseline = "middle"; ctx.fillText(t, x, y); }
-function polyline(ctx, pts, col, lw, alpha, dash) {
-  if (!pts.length) return;
-  ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha; ctx.strokeStyle = col; ctx.lineWidth = lw; ctx.lineJoin = "round"; ctx.lineCap = "round";
-  if (dash) ctx.setLineDash(dash);
-  ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.stroke(); ctx.restore();
-}
 
-/* ====== canvases that stay inside their panel (lesson 10's override, as lessons 16-20 carry it) ====== */
+/* sim.js's setupCanvas pins a canvas to its declared width, which spills out of a narrow panel; this one measures the room
+   (lessons 10 and 11's override) */
 let FIT_EPOCH = 0;
-function setupCanvas(canvas, h) {
-  const dpr = window.devicePixelRatio || 1;
+function fitWidth(canvas) {
   if (!canvas.dataset.cssW) { canvas.dataset.cssW = String(canvas.width); canvas.dataset.cssH = String(canvas.height); }
   const declW = +canvas.dataset.cssW;
-  let cssW;
-  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) cssW = +canvas.dataset.fitW;
-  else {
-    const host = canvas.parentElement; let room = 0;
-    if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
-    if (room > 60) { cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH); }
-    else cssW = declW;
-  }
-  const cssH = h == null ? +canvas.dataset.cssH : h;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(FIT_EPOCH)) return +canvas.dataset.fitW;
+  const host = canvas.parentElement; let room = 0;
+  if (host) { const cs = getComputedStyle(host); room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0); }
+  if (room <= 60) return declW;
+  const cssW = Math.round(Math.min(room, declW)); canvas.dataset.fitW = String(cssW); canvas.dataset.fitEpoch = String(FIT_EPOCH);
+  return cssW;
+}
+/* the pictures here are redrawn every frame, so the canvas is resized only when its size changes */
+function setupCanvas(canvas, h) {
+  const dpr = window.devicePixelRatio || 1, cssW = fitWidth(canvas), cssH = h == null ? +canvas.dataset.cssH : h;
   canvas.dataset.drawW = String(cssW); canvas.dataset.drawH = String(cssH);
-  canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
-  canvas.style.width = cssW + "px"; canvas.style.height = cssH + "px";
+  const pw = Math.round(cssW * dpr), ph = Math.round(cssH * dpr);
+  if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
+  if (canvas.style.width !== cssW + "px") canvas.style.width = cssW + "px";
+  if (canvas.style.height !== cssH + "px") canvas.style.height = cssH + "px";
   const ctx = canvas.getContext("2d");
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { ctx, W: cssW, H: cssH };
 }
+/* a picture drawn in a fixed frame (fw x fh) and scaled to the room it has; the caller restores the context when done */
 function frameCanvas(cv, fw, fh) {
-  let { ctx, W } = setupCanvas(cv, null);
-  const k = W / fw, want = Math.round(fh * k);
-  if (Math.abs(+cv.dataset.drawH - want) > 1) ({ ctx, W } = setupCanvas(cv, want));
-  ctx.clearRect(0, 0, W, want); ctx.save(); ctx.scale(k, k);
+  const k = fitWidth(cv) / fw, H = Math.round(fh * k), { ctx, W } = setupCanvas(cv, H);
+  ctx.clearRect(0, 0, W, H); ctx.save(); ctx.scale(k, k);
   return { ctx, k };
 }
-function framePt(cv, e, fw) { const r = cv.getBoundingClientRect(), k = r.width / fw; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; }
-
 const RTEXT = {};
 function codeInto(id, lines) {
-  RTEXT[id] = lines.map(l => l[1]).join("\n") + "\n";
+  const text = lines.map(l => l[1]).join("\n") + "\n"; if (RTEXT[id] === text) return; RTEXT[id] = text;
   const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
   document.getElementById(id).innerHTML = lines.map(([k, s]) => {
     const c = s.indexOf("#"), body = c < 0 ? s : s.slice(0, c), com = c < 0 ? "" : s.slice(c);
     return '<span class="line"' + (k ? ' data-line="' + k + '"' : "") + ">" +
-      esc(body).replace(/\b(mean|sum|rbinom|runif|rpois|replicate|c|rep|sapply|lapply|length|sample|sample\.int|abs|list|Filter|max|exp|matrix|rbind|cbind|function|rowMeans|rowSums|which|ifelse|integer|numeric|tabulate|round)\(/g, '<span class="fn">$1</span>(') +
+      esc(body).replace(/\b(mean|sum|c|rep|sapply|length|abs|max|min|exp|function|which|ifelse|numeric|round|ceiling|seq|seq_along|tail|head|diff|table|factor|uniroot|pmin|pmax|log|log2)\(/g, '<span class="fn">$1</span>(') +
       (com ? '<span class="com">' + esc(com) + "</span>" : "") + "</span>";
   }).join("");
 }
-
-
-/* ====== gates: a stage opens the next by being worked through; one bit per target (JM, 2026-09-30) ====== */
-const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false }, D: { open: false, done: false }, E: { open: false, done: false } };
-const NEXT_STAGE = { A: "B", B: "C", C: "D", D: "E", E: null };
-const BIT = { A1: 0, A2: 1, A3: 2, B1: 3, B2: 4, B3: 5, C1: 6, C2: 7, C3: 8, D1: 9, D2: 10, D3: 11, E1: 12, E2: 13, E3: 14 };
 function record(pos, ok) { if (pos == null || typeof Score === "undefined" || !Score.recordCheckpoint) return; Score.recordCheckpoint(pos, ok); }
-const firstTry = pos => typeof Score === "undefined" || !Score.isAnswered || !Score.isAnswered("scaffold", pos);
 function bump(stage) { if (typeof Score !== "undefined" && Score.bumpManipulation) Score.bumpManipulation(stage); }
-function tick(stage, task, on, hint) {
-  const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on);
-  const h = $(stage + "_" + task + "_now"); if (h && hint != null) h.textContent = hint;
-}
+function tick(stage, task, on) { const li = document.querySelector("#tasks" + stage + ' li[data-task="' + task + '"]'); if (li) li.classList.toggle("done", !!on); }
+function setText(el, t) { if (el && el.textContent !== t) el.textContent = t; }
 function unlockNext(stage) {
   const nx = NEXT_STAGE[stage];
   if (!nx) { $("done-banner").classList.add("shown"); if (typeof Score !== "undefined" && Score.finish) Score.finish(); $("done-banner").scrollIntoView({ behavior: "smooth", block: "center" }); return; }
   $("stage" + nx).classList.remove("stage-locked"); const toc = $("toc" + nx); if (toc) toc.classList.remove("locked");
-  Gates[nx].open = true; FIT_EPOCH++; paintAll();
+  Gates[nx].open = true; FIT_EPOCH++; paintAll(); wake();
 }
 function finishStage(stage) { if (Gates[stage].done) return; Gates[stage].done = true; $("solved" + stage).classList.add("shown"); unlockNext(stage); }
 
+const Gates = { A: { open: false, done: false }, B: { open: false, done: false }, C: { open: false, done: false } };
+const NEXT_STAGE = { A: "B", B: "C", C: null };
+/* one bit for each thing to find; a find writes 1 and nothing writes a miss */
+const BIT = { A1: 0, A2: 1, A3: 2, B1: 3, B2: 4, B3: 5, B4: 6, B5: 7, C1: 8, C2: 9, C3: 10 };
 
-/* =====================================================================
-   STAGE A's ENGINE: one cell's Hes7, step by step (JM, 2026-11-07: "name
-   things like HES and also put transcription/mRNA decay in there").
-   Transcription starts new Hes7 mRNA at k a minute when nothing shuts the
-   gene; the mRNA is ready tau minutes later (copying the gene, cutting its
-   introns out, export: 33 minutes with its three introns, 26.6 with one,
-   14 with none; all three removed take about 19 minutes off: Takashima et
-   al. 2011); it is read into protein 2 minutes later; each is broken down
-   at its half-life (protein about 22 minutes: Hirata et al. 2004). The
-   protein, when it can bind, shuts its own gene:
-     dm/dt = k / (1 + (p(t - tau) / p0)^2.5) - ln2 / hm m
-     dp/dt = a m(t - 2) - ln2 / hp p
-   k 25, a 3, p0 200; Euler steps of .05 minutes.
-   MEASURED (scratchpad l24v2/hes.js, the same model at 1/5 the counts):
-   the delay sets the period: none, steady; one intron 102 minutes, swing
-   .27; three 122, .56. Protein half-life 11 / 16 / 22 / 30: swing .92 /
-   .80 / .56 / .11 (30 fades: Hirata et al.'s slower-decaying Hes7).
-   Without binding the protein climbs to k a hm hp / ln2^2 (10,300 at
-   mRNA half-life 3, 20,600 at 6, 41,200 at 12).
-   ===================================================================== */
-const HX = { k: 25, a: 3, p0: 200, n: 2.5, tp: 2, dt: 0.05, T: 720, frame: 5 };
-function hesRun(P, T) {
-  const dt = HX.dt, N = Math.ceil(T / dt) + 1, m = new Float64Array(N + 1), p = new Float64Array(N + 1), lag = Math.round(P.tau / dt), lp = Math.round(HX.tp / dt), cm = Math.LN2 / P.hm, cp = Math.LN2 / P.hp;
-  for (let i = 0; i < N; i++) {
-    const pd = i >= lag ? p[i - lag] : 0, md = i >= lp ? m[i - lp] : 0, on = P.fb ? 1 / (1 + Math.pow(pd / HX.p0, HX.n)) : 1;
-    m[i + 1] = m[i] + dt * (HX.k * on - cm * m[i]); p[i + 1] = p[i] + dt * (HX.a * md - cp * p[i]);
-  }
-  return { m, p, dt, N, P };
-}
-const trAt = (tr, arr, t) => { const x = t / tr.dt, i = Math.max(0, Math.min(tr.N - 1, Math.floor(x))), f = Math.max(0, Math.min(1, x - i)); return arr[i] * (1 - f) + arr[i + 1] * f; };
-/* the swing of the protein over the last 300 minutes before t: (top - bottom) / (top + bottom) */
-function swingOf(tr, t) { if (t < 300) return null; let lo = Infinity, hi = -Infinity; for (let i = Math.round((t - 300) / tr.dt); i <= Math.round(t / tr.dt); i++) { lo = Math.min(lo, tr.p[i]); hi = Math.max(hi, tr.p[i]); } return (hi - lo) / (hi + lo + 1e-9); }
-/* minutes between the protein's peaks in the last 400 minutes before t (none while it barely moves) */
-function periodOf(tr, t) { const pk = []; for (let i = Math.max(1, Math.round((t - 400) / tr.dt)); i < Math.round(t / tr.dt); i++) if (tr.p[i] > tr.p[i - 1] && tr.p[i] >= tr.p[i + 1]) pk.push(i * tr.dt);
-  const s = swingOf(tr, t); return pk.length >= 2 && s != null && s > 0.05 ? (pk[pk.length - 1] - pk[0]) / (pk.length - 1) : null; }
-function cellWorld(P) { return { P, t: 0, tr: hesRun(P, HX.T + 10) }; }
-const cellMin = w => w.t * HX.frame;
-const CELL = { step: w => { w.t++; }, stat: w => { const t = cellMin(w); return { min: t, m: trAt(w.tr, w.tr.m, t), prot: trAt(w.tr, w.tr.p, t), swing: swingOf(w.tr, t), per: periodOf(w.tr, t) }; } };
-
-/* =====================================================================
-   STAGE B's ENGINE: the embryo (Cooke & Zeeman 1976's clock and front;
-   Fgf8's gradient by mRNA decay: Dubrulle & Pourquie 2004). The tail adds
-   .2 cells a minute for 24 hours, every one carrying A's Hes7 cell (mRNA
-   half-life 3 minutes, its own gene shut by its protein). A cell's Fgf8
-   mRNA, made only in the tail, is broken down from the moment it leaves
-   (half-life hF); while it lasts the cell's Hes7 runs at .4 + .6 x its
-   Fgf8 (slower as Fgf8 falls); at Fgf8 .3 Hes7 stops for good. Hes7
-   starts at minute 0 in every cell, so each cell is A's one trajectory
-   read at the cell's own Hes7 time (exact: the cells do not talk).
-   Along the stopped cells, front to back, Mesp2 marks a boundary where
-   Hes7 mRNA passes from 5 or less to 9 or more (Mesp2 lasts the hour
-   after the cell stops); the cells between two boundaries are a somite.
-   A stripe in the tail: a run of cells at 9 or more, after 5 or less.
-   MEASURED (scratchpad l24v2/emb.js): 24 hours, Fgf8 mRNA 400 minutes:
-   three introns 9 somites, one intron 11, none 1 and then one long block;
-   protein half-life 30: 3, then a block (Hirata et al.: 3-4 cycles);
-   Fgf8 mRNA 200 / 400 / 800: 1 / 2 / 3 Hes7 stripes in the tail.
-   ===================================================================== */
-const EM = { T: 1440, v: 0.2, th: 0.3, r0: 0.4, lo: 5, hi: 9, frame: 10, hm: 3, mesp: 60 };
-function emWorld(P) {
-  const af = P.hF * Math.log2(1 / EM.th), tr = hesRun({ fb: 1, tau: P.tau, hm: EM.hm, hp: P.hp }, EM.T + 10), births = [];
-  for (let b = -af; b <= EM.T + 1e-9; b += 1 / EM.v) births.push(b);
-  return { P, t: 0, af, tr, births };
-}
-const emR = (w, a) => EM.r0 * a + (1 - EM.r0) * w.P.hF / Math.LN2 * (1 - Math.pow(2, -a / w.P.hF));   /* a cell's Hes7 time after age a */
-function emCells(w) {
-  const t = w.t * EM.frame, out = [];
-  for (const b of w.births) {
-    if (b > t) break;
-    const age = t - b, fz = age >= w.af, a = Math.min(age, w.af), ht = b >= 0 ? b + emR(w, a) : (a <= -b ? 0 : emR(w, a) - emR(w, -b));
-    out.push({ b, age, fz, F: Math.pow(2, -a / w.P.hF), m: trAt(w.tr, w.tr.m, ht), p: trAt(w.tr, w.tr.p, ht) });
-  }
-  let s = 0; const bd = [];
-  out.forEach((c, i) => { if (!c.fz) return; if (!s && c.m >= EM.hi) { s = 1; bd.push(i); } else if (s && c.m <= EM.lo) s = 0; c.hi = s; c.mesp = s && c.age - w.af < EM.mesp ? 1 : 0; });
-  let s2 = 0, str = 0; for (const c of out) { if (c.fz) continue; if (!s2 && c.m >= EM.hi) { s2 = 1; str++; } else if (s2 && c.m <= EM.lo) s2 = 0; }
-  const nfz = out.filter(c => c.fz).length;
-  return { t, cells: out, bd, somites: Math.max(0, bd.length - 1), stripes: str, nfz, tail: bd.length ? nfz - bd[bd.length - 1] : nfz };
-}
-const EMB = { step: w => { w.t++; }, stat: w => { const e = emCells(w); return { somites: e.somites, stripes: e.stripes, block: e.tail }; } };
-
-/* =====================================================================
-   STAGE C's ENGINE: where a limb goes, rules on 24 somite levels (Burke
-   et al. 1995: the forelimb sits where Hoxc6 starts, in every tetrapod
-   measured; Cohn & Tickle 1999: a python's Hoxc6 on from the head, no
-   forelimb; Ohuchi et al. 1998: Fgf in the flank makes a limb, a wing
-   with Tbx5 in front, a leg with Tbx4 behind; Min et al. 1998: no Fgf10,
-   no limbs). Each Hox gene is on from its first somite to the tail:
-   Hoxc6 from c6 (normally somite 8), Hoxc10 from somite 20. In the flank,
-   Tbx5 is on in the first four somites of the Hoxc6 region, Tbx4 from
-   there to the end of the Hoxc10 region's first two somites. Fgf10 comes
-   on by itself where Hoxc6 starts after somites without it (a forelimb
-   bud: Tbx5 there) and where Hoxc10 starts (a hindlimb bud: Tbx4), and
-   at the somite the student switches it on in; a bud is an arm where
-   Tbx5 is on, a leg where Tbx4 is, nothing where neither is.
-   ===================================================================== */
-const NL = 24, C10 = 19;
-function posLimbs(P) {
-  const c6 = P.c6 - 1, tb5 = i => i >= c6 && i < c6 + 4, tb4 = i => i >= c6 + 4 && i <= C10 + 1, limbs = [], fg = new Uint8Array(NL);
-  if (c6 > 0) { fg[c6] = 1; limbs.push({ at: c6, kind: "arm" }); }
-  fg[C10] = 1; limbs.push({ at: C10, kind: tb5(C10) ? "arm" : "leg" });
-  if (P.fg >= 0) { fg[P.fg] = 1; if (!limbs.some(l => l.at === P.fg) && (tb5(P.fg) || tb4(P.fg))) limbs.push({ at: P.fg, kind: tb5(P.fg) ? "arm" : "leg", extra: true }); }
-  const arm = limbs.find(l => l.kind === "arm" && !l.extra);
-  return { c6, tb5: Array.from({ length: NL }, (_, i) => tb5(i) ? 1 : 0), tb4: Array.from({ length: NL }, (_, i) => tb4(i) ? 1 : 0), fg, limbs,
-           arms: limbs.filter(l => l.kind === "arm").length, legs: limbs.filter(l => l.kind === "leg").length, armAt: arm ? arm.at + 1 : null };
-}
-function posWorld(P) { return { P, t: 0, res: posLimbs(P) }; }
-const POS = { step: w => { w.t++; }, stat: w => ({ arms: w.res.arms, legs: w.res.legs, armAt: w.res.armAt }) };
-
-/* =====================================================================
-   STAGE D's ENGINE: the bud grows and stops itself (Dillon & Othmer 1999
-   for growth from a tip signal; the loop: Zuniga et al. 1999, Scherz et
-   al. 2004, Benazet et al. 2009, as JM's lecture puts it: "Shh ->
-   Gremlin on -> BMP off -> FGF on -> grow"; "Limb outgrows Shh diffusion
-   range -> circuit collapses -> terminate"). Draft 1's engine, its
-   sources now transcription rates relative to normal. One dimension,
-   body (x 0) to tip (x L); every .05 hours the signals settle (spreading
-   with breakdown, nothing lost at either end, 81 points):
-     Fgf8 from the tip's cells (while they make it) x f, reach .6;
-     Shh from cells near the body (x < .08), made as sh x Fgf8 / (.02 +
-       Fgf8) there, reach .25;
-     Grem1 made (x gr) where Shh is above .05, outside the cells
-       descended from the Shh-makers (x > .08 + .003 t), reach .1;
-     Bmp4 at the tip 1 / (1 + Grem1 there); the tip stops making Fgf8
-       for good when it passes .5;
-     dL/dt = .3 x Fgf8 at the tip.
-   Lengths shown x 2.5, in mm (a chick bud ~.25 -> 1.75 mm).
-   MEASURED (scratchpad l24v2/bud.js): from .75 mm, Shh x .3 / 1 / 3:
-   1.01 / 1.70 / 2.29 mm (stopping at hour 3.5 / 17.1 / 31.4); Fgf8 x 2:
-   1.78 mm at hour 9.4 (the same length, sooner); Grem1 x 20 / 80: 1.70
-   / 2.00 (below 20 it levels off near 1.45; at 1 no growth).
-   ===================================================================== */
-const GN = 81, GD = { L0: 0.3, z0: 0.08, tipW: 0.03, lamF: 0.6, lamS: 0.25, lamG: 0.1, K: 0.02, thS: 0.05, rd: 0.003, thB: 0.5, g: 0.3, dt: 0.05, MM: 2.5 };
-function gSteady(L, lam, src) {
-  const h = L / (GN - 1), a = lam * lam / (h * h), A = new Float64Array(GN), B = new Float64Array(GN), C = new Float64Array(GN), D = Float64Array.from(src);
-  for (let i = 0; i < GN; i++) { A[i] = -a; C[i] = -a; B[i] = 1 + 2 * a; } C[0] = -2 * a; A[GN - 1] = -2 * a;
-  for (let i = 1; i < GN; i++) { const m = A[i] / B[i - 1]; B[i] -= m * C[i - 1]; D[i] -= m * D[i - 1]; }
-  const x = new Float64Array(GN); x[GN - 1] = D[GN - 1] / B[GN - 1]; for (let i = GN - 2; i >= 0; i--) x[i] = (D[i] - C[i] * x[i + 1]) / B[i]; return x;
-}
-function bdWorld(P) { const w = { P, t: 0, hrs: 0, L: GD.L0, aer: 1, tEnd: null, outl: [[0, GD.L0 * GD.MM]] }; bdSignals(w); return w; }
-function bdSignals(w) {
-  const P = w.P, L = w.L, h = L / (GN - 1), xs = Array.from({ length: GN }, (_, i) => i * h);
-  const F = gSteady(L, GD.lamF, xs.map(x => w.aer && x > L - GD.tipW ? P.f : 0));
-  let fz = 0; for (let i = 0; i < GN; i++) if (xs[i] < GD.z0) fz = Math.max(fz, F[i]);
-  const S = gSteady(L, GD.lamS, xs.map(x => x < GD.z0 ? P.sh * fz / (GD.K + fz) : 0));
-  const desc = GD.z0 + GD.rd * w.hrs;
-  const Gr = gSteady(L, GD.lamG, xs.map((x, i) => S[i] > GD.thS && x > desc ? P.gr : 0));
-  w.F = F; w.S = S; w.Gr = Gr; w.desc = desc; w.B = Array.from(Gr, g => 1 / (1 + g));
-}
-function bdStep(w) {
-  for (let s = 0; s < 5; s++) {
-    if (w.aer && w.B[GN - 1] > GD.thB) { w.aer = 0; w.tEnd = w.hrs; }
-    w.L += GD.dt * GD.g * w.F[GN - 1]; w.hrs += GD.dt;
-    bdSignals(w);
-  }
-  w.t++; if (w.t % 20 === 0) w.outl.push([w.hrs, w.L * GD.MM]);
-}
-function bdStat(w) { return { len: w.L * GD.MM, hours: w.tEnd == null ? w.hrs : w.tEnd, ridge: w.aer }; }
-const BUD = { step: bdStep, stat: bdStat };
-
-/* =====================================================================
-   STAGE E's ENGINE: the skeleton. Sox9 (s, stays in its cell), Bmp (b)
-   and Wnt (w): Bmp switches Sox9 on, Wnt shuts it off, Sox9 shuts both
-   off (Raspopovic et al. 2014's signs; their numbers not used):
-     ds/dt = -s + b - w - s^3
-     db/dt = -1.59 s - .1 b + h b''      dw/dt = -1.27 s - .5 w + .1 h w''
-   h, how far Bmp and Wnt spread, is set by the row's Hox code: the Meis
-   region (rows 1-15, 8 cells wide) 10, the Hoxa11 region (16-30, 12
-   wide) 4, the Hoxa13 region (31-60) 1.5 x the Hox13 level (less Hox13,
-   closer digits: Sheth et al. 2012), 22 cells wide with Gli3, 30
-   without (Gli3's loss broadens the limb's end: Hui & Joyner 1993). The
-   limb is laid down row by row from the body: each row starts from the
-   row behind it (stretched to its width, noise .02) and settles for 60
-   time units (the first row 180, from noise .05); a Sox9 cell (s above
-   .1) makes cartilage; a run of them across a row is an element.
-   MEASURED (scratchpad l24v2/bsw.js, 16 limbs): Hox13 x 1: 1-2-5 in 16
-   of 16; x .5: ten digits; x 2: four; x 3: three; without Gli3 (x 1):
-   seven or eight. About 4 ms a limb.
-   ===================================================================== */
-const SX = { ks: 1, kb: 1, kw: 1, k4: 1.59, k5: 0.1, k7: 1.27, k9: 0.5, Db: 1, Dw: 0.1, T: 60, noise: 0.02, rows: 60, th: 0.1 };
-const sxRegion = k => k < 15 ? 0 : k < 30 ? 1 : 2;
-const sxWidth = (r, gli) => r === 0 ? 8 : r === 1 ? 12 : gli ? 22 : 30;
-function sxSettle(s, b, w, h, T) {
-  const n = s.length, Db = SX.Db * h, Dw = SX.Dw * h, dt = Math.min(0.2, 0.4 / (2 * Db)), steps = Math.ceil(T / dt), lb = new Float64Array(n), lw = new Float64Array(n);
-  for (let k = 0; k < steps; k++) {
-    for (let i = 0; i < n; i++) { const l = i ? i - 1 : 1, r = i < n - 1 ? i + 1 : n - 2; lb[i] = b[l] + b[r] - 2 * b[i]; lw[i] = w[l] + w[r] - 2 * w[i]; }
-    for (let i = 0; i < n; i++) { const si = s[i]; s[i] += dt * (-SX.ks * si + SX.kb * b[i] - SX.kw * w[i] - si * si * si); b[i] += dt * (-SX.k4 * si - SX.k5 * b[i] + Db * lb[i]); w[i] += dt * (-SX.k7 * si - SX.k9 * w[i] + Dw * lw[i]); }
+/* ====== the models ====== */
+/* ENGINE 24 (draft 3): one Hes7 cell stepped live, and a body of them */
+const HX = { k: 25, a: 3, p0: 200, n: 2.5, tp: 2, dt: 0.05, tau0: 14, ti: [2.5, 2.5, 14] };
+const tauOf = P => HX.tau0 + (P.i1 ? HX.ti[0] : 0) + (P.i2 ? HX.ti[1] : 0) + (P.i3 ? HX.ti[2] : 0);
+function hesNew() { return { m: 0, p: 0, on: 1, i: 0, acc: 0, ph: new Float32Array(1024), mh: new Float32Array(64) }; }
+function hesClone(c) { return { m: c.m, p: c.p, on: c.on, i: c.i, acc: 0, ph: c.ph.slice(), mh: c.mh.slice() }; }
+/* n Euler steps of .05 minutes. P: introns, hm, hp, fb (protein binds its promoter), tl (mRNA is read into protein) */
+function hesStep(c, P, n) {
+  const dt = HX.dt, cm = Math.LN2 / P.hm, cp = Math.LN2 / P.hp, lag = Math.round(tauOf(P) / dt), lp = Math.round(HX.tp / dt), a = P.tl ? HX.a : 0;
+  for (let s = 0; s < n; s++) {
+    const i = c.i, pd = c.ph[(i - lag) & 1023], md = c.mh[(i - lp) & 63], on = P.fb ? 1 / (1 + Math.pow(pd / HX.p0, HX.n)) : 1;
+    c.m += dt * (HX.k * on - cm * c.m); c.p += dt * (a * md - cp * c.p); c.on = on; c.i = i + 1;
+    c.ph[(i + 1) & 1023] = c.p; c.mh[(i + 1) & 63] = c.m;
   }
 }
-function sxStretch(a, n) { const m = a.length, o = new Float64Array(n); for (let i = 0; i < n; i++) { const x = (i + 0.5) / n * m - 0.5, j = Math.max(0, Math.min(m - 1, Math.floor(x))), j2 = Math.min(m - 1, j + 1), f = Math.max(0, Math.min(1, x - j)); o[i] = a[j] * (1 - f) + a[j2] * f; } return o; }
-function sxCount(s) { let k = 0, inn = false; for (const x of s) { if (x > SX.th && !inn) { k++; inn = true; } else if (x <= SX.th) inn = false; } return k; }
-function sxWorld(P, seed) { return { P, rng: mulberry32(seed), t: 0, s: null, b: null, w: null, rows: [] }; }
-function sxStep(w) {
-  const P = w.P, r = w.rng, k = w.t, reg = sxRegion(k), n = sxWidth(reg, P.gli), h = [10, 4, 1.5 * P.hx][reg];
-  if (!w.s) { const z = () => new Float64Array(n).map(() => 0.05 * (r() - 0.5)); w.s = z(); w.b = z(); w.w = z(); }
-  else { w.s = sxStretch(w.s, n); w.b = sxStretch(w.b, n); w.w = sxStretch(w.w, n); for (let i = 0; i < n; i++) { w.s[i] += SX.noise * (r() - 0.5); w.b[i] += SX.noise * (r() - 0.5); w.w[i] += SX.noise * (r() - 0.5); } }
-  sxSettle(w.s, w.b, w.w, h, k === 0 ? 3 * SX.T : SX.T);
-  w.rows.push({ reg, s: Array.from(w.s), n: sxCount(w.s) });
-  w.t++;
+/* the level the protein rests at when it binds its promoter and nothing pulses */
+function hesRest(P) {
+  const top = HX.k * HX.a * P.hm * P.hp / (Math.LN2 * Math.LN2); if (!P.fb) return top;
+  let lo = 0, hi = top; for (let k = 0; k < 60; k++) { const x = (lo + hi) / 2; if (x * (1 + Math.pow(x / HX.p0, HX.n)) > top) hi = x; else lo = x; } return (lo + hi) / 2;
 }
-function sxStat(w) {
-  const at = k => w.rows[k] ? w.rows[k].n : null, up = at(12), fo = at(27), full = w.rows.length === SX.rows, di = full ? w.rows[SX.rows - 1].n : null;
-  return { up, fo, di, m125: full && up === 1 && fo === 2 && di === 5 ? 1 : 0, d3: full && di === 3 ? 1 : 0, d7: full && di >= 7 ? 1 : 0 };
+/* BODY: cells head (index 0) to tail. v cells a minute join at the tail, each a copy of the tail cell.
+   Fgf8 mRNA is made only in the tail; in a cell that has left, it halves every hF minutes. Hes7 stops for good
+   where Fgf8 falls below .3 (the front); with slow on, Hes7 runs at .4 + .6 x Fgf8 of full speed. */
+const BD = { v: 0.1, th: 0.3, r0: 0.4, lo: 0.8, hi: 1.25 };
+function bodyNew(o) {
+  const w = { o, t: 0, cells: [], nfz: 0, s: 0, bd: [], born: 0, done: false };
+  for (let j = 0; j < o.n0; j++) w.cells.push({ b: -(o.n0 - 1 - j) / BD.v, h: hesNew(), fz: 0, z: 0 });
+  return w;
 }
-const SKEL = { step: sxStep, stat: sxStat };
-
-function meanOf(a) { const v = a.filter(x => x != null && !Number.isNaN(x)); return v.length ? v.reduce((x, y) => x + y, 0) / v.length : null; }
-function sumAt(q, t) {
-  let s = q.hist[0]; for (const h of q.hist) if (h.t <= t) s = h;
-  const out = { t: s.t }, R = s.runs;
-  for (const key of Object.keys(R[0])) {
-    const v0 = R.map(p => p[key]).find(v => v != null);
-    if (v0 == null || typeof v0 === "number") out[key] = meanOf(R.map(p => p[key]));
-    else if (v0.length != null) out[key] = Array.from(v0, (_, i) => meanOf(R.map(p => p[key] ? p[key][i] : null)));
-  }
-  return out;
-}
-
-/* ====== one stage's targets: the bowling shape (lessons 16, 17 and 19's), shared by A-E ======
-   cfg: ctl [{key, vals, hidden, line}], rounds [{open, hold, pic, rules [{meas, lo, hi, ok(S), val(S)}], text}],
-   start(set, seed) -> { P, eng { step, stat }, runs, G, every }, paint(); hooks: afterOpen(), onInput(key), afterSync(busy). */
-const ST = {};
-function mkStage(K, cfg) { ST[K] = { K, cfg, round: 0, results: [], waiting: false, done: false, run: null, last: null, runs: 0, on: false, t0: 0 }; return ST[K]; }
-const ruleOf = S => S.cfg.rounds[Math.min(S.round, S.cfg.rounds.length - 1)];
-const practising = S => ($(S.K + "_practice") && $(S.K + "_practice").checked) || S.done;
-const ctlIdx = el => +el.value - (+el.min || 0);
-function readSet(S) { const o = {}; for (const c of S.cfg.ctl) o[c.key] = c.vals[ctlIdx($(S.K + "_" + c.key))]; return o; }
-function openRound(S) {
-  const r = ruleOf(S);
-  for (const c of S.cfg.ctl) {
-    const el = $(S.K + "_" + c.key), held = !S.done && r.hold && r.hold[c.key] != null;
-    if (!S.done && r.open && r.open[c.key] != null) el.value = c.vals.indexOf(r.open[c.key]) + (+el.min || 0);
-    if (held) el.value = c.vals.indexOf(r.hold[c.key]) + (+el.min || 0);
-    el.dataset.held = held ? "1" : "";
-  }
-  S.preview = null;
-  if (S.cfg.afterOpen) S.cfg.afterOpen();
-}
-function snap(q) { q.hist.push({ t: q.t, runs: q.runs.map(w => q.eng.stat(w)) }); }
-function stepOnce(q) { q.t++; for (const w of q.runs) q.eng.step(w); if (q.t === q.G || q.t % q.every === 0) snap(q); }
-function goStage(S) {
-  if (S.run || S.waiting) return;
-  const r = S.done ? null : ruleOf(S);
-  const set = readSet(S), seed = pageSeed("l24" + S.K, 1, 999999) + 104729 * S.runs++ + 7919 * S.round;
-  const q = S.cfg.start(set, seed);
-  Object.assign(q, { set, t: 0, hist: [], practice: practising(S), r, round: S.round, seed });
-  snap(q);
-  S.run = q; $(S.K + "_verdict").innerHTML = ""; bump(S.K); S.cfg.paint(); loopStage(S);
-}
-function loopStage(S) { if (S.on) return; S.on = true; S.t0 = 0; requestAnimationFrame(ts => frameStage(S, ts)); }
-function frameStage(S, ts) {
-  const q = S.run;
-  if (q) {
-    if (!S.t0) S.t0 = ts;
-    const due = Math.min(q.G, Math.ceil((ts - S.t0) / S.cfg.ms)), t0 = performance.now();
-    while (q.t < due && performance.now() - t0 < 14) stepOnce(q);
-    S.cfg.paint();
-    if (q.t >= q.G) endStage(S);
-  }
-  if (S.run) requestAnimationFrame(t => frameStage(S, t)); else S.on = false;
-}
-/* the instructor's and the checks' way to finish a run at once */
-function finishNow(S) { const q = S.run; if (!q) return; while (q.t < q.G) stepOnce(q); endStage(S); }
-function judge(r, S) { const each = r.rules.map(u => u.ok(S)); return { ok: each.every(Boolean), each, vals: r.rules.map(u => u.val(S)) }; }
-function endStage(S) {
-  const q = S.run; if (!q) return;
-  S.run = null; S.last = q;
-  if (q.r) {
-    q.j = judge(q.r, sumAt(q, q.G));
-    if (!q.practice) {
-      const pos = BIT[S.K + (q.round + 1)];
-      if (firstTry(pos)) record(pos, q.j.ok);
-      if (q.j.ok) { S.results[q.round] = true; S.waiting = true; }
+const fgfOf = (w, c, P) => Math.pow(2, -Math.max(0, w.t - c.b) / P.hF);
+function bodyStep(w, P, mins) {
+  for (let k = 0; k < mins; k++) {
+    const growing = P.grow && w.t < w.o.T;
+    if (growing) { w.born += BD.v; while (w.born >= 1) { w.born -= 1; const tail = w.cells[w.cells.length - 1], c = { b: w.t, h: hesClone(tail.h), fz: 0, z: 0 }; w.cells.push(c); } }
+    const last = w.cells.length - 1, rest = hesRest(P);
+    for (let j = w.nfz; j <= last; j++) {
+      const c = w.cells[j];
+      if (growing && j === last) c.b = w.t;                                 /* the tail cell is always age 0 while the tail grows */
+      const F = P.fgf ? fgfOf(w, c, P) : 1;
+      if (P.fgf && F < BD.th && j === w.nfz) {                              /* cells stop in order, head first */
+        c.fz = 1; c.z = c.h.p / rest; c.tf = w.t; c.h.ph = c.h.mh = null; w.nfz++;
+        if (!w.s && c.z >= BD.hi) { w.s = 1; w.bd.push(j); } else if (w.s && c.z <= BD.lo) w.s = 0;
+        continue;
+      }
+      const r = P.slow && P.fgf ? BD.r0 + (1 - BD.r0) * F : 1;
+      c.h.acc += r / HX.dt; const n = Math.floor(c.h.acc); c.h.acc -= n; hesStep(c.h, P, n);
     }
-    $(S.K + "_verdict").innerHTML = (q.practice ? "practice: " : "") + (q.j.ok ? '<span class="ok">✓ correct</span>' : '<span class="off">✗ incorrect</span>');
-    if (S.results.filter(Boolean).length >= S.cfg.rounds.length) { S.done = true; S.waiting = false; openRound(S); }
+    w.t++;
+    if (P.fgf && !(P.grow && w.t < w.o.T) && w.nfz >= w.cells.length) { w.done = true; break; }
   }
-  if (S.done) finishStage(S.K);
-  S.cfg.paint();
 }
-/* the targets of a part can be taken in any order (JM, 2026-10-26): a circle opens its target; Next target opens the next unsolved one */
-function gotoRound(S, i) { if (S.run || S.done || (i === S.round && !S.waiting)) return; S.waiting = false; S.round = i; S.last = null; openRound(S); $(S.K + "_verdict").innerHTML = ""; S.cfg.paint(); }
-function nextRound(S) { if (!S.waiting) return; const n = S.cfg.rounds.length; let i = S.round; for (let k = 1; k <= n; k++) { const j = (S.round + k) % n; if (!S.results[j]) { i = j; break; } } gotoRound(S, i); }
-const PATHS = {};
-function syncStage(S) {
-  const busy = !!S.run, free = S.done, r = ruleOf(S), K = S.K;
-  $(K + "_pips").innerHTML = free ? "" : Pips.html(S.cfg.rounds.length, i => S.results[i], S.round, busy);
-  /* no words in a card (JM, 2026-10-22), but for a control with no cue of its own (REVISIONS row 22): A round 1's seeds */
-  if ($(K + "_ttext")) $(K + "_ttext").innerHTML = free ? "" : r.text || "";
-  for (const c of S.cfg.ctl) $(K + "_" + c.key).disabled = busy || S.waiting || $(K + "_" + c.key).dataset.held === "1";
-  if ($(K + "_practice")) $(K + "_practice").disabled = busy || free || S.waiting;
-  $(K + "_go").disabled = busy || S.waiting; $(K + "_go").textContent = $(K + "_practice") && practising(S) ? "Practice run" : "Go";
-  $(K + "_next").hidden = !S.waiting || busy;
-  const n = S.results.filter(Boolean).length;
-  tick(K, "rounds", n >= S.cfg.rounds.length, n + " of " + S.cfg.rounds.length);
-  /* an arrow freed by Next target glows once its input is enabled: redraw the diagram whenever which inputs are enabled changes */
-  const sig = S.cfg.ctl.map(c => $(K + "_" + c.key).disabled ? 1 : 0).join(""), pp = PATHS[K];
-  if (sig !== S.dsig && pp) { S.dsig = sig; pp.sync(); }
-  const ctl = $(K + "_controls"); if (ctl) ctl.classList.toggle("pending", busy || S.waiting);
-  const pw = $(K + "_pathwrap"); if (pw) pw.classList.toggle("pending", busy || S.waiting);
-  if (S.cfg.afterSync) S.cfg.afterSync(busy || S.waiting);
+function bodyStat(w) {
+  const bd = w.bd, n = Math.max(0, bd.length - 1), sizes = []; for (let i = 1; i < bd.length; i++) sizes.push(bd[i] - bd[i - 1]);
+  const last3 = sizes.slice(-3), block = w.nfz - (bd.length ? bd[bd.length - 1] : 0);
+  let st = 0, s = 0; for (let j = w.nfz; j < w.cells.length; j++) { const c = w.cells[j], z = c.h.p / (w.rest || 1); if (!s && z >= BD.hi) { s = 1; st++; } else if (s && z <= BD.lo) s = 0; }
+  return { segs: n, size: last3.length ? last3.reduce((a, b) => a + b, 0) / last3.length : null, sizes, block, zone: w.cells.length - w.nfz, stripes: st, cells: w.cells.length };
+}
+/* HOX: a cell keeps the code it left the tail with. 0 neither, 1 Hoxc6, 2 Hoxc10. A segment takes its first cell's code.
+   A limb forms where a code starts behind segments without it: forelimb at the first Hoxc6 segment, hindlimb at the first
+   Hoxc10 segment; a code on from the first segment makes no limb. */
+const hoxOf = (c, P) => { const h = Math.max(0, c.b) / 60; return h >= P.t10 ? 2 : h >= P.t6 ? 1 : 0; };
+function bodyPlan(w, P) {
+  const bd = w.bd, ids = []; for (let i = 0; i + 1 < bd.length; i++) ids.push(hoxOf(w.cells[bd[i]], P));
+  let neck = 0, rib = 0, rear = 0; for (const x of ids) { if (x === 0) neck++; else if (x === 1) rib++; else rear++; }
+  let fore = ids.indexOf(1), hind = ids.indexOf(2); if (fore <= 0) fore = -1; if (hind <= 0) hind = -1;
+  return { ids, n: ids.length, neck, rib, rear, fore, hind };
+}
+
+/* WATCHING: what the page reads off the running models to draw them and to tick a find */
+/* one cell: its last ten hours a minute at a time, the protein's peaks (a peak counts once the level has fallen a little
+   below it, so a kink where a control changed is not one), and the polymerases on the gene */
+function cellNew() { return { c: hesNew(), t: 0, sub: 0, hm: new Float32Array(600), hp: new Float32Array(600), n: 0, peaks: [], up: true, xv: 0, xt: 0, pol: [], polAcc: 0, mark: 0, on: 1 }; }
+function cellStep(S, P, quarters) {
+  const d = 0.045 * hesRest(P), tau = tauOf(P);
+  for (let q = 0; q < quarters; q++) {
+    hesStep(S.c, P, 5); S.t += 0.25;
+    const p = S.c.p;
+    if (S.up) { if (p >= S.xv) { S.xv = p; S.xt = S.t; } else if (p < S.xv - d) { S.peaks.push(S.xt); if (S.peaks.length > 16) S.peaks.shift(); S.up = false; S.xv = p; S.xt = S.t; } }
+    else if (p <= S.xv) { S.xv = p; S.xt = S.t; } else if (p > S.xv + d) { S.up = true; S.xv = p; S.xt = S.t; }
+    const on = P.fb ? 1 / (1 + Math.pow(p / HX.p0, HX.n)) : 1;            /* the promoter now: what a polymerase starting now sees */
+    S.on = on; S.polAcc += on * 0.25; if (S.polAcc >= 1) { S.polAcc -= 1; S.pol.push(S.t); }
+    while (S.pol.length && S.t - S.pol[0] > tau) S.pol.shift();
+    if (++S.sub === 4) { S.sub = 0; S.hm[S.n % 600] = S.c.m; S.hp[S.n % 600] = p; S.n++; }
+  }
+}
+/* how far the protein swings over the last W minutes: (high - low) / (high + low) */
+function cellSwing(S, W) {
+  const n = Math.min(W, S.n, 600); if (n < 2) return 1;
+  let lo = Infinity, hi = -Infinity; for (let i = S.n - n; i < S.n; i++) { const v = S.hp[i % 600]; if (v < lo) lo = v; if (v > hi) hi = v; }
+  return hi + lo > 0 ? (hi - lo) / (hi + lo) : 0;
+}
+/* minutes between the protein's peaks: the average of the last two gaps, peaks since minute `since` only */
+function cellPeriod(S, since) { const k = S.peaks, n = k.length; return n >= 3 && k[n - 3] >= since ? (k[n - 1] - k[n - 3]) / 2 : null; }
+/* a row of cells: the engine's body plus what the finds read (minutes with two stripes, segments since the last change) */
+function rowNew(o) { const w = bodyNew(o); w.mark = 0; w.fTouched = false; w.two = 0; w.zone = 0; w.st = null; return w; }
+function rowStep(w, P, mins) {
+  for (let k = 0; k < mins && !w.done; k++) {
+    bodyStep(w, P, 1); w.rest = hesRest(P); const s = w.st = bodyStat(w);
+    if (P.fgf && s.stripes >= 2) w.two++;
+    w.zone = P.fgf && P.grow && w.t < w.o.T ? s.zone : 0;
+  }
+}
+/* the average size of the last five segments made since the last change to Hes7 (null until there are five) */
+function rowSize(w) { const b = w.bd, n = b.length; return n - w.mark >= 6 ? (b[n - 1] - b[n - 6]) / 5 : null; }
+
+/* ====== the R panels: the same models at the stage's settings ====== */
+const rBool = v => v ? "TRUE" : "FALSE";
+const rHes = ["k <- 25; a <- 3; p0 <- 200; n <- 2.5; dt <- 0.05                  # transcripts a minute; proteins per mRNA a minute; the protein level that half-blocks the promoter"];
+function rCell(dur) { return [
+  ["", "N <- ceiling(" + dur + " / dt); m <- p <- numeric(N + 1); lag <- round(delay / dt); lp <- round(2 / dt)"],
+  ["", "for (i in 1:N) {"],
+  ["in", "  pd <- if (i > lag) p[i - lag] else 0; md <- if (i > lp) m[i - lp] else 0   # the protein there was when this mRNA's transcription began"],
+  ["fb", "  on <- if (binds) 1 / (1 + (pd / p0)^n) else 1                              # the promoter: blocked by Hes7 protein"],
+  ["hm", "  m[i + 1] <- m[i] + dt * (k * on - log(2) / hm * m[i])                      # mRNA finished, mRNA broken down"],
+  ["hp", "  p[i + 1] <- p[i] + dt * ((if (translate) a else 0) * md - log(2) / hp * p[i])   # protein translated, protein broken down"],
+  ["", "}"]]; }
+function A_lines(P) { return [
+  ["", "# Lesson 24, Stage A -- one cell's Hes7: transcription, translation, breakdown, and the protein on its own promoter"],
+  ["in", "introns <- c(2.5, 2.5, 14) * c(" + [P.i1, P.i2, P.i3].map(x => x ? 1 : 0).join(", ") + ")       # minutes each intron adds to transcription (0: removed)"],
+  ["in", "delay <- 14 + sum(introns)                    # minutes from the promoter to a finished mRNA"],
+  ["hm", "hm <- " + P.hm + "; hp <- " + P.hp + "                            # half-lives (minutes): mRNA, protein"],
+  ["fb", "translate <- " + rBool(P.tl) + "; binds <- " + rBool(P.fb) + "             # the parts"],
+  ["", rHes[0]]].concat(rCell("1200"), [
+  ["", "t <- (0:N) * dt; late <- p[t >= 900]; i <- 2:N; pk <- t[i][p[i] > p[i - 1] & p[i] >= p[i + 1]]   # the protein's peaks"],
+  ["", "c(mRNA = round(m[N + 1], 1), protein = round(p[N + 1]), swing = round((max(late) - min(late)) / (max(late) + min(late)), 2),"],
+  ["", "  minutes_between_peaks = if (length(pk) > 2) round(mean(diff(tail(pk, 3))), 1) else NA)"]]); }
+function rowLines(P, o, hox) {
+  const L = [
+  ["in", "introns <- c(2.5, 2.5, 14) * c(" + [P.i1, P.i2, P.i3].map(x => x ? 1 : 0).join(", ") + "); delay <- 14 + sum(introns)   # Hes7: minutes from the promoter to a finished mRNA"],
+  ["hp", "hm <- 3; hp <- " + P.hp + "; translate <- TRUE; binds <- TRUE                 # Hes7: half-lives (minutes)"],
+  ["hF", "hF <- " + P.hF + "                                     # Fgf8 mRNA half-life (minutes)"],
+  ["pt", "grows <- " + rBool(P.grow) + "; fgf <- " + rBool(P.fgf) + "; speeds <- " + rBool(P.slow && P.fgf) + "      # the parts: the tail adds cells; Fgf8; Fgf8 speeds Hes7"],
+  ["", "dur <- " + o.T + "; n0 <- " + o.n0 + "; v <- 0.1; th <- 0.3; r0 <- 0.4          # minutes of growth; cells at the start; cells added a minute"],
+  ["", rHes[0]],
+  ["hF", "af <- hF * log2(1 / th)                        # a cell's age (minutes) when its Fgf8 has fallen to th and its Hes7 stops"],
+  ["", "R <- function(x) if (speeds) r0 * x + (1 - r0) * hF / log(2) * (1 - 2^(-x / hF)) else x   # Hes7 minutes a cell runs in its first x minutes"]]
+  .concat(rCell("(dur + af + 10)"), [
+  ["", "top <- k * a * hm * hp / log(2)^2; rest <- uniroot(function(x) x * (1 + (x / p0)^n) - top, c(0, top))$root   # Hes7 protein's resting level"],
+  ["", "b <- c(seq(-(n0 - 1) / v, -1 / v, by = 1 / v), if (grows) seq(1 / v, dur, by = 1 / v) else 0)   # each cell's birth minute, head first"],
+  ["", "ht <- ifelse(b >= 0, b + R(af), R(af) - R(pmin(af, -b)))                # Hes7 minutes each cell has run when it stops"],
+  ["", "z <- p[pmin(N + 1, round(ht / dt) + 1)] / rest                            # its Hes7 protein then, relative to rest"],
+  ["", "s <- 0; bd <- c(); if (fgf) for (i in seq_along(z)) { if (s == 0 && z[i] >= 1.25) { s <- 1; bd <- c(bd, i) } else if (s == 1 && z[i] <= 0.8) s <- 0 }   # a boundary where stopped Hes7 goes from low to high"]]);
+  if (!hox) return L.concat([["", "c(somites = max(0, length(bd) - 1), cells_in_each = if (length(bd) > 1) round(mean(tail(diff(bd), 5)), 1) else NA)"]]);
+  return L.concat([
+  ["t6", "t6 <- " + P.t6 + "; t10 <- " + P.t10 + "                          # the hour Hoxc6 switches on in the tail; the hour Hoxc10 does"],
+  ["t6", "hour <- pmax(0, b[head(bd, -1)]) / 60; code <- ifelse(hour >= t10, 'behind', ifelse(hour >= t6, 'ribs', 'neck'))   # each somite, by its first cell"],
+  ["", "table(factor(code, c('neck', 'ribs', 'behind')))"]]);
+}
+function B_lines(P) { return [["", "# Lesson 24, Stage B -- a row of cells: Hes7 in each, the tail adding cells, Fgf8 mRNA decaying behind the tail"]].concat(rowLines(P, { n0: 40, T: 1440 }, false)); }
+function C_lines(P) { return [["", "# Lesson 24, Stage C -- the whole body: stage B's row for 64 hours, Hoxc6 and Hoxc10 switched on in the tail"]].concat(rowLines(P, { n0: 10, T: 3840 }, true)); }
+
+/* ====== drawing ====== */
+const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+/* a colour at a strength, blended on white: an opaque ramp from pale to dark, so neighbouring cells can overlap without seams */
+const blend = (r, g, b, a) => "rgb(" + Math.round(255 + (r - 255) * a) + "," + Math.round(255 + (g - 255) * a) + "," + Math.round(255 + (b - 255) * a) + ")";
+const hotA = a => blend(178, 58, 72, clamp01(a)), blueA = a => blend(47, 107, 143, clamp01(a)), inkA = a => blend(29, 29, 27, clamp01(a));
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+/* diagonal lines over a box (crossed when cross is set): a gene's pattern, readable without its hue */
+function hatch(ctx, x, y, w, h, col, cross) {
+  if (w <= 0) return; ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.strokeStyle = col; ctx.lineWidth = 1.1; ctx.beginPath();
+  for (let u = x - h; u < x + w; u += 4) { ctx.moveTo(u, y + h); ctx.lineTo(u + h, y); if (cross) { ctx.moveTo(u, y); ctx.lineTo(u + h, y + h); } }
+  ctx.stroke(); ctx.restore();
+}
+function wavy(ctx, x, y, len) { ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + len * 0.25, y - 4, x + len * 0.5, y); ctx.quadraticCurveTo(x + len * 0.75, y + 4, x + len, y); ctx.stroke(); }
+/* places for the cell's mRNAs and protein dots: a jittered grid in a shuffled order, fixed for this student's page. Room for
+   224 mRNAs and 1360 dots, so the counts printed beside them are drawn in full at the default half-lives with no feedback
+   (108 mRNAs, 1030 dots) and up to mRNA half-life 6 (216); only the longest half-lives together fill the cell before the count does */
+function slots(rng, nx, ny, x0, y0, w, h) {
+  const a = []; for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) a.push([x0 + (i + 0.2 + 0.6 * rng()) * w / nx, y0 + (j + 0.2 + 0.6 * rng()) * h / ny]);
+  for (let i = a.length - 1; i > 0; i--) { const k = Math.floor(rng() * (i + 1)), t = a[i]; a[i] = a[k]; a[k] = t; }
+  return a;
+}
+const CELLPIC = (() => { const rng = mulberry32(pageSeed("l24-cell", 1, 999999)); return { m: slots(rng, 16, 14, 428, 58, 296, 246), p: slots(rng, 40, 34, 426, 56, 316, 252) }; })();
+const GENE = { x: 50, y: 158, px: 9, pro: 30 };
+
+/* ---------- stage A: the cell, and its last ten hours ---------- */
+function paintCell() {
+  const { ctx } = frameCanvas($("A_cell"), 760, 330), S = SA.S, P = SA.P, tau = tauOf(P), g = GENE, gy = g.y;
+  roundRect(ctx, 8, 8, 744, 314, 24); ctx.fillStyle = "#fdfcf8"; ctx.fill(); ctx.strokeStyle = "#bdb8a4"; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(215, 150, 195, 120, 0, 0, 2 * Math.PI); ctx.fillStyle = "#f1efe6"; ctx.fill(); ctx.lineWidth = 1.2; ctx.stroke();
+  cardText(ctx, "nucleus", 215, 254, { size: 13, col: MUTED, align: "center" });
+  cardText(ctx, "Hes7 gene", 215, 62, { size: 15, bold: true, italic: true, align: "center" });
+  /* the gene: promoter, then exons (dark) and the introns still in it (pale) */
+  const gx0 = g.x + g.pro, len = tau * g.px;
+  ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(g.x, gy); ctx.lineTo(gx0 + len, gy); ctx.stroke();
+  ctx.fillStyle = "#fff"; ctx.fillRect(g.x, gy - 6, g.pro, 12); ctx.strokeRect(g.x, gy - 6, g.pro, 12);
+  cardText(ctx, "promoter", g.x + g.pro / 2, gy + 22, { size: 12.5, col: MUTED, align: "center" });
+  let x = gx0; const segs = [[0, HX.tau0 / 4], [1, P.i1 ? HX.ti[0] : 0], [0, HX.tau0 / 4], [2, P.i2 ? HX.ti[1] : 0], [0, HX.tau0 / 4], [3, P.i3 ? HX.ti[2] : 0], [0, HX.tau0 / 4]];
+  for (const [intron, mins] of segs) { const w = mins * g.px; if (!w) continue;
+    if (intron) { ctx.fillStyle = "#cdc9b8"; ctx.fillRect(x, gy - 3, w, 6); cardText(ctx, "intron " + intron, x + w / 2, gy + 22, { size: 12.5, col: MUTED, align: "center" }); }
+    else { ctx.fillStyle = INK; ctx.fillRect(x, gy - 6, w, 12); }
+    x += w; }
+  /* the promoter now: the bent arrow fades as it is blocked; the protein bound there */
+  const on = S.on;
+  ctx.globalAlpha = 0.15 + 0.85 * on; ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(gx0, gy - 6); ctx.lineTo(gx0, gy - 24); ctx.lineTo(gx0 + 16, gy - 24); ctx.stroke();
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(gx0 + 22, gy - 24); ctx.lineTo(gx0 + 15, gy - 28); ctx.lineTo(gx0 + 15, gy - 20); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+  if (P.fb && P.tl && on < 0.97) { ctx.globalAlpha = clamp01(1 - on); ctx.fillStyle = HOT; for (const dx of [7, 15, 23]) { ctx.beginPath(); ctx.arc(g.x + dx, gy - 10, 3.4, 0, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
+  /* polymerases on the gene, each trailing the RNA made so far */
+  ctx.strokeStyle = "rgba(29,29,27,0.55)"; ctx.lineWidth = 1; ctx.fillStyle = INK;
+  for (const t0 of S.pol) { const f = clamp01((S.t - t0) / tau), px = gx0 + f * len, top = gy - 12;
+    ctx.beginPath(); ctx.moveTo(px, top); ctx.lineTo(px - 3 - f * 5, top - 4 - f * 26); ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, gy - 9, 3, 0, 2 * Math.PI); ctx.fill(); }
+  /* the cytoplasm: finished mRNAs and the protein, counted off the model */
+  const nm = Math.min(CELLPIC.m.length, Math.round(S.c.m)), np = Math.min(CELLPIC.p.length, Math.round(S.c.p / 10));
+  ctx.fillStyle = HOT; for (let i = 0; i < np; i++) { const q = CELLPIC.p[i]; ctx.beginPath(); ctx.arc(q[0], q[1], 2.6, 0, 2 * Math.PI); ctx.fill(); }
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.5; for (let i = 0; i < nm; i++) { const q = CELLPIC.m[i]; wavy(ctx, q[0], q[1], 16); }
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.5; wavy(ctx, 430, 25, 16); cardText(ctx, "Hes7 mRNA  " + Math.round(S.c.m), 454, 25, { size: 13.5 });
+  ctx.fillStyle = HOT; ctx.beginPath(); ctx.arc(438, 42, 2.6, 0, 2 * Math.PI); ctx.fill(); cardText(ctx, "Hes7 protein  " + Math.round(S.c.p), 454, 42, { size: 13.5 });
+  cardText(ctx, "minute " + Math.floor(S.t), 30, 302, { size: 13, mono: true, col: MUTED });
+  ctx.restore();
+}
+function paintHist() {
+  const { ctx } = frameCanvas($("A_hist"), 760, 114), S = SA.S, x0 = 70, x1 = 750, W = 600, pxm = (x1 - x0) / W, n = Math.min(S.n, W);
+  cardText(ctx, "mRNA", 62, 31, { size: 13, align: "right" }); cardText(ctx, "protein", 62, 63, { size: 13, align: "right" });
+  cardText(ctx, "10 hours ago", x0, 8, { size: 12.5, col: MUTED }); cardText(ctx, "now", x1, 8, { size: 12.5, col: MUTED, align: "right" });
+  for (let i = 0; i < n; i++) { const k = (S.n - n + i) % 600, x = x1 - (n - i) * pxm;
+    ctx.fillStyle = inkA(S.hm[k] / 25); ctx.fillRect(x, 18, pxm + 0.6, 26); ctx.fillStyle = hotA(S.hp[k] / 1400); ctx.fillRect(x, 50, pxm + 0.6, 26); }
+  ctx.strokeStyle = RULE; ctx.lineWidth = 1; ctx.strokeRect(x0, 18, x1 - x0, 26); ctx.strokeRect(x0, 50, x1 - x0, 26);
+  const xs = S.peaks.map(t => x1 - (S.t - t) * pxm).filter(x => x >= x0 + 4);
+  ctx.fillStyle = INK; for (const x of xs) { ctx.beginPath(); ctx.moveTo(x, 80); ctx.lineTo(x - 4.5, 88); ctx.lineTo(x + 4.5, 88); ctx.closePath(); ctx.fill(); }
+  if (xs.length >= 2 && S.peaks.length >= 2) { const a = xs[xs.length - 2], b = xs[xs.length - 1], k = S.peaks;
+    ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a, 93); ctx.lineTo(a, 96); ctx.lineTo(b, 96); ctx.lineTo(b, 93); ctx.stroke();
+    cardText(ctx, Math.round(k[k.length - 1] - k[k.length - 2]) + " min", (a + b) / 2, 105, { size: 12.5, mono: true, align: "center" }); }
+  ctx.restore();
+}
+
+/* ---------- stages B and C: the embryo seen from above, head to the left ----------
+   The row of cells is drawn twice, one each side of the midline, and closes round the tail. Cells whose Hes7 has stopped
+   stay where they are; between two boundaries they are drawn as one block, a somite. */
+const ROWX = 96;                                  /* the left gutter: the rows' names */
+/* G: { cw, yF, hF (the Fgf8 row), y, h, gap (the two strips and the midline between them), cap (the tail's length) } */
+function paintEmbryo(ctx, w, P, G, somiteFill) {
+  const n = w.cells.length, rest = hesRest(P), X = j => ROWX + j * G.cw, xe = X(n), bd = w.bd, yMid = G.y + G.h + G.gap / 2, tops = [G.y, G.y + G.h + G.gap];
+  const colOf = c => hotA(c.fz ? c.z / 2 : c.h.p / (2 * rest));
+  if (P.fgf) { for (let j = 0; j < n; j++) { ctx.fillStyle = blueA(fgfOf(w, w.cells[j], P)); ctx.fillRect(X(j), G.yF, G.cw + 0.5, G.hF); }
+    ctx.strokeStyle = "#cfcbbb"; ctx.lineWidth = 1; ctx.strokeRect(ROWX, G.yF, n * G.cw, G.hF); }
+  /* the tail: the two strips meet round its end */
+  ctx.beginPath(); ctx.moveTo(xe - 0.5, G.y); ctx.ellipse(xe - 0.5, yMid, G.cap, G.h + G.gap / 2, 0, -Math.PI / 2, Math.PI / 2); ctx.closePath();
+  ctx.fillStyle = colOf(w.cells[n - 1]); ctx.fill(); ctx.strokeStyle = "#bdb8a4"; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = "#e9e6da"; ctx.fillRect(ROWX, G.y + G.h, xe - ROWX, G.gap);
+  const first = bd.length ? bd[0] : w.nfz, lastB = bd.length ? bd[bd.length - 1] : w.nfz;
+  for (const y of tops) {
+    const cells = (a, b) => { for (let j = a; j < b; j++) { ctx.fillStyle = colOf(w.cells[j]); ctx.fillRect(X(j), y, G.cw + 0.5, G.h); } };
+    cells(0, first); cells(lastB, n);
+    for (let i = 0; i + 1 < bd.length; i++) { const x = X(bd[i]) + 0.8, ww = Math.max(1.5, (bd[i + 1] - bd[i]) * G.cw - 1.6);
+      ctx.save(); roundRect(ctx, x, y, ww, G.h, Math.min(5, ww / 3)); ctx.clip();
+      if (somiteFill) somiteFill(i, x, y, ww, G.h); else cells(bd[i], bd[i + 1]);
+      ctx.restore(); roundRect(ctx, x, y, ww, G.h, Math.min(5, ww / 3)); ctx.strokeStyle = INK; ctx.lineWidth = 1.1; ctx.stroke(); }
+    ctx.strokeStyle = "#bdb8a4"; ctx.lineWidth = 1; ctx.beginPath(); const yo = y === G.y ? y : y + G.h;
+    ctx.moveTo(ROWX, yo); ctx.lineTo(X(first), yo); ctx.moveTo(X(lastB), yo); ctx.lineTo(xe, yo); ctx.stroke();
+    /* the cells stopped since the last boundary: no somite yet */
+    if (bd.length && w.nfz > lastB) { ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = MUTED; ctx.strokeRect(X(lastB) + 0.8, y + 0.5, Math.max(1, (w.nfz - lastB) * G.cw - 1.6), G.h - 1); ctx.restore(); }
+  }
+  /* where Hes7 stops */
+  if (P.fgf && w.nfz < n) { const x = X(w.nfz), y0 = G.yF + G.hF + 10, y1 = tops[1] + G.h + 5;
+    ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = INK; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, y0 + 6); ctx.lineTo(x, y1); ctx.stroke(); ctx.restore();
+    ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(x, y0 + 7); ctx.lineTo(x - 5, y0 - 1); ctx.lineTo(x + 5, y0 - 1); ctx.closePath(); ctx.fill();
+    const left = x > ROWX + 110; cardText(ctx, "Hes7 stops here", x + (left ? -9 : 9), y0 + 2, { size: 12.5, col: MUTED, align: left ? "right" : "left" }); }
+  /* the somites, counted */
+  const yb = tops[1] + G.h + 10, segs = Math.max(0, bd.length - 1);
+  if (segs) { const xa = X(bd[0]) + 1, xb = X(lastB) - 1;
+    ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xa, yb - 4); ctx.lineTo(xa, yb); ctx.lineTo(xb, yb); ctx.lineTo(xb, yb - 4); ctx.stroke();
+    const t = segs + (segs === 1 ? " somite" : " somites"); if (xb - xa > 76) cardText(ctx, t, (xa + xb) / 2, yb + 13, { size: 13, align: "center" }); else cardText(ctx, t, xa, yb + 13, { size: 13 }); }
+  cardText(ctx, "head", ROWX, yb + 31, { size: 12.5, col: MUTED }); cardText(ctx, "tail", xe + G.cap, yb + 31, { size: 12.5, col: MUTED, align: "right" });
+  /* the clock in the top corner of the names' gutter, away from "head" (beside it, the two read as one label) */
+  cardText(ctx, "hour " + (w.t / 60).toFixed(1), 4, G.clockY, { size: 12.5, mono: true, col: MUTED });
+}
+const B_G = { cw: (756 - 38 - ROWX) / 184, yF: 30, hF: 18, y: 84, h: 56, gap: 16, cap: 38, clockY: 11 };
+function paintRow() {
+  const { ctx } = frameCanvas($("B_emb"), 760, 270), w = SB.w, P = SB.P, G = B_G;
+  cardText(ctx, "Fgf8 mRNA", ROWX - 6, G.yF + G.hF / 2, { size: 13, align: "right", col: P.fgf ? INK : "#b8b8b4" });
+  cardText(ctx, "Hes7 protein", ROWX - 6, G.y + G.h + G.gap / 2, { size: 13, align: "right" });
+  paintEmbryo(ctx, w, P, G, null);
+  ctx.restore();
+}
+const C_G = { cw: (750 - 16 - ROWX) / 393, yF: 62, hF: 10, y: 96, h: 22, gap: 8, cap: 14, clockY: 9 };
+function paintEmb() {
+  const { ctx } = frameCanvas($("C_emb"), 760, 200), w = SC.w, P = SC.P, G = C_G, n = w.cells.length, X = j => ROWX + j * G.cw;
+  const lab = (t, y, o) => cardText(ctx, t, ROWX - 6, y, Object.assign({ size: 13, align: "right" }, o));
+  lab("Hoxc6", 27, { italic: true }); lab("Hoxc10", 47, { italic: true }); lab("Fgf8 mRNA", G.yF + G.hF / 2); lab("Hes7 protein", G.y + G.h + G.gap / 2);
+  /* a Hox gene is on in every cell the tail made from its hour on */
+  const from = t => { for (let j = 0; j < n; j++) if (Math.max(0, w.cells[j].b) / 60 >= t) return j; return -1; }, j6 = from(P.t6), j10 = from(P.t10);
+  if (j6 >= 0) { ctx.fillStyle = "#fbe3cd"; ctx.fillRect(X(j6), 20, (n - j6) * G.cw, 14); hatch(ctx, X(j6), 20, (n - j6) * G.cw, 14, ORANGE, false); }
+  if (j10 >= 0) { ctx.fillStyle = "#e4e2da"; ctx.fillRect(X(j10), 40, (n - j10) * G.cw, 14); hatch(ctx, X(j10), 40, (n - j10) * G.cw, 14, INK, true); }
+  ctx.strokeStyle = "#cfcbbb"; ctx.lineWidth = 1; ctx.strokeRect(ROWX, 20, n * G.cw, 14); ctx.strokeRect(ROWX, 40, n * G.cw, 14);
+  /* a somite is drawn by the Hox genes on in its first cell */
+  paintEmbryo(ctx, w, P, G, (i, x, y, ww, h) => { const code = hoxOf(w.cells[w.bd[i]], P);
+    ctx.fillStyle = code === 1 ? "#fbe3cd" : code === 2 ? "#e4e2da" : "#fff"; ctx.fillRect(x, y, ww, h); if (code) hatch(ctx, x, y, ww, h, code === 1 ? ORANGE : INK, code === 2); });
+  ctx.restore();
+}
+/* the skeleton a row of somites becomes, seen from the side, head to the left: one vertebra a somite; ribs on the vertebrae
+   made with Hoxc6, ending where Hoxc10 begins; a forelimb at the first Hoxc6 vertebra, a hindlimb at the first Hoxc10 one.
+   The same drawing serves the student's body (each vertebra under its somite: o.at) and the three animals (o.small). */
+function drawBody(ctx, plan, x, y, w, o) {
+  o = o || {}; const sm = !!o.small, skull = sm ? 16 : 44, n = plan.n, vh = sm ? 5 : 12, cy = y + (sm ? 13 : 46), lw = sm ? 0.9 : 1.3, top = cy + vh / 2;
+  const vw = n ? Math.min(sm ? 5 : 14, (w - skull - (sm ? 6 : 16)) / n) : 0, x0 = x + skull + (sm ? 3 : 6);
+  const at = o.at || (i => [x0 + (i + 0.5) * vw, Math.max(1, vw - (sm ? 0.9 : 2))]), sx = o.at ? (n ? at(0)[0] - at(0)[1] / 2 : x + skull + 6) - skull - 5 : x;
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.fillStyle = "#fff"; ctx.strokeStyle = INK; ctx.lineWidth = lw;
+  ctx.beginPath(); ctx.ellipse(sx + skull / 2, cy - (sm ? 1 : 2), skull / 2, skull * 0.34, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(sx + skull * 0.4, cy - skull * 0.1, sm ? 1 : 2.2, 0, 2 * Math.PI); ctx.fill();
+  if (!n) { if (o.rod) { ctx.save(); ctx.setLineDash([5, 4]); ctx.strokeStyle = MUTED; ctx.lineWidth = lw; ctx.strokeRect(sx + skull + 5, cy - vh / 2, o.rod, vh); ctx.restore(); } return; }
+  const ribL = sm ? 14 : 44; let r = 0;
+  ctx.strokeStyle = INK; ctx.lineWidth = sm ? 0.8 : 1.5;
+  for (let i = 0; i < n; i++) if (plan.ids[i] === 1) { const L = ribL * (0.55 + 0.45 * Math.sin(Math.PI * (r + 0.5) / plan.rib)), cx = at(i)[0]; r++;
+    ctx.beginPath(); ctx.moveTo(cx, top); ctx.quadraticCurveTo(cx + L * 0.34, top + L * 0.5, cx + L * 0.06, top + L); ctx.stroke(); }
+  const limb = (i, k) => { if (i < 0 || i >= n) return; const L = sm ? 21 : 64, cx = at(i)[0];
+    ctx.strokeStyle = INK; ctx.lineWidth = sm ? 1.9 : 3.6; ctx.beginPath(); ctx.moveTo(cx, top); ctx.lineTo(cx + k * L * 0.17, top + L * 0.5); ctx.lineTo(cx - k * L * 0.05, top + L); ctx.lineTo(cx - k * L * 0.05 - L * 0.24, top + L); ctx.stroke(); };
+  limb(plan.fore, -1); limb(plan.hind, 1);
+  let q = 0;
+  for (let i = 0; i < n; i++) { let hh = vh; if (plan.ids[i] === 2) { hh = vh * (1 - 0.6 * (plan.rear > 1 ? q / (plan.rear - 1) : 0)); q++; }
+    const a = at(i); ctx.fillStyle = "#fff"; ctx.strokeStyle = INK; ctx.lineWidth = lw; ctx.beginPath(); ctx.rect(a[0] - a[1] / 2, cy - hh / 2, a[1], hh); ctx.fill(); ctx.stroke(); }
+  if (sm) return;
+  /* each stretch, counted */
+  /* a short stretch at either end keeps its count inside the picture */
+  const span = (a, b, text, row) => { if (b <= a) return; const A = at(a), B = at(b - 1), xa = A[0] - A[1] / 2, xb = B[0] + B[1] / 2, yy = cy + 84, t = (b - a) + " " + text;
+    ctx.strokeStyle = MUTED; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(xa, yy - 4); ctx.lineTo(xa, yy); ctx.lineTo(xb, yy); ctx.lineTo(xb, yy - 4); ctx.stroke();
+    ctx.font = "13px -apple-system, sans-serif"; const hw = ctx.measureText(t).width / 2 + 2;
+    cardText(ctx, t, Math.min(x + w - hw, Math.max(x + hw, (xa + xb) / 2)), yy + 13 + row * 16, { size: 13, align: "center" }); };
+  span(0, plan.neck, "neck", 0); span(plan.neck, plan.neck + plan.rib, "with ribs", 1); span(plan.neck + plan.rib, n, plan.rib ? "behind the ribs" : "behind", 0);
+}
+function paintBody() {
+  const { ctx } = frameCanvas($("C_body"), 760, 200), w = SC.w, bd = w.bd, G = C_G;
+  drawBody(ctx, bodyPlan(w, SC.P), 14, 8, 732, { rod: w.done ? (w.cells.length - 8) * G.cw : 0,
+    at: i => [ROWX + (bd[i] + bd[i + 1]) / 2 * G.cw, Math.max(1.5, (bd[i + 1] - bd[i]) * G.cw - 2)] });
+  ctx.restore();
+}
+
+/* ====== the three animals of stage C: each a body this same model grows at one setting of the three genes ======
+   ok() is what a student's finished body needs to be like it, sized on the idea and not on the counts: a goose has a long
+   neck before its ribs; the lizard has more vertebrae and a long rib cage; the snake has many more, ribs from the head, and
+   no forelimb. The mouse the stage opens on is none of them (the check re-measures all of this). */
+const C_WORLD = { n0: 10, T: 3840 }, MOUSE = { i1: 1, i2: 1, i3: 1, hm: 3, hp: 22, fb: 1, tl: 1, grow: 1, fgf: 1, slow: 1, hF: 400, t6: 12, t10: 39 };
+const CARDS = [
+  { id: "goose", P: { t6: 30, t10: 46 }, ok: b => b.neck >= 14 && b.rib >= 3 && b.rib <= b.neck && b.fore > 0 && b.hind > 0 },
+  { id: "lizard", P: { i1: 0, i2: 0, hp: 11, t6: 8, t10: 50 }, ok: b => b.n >= 35 && b.neck >= 3 && b.neck <= 9 && b.rib >= 20 && b.fore > 0 && b.hind > 0 },
+  { id: "snake", P: { i3: 0, hp: 11, t6: 0, t10: 56 }, ok: b => b.n >= 48 && b.fore < 0 && b.rib >= 40 }
+];
+for (const c of CARDS) { c.Pfull = Object.assign({}, MOUSE, c.P); c.w = null; c.plan = null; }
+/* a card grows a little each frame until it is done, one card at a time */
+function cardsTick(mins) {
+  for (let i = 0; i < CARDS.length; i++) { const c = CARDS[i]; if (c.plan) continue;
+    if (!c.w) c.w = bodyNew(C_WORLD);
+    bodyStep(c.w, c.Pfull, mins);
+    if (c.w.done) { c.plan = bodyPlan(c.w, c.Pfull); c.w = null; }
+    paintCard(i); return true; }
+  return false;
+}
+function cardsFinish() { while (cardsTick(100000)); }
+function paintCard(i) {
+  const c = CARDS[i], { ctx } = frameCanvas($("C_cv" + i), 300, 56), plan = c.plan || (c.w ? bodyPlan(c.w, c.Pfull) : null);
+  if (plan) drawBody(ctx, plan, 4, 4, 292, { small: true });
+  ctx.restore();
+}
+function paintCards() { for (let i = 0; i < CARDS.length; i++) paintCard(i); }
+
+/* ====== what there is to find ======
+   Each test reads the running model. A find latches: its circle fills and its bit is written 1. Nothing writes a miss.
+   The windows were swept on the engine and are re-measured by scripts/check_lesson24_numbers.js. */
+const NEED = { A: 3, B: 5, C: 2 }, FOUND = {};
+const FINDS = {
+  A: [
+    /* still pulsing ten hours after the last change: the swing of the last 150 minutes */
+    { id: "pulse", bit: BIT.A1, test: () => SA.P.fb && SA.P.tl && SA.S.t - SA.S.mark >= 600 && cellSwing(SA.S, 150) >= 0.35 },
+    /* the mouse's gene pulses every 122 minutes; any one step the right way brings it under 118 */
+    { id: "faster", bit: BIT.A2, test: () => { if (!SA.P.fb || !SA.P.tl) return false; const per = cellPeriod(SA.S, SA.S.mark); return per != null && per <= 118 && cellSwing(SA.S, 300) >= 0.2; } },
+    { id: "fade", bit: BIT.A3, test: () => SA.P.fb && SA.P.tl && SA.S.t - SA.S.mark >= 240 && cellSwing(SA.S, 240) < 0.12 }
+  ],
+  B: [
+    { id: "four", bit: BIT.B1, test: () => !!SB.w.st && SB.w.st.segs >= 4 },
+    /* two stripes of Hes7 among the cells still running, for an hour in all */
+    { id: "two", bit: BIT.B5, test: () => SB.w.two >= 60 },
+    /* the mouse's somites are 12 cells; the last five average 11.7 or under, all of them made since the last change to Hes7,
+       in a run whose Fgf8 half-life was left alone (a change to it squeezes a few somites while the row catches up) */
+    { id: "small", bit: BIT.B2, test: () => { const s = rowSize(SB.w); return !SB.w.fTouched && s != null && s <= 11.7; } },
+    { id: "zone", bit: BIT.B4, test: () => SB.w.zone >= 76 },
+    { id: "block", bit: BIT.B3, test: () => !!SB.w.st && SB.P.fgf && SB.w.st.block >= 60 }
+  ],
+  C: [
+    { id: "goose", bit: BIT.C1, test: () => SC.w.done && CARDS[0].ok(bodyPlan(SC.w, SC.P)) },
+    { id: "lizard", bit: BIT.C2, test: () => SC.w.done && CARDS[1].ok(bodyPlan(SC.w, SC.P)) },
+    { id: "snake", bit: BIT.C3, test: () => SC.w.done && CARDS[2].ok(bodyPlan(SC.w, SC.P)) }
+  ]
+};
+function found(K, f) {
+  if (FOUND[K + f.id]) return; FOUND[K + f.id] = true;
+  record(f.bit, true); tick(K, f.id, true);
+  let n = 0; for (const g of FINDS[K]) if (FOUND[K + g.id]) n++;
+  if (n < NEED[K]) return;
+  if (!Gates[K].done) finishStage(K);
+  else if (!NEXT_STAGE[K] && typeof Score !== "undefined" && Score.finish) Score.finish();     /* the last stage's third animal, after the code is out: the code is made again */
+}
+function checkFinds(K) { if (!Gates[K].open) return; for (const f of FINDS[K]) if (!FOUND[K + f.id] && f.test()) found(K, f); }
+
+/* ====== the three stages ======
+   Each holds its settings (P), its running model, and step(n): advance the model and look for finds. frame(dt) turns the
+   time since the last frame into steps. The check script drives step() itself. */
+const SA = {
+  K: "A", P: { i1: 1, i2: 1, i3: 1, hm: 3, hp: 22, tl: 0, fb: 0 }, parts: 1, flags: ["", "tl", "fb"], S: null, acc: 0, paused: false, fast: false, vis: true,
+  sliders: [["hm", v => v + " min"], ["hp", v => v + " min"]],
+  restart: function () { this.S = cellNew(); this.acc = 0; },
+  over: function () { return false; },
+  changedHes: function () { this.S.mark = this.S.t; },
+  step: function (quarters) { cellStep(this.S, this.P, quarters); checkFinds("A"); },
+  /* 40 minutes of the cell a second (120 fast), in quarter minutes */
+  frame: function (dt) { this.acc += dt * 160 * (this.fast ? 3 : 1); const n = Math.min(120, Math.floor(this.acc)); this.acc = Math.min(4, this.acc - n); if (n) this.step(n); return n > 0; },
+  held: function () { const off = !this.P.tl; $("A_hpRow").classList.toggle("held", off); $("A_hp").disabled = off; },
+  lines: function () { return A_lines(this.P); },
+  paint: function () {
+    paintCell(); paintHist();
+    const k = this.S.peaks, on = this.P.fb && this.P.tl && k.length >= 2 && this.S.t - k[k.length - 1] < 200 && cellSwing(this.S, 150) >= 0.2;
+    setText($("A_faster_now"), on ? "now: a peak every " + Math.round(k[k.length - 1] - k[k.length - 2]) + " minutes" : "");
+  }
+};
+const SB = {
+  K: "B", o: { n0: 40, T: 1440 }, P: { i1: 1, i2: 1, i3: 1, hm: 3, hp: 22, fb: 1, tl: 1, grow: 0, fgf: 0, slow: 0, hF: 400 }, parts: 1, flags: ["", "grow", "fgf", "slow"], w: null, acc: 0, paused: false, fast: false, vis: true,
+  sliders: [["hp", v => v + " min"], ["hF", v => v + " min"]],
+  restart: function () { this.w = rowNew(this.o); this.acc = 0; },
+  over: function () { return this.w.done; },
+  /* a change to Hes7 in a growing row acts on the cells there are (somites are sized from here on); in a finished row it grows the row again */
+  changedHes: function () { const w = this.w; if (w.done) this.restart(); else w.mark = w.bd.length; },
+  changedF: function () { const w = this.w; if (w.done) this.restart(); else if (w.t > 0) w.fTouched = true; },
+  step: function (mins) { rowStep(this.w, this.P, mins); checkFinds("B"); },
+  /* an hour of the embryo a second (three fast) */
+  frame: function (dt) { this.acc += dt * 60 * (this.fast ? 3 : 1); const n = Math.min(30, Math.floor(this.acc)); this.acc = Math.min(2, this.acc - n); if (n) this.step(n); return n > 0; },
+  held: function () { const off = !this.P.fgf; $("B_hFRow").classList.toggle("held", off); $("B_hF").disabled = off; },
+  lines: function () { return B_lines(this.P); },
+  paint: function () {
+    paintRow(); const w = this.w, s = rowSize(w);
+    setText($("B_small_now"), this.P.fgf && s != null ? "now: " + s.toFixed(1) + " cells in a somite" : "");
+    setText($("B_zone_now"), this.P.fgf && w.st && !w.done ? "now: " + w.st.zone + " cells" : "");
+  }
+};
+const SC = {
+  K: "C", o: C_WORLD, P: Object.assign({}, MOUSE), w: null, acc: 0, paused: false, fast: false, vis: true,
+  sliders: [["hp", v => v + " min"], ["t6", v => "hour " + v], ["t10", v => "hour " + v]],
+  restart: function () { this.w = rowNew(this.o); this.acc = 0; },
+  over: function () { return this.w.done; },
+  changedHes: function () { if (this.w.done) this.restart(); },
+  /* the Hox hours relabel the cells there are, so a finished body changes at once */
+  changedHox: function () { checkFinds("C"); },
+  step: function (mins) { rowStep(this.w, this.P, mins); checkFinds("C"); },
+  /* six hours of the embryo a second (eighteen fast) */
+  frame: function (dt) { this.acc += dt * 360 * (this.fast ? 3 : 1); const n = Math.min(90, Math.floor(this.acc)); this.acc = Math.min(6, this.acc - n); if (n) this.step(n); return n > 0; },
+  lines: function () { return C_lines(this.P); },
+  paint: function () { paintEmb(); paintBody(); }
+};
+const STAGES = [SA, SB, SC];
+function paintAll() { for (const S of STAGES) S.paint(); paintCards(); }
+
+/* ====== wiring ====== */
+/* the page shows what the settings are: intron buttons, slider labels, held rows, the R panel, the picture */
+function refresh(S) {
+  const K = S.K, P = S.P;
+  for (let n = 1; n <= 3; n++) { const b = $(K + "_i" + n); b.setAttribute("aria-pressed", P["i" + n] ? "true" : "false"); b.classList.toggle("out", !P["i" + n]); }
+  for (const s of S.sliders) { const k = s[0], el = $(K + "_" + k); if (+el.value !== P[k]) el.value = P[k]; setText($(K + "_" + k + "V"), s[1](P[k])); }
+  if (S.held) S.held();
+  codeInto("code" + K, S.lines());
+  S.paint(); wake();
+}
+/* the parts added so far are on the page; the rest wait behind "Add the next part" */
+function showParts(S) {
+  if (!S.flags) return; const K = S.K, n = S.flags.length;
+  for (let i = 2; i <= n; i++) { const box = $(K + "_p" + i); box.closest(".part").hidden = i > S.parts; box.checked = !!S.P[S.flags[i - 1]]; }
+  $(K + "_add").style.display = S.parts >= n ? "none" : "";
 }
 function wireStage(S) {
-  const K = S.K;
-  $(K + "_go").addEventListener("click", () => goStage(S));
-  $(K + "_next").addEventListener("click", () => nextRound(S));
-  Pips.wire($(K + "_pips"), i => gotoRound(S, i));
-  if ($(K + "_practice")) $(K + "_practice").addEventListener("change", () => S.cfg.paint());
-  for (const c of S.cfg.ctl) {
-    $(K + "_" + c.key).addEventListener("input", () => {
-      S.preview = null; if (S.cfg.onInput) S.cfg.onInput(c.key); S.cfg.paint(); highlightByDataLine("code" + K, c.line || c.key);
-      if (c.hidden && Date.now() - (S.lastBump || 0) > 600) { S.lastBump = Date.now(); bump(K); }
-    });
-    $(K + "_" + c.key).addEventListener("change", () => bump(K));
+  const K = S.K, P = S.P;
+  $(K + "_re").addEventListener("click", () => { S.restart(); bump(K); S.paint(); wake(); });
+  $(K + "_fast").addEventListener("change", e => { S.fast = e.target.checked; });
+  $(K + "_pause").addEventListener("change", e => { S.paused = e.target.checked; wake(); });
+  for (let n = 1; n <= 3; n++) $(K + "_i" + n).addEventListener("click", () => { P["i" + n] = P["i" + n] ? 0 : 1; S.changedHes(); bump(K); refresh(S); });
+  for (const s of S.sliders) { const k = s[0], el = $(K + "_" + k);
+    el.addEventListener("input", () => { P[k] = +el.value; if (k === "hF") S.changedF(); else if (k === "t6" || k === "t10") S.changedHox(); else S.changedHes(); refresh(S); });
+    el.addEventListener("change", () => bump(K)); }
+  if (S.flags) {
+    /* a part added or switched starts the model again, so what the part does is seen from the start */
+    $(K + "_add").addEventListener("click", () => { if (S.parts >= S.flags.length) return; S.parts++; P[S.flags[S.parts - 1]] = 1; showParts(S); S.restart(); bump(K); refresh(S); });
+    for (let i = 2; i <= S.flags.length; i++) $(K + "_p" + i).addEventListener("change", e => { P[S.flags[i - 1]] = e.target.checked ? 1 : 0; S.restart(); bump(K); refresh(S); });
   }
-  openRound(S);
+  $(K + "_dl").addEventListener("click", () => downloadText("lesson24_stage" + K + ".R", RTEXT["code" + K]));
 }
-/* before the first Go, the surfaces show the start the current settings make (run 1) */
-function previewRun(S) {
-  const set = readSet(S), key = JSON.stringify(set) + S.round;
-  if (!S.preview || S.preview.key !== key) { const q = S.cfg.start(set, pageSeed("l24" + S.K, 1, 999999)); S.preview = { key, w: q.runs[0] }; }
-  return S.preview;
+/* instructor bypass and study mode: every stage open. Study mode leaves the finds to be found; the bypass fills them */
+function reveal() {
+  const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
+  for (const K in Gates) { Gates[K].open = true; $("stage" + K).classList.remove("stage-locked"); const t = $("toc" + K); if (t) t.classList.remove("locked"); }
+  if (!study) for (const K in FINDS) { for (const f of FINDS[K]) { FOUND[K + f.id] = true; record(f.bit, true); tick(K, f.id, true); } Gates[K].done = true; $("solved" + K).classList.add("shown"); }
+  FIT_EPOCH++; paintAll(); wake();
 }
-const shownRun = S => S.run || S.last;
-function holdArrows(paths, K, keys) { if (!paths) return; for (const k of keys) paths.setArrow(k, { readonly: $(K + "_" + k).dataset.held === "1" }); paths.sync(); }
-const canDrag = (S, key) => () => Gates[S.K].open && !S.run && !S.waiting && $(S.K + "_" + key).dataset.held !== "1";
-const hold = (S, keys) => () => holdArrows(PATHS[S.K], S.K, keys);
-const atLeast = (meas, lo) => ({ meas, lo, hi: null, ok: S => S[meas] >= lo, val: S => f2(S[meas]) });
-const atMost = (meas, hi) => ({ meas, lo: null, hi, ok: S => S[meas] <= hi, val: S => f2(S[meas]) });
-const pick = (D, keys) => { const o = {}; for (const k of keys) o[k] = D[k]; return o; };
+document.addEventListener("score:bypass", reveal);
+window.__l24reveal = reveal;
 
+/* one clock for the page. Each open stage on the screen advances by the time since the last frame and is redrawn when it
+   has moved. The clock runs only while something is moving (a stage that has not finished, an animal still growing) and is
+   woken by anything that could start one again. ?still=1 keeps it stopped: the check scripts step the models themselves,
+   and a headless browser spends a tenth of a second on every animation frame. */
+const STILL = /[?&]still=1\b/.test(location.search);
+let LAST_T = 0, TICKING = false;
+function loop(ts) {
+  const dt = LAST_T ? Math.min(0.1, Math.max(0, (ts - LAST_T) / 1000)) : 0; LAST_T = ts;
+  let busy = false;
+  for (const S of STAGES) if (Gates[S.K].open && S.vis && !S.paused && !S.over()) { if (S.frame(dt)) S.paint(); busy = true; }
+  if (Gates.C.open && SC.vis && cardsTick(40)) busy = true;
+  if (busy && !STILL) requestAnimationFrame(loop); else TICKING = false;
+}
+function wake() { if (TICKING || STILL) return; TICKING = true; LAST_T = 0; requestAnimationFrame(loop); }
 
-/* ====== drawing: cells, embryos, buds and limbs, never a line over time (JM, 2026-11-07: "I don't think we need or want any
-   line plots, though more embryo-shaped visualizations would be ideal"). One hue, light to dark, for every expression level
-   (colourblind students, JM 2026-10-20); Tbx5 and Tbx4 by pattern, hatched and dotted. ====== */
-const ON = "#2f6b8f", OFF = "#e6e2d6", TISSUE = "#f6f1e4", EDGE = "#9c9480";
-const ramp = v => { const a = [236, 232, 220], b = [31, 78, 112], t = Math.max(0, Math.min(1, v)); return "rgb(" + a.map((x, i) => Math.round(x + (b[i] - x) * t)).join(",") + ")"; };
-function rrect(ctx, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
-function redBox(ctx, x, y, w, h) { ctx.save(); ctx.strokeStyle = HOT; ctx.lineWidth = 1.8; ctx.setLineDash([]); ctx.strokeRect(x, y, w, h); ctx.restore(); }
-/* fixed scatter positions for A's molecules: the same cell every run, seeded */
-const SPOTS = (() => { const r = mulberry32(pageSeed("l24spots", 1, 999999)), nuc = [], cyt = [];
-  while (nuc.length < 90) { const x = r() * 2 - 1, y = r() * 2 - 1; if (x * x + y * y < 0.82) nuc.push([x, y]); }
-  while (cyt.length < 120) { const x = r() * 2 - 1, y = r() * 2 - 1, e = x * x + y * y, nx = (x * 210 + 30) / 66, ny = y * 130 / 66; if (e < 0.86 && nx * nx + ny * ny > 1.25) cyt.push([x, y, r() * Math.PI]); }
-  return { nuc, cyt }; })();
-const introns = tau => tau >= 30 ? 3 : tau >= 20 ? 1 : 0;
-/* A: the cell. The nucleus (the gene, the protein), the cytoplasm (the mRNA), the counts at the right */
-function drawCell(cvId, w) {
-  const cv = $(cvId); if (!cv) return;
-  const { ctx } = frameCanvas(cv, 760, 300), t = cellMin(w), m = trAt(w.tr, w.tr.m, t), p = trAt(w.tr, w.tr.p, t), P = w.P;
-  const cx = 250, cy = 150, nx = cx - 30, rr = 66;
-  ctx.fillStyle = "#fbf8f1"; ctx.strokeStyle = "#cfc8b4"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(cx, cy, 210, 130, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f1ece0"; ctx.strokeStyle = "#b9b09a"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(nx, cy, rr, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  /* the gene: a promoter, then four exons with the introns between them as thin gaps (an intron taken out is gone) */
-  const g0 = nx - 50, gy = cy + 22, ni = introns(P.tau), ex = ni + 1, gap = 9, segW = (92 - ni * gap) / ex;
-  ctx.strokeStyle = MUTED; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(g0 - 12, gy); ctx.lineTo(g0 + 104, gy); ctx.stroke();
-  ctx.fillStyle = "#c9c2ae"; ctx.fillRect(g0 - 10, gy - 6, 10, 12);
-  let gx = g0 + 2; for (let i = 0; i < ex; i++) { ctx.fillStyle = INK; ctx.fillRect(gx, gy - 5, segW, 10); gx += segW + gap; }
-  cardText(ctx, "Hes7", g0 + 46, gy + 18, { size: 11, col: MUTED, align: "center" });
-  const shut = P.fb ? 1 - 1 / (1 + Math.pow(trAt(w.tr, w.tr.p, Math.max(0, t - P.tau)) / HX.p0, HX.n)) : 0;
-  /* protein: a dot per 25 molecules, in the nucleus (some outside); a few sit on the promoter when the gene is shut */
-  const np = Math.min(SPOTS.nuc.length + 40, Math.round(p / 25));
-  ctx.fillStyle = ON; for (let i = 0; i < np; i++) { let x, y; if (i < SPOTS.nuc.length) { [x, y] = SPOTS.nuc[i]; x = nx + x * rr; y = cy + y * rr; } else { const s = SPOTS.cyt[i - SPOTS.nuc.length]; x = cx + s[0] * 210; y = cy + s[1] * 130; } ctx.beginPath(); ctx.arc(x, y, 2.6, 0, 2 * Math.PI); ctx.fill(); }
-  if (shut > 0.15) { ctx.fillStyle = INK; for (let k = 0; k < Math.round(4 * shut); k++) { ctx.beginPath(); ctx.arc(g0 - 7 + (k % 2) * 6, gy - 9 - Math.floor(k / 2) * 5, 2.6, 0, 2 * Math.PI); ctx.fill(); } }
-  /* mRNA: a short stroke each, in the cytoplasm */
-  const nm = Math.min(SPOTS.cyt.length, Math.round(m)); ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.lineCap = "round";
-  for (let i = 0; i < nm; i++) { const [x0, y0, a] = SPOTS.cyt[SPOTS.cyt.length - 1 - i], x = cx + x0 * 210, y = cy + y0 * 130; ctx.beginPath(); ctx.moveTo(x - 5 * Math.cos(a), y - 5 * Math.sin(a)); ctx.quadraticCurveTo(x, y + 3, x + 5 * Math.cos(a), y + 5 * Math.sin(a)); ctx.stroke(); }
-  /* the counts */
-  const rx = 520; cardText(ctx, "minute " + Math.round(t), rx, 40, { size: 13, col: MUTED });
-  ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(rx, 92); ctx.quadraticCurveTo(rx + 5, 95, rx + 10, 88); ctx.stroke();
-  cardText(ctx, "Hes7 mRNA", rx + 20, 90, { size: 13, col: INK }); cardText(ctx, String(Math.round(m)), rx + 225, 90, { size: 20, bold: true, col: INK, align: "right" });
-  ctx.fillStyle = ON; ctx.beginPath(); ctx.arc(rx + 5, 140, 3, 0, 2 * Math.PI); ctx.fill();
-  cardText(ctx, "Hes7 protein", rx + 20, 140, { size: 13, col: INK }); cardText(ctx, Math.round(p).toLocaleString("en-US"), rx + 225, 140, { size: 20, bold: true, col: INK, align: "right" });
-  cardText(ctx, P.fb ? (shut > 0.5 ? "gene: mostly shut by its protein" : "gene: mostly free") : "gene: its protein cannot bind", rx, 190, { size: 12.5, col: MUTED });
-  cardText(ctx, introns(P.tau) + (introns(P.tau) === 1 ? " intron" : " introns") + ": new mRNA ready after " + P.tau + " min", rx, 214, { size: 12.5, col: MUTED });
-  ctx.restore();
+for (const S of STAGES) { S.restart(); wireStage(S); showParts(S); refresh(S); }
+{ let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); }); }
+/* a stage off the screen is not stepped */
+if ("IntersectionObserver" in window) {
+  const io = new window.IntersectionObserver(es => { for (const e of es) for (const S of STAGES) if ("stage" + S.K === e.target.id) S.vis = e.isIntersecting; wake(); }, { rootMargin: "150px" });
+  for (const S of STAGES) io.observe($("stage" + S.K));
 }
-/* a small cell: nucleus shaded by protein, a stroke per few mRNA */
-function miniCell(ctx, x, y, p, m, s) {
-  s = s || 1; ctx.fillStyle = "#fbf8f1"; ctx.strokeStyle = "#cfc8b4"; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, y, 16 * s, 12 * s, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = ramp(p / 1400); ctx.beginPath(); ctx.arc(x - 3 * s, y, 7 * s, 0, 2 * Math.PI); ctx.fill();
-  const k = Math.min(6, Math.round(m / 3)); ctx.strokeStyle = HOT; ctx.lineWidth = 1.2; for (let i = 0; i < k; i++) { const a = -1.1 + i * 0.45; ctx.beginPath(); ctx.moveTo(x + 9 * s * Math.cos(a), y + 9 * s * Math.sin(a)); ctx.lineTo(x + 13 * s * Math.cos(a), y + 13 * s * Math.sin(a)); ctx.stroke(); }
-}
-function drawStrip(cvId, w) {
-  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 760, 150), t = cellMin(w);
-  for (let i = 0; i < 36; i++) { const tm = i * 20, x = 30 + (i % 18) * 40, y = 40 + Math.floor(i / 18) * 62;
-    if (tm <= t) miniCell(ctx, x, y, trAt(w.tr, w.tr.p, tm), trAt(w.tr, w.tr.m, tm)); else { ctx.strokeStyle = "#ebe7dc"; ctx.lineWidth = 1; ctx.beginPath(); ctx.ellipse(x, y, 16, 12, 0, 0, 2 * Math.PI); ctx.stroke(); }
-    if (i % 6 === 0) cardText(ctx, tm + " min", x, y + 23, { size: 10, col: MUTED, align: "center" }); }
-  ctx.restore();
-}
-function drawCellPic(cvId, r) {
-  const cv = $(cvId); if (!cv) return; cv.hidden = !r; if (!r) return; const { ctx } = frameCanvas(cv, 460, 120);
-  if (r.gauge) { const x0 = 30, x1 = 430, sc = v => x0 + (x1 - x0) * v / 45000;
-    ctx.fillStyle = "#efebe0"; ctx.fillRect(x0, 50, x1 - x0, 16); ctx.fillStyle = ON; ctx.fillRect(x0, 50, sc(22000) - x0, 16);
-    for (const v of [0, 15000, 30000, 45000]) cardText(ctx, v.toLocaleString("en-US"), sc(v), 84, { size: 10.5, col: MUTED, align: "center" });
-    ctx.fillStyle = ON; ctx.beginPath(); ctx.arc(x0 - 14, 58, 3.5, 0, 2 * Math.PI); ctx.fill();
-    redBox(ctx, sc(15000), 44, sc(30000) - sc(15000), 28); }
-  else { for (let i = 0; i < 12; i++) { const hi = Math.floor(i / 3) % 2 === 0, p = r.strong ? (hi ? 1400 : 60) : (hi ? 1000 : 380); miniCell(ctx, 40 + i * 35, 60, p, hi ? 3 : 12, 0.95); }
-    redBox(ctx, 18, 38, 424, 44); }
-  ctx.restore();
-}
-/* B: the embryo from above. Head at the left; somites in pairs either side of the midline; the tail's cells shaded by the gene shown */
-const EMB_SHOW = { m: c => c.m / 20, p: c => c.p / 1300, f: c => (c.F - EM.th) / (1 - EM.th), x: c => c.mesp };
-function drawEmbryo(cvId, w, show) {
-  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 760, 230), e = emCells(w), N = w.births.length, x0 = 78, pc = (760 - x0 - 66) / N, cy = 108;
-  const sh = EMB_SHOW[show] || EMB_SHOW.m, cells = e.cells, xs = i => x0 + i * pc;
-  /* head */
-  ctx.fillStyle = "#efe9da"; ctx.strokeStyle = EDGE; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x0 - 26, cy, 48, 82, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  if (!cells.length) { ctx.restore(); return; }
-  const xe = xs(cells.length);
-  /* the midline */
-  ctx.fillStyle = "#e7e1d1"; ctx.fillRect(x0, cy - 7, xe - x0, 14);
-  const bandT = [cy - 60, cy - 9], bandB = [cy + 9, cy + 60];
-  /* in front of the first boundary: tissue that formed before Hes7 first came round */
-  const b0 = e.bd.length ? e.bd[0] : e.nfz;
-  if (b0 > 0) for (const [y0, y1] of [bandT, bandB]) { ctx.fillStyle = "#ede8dc"; ctx.fillRect(x0, y0, xs(b0) - x0, y1 - y0); }
-  /* somites (and a last block that may be a fused run) */
-  const segs = []; for (let k = 0; k < e.bd.length; k++) segs.push([e.bd[k], k + 1 < e.bd.length ? e.bd[k + 1] : e.nfz]);
-  for (const [a, b] of segs) { if (b <= a) continue; for (const [y0, y1] of [bandT, bandB]) {
-    rrect(ctx, xs(a) + 0.8, y0, Math.max(1, xs(b) - xs(a) - 1.6), y1 - y0, 5); ctx.fillStyle = "#f3eddf"; ctx.fill(); ctx.strokeStyle = EDGE; ctx.lineWidth = 1.1; ctx.stroke();
-    if (show === "x") for (let i = a; i < b; i++) if (cells[i].mesp) { ctx.fillStyle = ramp(1); ctx.fillRect(xs(i), y0 + 2, pc + 0.4, y1 - y0 - 4); } } }
-  /* the tail: every cell not yet stopped, shaded */
-  for (let i = e.nfz; i < cells.length; i++) { const c = cells[i], col = ramp(sh(c)); ctx.fillStyle = col; for (const [y0, y1] of [bandT, bandB]) ctx.fillRect(xs(i), y0, pc + 0.4, y1 - y0); }
-  /* the tail bud */
-  ctx.fillStyle = show === "f" ? ramp(1) : ramp(sh(cells[cells.length - 1])); ctx.strokeStyle = EDGE; ctx.beginPath(); ctx.arc(xe, cy, 60, -Math.PI / 2, Math.PI / 2); ctx.fill(); ctx.stroke();
-  ctx.strokeStyle = EDGE; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0, bandT[0]); ctx.lineTo(xe, bandT[0]); ctx.moveTo(x0, bandB[1]); ctx.lineTo(xe, bandB[1]); ctx.stroke();
-  cardText(ctx, "head", x0 - 26, cy, { size: 11, col: MUTED, align: "center" }); cardText(ctx, "tail", xe + 30, cy + 74, { size: 11, col: MUTED, align: "center" });
-  const front = e.nfz; if (front < cells.length) { ctx.strokeStyle = MUTED; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(xs(front), bandT[0] - 8); ctx.lineTo(xs(front), bandB[1] + 8); ctx.stroke(); ctx.setLineDash([]);
-    cardText(ctx, "Hes7 stops here", xs(front), bandB[1] + 16, { size: 10.5, col: MUTED, align: "center" }); }
-  ctx.restore();
-}
-function drawEmbPic(cvId, r) {
-  const cv = $(cvId); if (!cv) return; cv.hidden = !r; if (!r) return; const { ctx } = frameCanvas(cv, 460, 120), cy = 60;
-  ctx.fillStyle = "#efe9da"; ctx.strokeStyle = EDGE; ctx.beginPath(); ctx.ellipse(30, cy, 22, 34, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  const som = (x, w) => { for (const y0 of [cy - 26, cy + 6]) { rrect(ctx, x + 0.6, y0, w - 1.2, 20, 3); ctx.fillStyle = "#f3eddf"; ctx.fill(); ctx.strokeStyle = EDGE; ctx.stroke(); } };
-  let x = 52;
-  if (r.pic === "many") { for (let k = 0; k < 13; k++) { som(x, 17); x += 17; } redBox(ctx, 50, 28, x - 48, 64); }
-  else if (r.pic === "block") { for (let k = 0; k < 3; k++) { som(x, 22); x += 22; } som(x, 150); redBox(ctx, x - 2, 28, 154, 64); x += 150; }
-  else { for (let k = 0; k < 6; k++) { som(x, 22); x += 22; } }
-  const tl = 440 - x, nst = r.pic === "stripes" ? 3 : 1;
-  for (let i = 0; i < tl; i++) { const ph = i / tl * nst * 2 * Math.PI; ctx.fillStyle = ramp(0.5 + 0.5 * Math.cos(ph * (1 + 0.4 * (1 - i / tl)))); ctx.fillRect(x + i, cy - 26, 1.2, 20); ctx.fillRect(x + i, cy + 6, 1.2, 20); }
-  ctx.fillStyle = ramp(0.9); ctx.beginPath(); ctx.arc(440, cy, 26, -Math.PI / 2, Math.PI / 2); ctx.fill();
-  if (r.pic === "stripes") redBox(ctx, x - 2, 28, 470 - x, 64);
-  ctx.restore();
-}
-/* C: the embryo from the side. Hox bars over the somites, the flank under them (Tbx5 hatched, Tbx4 dotted, Fgf10 dark), buds below */
-const CX = { x0: 104, bw: 25, sy: 92, fy: 132 };
-function hatch(ctx, x, y, w, h) { ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip(); ctx.strokeStyle = ON; ctx.lineWidth = 1.2; for (let k = -h; k < w; k += 5) { ctx.beginPath(); ctx.moveTo(x + k, y + h); ctx.lineTo(x + k + h, y); ctx.stroke(); } ctx.restore(); }
-function dots(ctx, x, y, w, h) { ctx.fillStyle = INK; for (let i = 3; i < w; i += 6) for (let j = 3; j < h; j += 6) { ctx.beginPath(); ctx.arc(x + i, y + j, 1.2, 0, 2 * Math.PI); ctx.fill(); } }
-function budShape(ctx, x, y, kind, s) { s = s || 1; const w = (kind === "leg" ? 30 : 26) * s, h = (kind === "leg" ? 48 : 42) * s;
-  ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.bezierCurveTo(x - w / 2, y + h * 0.7, x - w * 0.35, y + h, x, y + h); ctx.bezierCurveTo(x + w * 0.35, y + h, x + w / 2, y + h * 0.7, x + w / 2, y); ctx.closePath(); }
-function drawSide(cvId, res, o) {
-  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 760, 250), { x0, bw, sy, fy } = CX, xe = x0 + NL * bw;
-  /* head, back and belly */
-  ctx.fillStyle = "#efe9da"; ctx.strokeStyle = EDGE; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(62, 132, 50, 70, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  ctx.fillStyle = "#f6f1e4"; ctx.beginPath(); ctx.moveTo(x0 - 6, sy - 4); ctx.lineTo(xe, sy - 4); ctx.quadraticCurveTo(xe + 34, sy + 30, xe + 4, fy + 34); ctx.lineTo(x0 - 6, fy + 34); ctx.closePath(); ctx.fill(); ctx.stroke();
-  /* Hox bars: each gene from its first somite to the tail */
-  const bars = [["Hoxc6", res.c6, 64], ["Hoxc10", C10, 46]];
-  for (const [nm, from, y] of bars) { ctx.fillStyle = ON; ctx.fillRect(x0 + from * bw + 1, y, xe - x0 - from * bw - 2, 13); cardText(ctx, nm, x0 + from * bw + 5, y + 7, { size: 10.5, bold: true, col: "#fff" }); }
-  /* somites */
-  for (let i = 0; i < NL; i++) { rrect(ctx, x0 + i * bw + 1.5, sy, bw - 3, 28, 4); ctx.fillStyle = "#efe8d8"; ctx.fill(); ctx.strokeStyle = EDGE; ctx.lineWidth = 1; ctx.stroke(); cardText(ctx, String(i + 1), x0 + i * bw + bw / 2, sy + 14, { size: 10, col: MUTED, align: "center" }); }
-  /* the flank */
-  for (let i = 0; i < NL; i++) { const x = x0 + i * bw; ctx.fillStyle = "#fbf9f3"; ctx.fillRect(x + 1, fy, bw - 2, 30); if (res.tb5[i]) hatch(ctx, x + 1, fy, bw - 2, 30); if (res.tb4[i]) dots(ctx, x + 1, fy, bw - 2, 30);
-    ctx.strokeStyle = "#ddd6c4"; ctx.lineWidth = 1; ctx.strokeRect(x + 1, fy, bw - 2, 30); if (res.fg[i]) { ctx.fillStyle = INK; ctx.fillRect(x + 4, fy + 23, bw - 8, 6); } }
-  /* buds */
-  for (const l of res.limbs) { const x = x0 + l.at * bw + bw / 2; budShape(ctx, x, fy + 32, l.kind); ctx.fillStyle = l.kind === "arm" ? "#e9f0f5" : "#f1efe8"; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.stroke();
-    if (l.kind === "arm") hatch(ctx, x - 10, fy + 36, 20, 24); else dots(ctx, x - 11, fy + 36, 22, 28);
-    cardText(ctx, l.kind, x, fy + 96, { size: 12, bold: true, col: INK, align: "center" }); }
-  if (o && o.sel != null && o.sel >= 0) { ctx.strokeStyle = HOT; ctx.lineWidth = 2; ctx.strokeRect(x0 + o.sel * bw, fy - 2, bw, 34); }
-  ctx.restore();
-}
-function drawSidePic(cvId, res) {
-  const cv = $(cvId); if (!cv) return; cv.hidden = !res; if (!res) return; const { ctx } = frameCanvas(cv, 460, 120), x0 = 46, bw = 16, fy = 38;
-  ctx.fillStyle = "#efe9da"; ctx.strokeStyle = EDGE; ctx.beginPath(); ctx.ellipse(26, 40, 20, 28, 0, 0, 2 * Math.PI); ctx.fill(); ctx.stroke();
-  for (let i = 0; i < NL; i++) { ctx.fillStyle = "#efe8d8"; ctx.fillRect(x0 + i * bw + 1, 14, bw - 2, 18); ctx.fillStyle = "#fbf9f3"; ctx.fillRect(x0 + i * bw + 1, fy, bw - 2, 16);
-    if (res.tb5[i]) hatch(ctx, x0 + i * bw + 1, fy, bw - 2, 16); if (res.tb4[i]) dots(ctx, x0 + i * bw + 1, fy, bw - 2, 16); }
-  for (const l of res.limbs) { const x = x0 + l.at * bw + bw / 2; budShape(ctx, x, fy + 17, l.kind, 0.7); ctx.fillStyle = "#fff"; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.stroke(); }
-  redBox(ctx, x0 - 4, 8, NL * bw + 8, 104);
-  ctx.restore();
-}
-/* D: four copies of the bud, one gene each, growing up from the flank, to scale */
-let BUD_TOP = null;
-function budTop() { if (!BUD_TOP) { const w = bdWorld({ sh: 1, gr: 20, f: 1 }); BUD_TOP = { F: Math.max(...w.F) * 1.6, S: Math.max(...w.S) * 1.6, Gr: Math.max(...w.Gr) * 1.6, B: 1 }; } return BUD_TOP; }
-function budPath(ctx, cx, base, lenPx, wid) { const tipR = wid * 0.42; ctx.beginPath(); ctx.moveTo(cx - wid / 2, base); ctx.lineTo(cx - wid * 0.46, base - Math.max(0, lenPx - tipR)); ctx.quadraticCurveTo(cx - wid * 0.46, base - lenPx, cx, base - lenPx); ctx.quadraticCurveTo(cx + wid * 0.46, base - lenPx, cx + wid * 0.46, base - Math.max(0, lenPx - tipR)); ctx.lineTo(cx + wid / 2, base); ctx.closePath(); }
-function drawBuds(cvId, w) {
-  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 760, 300), top = budTop(), base = 272, sc = 95, len = w.L * GD.MM, lenPx = len * sc, wid = 74;
-  const genes = [["Fgf8", w.F, top.F], ["Shh", w.S, top.S], ["Grem1", w.Gr, top.Gr], ["Bmp4", w.B, top.B]];
-  ctx.fillStyle = "#efe9da"; ctx.fillRect(0, base, 760, 28);
-  genes.forEach(([nm, arr, mx], k) => { const cx = 95 + k * 190;
-    ctx.save(); budPath(ctx, cx, base, lenPx, wid); ctx.clip();
-    for (let i = 0; i < GN - 1; i++) { ctx.fillStyle = ramp(arr[i] / mx); const y0 = base - (i + 1) / (GN - 1) * lenPx; ctx.fillRect(cx - wid, y0, 2 * wid, lenPx / (GN - 1) + 0.8); }
-    ctx.restore(); budPath(ctx, cx, base, lenPx, wid); ctx.strokeStyle = EDGE; ctx.lineWidth = 1.3; ctx.stroke();
-    if (w.aer) { ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(cx - wid * 0.4, base - lenPx + wid * 0.2); ctx.quadraticCurveTo(cx, base - lenPx - 4, cx + wid * 0.4, base - lenPx + wid * 0.2); ctx.stroke(); }
-    cardText(ctx, nm, cx, 14, { size: 13, bold: true, col: INK, align: "center" }); });
-  cardText(ctx, "flank", 8, base + 15, { size: 10.5, col: MUTED });
-  ctx.restore();
-}
-function drawSeries(cvId, w, o) {
-  const cv = $(cvId); if (!cv) return; o = o || {}; const W = o.W || 760, H = o.H || 170, { ctx } = frameCanvas(cv, W, H), base = H - 26, sc = o.sc || 50, gap = (W - 40) / 9, wid = o.wid || 30;
-  const pts = w ? w.outl : o.pts;
-  ctx.fillStyle = "#efe9da"; ctx.fillRect(0, base, W, 4);
-  if (o.box) { const y1 = base - o.box.hi * sc, y0 = base - o.box.lo * sc; ctx.fillStyle = "rgba(29,29,27,0.06)"; ctx.fillRect(o.box.x0 || 8, y1, (o.box.x1 || W - 8) - (o.box.x0 || 8), y0 - y1); redBox(ctx, o.box.x0 || 8, y1, (o.box.x1 || W - 8) - (o.box.x0 || 8), y0 - y1); }
-  for (let k = 0; k <= 8; k++) { const cx = 20 + gap / 2 + k * gap, hr = k * 5, p = pts.find(q => Math.abs(q[0] - hr) < 0.13);
-    if (p) { budPath(ctx, cx, base, p[1] * sc, wid); ctx.fillStyle = TISSUE; ctx.fill(); ctx.strokeStyle = INK; ctx.lineWidth = 1.3; ctx.stroke(); }
-    cardText(ctx, hr + " h", cx, H - 10, { size: 10.5, col: MUTED, align: "center" }); }
-  ctx.restore();
-}
-/* E: one limb, body at the left: a column a row, its cells across; dark where Sox9 is high */
-function limbGeom(P, k) { const reg = sxRegion(k); return { reg, n: sxWidth(reg, P.gli) }; }
-function drawLimb(cvId, w, o) {
-  const cv = $(cvId); if (!cv) return; o = o || {}; const W = o.W || 760, H = o.H || 260, { ctx } = frameCanvas(cv, W, H), cw = o.cw || 11.4, ch = o.ch || 7.2, x0 = o.x0 || 26, mid = o.mid || 118;
-  ctx.fillStyle = "#efe9da"; ctx.fillRect(0, mid - 120 * ch / 7.2, x0 - 6, 240 * ch / 7.2);
-  /* the outline: the rows' widths, smoothed, a rounded tip */
-  const top = [], bot = []; for (let k = 0; k < SX.rows; k++) { const n = limbGeom(w.P, k).n; top.push([x0 + k * cw, mid - n / 2 * ch]); bot.push([x0 + k * cw, mid + n / 2 * ch]); }
-  ctx.beginPath(); ctx.moveTo(x0, top[0][1]); for (const [x, y] of top) ctx.lineTo(x + cw / 2, y); const xe = x0 + SX.rows * cw;
-  ctx.quadraticCurveTo(xe + 10 * cw / 11.4, mid, bot[bot.length - 1][0] + cw / 2, bot[bot.length - 1][1]); for (let i = bot.length - 1; i >= 0; i--) ctx.lineTo(bot[i][0] + cw / 2, bot[i][1]); ctx.closePath();
-  ctx.fillStyle = TISSUE; ctx.fill(); ctx.strokeStyle = EDGE; ctx.lineWidth = 1.2; ctx.stroke();
-  for (let k = 0; k < w.rows.length; k++) { const row = w.rows[k], n = row.s.length; for (let i = 0; i < n; i++) if (row.s[i] > SX.th) { ctx.fillStyle = INK; ctx.fillRect(x0 + k * cw - 0.3, mid + (i - n / 2) * ch - 0.3, cw + 0.6, ch + 0.6); } }
-  if (!o.small) ["Meis region", "Hoxa11 region", "Hoxa13 region"].forEach((nm, r) => cardText(ctx, nm, x0 + [7.5, 22.5, 45][r] * cw, H - 10, { size: 11.5, col: MUTED, align: "center" }));
-  ctx.restore();
-}
-function drawAllLimbs(cvId, q, prev) {
-  const cv = $(cvId); if (!cv) return; const { ctx } = frameCanvas(cv, 760, 230), runs = q ? q.runs : [prev];
-  for (let j = 0; j < 16; j++) { const w = runs[j], ox = 6 + (j % 8) * 94, oy = Math.floor(j / 8) * 114; if (!w) continue;
-    ctx.save(); ctx.translate(ox, oy);
-    const cw = 1.38, ch = 2.5, mid = 46, x0 = 4;
-    const top = [], bot = []; for (let k = 0; k < SX.rows; k++) { const n = limbGeom(w.P, k).n; top.push([x0 + k * cw, mid - n / 2 * ch]); bot.push([x0 + k * cw, mid + n / 2 * ch]); }
-    ctx.beginPath(); ctx.moveTo(x0, top[0][1]); for (const [x, y] of top) ctx.lineTo(x + cw / 2, y); ctx.quadraticCurveTo(x0 + SX.rows * cw + 2, mid, bot[bot.length - 1][0] + cw / 2, bot[bot.length - 1][1]); for (let i = bot.length - 1; i >= 0; i--) ctx.lineTo(bot[i][0] + cw / 2, bot[i][1]); ctx.closePath();
-    ctx.fillStyle = TISSUE; ctx.fill(); ctx.strokeStyle = EDGE; ctx.lineWidth = 0.8; ctx.stroke();
-    for (let k = 0; k < w.rows.length; k++) { const row = w.rows[k], n = row.s.length; for (let i = 0; i < n; i++) if (row.s[i] > SX.th) { ctx.fillStyle = INK; ctx.fillRect(x0 + k * cw, mid + (i - n / 2) * ch, cw + 0.1, ch); } }
-    const st = sxStat(w); cardText(ctx, w.rows.length === SX.rows ? st.up + "-" + st.fo + "-" + st.di : "", 46, 101, { size: 11, col: INK, align: "center", mono: true });
-    ctx.restore(); }
-  ctx.restore();
-}
-function drawLimbPic(cvId, want) {
-  const cv = $(cvId); if (!cv) return; cv.hidden = !want; if (!want) return;
-  const { ctx } = frameCanvas(cv, 460, 120), segs = [[30, 120, 1], [130, 220, 2], [230, 400, want]];
-  ctx.fillStyle = TISSUE; ctx.strokeStyle = EDGE; ctx.beginPath(); ctx.moveTo(24, 46); ctx.lineTo(124, 44); ctx.lineTo(226, 38); ctx.lineTo(226, 12); ctx.quadraticCurveTo(430, 10, 412, 60); ctx.quadraticCurveTo(430, 110, 226, 108); ctx.lineTo(226, 82); ctx.lineTo(124, 76); ctx.lineTo(24, 74); ctx.closePath(); ctx.fill(); ctx.stroke();
-  for (const [a, b, n] of segs) for (let j = 0; j < n; j++) { const y = 60 + (j - (n - 1) / 2) * (n > 5 ? 11 : 15); ctx.strokeStyle = INK; ctx.lineWidth = n > 5 ? 4 : 5; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(a + 6, n === 1 ? 60 : 60 + (y - 60) * 0.3); ctx.lineTo(b - 6, y); ctx.stroke(); }
-  redBox(ctx, 222, 6, 200, 108);
-  ctx.restore();
-}
-/* ====== the controls, diagrams and stages. Every control is a gene's expression: how fast it is transcribed, how long its
-   mRNA or protein lasts, how long until new mRNA is ready, or where it is on (JM, 2026-11-07: "purely modulating the
-   expression of different genes is what I'm after"). An arrow to "broken down" is thicker the faster the breakdown. ====== */
-const TAU_V = [14, 26.6, 33], TAU_LAB = ["no introns: 14 min", "1 intron: 26.6 min", "3 introns: 33 min"];
-const HM_V = [12, 6, 3], HP_V = [30, 22, 16, 11], FB_V = [1, 0], HF_V = [800, 400, 200];
-const C6_V = [1, 8, 12], FG_V = Array.from({ length: NL + 1 }, (_, i) => i - 1);
-const SH_V = [0.3, 1, 3], GR_V = [5, 20, 80], F_V = [1, 2];
-const HX_V = [0.5, 1, 3], GLI_V = [1, 0];
-const fixedArrow = (id, from, to, o) => Object.assign({ id, from, to, readonly: true, dark: true, label: "" }, o || {});
-const rule = (meas, ok, val) => ({ meas, lo: null, hi: null, ok, val: val || (S => f2(S[meas])) });
-const xTimes = v => "×" + v;
-function mountA() {
-  const boxes = [{ id: "g", label: "Hes7 gene", x: 100, y: 44, w: 110, h: 32 }, { id: "m", label: "Hes7 mRNA", x: 100, y: 176, w: 110, h: 32 },
-    { id: "p", label: "Hes7 protein", x: 330, y: 176, w: 124, h: 34, kind: "outcome" }, { id: "d1", label: "broken down", x: 100, y: 292, w: 110, h: 30 }, { id: "d2", label: "broken down", x: 330, y: 292, w: 110, h: 30 }];
-  const arrows = [fixedArrow("x1", "m", "p"),
-    { id: "tau", from: "g", to: "m", input: "A_tau", signed: true, label: "delay", fmt: v => TAU_LAB[Math.round(v) - 1] },
-    { id: "hm", from: "m", to: "d1", input: "A_hm", signed: true, label: "mRNA half-life", fmt: v => "half-life " + HM_V[Math.round(v) - 1] + " min" },
-    { id: "hp", from: "p", to: "d2", input: "A_hp", signed: true, label: "protein half-life", fmt: v => "half-life " + HP_V[Math.round(v) - 1] + " min" },
-    { id: "fb", from: "p", to: "g", input: "A_fb", signed: true, bend: -34, label: "shuts its gene", fmt: v => Math.round(v) < 0 ? "shuts its gene" : "cannot bind" }];
-  return Paths.init({ mount: "#A_paths", width: 450, height: 320, boxes, arrows, valuesOnSelect: true, lockColours: true });
-}
-function mountB() {
-  const boxes = [{ id: "g", label: "Hes7 gene", x: 80, y: 40, w: 104, h: 32 }, { id: "p", label: "Hes7 protein", x: 262, y: 40, w: 116, h: 32 },
-    { id: "d", label: "broken down", x: 396, y: 118, w: 96, h: 30 }, { id: "f", label: "Fgf8 mRNA", x: 80, y: 190, w: 104, h: 32 },
-    { id: "d2", label: "broken down", x: 80, y: 300, w: 104, h: 30 }, { id: "x", label: "Mesp2", x: 262, y: 190, w: 86, h: 32 }, { id: "s", label: "somites", x: 262, y: 300, w: 96, h: 34, kind: "outcome" }];
-  const arrows = [fixedArrow("fbk", "p", "g", { bend: -28 }), fixedArrow("x1", "f", "g"), fixedArrow("x2", "p", "x"), fixedArrow("x3", "f", "x"), fixedArrow("x4", "x", "s"),
-    { id: "tau", from: "g", to: "p", input: "B_tau", signed: true, label: "delay", fmt: v => TAU_LAB[Math.round(v) - 1] },
-    { id: "hp", from: "p", to: "d", input: "B_hp", signed: true, label: "protein half-life", fmt: v => "half-life " + HP_V[Math.round(v) - 1] + " min" },
-    { id: "hF", from: "f", to: "d2", input: "B_hF", signed: true, label: "Fgf8 mRNA half-life", fmt: v => "half-life " + HF_V[Math.round(v) - 1] + " min" }];
-  return Paths.init({ mount: "#B_paths", width: 450, height: 330, boxes, arrows, valuesOnSelect: true, lockColours: true });
-}
-function mountC() {
-  const boxes = [{ id: "c6", label: "Hoxc6", x: 70, y: 40, w: 86, h: 32 }, { id: "c10", label: "Hoxc10", x: 70, y: 160, w: 90, h: 32 },
-    { id: "t5", label: "Tbx5", x: 236, y: 40, w: 80, h: 32 }, { id: "t4", label: "Tbx4", x: 236, y: 160, w: 80, h: 32 },
-    { id: "f10", label: "Fgf10", x: 405, y: 160, w: 84, h: 32 }, { id: "bd", label: "a bud: arm or leg", x: 380, y: 292, w: 140, h: 34, kind: "outcome" }];
-  const arrows = [fixedArrow("x1", "c6", "t4"), fixedArrow("x2", "c10", "t4"), fixedArrow("x3", "t5", "bd"), fixedArrow("x4", "t4", "bd"), fixedArrow("x5", "f10", "bd"),
-    { id: "c6", from: "c6", to: "t5", input: "C_c6", signed: true, label: "where Hoxc6 starts", fmt: v => "from somite " + C6_V[Math.round(v) - 1] }];
-  return Paths.init({ mount: "#C_paths", width: 460, height: 320, boxes, arrows, valuesOnSelect: true, lockColours: true });
-}
-function mountD() {
-  const boxes = [{ id: "tip", label: "the tip's cells", x: 400, y: 40, w: 124, h: 32 }, { id: "fg", label: "Fgf8", x: 400, y: 150, w: 80, h: 32 },
-    { id: "sh", label: "Shh", x: 110, y: 150, w: 80, h: 32 }, { id: "gr", label: "Grem1", x: 110, y: 262, w: 90, h: 32 }, { id: "bm", label: "Bmp4", x: 280, y: 262, w: 80, h: 32 },
-    { id: "gw", label: "the bud grows", x: 400, y: 340, w: 124, h: 34, kind: "outcome" }];
-  const arrows = [fixedArrow("x1", "gr", "bm"), fixedArrow("x2", "bm", "tip", { bend: -60 }), fixedArrow("x3", "fg", "gw"),
-    { id: "f", from: "tip", to: "fg", input: "D_f", signed: true, label: "Fgf8 transcription", fmt: v => xTimes(F_V[Math.round(v) - 1]) },
-    { id: "sh", from: "fg", to: "sh", input: "D_sh", signed: true, label: "Shh transcription", fmt: v => xTimes(SH_V[Math.round(v) - 1]) },
-    { id: "gr", from: "sh", to: "gr", input: "D_gr", signed: true, label: "Grem1 transcription", fmt: v => xTimes(GR_V[Math.round(v) - 1] / 20) }];
-  return Paths.init({ mount: "#D_paths", width: 500, height: 370, boxes, arrows, valuesOnSelect: true, lockColours: true });
-}
-function mountE() {
-  const boxes = [{ id: "me", label: "Meis", x: 66, y: 40, w: 76, h: 30 }, { id: "ha", label: "Hoxa11", x: 66, y: 120, w: 86, h: 30 }, { id: "hx", label: "Hox13", x: 66, y: 200, w: 80, h: 30 },
-    { id: "gl", label: "Gli3", x: 66, y: 300, w: 70, h: 30 }, { id: "bm", label: "Bmp", x: 250, y: 60, w: 70, h: 30 }, { id: "wn", label: "Wnt", x: 250, y: 222, w: 70, h: 30 },
-    { id: "sx", label: "Sox9: cartilage", x: 405, y: 140, w: 132, h: 34, kind: "outcome" }, { id: "wd", label: "the Hoxa13 region's width", x: 320, y: 300, w: 190, h: 30 }];
-  const arrows = [fixedArrow("x1", "bm", "sx"), fixedArrow("x2", "wn", "sx"), fixedArrow("x3", "sx", "bm", { bend: -34 }), fixedArrow("x4", "sx", "wn", { bend: 34 }), fixedArrow("x5", "wd", "sx"),
-    { id: "a1", from: "me", onto: "x1", ontoAt: 0.35, readonly: true, dark: true, label: "" }, { id: "a2", from: "ha", onto: "x1", ontoAt: 0.55, readonly: true, dark: true, label: "" },
-    { id: "hx", from: "hx", onto: "x1", ontoAt: 0.75, input: "E_hx", signed: true, label: "Hox13", fmt: v => xTimes(HX_V[Math.round(v) - 1]) },
-    { id: "g", from: "gl", to: "wd", input: "E_g", signed: true, label: "Gli3", fmt: v => Math.round(v) < 0 ? "made" : "not made" }];
-  return Paths.init({ mount: "#E_paths", width: 480, height: 340, boxes, arrows, valuesOnSelect: true, lockColours: true });
-}
-const PICK = (S) => S.done ? null : ruleOf(S);
-/* ---------- A ---------- */
-const SA = mkStage("A", {
-  ctl: [{ key: "tau", vals: TAU_V, hidden: true }, { key: "hm", vals: HM_V, hidden: true }, { key: "hp", vals: HP_V, hidden: true }, { key: "fb", vals: FB_V, hidden: true }],
-  rounds: [
-    { hold: { fb: 0, tau: 33, hp: 22 }, open: { hm: 3 }, rules: [rule("prot", S => S.prot >= 15000 && S.prot <= 30000, S => Math.round(S.prot).toLocaleString("en-US"))], pic: { gauge: true } },
-    { hold: { fb: 1, hm: 3, hp: 22 }, open: { tau: 14 }, rules: [rule("swing", S => S.swing != null && S.swing >= 0.2)], pic: { strong: false } },
-    { hold: { fb: 1, hm: 3, tau: 33 }, open: { hp: 22 }, rules: [rule("swing", S => S.swing != null && S.swing >= 0.75)], pic: { strong: true } },
-  ],
-  ms: 28,
-  start: set => { const P = { tau: set.tau, hm: set.hm, hp: set.hp, fb: set.fb }; return { P, eng: CELL, G: HX.T / HX.frame, every: 1, runs: [cellWorld(P)] }; },
-  afterOpen: () => hold(SA, ["tau", "hm", "hp", "fb"])(),
-  onInput: () => { if (PATHS.A) PATHS.A.sync(); },
-  paint: () => { const S = SA, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S), st = CELL.stat(w);
-    drawCell("A_cell", w); drawStrip("A_strip", w); drawCellPic("A_tpic", r ? r.pic : null);
-    $("A_cellH").textContent = "The cell · minute " + st.min + " · " + Math.round(st.m) + " Hes7 mRNA · " + Math.round(st.prot).toLocaleString("en-US") + " Hes7 protein" + (st.per ? " · a peak every " + Math.round(st.per) + " min" : "");
-    syncStage(S); A_code(); },
-});
-/* ---------- B ---------- */
-const SB = mkStage("B", {
-  ctl: [{ key: "tau", vals: TAU_V, hidden: true }, { key: "hp", vals: HP_V, hidden: true }, { key: "hF", vals: HF_V, hidden: true }],
-  rounds: [
-    { hold: { hp: 22, hF: 400 }, open: { tau: 33 }, rules: [rule("somites", S => S.somites >= 11, S => String(Math.round(S.somites)))], pic: { pic: "many" } },
-    { hold: { tau: 33, hF: 400 }, open: { hp: 22 }, rules: [rule("somites", S => S.somites <= 5, S => String(Math.round(S.somites)))], pic: { pic: "block" } },
-    { hold: { tau: 33, hp: 22 }, open: { hF: 400 }, rules: [rule("stripes", S => S.stripes >= 3, S => String(Math.round(S.stripes)))], pic: { pic: "stripes" } },
-  ],
-  ms: 30,
-  start: set => { const P = { tau: set.tau, hp: set.hp, hF: set.hF }; return { P, eng: EMB, G: EM.T / EM.frame, every: 1, runs: [emWorld(P)] }; },
-  afterOpen: () => hold(SB, ["tau", "hp", "hF"])(),
-  onInput: () => { if (PATHS.B) PATHS.B.sync(); },
-  paint: () => { const S = SB, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S), e = emCells(w);
-    drawEmbryo("B_emb", w, $("B_show").value); drawEmbPic("B_tpic", r ? r.pic : null);
-    $("B_embH").textContent = "The embryo · hour " + Math.round(e.t / 60) + " · " + e.somites + (e.somites === 1 ? " somite" : " somites") + " · " + e.stripes + (e.stripes === 1 ? " Hes7 stripe" : " Hes7 stripes") + " in the tail";
-    syncStage(S); B_code(); },
-});
-/* ---------- C ---------- */
-const SC = mkStage("C", {
-  ctl: [{ key: "c6", vals: C6_V, hidden: true }, { key: "fg", vals: FG_V, hidden: true }],
-  rounds: [
-    { hold: { fg: -1 }, open: { c6: 8 }, rules: [rule("armAt", S => S.arms === 1 && S.legs === 1 && S.armAt >= 11, S => S.armAt == null ? "no arm" : "arm at somite " + S.armAt)], want: { c6: 12, fg: -1 } },
-    { hold: { c6: 8 }, open: { fg: -1 }, rules: [rule("legs", S => S.legs === 2 && S.arms === 1, S => S.arms + " arm, " + S.legs + " legs")], want: { c6: 8, fg: 15 } },
-    { hold: { fg: -1 }, open: { c6: 8 }, rules: [rule("arms", S => S.arms === 0, S => S.arms + " arms")], want: { c6: 1, fg: -1 } },
-  ],
-  ms: 200,
-  start: set => { const P = { c6: set.c6, fg: set.fg }; return { P, eng: POS, G: 1, every: 1, runs: [posWorld(P)] }; },
-  afterOpen: () => hold(SC, ["c6"])(),
-  onInput: () => { if (PATHS.C) PATHS.C.sync(); },
-  paint: () => { const S = SC, set = readSet(S), r = PICK(S); drawSide("C_emb", posLimbs({ c6: set.c6, fg: set.fg }), { sel: set.fg });
-    drawSidePic("C_tpic", r ? posLimbs(r.want) : null);
-    syncStage(S); C_code(); },
-});
-/* Fgf10 in the flank: a click on the flank under a somite (only when it is free) */
-function wireFlank() {
-  $("C_emb").addEventListener("click", e => {
-    const S = SC, el = $("C_fg"); if (!Gates.C.open || S.run || S.waiting || el.dataset.held === "1") return;
-    const p = framePt($("C_emb"), e, 760), i = Math.floor((p.x - CX.x0) / CX.bw); if (i < 0 || i >= NL || p.y < CX.fy - 4 || p.y > CX.fy + 34) return;
-    const cur = FG_V[+el.value - (+el.min || 0)], want = cur === i ? -1 : i; el.value = FG_V.indexOf(want) + (+el.min || 0); el.dispatchEvent(new Event("input")); bump("C");
-  });
-}
-/* ---------- D ---------- */
-const D_PIC = (end, top) => { const pts = []; for (let k = 0; k <= 8; k++) { const t = k * 5, u = Math.min(1, t / end); pts.push([t, 0.75 + (top - 0.75) * u * (2 - u)]); } return pts; };
-const SD = mkStage("D", {
-  ctl: [{ key: "sh", vals: SH_V, hidden: true }, { key: "gr", vals: GR_V, hidden: true }, { key: "f", vals: F_V, hidden: true }],
-  rounds: [
-    { hold: { gr: 20, f: 1 }, open: { sh: 0.3 }, rules: [rule("len", S => S.len >= 1.6 && S.len <= 1.8, S => S.len.toFixed(2) + " mm")], box: { lo: 1.6, hi: 1.8 }, pts: D_PIC(20, 1.7) },
-    { hold: { sh: 1, gr: 20 }, open: { f: 1 }, rules: [rule("hours", S => S.hours <= 10, S => "stopped at hour " + S.hours.toFixed(1)), rule("len", S => S.len >= 1.6, S => S.len.toFixed(2) + " mm")], box: { lo: 1.6, hi: 1.8, x0: 8, x1: 162 }, pts: D_PIC(9, 1.75) },
-    { hold: { sh: 1, f: 1 }, open: { gr: 20 }, rules: [rule("len", S => S.len >= 1.9, S => S.len.toFixed(2) + " mm")], box: { lo: 1.9, hi: 2.6 }, pts: D_PIC(24, 2.05) },
-  ],
-  ms: 18,
-  start: set => { const P = { sh: set.sh, gr: set.gr, f: set.f }; return { P, eng: BUD, G: 160, every: 1, runs: [bdWorld(P)] }; },
-  afterOpen: () => hold(SD, ["sh", "gr", "f"])(),
-  onInput: () => { if (PATHS.D) PATHS.D.sync(); },
-  paint: () => { const S = SD, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S), st = bdStat(w);
-    drawBuds("D_bud", w); drawSeries("D_series", w);
-    $("D_budH").textContent = "The bud · hour " + w.hrs.toFixed(1) + " · " + st.len.toFixed(2) + " mm" + (w.tEnd != null ? " · the tip stopped making Fgf8 at hour " + w.tEnd.toFixed(1) : "");
-    const cv = $("D_tpic"); cv.hidden = !r; if (r) drawSeries("D_tpic", null, { W: 460, H: 120, sc: 34, wid: 18, pts: r.pts, box: r.box.x1 ? { lo: r.box.lo, hi: r.box.hi, x0: 8, x1: 8 + (460 - 40) / 9 * 3 + 12 } : r.box });
-    syncStage(S); D_code(); },
-});
-/* ---------- E ---------- */
-const SE = mkStage("E", {
-  ctl: [{ key: "hx", vals: HX_V, hidden: true }, { key: "g", vals: GLI_V, hidden: true }],
-  rounds: [
-    { hold: { g: 1 }, open: { hx: 0.5 }, rules: [rule("m125", S => S.m125 >= 0.75, S => Math.round(16 * S.m125) + " of 16")], want: 5 },
-    { hold: { g: 1 }, open: { hx: 1 }, rules: [rule("d3", S => S.d3 >= 0.75, S => Math.round(16 * S.d3) + " of 16")], want: 3 },
-    { hold: { hx: 1 }, open: { g: 1 }, rules: [rule("d7", S => S.d7 >= 0.75, S => Math.round(16 * S.d7) + " of 16")], want: 7 },
-  ],
-  ms: 40,
-  start: (set, seed) => { const P = { hx: set.hx, gli: set.g }; return { P, eng: SKEL, G: SX.rows, every: 1, runs: Array.from({ length: 16 }, (_, i) => sxWorld(P, seed + 1 + 7919 * i)) }; },
-  afterOpen: () => hold(SE, ["hx", "g"])(),
-  onInput: () => { if (PATHS.E) PATHS.E.sync(); },
-  paint: () => { const S = SE, q = shownRun(S), w = q ? q.runs[0] : previewRun(S).w, r = PICK(S);
-    drawLimb("E_limb", w); drawAllLimbs("E_all", q, w); drawLimbPic("E_tpic", r ? r.want : null);
-    const st = sxStat(w); $("E_limbH").textContent = "Limb 1 of 16 · " + w.rows.length + " of " + SX.rows + " rows" + (w.rows.length === SX.rows ? " · " + st.up + "-" + st.fo + "-" + st.di : "");
-    syncStage(S); E_code(); },
-});
-/* ====== the R panels: the same models, one stage's settings ====== */
-function A_code() { const s = readSet(SA);
-  codeInto("codeA", [
-    ["", "# Lesson 24, Stage A -- one cell's Hes7: transcription, the delay, translation, breakdown"],
-    ["tau", "tau <- " + s.tau + "                               # minutes until new mRNA is ready (3 introns 33, 1 intron 26.6, none 14)"],
-    ["hm", "hm <- " + s.hm + "; hp <- " + s.hp + "                      # half-lives (minutes): mRNA, protein"],
-    ["fb", "fb <- " + (s.fb ? "TRUE" : "FALSE") + "                              # the protein shuts its own gene"],
-    ["", "k <- 25; a <- 3; p0 <- 200; n <- 2.5; tp <- 2; dt <- 0.05; dur <- 720"],
-    ["", "N <- ceiling(dur / dt); m <- p <- numeric(N + 1); lag <- round(tau / dt); lp <- round(tp / dt)"],
-    ["", "for (i in 1:N) {"],
-    ["tau", "  pd <- if (i > lag) p[i - lag] else 0; md <- if (i > lp) m[i - lp] else 0"],
-    ["fb", "  on <- if (fb) 1 / (1 + (pd / p0)^n) else 1                     # transcription, shut by the protein"],
-    ["hm", "  m[i + 1] <- m[i] + dt * (k * on - log(2) / hm * m[i])           # mRNA made, broken down"],
-    ["hp", "  p[i + 1] <- p[i] + dt * (a * md - log(2) / hp * p[i])           # protein made, broken down"],
-    ["", "}"],
-    ["", "late <- p[max(1, N - 300 / dt):(N + 1)]                             # the last 300 minutes"],
-    ["", "c(mRNA = round(m[N + 1]), protein = round(p[N + 1]), swing = round((max(late) - min(late)) / (max(late) + min(late)), 2))"],
-  ]); }
-function B_code() { const s = readSet(SB);
-  codeInto("codeB", [
-    ["", "# Lesson 24, Stage B -- the embryo: Hes7 in every tail cell, Fgf8 mRNA broken down behind the tail, Mesp2 at the boundaries"],
-    ["tau", "tau <- " + s.tau + "; hp <- " + s.hp + "                     # Hes7: minutes until new mRNA is ready; protein half-life"],
-    ["hF", "hF <- " + s.hF + "                                # Fgf8 mRNA half-life (minutes)"],
-    ["", "dur <- 1440; v <- 0.2; th <- 0.3; r0 <- 0.4; lo <- 5; hi <- 9      # 24 hours; cells added a minute"],
-    ["", "k <- 25; a <- 3; p0 <- 200; dt <- 0.05; N <- ceiling((dur + 10) / dt); m <- p <- numeric(N + 1); lag <- round(tau / dt); lp <- round(2 / dt)"],
-    ["hp", "for (i in 1:N) { pd <- if (i > lag) p[i - lag] else 0; md <- if (i > lp) m[i - lp] else 0     # one Hes7 cell from minute 0 (stage A's)"],
-    ["", "  m[i + 1] <- m[i] + dt * (k / (1 + (pd / p0)^2.5) - log(2) / 3 * m[i]); p[i + 1] <- p[i] + dt * (a * md - log(2) / hp * p[i]) }"],
-    ["", "at <- function(t) m[pmin(N + 1, pmax(1, round(t / dt) + 1))]"],
-    ["hF", "af <- hF * log2(1 / th)                                  # a cell's Hes7 stops when its Fgf8 mRNA falls to th"],
-    ["", "R <- function(x) r0 * x + (1 - r0) * hF / log(2) * (1 - 2^(-x / hF))   # a cell's Hes7 time after age x (slower as Fgf8 falls)"],
-    ["", "b <- seq(-af, dur, by = 1 / v); age <- pmin(dur - b, af)              # each cell's birth; its age, up to when it stops"],
-    ["", "ht <- ifelse(b >= 0, b + R(age), ifelse(age <= -b, 0, R(age) - R(-b))); mm <- at(ht); stopped <- dur - b >= af"],
-    ["", "s <- 0; bd <- c(); for (i in which(stopped)) { if (s == 0 && mm[i] >= hi) { s <- 1; bd <- c(bd, i) } else if (s == 1 && mm[i] <= lo) s <- 0 }   # Mesp2: a boundary"],
-    ["", "s <- 0; stripes <- 0; for (i in which(!stopped)) { if (s == 0 && mm[i] >= hi) { s <- 1; stripes <- stripes + 1 } else if (s == 1 && mm[i] <= lo) s <- 0 }"],
-    ["", "c(somites = max(0, length(bd) - 1), stripes_in_tail = stripes)"],
-  ]); }
-function C_code() { const s = readSet(SC);
-  codeInto("codeC", [
-    ["", "# Lesson 24, Stage C -- where a limb goes (24 somites)"],
-    ["c6", "c6 <- " + s.c6 + "                                   # the first somite with Hoxc6"],
-    ["fg", "fg <- " + (s.fg < 0 ? "NA" : s.fg + 1) + "                                   # a somite where Fgf10 is switched on in the flank (NA: none)"],
-    ["", "c10 <- 20                                 # the first somite with Hoxc10"],
-    ["", "tbx5 <- 1:24 >= c6 & 1:24 < c6 + 4; tbx4 <- 1:24 >= c6 + 4 & 1:24 <= c10 + 1"],
-    ["", "bud <- c(if (c6 > 1) c6, c10)            # Fgf10 on where Hoxc6 starts after somites without it, and where Hoxc10 starts"],
-    ["", "if (!is.na(fg) && !(fg %in% bud) && (tbx5[fg] || tbx4[fg])) bud <- c(bud, fg)"],
-    ["", "data.frame(somite = bud, limb = ifelse(tbx5[bud], 'arm', 'leg'))"],
-  ]); }
-function D_code() { const s = readSet(SD);
-  codeInto("codeD", [
-    ["", "# Lesson 24, Stage D -- a bud that grows and stops itself (one dimension, body x = 0 to tip x = L)"],
-    ["sh", "sh <- " + s.sh + "                                   # Shh transcription, relative to normal"],
-    ["gr", "gr <- " + s.gr + "                                    # Grem1 transcription (20 normal)"],
-    ["f", "f <- " + s.f + "                                     # Fgf8 transcription, relative to normal"],
-    ["", "N <- 81; L <- 0.3; hrs <- 0; dt <- 0.05; tip <- TRUE; G <- 800"],
-    ["", "steady <- function(L, lam, src) { h <- L / (N - 1); a <- lam^2 / h^2; M <- diag(1 + 2 * a, N)"],
-    ["", "  M[cbind(2:N, 1:(N - 1))] <- -a; M[cbind(1:(N - 1), 2:N)] <- -a; M[1, 2] <- -2 * a; M[N, N - 1] <- -2 * a; solve(M, src) }"],
-    ["", "for (step in 1:G) {"],
-    ["", "  x <- seq(0, L, length.out = N)"],
-    ["f", "  Fg <- steady(L, 0.6, f * as.numeric(tip & x > L - 0.03))                  # Fgf8 from the tip's cells"],
-    ["sh", "  fz <- max(Fg[x < 0.08]); S <- steady(L, 0.25, ifelse(x < 0.08, sh * fz / (0.02 + fz), 0))   # Shh, kept up by Fgf8"],
-    ["gr", "  Gr <- steady(L, 0.1, gr * as.numeric(S > 0.05 & x > 0.08 + 0.003 * hrs))     # Grem1, not in the Shh-makers' descendants"],
-    ["", "  if (tip && 1 / (1 + Gr[N]) > 0.5) tip <- FALSE                             # Bmp4 at the tip shuts its Fgf8 for good"],
-    ["", "  L <- L + dt * 0.3 * Fg[N]; hrs <- hrs + dt"],
-    ["", "}"],
-    ["", "c(length_mm = 2.5 * L)"],
-  ]); }
-function E_code() { const s = readSet(SE);
-  codeInto("codeE", [
-    ["", "# Lesson 24, Stage E -- a skeleton laid down row by row: Sox9 with Bmp and Wnt"],
-    ["hx", "hx <- " + s.hx + "                                  # Hox13 (Hoxa13 and Hoxd13), relative to normal"],
-    ["g", "gli <- " + (s.g ? "TRUE" : "FALSE") + "                              # Gli3 made"],
-    ["", "h <- c(10, 4, 1.5 * hx); W <- c(8, 12, if (gli) 22 else 30); rows <- 60   # Meis, Hoxa11, Hoxa13 regions"],
-    ["", "settle <- function(s, b, w, h, T) { n <- length(s); Db <- h; Dw <- 0.1 * h; dt <- min(0.2, 0.4 / (2 * Db))"],
-    ["", "  lap <- function(z) c(z[2], z[-n]) + c(z[-1], z[n - 1]) - 2 * z          # nothing lost at either edge"],
-    ["", "  for (k in 1:ceiling(T / dt)) { s2 <- s + dt * (-s + b - w - s^3); b2 <- b + dt * (-1.59 * s - 0.1 * b + Db * lap(b))"],
-    ["", "    w <- w + dt * (-1.27 * s - 0.5 * w + Dw * lap(w)); s <- s2; b <- b2 }"],
-    ["", "  list(s = s, b = b, w = w) }"],
-    ["", "reg <- function(k) if (k <= 15) 1 else if (k <= 30) 2 else 3"],
-    ["", "st <- function(z, n) approx(seq(0, 1, length.out = length(z)), z, seq(0, 1, length.out = n))$y"],
-    ["", "s <- NULL; count <- c()"],
-    ["", "for (k in 1:rows) { r <- reg(k); n <- W[r]"],
-    ["", "  if (is.null(s)) { s <- 0.05 * (runif(n) - 0.5); b <- 0.05 * (runif(n) - 0.5); w <- 0.05 * (runif(n) - 0.5) } else {"],
-    ["", "    if (length(s) != n) { s <- st(s, n); b <- st(b, n); w <- st(w, n) }"],
-    ["", "    s <- s + 0.02 * (runif(n) - 0.5); b <- b + 0.02 * (runif(n) - 0.5); w <- w + 0.02 * (runif(n) - 0.5) }"],
-    ["hx", "  z <- settle(s, b, w, h[r], if (k == 1) 180 else 60); s <- z$s; b <- z$b; w <- z$w"],
-    ["", "  count[k] <- sum(diff(c(0, s > 0.1)) == 1)                                 # elements across this row"],
-    ["", "}"],
-    ["", "c(Meis = count[13], Hoxa11 = count[28], digits = count[rows])"],
-  ]); }
-
-const STAGES = [SA, SB, SC, SD, SE];
-function paintAll() { for (const S of STAGES) S.cfg.paint(); }
-function wire() {
-  PATHS.A = mountA(); PATHS.B = mountB(); PATHS.C = mountC(); PATHS.D = mountD(); PATHS.E = mountE();
-  for (const S of STAGES) wireStage(S);
-  wireFlank();
-  $("B_show").addEventListener("change", () => SB.cfg.paint());
-  for (const K of ["A", "B", "C", "D", "E"]) $(K + "_dl").addEventListener("click", () => downloadText("lesson24_stage" + K + ".R", RTEXT["code" + K]));
-  let rt = 0; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { FIT_EPOCH++; paintAll(); }, 120); });
-  const reveal = () => {
-    const study = typeof Score !== "undefined" && Score.isStudy && Score.isStudy();
-    for (const k in Gates) { Gates[k].open = true; $("stage" + k).classList.remove("stage-locked"); const t = $("toc" + k); if (t) t.classList.remove("locked"); }
-    if (!study) { for (const S of STAGES) { S.done = true; S.waiting = false; S.results = S.cfg.rounds.map(() => true); openRound(S); } for (const k in BIT) record(BIT[k], true); }
-    FIT_EPOCH++; paintAll();
-  };
-  document.addEventListener("score:bypass", reveal);
-  window.__l24reveal = reveal;
-}
-
-wire();
-paintAll();
 
 Score.init({
   moduleId: "lesson24",
-  version: 2,      /* 2: draft 2 (2026-11-07): named genes, every control a gene's expression; A three targets, B three, C three, D three, E three (15). 1: draft 1 (14) */
-  scaffold: 15,
+  version: 3,      /* 3: draft 3 (2026-11-10): live models, parts added one at a time, things to find; A three, B five, C three (11). 2: draft 2 (15). 1: draft 1 (14) */
+  scaffold: 11,
   mountNamePrompt: "#score-name",
   mountFinalCode:  "#score-final",
   onReady: () => {
     $("stageA").classList.remove("stage-locked"); Gates.A.open = true;
     if (Score.isStudy && Score.isStudy()) window.__l24reveal();
-    FIT_EPOCH++; paintAll();
+    FIT_EPOCH++; paintAll(); wake();
   }
 });
 </script>

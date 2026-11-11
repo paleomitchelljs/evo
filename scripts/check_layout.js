@@ -7,7 +7,9 @@
  * really be turned into hover text ... I want attention drawn and fixed to controls, output, and predictions".
  *
  * Each page is opened in headless Chrome, its name box given "study mode" (every stage open, no code), every
- * stage unlocked, and then:
+ * stage unlocked, and then (the page is asked for with ?still=1: a lesson whose models run as they are watched,
+ * 24 and 25, keeps its clock stopped, since headless Chrome spends a tenth of a second on each animation frame
+ * and a minute of them takes this check ten; every other lesson ignores the flag):
  *   errors   no uncaught error on the page, at load or after the name (Chrome's log, attributed by file);
  *   ids      every literal $("x") / getElementById("x") in the page's own script names an element that exists
  *            (a summary line cut from the page with its writer left behind throws only when that writer runs);
@@ -108,7 +110,7 @@ const INNER = (page) => `(() => {
 })()`;
 
 const probe = (list) => `<!doctype html><meta charset="utf-8"><title>pending</title>
-${list.map((p, i) => `<iframe id="f${i}" src="app/lessons/${p}?preview=1" width="1400" height="1000"></iframe><pre id="o${i}"></pre>`).join("\n")}
+${list.map((p, i) => `<iframe id="f${i}" src="app/lessons/${p}?preview=1&still=1" width="1400" height="1000"></iframe><pre id="o${i}"></pre>`).join("\n")}
 <script>
 const PAGES = ${JSON.stringify(list)}, SRC = ${JSON.stringify(list.map(INNER))};
 let n = 0;

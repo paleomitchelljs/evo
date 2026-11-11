@@ -40,8 +40,8 @@ Reading: "more likely to involve repeatedly" = more likely to evolve repeatedly.
     22  kin selection, gene-level selection                                  lesson22_overhaul.md
     23  species selection, hierarchical selection                            lesson23_overhaul.md (was hierarchical_price_plan.md)
     2X  origins of individuality (Michod), the capstone                      lesson26_overhaul.md
-    2Y  evo-devo: networks, a somite clock, limb position, size, skeleton    lesson24_overhaul.md (papers: docs/refs/README.md)
-    2Z  mesoevolution: species selection on development; deep homology      lesson25_overhaul.md
+    2Y  evo-devo, bodies: Hes7 in a cell, somites, Hoxc6 / Hoxc10 (draft 3)  lesson24_overhaul.md (papers: docs/refs/README.md)
+    2Z  evo-devo, limbs, then species selection on the map from genes to digits  lesson25_overhaul.md
 
 Order after 23, ruled 2026-11-07: evo-devo (2Y), then mesoevolution (2Z), then Michod last (2X). JM:
 

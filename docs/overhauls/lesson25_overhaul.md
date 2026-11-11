@@ -1,10 +1,176 @@
 # Lesson 25 — mesoevolution: species selection on development ("2Z"; slot 25 since 2026-11-07, was `mesoevolution_plan.md`)
 
-**File** · `app/lessons/lesson25.html` — draft 2 (2026-11-07, v2, 5 bits, LOCKS `x`): rebuilt on lesson 24's draft-2 limb
+**File** · `app/lessons/lesson25.html` — draft 3 (2026-11-09, v3, 17 bits, LOCKS `x`): the limb (from 24), then the map and clades. Draft 2 (2026-11-07, v2, 5 bits, LOCKS `x`): rebuilt on lesson 24's draft-2 limb
 **Checks** · `node scripts/check_lesson25_numbers.js` · `python3 scripts/check_lessons.py` · `node scripts/check_layout.js`
-**Status** · DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 1-3 taken on the recommendations: limbs, deep homology left for later, both readings through the map). Needs 23's species-level engine and the evo-devo lesson's
+**Status** · DRAFT 3 BUILT 2026-11-11 (v3, 17 bits; checks pass; JM to play). Planned 2026-11-09 (JM's rework note, below). Before it: DRAFT 1 BUILT 2026-11-07 (JM: "let's please draft leson 23 and onward"; Open 1-3 taken on the recommendations: limbs, deep homology left for later, both readings through the map). Needs 23's species-level engine and the evo-devo lesson's
 limb network (lesson24_overhaul.md)
-**Last touched** · 2026-11-07 (draft 2)
+**Last touched** · 2026-11-11 (draft 3 built)
+
+## DRAFT 3 — JM, 2026-11-09 (verbatim; the whole note and what it changes for both lessons: lesson24_overhaul.md)
+
+> I want this to empower them to explore how diverse bodies and limb forms (like the differences in horses and ichthyosaurs
+> and bats and humans and skinks of sorts).
+
+> The current ones feel unengaging and the genetic controls too abstract. I also fear we've continued our drift towards
+> assessing students relative to building understanding in the students
+
+> While loci small, I do want them named clearly, though
+
+### Lesson 25, draft 3 (v3, 17 bits): the limb, then the map
+
+- The limb moved here from 24 (draft 2's D and E), rebuilt as one limb grown live. The map and clades stay, as the last stage.
+- **Five genes: Fgf8, Shh, Grem1, Bmp4, Sox9.** Four are set; Sox9 is what they lay down.
+
+    A  a bud that stops       parts: Fgf8 at the tip (grows without end); Bmp4 shuts Fgf8 off (never grows); Grem1 blocks
+       itself                 Bmp4 (grows without end); Grem1 only where Shh reaches (grows, then stops itself)
+                              controls: Fgf8, Shh, Grem1 levels
+                              find: A1 it stops itself · A2 a longer limb · A3 a shorter one · A4 the same length sooner
+    B  digits                 parts: Sox9 in the cells left behind the tip (one bone, two, then digits); joints, one every
+                              4.2 hours the tip keeps growing; Bmp4 between the digits (web, free digits, side digits lost)
+                              controls: the four levels
+                              find: B1 six or more digits · B2 three or fewer, none lost to cell death · B3 three or fewer,
+                              five laid down first · B4 a web · B5 six or more bones in a digit
+    C  animals                the human limb is the start; cards drawn by the same engine: skink, horse, camel, bat,
+                              ichthyosaur; build any four
+    D  the map, and clades    Shh x Bmp4 → digits, off the engine; a founder clicked on the map; its clade walks the map
+                              by small steps; menu: which limbs split more often
+                              find: D1 digit number changes in four or more lineages · D2 twelve species and no change ·
+                              D3 a digit lost to cell death in the clade
+
+- Engine (one limb, rows from body to tip, .1-hour steps; JM's lecture: "Shh → Gremlin on → BMP off → FGF on → grow"; "Limb
+  outgrows Shh diffusion range → circuit collapses → terminate"):
+  - the tip grows 1.8 rows an hour x Fgf8 while its Fgf8 is on;
+  - Grem1 is made out to where Shh reaches, 40 + 14 ln(Shh) rows; past that it thins by e every 10 rows;
+  - Bmp4 at the tip = 1 / (1 + 7.39 x Grem1 there); above .5 it shuts the tip's Fgf8 off for good. So the limb stops at
+    reach + 10 ln(7.39 x Grem1): 60 rows at the defaults;
+  - Sox9: draft 2's Sox9-Bmp-Wnt rows (Raspopovic et al. 2014's signs), unnamed here: 8 cells wide to row 15, 12 to row 30,
+    then the plate, 21 x sqrt(Shh) cells; stripe spacing by region as in draft 2 (the Hox code, now fixed and unnamed);
+  - a joint every 4.2 hours of growth past row 30 (time at the tip sets the count: Sanz-Ezquerro & Tickle 2003);
+  - Bmp4 between the digits: under .5 a web; from 1.5 the plate's edges die inward (to .2 of its width at 1.5, .4 at 2) and
+    take the digits there; the middle one (odd) or two (even) always stay.
+- MEASURED (scratchpad l24v3/t25b.js, 16 seeds):
+  - parts: Fgf8 alone runs off the panel; + Bmp4 never grows; + Grem1 runs off; + Shh: 60 rows at hour 30.
+  - Fgf8 x .5 / 1 / 2: 60 rows at hour 60 / 30 / 15; 8 / 4 / 2 bones in a digit. Grem1 x .25 / 1 / 4: 46 / 60 / 74 rows.
+  - Shh x .2 / .3 / .5 / .7 / 1 / 1.5 / 2 / 3: 2 / 3 / 4 / 4-5 / 5 / 6-7 / 7-8 / 8-9 digits laid; limb 37 / 43 / 50 / 55 /
+    60 / 66 / 70 / 75 rows. One bone, then two, in 16 of 16 at every level.
+  - cell death: five laid → 3 at Bmp4 1.5-1.7, 1 from 1.75; four → 2; six → 4, then 2; seven → 5, 3, 1.
+  - the five cards are each built by some settings and none by the defaults; one slider moved builds only the skink.
+  - 17 ms a limb.
+
+### Sources for draft 3
+
+- Checked by search 2026-11-09: Shapiro, Hanken & Rosenthal 2003 (*J Exp Zool B* 297B:48: *Hemiergis* skinks with fewer digits
+  make Shh for a shorter time); Cooper et al. 2014 (*Nature* 511:41: horse, camel and jerboa lose digits to cell death after five
+  are laid down; the pig by earlier patterning); Weatherbee et al. 2006 (*PNAS* 103:15103: a bat's web keeps Grem1 and Fgf8 and
+  loses Bmp signalling); Sanz-Ezquerro & Tickle 2003 (*Curr Biol* 13:1830, title only: Fgf at the tip and the number of phalanges).
+- From memory, not checked, not in docs/refs: Sears et al. 2006 (bat digits lengthen through Bmp2, which this model does not
+  do); Richardson & Oelschläger 2002 (dolphin flippers: more phalanges from a longer-lived tip ridge); Merino et al. 1999 (duck
+  web and Gremlin).
+- Stylised or by analogy: Shh as one level setting both reach and plate width; one Bmp4 level for the web and for side loss; the
+  odd / even outcome of side loss; the ichthyosaur (no molecular data exists; built as a dolphin flipper with more digits).
+
+### Open for JM (draft 3)
+
+1. Which two genes the map crosses: built as Shh x Bmp4 (two ways to lose a digit). Shh x Grem1 would map length.
+2. The camel card: a fifth animal, not on JM's list; it is the even-toed outcome of the same slider as the horse. Drop it if
+   five is too many.
+3. D's menu "split more often" is what is left of species selection in this lesson (23 has the rest).
+4. The finds and cards: as lesson24_overhaul.md, Open 2.
+5. A's reference is "every gene at ×1" (the same limb C calls the human arm); A2-A4 read against it. Two rows either way
+   is the window (Shh one notch, ×0.9 or ×1.1, moves the stop 1.4-1.6 rows and does not count).
+6. D's finds read clade 1 (the tree); the 16 bars are replicates from the same founder. D2 is a chance history: about one
+   start in 400 misses (12 species not reached in 400 steps); ↺ starts the clades again.
+7. The four sliders are transcription as a multiple (×0.2 to ×4), where lesson 24's are minutes and hours. This is the
+   nearest thing left to what JM called "too abstract"; each one's effect is drawn (Shh's reach line, the Bmp4 gauge, a ▾
+   every five hours of growth), but the control itself has no unit. Say so if they should be in something countable.
+8. `pageSeed` is random across loads (sim.js: "random across loads, fixed within one"), so the limb seed and D's map are
+   redrawn on a reload; digit counts at the edge Shh levels can differ. True of every lesson; CLAUDE.md §5 says otherwise.
+
+### Draft 3 as built (2026-11-11; parts and build script in scratchpad l25v3/, `build25.py --install`)
+
+    A  the bud and its four genes over it (Fgf8 a blue rim at the tip, Shh orange from the body to a dashed "Shh reaches"
+       line, Grem1 hatching, Bmp4 red dots by 1 / (1 + Grem1)); a gauge "Bmp4 at the tip" against "Fgf8 off"; ▾ where the
+       tip was every 5 hours; the ruler with the bud's length heavy and "×1 stops here". Parts panel under the picture;
+       cards Fgf8, Shh, Grem1 (Shh, Grem1 held until their parts)
+    B  the same limb as a skeleton: Sox9's runs joined into bones (rounded), joints as gaps, the palm and web or free
+       fingers, cell death as dashed outlines; counts under the limb ("1 bone · 2 bones · 5 digits, 4 bones in each");
+       Parts panel under the picture; cards Fgf8, Shh, Grem1, Bmp4 between the digits (held until its part)
+    C  B's limb, all parts, opening on ×1 ("a human arm"); the four cards under the picture; five animal cards drawn by
+       the same renderer at the same scale
+    D  left: the map (17 Shh levels x 10 Bmp4 levels; number = digits kept, darker more; ✗n = lost) with clade 1's
+       species as dots, the limb at the outlined cell, clade 1's tree; right: the menu, the 16 clades as bars, the finds
+
+- Controls are ladders, one notch a level: Fgf8 .5 .6 .7 .85 1 1.2 1.4 1.7 2; Shh .2 .25 .3 .4 .5 .6 .7 .8 .9 1 1.1 1.2
+  1.4 1.6 2 2.5 3; Grem1 .25 .35 .5 .7 1 1.4 2 2.8 4; Bmp4 between the digits 0 .2 .4 .6 .8 1 1.5 1.7 2 2.5.
+- A change to a gene acts on the growing limb; once the limb has stopped, it grows it again. Bmp4 between the digits acts
+  on a stopped limb at once (cell death is after the digits). A part added or switched grows it again.
+- Live: A and B 3 model hours a second, C 5, D 40 steps a second; "fast" x3; ?still=1 keeps the clock stopped.
+- Engine changes from the plan (measured in l25v3/m*.js): the web is (1 - Bmp4) / .6 of the way out (the plan's
+  1 - (Bmp4 - .2) / .6 left no web one notch below x1); digits laid = the commonest count over the plate's last 15 rows
+  (the plan's: all rows from 34; they agree on 1224 of 1224 untouched limbs, and the last 15 follow a Shh change made
+  mid-run); clades walk the map's cells (sd .04 of a cell a step, 400 steps, split .05 x room, lost .015).
+
+### Finds as built (windows; the check re-measures every line)
+
+    A1 stop        all four parts in, the tip's Fgf8 off after growing: x1 stops at 60.18 rows, hour 30.1 (closed form
+                   reach + 10 ln(7.39 Grem1) = 60.0; growth .18 rows a step)
+    A2 longer      stopped >= x1 + 2 rows: Grem1 1.4 (63.4), 2, 4; Shh 1.2 (62.7), 1.4, 2. Not Shh 1.1 (61.4)
+    A3 shorter     stopped <= x1 - 2 rows: Grem1 .7 (56.6), .5, .25; Shh .8 (56.9), .6, .3. Not Shh .9 (58.6)
+    A4 sooner      within 1.5 rows of x1, by hour 28.1: Fgf8 1.2 (hour 25.1; changed at hour 10: 26.7), 1.4, 2.
+                   Not Fgf8 .85 or .6 (later); Shh .8/1.2 are not the same length
+    B1 six         >= 6 digits kept: Shh 1.6, 2, 3 (12 of 12 seeds); Shh 1.4 lays 5 on 2 seeds in 200
+    B2 few         <= 3 kept, none lost: Shh .25, .2 (200 of 200 seeds); .3/.4 lay 4 on 13 in 200
+    B3 carved      >= 5 laid, <= 3 kept: Bmp4 1.5 (3 of 5), 1.7, 2 (1 of 5), at once on a stopped limb
+    B4 web         web >= .25: Bmp4 .8 (.33), .6, .4, .2, 0
+    B5 bones       >= 6 bones a digit: Fgf8 .7 (6), .6, .5 (8); Grem1 4 (6); Shh 2.5, 3 (6). Not Fgf8 .85 (5), Grem1 2.8 (5)
+    every B find needs its part (Sox9; joints; Bmp4 between the digits); none at x1; each the same from hour 10
+
+    animals (ok on the finished limb; the card is grown at the first of its settings that is that animal on this page's
+    seed):
+    skink          kept 2-3, none lost, <= 50 rows                 card Shh .25          (Shh .2-.4 alone also)
+    horse          kept 1, >= 2 lost, >= 65 rows                   card Grem1 2, Bmp4 2
+    camel          kept 2, >= 2 lost                               card Shh .6, Grem1 2, Bmp4 1.7 (then .5; 2.5, Bmp4 2; 2)
+    bat            kept 5, none lost, web >= .6, hand >= 36 rows, <= 4 bones      card Fgf8 1.4, Grem1 2.8, Bmp4 .2
+    ichthyosaur    >= 6 kept, none lost, web >= .6, >= 8 bones                     card Fgf8 .5, Shh 2, Grem1 2, Bmp4 0
+    the full ladder grid (13,770 settings), seed 1001 / 2002 / 3003: skink 1008, camel 972 / 1053 / 972, horse 604 /
+    638 / 580 (398-506 on the check's page seeds), ichthyosaur 428, bat 200 (was 4 of 1600 in t25b; hand >= 40 -> 36 and the web formula widened it); two
+    animals at once 0; x1 none. The t25b 1600-grid (5 x 8 x 5 x 8), 4 seeds: skink 80, camel 175-250, horse 67-107,
+    bat 18, ichthyosaur 63. Card settings on 48 seeds: 48 / 48 / 47 / 48 / 48.
+
+    D1 lineages    clade 1: >= 4 species whose own digits changed. Founder Shh .2, Bmp4 .4 (next to 3 digits): 20 of 20
+                   seeds on 3 maps (median 128 steps in the check); Shh .7: 18-19 of 20
+    D2 still       clade 1: >= 12 living, no species ever changed. Founder Shh 1 (or .9), Bmp4 .4: 400 of 400 seeds at
+                   split .05 (397 of 400 at .04), median 92-111 steps; D1 from it 1 of 400, D3 0
+    D3 lost        clade 1: a species comes to lose a digit to cell death, the founder had none. Founder at x1 (Shh 1,
+                   Bmp4 1): 198 of 200 (20 of 20 in the check); D1 from it too, 16-19 of 20 (allowed)
+
+- Stylised in the drawing (not in the plan): the elements of each region are drawn centred across the limb (the model's
+  pattern puts the single upper bone against one edge); bones are Sox9's runs joined row to row, and a row that lays
+  another count while the pattern settles (the first rows past the wrist; 2-5% of plate rows) carries the bones on either
+  side of it, so the picture draws exactly the counts printed (checked on 5,076 limbs in node, and on the page for x1 and
+  the five cards); the palm (to the first joint, or .3 of the plate) is always webbed; a free finger is a rounded strip
+  round its digit; the Shh-making patch is drawn at the back edge near the body, though the model has only Shh's reach.
+- Cards: where a card's first setting sits on an edge between two digit counts (camel at Shh .6: 4 digits on 198 seeds in
+  200), the card takes its next setting on that seed, so it is always the animal it names.
+
+### Looked at, 2026-11-11
+
+- The limb seed is new on every load (sim.js `pageSeed`), so the map is too. 24 limb seeds: the five-digit patch at Bmp4
+  x0.2 runs Shh x0.6-1.2 on 17, x0.8-1.2 on 7; from x0.9, 3 clades in 20 change digits on those 7; from x1, 0 in 20 on
+  all 24 (D2 20/20 on all 24). The check's x0.9 founder was pasted; it now takes the patch cell farthest from a change.
+- Some seeds' maps are not monotone in Shh (7 then 6 at x1.6/x2; 4 4 3 at x0.3-0.5): the Sox9 pattern's noise.
+- Screenshots seen: A part by part (Bmp4 without Grem1: the bud never grows), B part by part, C, D, the code.
+
+### Items (draft 3)
+
+    plan           this section                                                    done 2026-11-09
+    engine         one limb: loop, Sox9 rows, joints, cell death                   done (scratchpad l24v3; l25v3 eng25.js)
+    page           app/lessons/lesson25.html rebuilt, v3, 17 bits                  done 2026-11-11
+    check          scripts/check_lesson25_numbers.js rewritten                     done 2026-11-11 (ALL PASS)
+    visual pass    lesson 24's: labels >= 11 px at 1400, clock alone, columns      done 2026-11-11
+                   within 100 px, single column under 1180 px, drawn = printed
+    LOCKS, index   titles                                                          done (by the coordinator)
+    JM plays it    his voice for the intros; Open 1-4 above                        todo
 
 ## JM, 2026-11-07 (verbatim, the 2Z part; the whole message is in lesson21_overhaul.md)
 
