@@ -114,16 +114,52 @@ Chart-reading and statistics, in the order they are built:
 
 ### Lessons 1-7, rewritten
 
-| # | Phenomenon | The student sees | Statistics and chart built | Data | Hands on |
+JM, 2026-11-13, on the first version of this table: *"For 1-7, the key arc in lecture is that two individuals can
+share a trait for exactly one of two reasons: same underlying cause (inheritance; homology broadly defined) or
+independent acquisition (convergence; homoplasy). They're meant to set students up to understand the evolutionary
+forces not as separate entities but as results (eg selection doesn't favor high fitness, selection **is** the result
+of fitness differences), while also slowly introducing statistical concepts & building intuition for quantitative
+data."*
+
+So two threads run through all eight, and every stage serves one of them:
+
+- **Alike for one of two reasons.** Whenever two individuals, two groups or two records are alike, the stage's
+  question is whether they share a cause (one was copied from the other, both were copied from the same thing, both
+  sit under the same cause) or came to it independently. The statistics is how you tell: how alike would they be
+  with nothing shared?
+- **A force is a result, not an agent.** Nothing on screen "pushes", "favours", "wants" or "acts". A population
+  grows *because* births outnumber deaths; the average beak changes *because* the birds that lived differ from the
+  birds that died. The student sets who lives and who breeds and reads the change off as the outcome. No sentence,
+  tip or label makes growth, drift or selection the subject of an active verb.
+
+The examples JM chose already carry the first thread (the films are like the book because they were copied from
+it; a son is like his father; two species under one sky): **keep his examples and datasets**; rebuild the
+interactives around them. The cells below are the coordinator's reading of the arc, for JM to correct.
+
+| # | The question | The student sees | Statistics and chart built | Data (kept) | Hands on |
 |---|---|---|---|---|---|
-| 1 | **Variation.** Individuals in a population differ, and for most traits the differences pile into the same shape, because many small causes add up | builds a trait from many small either/or contributions and watches the bell appear; then real birds | dot strip → histogram; centre, spread; one number as a prediction, and its typical miss | Daphne Major finches (`finch_individuals`), NHANES heights | the histogram; "typical miss"; many small causes → 9 E, 14 C (many loci) |
-| 2 | **A sample is not the population.** Catch a few birds and the average wobbles; the fewer caught, the more it wobbles. A real difference has to be bigger than the wobble | resamples; asks whether the 1978 birds (after the drought) belong with the 1976 birds | the sample fan; two histograms; overlap; bigger sample, narrower fan | finches before/after 1977; NHANES/NBA kept as the obvious case | sampling wobble → drift in 10 ("random sampling error, inherited and compounded") |
-| 3 | **A trait tracks something.** Beak depth with body size, with year; subtract the trend and look at what is left | drags a line through a scatter; reads the leftovers; a second cause shows up in them | scatter, line, leftovers; a group as a second number | finches (individuals; 40-year record), `kids_growth` | the line and its leftovers → 4, 5, 8, 13 |
-| 4 | **Is the change real?** A trend through few points could be many trends | locks in many lines that all fit; samples again and again; watches the cloud narrow | the cloud of lines; more data, tighter cloud | bighorn horn length by year (`bighorn_horn`), finches | the cloud → every "many runs" plot from 10 on |
-| 5 | **Two species on one island change differently.** fortis and scandens under the same weather | two lines, two clouds; when they come apart; the seed crop as the reason | two groups, two lines; a cause that acts differently on each | finches (beak, seeds) | species as separate lineages → 19-20; seeds as the cause → 7 |
-| 6 | **A population changes by births and deaths, and nothing else.** Constant rates cannot make a real record; rates that depend on something can | builds the model arrow by arrow: rain → finches; wolves → moose; crowding | a model that draws the line; typical miss; arrows as causes (DAG step 1); r and K arrive built, unnamed until used | `finch_pop`, `grant_rainfall`, `isle_royale` | births/deaths → 7, 9 E, 10, 14; the moose → 10 D, 11 D |
-| 6b | **A model that fits the past perfectly can know nothing about next year** | fits half the record, is judged on the other half; three models compared | train/test; more numbers, more ways to be wrong | finches | "predict before it is unveiled" → 7 C/D |
-| 7 | **A heritable trait sits on the arrows** (the bridge to unit 2): beak depth changes who lives, so the population's beaks change | plays a bird; builds the trait into the birth-death model; forecasts; a new species arrives and the forecast breaks | forecast with a cloud; a cause that was not in the data | `island.csv` (modelled on the Grants) | trait → births/deaths → heredity: 8, 12-14 |
+| 1 | **How alike are two individuals with nothing shared?** Many small independent causes add up to the same shape every time, so most individuals sit near the middle for no shared reason at all | adds up coin flips and watches the bell appear; real adults; one number as a prediction for a stranger; a second group the number fails on | dot strip → histogram; centre, spread; a prediction and its typical miss | coin flips, NHANES heights | the baseline of "alike by chance" for everything after; many small causes → 9 E, 14 C |
+| 2 | **Does this one belong?** A group shares a cause; a new individual either sits inside what that cause produces or does not | resamples to see what the same cause gives again; calls players from adults (easy), home fans from away fans (not) | a sample is not the population; the sample fan; two histograms and their overlap | NHANES, NBA | sampling wobble → drift in 10; "one kind or two" → 19-20 |
+| 3 | **Take out what is shared and read what is left.** One number, then one per group, then a line: each is a shared cause removed. A model fitted on one brother, tried on the other; films laid against the book they were copied from | drags a number, two numbers, a line; reads the leftovers; carries a fit from one individual to another | scatter, line, leftovers; a group as a second number | NHANES, `kids_growth` (Beren, Cyrus), LOTR quotes | the line and its leftovers → 4, 5, 8, 13; copy vs. independent → 8 |
+| 4 | **How sure is the shared pattern?** Many lines fit the same few points; whether two things differ depends on how many you looked at | locks in many lines that all fit; resamples; watches the cloud narrow; counts the quotes it takes before the films' pacing separates | the cloud of lines; more data, tighter cloud | NHANES, LOTR | the cloud → every "many runs" plot from 10 on |
+| 5 | **Two species under one sky.** Same island, same weather: where their beaks change together the cause is shared; where they come apart, something acts on one and not the other | two lines, two clouds; when they come apart; the seed crop as the cause each answers differently | two groups, two lines; a cause that acts differently on each | Daphne Major finches (beak, seeds) | species as separate lineages → 19-20; seeds → 7 |
+| 6 | **Growth is a result.** A population changes because of births and deaths and nothing else; "growth" is what is left when you subtract. Constant rates cannot make a real record; rates that depend on something can | builds the model arrow by arrow: rain → finches; wolves → moose; crowding | a model that draws the line; typical miss; arrows as causes (diagram step 1); r and K arrive built, unnamed | bunnies, `finch_pop`, `grant_rainfall`, `isle_royale` | births/deaths → 7, 9 E, 10, 14; the moose → 10 D, 11 D |
+| 6b | **Fitting the past is not knowing the cause.** A model with a number for every year matches perfectly and predicts nothing | fits half the record, is judged on the other half; three models compared | train/test; more numbers, more ways to be wrong | finches | "predict before it is unveiled" → 7 C/D |
+| 7 | **Selection is a result.** Birds with different beaks leave different numbers of chicks; the change in the average beak is that difference, added up, and passed on | plays a bird; puts the trait on the birth and death arrows; hands chicks their parents' beaks; forecasts; a newcomer species breaks the forecast | forecast with a cloud; a cause that was not in the data | `island.csv` (modelled on the Grants) | differential reproduction of a heritable trait → 8 (why a child is like its parent), 10 (the same with no trait), 12-14 |
+
+### Added text is red (JM, 2026-11-13)
+
+*"This is a first round update pass, so I intend to edit them intensively later. Let's color code any added text as
+red, so I can easily review it."*
+
+- Any on-screen words a session adds or rewrites in this pass (a voice line, a tip, a label, a task, a banner, a
+  button) are wrapped in `<span class="added">…</span>` (or carry `class="added"` on their own element).
+  `app/assets/hover.css`, which every page loads, colours `.added` bright red (`#e8000b`, not the palette's accent).
+  Words that were only moved, or cut, are not marked.
+- Words drawn on a canvas cannot carry a class: draw new or changed canvas text in `#e8000b` through one constant,
+  `const ADDED = "#e8000b"`, so one search finds them all.
+- A wholly rewritten lesson is not all red: JM's kept sentences stay ink; everything else on the page is red.
+- Each overhaul doc lists the stages where red text sits. Removing the colour later is one CSS rule and one constant.
 
 ### Lessons 8-26: what each already is (do not change the phenomenon)
 
