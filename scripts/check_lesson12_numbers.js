@@ -29,8 +29,8 @@ const { spawn, spawnSync } = require("child_process");
 const fs = require("fs"), path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
-const PORT = 8793;
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const PORT = +process.env.PORT || 8793;
+const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const INNER = `
 const L=[], say=s=>L.push(s);

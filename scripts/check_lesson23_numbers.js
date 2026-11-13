@@ -26,7 +26,7 @@ const { spawn, spawnSync } = require("child_process");
 const fs = require("fs"), path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8797;
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const CANVAS_IDS = ["A_tree", "A_time", "A_split", "A_tpic", "B_tree", "B_time", "B_split", "B_tpic", "C_tree", "C_time", "C_split", "C_tpic"];
 
 const INNER = `

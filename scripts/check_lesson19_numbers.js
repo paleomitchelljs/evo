@@ -65,7 +65,7 @@ const fs = require("fs"), path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8799;
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const CANVAS_IDS = ["A_board", "A_genes", "A_time", "B_board", "B_genes", "B_time", "B_surf", "B_tpic", "B_food", "C_board", "C_time", "C_dmi", "C_grid", "C_tpic", "D_board", "D_genes", "D_time", "D_fit", "D_got", "D_tpic"];
 const INNER = `

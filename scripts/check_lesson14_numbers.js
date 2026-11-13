@@ -70,7 +70,7 @@ const fs = require("fs"), path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8795;   /* PORT=8796 ... lets stages run side by side */
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 const ONLY = process.argv.slice(2).filter(a => /^[ABCD]$/.test(a));
 
 const INNER = `

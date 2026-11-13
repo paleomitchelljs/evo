@@ -99,7 +99,7 @@ const fs = require("fs"), path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
 const PORT = +process.env.PORT || 8797;
-const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+const CHROME = process.env.CHROME || "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const INNER = `
 const L=[], say=s=>L.push(s);
