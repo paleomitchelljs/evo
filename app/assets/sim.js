@@ -49,16 +49,42 @@ function makeNormal(rng) {
   };
 }
 
-/* setupCanvas: 19/22 copies agreed; 2 variants in the wild, majority taken */
+/* setupCanvas: sizes a canvas to the room its panel gives it, never wider than the width its markup declares.
+ * Height stays as declared, so nothing is squashed; a draw function written against the returned W and H
+ * re-lays-out. (Until 2026-11 this pinned the declared width, so a plot declared 680 wide spilled out of a
+ * 500-wide column: REVISIONS_PLANNED row 4, PROPOSED_FIXES item 3. The measuring version was lesson 10's.)
+ * The measurement is cached per canvas and dropped on a window resize; a canvas in a hidden panel measures
+ * nothing and falls back to the declared width without caching it. A page that declares its own
+ * `function setupCanvas` after this file loads replaces this one, as most still do. */
+var __FIT_EPOCH = 0;
+window.addEventListener("resize", function () { __FIT_EPOCH++; });
 function setupCanvas(canvas) {
-  // Cache the original CSS size on first call so repeated redraws on retina
+  // Cache the declared CSS size on first call so repeated redraws on retina
   // displays do not compound the dpr scaling and inflate the backing store.
   const dpr = window.devicePixelRatio || 1;
   if (!canvas.dataset.cssW) {
     canvas.dataset.cssW = String(canvas.width);
     canvas.dataset.cssH = String(canvas.height);
   }
-  const cssW = +canvas.dataset.cssW, cssH = +canvas.dataset.cssH;
+  const declW = +canvas.dataset.cssW, cssH = +canvas.dataset.cssH;
+  let cssW;
+  if (canvas.dataset.fitW && canvas.dataset.fitEpoch === String(__FIT_EPOCH)) {
+    cssW = +canvas.dataset.fitW;
+  } else {
+    const host = canvas.parentElement;
+    let room = 0;
+    if (host) {
+      const cs = getComputedStyle(host);
+      room = host.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0);
+    }
+    if (room > 60) {
+      cssW = Math.round(Math.min(room, declW));
+      canvas.dataset.fitW = String(cssW);
+      canvas.dataset.fitEpoch = String(__FIT_EPOCH);
+    } else {
+      cssW = declW;           // not laid out yet; do not cache this
+    }
+  }
   canvas.width  = cssW * dpr;
   canvas.height = cssH * dpr;
   canvas.style.width  = cssW + "px";
@@ -146,9 +172,16 @@ function highlightByDataLine(codeId, key) {
  * accidental.
  * ========================================================================= */
 
-/* One 32-bit draw per page load. Everything else on the page hangs off it, so
+/* One 32-bit draw per page load (or ?seed=N). Everything else on the page hangs off it, so
  * a single value is all that separates one student's copy from another's. */
 var PAGE_SEED_BASE = (function () {
+  /* ?seed=N in the page's address forces the base, so a check that failed, or a page someone describes, can be
+     replayed: every draw on the page hangs off this one number (PROPOSED_FIXES item 1, 2026-11). Without it the
+     page is random across loads, fixed within one. The base is readable as window.PAGE_SEED_BASE. */
+  try {
+    const m = /[?&]seed=(\d+)(?:&|#|$)/.exec(window.location.search || "");
+    if (m) { const n = Number(m[1]) >>> 0; if (n) return n; }
+  } catch (e) { /* no location (a worker, a test harness) -- fall through */ }
   try {
     const b = new Uint32Array(1);
     (window.crypto || window.msCrypto).getRandomValues(b);
