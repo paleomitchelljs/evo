@@ -18,3 +18,11 @@ Base drawings and their licences are in `base/`.
 Sources behind the content: Small et al. 1992 (eve stripe 2); Wellik & Capecchi 2003
 and Burke et al. 1995 (Hox10, Hox11, Hoxc6 boundary); Lynch et al. 2011 (MER20) and
 Dunn-Fletcher et al. 2018 (THE1B and CRH); syncytin-1 is ERVW-1, syncytin-2 is ERVFRD-1.
+
+# Bird morphospace
+
+`bird_morphospace.png` (labelled) and `bird_morphospace_plain.png`: wing length against
+tarsus length, log axes, for 11,004 species in AVONET (Tobias et al. 2022, CC BY 4.0).
+The shaded box spans the observed range on each axis (theoretical); the dots are the
+species that exist (realized). Kiwis are left out: AVONET codes their wing as 0.1 mm.
+Rebuild with `python3 scripts/make_bird_morphospace.py`.
