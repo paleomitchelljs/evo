@@ -21,8 +21,12 @@ Dunn-Fletcher et al. 2018 (THE1B and CRH); syncytin-1 is ERVW-1, syncytin-2 is E
 
 # Bird morphospace
 
-`bird_morphospace.png` (labelled) and `bird_morphospace_plain.png`: wing length against
-tarsus length, log axes, for 11,004 species in AVONET (Tobias et al. 2022, CC BY 4.0).
-The shaded box spans the observed range on each axis (theoretical); the dots are the
-species that exist (realized). Kiwis are left out: AVONET codes their wing as 0.1 mm.
-Rebuild with `python3 scripts/make_bird_morphospace.py`.
+`bird_morphospace.png`: wing length against tarsus length, log axes, for 11,004 species in
+AVONET (Tobias et al. 2022, CC BY 4.0), with PhyloPic silhouettes beside nine species
+(ostrich, emu, albatross, frigatebird, bee hummingbird, swift, stilt, flamingo, emperor
+penguin). `bird_morphospace_plain.png`: the dots alone. Kiwis are left out: AVONET codes
+their wing as 0.1 mm.
+
+Silhouettes are in `base/phylopic/` with `credits.json`. All are public domain except the
+stilt (Edwin Price, CC BY 4.0), credited at the foot of the figure.
+Rebuild: `python3 -I scripts/fetch_phylopic_birds.py`, then `python3 scripts/make_bird_morphospace.py`.
