@@ -529,3 +529,23 @@ consumption.
   - `data/clean/lct_scan.json` — 21 windows of 200 kb (sum of 2pq per kb, CEU, YRI, ratio); three distant 500 kb background stretches (120.0, 133.0, 139.5 Mb; ratios 0.67, 0.75, 0.86); the site's alleles and 100 marker SNPs (one per 40 kb bin, YRI minor allele frequency ≥ 0.2) for all 198 CEU haplotypes. 25 KB.
 - **Cleaning script.** `scripts/make_lct_scan.py` (streams the region; ~15 s).
 - **Redistribution.** Derived summary and a 100-marker haplotype excerpt of open data.
+
+## Campione & Evans (2012) — humerus and femur of living quadrupeds
+
+- **Citation.** Campione, N. E. & Evans, D. C. (2012). A universal scaling
+  relationship between body mass and proximal limb bone dimensions in
+  quadrupedal terrestrial tetrapods. *BMC Biology* 10: 60.
+  doi:10.1186/1741-7007-10-60 (CC BY 2.0).
+- **URL / DOI.** Shipped as `extants` in the MASSTIMATE R package
+  (Campione; GPL >= 2), CRAN archive
+  <https://cran.r-project.org/src/contrib/Archive/MASSTIMATE/MASSTIMATE_2.0-1.tar.gz>
+  (archived 2026-10-12), file `MASSTIMATE/data/extants.csv`.
+- **What it is.** One museum specimen per species, 245 species: 198
+  mammals in eight groups and 47 reptiles (turtles, lizards, crocodylians).
+  Body mass (g), humerus and femur length and circumference (mm). 231 have
+  both lengths. **Quadrupedal terrestrial species only** by design: no bats,
+  no birds, no humans, so the sample itself trims the realized space.
+- **Used in.** `export/limb_morphospace.png` (lecture figure).
+- **Clean derivative.** `data/clean/campione_evans_limbs.csv` (CSV only);
+  `scripts/make_campione_limbs.py`.
+- **Redistribution.** CC BY data; the cleaned CSV lives in the repo.

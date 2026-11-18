@@ -2,7 +2,7 @@
 
 Reads data/clean/avonet_birds.csv (Tobias et al. 2022, CC BY 4.0).
 Writes export/bird_morphospace.png (PhyloPic silhouettes; fetch them with
-scripts/fetch_phylopic_birds.py) and export/bird_morphospace_plain.png.
+scripts/fetch_phylopic.py) and export/bird_morphospace_plain.png.
 Kiwis (Apteryx) are dropped: AVONET codes their wing as 0.1 mm.
 """
 import csv

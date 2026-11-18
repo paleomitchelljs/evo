@@ -29,4 +29,17 @@ their wing as 0.1 mm.
 
 Silhouettes are in `base/phylopic/` with `credits.json`. All are public domain except the
 stilt (Edwin Price, CC BY 4.0), credited at the foot of the figure.
-Rebuild: `python3 -I scripts/fetch_phylopic_birds.py`, then `python3 scripts/make_bird_morphospace.py`.
+Rebuild: `python3 -I scripts/fetch_phylopic.py birds`, then `python3 scripts/make_bird_morphospace.py`.
+
+# Limb morphospace (mammals and reptiles)
+
+`limb_morphospace.png`: humerus length against femur length, log axes, for 231 living
+quadrupeds (Campione & Evans 2012, BMC Biology, CC BY 2.0; one specimen per species,
+via the MASSTIMATE R package). Silhouettes: African elephant, orangutan, red kangaroo,
+Komodo dragon, brown fur seal, gopher tortoise, kangaroo rat, meadow vole.
+`limb_morphospace_plain.png`: the dots alone. The source sampled quadrupedal land animals
+only (no bats, birds or people), so part of the empty space is the sample, not the animals.
+Two silhouettes are a congener of the plotted species: Gopherus agassizii for the gopher
+tortoise, Dipodomys merriami for Ord's kangaroo rat. All silhouettes are public domain
+(`base/phylopic_tetrapods/credits.json`).
+Rebuild: `python3 -I scripts/fetch_phylopic.py tetrapods`, then `python3 scripts/make_limb_morphospace.py`.
