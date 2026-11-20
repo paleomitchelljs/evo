@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIO 202 — Wiring</title>
+<link rel="stylesheet" href="../assets/hover.css">
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent2: #2f6b8f; --rule: #e2e0d9; --box: #f3f1ea;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 12px 22px; border-bottom: 1px solid var(--rule); background: var(--panel); display: flex; align-items: baseline; gap: 16px; }
+  header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: auto; }
+  main { max-width: 1240px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  .grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
+  .panel h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+
+  .levelhead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+  .levelhead h2 { margin: 0; font-size: 17px; }
+  .levelhead .goal { color: var(--muted); font-size: 13px; }
+  .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0 8px; }
+  .btn { padding: 6px 12px; border: 1px solid var(--rule); background: #f4f2ec; border-radius: 6px; cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--ink); }
+  .btn:hover:not(:disabled) { border-color: var(--accent2); }
+  .btn.primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .sel { display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--muted); }
+  .sel[hidden] { display: none; }
+  .sel b { color: var(--ink); font-size: 15px; min-width: 1.2em; text-align: center; font-variant-numeric: tabular-nums; }
+  .count { margin-left: auto; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .board { border: 1px solid var(--rule); border-radius: 8px; background: #fdfcf9; }
+  svg#svg { display: block; width: 100%; height: auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .flash { min-height: 1.4em; font-size: 12.5px; color: var(--accent); margin-top: 6px; }
+
+  ol.levels { list-style: none; margin: 0; padding: 0; }
+  ol.levels li { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  ol.levels li:hover { background: var(--box); }
+  ol.levels li.on { background: var(--ink); color: #fff; }
+  ol.levels li .n { width: 1.6em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  ol.levels li.on .n { color: #c9c6bd; }
+  ol.levels li .ok { margin-left: auto; color: var(--accent2); font-weight: 700; }
+  ol.levels li.on .ok { color: #9cc3dc; }
+
+  table.tt { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; width: 100%; }
+  table.tt th { font-weight: 600; color: var(--muted); font-size: 11.5px; padding: 3px 6px; border-bottom: 1px solid var(--rule); text-align: center; }
+  table.tt th.grp { border-bottom: 0; padding-bottom: 0; }
+  table.tt td { text-align: center; padding: 3px 6px; cursor: pointer; }
+  table.tt tr:hover td { background: var(--box); }
+  table.tt tr.cur td { background: #e8eef2; }
+  table.tt td.sep, table.tt th.sep { border-left: 1px solid var(--rule); }
+  table.tt td.bad { color: var(--accent); font-weight: 700; }
+  table.tt td.good { color: var(--accent2); font-weight: 700; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--muted); vertical-align: -1px; }
+  .dot.on { background: var(--ink); border-color: var(--ink); }
+
+  .solved { margin-top: 10px; padding: 10px 12px; border-radius: 6px; background: #e8eef2; border-left: 3px solid var(--accent2); font-size: 13px; }
+  .solved[hidden] { display: none; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Wiring</h1>
+<a class="back" href="../../index.html">all activities</a>
+</header>
+
+<main>
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <div class="levelhead"><h2 id="lvName"></h2><span class="goal" id="lvGoal"></span></div>
+        <div class="tools">
+          <button class="btn primary" id="addBtn">+ Neuron</button>
+          <span class="sel" id="selBox" hidden>
+            <span class="info">threshold<span class="tip">
+              <span>A neuron fires when the number of its excitatory inputs that are firing, minus the number of its inhibitory inputs that are firing, reaches this number.</span>
+              <span>Set to 0, it fires with no input at all, until something holds it down.</span>
+            </span></span>
+            <button class="btn" id="thDn">−</button><b id="thVal">1</b><button class="btn" id="thUp">+</button>
+            <button class="btn" id="delBtn">Remove</button>
+          </span>
+          <span class="count" id="count"></span>
+        </div>
+        <div class="board">
+          <span class="info corner"><span class="tip">
+            <span>Sensors on the left fire while their stimulus is there. Click one to switch it on or off.</span>
+            <span>Muscles on the right contract while the one neuron wired into them fires.</span>
+            <span>Drag from the dot on the right edge of a sensor or neuron onto a neuron or a muscle to connect them. A new connection excites (arrow). Click it once to make it inhibit (bar); click again to remove it.</span>
+            <span>Click a neuron to set its threshold or remove it; drag it to move it.</span>
+            <span>Every cell is either firing (filled) or silent (open), and signals run one way, out of the dot and into the next cell. A wire that would loop back is refused.</span>
+          </span></span>
+          <svg id="svg" viewBox="0 0 800 460" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+        <div class="flash" id="flash"></div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h3 class="info">Every combination<span class="tip">
+          <span>One row for each way the stimuli can be on (●) or off (○). For each muscle, the column on the left is what the animal should do; the one on the right is what your wiring does.</span>
+          <span>Click a row to set the sensors to it.</span>
+        </span></h3>
+        <table class="tt" id="tt"></table>
+        <div class="solved" id="solved" hidden></div>
+      </div>
+      <div class="panel">
+        <h3>Circuits</h3>
+        <ol class="levels" id="levels"></ol>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+// ============================================================================
+// Levels. want(s) takes the sensor states (0/1) and returns the wanted muscle
+// states. par is the fewest neurons known to do it.
+// ============================================================================
+const LEVELS = [
+  { id: "reflex", name: "Pull back",          goal: "Pull the foot back when it is touched.",
+    sensors: ["touch"], muscles: ["withdraw"], want: s => [s[0]], par: 1 },
+  { id: "either", name: "Either one",         goal: "Pull back from a touch or from heat.",
+    sensors: ["touch", "heat"], muscles: ["withdraw"], want: s => [s[0] | s[1]], par: 1 },
+  { id: "both",   name: "Both at once",       goal: "Strike only when prey can be smelled and seen.",
+    sensors: ["smell", "sight"], muscles: ["strike"], want: s => [s[0] & s[1]], par: 1 },
+  { id: "unless", name: "Unless",             goal: "Feed on food, but not while a shadow passes over.",
+    sensors: ["food", "shadow"], muscles: ["feed"], want: s => [s[0] & !s[1]], par: 1 },
+  { id: "tonic",  name: "Until touched",      goal: "Keep swimming; stop when touched.",
+    sensors: ["touch"], muscles: ["swim"], want: s => [+!s[0]], par: 1 },
+  { id: "two3",   name: "Two of three",       goal: "Bite when at least two whiskers are touched.",
+    sensors: ["left", "middle", "right"], muscles: ["bite"], want: s => [+(s[0] + s[1] + s[2] >= 2)], par: 1 },
+  { id: "pair",   name: "Opposing muscles",   goal: "A touch bends the leg; otherwise it is held straight. Never both.",
+    sensors: ["touch"], muscles: ["bend", "straighten"], want: s => [s[0], +!s[0]], par: 2 },
+  { id: "turn",   name: "Turn toward",        goal: "Turn toward a sound on one side. Sound on both sides: hold still.",
+    sensors: ["left ear", "right ear"], muscles: ["turn left", "turn right"], want: s => [s[0] & !s[1], s[1] & !s[0]], par: 2 },
+  { id: "xor",    name: "One side, not both", goal: "Flick the tail when one side is touched, but not when both are.",
+    sensors: ["left", "right"], muscles: ["flick"], want: s => [s[0] ^ s[1]], par: 3 },
+  { id: "hawk",   name: "Feed, flee or freeze", goal: "Feed when there is food and no hawk. With a hawk: flee if there is cover, freeze if not.",
+    sensors: ["food", "hawk", "cover"], muscles: ["feed", "flee", "freeze"], want: s => [s[0] & !s[1], s[1] & s[2], s[1] & !s[2]], par: 3 },
+  { id: "free",   name: "Free build",         goal: "No target. Build anything.",
+    sensors: ["A", "B", "C"], muscles: ["X", "Y", "Z"], want: null },
+];
+
+// ============================================================================
+// Geometry
+// ============================================================================
+const W = 800, H = 460, R = 24, SX = 72, MX = 728, BW = 104, BH = 40;
+const rowY = (i, n) => H / 2 + (i - (n - 1) / 2) * Math.min(110, (H - 80) / Math.max(1, n - 1 || 1));
+
+// ============================================================================
+// State, kept per level, saved in this browser
+// ============================================================================
+const KEY = "bio202.wiring.v1";
+let saved = { solved: {}, boards: {} };
+try { saved = Object.assign(saved, JSON.parse(localStorage.getItem(KEY) || "{}")); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} };
+
+let L, nodes, edges, input, selId = null, drag = null, nid = 0;
+
+function load(i) {
+  L = LEVELS[i]; selId = null; drag = null;
+  nodes = [];
+  L.sensors.forEach((nm, k) => nodes.push({ id: "s" + k, kind: "s", name: nm, x: SX, y: rowY(k, L.sensors.length) }));
+  L.muscles.forEach((nm, k) => nodes.push({ id: "m" + k, kind: "m", name: nm, x: MX, y: rowY(k, L.muscles.length) }));
+  edges = [];
+  const b = saved.boards[L.id];
+  if (b) { for (const n of b.nodes) nodes.push({ ...n, kind: "n" }); edges = b.edges.map(e => ({ ...e })); }
+  nid = nodes.reduce((m, n) => n.kind === "n" ? Math.max(m, +n.id.slice(1) + 1) : m, 0);
+  input = L.sensors.map(() => 0);
+  saved.last = i; save();
+  render();
+}
+function store() {
+  saved.boards[L.id] = { nodes: nodes.filter(n => n.kind === "n").map(({ id, x, y, th }) => ({ id, x, y, th })), edges };
+  save();
+}
+const node = id => nodes.find(n => n.id === id);
+
+// ============================================================================
+// Firing: one pass, in the direction the wires run
+// ============================================================================
+function evaluate(s) {
+  const val = {};
+  const v = id => {
+    if (id in val) return val[id];
+    const n = node(id);
+    if (n.kind === "s") return (val[id] = s[+id.slice(1)]);
+    const ins = edges.filter(e => e.to === id);
+    if (n.kind === "m") return (val[id] = ins.length ? v(ins[0].from) : 0);
+    let sum = 0; for (const e of ins) sum += e.w * v(e.from);
+    return (val[id] = sum >= n.th ? 1 : 0);
+  };
+  for (const n of nodes) v(n.id);
+  return val;
+}
+function reaches(a, b) {           // can a signal leaving a get to b?
+  const seen = new Set(), stack = [a];
+  while (stack.length) { const x = stack.pop(); if (x === b) return true; if (seen.has(x)) continue; seen.add(x); for (const e of edges) if (e.from === x) stack.push(e.to); }
+  return false;
+}
+
+// ============================================================================
+// Drawing
+// ============================================================================
+const svg = document.getElementById("svg");
+const NS = "http://www.w3.org/2000/svg";
+const INK = "#1d1d1b", MUT = "#6b6b68", EXC = "#2f6b8f", INH = "#b23a48", RULE = "#c9c6bd";
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+function outPort(n) { return n.kind === "s" ? [n.x + BW / 2, n.y] : [n.x + R, n.y]; }
+function inPoint(n, from) {
+  if (n.kind === "m") return [n.x - BW / 2, n.y];
+  const a = Math.atan2(n.y - from[1], n.x - (from[0] + 50));
+  return [n.x - (R + 2) * Math.cos(a), n.y - (R + 2) * Math.sin(a)];
+}
+function wirePath(p, q) {
+  const dx = Math.max(40, Math.abs(q[0] - p[0]) * 0.45);
+  return { d: `M${p[0]},${p[1]} C${p[0] + dx},${p[1]} ${q[0] - dx * .6},${q[1]} ${q[0]},${q[1]}`, c2: [q[0] - dx * .6, q[1]] };
+}
+function endMark(q, c2, w, col) {
+  const a = Math.atan2(q[1] - c2[1], q[0] - c2[0]), ca = Math.cos(a), sa = Math.sin(a);
+  if (w > 0) {
+    const bx = q[0] - 11 * ca, by = q[1] - 11 * sa;
+    return `<path d="M${q[0]},${q[1]} L${bx - 6 * sa},${by + 6 * ca} L${bx + 6 * sa},${by - 6 * ca}Z" fill="${col}"/>`;
+  }
+  const bx = q[0] - 2 * ca, by = q[1] - 2 * sa;
+  return `<path d="M${bx - 8 * sa},${by + 8 * ca} L${bx + 8 * sa},${by - 8 * ca}" stroke="${col}" stroke-width="4" stroke-linecap="round"/>`;
+}
+
+function render() {
+  const val = evaluate(input), want = L.want ? L.want(input) : null;
+  let h = "";
+  // wires
+  edges.forEach((e, i) => {
+    const a = node(e.from), b = node(e.to), p = outPort(a), q = inPoint(b, p), { d, c2 } = wirePath(p, q);
+    const on = val[e.from], col = e.w > 0 ? EXC : INH;
+    h += `<g data-role="edge" data-i="${i}" style="cursor:pointer">
+      <path d="${d}" fill="none" stroke="transparent" stroke-width="14"/>
+      <path d="${d}" fill="none" stroke="${col}" stroke-width="${on ? 3.2 : 1.8}" opacity="${on ? 1 : .45}" ${on ? "" : 'stroke-dasharray="5 4"'}/>
+      <g opacity="${on ? 1 : .5}">${endMark(q, c2, e.w, col)}</g></g>`;
+  });
+  if (drag && drag.type === "wire") {
+    const p = outPort(node(drag.from)), { d } = wirePath(p, [drag.x, drag.y]);
+    h += `<path d="${d}" fill="none" stroke="${INK}" stroke-width="1.6" stroke-dasharray="4 3" pointer-events="none"/>`;
+  }
+  // cells
+  for (const n of nodes) {
+    const on = val[n.id];
+    if (n.kind === "s") {
+      h += `<g data-role="body" data-id="${n.id}" style="cursor:pointer">
+        <rect x="${n.x - BW / 2}" y="${n.y - BH / 2}" width="${BW}" height="${BH}" rx="20" fill="${on ? INK : "#fff"}" stroke="${INK}" stroke-width="1.5"/>
+        <text x="${n.x}" y="${n.y + 4.5}" text-anchor="middle" font-size="13" font-weight="600" fill="${on ? "#fff" : INK}">${esc(n.name)}</text></g>`;
+    } else if (n.kind === "m") {
+      const ok = want ? (want[+n.id.slice(1)] ? 1 : 0) === on : true;
+      h += `<g data-role="body" data-id="${n.id}">
+        <rect x="${n.x - BW / 2}" y="${n.y - BH / 2}" width="${BW}" height="${BH}" rx="6" fill="${on ? INK : "#fff"}" stroke="${INK}" stroke-width="1.5"/>
+        <text x="${n.x}" y="${n.y + 4.5}" text-anchor="middle" font-size="13" font-weight="600" fill="${on ? "#fff" : INK}">${esc(n.name)}</text>
+        ${want ? `<text x="${n.x}" y="${n.y + BH / 2 + 15}" text-anchor="middle" font-size="11" fill="${ok ? MUT : INH}" font-weight="${ok ? 400 : 700}">${want[+n.id.slice(1)] ? "should contract" : "should rest"}</text>` : ""}</g>`;
+    } else {
+      const sel = n.id === selId;
+      h += `<g data-role="body" data-id="${n.id}" style="cursor:grab">
+        ${sel ? `<circle cx="${n.x}" cy="${n.y}" r="${R + 6}" fill="none" stroke="${EXC}" stroke-width="2" stroke-dasharray="3 3"/>` : ""}
+        <circle cx="${n.x}" cy="${n.y}" r="${R}" fill="${on ? INK : "#fff"}" stroke="${INK}" stroke-width="1.6"/>
+        <text x="${n.x}" y="${n.y + 6}" text-anchor="middle" font-size="17" font-weight="700" fill="${on ? "#fff" : INK}">${n.th}</text></g>`;
+    }
+    if (n.kind !== "m") {
+      const [px, py] = outPort(n);
+      h += `<g data-role="port" data-id="${n.id}" style="cursor:crosshair"><circle cx="${px}" cy="${py}" r="13" fill="transparent"/>
+        <circle cx="${px}" cy="${py}" r="5.5" fill="#fff" stroke="${INK}" stroke-width="1.6"/></g>`;
+    }
+  }
+  svg.innerHTML = h;
+  drawSide();
+}
+
+function drawSide() {
+  const nN = nodes.filter(n => n.kind === "n").length;
+  document.getElementById("lvName").textContent = L.name;
+  document.getElementById("lvGoal").textContent = L.goal;
+  document.getElementById("count").textContent = `${nN} neuron${nN === 1 ? "" : "s"}`;
+  const sn = node(selId);
+  document.getElementById("selBox").hidden = !sn;
+  if (sn) document.getElementById("thVal").textContent = sn.th;
+
+  // every combination
+  const ns = L.sensors.length, rows = 1 << ns, tt = document.getElementById("tt");
+  let allOk = !!L.want, html = `<tr><th class="grp" colspan="${ns}"></th>` +
+    L.muscles.map(m => `<th class="grp sep" colspan="${L.want ? 2 : 1}">${esc(m)}</th>`).join("") + `</tr><tr>` +
+    L.sensors.map(s => `<th>${esc(s)}</th>`).join("") +
+    L.muscles.map(() => L.want ? `<th class="sep">should</th><th>yours</th>` : `<th class="sep">yours</th>`).join("") + `</tr>`;
+  const cur = input.reduce((a, b, i) => a | (b << (ns - 1 - i)), 0);
+  for (let r = 0; r < rows; r++) {
+    const s = L.sensors.map((_, i) => (r >> (ns - 1 - i)) & 1), v = evaluate(s), w = L.want ? L.want(s) : null;
+    const dot = b => `<span class="dot ${b ? "on" : ""}"></span>`;
+    html += `<tr data-r="${r}" class="${r === cur ? "cur" : ""}">` + s.map(b => `<td>${dot(b)}</td>`).join("");
+    L.muscles.forEach((_, k) => {
+      const got = v["m" + k];
+      if (w) { const ok = (w[k] ? 1 : 0) === got; allOk = allOk && ok; html += `<td class="sep">${dot(w[k])}</td><td class="${ok ? "good" : "bad"}">${dot(got)} ${ok ? "✓" : "✗"}</td>`; }
+      else html += `<td class="sep">${dot(got)}</td>`;
+    });
+    html += `</tr>`;
+  }
+  tt.innerHTML = html;
+  for (const tr of tt.querySelectorAll("tr[data-r]")) tr.addEventListener("click", () => { const r = +tr.dataset.r; input = L.sensors.map((_, i) => (r >> (ns - 1 - i)) & 1); render(); });
+
+  const box = document.getElementById("solved");
+  if (allOk) {
+    const best = saved.solved[L.id];
+    if (!best || nN < best) { saved.solved[L.id] = nN; save(); }
+    box.hidden = false;
+    box.innerHTML = `<b>Solved</b> with ${nN} neuron${nN === 1 ? "" : "s"}.` + (nN > L.par ? ` It can be done with ${L.par}.` : "") +
+      (LEVELS.indexOf(L) < LEVELS.length - 1 ? ` <button class="btn primary" id="nextLv" style="margin-left:8px">Next circuit</button>` : "");
+    const nb = document.getElementById("nextLv"); if (nb) nb.addEventListener("click", () => load(LEVELS.indexOf(L) + 1));
+  } else box.hidden = true;
+
+  document.getElementById("levels").innerHTML = LEVELS.map((lv, i) =>
+    `<li data-i="${i}" class="${lv === L ? "on" : ""}"><span class="n">${i + 1}</span>${esc(lv.name)}` +
+    `<span class="ok">${saved.solved[lv.id] != null ? (saved.solved[lv.id] <= lv.par ? "✓✓" : "✓") : ""}</span></li>`).join("");
+  for (const li of document.querySelectorAll("#levels li")) li.addEventListener("click", () => load(+li.dataset.i));
+}
+
+let ft; function flash(t) { const f = document.getElementById("flash"); f.textContent = t; clearTimeout(ft); ft = setTimeout(() => f.textContent = "", 2600); }
+
+// ============================================================================
+// Editing
+// ============================================================================
+function pt(e) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()); }
+function hit(p) {
+  for (const n of nodes) {
+    if (n.kind === "n" && Math.hypot(p.x - n.x, p.y - n.y) < R + 10) return n;
+    if (n.kind !== "n" && Math.abs(p.x - n.x) < BW / 2 + 8 && Math.abs(p.y - n.y) < BH / 2 + 8) return n;
+  }
+  return null;
+}
+function connect(from, to) {
+  if (!to || to.id === from) return;
+  if (to.kind === "s") return flash("A sensor only sends; nothing can wire into it.");
+  if (to.kind === "m" && node(from).kind === "s") return flash("A muscle only answers to a neuron. Put one in between.");
+  if (edges.some(e => e.from === from && e.to === to.id)) return;
+  if (reaches(to.id, from)) return flash("Refused: that wire would carry a signal back the way it came.");
+  if (to.kind === "m") edges = edges.filter(e => e.to !== to.id);     // one neuron per muscle
+  edges.push({ from, to: to.id, w: 1 });
+  store();
+}
+function freeSpot() {
+  for (let k = 0; k < 60; k++) {
+    const x = 250 + (k % 4) * 100, y = 90 + Math.floor(k / 4) % 4 * 95 + (k >= 16 ? 45 : 0);
+    if (!nodes.some(n => Math.hypot(n.x - x, n.y - y) < 2 * R + 20)) return [x, y];
+  }
+  return [W / 2, H / 2];
+}
+
+svg.addEventListener("pointerdown", e => {
+  const t = e.target.closest("[data-role]"), p = pt(e);
+  if (!t) { selId = null; render(); return; }
+  const role = t.dataset.role;
+  if (role === "port") drag = { type: "wire", from: t.dataset.id, x: p.x, y: p.y };
+  else if (role === "body") { const n = node(t.dataset.id); drag = { type: "move", id: n.id, dx: p.x - n.x, dy: p.y - n.y, sx: p.x, sy: p.y, moved: false }; }
+  else if (role === "edge") { const e2 = edges[+t.dataset.i]; if (e2.w > 0) e2.w = -1; else edges.splice(+t.dataset.i, 1); store(); render(); return; }
+  svg.setPointerCapture(e.pointerId); e.preventDefault();
+});
+svg.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const p = pt(e);
+  if (drag.type === "wire") { drag.x = p.x; drag.y = p.y; render(); return; }
+  if (Math.hypot(p.x - drag.sx, p.y - drag.sy) > 4) drag.moved = true;
+  const n = node(drag.id);
+  if (drag.moved && n.kind === "n") { n.x = Math.max(SX + BW / 2 + R + 10, Math.min(MX - BW / 2 - R - 10, p.x - drag.dx)); n.y = Math.max(R + 4, Math.min(H - R - 4, p.y - drag.dy)); render(); }
+});
+svg.addEventListener("pointerup", e => {
+  if (!drag) return;
+  const d = drag; drag = null;
+  if (d.type === "wire") connect(d.from, hit(pt(e)));
+  else if (!d.moved) {
+    const n = node(d.id);
+    if (n.kind === "s") input[+n.id.slice(1)] ^= 1;
+    else if (n.kind === "n") selId = n.id;
+  } else store();
+  render();
+});
+
+function setTh(dv) { const n = node(selId); if (!n) return; n.th = Math.max(0, Math.min(4, n.th + dv)); store(); render(); }
+function removeSel() { if (!selId) return; nodes = nodes.filter(n => n.id !== selId); edges = edges.filter(e => e.from !== selId && e.to !== selId); selId = null; store(); render(); }
+document.getElementById("addBtn").addEventListener("click", () => {
+  const [x, y] = freeSpot(), n = { id: "n" + nid++, kind: "n", x, y, th: 1 };
+  nodes.push(n); selId = n.id; store(); render();
+});
+document.getElementById("thUp").addEventListener("click", () => setTh(1));
+document.getElementById("thDn").addEventListener("click", () => setTh(-1));
+document.getElementById("delBtn").addEventListener("click", removeSel);
+document.addEventListener("keydown", e => {
+  if (!selId) return;
+  if (e.key === "Delete" || e.key === "Backspace") { removeSel(); e.preventDefault(); }
+  else if (e.key === "+" || e.key === "=" || e.key === "ArrowUp") { setTh(1); e.preventDefault(); }
+  else if (e.key === "-" || e.key === "ArrowDown") { setTh(-1); e.preventDefault(); }
+});
+
+load(Math.min(LEVELS.length - 1, saved.last | 0));
+</script>
+<script src="../assets/hover.js"></script>
+</body>
+</html>

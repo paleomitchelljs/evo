@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Release gate: hides this page while LOCKS.txt says it is not open yet. -->
+<script src="../assets/lock.js"></script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BIO 202 — Courtship</title>
+<link rel="stylesheet" href="../assets/hover.css">
+<style>
+  :root {
+    --bg: #fafaf7; --panel: #ffffff; --ink: #1d1d1b; --muted: #6b6b68;
+    --accent: #b23a48; --accent2: #2f6b8f; --rule: #e2e0d9; --box: #f3f1ea;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; background: var(--bg); color: var(--ink); }
+  header { padding: 12px 22px; border-bottom: 1px solid var(--rule); background: var(--panel); display: flex; align-items: baseline; gap: 16px; }
+  header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 12px; margin-left: auto; }
+  main { max-width: 1180px; margin: 0 auto; padding: 14px 18px 60px; }
+
+  nav.chapters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  nav.chapters button { font: inherit; font-size: 12.5px; padding: 6px 12px; border: 1px solid var(--rule); background: var(--panel); border-radius: 16px; cursor: pointer; color: var(--ink); }
+  nav.chapters button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  nav.chapters button b { font-weight: 700; margin-right: 5px; }
+
+  .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start; }
+  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; }
+  .panel h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  canvas { display: block; width: 100%; }
+  .veil { position: relative; }
+  .veil .note { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; background: rgba(250,250,247,.97); border-radius: 6px; }
+  .veil .note[hidden] { display: none; }
+
+  table.spec { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.spec td { padding: 4px 0; border-bottom: 1px solid var(--rule); }
+  table.spec td:last-child { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  table.spec tr:last-child td { border-bottom: 0; }
+  table.spec input[type=range] { width: 110px; vertical-align: middle; accent-color: var(--accent2); }
+  table.spec select { font: inherit; font-size: 12.5px; }
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+  .seg button { font: inherit; font-size: 12.5px; border: 0; background: var(--panel); padding: 3px 10px; cursor: pointer; }
+  .seg button.on { background: var(--ink); color: #fff; }
+
+  .act { display: flex; gap: 10px; }
+  .btn { flex: 1; padding: 10px 12px; border: 1px solid var(--rule); background: #f4f2ec; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--ink); }
+  .btn:hover:not(:disabled) { border-color: var(--accent2); }
+  .btn.primary { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .msg { min-height: 1.5em; margin-top: 8px; font-size: 13px; color: var(--muted); }
+  .msg b { color: var(--ink); }
+
+  .result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 10px; }
+  .result div { background: var(--box); border-radius: 6px; padding: 6px 8px; text-align: center; font-size: 11.5px; color: var(--muted); }
+  .result div b { display: block; font-size: 20px; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .result[hidden] { display: none; }
+
+  table.hist { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  table.hist th { text-align: right; font-weight: 600; color: var(--muted); font-size: 11.5px; padding: 3px 4px; border-bottom: 1px solid var(--rule); }
+  table.hist td { text-align: right; padding: 3px 4px; }
+  table.hist th:first-child, table.hist td:first-child { text-align: left; }
+  table.hist tr.mean td { border-top: 1px solid var(--rule); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+<h1>Courtship</h1>
+<a class="back" href="../../index.html">all activities</a>
+</header>
+
+<main>
+  <nav class="chapters" id="chapters"></nav>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <span class="info corner"><span class="tip">
+          <span>You are the bird on the left. One suitor arrives each day of the breeding season, and you either pair with it or let it go. It does not come back.</span>
+          <span>The bar under a suitor is its display, and it is honest: a display of 80 means each chick from that pairing has an 80% chance to fledge.</span>
+          <span>The row along the bottom is where your young can go. Each egg takes the colour of the bird it came from.</span>
+        </span></span>
+        <canvas id="scene" height="300"></canvas>
+      </div>
+      <div class="panel">
+        <h3 class="info">Every rule, two thousand seasons<span class="tip">
+          <span>Across: the lowest display a bird will pair with. All the way left, it pairs with everyone; to the right, it holds out for better.</span>
+          <span>Up: young fledged per season by a bird that plays that rule every time, averaged over 2000 seasons of random suitors, as a multiple of what pairing with everyone gives. Above ×1, holding out pays; below it, it costs.</span>
+          <span>The solid line is the sex you are playing; the dashed line is the other sex in the same species. The dotted line is you so far, measured the same way against the suitors you actually met.</span>
+        </span></h3>
+        <div class="veil"><canvas id="curve" height="260"></canvas><div class="note" id="curveNote">Play three seasons to open this.</div></div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="panel">
+        <h3>This species</h3>
+        <table class="spec" id="spec"></table>
+      </div>
+      <div class="panel">
+        <div class="act">
+          <button class="btn primary" id="pairBtn">Pair</button>
+          <button class="btn" id="passBtn">Let it go</button>
+        </div>
+        <div class="msg" id="msg"></div>
+        <div class="result" id="result" hidden>
+          <div class="info">You<b id="rYou">–</b><span class="tip">Young you can expect to fledge from this season's pairings: the fledging chances of every egg, added up.</span></div>
+          <div class="info">Pair with all<b id="rAll">–</b><span class="tip">What the same suitors would have given you if you had paired with every one of them, in the order they came.</span></div>
+          <div class="info">Best of these<b id="rBest">–</b><span class="tip">The most these suitors could have given you, picking with hindsight.</span></div>
+        </div>
+        <div class="act" style="margin-top:10px"><button class="btn" id="nextBtn" hidden>Next season</button></div>
+      </div>
+      <div class="panel">
+        <h3>Seasons</h3>
+        <table class="hist" id="hist"></table>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<script>
+"use strict";
+
+// ============================================================================
+// The model.
+//   A hen lays at most E eggs in a season. A nest raises at most Y young.
+//   Whoever raises the young is capped by the nest; a hen is always capped by
+//   her eggs. A cock that does not raise young has no cap at all.
+//   Each pairing fills places in the limited row, in order, until it is full.
+//   Each egg fledges with chance q, the display of the bird it came from.
+// ============================================================================
+const CH = [
+  { key: "A", name: "A hen",                    role: "F", rears: "F", E: 4, Y: 4, D: 10 },
+  { key: "B", name: "A cock, same species",     role: "M", rears: "F", E: 4, Y: 4, D: 10 },
+  { key: "C", name: "A cock that sits the nest", role: "M", rears: "M", E: 16, Y: 4, D: 10 },
+  { key: "D", name: "A hen, same species",      role: "F", rears: "M", E: 16, Y: 4, D: 10 },
+  { key: "E", name: "Any species",              role: "F", rears: "F", E: 4, Y: 4, D: 10, free: true },
+];
+for (const c of CH) { c.hist = []; c.cur = null; c.curve = null; }
+let ch = CH[0];
+
+const Q_LO = 0.10, Q_HI = 0.95;
+const rq = () => Q_LO + (Q_HI - Q_LO) * Math.random();
+
+function limits(c, role) {
+  const rF = c.rears !== "M", rM = c.rears !== "F";
+  if (role === "F") return { slots: rF ? Math.min(c.E, c.Y) : c.E, supply: rM ? c.Y : Infinity };
+  return { slots: rM ? c.Y : Infinity, supply: rF ? Math.min(c.E, c.Y) : c.E };
+}
+
+function playRule(qs, t, lim) {        // pair with every suitor at or above t, while there is room
+  let filled = 0, sum = 0;
+  for (const q of qs) {
+    if (q < t || filled >= lim.slots) continue;
+    const add = Math.min(lim.supply, lim.slots - filled);
+    filled += add; sum += add * q;
+  }
+  return sum;
+}
+const bestOf = (qs, lim) => playRule([...qs].sort((a, b) => b - a), 0, lim);
+
+function newSeason(c) {
+  c.cur = { q: Array.from({ length: c.D }, rq), day: 0, eggs: [], log: [], done: false, msg: "" };
+  c.anim = performance.now();
+}
+
+// ---- curves: the same 2000 seasons for every rule --------------------------
+const TS = Array.from({ length: 86 }, (_, i) => +(i * 0.01).toFixed(2) + 0.10);
+function buildCurve(c) {
+  const S = 2000, seasons = Array.from({ length: S }, () => Array.from({ length: c.D }, rq));
+  const out = {};
+  for (const role of ["F", "M"]) {
+    const lim = limits(c, role);
+    out[role] = TS.map(t => { let s = 0; for (const qs of seasons) s += playRule(qs, t, lim); return s / S; });
+  }
+  c.curve = out;
+}
+
+// ============================================================================
+// Drawing
+// ============================================================================
+const COL = { F: "#2f6b8f", M: "#b23a48" };          // hens blue, cocks red, everywhere on the page
+const DULL = [163, 157, 146];
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, f) => a.map((v, i) => Math.round(v + (b[i] - v) * f));
+const rgb = a => `rgb(${a.join(",")})`;
+const plumage = (sex, q) => rgb(mix(DULL, hex(COL[sex]), Math.max(0, Math.min(1, (q - Q_LO) / (Q_HI - Q_LO)))));
+const darker = (c, f) => rgb(c.match(/\d+/g).map(v => Math.round(v * (1 - f))));
+
+function fit(cv) {
+  const r = window.devicePixelRatio || 1, w = cv.clientWidth, h = +cv.getAttribute("height");
+  if (cv.width !== Math.round(w * r)) { cv.width = Math.round(w * r); cv.height = Math.round(h * r); cv.style.height = h + "px"; }
+  const g = cv.getContext("2d"); g.setTransform(r, 0, 0, r, 0, 0); g.clearRect(0, 0, w, h);
+  return [g, w, h];
+}
+
+function bird(g, x, y, s, col, dir) {
+  g.save(); g.translate(x, y); g.scale(s * dir, s);
+  g.strokeStyle = "#6b6b68"; g.lineWidth = 2.4; g.lineCap = "round";
+  g.beginPath(); g.moveTo(-4, 20); g.lineTo(-8, 44); g.lineTo(-15, 46); g.moveTo(8, 20); g.lineTo(10, 44); g.lineTo(3, 46); g.stroke();
+  g.fillStyle = darker(col, .25);
+  g.beginPath(); g.moveTo(-26, -4); g.lineTo(-62, -22); g.lineTo(-56, 8); g.closePath(); g.fill();
+  g.fillStyle = col; g.beginPath(); g.ellipse(0, 0, 34, 24, 0, 0, 7); g.fill();
+  g.fillStyle = darker(col, .18); g.beginPath(); g.ellipse(-8, -3, 21, 12, -.18, 0, 7); g.fill();
+  g.fillStyle = col; g.beginPath(); g.arc(27, -22, 15, 0, 7); g.fill();
+  g.fillStyle = "#8a7a55"; g.beginPath(); g.moveTo(39, -27); g.lineTo(56, -21); g.lineTo(39, -15); g.closePath(); g.fill();
+  g.fillStyle = "#fff"; g.beginPath(); g.arc(31, -25, 4.2, 0, 7); g.fill();
+  g.fillStyle = "#1d1d1b"; g.beginPath(); g.arc(32, -25, 2.2, 0, 7); g.fill();
+  g.restore();
+}
+
+function egg(g, x, y, fill, empty) {
+  g.beginPath(); g.ellipse(x, y, 9, 12, 0, 0, 7);
+  if (empty) { g.setLineDash([3, 3]); g.strokeStyle = "#a5a29a"; g.lineWidth = 1.3; g.stroke(); g.setLineDash([]); }
+  else { g.fillStyle = fill; g.fill(); g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 1; g.stroke(); }
+}
+
+function rowLabel(c) {
+  const lim = limits(c, c.role);
+  if (c.role === "F") return c.rears === "M" ? `Your eggs: ${c.E} to give, up to ${c.Y} into each cock's nest`
+                                            : `Your clutch: room for ${lim.slots}`;
+  return c.rears === "F" ? "Eggs you fathered: no limit" : `Your nest: room for ${lim.slots}`;
+}
+
+function drawScene() {
+  const [g, w] = fit(scene), c = ch, s = c.cur, you = c.role, them = you === "F" ? "M" : "F";
+  // days
+  const dx = Math.min(26, (w - 40) / c.D);
+  g.font = "11px -apple-system, sans-serif"; g.fillStyle = "#6b6b68"; g.textAlign = "left";
+  g.fillText("day", 14, 22);
+  for (let d = 0; d < c.D; d++) {
+    const x = 48 + d * dx, l = s.log[d];
+    g.beginPath(); g.arc(x, 18, 7, 0, 7);
+    if (l && l.paired) { g.fillStyle = plumage(them, l.q); g.fill(); }
+    else if (l) { g.strokeStyle = "#c9c6bd"; g.lineWidth = 1.2; g.stroke(); }
+    else { g.strokeStyle = d === s.day ? "#1d1d1b" : "#e2e0d9"; g.lineWidth = d === s.day ? 2 : 1.2; g.stroke(); }
+  }
+  // birds
+  const sc = Math.min(1, w / 520);
+  bird(g, w * 0.24, 132, sc, plumage(you, 0.62), 1);
+  g.fillStyle = "#6b6b68"; g.textAlign = "center"; g.fillText(you === "F" ? "you, a hen" : "you, a cock", w * 0.24, 196);
+  if (!s.done) {
+    const q = s.q[s.day], k = Math.min(1, (performance.now() - c.anim) / 380), e = 1 - Math.pow(1 - k, 3);
+    const x = w * 0.70 + (1 - e) * w * 0.35;
+    bird(g, x, 132, sc, plumage(them, q), -1);
+    const bw = 110 * sc + 20, bx = x - bw / 2, by = 192;
+    g.fillStyle = "#f3f1ea"; g.fillRect(bx, by, bw, 9);
+    g.fillStyle = plumage(them, q); g.fillRect(bx, by, bw * q, 9);
+    g.fillStyle = "#1d1d1b"; g.font = "600 12px -apple-system, sans-serif";
+    g.fillText(`display ${Math.round(q * 100)}`, x, by + 24);
+    if (k < 1) requestAnimationFrame(drawScene);
+  } else {
+    g.fillStyle = "#6b6b68"; g.font = "13px -apple-system, sans-serif";
+    g.fillText("the season is over", w * 0.70, 140);
+  }
+  // the row
+  const lim = limits(c, you), y = 262;
+  g.textAlign = "left"; g.font = "11.5px -apple-system, sans-serif"; g.fillStyle = "#6b6b68";
+  g.fillText(rowLabel(c), 14, 238);
+  const n = isFinite(lim.slots) ? lim.slots : Math.max(s.eggs.length, 0);
+  const step = Math.min(24, (w - 40) / Math.max(n, 1));
+  for (let i = 0; i < n; i++) egg(g, 24 + i * step, y, s.eggs[i] != null ? plumage(them, s.eggs[i]) : null, s.eggs[i] == null);
+  if (!isFinite(lim.slots)) {
+    g.fillStyle = "#a5a29a"; g.font = "16px -apple-system, sans-serif";
+    g.fillText(n ? "  …" : "…", 24 + n * step - (n ? 10 : 6), y + 5);
+  }
+}
+
+function drawCurve() {
+  const [g, w, h] = fit(curve), c = ch;
+  const L = 44, R = 14, T = 10, B = 34, pw = w - L - R, ph = h - T - B;
+  if (!c.curve) buildCurve(c);
+  // each sex against its own "pair with everyone" (the left end), so both read on one scale
+  const rel = { F: c.curve.F.map(v => v / c.curve.F[0]), M: c.curve.M.map(v => v / c.curve.M[0]) };
+  const ymax = Math.max(1.25, ...rel.F, ...rel.M) * 1.06;
+  const X = t => L + (t - 0.1) / 0.85 * pw, Y = v => T + ph - v / ymax * ph;
+  g.strokeStyle = "#e2e0d9"; g.lineWidth = 1; g.fillStyle = "#6b6b68"; g.font = "11px -apple-system, sans-serif";
+  g.textAlign = "right";
+  for (let v = 0; v <= ymax + 1e-9; v += 0.5) {
+    g.strokeStyle = v === 1 ? "#a5a29a" : "#e2e0d9"; g.beginPath(); g.moveTo(L, Y(v)); g.lineTo(L + pw, Y(v)); g.stroke();
+    g.fillText(v === 1 ? "×1" : "×" + v, L - 6, Y(v) + 4);
+  }
+  g.textAlign = "center";
+  for (let t = 10; t <= 90; t += 20) g.fillText(t, X(t / 100), T + ph + 15);
+  g.fillText("lowest display it will pair with", L + pw / 2, h - 3);
+  g.save(); g.translate(11, T + ph / 2); g.rotate(-Math.PI / 2); g.fillText("young, against pairing with all", 0, 0); g.restore();
+  for (const role of [c.role === "F" ? "M" : "F", c.role]) {
+    const v = rel[role], mine = role === c.role;
+    g.strokeStyle = COL[role]; g.lineWidth = mine ? 2.6 : 1.6; g.setLineDash(mine ? [] : [5, 4]); g.globalAlpha = mine ? 1 : .7;
+    g.beginPath(); TS.forEach((t, i) => i ? g.lineTo(X(t), Y(v[i])) : g.moveTo(X(t), Y(v[i]))); g.stroke();
+    g.setLineDash([]);
+    let bi = 0; v.forEach((y, i) => { if (y > v[bi] + 1e-9) bi = i; });
+    g.fillStyle = COL[role]; g.beginPath(); g.arc(X(TS[bi]), Y(v[bi]), mine ? 4.5 : 3.5, 0, 7); g.fill();
+    g.globalAlpha = 1;
+    const right = TS[bi] > 0.7, lx = X(TS[bi]) + (right ? -8 : 8);
+    g.textAlign = right ? "right" : "left"; g.font = (mine ? "600 " : "") + "11.5px -apple-system, sans-serif";
+    g.fillText(role === "F" ? "hens" : "cocks", lx, Y(v[bi]) - 8);
+  }
+  if (c.hist.length) {
+    const m = c.hist.reduce((a, r) => a + r.you, 0) / c.hist.reduce((a, r) => a + r.all, 0);
+    g.strokeStyle = "#1d1d1b"; g.lineWidth = 1.2; g.setLineDash([2, 3]);
+    g.beginPath(); g.moveTo(L, Y(m)); g.lineTo(L + pw, Y(m)); g.stroke(); g.setLineDash([]);
+    g.fillStyle = "#1d1d1b"; g.textAlign = "right"; g.font = "11px -apple-system, sans-serif";
+    g.fillText("you", L + pw, Y(m) - 4);
+  }
+  curveNote.hidden = c.free || c.hist.length >= 3;
+}
+
+// ============================================================================
+// Panels
+// ============================================================================
+const $ = id => document.getElementById(id);
+const scene = $("scene"), curve = $("curve"), curveNote = $("curveNote");
+const f1 = v => v.toFixed(1);
+
+function drawSpec() {
+  const c = ch, who = { F: "the hen", M: "the cock", B: "both" }[c.rears];
+  const rows = c.free ? [
+    ["You are", `<span class="seg" id="roleSeg"><button data-r="F" class="${c.role === "F" ? "on" : ""}">hen</button><button data-r="M" class="${c.role === "M" ? "on" : ""}">cock</button></span>`],
+    ["Eggs a hen can lay", `<input type="range" id="sE" min="1" max="20" value="${c.E}"> ${c.E}`],
+    ["Young are raised by", `<select id="sR"><option value="F">the hen</option><option value="M">the cock</option><option value="B">both</option></select>`],
+    ["Young one nest can raise", `<input type="range" id="sY" min="1" max="12" value="${c.Y}"> ${c.Y}`],
+    ["Suitors in a season", `<input type="range" id="sD" min="3" max="20" value="${c.D}"> ${c.D}`],
+  ] : [
+    ["You are", c.role === "F" ? "a hen" : "a cock"],
+    ["Eggs a hen can lay", c.E],
+    ["Young are raised by", who],
+    ["Young one nest can raise", c.Y],
+    ["Suitors in a season", c.D],
+  ];
+  $("spec").innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+  if (!c.free) return;
+  $("sR").value = c.rears;
+  const reset = () => { c.hist = []; c.curve = null; newSeason(c); render(); };
+  for (const [id, k] of [["sE", "E"], ["sY", "Y"], ["sD", "D"]])
+    $(id).addEventListener("input", e => { c[k] = +e.target.value; e.target.nextSibling.textContent = " " + c[k]; c.curve = null; drawCurve(); });
+  for (const id of ["sE", "sY", "sD"]) $(id).addEventListener("change", reset);
+  $("sR").addEventListener("change", e => { c.rears = e.target.value; reset(); });
+  for (const b of $("roleSeg").children) b.addEventListener("click", () => { c.role = b.dataset.r; c.hist = []; newSeason(c); render(); });
+}
+
+function drawHist() {
+  const h = ch.hist;
+  if (!h.length) { $("hist").innerHTML = `<tr><td style="color:var(--muted)">none yet</td></tr>`; return; }
+  const m = k => f1(h.reduce((a, r) => a + r[k], 0) / h.length);
+  $("hist").innerHTML = `<tr><th>season</th><th>paired</th><th>you</th><th>pair with all</th><th>best of these</th></tr>` +
+    h.slice(-8).map((r, i) => `<tr><td>${h.length - Math.min(8, h.length) + i + 1}</td><td>${r.n}</td><td>${f1(r.you)}</td><td>${f1(r.all)}</td><td>${f1(r.best)}</td></tr>`).join("") +
+    `<tr class="mean"><td>average</td><td>${m("n")}</td><td>${m("you")}</td><td>${m("all")}</td><td>${m("best")}</td></tr>`;
+}
+
+function drawControls() {
+  const s = ch.cur;
+  $("pairBtn").disabled = $("passBtn").disabled = s.done;
+  $("msg").innerHTML = s.msg;
+  $("result").hidden = !s.done; $("nextBtn").hidden = !s.done;
+  if (s.done) { const r = ch.hist[ch.hist.length - 1]; $("rYou").textContent = f1(r.you); $("rAll").textContent = f1(r.all); $("rBest").textContent = f1(r.best); }
+}
+
+function drawNav() {
+  $("chapters").innerHTML = CH.map((c, i) => `<button data-i="${i}" class="${c === ch ? "on" : ""}"><b>${c.key}</b>${c.name}</button>`).join("");
+  for (const b of $("chapters").children) b.addEventListener("click", () => { ch = CH[+b.dataset.i]; if (!ch.cur) newSeason(ch); render(); });
+}
+
+function render() { drawNav(); drawSpec(); drawControls(); drawHist(); drawScene(); drawCurve(); }
+
+// ============================================================================
+// Play
+// ============================================================================
+function step(paired) {
+  const c = ch, s = c.cur; if (s.done) return;
+  const q = s.q[s.day], lim = limits(c, c.role);
+  let add = 0;
+  if (paired) {
+    add = Math.max(0, Math.min(lim.supply, lim.slots - s.eggs.length));
+    for (let i = 0; i < add; i++) s.eggs.push(q);
+    s.msg = add ? `Paired: <b>+${add} egg${add > 1 ? "s" : ""}</b>, each with a ${Math.round(q * 100)}% chance to fledge.`
+                : `Paired, and <b>nothing added</b>: every place was already taken.`;
+  } else s.msg = `Let it go.`;
+  s.log.push({ q, paired, add });
+  s.day++; c.anim = performance.now();
+  if (s.day >= c.D) {
+    s.done = true;
+    c.hist.push({ n: s.log.filter(l => l.paired).length, you: s.eggs.reduce((a, q) => a + q, 0), all: playRule(s.q, 0, lim), best: bestOf(s.q, lim) });
+  }
+  render();
+}
+$("pairBtn").addEventListener("click", () => step(true));
+$("passBtn").addEventListener("click", () => step(false));
+$("nextBtn").addEventListener("click", () => { newSeason(ch); render(); });
+document.addEventListener("keydown", e => {
+  if (e.target.closest("input,select")) return;
+  if (e.key === "p" || e.key === "ArrowLeft") step(true);
+  else if (e.key === "l" || e.key === "ArrowRight") step(false);
+  else if ((e.key === "Enter" || e.key === "n") && ch.cur.done) { newSeason(ch); render(); }
+});
+let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { drawScene(); drawCurve(); }, 80); });
+
+newSeason(ch); render();
+</script>
+<script src="../assets/hover.js"></script>
+</body>
+</html>
